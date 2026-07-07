@@ -203,8 +203,12 @@ onMounted(() => {
     })
 
     // Initiale Vorauswahl (nur für visuelles Highlight)
-    const initial = toExportName(props.currentIcon)
-    selectedIconName.value = initial
+    selectedIconName.value = props.currentIcon ? toExportName(props.currentIcon) : null
+})
+
+/* Prop-Änderungen synchronisieren (z.B. externes Entfernen des Icons) */
+watch(() => props.currentIcon, (val) => {
+    selectedIconName.value = val ? toExportName(val) : null
 })
 
 /* Async Komponente pro Icon (mit Cache) */
@@ -249,7 +253,8 @@ function toExportName (input) {
 }
 const selectedIconComp = computed(() => {
     if (isComponentLike(props.currentIcon)) return props.currentIcon
-    const name = selectedIconName.value || toExportName(props.currentIcon)
+    const name = selectedIconName.value
+    if (!name) return iconComp('IconPhotoCircle')
     return iconComp(name)
 })
 

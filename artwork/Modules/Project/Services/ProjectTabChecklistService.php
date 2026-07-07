@@ -64,6 +64,16 @@ class ProjectTabChecklistService
             $query->whereIn('tab_id', $scope);
         }
 
+        // Public checklists are visible to everyone who can view the component
+        if (!$private) {
+            return ChecklistIndexResource::collection($query->get())->resolve();
+        }
+
+        // Private checklists require user to be assigned, creator, or in project team
+        if (!$project->relationLoaded('users')) {
+            $project->load('users');
+        }
+
         $checklists = $query->get()->filter(function ($checklist) use ($userId, $project) {
             $isInChecklistUsers = $checklist->users->contains('id', $userId);
             $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {

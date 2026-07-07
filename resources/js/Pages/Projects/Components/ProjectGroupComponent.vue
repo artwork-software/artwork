@@ -1,5 +1,7 @@
 <template>
-    <div class="flex items-center" v-if="headerObject?.project?.is_group || headerObject?.project?.groups?.length > 0">
+    <div v-if="headerObject?.project?.is_group || headerObject?.project?.groups?.length > 0">
+        <span class="componentLabel">{{ $t('Project group') }}</span>
+        <div class="flex items-center mt-1">
         <span>
             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true" alt=""/>
         </span>
@@ -20,6 +22,7 @@
                     {{ project?.name }}
                 </Link>
             </div>
+        </div>
         </div>
     </div>
 </template>

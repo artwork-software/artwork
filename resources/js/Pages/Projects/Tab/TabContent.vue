@@ -1,6 +1,22 @@
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id" :print-layouts="printLayouts">
         <div class="my-10 w-full">
+            <!-- Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
+            <div v-if="can('can invite externals')" class="flex justify-end mb-4">
+                <button class="ui-button flex items-center gap-1.5" @click="showInviteModal = true">
+                    <IconUserPlus stroke-width="1" class="size-5" />
+                    {{ $t('Invite external to this tab') }}
+                </button>
+            </div>
+            <InviteExternalModal
+                v-if="showInviteModal"
+                source="project_tab"
+                :project="project"
+                :available-tabs="headerObject.tabs ?? []"
+                :preselected-tab-id="currentTab.id"
+                @close="showInviteModal = false"
+            />
+            -->
             <div v-for="(component, idx) in currentTab.components" :key="component?.id ?? component?.component?.id ?? idx" :class="removeML(component.component?.type)">
                 <Component
                     v-if="canSeeComponent(component.component) && componentMapping[component.component?.type]"
@@ -132,13 +148,25 @@ import ProjectGroupDisplayComponent from "@/Pages/Projects/Components/ProjectGro
 import DisclosureComponent from "@/Pages/Projects/Tab/Components/DisclosureComponent.vue";
 import ArtistNameDisplayComponent from "@/Pages/Projects/Components/ArtistNameDisplayComponent.vue";
 import ProjectBasicDataDisplayComponent from "@/Pages/Projects/Components/ProjectBasicDataDisplayComponent.vue";
+import ProjectCostCenterDisplayComponent from "@/Pages/Projects/Components/ProjectCostCenterDisplayComponent.vue";
 import LinkComponent from "@/Pages/Projects/Tab/Components/LinkComponent.vue";
 import ProjectMaterialIssueComponent from "@/Pages/Projects/Components/Issue/ProjectMaterialIssueComponent.vue";
+import LinkListComponent from "@/Pages/Projects/Tab/Components/LinkListComponent.vue";
+import ProjectContractsDocumentsComponent from "@/Pages/Projects/Components/ProjectContractsDocumentsComponent.vue";
+import BusinessIntelligenceComponent from "@/Pages/Projects/Tab/Components/BusinessIntelligenceComponent.vue";
+// Externe-Einladen-Feature vorerst ausgeblendet (noch nicht ausgereift)
+// import InviteExternalModal from "@/Pages/CRM/Components/InviteExternalModal.vue";
+import { IconUserPlus } from "@tabler/icons-vue";
+import { useTranslation } from "@/Composeables/Translation.js";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
 
-const { canSeeComponent, canEditComponent } = usePermission(usePage().props);
+const $t = useTranslation();
+
+const { canSeeComponent, canEditComponent, can } = usePermission(usePage().props);
+
+const showInviteModal = ref(false);
 
 const componentMapping = {
     TextField,
@@ -174,7 +202,11 @@ const componentMapping = {
     DisclosureComponent,
     ArtistNameDisplayComponent,
     ProjectBasicDataDisplayComponent,
-    ProjectMaterialIssueComponent
+    ProjectCostCenterDisplayComponent,
+    ProjectMaterialIssueComponent,
+    LinkList: LinkListComponent,
+    ProjectContractsDocumentsComponent,
+    BusinessIntelligenceComponent,
 };
 
 const props = defineProps({
@@ -232,7 +264,8 @@ const removeML = (componentType) => {
         componentType === 'ShiftTab' ||
         componentType === 'BudgetTab' ||
         componentType === 'ChecklistComponent' ||
-        componentType === 'ChecklistAllComponent'
+        componentType === 'ChecklistAllComponent' ||
+        componentType === 'BulkBody'
     ) {
         return '';
     } else {
@@ -259,8 +292,8 @@ onMounted(() => {
             updatedAt: new Date().toISOString(), // optional: für spätere Sortierung
             key_visual_path: project.key_visual_path,
             is_group: project.is_group,
-            firstEventStart: props.headerObject.firstEventInProject.event_date_without_time.start,
-            lastEventEnd: props.headerObject.lastEventInProject.event_date_without_time.end
+            firstEventStart: props.headerObject.firstEventInProject?.event_date_without_time?.start ?? null,
+            lastEventEnd: props.headerObject.lastEventInProject?.event_date_without_time?.end ?? null
         });
 
         // Nur die letzten 10 behalten

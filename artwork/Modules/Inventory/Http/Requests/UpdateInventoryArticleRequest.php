@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Inventory\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInventoryArticleRequest extends FormRequest
 {
@@ -13,15 +14,20 @@ class UpdateInventoryArticleRequest extends FormRequest
 
     public function rules(): array
     {
+        $articleId = $this->route('inventoryArticle')?->id;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'inventory_category_id' => ['required', 'integer', 'exists:inventory_categories,id'],
+            'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
             'quantity' => ['required', 'integer', 'min:0'],
             'is_detailed_quantity' => ['required', 'boolean'],
 
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'max:10240'], // max 10MB
+            'newImages' => ['nullable', 'array'],
+            'newImages.*' => ['image', 'max:10240'],
 
             'main_image_index' => ['nullable', 'integer'],
 
@@ -30,6 +36,13 @@ class UpdateInventoryArticleRequest extends FormRequest
             'properties.*.value' => ['nullable', 'max:255'],
 
             'detailed_article_quantities' => ['nullable', 'array'],
+            'detailed_article_quantities.*.id' => [
+                'nullable',
+                'integer',
+                Rule::exists('inventory_detailed_quantity_articles', 'id')
+                    ->where(fn ($query) => $query->where('inventory_article_id', $articleId)
+                        ->whereNull('deleted_at')),
+            ],
             'detailed_article_quantities.*.name' => ['required', 'string', 'max:255'],
             'detailed_article_quantities.*.quantity' => ['required', 'integer', 'min:0'],
             'detailed_article_quantities.*.description' => ['nullable', 'string'],

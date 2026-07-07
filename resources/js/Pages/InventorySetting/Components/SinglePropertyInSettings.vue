@@ -1,7 +1,7 @@
 <template>
     <!-- Regular columns (all except Actions) -->
     <template v-if="!showOnlyActions">
-        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize max-w-name truncate" :title="property?.name">{{ property?.name }}</td>
+        <td class="py-4 pr-4 pl-6 text-sm font-medium whitespace-nowrap text-gray-900 first-letter:capitalize max-w-name truncate" :title="property?.name">{{ property?.name }}</td>
         <td class="p-4 text-sm whitespace-nowrap text-gray-500 max-w-tooltip truncate" :title="property.tooltip_text ?? $t('No tooltip text')">{{ property.tooltip_text ?? $t('No tooltip text') }}</td>
         <td class="p-4 text-sm whitespace-nowrap text-gray-500">{{ $t(capitalizeFirstLetter(property?.type)) }}</td>
         <td class="p-4 text-sm whitespace-nowrap text-gray-500">

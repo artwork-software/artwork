@@ -1,21 +1,10 @@
 <template>
-    <div class="w-full flex justify-end items-center ml-8 -mt-14">
-        <div v-if="!this.showSearchbar" @click="openSearchbar"
-             class="cursor-pointer inset-y-0 mr-3">
-            <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-        </div>
-        <div v-else class="flex items-center w-64 mr-2">
-            <div>
-                <input type="text"
-                       :placeholder="$t('Search')"
-                       v-model="this.searchText"
-                       ref="searchBarInput"
-                       class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-            </div>
-            <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-        </div>
-    </div>
-    <div v-for="sageNotAssignedData in this.filteredTrashedSageNotAssignedData"
+    <TrashSearchAndActions
+        property-name="sageNotAssignedDataTrashed"
+        :total="sageNotAssignedDataTrashed.total"
+        @delete-all="showConfirmDeleteAll = true"
+    />
+    <div v-for="sageNotAssignedData in sageNotAssignedDataTrashed.data" :key="sageNotAssignedData.id"
          class="flex w-full bg-white my-2 border border-gray-200">
         <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="sageNotAssignedData.hidden = !sageNotAssignedData.hidden">
             <ChevronUpIcon v-if="sageNotAssignedData.hidden === true"
@@ -123,6 +112,21 @@
             </div>
         </div>
     </div>
+
+    <BasePaginator
+        v-if="sageNotAssignedDataTrashed.total > 0"
+        :entities="sageNotAssignedDataTrashed"
+        property-name="sageNotAssignedDataTrashed"
+        class="mt-6"
+    />
+
+    <ConfirmDeleteModal
+        v-if="showConfirmDeleteAll"
+        :title="$t('Delete all')"
+        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
+        @closed="showConfirmDeleteAll = false"
+        @delete="forceDeleteAll"
+    />
 </template>
 
 <script>
@@ -133,12 +137,18 @@ import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 
 export default {
     name: "SageNotAssignedDataTrashed",
     layout: [AppLayout, TrashLayout],
     props: ['sageNotAssignedDataTrashed'],
     components: {
+        BasePaginator,
+        TrashSearchAndActions,
+        ConfirmDeleteModal,
         Input,
         XIcon,
         SearchIcon,
@@ -155,37 +165,20 @@ export default {
     },
     data() {
         return {
-            showSearchbar: false,
-            searchText: '',
-        }
-    },
-    computed: {
-        filteredTrashedSageNotAssignedData() {
-            if (!this.searchText) {
-                return this.sageNotAssignedDataTrashed;
-            }
-
-            return this.sageNotAssignedDataTrashed.filter((sageNotAssignedData) => {
-                return sageNotAssignedData.buchungstext.includes(this.searchText);
-            });
+            showConfirmDeleteAll: false,
         }
     },
     methods: {
-        closeSearchbar() {
-            this.showSearchbar = false
-            this.searchText = ''
-        },
         formatBookingDataDate(dateString) {
             let parts = dateString.split('T');
             parts = parts[0].split('-');
 
             return parts[2] + '.' + parts[1] + '.' + parts[0];
         },
-        openSearchbar(){
-            this.showSearchbar = !this.showSearchbar;
-            this.$nextTick(() => {
-                if (this.showSearchbar) {
-                    this.$refs.searchBarInput.focus();
+        forceDeleteAll() {
+            this.$inertia.delete(route('sageNotAssignedData.forceDeleteAll'), {
+                onSuccess: () => {
+                    this.showConfirmDeleteAll = false;
                 }
             });
         },

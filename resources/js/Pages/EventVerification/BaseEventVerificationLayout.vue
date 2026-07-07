@@ -18,15 +18,21 @@
 
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
-import {can, is} from "laravel-permission-to-vuejs";
-
-const props = defineProps({
-
-})
+import {usePage} from "@inertiajs/vue3";
 
 const tabs = [
-    { name: 'My Verification Requests', href: route('event-verifications.index'), current: route().current('event-verifications.index'), permission: ('can see planning calendar | can edit planning calendar') || is('artwork admin')},
-    { name: 'Verification Requests', href: route('event-verifications.requests'), current: route().current('event-verifications.requests'), permission: can('can edit planning calendar') || is('artwork admin') },
+    {
+        name: 'Incoming requests',
+        href: route('event-verifications.index'),
+        current: route().current('event-verifications.index'),
+        permission: usePage().props.canSeeIncomingRequests,
+    },
+    {
+        name: 'Requests sent by me',
+        href: route('event-verifications.sent'),
+        current: route().current('event-verifications.sent'),
+        permission: true,
+    },
 ]
 
 </script>

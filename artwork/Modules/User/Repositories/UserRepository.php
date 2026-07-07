@@ -65,14 +65,23 @@ class UserRepository extends BaseRepository
         return $user;
     }
 
-    public function getWorkers(): Collection
+    public function getWorkers(\Illuminate\Support\Carbon $startDate, \Illuminate\Support\Carbon $endDate): Collection
     {
-        return User::query()->canWorkShifts()->with(
-            'dayServices',
-            'shifts',
-            'shifts.shiftsQualifications',
-            'shiftQualifications',
-        )->get();
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlan(User::class, $startDate, $endDate);
+    }
+
+    /**
+     * @param  array<int>  $userIds
+     */
+    public function getWorkersByIds(
+        array $userIds,
+        \Illuminate\Support\Carbon $startDate,
+        \Illuminate\Support\Carbon $endDate
+    ): Collection {
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlanByIds(User::class, $userIds, $startDate, $endDate);
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(
@@ -99,6 +108,18 @@ class UserRepository extends BaseRepository
             ->get();
     }
 
+    public function getUserVacationsByMonthOrderedByDateAsc(User|int $user, Carbon $monthDate): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUserOrFail($user);
+        }
+
+        return $user->vacations()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
+            ->orderedByDate()
+            ->get();
+    }
+
     public function getUserAvailabilitiesByDateOrderedByDateAsc(User|int $user, Carbon $selectedDate): Collection
     {
         if (!$user instanceof User) {
@@ -111,15 +132,26 @@ class UserRepository extends BaseRepository
             ->get();
     }
 
+    public function getUserAvailabilitiesByMonthOrderedByDateAsc(User|int $user, Carbon $monthDate): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUserOrFail($user);
+        }
+
+        return $user->availabilities()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
+            ->orderedByDate()
+            ->get();
+    }
+
     public function getShiftsOrderedByStartAscending(int|User $user): Collection
     {
         if (!$user instanceof User) {
             $user = $this->findUser($user);
         }
-
         return $user
             ->shifts()
-            ->with(['event', 'event.project', 'event.room'])
+            ->with('project')
             ->orderedByStart()
             ->get();
     }

@@ -12,7 +12,9 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Auth\AuthManager;
 
@@ -123,6 +125,22 @@ class InternalIssueController extends Controller
     }
 
 
+    public function show(InternalIssue $internalIssue): JsonResponse
+    {
+        $internalIssue->load([
+            'files',
+            'articles.images',
+            'articles.category',
+            'articles.subCategory',
+            'specialItems',
+            'room',
+            'project',
+            'responsibleUsers.departments',
+        ]);
+
+        return response()->json($internalIssue);
+    }
+
     public function store(StoreInternalIssueRequest $request): \Illuminate\Http\RedirectResponse
     {
         $issue = $this->internalIssueService
@@ -154,6 +172,47 @@ class InternalIssueController extends Controller
             ->deleteFile($internalIssueFile);
 
         return redirect()->back();
+    }
+
+    public function print(InternalIssue $internalIssue)
+    {
+        $internalIssue->load([
+            'articles.category',
+            'articles.subCategory',
+            'specialItems.category',
+            'specialItems.subCategory',
+            'files',
+            'project',
+            'room',
+            'responsibleUsers',
+        ]);
+
+        $createdAt = now()->format('d.m.Y');
+        $createdBy = $this->authManger->user()->full_name;
+
+        $pdf = SnappyPdf::loadView('pdf.internal_issue', [
+            'issue' => $internalIssue,
+            'createdAt' => $createdAt,
+            'createdBy' => $createdBy,
+        ]);
+
+        $pdfContent = $pdf->output();
+        $projectPart = $internalIssue->project ? str_replace(' ', '_', $internalIssue->project->name) . '_' : '';
+        $fileName = 'int._Materialausgabe_' . $projectPart . 'Nr._' . $internalIssue->id . '_' . now()->format('Y-m-d') . '.pdf';
+        $storagePath = 'material-issue/' . $fileName;
+
+        Storage::disk('public')->put($storagePath, $pdfContent);
+
+        InternalIssueFile::create([
+            'internal_issue_id' => $internalIssue->id,
+            'file_path' => $storagePath,
+            'original_name' => $fileName,
+        ]);
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
     }
 
     public function setSpecialItemsDone(InternalIssue $internalIssue): \Illuminate\Http\RedirectResponse

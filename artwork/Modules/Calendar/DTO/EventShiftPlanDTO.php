@@ -2,18 +2,11 @@
 
 namespace Artwork\Modules\Calendar\DTO;
 
-use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Models\EventStatus;
-use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Event\Models\SeriesEvents;
-use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserCalendarSettings;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Lazy;
 use Spatie\LaravelData\Optional;
 
 class EventShiftPlanDTO extends Data
@@ -24,39 +17,35 @@ class EventShiftPlanDTO extends Data
         public string $end,
         public ?string $eventName,
         public ?string $description,
-        public ?ProjectDTO $project,
-        public EventType|null $eventType,
+        public ?int $projectId,
+        public ?int $eventTypeId,
         public ?Collection $shifts,
         public bool $allDay,
         public ?int $roomId,
         public ?string $roomName,
-        public ?array $daysOfEvent,
-        public User|null|Optional $created_by,
-        public ?array $formattedDates,
+        public MinimalCreatorDTO|Optional|null $created_by,
         public ?bool $is_series,
-        public Collection $eventProperties,
+        public ?array $eventProperties,
         public ?bool $occupancy_option,
         public ?string $option_string,
         public ?bool $isPlanning,
         public ?bool $hasVerification = false,
+        public ?bool $hasTimelines = false,
         public ?Collection $timelines = null
     ) {
     }
 
     public static function fromModel(
         Event $event,
-        Collection $eventTypes,
-        Collection $users,
-        ?bool $addTimeline = false,
-    ): EventShiftPlanDTO
-    {
-        // For all-day events, set time to 00:00 - 23:59 to display them as full-day events
+        ?Project $project,
+        ?bool $addTimeline = false
+    ): EventShiftPlanDTO {
         if ($event->allDay) {
             $startTime = Carbon::parse($event->start_time)->format('Y-m-d') . ' 00:00';
-            $endTime = Carbon::parse($event->end_time)->format('Y-m-d') . ' 23:59';
+            $endTime   = Carbon::parse($event->end_time)->format('Y-m-d') . ' 23:59';
         } else {
             $startTime = Carbon::parse($event->start_time)->format('Y-m-d H:i');
-            $endTime = Carbon::parse($event->end_time)->format('Y-m-d H:i');
+            $endTime   = Carbon::parse($event->end_time)->format('Y-m-d H:i');
         }
 
         return new self(
@@ -65,22 +54,41 @@ class EventShiftPlanDTO extends Data
             end: $endTime,
             eventName: $event->eventName,
             description: $event->description,
-            project: $event->project ? ProjectDTO::fromModel($event->project) : null,
-            eventType: $eventTypes[$event->event_type_id] ?? null,
-            shifts: $event->shifts->map(fn($shift) => ShiftDTO::fromModel($shift)),
+            projectId: $project?->id,
+            eventTypeId: $event->event_type_id,
+            shifts: collect([]),
             allDay: $event->allDay,
             roomId: $event->room_id,
-            roomName: $event->room->name,
-            daysOfEvent: $event->getAttribute('days_of_event') ?? [],
-            created_by: $event->user_id ? $users[$event->user_id] : null,
-            formattedDates: $event->getAttribute('formatted_dates') ?? [],
+            roomName: $event->room?->name,
+            created_by: $event->creator ? new MinimalCreatorDTO(
+                id: $event->creator->id,
+                first_name: $event->creator->first_name,
+                last_name: $event->creator->last_name,
+                profile_photo_url: $event->creator->profile_photo_path
+                    ? '/storage/' . $event->creator->profile_photo_path
+                    : null,
+            ) : null,
             is_series: $event->is_series,
-            eventProperties: $event->eventProperties,
+            eventProperties: self::serializeEventProperties($event),
             occupancy_option: $event->occupancy_option,
             option_string: $event->option_string,
             isPlanning: $event->is_planning ?? false,
-            hasVerification: $event->getAttribute('has_verification') ?? false,
-            timelines: $addTimeline ? $event->getAttribute('timelines') : collect([]),
+            hasVerification: false,
+            hasTimelines: (bool) $event->timelines_exists,
+            timelines: $addTimeline ? ($event->getAttribute('timelines') ?? collect()) : collect(),
         );
+    }
+
+    private static function serializeEventProperties(Event $event): array
+    {
+        if (!$event->relationLoaded('eventProperties')) {
+            return [];
+        }
+
+        return $event->eventProperties->map(fn ($prop) => [
+            'id' => $prop->id,
+            'name' => $prop->name,
+            'icon' => $prop->icon,
+        ])->values()->all();
     }
 }

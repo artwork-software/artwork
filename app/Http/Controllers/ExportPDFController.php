@@ -7,24 +7,30 @@ use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\EventCalendarService;
 use Artwork\Modules\Calendar\Services\ShiftCalendarService;
 use Artwork\Modules\Event\Models\EventProperty;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\DailyShiftPlanPdfBuilder;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
-use Barryvdh\DomPDF\PDF;
+use Barryvdh\Snappy\PdfWrapper;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Routing\UrlGenerator;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,7 +45,7 @@ class ExportPDFController extends Controller
         protected FilesystemManager $filesystemManager,
         protected InertiaResponseFactory $inertiaResponseFactory,
         protected UrlGenerator $urlGenerator,
-        protected PDF $domPdf,
+        protected PdfWrapper $snappyPdf,
         protected AuthManager $authManager,
         protected EventCalendarService $eventCalendarService,
         protected ShiftCalendarService $shiftCalendarService,
@@ -108,7 +114,7 @@ class ExportPDFController extends Controller
 
         // Calendar DTO (rooms[]= ['roomId'=>..,'content'=>['29.10.2025'=>['events'=>[...]]]])
         $calendar = $this->eventCalendarService->mapRoomsToContentForCalendar(
-            $this->eventCalendarService->filterRoomsEvents(
+            $this->eventCalendarService->filterRoomsEventsForPdf(
                 $rooms,
                 $userCalendarFilter,
                 $startDate,
@@ -118,6 +124,16 @@ class ExportPDFController extends Controller
             $startDate,
             $endDate
         );
+
+        // Lookup: roomId -> content (O(1) statt O(n) im Blade)
+        $calendarLookup = [];
+        foreach (($calendar->rooms ?? []) as $roomBlock) {
+            $rid = $roomBlock['roomId'] ?? ($roomBlock->roomId ?? null);
+            $content = $roomBlock['content'] ?? ($roomBlock->content ?? []);
+            if ($rid !== null) {
+                $calendarLookup[$rid] = $content;
+            }
+        }
 
         // Liste der Tage bauen
         $days = [];
@@ -150,23 +166,11 @@ class ExportPDFController extends Controller
         if ($exportMode === 'block') {
             // Old export mode: dynamic row heights based on event count per slot
             try {
-                $perEventHeight = 18; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
+                $perEventHeight = 22; // px, entspricht ungefähr der Mindesthöhe eines Event-Bubbles inkl. Margin
                 $baseMinHeight  = 36; // px, Mindesthöhe wenn keine Events vorhanden sind
 
                 // Liste der Tag-Strings (Format wie im View: d.m.Y)
                 $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
-
-                // Kalender-Räume-Struktur aus DTO
-                $calendarRooms = $calendar->rooms ?? [];
-
-                // Hilfs-Lookup: roomId -> calendar room block
-                $calendarRoomLookup = [];
-                foreach ($calendarRooms as $roomBlock) {
-                    $rid = $roomBlock['roomId'] ?? null;
-                    if ($rid !== null) {
-                        $calendarRoomLookup[$rid] = $roomBlock;
-                    }
-                }
 
                 foreach ($rooms as $room) {
                     $rid = $room->id;
@@ -176,9 +180,8 @@ class ExportPDFController extends Controller
                         'evening' => 0,
                     ];
 
-                    $roomBlock = $calendarRoomLookup[$rid] ?? null;
-                    if (!$roomBlock) {
-                        // Falls keine Inhalte vorhanden sind, auf Basis-Mindesthöhe setzen
+                    $roomContent = $calendarLookup[$rid] ?? null;
+                    if (!$roomContent) {
                         $rowHeights[$rid] = [
                             'morning' => $baseMinHeight,
                             'noon'    => $baseMinHeight,
@@ -188,7 +191,7 @@ class ExportPDFController extends Controller
                     }
 
                     foreach ($allDayStrings as $dayDisplay) {
-                        $events = $roomBlock['content'][$dayDisplay]['events'] ?? [];
+                        $events = $roomContent[$dayDisplay]['events'] ?? [];
                         if (empty($events)) {
                             // Keine Events für diesen Tag
                             continue;
@@ -220,15 +223,105 @@ class ExportPDFController extends Controller
                 $rowHeights = [];
             }
         } else {
-            // New export mode: fixed segment height
-            $baseSegmentHeight = 36; // px (gerne anpassen, wenn dir die Zellen zu "flach" wirken)
+            // Compact stacking mode: Events werden kompakt gestapelt, nicht zeit-proportional.
+            // Slot-Höhe = Summe der Event-Höhen in der vollsten Lane + Gaps.
+            $baseSegmentHeight = 40;  // px minimum per slot
+            $maxSegmentHeight  = 400; // px cap to prevent absurdly tall rows
+            $baseCharsPerLine  = 14;  // chars per line at full column width (single lane)
+            $titleLineH        = 14;  // .event-title: 11px * 1.2 + spacing
+            $projectLineH      = 14;  // .event-sub:   10px * 1.2 + margin
+            $timeLineH         = 12;  // .event-time:   8px * 1.15 + margin
+            $paddingPx         = 14;  // .event-inner padding + borders + extra breathing room
+            $GAP_PX            = 4;   // gap between non-consecutive events
+
+            $allDayStrings = array_map(static fn ($d) => $d['fullDay'], $days);
 
             foreach ($rooms as $room) {
-                $rowHeights[$room->id] = [
+                $rid = $room->id;
+                $roomContent = $calendarLookup[$rid] ?? null;
+
+                $slotMaxHeight = [
                     'morning' => $baseSegmentHeight,
                     'noon'    => $baseSegmentHeight,
                     'evening' => $baseSegmentHeight,
                 ];
+
+                if ($roomContent) {
+                    foreach ($allDayStrings as $dayDisplay) {
+                        $events = $roomContent[$dayDisplay]['events'] ?? [];
+                        if (empty($events)) {
+                            continue;
+                        }
+
+                        // Count events per slot and determine lane count
+                        $slotCounts = ['morning' => 0, 'noon' => 0, 'evening' => 0];
+                        foreach ($events as $event) {
+                            foreach (['morning', 'noon', 'evening'] as $slot) {
+                                if (self::eventOverlapsSlot($event, $dayDisplay, $slot)) {
+                                    $slotCounts[$slot]++;
+                                }
+                            }
+                        }
+                        $laneCount = max(1, max($slotCounts['morning'], $slotCounts['noon'], $slotCounts['evening']));
+
+                        $effectiveCharsPerLine = max(4, (int) floor($baseCharsPerLine / $laneCount));
+
+                        // Collect content heights per slot
+                        $slotContentHeights = ['morning' => [], 'noon' => [], 'evening' => []];
+                        $tz = config('app.timezone');
+                        foreach ($events as $event) {
+                            $start    = \Illuminate\Support\Carbon::parse($event->start)->timezone($tz);
+                            $startMin = max(360, min(1440, ((int) $start->format('H')) * 60 + ((int) $start->format('i'))));
+                            $allDay   = (bool) ($event->allDay ?? false);
+
+                            $slot = $allDay ? 'morning' : ($startMin < 720 ? 'morning' : ($startMin < 1080 ? 'noon' : 'evening'));
+
+                            $name        = $event->eventName ?? '';
+                            $abbr        = $event->eventType?->abbreviation ?? '';
+                            $projectName = $event->project->name ?? '';
+
+                            $titleText    = ($abbr !== '' ? $abbr . ': ' : '') . $name;
+                            $titleLines   = max(1, (int) ceil(mb_strlen($titleText) / $effectiveCharsPerLine));
+                            $projectLines = $projectName !== '' ? max(1, (int) ceil(mb_strlen($projectName) / $effectiveCharsPerLine)) : 0;
+                            $contentHeight = max(40,
+                                $titleLines * $titleLineH
+                                + $projectLines * $projectLineH
+                                + $timeLineH
+                                + $paddingPx
+                            );
+
+                            $slotContentHeights[$slot][] = $contentHeight;
+                        }
+
+                        // Compute required slot heights based on compact stacking
+                        foreach (['morning', 'noon', 'evening'] as $slot) {
+                            $heights = $slotContentHeights[$slot];
+                            $n = count($heights);
+                            if ($n === 0) {
+                                continue;
+                            }
+
+                            // Approximate events per lane (worst case for tallest lane)
+                            $lanesInSlot = min($slotCounts[$slot], $laneCount);
+                            $eventsPerLane = (int) ceil($n / max(1, $lanesInSlot));
+
+                            // Use largest content heights for tallest lane estimate
+                            rsort($heights);
+                            $stackHeight = 0;
+                            for ($i = 0; $i < min($eventsPerLane, $n); $i++) {
+                                $stackHeight += $heights[$i];
+                            }
+                            $stackHeight += max(0, min($eventsPerLane, $n) - 1) * $GAP_PX;
+                            $stackHeight = min($stackHeight, $maxSegmentHeight);
+
+                            if ($stackHeight > $slotMaxHeight[$slot]) {
+                                $slotMaxHeight[$slot] = $stackHeight;
+                            }
+                        }
+                    }
+                }
+
+                $rowHeights[$rid] = $slotMaxHeight;
             }
         }
 
@@ -236,7 +329,7 @@ class ExportPDFController extends Controller
         $bladeTemplate = $exportMode === 'block' ? 'pdf.calendarExportNotRelative' : 'pdf.calendar';
 
         // PDF rendern
-        $pdf = $this->domPdf->loadView(
+        $pdf = $this->snappyPdf->loadView(
             $bladeTemplate,
             [
                 'title'          => $request->get('title') ?? 'Raumbelegung',
@@ -244,6 +337,7 @@ class ExportPDFController extends Controller
                 'user_filters'   => $userCalendarFilter,
                 'created_by'     => $user->full_name,
                 'calendar'       => $calendar,     // CalendarFrontendDataDTO
+                'calendarLookup' => $calendarLookup, // roomId -> content (O(1) Lookup)
                 'roomChunks'     => $roomChunks,   // Collection pro vertikaler Seite
                 'dayChunks'      => $dayChunks,    // Array pro horizontaler Seite
                 'activeFilter'  => [
@@ -255,22 +349,17 @@ class ExportPDFController extends Controller
                 ],
                 'DAYS_PER_PAGE'  => $DAYS_PER_PAGE,
                 'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
+                'colorSource'    => $request->get('colorSource', 'eventType'),
+                'paperSize'      => $request->string('paperSize', 'a4'),
             ]
         )
             ->setPaper(
                 $request->string('paperSize'),
                 $request->string('paperOrientation')
             )
-            ->setOptions([
-                'dpi'         => $request->float('dpi'),
-                'defaultFont' => 'sans-serif'
-            ]);
+            ->setOption('dpi', (int) $request->float('dpi'));
 
-        $filename = $this->createFilename(
-            $request->string('paperOrientation', ''),
-            $request->string('title', ''),
-            $request->float('dpi', '')
-        );
+        $filename = $this->createFilename();
 
         if ($this->filesystemManager->directoryMissing('pdf')) {
             $this->filesystemManager->makeDirectory('pdf');
@@ -284,9 +373,190 @@ class ExportPDFController extends Controller
     }
 
 
+    /**
+     * Exports the currently displayed shift plan view (date range, active filters and project mode
+     * are taken over from the request, mirroring the parameters used by shiftPlanEventAPI) into a PDF.
+     * Each ISO calendar week is rendered on its own page.
+     */
+    public function createShiftPlanPDF(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->authManager->guard()->user();
+
+        $projectId = $request->get('projectId');
+        $project = !empty($projectId) ? $this->projectService->findById($projectId) : null;
+
+        // Mirror shiftPlanEventAPI: project view forces non-daily, otherwise respect the user's daily flag.
+        $isInProjectView = $request->boolean('isInProjectView', !empty($projectId));
+        $isDailyView = !$isInProjectView
+            && $request->boolean('isDailyView', (bool) $user->getAttribute('calendar_daily_view'));
+
+        if ($isDailyView) {
+            $userCalendarSettings = $user->getAttribute('daily_view_calendar_settings')
+                ?? $user->daily_view_calendar_settings()->create();
+        } else {
+            $userCalendarSettings = $user->getAttribute('calendar_settings')
+                ?? $user->calendar_settings()->create();
+        }
+
+        $shiftFilterType = $isInProjectView
+            ? UserFilterTypes::PROJECT_SHIFT_FILTER->value
+            : ($isDailyView
+                ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value);
+
+        $userCalendarFilter = $user->userFilters()->firstOrCreate(
+            ['filter_type' => $shiftFilterType],
+            [
+                'start_date' => null,
+                'end_date' => null,
+                'event_type_ids' => null,
+                'room_ids' => null,
+                'area_ids' => null,
+                'room_attribute_ids' => null,
+                'room_category_ids' => null,
+                'event_property_ids' => null,
+                'craft_ids' => null,
+            ]
+        );
+
+        // Respect the date range currently shown in the shift plan (sent by the frontend).
+        $startDateParam = $request->get('start');
+        $endDateParam = $request->get('end');
+
+        if (!empty($startDateParam) && !empty($endDateParam)) {
+            $startDate = Carbon::parse($startDateParam)->startOfDay();
+            $endDate = Carbon::parse($endDateParam)->endOfDay();
+        } else {
+            [$startDate, $endDate] = $this->calendarDataService
+                ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $startDate,
+            $endDate,
+            true,
+            $project
+        );
+
+        $filterResult = $this->shiftCalendarService->filterRoomsEventsAndShifts(
+            $rooms,
+            $userCalendarFilter,
+            $startDate,
+            $endDate,
+            false,
+            $project,
+            false
+        );
+        $rooms = $filterResult['rooms'];
+        $lookups = $filterResult['lookups'] ?? [];
+
+        $calendar = $this->shiftCalendarService->mapRoomsToContentForCalendar(
+            $rooms,
+            $startDate,
+            $endDate
+        );
+
+        // Normalize the room blocks to plain nested arrays (identical to the JSON the frontend
+        // receives) so the blade can rely on consistent array access for rooms, events and shifts.
+        $normalizedRooms = json_decode(json_encode($calendar->rooms ?? []), true) ?: [];
+
+        // Lookup: roomId -> room data (content + eventsById + shiftsById) for O(1) blade access.
+        $roomLookup = [];
+        foreach ($normalizedRooms as $roomBlock) {
+            $rid = $roomBlock['roomId'] ?? null;
+            if ($rid !== null) {
+                $roomLookup[$rid] = $roomBlock;
+            }
+        }
+
+        // Build the list of days and group them by ISO calendar week (one week = one page).
+        $weeks = [];
+        $cursor = $startDate->copy()->startOfDay();
+        $lastDay = $endDate->copy()->startOfDay();
+        while ($cursor->lte($lastDay)) {
+            $weekKey = $cursor->isoWeekYear . '-' . str_pad((string) $cursor->isoWeek, 2, '0', STR_PAD_LEFT);
+            if (!isset($weeks[$weekKey])) {
+                $weeks[$weekKey] = [
+                    'weekNumber' => $cursor->isoWeek,
+                    'weekYear' => $cursor->isoWeekYear,
+                    'days' => [],
+                ];
+            }
+            $weeks[$weekKey]['days'][] = [
+                'fullDay' => $cursor->format('d.m.Y'),
+                'dayString' => $cursor->translatedFormat('D'),
+                'longDay' => $cursor->translatedFormat('l'),
+                'isWeekend' => $cursor->isWeekend(),
+                'isToday' => $cursor->isToday(),
+            ];
+            $cursor->addDay();
+        }
+        $weeks = array_values($weeks);
+
+        // Human-readable summary of the active filters for the header.
+        $activeFilter = [
+            'rooms' => Room::whereIn('id', $userCalendarFilter->room_ids ?? [])->pluck('name')->toArray(),
+            'event_types' => EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])->pluck('name')->toArray(),
+            'crafts' => Craft::whereIn('id', $userCalendarFilter->craft_ids ?? [])->pluck('name')->toArray(),
+        ];
+
+        $title = $request->get('title');
+        if (empty($title)) {
+            $title = $project ? $project->name : __('Shift plan');
+        }
+
+        // In project mode the shifts/events of the active time-period project are highlighted.
+        $highlightProjectId = $request->get('highlightProjectId');
+        $highlightProjectId = ($highlightProjectId !== null && $highlightProjectId !== '')
+            ? (int) $highlightProjectId
+            : null;
+        $highlightProjectName = $highlightProjectId
+            ? optional($this->projectService->findById($highlightProjectId))->name
+            : null;
+
+        $pdf = $this->snappyPdf->loadView(
+            'pdf.shiftplan_export',
+            [
+                'title' => $title,
+                'project' => $project,
+                'weeks' => $weeks,
+                'rooms' => $rooms,
+                'roomLookup' => $roomLookup,
+                'eventTypesById' => $lookups['eventTypesById'] ?? [],
+                'activeFilter' => $activeFilter,
+                'created_by' => $user->full_name,
+                'startDate' => $startDate->format('d.m.Y'),
+                'endDate' => $endDate->format('d.m.Y'),
+                'highlightProjectId' => $highlightProjectId,
+                'highlightProjectName' => $highlightProjectName,
+            ]
+        )
+            ->setPaper(
+                $request->string('paperSize', 'a4'),
+                $request->string('paperOrientation', 'landscape')
+            )
+            ->setOption('dpi', (int) ($request->float('dpi') ?: 96));
+
+        $filename = $this->createFilename();
+
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
+        }
+
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
+
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
+    }
+
     public static function eventOverlapsSlot($event, string $dayDisplay, string $slot): bool
     {
-        // Ganztägig -> in allen Slots anzeigen
         if (!empty($event->allDay)) {
             return true;
         }
@@ -295,33 +565,489 @@ class ExportPDFController extends Controller
             return false;
         }
 
-        $eventStart = \Carbon\Carbon::parse($event->start);
-        $eventEnd   = \Carbon\Carbon::parse($event->end);
+        // Slot-Grenzen als Stunden
+        $slotBounds = ['morning' => [0, 12], 'noon' => [12, 18], 'evening' => [18, 24]];
+        [$slotStartH, $slotEndH] = $slotBounds[$slot] ?? [0, 24];
 
-        $day = \Carbon\Carbon::createFromFormat('d.m.Y', $dayDisplay);
+        $day = \Carbon\Carbon::createFromFormat('d.m.Y', $dayDisplay)->startOfDay();
+        $slotStartTs = $day->copy()->addHours($slotStartH)->getTimestamp();
+        $slotEndTs   = $slot === 'evening'
+            ? $day->copy()->setTime(23, 59, 59)->getTimestamp()
+            : $day->copy()->addHours($slotEndH)->getTimestamp();
 
-        switch ($slot) {
-            case 'morning': // 00:00 - 12:00
-                $slotStart = $day->copy()->startOfDay();           // 00:00
-                $slotEnd   = $day->copy()->setTime(12, 0, 0);      // 12:00
-                break;
+        $eventStartTs = \Carbon\Carbon::parse($event->start)->getTimestamp();
+        $eventEndTs   = \Carbon\Carbon::parse($event->end)->getTimestamp();
 
-            case 'noon': // 12:00 - 18:00
-                $slotStart = $day->copy()->setTime(12, 0, 0);      // 12:00
-                $slotEnd   = $day->copy()->setTime(18, 0, 0);      // 18:00
-                break;
-
-            case 'evening': // 18:00 - 24:00
-            default:
-                $slotStart = $day->copy()->setTime(18, 0, 0);      // 18:00
-                $slotEnd   = $day->copy()->endOfDay()->setTime(23, 59, 59); // 23:59
-                break;
-        }
-
-        // Overlap wenn: Start < SlotEnd && Ende > SlotStart
-        return $eventStart < $slotEnd && $eventEnd > $slotStart;
+        return $eventStartTs < $slotEndTs && $eventEndTs > $slotStartTs;
     }
 
+
+    /**
+     * Normalisiert Monats-Eingaben auf "YYYY-MM". Akzeptiert "YYYY-MM", "YYYY-MM-DD",
+     * "MM.YYYY" und "DD.MM.YYYY"; alles andere ergibt null (= Fallback aktueller Monat).
+     */
+    private function normalizeMonthInput(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+        if (preg_match('/^\d{4}-\d{2}$/', $value)) {
+            return $value;
+        }
+        if (preg_match('/^(\d{4})-(\d{2})-\d{2}/', $value, $matches)) {
+            return $matches[1] . '-' . $matches[2];
+        }
+        if (preg_match('/^(\d{1,2})\.(\d{4})$/', $value, $matches)) {
+            return sprintf('%04d-%02d', $matches[2], $matches[1]);
+        }
+        if (preg_match('/^\d{1,2}\.(\d{1,2})\.(\d{4})$/', $value, $matches)) {
+            return sprintf('%04d-%02d', $matches[2], $matches[1]);
+        }
+
+        return null;
+    }
+
+    public function createMonthlyPDF(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->authManager->guard()->user();
+        $userFilter = $user->userFilters()->calendarFilter()->first();
+
+        $projectId = $request->get('project');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+        $filterData = $request->filter;
+        $userCalendarFilter = new UserFilter($filterData);
+        $userCalendarFilter->exists = false;
+
+        // Determine months to export
+        $months = []; // array of ['start' => Carbon, 'end' => Carbon]
+
+        if ($projectId) {
+            $project = $this->projectService->findById($projectId);
+            $today = Carbon::now();
+            [$projectStart, $projectEnd] = $this->calendarDataService->getProjectDateRange($project, $today);
+            $projectStart = Carbon::parse($projectStart)->startOfMonth();
+            $projectEnd = Carbon::parse($projectEnd)->endOfMonth();
+
+            $cursor = $projectStart->copy();
+            while ($cursor->lte($projectEnd)) {
+                $months[] = [
+                    'start' => $cursor->copy()->startOfMonth(),
+                    'end' => $cursor->copy()->endOfMonth(),
+                ];
+                $cursor->addMonth();
+            }
+        } else {
+            // User-Eingaben können je nach Browser/Locale auch "10.2025", "15.10.2025" oder
+            // "2025-10-15" sein – auf "YYYY-MM" normalisieren statt mit 500 zu crashen
+            $startMonth = $this->normalizeMonthInput($request->get('startMonth'));
+            $endMonth = $this->normalizeMonthInput($request->get('endMonth'));
+
+            if ($startMonth) {
+                $start = Carbon::parse($startMonth . '-01')->startOfMonth();
+                $end = $endMonth
+                    ? Carbon::parse($endMonth . '-01')->endOfMonth()
+                    : $start->copy()->endOfMonth();
+
+                $cursor = $start->copy();
+                while ($cursor->lte($end)) {
+                    $months[] = [
+                        'start' => $cursor->copy()->startOfMonth(),
+                        'end' => $cursor->copy()->endOfMonth(),
+                    ];
+                    $cursor->addMonth();
+                }
+            } else {
+                // Fallback: current month
+                $months[] = [
+                    'start' => Carbon::now()->startOfMonth(),
+                    'end' => Carbon::now()->endOfMonth(),
+                ];
+            }
+        }
+
+        // Get the full date range for fetching rooms and events
+        $globalStart = $months[0]['start']->copy();
+        $globalEnd = end($months)['end']->copy();
+
+        // Get filtered rooms
+        $rooms = $this->calendarDataService->getFilteredRooms(
+            $userCalendarFilter,
+            $userCalendarSettings,
+            $globalStart,
+            $globalEnd,
+        );
+
+        // Get calendar data
+        $calendar = $this->eventCalendarService->mapRoomsToContentForCalendar(
+            $this->eventCalendarService->filterRoomsEventsForPdf(
+                $rooms,
+                $userCalendarFilter,
+                $globalStart,
+                $globalEnd,
+                $userCalendarSettings
+            ),
+            $globalStart,
+            $globalEnd
+        );
+
+        // Build lookup: roomId -> content
+        $calendarLookup = [];
+        foreach (($calendar->rooms ?? []) as $roomBlock) {
+            $rid = $roomBlock['roomId'] ?? ($roomBlock->roomId ?? null);
+            $content = $roomBlock['content'] ?? ($roomBlock->content ?? []);
+            if ($rid !== null) {
+                $calendarLookup[$rid] = $content;
+            }
+        }
+
+        // Build pages data: one page per month
+        $pages = [];
+        $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+        foreach ($months as $monthData) {
+            $monthStart = $monthData['start'];
+            $monthEnd = $monthData['end'];
+            $days = [];
+            $cursor = $monthStart->copy();
+            while ($cursor->lte($monthEnd)) {
+                $days[] = [
+                    'fullDay' => $cursor->format('d.m.Y'),
+                    'display' => $dayNames[$cursor->dayOfWeekIso - 1] . ', ' . $cursor->format('d.m'),
+                    'isWeekend' => $cursor->isWeekend(),
+                ];
+                $cursor->addDay();
+            }
+            $pages[] = [
+                'monthLabel' => $monthStart->translatedFormat('F Y'),
+                'days' => $days,
+            ];
+        }
+
+        // Big logo as base64
+        $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $bigLogoBase64 = null;
+        if ($generalSettings->big_logo_path) {
+            $storage = $this->filesystemManager->disk('public');
+            if ($storage->exists($generalSettings->big_logo_path)) {
+                $logoContent = $storage->get($generalSettings->big_logo_path);
+                $mimeType = $storage->mimeType($generalSettings->big_logo_path);
+                $bigLogoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);
+            }
+        }
+
+        $project = $projectId ? $this->projectService->findById($projectId) : null;
+
+        $pdf = $this->snappyPdf->loadView(
+            'pdf.calendarMonthlyOverview',
+            [
+                'title' => $request->get('title') ?? 'Monatsübersicht',
+                'project' => $project,
+                'rooms' => $rooms,
+                'calendarLookup' => $calendarLookup,
+                'pages' => $pages,
+                'created_by' => $user->first_name . ' ' . $user->last_name,
+                'created_date' => Carbon::now()->format('d.m.Y'),
+                'bigLogoBase64' => $bigLogoBase64,
+                'colorSource' => $request->get('colorSource', 'eventType'),
+                'paperSize' => $request->string('paperSize', 'a3'),
+            ]
+        )
+            ->setPaper(
+                $request->string('paperSize', 'a3'),
+                $request->string('paperOrientation', 'landscape')
+            )
+            ->setOption('dpi', (int) $request->float('dpi', 72));
+
+        $filename = $this->createFilename();
+
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
+        }
+
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
+
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
+    }
+
+    /**
+     * Persönlicher Einsatzplan als Monatsübersicht (Outlook-Stil): 1 Monat = 1 Seite,
+     * KW-Zeilen, Mo–So-Spalten. Schichten in Gewerk-Farbe, individuelle Zeiten in Grau.
+     */
+    public function createUserShiftPlanPDF(
+        Request $request,
+        User $user,
+        EventService $eventService
+    ): Response {
+        $authUser = $this->authManager->guard()->user();
+
+        $type = $request->string('type', 'user')->toString();
+        $modelId = (int) ($request->integer('model_id') ?: $user->id);
+
+        // Monatsliste (je YYYY-MM)
+        $startMonth = $request->get('startMonth');
+        $endMonth = $request->get('endMonth');
+
+        $start = $startMonth
+            ? Carbon::parse($startMonth . '-01')->startOfMonth()
+            : Carbon::now()->startOfMonth();
+        $end = $endMonth
+            ? Carbon::parse($endMonth . '-01')->endOfMonth()
+            : $start->copy()->endOfMonth();
+
+        if ($end->lt($start)) {
+            $end = $start->copy()->endOfMonth();
+        }
+
+        $months = [];
+        $cursor = $start->copy();
+        while ($cursor->lte($end)) {
+            $months[] = [
+                'start' => $cursor->copy()->startOfMonth(),
+                'end' => $cursor->copy()->endOfMonth(),
+            ];
+            $cursor->addMonth();
+        }
+
+        // Globale Grid-Spanne: Montag der ersten KW .. Sonntag der letzten KW
+        $gridStart = $months[0]['start']->copy()->startOfWeek(Carbon::MONDAY);
+        $gridEnd = end($months)['end']->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
+            $modelId,
+            $type,
+            $gridStart->copy(),
+            $gridEnd->copy()
+        );
+
+        // Feiertage im Zeitraum -> map[Y-m-d] = name
+        $holidayMap = [];
+        $holidays = Holiday::query()
+            ->whereDate('date', '<=', $gridEnd->format('Y-m-d'))
+            ->whereDate('end_date', '>=', $gridStart->format('Y-m-d'))
+            ->get();
+        foreach ($holidays as $holiday) {
+            $hStart = Carbon::parse($holiday->date);
+            $hEnd = Carbon::parse($holiday->end_date ?? $holiday->date);
+            foreach (CarbonPeriod::create($hStart, $hEnd) as $hDay) {
+                $holidayMap[$hDay->format('Y-m-d')] = $holiday->name;
+            }
+        }
+
+        $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+        $weeklyWorkingHours = $type === 'user' ? (float) ($user->weekly_working_hours ?? 0) : null;
+
+        // Schichtqualifikationen (Funktion) -> [id => name]
+        $shiftQualifications = \Artwork\Modules\Shift\Models\ShiftQualification::query()
+            ->pluck('name', 'id')
+            ->all();
+
+        $pages = [];
+        foreach ($months as $monthData) {
+            $monthStart = $monthData['start'];
+            $monthEnd = $monthData['end'];
+            $monthNumber = $monthStart->month;
+
+            $weekGridStart = $monthStart->copy()->startOfWeek(Carbon::MONDAY);
+            $weekGridEnd = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);
+
+            $weeks = [];
+            $monthWorkMinutes = 0;
+            $daysInMonth = $monthEnd->day;
+            $prevHolidayName = null; // Namen mehrtägiger Feiertage/Ferien nur am ersten Tag zeigen
+
+            $cursorWeek = $weekGridStart->copy();
+            while ($cursorWeek->lte($weekGridEnd)) {
+                $cells = [];
+                for ($i = 0; $i < 7; $i++) {
+                    $day = $cursorWeek->copy()->addDays($i);
+                    $key = $day->format('Y-m-d');
+                    $dayData = $daysWithData[$key] ?? null;
+                    $inMonth = $day->month === $monthNumber && $day->year === $monthStart->year;
+                    $holidayName = $holidayMap[$key] ?? null;
+                    $showHolidayLabel = $holidayName !== null && $holidayName !== $prevHolidayName;
+                    $prevHolidayName = $holidayName;
+
+                    $shiftBlocks = [];
+                    foreach (($dayData['shifts'] ?? []) as $shift) {
+                        $shiftBlocks[] = $this->buildUserShiftBlock($shift, $type, $modelId, $shiftQualifications);
+                    }
+
+                    $individualBlocks = [];
+                    foreach (($dayData['individualTimes'] ?? []) as $it) {
+                        $individualBlocks[] = [
+                            'title' => $it['title'] ?? '',
+                            'full_day' => (bool) ($it['full_day'] ?? false),
+                            'start' => !empty($it['start_time']) ? substr((string) $it['start_time'], 0, 5) : null,
+                            'end' => !empty($it['end_time']) ? substr((string) $it['end_time'], 0, 5) : null,
+                        ];
+                    }
+
+                    if ($inMonth && $dayData) {
+                        $monthWorkMinutes += $this->hhmmToMinutes($dayData['totalWorkTime'] ?? '00:00');
+                    }
+
+                    $cells[] = [
+                        'dayNumber' => $day->day,
+                        'inMonth' => $inMonth,
+                        'isWeekend' => $day->isWeekend(),
+                        'isHoliday' => $holidayName !== null,
+                        'holidayName' => $showHolidayLabel ? $holidayName : null,
+                        'shifts' => $shiftBlocks,
+                        'individualTimes' => $individualBlocks,
+                    ];
+                }
+                $weeks[] = [
+                    'kw' => $cursorWeek->isoWeek(),
+                    'cells' => $cells,
+                ];
+                $cursorWeek->addWeek();
+            }
+
+            $sollMinutes = $weeklyWorkingHours !== null
+                ? (int) round($weeklyWorkingHours / 7 * $daysInMonth * 60)
+                : null;
+            $diffMinutes = $sollMinutes !== null ? $monthWorkMinutes - $sollMinutes : null;
+
+            $pages[] = [
+                'monthLabel' => $monthStart->translatedFormat('F Y'),
+                'monthName' => $monthStart->translatedFormat('F'),
+                'weekDayNames' => $dayNames,
+                'weeks' => $weeks,
+                'totalWork' => $this->minutesToHhmm($monthWorkMinutes),
+                'sollWork' => $sollMinutes !== null ? $this->minutesToHhmm($sollMinutes) : null,
+                'diffWork' => $diffMinutes !== null ? $this->minutesToHhmmSigned($diffMinutes) : null,
+                'diffPositive' => $diffMinutes !== null ? $diffMinutes >= 0 : null,
+            ];
+        }
+
+        // Logo als base64
+        $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $bigLogoBase64 = null;
+        if ($generalSettings->big_logo_path) {
+            $storage = $this->filesystemManager->disk('public');
+            if ($storage->exists($generalSettings->big_logo_path)) {
+                $logoContent = $storage->get($generalSettings->big_logo_path);
+                $mimeType = $storage->mimeType($generalSettings->big_logo_path);
+                $bigLogoBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($logoContent);
+            }
+        }
+
+        $pdf = $this->snappyPdf->loadView(
+            'pdf.user_shift_plan',
+            [
+                'userName' => $user->full_name,
+                'showSoll' => $weeklyWorkingHours !== null,
+                'pages' => $pages,
+                'created_by' => $authUser->first_name . ' ' . $authUser->last_name,
+                'created_date' => Carbon::now()->format('d.m.Y'),
+                'bigLogoBase64' => $bigLogoBase64,
+            ]
+        )
+            ->setPaper(
+                $request->string('paperSize', 'a4'),
+                $request->string('paperOrientation', 'landscape')
+            )
+            ->setOption('dpi', (int) $request->float('dpi', 96));
+
+        $filename = $this->createFilename();
+
+        if ($this->filesystemManager->directoryMissing('pdf')) {
+            $this->filesystemManager->makeDirectory('pdf');
+        }
+
+        $pdf->save($this->createStoragePath($this->filesystemManager, $filename));
+
+        return $this->inertiaResponseFactory->location(
+            $this->urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $shift
+     * @param array<int, string> $shiftQualifications  [shift_qualification_id => name]
+     * @return array<string, mixed>
+     */
+    private function buildUserShiftBlock(array $shift, string $type, int $modelId, array $shiftQualifications): array
+    {
+        $color = data_get($shift, 'craft.color') ?: '#3730a3';
+        $craft = data_get($shift, 'craft.name');
+        $room = data_get($shift, 'room.name') ?? data_get($shift, 'event.room.name');
+        $project = data_get($shift, 'project.name') ?? data_get($shift, 'event.project.name');
+        $eventName = data_get($shift, 'event.name');
+
+        $colleagues = [];
+        $note = null;
+        $function = null;
+        foreach (($shift['workers'] ?? []) as $worker) {
+            $wType = data_get($worker, 'type');
+            $wId = (int) data_get($worker, 'id');
+
+            if ($wType === $type && $wId === $modelId) {
+                $note = data_get($worker, 'pivot.short_description') ?: $note;
+                $qualId = data_get($worker, 'pivot.shift_qualification_id');
+                $function = $qualId ? ($shiftQualifications[$qualId] ?? null) : null;
+                continue;
+            }
+
+            $name = $this->workerName($worker);
+            if ($name !== '') {
+                $colleagues[] = $name;
+            }
+        }
+
+        return [
+            'color' => $color,
+            'craft' => $craft,
+            'function' => $function,
+            'start' => !empty($shift['start']) ? substr((string) $shift['start'], 0, 5) : null,
+            'end' => !empty($shift['end']) ? substr((string) $shift['end'], 0, 5) : null,
+            'room' => $room,
+            'project' => $project,
+            'event' => $eventName,
+            'description' => $shift['description'] ?? null,
+            'note' => $note,
+            'colleagues' => $colleagues,
+            'committed' => (bool) ($shift['is_committed'] ?? false),
+        ];
+    }
+
+    private function workerName(mixed $worker): string
+    {
+        $name = trim((string) data_get($worker, 'first_name') . ' ' . (string) data_get($worker, 'last_name'));
+        if ($name !== '') {
+            return $name;
+        }
+
+        return (string) (data_get($worker, 'provider_name') ?? data_get($worker, 'name') ?? '');
+    }
+
+    private function hhmmToMinutes(?string $time): int
+    {
+        if (!$time) {
+            return 0;
+        }
+        [$h, $m] = array_pad(explode(':', $time), 2, '0');
+
+        return ((int) $h) * 60 + (int) $m;
+    }
+
+    private function minutesToHhmm(int $minutes): string
+    {
+        $minutes = max(0, $minutes);
+
+        return sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
+    }
+
+    private function minutesToHhmmSigned(int $minutes): string
+    {
+        $sign = $minutes < 0 ? '-' : '+';
+        $abs = abs($minutes);
+
+        return sprintf('%s%02d:%02d', $sign, intdiv($abs, 60), $abs % 60);
+    }
 
     public function download(
         string $filename,
@@ -338,17 +1064,11 @@ class ExportPDFController extends Controller
         return $filesystemManager->path('pdf/' . $filename);
     }
 
-    private function createFilename(
-        string $paperOrientation,
-        string $title,
-        string $dpi
-    ): string {
+    private function createFilename(): string {
         return sprintf(
-            '%s_%s_%s_dpi_%s.pdf',
-            Carbon::now()->format('d.m.Y-H:i:s'),
-            $paperOrientation,
-            str_replace(' ', '_', $title),
-            $dpi
+            '%s_%s.pdf',
+            Carbon::now()->format('d.m.Y'),
+            Str::uuid()
         );
     }
 
@@ -411,14 +1131,22 @@ class ExportPDFController extends Controller
 
         $pdfData['groupedUsersByRole'] = $groupedUsersByRole;
 
-        $pdf = $this->domPdf
+        $pdf = $this->snappyPdf
             ->loadView('pdf.shiftplan_daily_project', $pdfData)
-            ->setOptions([
-                'dpi'         => 300,
-                'defaultFont' => 'sans-serif'
-            ])
-            ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape')
+            ->setOption('dpi', 300);
 
-        return $pdf->download("Shiftplan_{$project->name}_{$today}.pdf");
+        $safeProjectName = (string) Str::of((string) ($project->name ?? ''))
+            ->replace(['/', '\\'], '-')
+            ->trim();
+
+        if ($safeProjectName === '') {
+            $safeProjectName = 'Projekt';
+        }
+
+        // ':' ist zwar nicht der Auslöser dieses Fehlers, kann aber je nach Client/OS problematisch sein.
+        $safeToday = str_replace(':', '-', $today);
+
+        return $pdf->download("Shiftplan_{$safeProjectName}_{$safeToday}.pdf");
     }
 }

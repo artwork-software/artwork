@@ -48,10 +48,7 @@ class ColumnCell extends Model
         'commented' => 'boolean'
     ];
 
-    protected $appends = [
-        'sage_value',
-        'current_value',
-    ];
+    protected $appends = [];
 
     public function subPositionRow(): BelongsTo
     {
@@ -92,16 +89,28 @@ class ColumnCell extends Model
         );
     }
 
-    public function getSageValueAttribute(): ?string
+    public function getSageValueAttribute($value = null): ?string
     {
+        if ($value !== null) {
+            return $value;
+        }
+
+        if (!$this->relationLoaded('sageAssignedData')) {
+            $this->load('sageAssignedData');
+        }
+
         if ($this->sageAssignedData->isNotEmpty()) {
-            return $this->sageAssignedData->sum('buchungsbetrag');
+            return (string) $this->sageAssignedData->sum('buchungsbetrag');
         }
         return null;
     }
 
-    public function getCurrentValueAttribute(): ?string
+    public function getCurrentValueAttribute($value = null): ?string
     {
+        if ($value !== null) {
+            return $value;
+        }
+
         return $this->value;
     }
 }

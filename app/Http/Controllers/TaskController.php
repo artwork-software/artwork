@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Checklist\Events\ChecklistUpdated;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\Checklist\Models\ChecklistTemplate;
 use Artwork\Modules\MoneySource\Services\MoneySourceTaskService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
@@ -47,31 +47,22 @@ class TaskController extends Controller
         ProjectTabService $projectTabService,
         FilterOwnTasksRequest $request
     ): Response|ResponseFactory {
+        $userId = $this->authManager->id();
+        $sort = $request->integer('filter');
 
-        $checklists = $this->checklistService->getChecklistsWithMyTask(
-            $this->authManager->id(),
-            $projectTabService,
-            $request->integer('filter'),
-        );
+        $checklistPayload = $this->checklistService->buildOwnTasksChecklistPayload($userId, $sort);
 
-
-        $privateChecklists = $this->checklistService->getPrivateChecklists(
-            $this->authManager->id(),
-            $request->integer('filter')
-        );
-
-        $moneySourceTasks = $this->moneySourceTaskService->getMyMoneySourceTasks(
-            $this->authManager->id(),
-            $request->integer('filter')
-        );
+        $moneySourceTasks = $this->moneySourceTaskService->getMyMoneySourceTasks($userId, $sort);
 
         return inertia('Tasks/OwnTasksManagement', [
-            'checklists' => $checklists,
+            'opened_checklists' => $checklistPayload['opened_checklists'],
+            'checklist_templates' => $checklistPayload['checklist_templates'],
+            'public_checklists' => $checklistPayload['public_checklists'],
+            'private_checklists' => $checklistPayload['private_checklists'],
             'money_source_task' => $moneySourceTasks,
             'first_project_tasks_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                 ProjectTabComponentEnum::CHECKLIST
             ),
-            'checklist_templates' => ChecklistTemplate::all()
         ]);
     }
 
@@ -103,6 +94,7 @@ class TaskController extends Controller
                         $checklist->name
                     ])
             );
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
         }
 
         $this->createNotificationForAllChecklistUser($checklist);
@@ -154,6 +146,7 @@ class TaskController extends Controller
                             $checklist->name
                         ])
                 );
+                broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
             }
 
             $this->createNotificationUpdateTask($task);
@@ -193,7 +186,7 @@ class TaskController extends Controller
         /** @var Checklist $checklist */
         $checklist = $task->checklist()->first();
 
-        if ($checklist->hasProject()) {
+        if ($checklist && $checklist->hasProject()) {
             $this->changeService->saveFromBuilder(
                 $this->changeService
                     ->createBuilder()
@@ -205,6 +198,7 @@ class TaskController extends Controller
                         $checklist->name
                     ])
             );
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
         }
 
         $task->forceDelete();
@@ -219,12 +213,29 @@ class TaskController extends Controller
             $this->authManager->id()
         );
 
+        $checklist = $task->checklist()->first();
+        if ($checklist && $checklist->hasProject()) {
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+        }
+
         return Redirect::back();
     }
 
-    public function changeTaskChecklist(Checklist $checklist, Task $task) {
+    public function changeTaskChecklist(Checklist $checklist, Task $task): void
+    {
+        $oldChecklist = $task->checklist()->first();
         $task->update([
             'checklist_id' => $checklist->id
         ]);
+
+        // Broadcast for old checklist's project
+        if ($oldChecklist && $oldChecklist->hasProject()) {
+            broadcast(new ChecklistUpdated($oldChecklist->project_id))->toOthers();
+        }
+
+        // Broadcast for new checklist's project
+        if ($checklist->hasProject()) {
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+        }
     }
 }

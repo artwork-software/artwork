@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\SetDeveloperEnvironment;
 use App\Http\Middleware\UpdateUserStatus;
+use Artwork\Core\Api\Middleware\ApiAccessLog;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
@@ -13,6 +14,11 @@ use Artwork\Core\Http\Middleware\RedirectIfAuthenticated;
 use Artwork\Core\Http\Middleware\TrimStrings;
 use Artwork\Core\Http\Middleware\TrustProxies;
 use Artwork\Core\Http\Middleware\VerifyCsrfToken;
+use Artwork\Modules\ExternalAccess\Http\Middleware\Authenticate as ExternalAuthenticate;
+use Artwork\Modules\ExternalAccess\Http\Middleware\CheckExternalAccessValid;
+use Artwork\Modules\ExternalAccess\Http\Middleware\HandleExternalInertiaRequests;
+use Artwork\Modules\ExternalAccess\Http\Middleware\RedirectIfAuthenticatedExternal;
+use Artwork\Modules\ExternalAccess\Http\Middleware\SwapExternalSessionConfig;
 use Artwork\Modules\ModuleSettings\Http\Middleware\ModuleSettingsMiddleware;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
@@ -66,6 +72,38 @@ class Kernel extends HttpKernel
             EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             SubstituteBindings::class,
+            ApiAccessLog::class,
+        ],
+
+        // Isolated stack for external-access (magic-link) users.
+        // Deliberately excludes AuthenticateSession, ModuleSettingsMiddleware, the standard
+        // HandleInertiaRequests (which leaks permissions/roles), SetDeveloperEnvironment, and
+        // UpdateUserStatus — all of those are internal-user concerns.
+        'external' => [
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            SwapExternalSessionConfig::class,
+            StartSession::class,
+            ShareErrorsFromSession::class,
+            VerifyCsrfToken::class,
+            SubstituteBindings::class,
+            ExternalAuthenticate::class,
+            CheckExternalAccessValid::class,
+            HandleExternalInertiaRequests::class,
+            Localization::class,
+        ],
+
+        'external.guest' => [
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            SwapExternalSessionConfig::class,
+            StartSession::class,
+            ShareErrorsFromSession::class,
+            VerifyCsrfToken::class,
+            SubstituteBindings::class,
+            RedirectIfAuthenticatedExternal::class,
+            HandleExternalInertiaRequests::class,
+            Localization::class,
         ],
     ];
 
@@ -82,5 +120,6 @@ class Kernel extends HttpKernel
         'role' => RoleMiddleware::class,
         'permission' => PermissionMiddleware::class,
         'role_or_permission' => RoleOrPermissionMiddleware::class,
+        'external.scoped' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureScopedAccess::class,
     ];
 }

@@ -37,6 +37,7 @@ class AvailabilityController extends Controller
         Availability $availability,
         AvailabilityConflictService $availabilityConflictService
     ): RedirectResponse {
+        $this->authorize('update', $availability);
         if ($updateAvailabilityRequest->validated()) {
             if ($updateAvailabilityRequest->type_before_update !== $updateAvailabilityRequest->type) {
                 if ($updateAvailabilityRequest->type === 'vacation') {
@@ -78,6 +79,7 @@ class AvailabilityController extends Controller
 
     public function destroy(Availability $availability): RedirectResponse
     {
+        $this->authorize('delete', $availability);
         $this->availabilityService->delete($availability);
         return redirect()->back();
     }

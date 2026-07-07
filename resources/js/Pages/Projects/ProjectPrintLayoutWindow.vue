@@ -11,8 +11,8 @@
               '--footer-height': `${footerHeight}px`
             }">
                 <!-- HEADER (dynamic height, visible on every page) -->
-                <header ref="headerRef" class="print-header w-full absolute bg-gray-200" :style="{top: `-${headerHeight}px`}">
-                    <div class="header-content p-6">
+                <header v-if="hasHeaderContent" ref="headerRef" class="print-header w-full absolute bg-gray-200" :style="{top: `-${headerHeight}px`}">
+                    <div class="header-content p-2">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
                             <div v-for="index in layout['columns_header']" :key="index">
                                 <p class="xsDark" v-html="breakLine(layout.notes.header[index - 1])" />
@@ -33,7 +33,7 @@
                 </header>
 
                 <!-- BODY (takes up remaining space) -->
-                <main class="print-body p-6 " ref="bodyRef" :style="{marginTop: `${headerHeight}px`, paddingTop: `${headerHeight}px`}">
+                <main class="print-body p-2 " ref="bodyRef" :style="{marginTop: `${headerHeight}px`, paddingTop: `${headerHeight}px`}">
                     <div class="grid gap-4">
                         <template v-for="row in getRowCount(layout, 'body')" :key="row">
                             <div class="grid grid-cols-1 gap-4 component-wrapper" :class="'grid-cols-' + layout['columns_body']"  ref="componentRefs">
@@ -59,7 +59,7 @@
 
 
                 <!-- FOOTER (dynamic height, visible on every page) -->
-                <footer ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-6">
+                <footer v-if="hasFooterContent" ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-2">
                     <div class="footer-content">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
                             <div v-for="index in layout['columns_footer']" :key="index">
@@ -86,24 +86,25 @@
 </template>
 
 <script setup>
-import BuilderProjectTitleComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectTitleComponent.vue";
-import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectTeamComponent.vue";
-import BuilderTextArea from "@/Pages/Projects/BuilderComponents/BuilderTextArea.vue";
-import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectStateComponent.vue";
-import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/BuilderShiftContactPersonsComponent.vue";
-import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
-import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
-import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBudgetDeadlineComponent.vue";
-import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAttributesComponent.vue";
-import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/BuilderBudgetInformation.vue";
-import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
-import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/BuilderCheckbox.vue";
-import BuilderDropDown from "@/Pages/Projects/BuilderComponents/BuilderDropDown.vue";
-import BuilderTitle from "@/Pages/Projects/BuilderComponents/BuilderTitle.vue";
+import BuilderProjectTitleComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectTitleComponent.vue";
+import BuilderProjectTeamComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectTeamComponent.vue";
+import BuilderTextArea from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTextArea.vue";
+import BuilderProjectStateComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectStateComponent.vue";
+import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderShiftContactPersonsComponent.vue";
+import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderRelevantDatesForShiftPlanningComponent.vue";
+import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderGeneralShiftInformationComponent.vue";
+import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectBudgetDeadlineComponent.vue";
+import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectAttributesComponent.vue";
+import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBudgetInformation.vue";
+import BuilderTextField from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTextField.vue";
+import BuilderCheckbox from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderCheckbox.vue";
+import BuilderDropDown from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderDropDown.vue";
+import BuilderTitle from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderTitle.vue";
 import EventTable from "@/Pages/Projects/PrintComponents/EventTable.vue";
-import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
-import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
-import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
+import BuilderArtistResidenciesComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderArtistResidenciesComponent.vue";
+import BuilderBusinessIntelligenceComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBusinessIntelligenceComponent.vue";
+import BuilderProjectAllDocumentsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectAllDocumentsComponent.vue";
+import BuilderCommentAllTabComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderCommentAllTabComponent.vue";
 import ChecklistTable from "@/Pages/Projects/PrintComponents/ChecklistTable.vue";
 
 const props = defineProps({
@@ -121,9 +122,19 @@ const props = defineProps({
     }
 });
 
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/BuilderSeparatorComponent.vue";
-import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectGroupComponent.vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import BuilderSeparatorComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderSeparatorComponent.vue";
+import BuilderProjectGroupComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectGroupComponent.vue";
+import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderArtistNameDisplayComponent.vue";
+import BuilderProjectBasicDataDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectBasicDataDisplayComponent.vue";
+import BuilderProjectCostCenterDisplayComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectCostCenterDisplayComponent.vue";
+import BuilderProjectMaterialIssueComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectMaterialIssueComponent.vue";
+import BuilderProjectContractsDocumentsComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectContractsDocumentsComponent.vue";
+import BuilderLinkComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderLinkComponent.vue";
+import BuilderLinkListComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderLinkListComponent.vue";
+import BuilderProjectPeriodComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderProjectPeriodComponent.vue";
+import BuilderBiKeyFiguresDisplay from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderBiKeyFiguresDisplay.vue";
+import BuilderShiftComponent from "@/Pages/Projects/BuilderComponents/PrintLayoutBuilderShiftComponent.vue";
 
 const headerRef = ref(null);
 const footerRef = ref(null);
@@ -210,11 +221,34 @@ const componentMapping = {
     BuilderProjectGroupComponent,
     BuilderSeparatorComponent,
     BuilderBulkBody: EventTable,
-    BuilderArtistResidenciesComponent: ArtistResidenciesComponent,
-    BuilderProjectAllDocumentsComponent: ProjectAllDocumentsComponent,
-    BuilderCommentAllTab: CommentAllTab,
-    BuilderChecklistAllComponent: ChecklistTable
+    BuilderArtistResidenciesComponent,
+    BuilderProjectAllDocumentsComponent,
+    BuilderCommentAllTab: BuilderCommentAllTabComponent,
+    BuilderChecklistAllComponent: ChecklistTable,
+    BuilderArtistNameDisplayComponent,
+    BuilderProjectBasicDataDisplayComponent,
+    BuilderProjectCostCenterDisplayComponent,
+    BuilderProjectMaterialIssueComponent,
+    BuilderProjectContractsDocumentsComponent,
+    BuilderLink: BuilderLinkComponent,
+    BuilderLinkList: BuilderLinkListComponent,
+    BuilderBusinessIntelligenceComponent,
+    BuilderProjectPeriodComponent,
+    BuilderBiKeyFiguresDisplay,
+    BuilderShiftTab: BuilderShiftComponent,
 };
+
+const hasHeaderContent = computed(() => {
+    const hasComponents = props.layout?.header_components?.length > 0;
+    const hasNotes = props.layout?.notes?.header?.some(n => n && n.trim() !== '');
+    return hasComponents || hasNotes;
+});
+
+const hasFooterContent = computed(() => {
+    const hasComponents = props.layout?.footer_components?.length > 0;
+    const hasNotes = props.layout?.notes?.footer?.some(n => n && n.trim() !== '');
+    return hasComponents || hasNotes;
+});
 
 const getComponent = (layout, section, row, col) => {
     return layout[section + '_components'].find(comp => comp.row === row && comp.position === col) || null;
@@ -265,7 +299,7 @@ const breakLine = (text) => {
         margin: 0;
         padding: 0;
         width: 210mm;
-        height: 297mm;
+        height: auto;
     }
 
     .print-container {

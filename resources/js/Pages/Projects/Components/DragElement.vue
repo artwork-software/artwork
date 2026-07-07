@@ -4,7 +4,12 @@
             class="drag-item w-full p-2 text-white text-xs flex items-center gap-2 relative !rounded-lg border" :style="{backgroundColor: backgroundColorWithOpacityOld(color), borderColor : color+'80'}">
 
             <div class="text-white" v-if="!page.props.auth.user.compact_mode">
-                <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6"/>
+                <UserPopoverTooltip v-if="type === 0 || type === 1" :user="item" :use-slot-instead-of-icon="true" :auto-flip-vertical="true">
+                    <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6 cursor-pointer"/>
+                </UserPopoverTooltip>
+                <ServiceProviderPopoverTooltip v-else :provider="item" :use-slot-instead-of-icon="true" :auto-flip-vertical="true">
+                    <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6 cursor-pointer"/>
+                </ServiceProviderPopoverTooltip>
             </div>
 
             <div class="text-left cursor-pointer flex items-center gap-2 w-full">
@@ -53,6 +58,16 @@
                     />
                 </div>
 
+                <button
+                    v-if="type === 0 && enableInfoModal && (can('can view shift user kpis') || is('artwork admin'))"
+                    type="button"
+                    class="hover:opacity-70 transition-opacity"
+                    :title="$t('Staff info data')"
+                    @click.stop="emit('openUserInfoModal', item.id)"
+                >
+                    <PropertyIcon name="IconInfoCircle" class="w-4 h-4" />
+                </button>
+
                 <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
                     <PropertyIcon name="IconCalendarShare" class="w-4 h-4" />
                 </a>
@@ -65,8 +80,11 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
+import UserPopoverTooltip from '@/Layouts/Components/UserPopoverTooltip.vue';
+import ServiceProviderPopoverTooltip from '@/Layouts/Components/ServiceProviderPopoverTooltip.vue';
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { can, is } from 'laravel-permission-to-vuejs';
 const {
     backgroundColorWithOpacityOld
 } = useColorHelper();
@@ -113,6 +131,11 @@ const props = defineProps<{
     craft?: Craft | null
     isManagingCraft?: boolean
     workTimeBalance?: string | null
+    enableInfoModal?: boolean
+}>()
+
+const emit = defineEmits<{
+    (e: 'openUserInfoModal', id: number | string): void
 }>()
 
 /**

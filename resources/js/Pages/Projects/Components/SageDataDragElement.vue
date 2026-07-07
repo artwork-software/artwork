@@ -13,8 +13,9 @@
             </div>
             <div class="w-52 flex justify-end items-center">
                 {{ toCurrencyString(sageData.buchungsbetrag) }}
-                <IconAbacus
+                <PropertyIcon
                     v-if="sageData.is_collective_booking"
+                    name="IconAbacus"
                     class="w-5 h-5 cursor-pointer ml-2"
                     @click.stop="showChildren(sageData)"
                 />
@@ -26,13 +27,14 @@
                 {{ sageData.kst_traeger }}
             </div>
             <div class="ml-2 flex">
-                <IconTrash
+                <PropertyIcon
+                    name="IconTrash"
                     class="w-5 h-5 cursor-pointer hover:text-red-600"
-                    @click="$emit('removeSageNotAssignedData', sageData)"
+                    @click.stop="$emit('removeSageNotAssignedData', sageData)"
                 />
             </div>
             <div class="w-5 ml-2">
-                <IconDragDrop class="w-5 h-5 cursor-grab ml-2" />
+                <PropertyIcon name="IconDragDrop" class="w-5 h-5 cursor-grab ml-2" />
             </div>
         </div>
 
@@ -46,19 +48,17 @@
 </template>
 
 <script>
-import { TrashIcon, XIcon } from "@heroicons/vue/solid";
-import IconLib from "@/Mixins/IconLib.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import SageChildrenModal from "@/Pages/Projects/Components/CollectiveBooking/SageChildrenModal.vue";
 
 export default {
     name: "SageDataDragElement",
     components: {
-        SageChildrenModal,
-        TrashIcon,
-        XIcon
+        PropertyIcon,
+        SageChildrenModal
     },
-    mixins: [IconLib, CurrencyFloatToStringFormatter],
+    mixins: [CurrencyFloatToStringFormatter],
     props: {
         sageData: {
             type: Object,

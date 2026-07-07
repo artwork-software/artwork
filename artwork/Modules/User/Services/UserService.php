@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Services;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
@@ -90,6 +91,7 @@ class UserService
 
         $user->assignRole(...$roles);
         $user->givePermissionTo(...$permissions);
+        $user->forgetCachedShareData();
         $user->calendar_settings()->create();
         $user->userFilters()->create([
             'filter_type' => UserFilterTypes::CALENDAR_FILTER->value,
@@ -182,6 +184,13 @@ class UserService
             $this->getAuthUser()
         );
 
+        // Synchronize month with workerShiftPlanFilter dates for bidirectional sync
+        // Always derive month from workerShiftPlanFilter to keep both components in sync
+        $month = $requestedStartDate->format('Y-m-d');
+
+        // Derive the displayed calendar month from $month (which is always in sync with the calendar)
+        $calendarMonth = Carbon::parse($month)->startOfMonth();
+
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($requestedStartDate, $requestedEndDate)->map(
                 function (Carbon $date) {
@@ -220,14 +229,14 @@ class UserService
                         ]
                     )
             )
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setCrafts(Craft::all())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)
             ->setCreateShowDate(
                 [
-                    $selectedPeriodDate->isoFormat('MMMM YYYY'),
-                    $selectedPeriodDate->copy()->startOfMonth()->toDate()
+                    $calendarMonth->copy()->locale($selectedPeriodDate->locale)->isoFormat('MMMM YYYY'),
+                    $calendarMonth->copy()->startOfMonth()->toDate()
                 ]
             )
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
@@ -263,8 +272,8 @@ class UserService
             ->setProjects($projectService->getAll())
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
             ->setShifts($this->getUserShiftsOrderedByStartAscending($user))
-            ->setVacations($this->getUserVacationsByDateOrderedByDateAsc($user, $selectedDate))
-            ->setAvailabilities($this->getUserAvailabilitiesByDateOrderedByDateAsc($user, $selectedDate))
+            ->setVacations($this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth))
+            ->setAvailabilities($this->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $calendarMonth))
             ->setFirstProjectShiftTabId(
                 $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
@@ -277,12 +286,22 @@ class UserService
         return $this->userRepository->getUserVacationsByDateOrderedByDateAsc($user, $selectedDate);
     }
 
+    public function getUserVacationsByMonthOrderedByDateAsc(int|User $user, Carbon $monthDate): Collection
+    {
+        return $this->userRepository->getUserVacationsByMonthOrderedByDateAsc($user, $monthDate);
+    }
+
     public function getUserAvailabilitiesByDateOrderedByDateAsc(int|User $user, Carbon $selectedDate): Collection
     {
         return $this->userRepository->getUserAvailabilitiesByDateOrderedByDateAsc(
             $user,
             $selectedDate
         );
+    }
+
+    public function getUserAvailabilitiesByMonthOrderedByDateAsc(int|User $user, Carbon $monthDate): Collection
+    {
+        return $this->userRepository->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $monthDate);
     }
 
     public function getUserShiftsOrderedByStartAscending(int|User $user): Collection

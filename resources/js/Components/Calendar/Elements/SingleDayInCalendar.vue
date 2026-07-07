@@ -75,11 +75,17 @@ const textStyle = computed(() => {
 .stickyDays {
     position: sticky;
     position: -webkit-sticky;
-    left: 4rem;
+    left: 0;
     z-index: 22;
 }
 
-.stickyDaysNoMarginleft {
+@media (min-width: 1024px) {
+    .stickyDays {
+        left: 4rem;
+    }
+}
+
+.stickyDaysNoMarginLeft {
     position: sticky;
     position: -webkit-sticky;
     left: 0;

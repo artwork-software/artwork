@@ -1,6 +1,6 @@
 <template>
 
-      <UserHeader title="Accommodations" description="Manage your accommodations.">
+      <UserHeader title="Teams" description="Manage your teams.">
             <template #tabBar>
                 <!-- Toolbar -->
                 <ToolbarHeader

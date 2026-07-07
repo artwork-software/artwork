@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
+    <ArtworkBaseModal @close="handleClose" :modal-size="articleForm.is_detailed_quantity ? 'max-w-7xl' : 'max-w-4xl'"
                       full-modal :title="article ? $t('Edit article') : $t('Add Article')"
                       :description="article ? $t('Edit the article details') : $t('Add a new article')">
         <form @submit.prevent="submit">
@@ -48,7 +48,10 @@
                             id="name" v-model="articleForm.name"
                             :label="$t('Name*')"
                             required
+                            @focusout="onFieldSave('name', articleForm.name)"
                         />
+                        <p v-if="fieldStatus.name === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.name === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                     </div>
 
                     <div class="col-span-full">
@@ -56,7 +59,9 @@
                             id="description"
                             v-model="articleForm.description"
                             :label="$t('Description')"
+                            @focusout="onFieldSave('description', articleForm.description)"
                         />
+                        <p v-if="fieldStatus.description === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                     </div>
                 </div>
             </div>
@@ -155,7 +160,9 @@
                         option-key="id"
                         :label="$t('Select Category')"
                         :placeholder="$t('Please select a Category')"
+                        @update:model-value="val => onCategorySave('inventory_category_id', val?.id ?? null)"
                     />
+                    <p v-if="fieldStatus.inventory_category_id === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                 </div>
                 <div class="pb-4" v-if="selectedCategory && selectedCategory.subcategories.length > 0">
                     <ArtworkBaseListbox
@@ -167,7 +174,9 @@
                         :label="$t('Select Sub-Category')"
                         :placeholder="$t('Please select a Sub-Category')"
                         @change="val => updateSelectedSubCategory(val)"
+                        @update:model-value="val => onCategorySave('inventory_sub_category_id', val?.id ?? null)"
                     />
+                    <p v-if="fieldStatus.inventory_sub_category_id === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                     <div class="flex items-center justify-end mt-3" v-if="selectedSubCategory">
                         <div
                             class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
@@ -187,7 +196,18 @@
                             :max="10000000"
                             :maxlength="1000000"
                             required
+                            :disabled="detailedAlwaysOne && articleForm.is_detailed_quantity"
+                            @focusout="onFieldSave('quantity', articleForm.quantity)"
                         />
+                        <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
+                        <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
+                            <span class="text-xs text-red-500 font-lexend">{{ $t('Sum of detailed articles') }}: </span>
+                            <button type="button" class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
+                                {{ formatQuantity(calculateTotalQuantity) }}
+                                <component :is="IconClick" class="size-3.5" />
+                            </button>
+                        </div>
                     </div>
                     <div class="col-span-3">
                         <div class="mb-4">
@@ -225,7 +245,7 @@
 
                 <div v-if="!articleForm.is_detailed_quantity && selectedCategory" class="ml-4 relative">
                     <div v-for="(statusValue, index) in articleForm.statusValues">
-                        <div v-if="statusValue.id !== 5" class="grid grid-cols-2 gap-x-4 mb-3">
+                        <div class="grid grid-cols-2 gap-x-4 mb-3">
                             <div class="flex items-center">
                                 <div class="absolute top-0 left-0 w-px h-[90%] bg-gray-300"></div>
                                 <div class="font-lexend text-sm flex items-center text-secondary">
@@ -367,33 +387,27 @@
                                         />
 
                                         <input
-                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection'"
+                                            v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection' && property.type !== 'year'"
                                             :type="property.type" v-model="property.value"
                                             :required="property.is_required"
                                             class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
                                             :placeholder="property.is_required ? $t('Value*') : $t('Value')"
                                         />
 
-                                        <div v-if="property.type === 'file'">
-                                            <input type="file" @input="property.value = $event.target.files"
-                                                   class="sr-only"/>
-                                            <div class="flex items-center gap-x-2">
-                                                <div class="flex items-center gap-x-2">
-                                                    <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400"
-                                                               aria-hidden="true"/>
-                                                    <div class="flex">
-                                                        <div class="truncate font-medium">{{
-                                                                property.value ? property.value[0].name : $t('Select a file')
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button"
-                                                        class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
-                                                        @click="property.value = null">
-                                                    <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
-                                                </button>
-                                            </div>
+                                        <input
+                                            v-if="property.type === 'year'"
+                                            type="number" v-model="property.value"
+                                            :required="property.is_required"
+                                            min="1900" max="2100" step="1"
+                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                            :placeholder="property.is_required ? $t('Year*') : $t('Year')"
+                                        />
+
+                                        <div v-if="property.type === 'file'" class="px-3 py-1.5">
+                                            <PropertyFileCell
+                                                v-model="property.value"
+                                                :required="property.is_required"
+                                            />
                                         </div>
 
 
@@ -405,15 +419,11 @@
 
                                         <div v-if="property.type === 'selection'" class="">
                                             <div class="grid grid-cols-1 p-2">
-                                                <select id="location" name="location" v-model="property.value"
-                                                        :required="property.is_required"
-                                                        class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                    <option v-if="property.is_required" value="" disabled selected>
-                                                        {{ $t('Please select') }}*
-                                                    </option>
-                                                    <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}
-                                                    </option>
-                                                </select>
+                                                <SearchableSelect
+                                                    v-model="property.value"
+                                                    :options="property.select_values"
+                                                    :placeholder="property.is_required ? $t('Please select') + '*' : $t('Please select')"
+                                                />
                                             </div>
                                         </div>
 
@@ -505,39 +515,21 @@
                                 <!-- selection -->
                                 <div v-else-if="prop.type === 'selection'">
                                     <div class="grid grid-cols-1 p-2">
-                                        <select
+                                        <SearchableSelect
                                             v-model="acrossValues[prop.id]"
-                                            :required="prop.is_required"
-                                            class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
-                                        >
-                                            <option v-if="prop.is_required" value="" disabled selected>
-                                                {{ $t('Please select') }}*
-                                            </option>
-                                            <option v-for="value in prop.select_values" :value="value" :key="value">
-                                                {{ value }}
-                                            </option>
-                                        </select>
+                                            :options="prop.select_values"
+                                            :placeholder="prop.is_required ? $t('Please select') + '*' : $t('Please select')"
+                                        />
                                     </div>
                                 </div>
 
                                 <!-- file -->
                                 <div v-else-if="prop.type === 'file'">
-                                    <input type="file" class="sr-only" @input="setAcrossValue(prop.id, $event.target.files)" />
-                                    <div class="flex items-center gap-x-2">
-                                        <div class="flex items-center gap-x-2">
-                                            <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
-                                            <div class="flex">
-                                                <div class="truncate font-medium">
-                                                    {{ acrossValues[prop.id]?.[0]?.name ?? $t('Select a file') }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button type="button"
-                                                class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
-                                                @click="setAcrossValue(prop.id, null)">
-                                            <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
-                                        </button>
-                                    </div>
+                                    <PropertyFileCell
+                                        :model-value="acrossValues[prop.id]"
+                                        :required="prop.is_required"
+                                        @update:model-value="val => setAcrossValue(prop.id, val)"
+                                    />
                                 </div>
 
                                 <!-- checkbox -->
@@ -643,17 +635,19 @@
                                             <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                                 {{ $t('Status') }}
                                             </label>
-                                            <select class="focus:outline-hidden w-full"
-                                                    v-model="bulkEdit.status">
-                                                <option :value="null">{{ $t('Do not change') }}</option>
-                                                <option v-for="status in statuses" :value="status" :key="status.id">
-                                                    {{ status.name }}
-                                                </option>
-                                            </select>
+                                            <SearchableSelect
+                                                v-model="bulkEdit.status"
+                                                :options="statusList"
+                                                value-key="$self"
+                                                label-key="name"
+                                                color-key="color"
+                                                :empty-option="{ label: 'Do not change', value: null }"
+                                                :placeholder="$t('Do not change')"
+                                            />
                                         </div>
                                     </div>
 
-                                    <div class="col-span-full">
+                                    <div v-if="!detailedAlwaysOne" class="col-span-full">
                                         <BaseInput
                                             type="number"
                                             id="bulk_quantity"
@@ -671,13 +665,14 @@
                                             <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                                 {{ $t('Property') }}
                                             </label>
-                                            <select class="focus:outline-hidden w-full"
-                                                    v-model="bulkEdit.propertyId">
-                                                <option :value="null">{{ $t('Do not change') }}</option>
-                                                <option v-for="p in bulkEditableProperties" :key="p.id" :value="p.id">
-                                                    {{ p.name }}
-                                                </option>
-                                            </select>
+                                            <SearchableSelect
+                                                v-model="bulkEdit.propertyId"
+                                                :options="bulkEditableProperties"
+                                                value-key="id"
+                                                label-key="name"
+                                                :empty-option="{ label: 'Do not change', value: null }"
+                                                :placeholder="$t('Do not change')"
+                                            />
                                         </div>
                                     </div>
 
@@ -699,12 +694,11 @@
 
                                             <!-- Selection -->
                                             <div v-else-if="selectedBulkProp.type === 'selection'">
-                                                <select class="focus:outline-hidden w-full"
-                                                        v-model="bulkEdit.propertyValue">
-                                                    <option v-for="val in selectedBulkProp.select_values" :key="val" :value="val">
-                                                        {{ val }}
-                                                    </option>
-                                                </select>
+                                                <SearchableSelect
+                                                    v-model="bulkEdit.propertyValue"
+                                                    :options="selectedBulkProp.select_values"
+                                                    :placeholder="$t('Please select')"
+                                                />
                                             </div>
 
                                             <!-- Room -->
@@ -766,7 +760,11 @@
                             <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 divide-dashed" role="list">
                                 <li v-for="(item, idx) in filteredDetailedArticles" :key="item.id ?? item._key ?? `idx-${idx}`" class="">
                                     <!-- NEU: Checkbox + Button nebeneinander -->
-                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2" :class="isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900'">
+                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2"
+                                         :class="[
+                                             isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900',
+                                             isDetailedArticleIncomplete(item) ? 'border-l-2 border-red-500 bg-red-50' : ''
+                                         ]">
 
                                         <div class="flex gap-1.5">
                                             <div class="flex h-6 shrink-0 items-center">
@@ -777,7 +775,7 @@
                                                         name="comments"
                                                         type="checkbox"
                                                         :checked="isSelected(item)"
-                                                        @change.stop="toggleSelection(item, $event.target.checked)"
+                                                        @click.stop="toggleSelection(item, null, $event)"
                                                         class="aw-checklist-input" />
                                                     <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -793,8 +791,15 @@
                                             @keydown.enter.prevent="changeActiveDetailedArticleForEditing(item)"
                                             @keydown.space.prevent="changeActiveDetailedArticleForEditing(item)"
                                             :aria-pressed="isActiveDetailedArticle(item)">
-                                          <span class="text-sm font-medium truncate flex items-center gap-x-3">
-                                            {{ item.name }}
+                                          <span class="text-sm font-medium truncate flex flex-col items-start">
+                                            <template v-if="showInventoryNumberAsName && item.inventory_number">
+                                                <span>{{ formatInventoryNumber(item.inventory_number) }}</span>
+                                                <span class="text-xs font-normal text-gray-400">{{ item.name }}</span>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ item.name }}</span>
+                                                <span v-if="item.inventory_number" class="font-mono text-xs font-normal text-gray-400">{{ formatInventoryNumber(item.inventory_number) }}</span>
+                                            </template>
                                           </span>
 
                                             <span class="flex items-center gap-x-2">
@@ -815,7 +820,7 @@
                                                       type="button"
                                                       class="text-gray-400 hover:text-red-600 duration-200 ease-in-out"
                                                       aria-label="Löschen"
-                                                      @click.stop="removeOpenDetailedArticle(idx)"
+                                                      @click.stop="removeOpenDetailedArticle(item)"
                                                   >
                                                     <component :is="IconTrash" class="h-4 w-4" aria-hidden="true"/>
                                                   </button>
@@ -838,14 +843,129 @@
                             </ul>
 
                             <!-- Footer / Add -->
-                            <div class="p-4">
-                                <button
-                                    type="button"
-                                    class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
-                                    @click="addNewDetailedArticle">
-                                    <component :is="IconPlus" class="h-5 w-5" aria-hidden="true"/>
-                                    <span>{{ $t('Add Detailed Article') }}</span>
-                                </button>
+                            <div class="p-4 space-y-2">
+                                <div class="flex items-center gap-x-3">
+                                    <button
+                                        type="button"
+                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        @click="addNewDetailedArticle">
+                                        <component :is="IconCirclePlus" class="h-5 w-5" aria-hidden="true"/>
+                                        <span>{{ $t('Add Detailed Article') }}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        @click="initBulkCreate">
+                                        <component :is="IconCopyPlus" class="h-5 w-5" aria-hidden="true"/>
+                                        <span>{{ $t('Bulk create') }}</span>
+                                    </button>
+                                </div>
+
+                                <!-- Bulk Create Panel -->
+                                <div v-if="showBulkCreatePanel" class="border border-gray-200 rounded-md bg-white p-3 space-y-3">
+                                    <BaseInput
+                                        type="number"
+                                        id="bulk_create_count"
+                                        v-model.number="bulkCreateData.count"
+                                        :label="$t('Count')"
+                                        :min="1"
+                                        :max="100"
+                                    />
+                                    <div
+                                        class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                        <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                            {{ $t('Status') }}
+                                        </label>
+                                        <SearchableSelect
+                                            v-model="bulkCreateData.status"
+                                            :options="statusList"
+                                            value-key="$self"
+                                            label-key="name"
+                                            color-key="color"
+                                            :placeholder="$t('Please select')"
+                                        />
+                                    </div>
+
+                                    <!-- Property-Vorbelegung -->
+                                    <template v-for="prop in bulkCreateData.properties" :key="prop.id">
+                                        <div>
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="text-xs font-medium text-gray-600">
+                                                    {{ prop.name }} <span v-if="prop.is_required">*</span>
+                                                </span>
+                                                <ToolTipComponent
+                                                    v-if="prop.tooltip_text"
+                                                    :tooltip-text="prop.tooltip_text"
+                                                    :icon="IconInfoCircle" icon-size="size-4"
+                                                    direction="left"
+                                                />
+                                            </div>
+
+                                            <InventoryCombobox
+                                                v-if="prop.type === 'room'"
+                                                v-model="prop.value"
+                                                :items="rooms"
+                                                :return-object="false"
+                                                by="id"
+                                                option-label="name"
+                                                option-key="id"
+                                                :placeholder="$t('Please select a Room')"
+                                                :search-fields="['name']"
+                                                coerce="number"
+                                            />
+
+                                            <InventoryCombobox
+                                                v-else-if="prop.type === 'manufacturer'"
+                                                v-model="prop.value"
+                                                :items="manufacturers"
+                                                :return-object="false"
+                                                by="id"
+                                                option-label="name"
+                                                option-key="id"
+                                                :placeholder="$t('Please select a Manufacturer')"
+                                                :search-fields="['name']"
+                                                coerce="number"
+                                            />
+
+                                            <div v-else-if="prop.type === 'selection'">
+                                                <SearchableSelect
+                                                    v-model="prop.value"
+                                                    :options="prop.select_values"
+                                                    :empty-option="{ label: 'Please select', value: '' }"
+                                                    :placeholder="$t('Please select')"
+                                                />
+                                            </div>
+
+                                            <div v-else-if="prop.type === 'checkbox'" class="px-1">
+                                                <input type="checkbox"
+                                                       :checked="booleanValue(prop.value)"
+                                                       @change="prop.value = $event.target.checked"
+                                                       class="aw-checklist-input" />
+                                            </div>
+
+                                            <BaseInput
+                                                v-else-if="prop.type !== 'file'"
+                                                :id="'bulk-prop-' + prop.id"
+                                                :type="prop.type"
+                                                v-model="prop.value"
+                                                :label="prop.is_required ? $t('Value*') : $t('Value')"
+                                            />
+                                        </div>
+                                    </template>
+
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button"
+                                                class="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                                                @click="showBulkCreatePanel = false">
+                                            {{ $t('Cancel') }}
+                                        </button>
+                                        <button type="button"
+                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                @click="executeBulkCreate">
+                                            {{ $t('Create items') }}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
 
@@ -860,7 +980,10 @@
                                     v-model="activeDetailedArticleForEditing.name"
                                     :label="$t('Name*')"
                                     required
+                                    @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'name', activeDetailedArticleForEditing.name)"
                                 />
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                             </div>
 
                             <div class="col-span-full">
@@ -868,10 +991,12 @@
                                     :id="'description-' + activeDetailedArticleForEditing.name"
                                     v-model="activeDetailedArticleForEditing.description"
                                     :label="$t('Description')"
+                                    @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'description', activeDetailedArticleForEditing.description)"
                                 />
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_description'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
-                            <div class="col-span-full">
+                            <div v-if="!detailedAlwaysOne" class="col-span-full">
                                 <BaseInput
                                     type="number"
                                     :id="'quantity-' + activeDetailedArticleForEditing.name"
@@ -880,7 +1005,9 @@
                                     :max="10000000"
                                     :maxlength="1000000"
                                     required
+                                    @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'quantity', activeDetailedArticleForEditing.quantity)"
                                 />
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_quantity'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <div class="col-span-full">
@@ -889,14 +1016,17 @@
                                     <label for="location" class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
                                         {{ $t('Status*') }}
                                     </label>
-                                    <select id="location" name="location" class=" focus:outline-hidden"
-                                            v-model="activeDetailedArticleForEditing.status" required>
-                                        <option value="" disabled selected>{{ $t('Please select a status') }}*</option>
-                                        <option v-for="status in statuses" :value="status" :key="status.id">
-                                            {{ status.name }}
-                                        </option>
-                                    </select>
+                                    <SearchableSelect
+                                        v-model="activeDetailedArticleForEditing.status"
+                                        :options="statusList"
+                                        value-key="$self"
+                                        label-key="name"
+                                        color-key="color"
+                                        :placeholder="$t('Please select a status') + '*'"
+                                        @change="onDetailedStatusSave(activeDetailedArticleForEditing, activeDetailedArticleForEditing.status)"
+                                    />
                                 </div>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_inventory_article_status_id'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <!-- Vorher: v-for und v-if auf demselben Element -->
@@ -928,6 +1058,7 @@
                                         :placeholder="$t('Please select a Room')"
                                         :search-fields="['name']"
                                         coerce="number"
+                                        @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
                                     />
 
                                     <InventoryCombobox
@@ -941,6 +1072,16 @@
                                         :placeholder="$t('Please select a Manufacturer')"
                                         :search-fields="['name']"
                                         coerce="number"
+                                        @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
+                                    />
+
+                                    <BaseInput
+                                        :id="'property-' + property.id"
+                                        v-else-if="property.type === 'year'"
+                                        type="number" v-model="property.value"
+                                        :required="property.is_required"
+                                        :label="property.is_required ? $t('Year*') : $t('Year')"
+                                        @focusout="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                     />
 
                                     <BaseInput
@@ -949,47 +1090,36 @@
                                         :type="property.type" v-model="property.value"
                                         :required="property.is_required"
                                         :label="property.is_required ? $t('Value*') : $t('Value')"
+                                        @focusout="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
                                     />
 
                                     <div v-else-if="property.type === 'file'">
-                                        <input type="file" @input="property.value = $event.target.files" class="sr-only"/>
-                                        <div class="flex items-center gap-x-2">
-                                            <div class="flex items-center gap-x-2">
-                                                <component :is="IconPhoto" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
-                                                <div class="flex">
-                                                    <div class="truncate font-medium">
-                                                        {{ property.value ? property.value[0].name : $t('Select a file') }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button type="button"
-                                                    class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out"
-                                                    @click="property.value = null">
-                                                <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
-                                            </button>
-                                        </div>
+                                        <PropertyFileCell
+                                            v-model="property.value"
+                                            :required="property.is_required"
+                                            @update:model-value="val => onDetailedPropertySave(activeDetailedArticleForEditing, property.id, val)"
+                                        />
                                     </div>
 
                                     <div v-else-if="property.type === 'checkbox'" class="px-3 items-center flex">
                                         <input type="checkbox" :checked="booleanValue(property.value)"
-                                               @change="property.value = $event.target.checked"
+                                               @change="($event) => { property.value = $event.target.checked; onDetailedPropertySave(activeDetailedArticleForEditing, property.id, $event.target.checked) }"
                                                class="input-checklist"/>
                                     </div>
 
                                     <div v-else-if="property.type === 'selection'" class="">
                                         <div class="relative w-full">
-                                            <select id="location" name="location" v-model="property.value"
-                                                    :required="property.is_required"
-                                                    class="block w-full font-lexend shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out pl-4 pr-8 py-3 text-sm bg-white cursor-pointer">
-                                                <option v-if="property.is_required" disabled selected>
-                                                    {{ $t('Please select') }}*
-                                                </option>
-                                                <option v-for="value in property.select_values" :value="value" :key="value">
-                                                    {{ value }}
-                                                </option>
-                                            </select>
+                                            <SearchableSelect
+                                                v-model="property.value"
+                                                :options="property.select_values"
+                                                :placeholder="property.is_required ? $t('Please select') + '*' : $t('Please select')"
+                                                @change="onDetailedPropertySave(activeDetailedArticleForEditing, property.id, property.value)"
+                                            />
                                         </div>
                                     </div>
+
+                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
                                 </div>
                             </template>
                         </div>
@@ -997,12 +1127,19 @@
                 </div>
 
             </div>
-            <div class="flex items-center justify-center my-10">
-                <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
-                            :disabled="articleForm.processing || !checkIfEveryPropertyWhereAreRequiredIsFilled || !selectedCategory ||
-                            (articleForm.is_detailed_quantity && (calculateTotalQuantity > articleForm.quantity || calculateTotalQuantity < articleForm.quantity)) ||
-                            (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity)) || !canSaveWithTags"
-                />
+            <div class="flex flex-col items-center justify-center my-10 gap-y-3">
+                <div class="relative" @click="onDisabledButtonClick">
+                    <BaseUIButton type="submit" :label="article ? $t('Update') : $t('Create')" is-add-button
+                                :processing="articleForm.processing"
+                                :disabled="isButtonDisabled"
+                    />
+                    <div v-if="isButtonDisabled" class="absolute inset-0 cursor-pointer" />
+                </div>
+                <div v-if="showValidationHints && isButtonDisabled && articleForm.is_detailed_quantity && validationErrors.length" class="flex flex-col items-center gap-y-1">
+                    <p v-for="(error, idx) in validationErrors" :key="idx" class="text-red-500 font-lexend text-sm text-center">
+                        {{ error }}
+                    </p>
+                </div>
             </div>
         </form>
 
@@ -1030,7 +1167,9 @@
 
 <script setup>
 
-import {useForm, usePage} from '@inertiajs/vue3'
+import axios from 'axios'
+import {useForm, usePage, router} from '@inertiajs/vue3'
+import {usePermission} from '@/Composeables/Permission.js'
 import {computed, inject, onMounted, ref, watch, nextTick} from 'vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
@@ -1041,18 +1180,21 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import InventoryStylelessCombobox
     from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryStylelessCombobox.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
+import PropertyFileCell from "@/Pages/Inventory/Components/Article/PropertyFileCell.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import {
     IconClick,
     IconCopy,
+    IconCopyPlus,
     IconInfoCircle,
     IconPhoto,
     IconPhotoPlus,
-    IconPlus,
+    IconCirclePlus,
     IconTrash,
     IconTag,
     IconLock
@@ -1064,7 +1206,20 @@ import {useTranslation} from "@/Composeables/Translation.js";
 
 
 const $t = useTranslation()
+
+// === Inline-Autosave state ===
+const fieldStatus = ref({})
+const detailedFieldStatus = ref({})
+const originalValues = ref({})
+const originalDetailedValues = ref({})
+const isEditMode = computed(() => !!props.article)
+const hasInlineSaved = ref(false)
+
 const acrossValues = ref({})
+const detailedAlwaysOne = computed(() => usePage().props.inventoryDetailedArticlesAlwaysQuantityOne ?? false)
+const showInventoryNumberAsName = computed(() => usePage().props.inventoryShowInventoryNumberAsName ?? false)
+const inventoryNumberPrefix = computed(() => usePage().props.inventoryNumberPrefix ?? '')
+const formatInventoryNumber = (num) => num ? inventoryNumberPrefix.value + num : ''
 const props = defineProps({article: {type: Object, required: false, default: null}})
 
 const properties = inject('properties')
@@ -1078,6 +1233,14 @@ const tagGroups = inject('tagGroups', [])
 const tags = inject('tags', [])
 
 const emits = defineEmits(['close'])
+
+const handleClose = () => {
+    if (hasInlineSaved.value) {
+        router.reload({ preserveScroll: true, onFinish: () => emits('close') })
+    } else {
+        emits('close')
+    }
+}
 
 const articleImageInput = ref(null)
 const articleToDelete = ref(null)
@@ -1093,14 +1256,27 @@ const currentPageLanguage = ref(document.documentElement.lang || 'en')
 const activeId = ref(null)
 const activeKey = ref(null)
 const storedDetailedArticleQuantities = ref([])
+const showValidationHints = ref(false)
 /* Neu: zentrale Werte für artikelübergreifende Eigenschaften */
 
 
 const filteredPeople = computed(() => query.value ? rooms.filter(r => r.name.toLowerCase().includes(query.value.toLowerCase())) : rooms)
-const filteredDetailedArticles = computed(() =>
-  (articleForm.detailed_article_quantities || [])
-    .filter(d => (d?.name ?? '').toLowerCase().includes(searchDetailedArticleQuery.value.toLowerCase()))
-)
+const filteredDetailedArticles = computed(() => {
+  const q = searchDetailedArticleQuery.value.toLowerCase()
+  if (!q) return articleForm.detailed_article_quantities || []
+
+  return (articleForm.detailed_article_quantities || []).filter(d => {
+    if ((d?.name ?? '').toLowerCase().includes(q)) return true
+    if (d?.inventory_number) {
+      if (d.inventory_number.toLowerCase().includes(q)) return true
+      if (formatInventoryNumber(d.inventory_number).toLowerCase().includes(q)) return true
+    }
+    if ((d?.description ?? '').toLowerCase().includes(q)) return true
+    if ((d?.status?.name ?? '').toLowerCase().includes(q)) return true
+    if ((d?.properties ?? []).some(p => String(p?.value ?? '').toLowerCase().includes(q))) return true
+    return false
+  })
+})
 const filteredManufacturers = computed(() => queryManufacturer.value ? manufacturers.filter(m => m.name.toLowerCase().includes(queryManufacturer.value.toLowerCase())) : manufacturers)
 const itemsDetailed = computed(() => articleForm.detailed_article_quantities ?? [])
 
@@ -1113,7 +1289,8 @@ const ensureKeys = (arr = []) => {
     for (const a of arr) if (a && a._key == null) a._key = uid()
 }
 const getIsDeletable = id => properties?.find(p => p.id === id)?.is_deletable ?? false
-const defaultStatus = () => statuses.find(s => s.default) ?? (statuses.length > 0 ? statuses[2] : null)
+const statusList = Array.isArray(statuses) ? statuses : Object.values(statuses ?? {})
+const defaultStatus = () => statusList.find(s => s.default) ?? statusList[0] ?? null
 
 const getValue = (prop) => {
     if (prop.type === 'selection' && (prop.value === '' || prop.value == null)) return ''
@@ -1134,7 +1311,7 @@ const articleForm = useForm({
     inventory_category_id: props.article?.inventory_category_id ?? null,
     inventory_sub_category_id: props.article?.inventory_sub_category_id ?? null,
     quantity: props.article?.quantity ?? 0,
-    statusValues: statuses.map(s => ({
+    statusValues: statusList.map(s => ({
         id: s.id,
         name: s.name,
         value: props.article ? props.article.status_values.find(v => v.id === s.id)?.pivot?.value ?? 0 : 0
@@ -1159,7 +1336,8 @@ const articleForm = useForm({
         individual_value: !!p.individual_value,
     })) : [],
     detailed_article_quantities: props.article ? (props.article.detailed_article_quantities?.map(da => ({
-        name: da.name, description: da.description, quantity: da.quantity,
+        id: da.id,
+        name: da.name, description: da.description, quantity: da.quantity, inventory_number: da.inventory_number ?? null,
         properties: da.properties.map(p => ({
             id: p.id,
             name: p.name,
@@ -1172,13 +1350,35 @@ const articleForm = useForm({
             across_articles: !!p.across_articles,
             individual_value: !!p.individual_value,
         })) ?? [],
-        status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+        status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
     })) ?? []) : [],
     main_image_index: 0,
 })
 
-const removeOpenDetailedArticle = (idx) => {
-    articleToDelete.value = idx
+const getNextProvisionalDetailNumber = () => {
+    const articles = articleForm.detailed_article_quantities || []
+    let max = 0
+    for (const a of articles) {
+        if (a.inventory_number) {
+            const parts = a.inventory_number.split('-')
+            const num = parseInt(parts[parts.length - 1], 10)
+            if (!isNaN(num) && num > max) max = num
+        }
+    }
+    return max + 1
+}
+
+const generateProvisionalInventoryNumber = () => {
+    const parentNumber = props.article?.inventory_number
+    if (!parentNumber) return null
+    const next = getNextProvisionalDetailNumber()
+    return parentNumber + '-' + String(next).padStart(3, '0')
+}
+
+const removeOpenDetailedArticle = (item) => {
+    // The list renders the FILTERED collection — remember the item itself,
+    // an index would point at the wrong entry of the unfiltered list.
+    articleToDelete.value = item
     confirmSingleDeleteModalOpen.value = true
 }
 
@@ -1199,9 +1399,9 @@ const buildProp = (src, existing = null) => {
 }
 
 const mergePropsById = (currentProps = [], incoming = []) => {
-    const byId = new Map(currentProps.map(p => [p.id, {...p}]))
-    for (const np of incoming) byId.set(np.id, buildProp(np, byId.get(np.id)))
-    return [...byId.values()]
+    const currentMap = new Map(currentProps.map(p => [p.id, {...p}]))
+    // NUR incoming Properties zurückgeben, aber mit Werten aus currentProps mergen
+    return incoming.map(np => buildProp(np, currentMap.get(np.id)))
 }
 
 const applyPropsToForm = (newProps) => {
@@ -1332,6 +1532,28 @@ const checkIfEveryPropertyWhereAreRequiredIsFilled = computed(() => {
     return checkList(articleForm.properties)
 })
 
+const isDetailedArticleIncomplete = (da) => {
+    if (!da) return false
+    if (!da.status) return true
+    return da.properties?.some(p => p.is_required && !getValue(p)) ?? false
+}
+
+const calculateTotalQuantity = computed(() => {
+    const total = (articleForm.detailed_article_quantities || []).reduce((sum, d) => {
+        const q = parseInt(d?.quantity, 10);
+        return sum + (isNaN(q) ? 0 : q)
+    }, 0)
+    articleForm.quantity = total
+    return total
+})
+
+const calculateStatusQuantityInArticle = computed(() =>
+    articleForm.statusValues.reduce((t, s) => {
+        const q = parseInt(s.value, 10);
+        return t + (isNaN(q) ? 0 : q)
+    }, 0)
+)
+
 const formatQuantity = (q) => q?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 const addImage = () => articleImageInput.value?.click()
 const capitalizeFirstLetter = (v) => String(v).charAt(0).toUpperCase() + String(v).slice(1)
@@ -1381,9 +1603,10 @@ const addNewDetailedArticle = () => {
         _key: uid(),
         name: currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article',
         description: '',
-        quantity: 0,
+        quantity: detailedAlwaysOne.value ? 1 : 0,
         properties: baseProps,
-        status: defaultStatus()
+        status: defaultStatus(),
+        inventory_number: generateProvisionalInventoryNumber(),
     }
     articleForm.detailed_article_quantities.push(newItem)
     activeDetailedArticleForEditing.value = newItem
@@ -1392,9 +1615,15 @@ const addNewDetailedArticle = () => {
 }
 
 const removeDetailedArticle = () => {
-    let index = articleToDelete.value
     const arr = articleForm.detailed_article_quantities
-    if (!Array.isArray(arr) || index < 0 || index >= arr.length) return
+    const target = articleToDelete.value
+    if (!Array.isArray(arr) || target == null || typeof target !== 'object') return
+    let index = arr.indexOf(target)
+    if (index === -1) {
+        const key = itemKey(target)
+        index = key != null ? arr.findIndex(a => itemKey(a) === key) : -1
+    }
+    if (index < 0) return
     const removed = arr[index]
     arr.splice(index, 1)
 
@@ -1423,11 +1652,12 @@ const copyDetailedArticle = (d) => {
     const copiedProps = d.properties.map(p => ({...p, value: p.individual_value ? '' : p.value}))
     const newItem = {
         _key: uid(),
-        name: d.name + ' (Copy)',
+        name: d.name,
         description: d.description,
-        quantity: d.quantity ?? 0,
+        quantity: detailedAlwaysOne.value ? 1 : (d.quantity ?? 0),
         properties: copiedProps,
-        status: d.status
+        status: d.status,
+        inventory_number: generateProvisionalInventoryNumber(),
     }
     articleForm.detailed_article_quantities.push(newItem)
     activeDetailedArticleForEditing.value = newItem
@@ -1464,8 +1694,18 @@ const updateSelectedSubCategory = (sc) => {
     })
 }
 
-watch(selectedCategory, (val) => {
-    let propsArr = getCurrentProps().filter(p => !p.categoryProperty)
+watch(selectedCategory, (val, oldVal) => {
+    let propsArr = getCurrentProps()
+
+    // Alte Kategorie-Properties explizit entfernen (basierend auf alter Kategorie)
+    if (oldVal && Array.isArray(oldVal.properties)) {
+        const oldCatPropIds = new Set(oldVal.properties.map(p => p.id))
+        propsArr = propsArr.filter(p => !oldCatPropIds.has(p.id))
+    }
+
+    // Zusätzlich alle mit categoryProperty-Flag entfernen (Fallback)
+    propsArr = propsArr.filter(p => !p.categoryProperty)
+
     if (!val || !Array.isArray(val.properties)) {
         articleForm.inventory_category_id = null;
         applyPropsToForm(propsArr);
@@ -1488,16 +1728,35 @@ watch(selectedCategory, (val) => {
     syncAcrossValuesToDetailedArticles()
 })
 
-watch(selectedSubCategory, (val) => {
+watch(selectedSubCategory, (val, oldVal) => {
     let propsArr = getCurrentProps()
+
+    // Alte Subkategorie-Properties explizit entfernen (basierend auf alter Subkategorie)
+    if (oldVal && Array.isArray(oldVal.properties)) {
+        const oldSubCatPropIds = new Set(oldVal.properties.map(p => p.id))
+        propsArr = propsArr.filter(p => !oldSubCatPropIds.has(p.id))
+    }
+
+    // Wenn keine Subkategorie mehr: NUR Kategorie-Properties behalten
     if (!val) {
         articleForm.inventory_sub_category_id = null
-        if (selectedCategory.value) {
-            const catIds = new Set((selectedCategory.value.properties || []).map(p => p.id))
+        if (selectedCategory.value && Array.isArray(selectedCategory.value.properties)) {
+            const catIds = new Set(selectedCategory.value.properties.map(p => p.id))
+            // Behalte nur: manuelle Properties (!categoryProperty) ODER echte Kategorie-Properties
             propsArr = propsArr.filter(p => !p.categoryProperty || catIds.has(p.id))
-        } else propsArr = propsArr.filter(p => !p.categoryProperty)
+        } else {
+            propsArr = propsArr.filter(p => !p.categoryProperty)
+        }
         applyPropsToForm(propsArr);
         return
+    }
+
+    // Alte Subkategorie-Properties entfernen, aber Kategorie-Properties behalten (für Wechsel zu neuer Subkategorie)
+    if (selectedCategory.value) {
+        const catIds = new Set((selectedCategory.value.properties || []).map(p => p.id))
+        propsArr = propsArr.filter(p => !p.categoryProperty || catIds.has(p.id))
+    } else {
+        propsArr = propsArr.filter(p => !p.categoryProperty)
     }
 
     if (!Array.isArray(val.properties)) return
@@ -1535,7 +1794,7 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
             articleForm.detailed_article_quantities = [{
                 name: articleForm.name || (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article'),
                 description: articleForm.description,
-                quantity: '',
+                quantity: detailedAlwaysOne.value ? 1 : '',
                 properties: baseProps,
                 status: defaultStatus()
             }]
@@ -1576,21 +1835,6 @@ watch(() => articleForm.is_detailed_quantity, (isDetailed) => {
     }
 })
 
-const calculateTotalQuantity = computed(() => {
-    const total = (articleForm.detailed_article_quantities || []).reduce((sum, d) => {
-        const q = parseInt(d?.quantity, 10);
-        return sum + (isNaN(q) ? 0 : q)
-    }, 0)
-    articleForm.quantity = total
-    return total
-})
-
-const calculateStatusQuantityInArticle = computed(() =>
-    articleForm.statusValues.reduce((t, s) => {
-        const q = parseInt(s.value, 10);
-        return t + (isNaN(q) ? 0 : q)
-    }, 0)
-)
 
 onMounted(() => {
     if (props.article) {
@@ -1621,9 +1865,12 @@ onMounted(() => {
                     status: defaultStatus()
                 }]
             } else {
-                articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => ({
-                    name: da.name, description: da.description, quantity: da.quantity,
-                    properties: da.properties.map(p => ({
+                articleForm.detailed_article_quantities = props.article.detailed_article_quantities.map(da => {
+                    const daProps = da.properties || []
+                    const daPropIds = new Set(daProps.map(p => p.id))
+
+                    // Existing detailed article properties with their values
+                    const existingDaProps = daProps.map(p => ({
                         id: p.id,
                         name: p.name,
                         tooltip_text: p.tooltip_text,
@@ -1634,26 +1881,46 @@ onMounted(() => {
                         individual_value: p.individual_value ?? false,
                         categoryProperty: getIsDeletable(p.id),
                         select_values: p.select_values
-                    })),
-                    status: da.status ? (statuses.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
-                }))
+                    }))
+
+                    // Add new category properties that are not yet in this detailed article
+                    const newCatProps = categoryProps.filter(cp => !daPropIds.has(cp.id))
+
+                    return {
+                        id: da.id,
+                        name: da.name,
+                        description: da.description,
+                        quantity: da.quantity,
+                        inventory_number: da.inventory_number ?? null,
+                        properties: [...existingDaProps, ...newCatProps],
+                        status: da.status ? (statusList.find(s => s.id === da.status.id) ?? da.status) : defaultStatus(),
+                    }
+                })
             }
             articleForm.properties = []
         } else {
-            articleForm.properties = props.article.properties?.length
-                ? props.article.properties.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    tooltip_text: p.tooltip_text,
-                    type: p.type,
-                    value: p.value ?? p.pivot?.value ?? '',
-                    is_required: p.is_required,
-                    across_articles: p.across_articles ?? false,
-                    individual_value: p.individual_value ?? false,
-                    categoryProperty: getIsDeletable(p.id),
-                    select_values: p.select_values
-                }))
-                : [...categoryProps]
+            // Merge article properties with category/subcategory properties
+            const articleProps = props.article.properties || []
+            const articlePropIds = new Set(articleProps.map(p => p.id))
+
+            // Existing article properties with their values
+            const existingProps = articleProps.map(p => ({
+                id: p.id,
+                name: p.name,
+                tooltip_text: p.tooltip_text,
+                type: p.type,
+                value: p.value ?? p.pivot?.value ?? '',
+                is_required: p.is_required,
+                across_articles: p.across_articles ?? false,
+                individual_value: p.individual_value ?? false,
+                categoryProperty: getIsDeletable(p.id),
+                select_values: p.select_values
+            }))
+
+            // Add new category properties that are not yet in the article
+            const newCategoryProps = categoryProps.filter(cp => !articlePropIds.has(cp.id))
+
+            articleForm.properties = [...existingProps, ...newCategoryProps]
             articleForm.detailed_article_quantities = []
         }
 
@@ -1670,6 +1937,32 @@ onMounted(() => {
         syncAcrossValuesToDetailedArticles()
         // NEU: Auswahl initial leeren
         clearSelection()
+    }
+
+    // Inline-Autosave: Original-Werte merken
+    if (props.article) {
+        originalValues.value = {
+            name: props.article.name ?? '',
+            description: props.article.description ?? '',
+            quantity: props.article.quantity ?? 0,
+            inventory_category_id: props.article.inventory_category_id ?? null,
+            inventory_sub_category_id: props.article.inventory_sub_category_id ?? null,
+        }
+        // Original-Werte der Detailed Articles merken
+        const dv = {}
+        for (const da of (props.article.detailed_article_quantities || [])) {
+            if (da.id) {
+                dv[`${da.id}_name`] = da.name ?? ''
+                dv[`${da.id}_description`] = da.description ?? ''
+                dv[`${da.id}_quantity`] = da.quantity ?? 0
+                dv[`${da.id}_inventory_article_status_id`] = da.status?.id ?? null
+                // Property-Werte merken
+                for (const p of (da.properties || [])) {
+                    dv[`${da.id}_prop_${p.id}`] = p.pivot?.value ?? p.value ?? ''
+                }
+            }
+        }
+        originalDetailedValues.value = dv
     }
 })
 
@@ -1732,13 +2025,35 @@ const selectedBulkProp = computed(() =>
   bulkEditableProperties.value.find(p => p.id === bulkEdit.value.propertyId) || null
 )
 
-const toggleSelection = (it, checked = null) => {
+const lastClickedIndex = ref(null)
+
+const toggleSelection = (it, checked = null, event = null) => {
   const k = itemKey(it)
   if (k == null) return
+
+  const list = filteredDetailedArticles.value
+  const currentIndex = list.indexOf(it)
+
+  // Shift-Click: Bereich zwischen letztem Klick und aktuellem auswählen/abwählen
+  if (event?.shiftKey && lastClickedIndex.value != null && currentIndex !== -1 && currentIndex !== lastClickedIndex.value) {
+    const from = Math.min(lastClickedIndex.value, currentIndex)
+    const to = Math.max(lastClickedIndex.value, currentIndex)
+    const selecting = !selectedDetailedKeys.value.has(k)
+    const next = new Set(selectedDetailedKeys.value)
+    for (let i = from; i <= to; i++) {
+      const rangeKey = itemKey(list[i])
+      if (rangeKey != null) { selecting ? next.add(rangeKey) : next.delete(rangeKey) }
+    }
+    selectedDetailedKeys.value = next
+    lastClickedIndex.value = currentIndex
+    return
+  }
+
   const next = new Set(selectedDetailedKeys.value)
   const shouldSelect = checked == null ? !next.has(k) : !!checked
   if (shouldSelect) next.add(k); else next.delete(k)
   selectedDetailedKeys.value = next
+  lastClickedIndex.value = currentIndex !== -1 ? currentIndex : null
 }
 
 const toggleSelectAllVisible = (checked) => {
@@ -1811,6 +2126,7 @@ const bulkDeleteSelected = () => {
 
 
 const page = usePage()
+const { hasAdminRole } = usePermission(page.props)
 const currentUser = computed(() => page.props.auth?.user || null)
 const currentUserDepartmentIds = computed(() =>
     (page.props.auth?.user?.department_ids || [])
@@ -1876,6 +2192,9 @@ const tagGroupsForSelection = computed(() => {
 const userCanUseTag = (tag) => {
     if (!tag?.has_restricted_permissions) return true
 
+    // Admins dürfen immer alle Tags verwenden
+    if (hasAdminRole()) return true
+
     const user = currentUser.value
     if (!user) return false
 
@@ -1899,6 +2218,34 @@ const forbiddenTags = computed(() =>
 // 🔹 darf gespeichert werden?
 const canSaveWithTags = computed(() => forbiddenTags.value.length === 0)
 
+const isButtonDisabled = computed(() => {
+    return !checkIfEveryPropertyWhereAreRequiredIsFilled.value || !selectedCategory.value ||
+        (articleForm.is_detailed_quantity && (calculateTotalQuantity.value !== articleForm.quantity)) ||
+        (!articleForm.is_detailed_quantity && (calculateStatusQuantityInArticle.value !== articleForm.quantity)) || !canSaveWithTags.value
+})
+
+const validationErrors = computed(() => {
+    if (!articleForm.is_detailed_quantity) return []
+    const errors = []
+    if (calculateTotalQuantity.value !== articleForm.quantity) {
+        errors.push($t('The specified total quantity does not match the specified individual quantities'))
+    }
+    if (!checkIfEveryPropertyWhereAreRequiredIsFilled.value) {
+        errors.push($t('A required field is missing'))
+    }
+    return errors
+})
+
+const onDisabledButtonClick = () => {
+    if (isButtonDisabled.value) {
+        showValidationHints.value = true
+    }
+}
+
+watch(isButtonDisabled, (disabled) => {
+    if (!disabled) showValidationHints.value = false
+})
+
 // 🔹 kann Tag angeklickt werden?
 const canSelectTag = (tag) => userCanUseTag(tag)
 
@@ -1911,6 +2258,178 @@ const toggleTag = (tag) => {
         ids.add(tag.id)
     }
     selectedTagIds.value = Array.from(ids)
+}
+
+// === Inline-Autosave Logik (nur Edit-Modus) ===
+const articleRequiredFields = ['name', 'quantity']
+
+const onFieldSave = async (field, value) => {
+    if (!isEditMode.value) return
+    if (value === originalValues.value[field]) return
+    if (articleRequiredFields.includes(field) && (value === null || value === '')) {
+        fieldStatus.value[field] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.update-field', props.article.id), { field, value })
+        fieldStatus.value[field] = 'success'
+        hasInlineSaved.value = true
+        originalValues.value[field] = value
+        setTimeout(() => { fieldStatus.value[field] = null }, 3000)
+    } catch {
+        fieldStatus.value[field] = 'error'
+    }
+}
+
+const onCategorySave = async (field, value) => {
+    if (!isEditMode.value) return
+    if (value === originalValues.value[field]) return
+    if (field === 'inventory_category_id' && (value === null || value === '')) {
+        fieldStatus.value[field] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.update-field', props.article.id), { field, value })
+        fieldStatus.value[field] = 'success'
+        hasInlineSaved.value = true
+        originalValues.value[field] = value
+        setTimeout(() => { fieldStatus.value[field] = null }, 3000)
+    } catch {
+        fieldStatus.value[field] = 'error'
+    }
+}
+
+const detailedRequiredFields = ['name']
+
+const onDetailedFieldSave = async (detailedArticle, field, value) => {
+    if (!isEditMode.value || !detailedArticle?.id) return
+    const key = `${detailedArticle.id}_${field}`
+    if (value === originalDetailedValues.value[key]) return
+    if (detailedRequiredFields.includes(field) && (value === null || value === '')) {
+        detailedFieldStatus.value[key] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.detailed.update-field', detailedArticle.id), { field, value })
+        detailedFieldStatus.value[key] = 'success'
+        hasInlineSaved.value = true
+        originalDetailedValues.value[key] = value
+        setTimeout(() => { detailedFieldStatus.value[key] = null }, 3000)
+    } catch {
+        detailedFieldStatus.value[key] = 'error'
+    }
+}
+
+const onDetailedStatusSave = async (detailedArticle, statusObj) => {
+    if (!isEditMode.value || !detailedArticle?.id || !statusObj?.id) return
+    const key = `${detailedArticle.id}_inventory_article_status_id`
+    if (statusObj.id === originalDetailedValues.value[key]) return
+    try {
+        await axios.patch(route('inventory-management.articles.detailed.update-field', detailedArticle.id), {
+            field: 'inventory_article_status_id',
+            value: statusObj.id
+        })
+        detailedFieldStatus.value[key] = 'success'
+        hasInlineSaved.value = true
+        originalDetailedValues.value[key] = statusObj.id
+        setTimeout(() => { detailedFieldStatus.value[key] = null }, 3000)
+    } catch {
+        detailedFieldStatus.value[key] = 'error'
+    }
+}
+
+const onDetailedPropertySave = async (detailedArticle, propertyId, value) => {
+    if (!isEditMode.value || !detailedArticle?.id) return
+    const key = `${detailedArticle.id}_prop_${propertyId}`
+    if (value === originalDetailedValues.value[key]) return
+    const prop = detailedArticle.properties?.find(p => p.id === propertyId)
+    if (prop?.is_required && (value === null || value === '')) {
+        detailedFieldStatus.value[key] = 'error'
+        return
+    }
+    try {
+        await axios.patch(route('inventory-management.articles.detailed.update-property', detailedArticle.id), {
+            property_id: propertyId,
+            value: value ?? ''
+        })
+        detailedFieldStatus.value[key] = 'success'
+        hasInlineSaved.value = true
+        originalDetailedValues.value[key] = value
+        setTimeout(() => { detailedFieldStatus.value[key] = null }, 3000)
+    } catch {
+        detailedFieldStatus.value[key] = 'error'
+    }
+}
+
+// === Mehrfach-Einzelinventar-Erstellung ===
+const showBulkCreatePanel = ref(false)
+const bulkCreateData = ref({
+    count: 1,
+    status: null,
+    properties: [],
+})
+
+// Properties die im Bulk-Create-Panel bearbeitet werden können (nicht across_articles)
+const bulkCreateProperties = computed(() => {
+    const first = articleForm.detailed_article_quantities?.[0]
+    if (!first?.properties?.length) return []
+    return first.properties.filter(p => !p.across_articles)
+})
+
+const initBulkCreate = () => {
+    bulkCreateData.value = {
+        count: 1,
+        status: defaultStatus(),
+        properties: bulkCreateProperties.value.map(p => ({
+            id: p.id,
+            name: p.name,
+            tooltip_text: p.tooltip_text,
+            type: p.type,
+            value: '',
+            is_required: p.is_required,
+            select_values: p.select_values,
+        })),
+    }
+    showBulkCreatePanel.value = true
+}
+
+const executeBulkCreate = () => {
+    const count = Math.min(Math.max(parseInt(bulkCreateData.value.count, 10) || 1, 1), 100)
+    const baseProps = articleForm.detailed_article_quantities?.[0]?.properties?.map(p => ({
+        id: p.id, name: p.name, tooltip_text: p.tooltip_text, type: p.type, value: '', is_required: p.is_required,
+        categoryProperty: getIsDeletable(p.id), select_values: p.select_values,
+        across_articles: p.across_articles ?? false, individual_value: p.individual_value ?? false,
+    })) ?? []
+
+    // Vorausgefüllte Werte aus dem Bulk-Panel übernehmen
+    const prefillMap = new Map()
+    for (const bp of (bulkCreateData.value.properties || [])) {
+        if (bp.value !== '' && bp.value != null) {
+            prefillMap.set(bp.id, bp.value)
+        }
+    }
+
+    const currentLength = articleForm.detailed_article_quantities.length
+    for (let i = 0; i < count; i++) {
+        const newItem = {
+            _key: uid(),
+            name: (currentPageLanguage.value === 'de' ? 'Neuer Artikel' : 'New Article') + ' ' + (currentLength + i + 1),
+            description: '',
+            quantity: 1,
+            properties: baseProps.map(p => {
+                const copy = {...p}
+                if (!copy.across_articles && prefillMap.has(copy.id)) {
+                    copy.value = prefillMap.get(copy.id)
+                }
+                return copy
+            }),
+            status: bulkCreateData.value.status || defaultStatus(),
+            inventory_number: generateProvisionalInventoryNumber(),
+        }
+        articleForm.detailed_article_quantities.push(newItem)
+    }
+    syncAcrossValuesToDetailedArticles()
+    showBulkCreatePanel.value = false
 }
 </script>
 

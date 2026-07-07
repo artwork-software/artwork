@@ -25,6 +25,10 @@ class FilterController extends Controller
 
     public function activate(UserFilterTemplate $filter, User $user): void
     {
+        // IDOR-Schutz: ein Filter darf nur auf den EIGENEN Account angewendet werden,
+        // nicht auf einen beliebigen per URL übergebenen User.
+        abort_unless((int) Auth::id() === (int) $user->id, 403);
+
         $user->userFilters()->updateOrCreate([
             'filter_type' => $filter->filter_type
         ], [

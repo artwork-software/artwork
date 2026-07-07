@@ -4,8 +4,8 @@
             <div class="flex items-center gap-x-2">
                 <label
                     for="email"
-                    class="block text-sm font-bold leading-6"
-                    :class="inSidebar ? 'text-white' : ' text-gray-900'"
+                    class="componentLabel"
+                    :class="{'!text-white': inSidebar}"
                 >
                     {{ projectData.data.label }}
                 </label>
@@ -59,7 +59,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import { IconEdit } from "@tabler/icons-vue";
 
 // Für DevTools
-defineOptions({ name: "TextField" });
+defineOptions({ name: "LinkComponent" });
 
 const props = defineProps({
     data: { type: Object, required: true },

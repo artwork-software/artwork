@@ -7,6 +7,7 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 class InventoryArticleDTO
 {
     public int $id;
+    public ?string $inventory_number;
     public string $name;
     public ?string $description;
     public int $inventory_category_id;
@@ -30,6 +31,7 @@ class InventoryArticleDTO
     {
         $dto = new static();
         $dto->id = $article->id;
+        $dto->inventory_number = $article->inventory_number;
         $dto->name = $article->name;
         $dto->description = $article->description;
         $dto->inventory_category_id = $article->inventory_category_id;
@@ -38,8 +40,8 @@ class InventoryArticleDTO
         $dto->is_detailed_quantity = $article->is_detailed_quantity;
         $dto->properties = $article->properties->toArray();
         $dto->images = InventoryArticleImageDTO::fromCollection($article->images);
-        $dto->room = $article->room;
-        $dto->manufacturer = $article->manufacturer;
+        $dto->room = $article->room ?? [];
+        $dto->manufacturer = $article->manufacturer ?? [];
         $dto->created_at = $article->getRawOriginal('created_at');
         $dto->updated_at = $article->getRawOriginal('updated_at');
 

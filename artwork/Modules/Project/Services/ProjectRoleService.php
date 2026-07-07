@@ -29,9 +29,22 @@ class ProjectRoleService
 
     public function delete(ProjectRole $role): void
     {
-        DB::table('project_user')->whereJsonContains('roles', $role->id)->update([
-            'roles' => DB::raw('JSON_REMOVE(roles, "$[0]")')
-        ]);
-        $this->projectRoleRepository->delete($role);
+        DB::transaction(function () use ($role): void {
+            DB::table('project_user')
+                ->whereJsonContains('roles', $role->id)
+                ->lockForUpdate()
+                ->get(['id', 'roles'])
+                ->each(function ($row) use ($role): void {
+                    $remainingRoleIds = array_values(
+                        array_diff(json_decode($row->roles, true) ?? [], [$role->id])
+                    );
+
+                    DB::table('project_user')
+                        ->where('id', $row->id)
+                        ->update(['roles' => json_encode($remainingRoleIds)]);
+                });
+
+            $this->projectRoleRepository->delete($role);
+        });
     }
 }

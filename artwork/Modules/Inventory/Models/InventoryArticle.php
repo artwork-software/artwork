@@ -6,12 +6,15 @@ use Artwork\Core\Casts\TranslatedDateTimeCast;
 use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
+use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 
 /**
@@ -21,6 +24,8 @@ use Laravel\Scout\Searchable;
  * @property int inventory_sub_category_id
  * @property int quantity
  * @property bool is_detailed_quantity
+ * @property string external_id
+ * @property string inventory_number
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleProperty[] properties
  * @property \Illuminate\Database\Eloquent\Collection|\Artwork\Modules\Inventory\Models\InventoryArticleImage[] images
  * @property \Artwork\Modules\Inventory\Models\InventoryCategory category
@@ -46,6 +51,8 @@ class InventoryArticle extends Model
         'inventory_sub_category_id',
         'quantity',
         'is_detailed_quantity',
+        'external_id',
+        'inventory_number',
     ];
 
     protected $casts = [
@@ -60,6 +67,19 @@ class InventoryArticle extends Model
 
     protected $appends = ['room', 'manufacturer', 'category', 'subCategory'];
 
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function (InventoryArticle $article) {
+            if (!$article->external_id) {
+                $article->external_id = TypeNumberGenerator::generateExternalId();
+            }
+            if (!$article->inventory_number) {
+                $article->inventory_number = TypeNumberGenerator::generateInventoryNumber();
+            }
+        });
+    }
     public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InventoryCategory::class, 'inventory_category_id', 'id');
@@ -114,6 +134,7 @@ class InventoryArticle extends Model
         return [
             'id' => $this->id,
             'name' => $this->name ?? 'Name not found',
+            'inventory_number' => $this->inventory_number,
             'description' => $this->description,
             'category' => $this?->category?->name ?? null,
             'sub_category' => $this?->subCategory?->name ?? null,
@@ -140,14 +161,12 @@ class InventoryArticle extends Model
         return $this->getRelationValue('subCategory');
     }
 
-    public function getRoomAttribute(): array
+    public function getRoomAttribute(): ?array
     {
         $roomProperty = $this->properties->firstWhere('type', 'room');
 
         if (!$roomProperty || !$roomProperty->pivot->value) {
-            return [
-                'name' => 'Room not found',
-            ];
+            return null;
         }
 
         // Optimierung: Verwende Relation oder eager loading statt einzelner Query
@@ -162,11 +181,7 @@ class InventoryArticle extends Model
         $room = $roomCache[$roomId];
 
         if (!$room) {
-            return [
-                'id' => $roomId,
-                'name' => 'Room not found',
-                'property_id' => $roomProperty->id,
-            ];
+            return null;
         }
 
         return [
@@ -176,38 +191,31 @@ class InventoryArticle extends Model
         ];
     }
 
-    public function getManufacturerAttribute(): array
+    public function getManufacturerAttribute(): ?array
     {
         $manufacturerProperty = $this->properties->firstWhere('type', 'manufacturer');
 
         if (!$manufacturerProperty || !$manufacturerProperty->pivot->value) {
-            return [
-                'name' => 'Manufacturer not found',
-            ];
+            return null;
         }
 
-        // Optimierung: Verwende Relation oder eager loading statt einzelner Query
         static $manufacturerCache = [];
 
         $manufacturerId = $manufacturerProperty->pivot->value;
 
         if (!isset($manufacturerCache[$manufacturerId])) {
-            $manufacturerCache[$manufacturerId] = Manufacturer::select('id', 'name')->find($manufacturerId);
+            $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name')->find($manufacturerId);
         }
 
         $manufacturer = $manufacturerCache[$manufacturerId];
 
         if (!$manufacturer) {
-            return [
-                'id' => $manufacturerId,
-                'name' => 'Manufacturer not found',
-                'property_id' => $manufacturerProperty->id,
-            ];
+            return null;
         }
 
         return [
             'id' => $manufacturer->id,
-            'name' => $manufacturer->name,
+            'name' => $manufacturer->display_name,
             'property_id' => $manufacturerProperty->id,
         ];
     }
@@ -218,14 +226,6 @@ class InventoryArticle extends Model
         ?int $excludeIssueId = null,
         ?string $excludeType = null
     ): array {
-        $sumQuantity = function ($issues): int {
-            $used = 0;
-            foreach ($issues as $issue) {
-                $used += (int) ($issue->pivot->quantity ?? 0);
-            }
-            return $used;
-        };
-
         if ($this->relationLoaded('internalIssues')) {
             $internalIssues = $this->internalIssues;
             // Apply exclusion filter to pre-loaded relations if needed
@@ -268,7 +268,10 @@ class InventoryArticle extends Model
                 ->get();
         }
 
-        $usedQuantity = $sumQuantity($internalIssues) + $sumQuantity($externalIssues);
+        $usedQuantity = self::calculatePeakConcurrentUsage(
+            collect($internalIssues),
+            collect($externalIssues)
+        );
 
         // Get the quantity of items with "Einsatzbereit" status
         $total = 0;
@@ -285,7 +288,7 @@ class InventoryArticle extends Model
 
             foreach ($detailedQuantities as $detailedQuantity) {
                 if ($detailedQuantity->status && $detailedQuantity->status->name === 'Einsatzbereit') {
-                    $total += (int) $detailedQuantity->quantity;
+                    $total += (float) $detailedQuantity->quantity;
                 }
             }
         } else {
@@ -299,7 +302,7 @@ class InventoryArticle extends Model
                 $readyStatus = $this->statusValues->firstWhere('name', 'Einsatzbereit');
             }
 
-            $total = $readyStatus ? (int) $readyStatus->pivot->value : 0;
+            $total = $readyStatus ? (float) $readyStatus->pivot->value : 0;
         }
         $available = max($total - $usedQuantity, 0);
 
@@ -309,6 +312,79 @@ class InventoryArticle extends Model
             'reserved'  => $usedQuantity,
             'quantity'  => $total,
         ];
+    }
+
+    /**
+     * Sweep-line algorithm to calculate peak concurrent usage across all issues.
+     * Instead of summing all quantities (which overcounts non-overlapping issues),
+     * this finds the maximum quantity in use at any single point in time.
+     *
+     * @param Collection $internalIssues Issues with start_date, start_time, end_date, end_time
+     * @param Collection $externalIssues Issues with issue_date, return_date
+     * @return int Peak concurrent usage
+     */
+    public static function calculatePeakConcurrentUsage(
+        Collection $internalIssues,
+        Collection $externalIssues
+    ): int {
+        $events = [];
+
+        foreach ($internalIssues as $issue) {
+            $qty = (int) ($issue->pivot->quantity ?? 0);
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $startDateStr = Carbon::parse($issue->start_date)->format('Y-m-d');
+            $startTime = $issue->start_time ?? '00:00:00';
+            $endDateStr = Carbon::parse($issue->end_date ?? $issue->start_date)->format('Y-m-d');
+            $endTime = $issue->end_time ?? '23:59:59';
+
+            $start = Carbon::parse("{$startDateStr} {$startTime}")->timestamp;
+            // +1 second after end so that issues ending exactly when another starts don't overlap
+            $end = Carbon::parse("{$endDateStr} {$endTime}")->timestamp + 1;
+
+            $events[] = [$start, $qty];   // issue starts: add quantity
+            $events[] = [$end, -$qty];    // issue ends: remove quantity
+        }
+
+        foreach ($externalIssues as $issue) {
+            $qty = (int) ($issue->pivot->quantity ?? 0);
+            if ($qty <= 0) {
+                continue;
+            }
+
+            $issueDateStr = Carbon::parse($issue->issue_date)->format('Y-m-d');
+            $returnDateStr = Carbon::parse($issue->return_date ?? $issue->issue_date)->format('Y-m-d');
+
+            $start = Carbon::parse("{$issueDateStr} 00:00:00")->timestamp;
+            $end = Carbon::parse("{$returnDateStr} 23:59:59")->timestamp + 1;
+
+            $events[] = [$start, $qty];
+            $events[] = [$end, -$qty];
+        }
+
+        if (empty($events)) {
+            return 0;
+        }
+
+        // Sort by timestamp; on tie, process removals (-qty) before additions (+qty)
+        usort($events, function ($a, $b) {
+            if ($a[0] !== $b[0]) {
+                return $a[0] <=> $b[0];
+            }
+            return $a[1] <=> $b[1];
+        });
+
+        $current = 0;
+        $peak = 0;
+
+        foreach ($events as [$timestamp, $delta]) {
+            $current += $delta;
+            $peak = max($peak, $current);
+        }
+
+        return $peak;
     }
 
     public function tags(): BelongsToMany

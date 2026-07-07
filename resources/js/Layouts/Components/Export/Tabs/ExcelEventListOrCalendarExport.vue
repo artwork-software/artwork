@@ -223,7 +223,7 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import {ChevronDownIcon, ChevronUpIcon, DocumentReportIcon} from "@heroicons/vue/outline";
-import {computed, ref} from "vue";
+import {computed, ref, onMounted} from "vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
@@ -242,6 +242,22 @@ const toggleOpen = (mainKey, subKey) => {
     openState.value[k] = !openState.value[k];
 };
 
+// Filter options loaded from API if not available in page props
+const loadedFilterOptions = ref(null);
+
+onMounted(async () => {
+    // Load filter options from API if not available in page props
+    if (!usePage().props.filterOptions) {
+        try {
+            const response = await axios.get(route('calendar.filters'));
+            loadedFilterOptions.value = response.data;
+        } catch (error) {
+            console.error('Failed to load filter options:', error);
+            loadedFilterOptions.value = {};
+        }
+    }
+});
+
 
 const activeFilters = computed(() => {
     const list = [];
@@ -255,9 +271,10 @@ const activeFilters = computed(() => {
 })
 
 const filteredOptionsByCategories = computed(() => {
-    const roomFilters = Object.keys(usePage().props.filterOptions).filter((key) => key.includes('room'));
-    const eventFilters = Object.keys(usePage().props.filterOptions).filter((key) => key.includes('event'));
-    const areaFilters = Object.keys(usePage().props.filterOptions).filter((key) => key.includes('area'));
+    const filterOptions = usePage().props.filterOptions || loadedFilterOptions.value || {};
+    const roomFilters = Object.keys(filterOptions).filter((key) => key.includes('room'));
+    const eventFilters = Object.keys(filterOptions).filter((key) => key.includes('event'));
+    const areaFilters = Object.keys(filterOptions).filter((key) => key.includes('area'));
 
     const filteredOptions = {
         roomFilters: {},
@@ -267,12 +284,12 @@ const filteredOptionsByCategories = computed(() => {
 
     // Areas unverändert
     areaFilters.forEach((filter) => {
-        filteredOptions.areaFilters[filter] = usePage().props.filterOptions[filter] || [];
+        filteredOptions.areaFilters[filter] = filterOptions[filter] || [];
     })
 
     // Rooms: nur tatsächliche Raumliste filtern
     roomFilters.forEach((filter) => {
-        const list = usePage().props.filterOptions[filter] || [];
+        const list = filterOptions[filter] || [];
         if (filter === 'rooms' || filter === 'room_ids') {
             filteredOptions.roomFilters[filter] = list.filter((item) => {
                 const rel = item?.relevant_for_disposition;
@@ -285,7 +302,7 @@ const filteredOptionsByCategories = computed(() => {
 
     // Events unverändert
     eventFilters.forEach((filter) => {
-        filteredOptions.eventFilters[filter] = usePage().props.filterOptions[filter] || [];
+        filteredOptions.eventFilters[filter] = filterOptions[filter] || [];
     })
 
     return filteredOptions;

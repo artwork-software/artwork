@@ -28,6 +28,7 @@ return [
             'deleted' => 'Ein Dokument wurde gelöscht'
         ],
         'delete' => ':project wurde gelöscht',
+        'delete_with_events' => ':project mit :count Terminen wurde gelöscht',
     ],
     'contract' => [
         'add' => 'Ein Vertrag wurde für dich freigegeben',
@@ -69,6 +70,8 @@ return [
         'new_commit_request_title' => 'Neue Schicht-Commit-Anfrage',
         'new_commit_request' => 'Neue Schicht-Commit-Anfrage :start_time - :end_time von :user',
         'link_label_new_commit_request' => 'Gehe zu Schicht-Commit-Anfrage',
+        'commit_request_approved' => 'Dienstplananfrage :craft (KW :week) wurde genehmigt',
+        'commit_request_rejected' => 'Dienstplananfrage :craft (KW :week) wurde abgelehnt',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',
@@ -91,7 +94,7 @@ return [
     'scheduling' => [
         'deadline_tomorrow' => 'Deadline von :checklist ist morgen erreicht',
         'deadline_over' => ':checklist hat ihre Deadline überschritten',
-        'new_tasks' => ':count neue Aufgaben für dich',
+        'new_tasks' => ':count neue Aufgaben für dich in: :checklists',
         'changes_project' => 'Es gab Änderungen an :project',
         'changes_task' => 'Änderungen an :task',
         'changes_room' => 'Änderungen an :room',

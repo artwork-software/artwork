@@ -20,4 +20,10 @@ readonly class CellCommentService
     {
         $this->cellCommentRepository->forceDelete($cellComment);
     }
+
+    // restore function
+    public function restore(CellComment $cellComment): void
+    {
+        $this->cellCommentRepository->restore($cellComment);
+    }
 }

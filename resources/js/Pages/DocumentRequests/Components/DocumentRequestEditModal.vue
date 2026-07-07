@@ -1,0 +1,453 @@
+<template>
+    <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Edit document request')" :description="$t('Edit the document request details.')">
+        <div class="">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Assign to user -->
+                <div class="col-span-full relative">
+                    <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user')" />
+                    <div v-if="selectedUser" class="mt-2 flex items-center">
+                        <img class="h-8 w-8 rounded-full object-cover" :src="selectedUser.profile_photo_url" alt="" />
+                        <span class="ml-3 text-sm font-medium text-gray-900">
+                            {{ selectedUser.first_name }} {{ selectedUser.last_name }}
+                        </span>
+                        <button type="button" @click="selectedUser = null" class="ml-2">
+                            <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4 text-gray-400 hover:text-red-500" />
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="col-span-full">
+                    <Listbox as="div" class="flex relative" v-model="selectedStatus">
+                        <ListboxButton class="menu-button">
+                            <span>{{ getStatusLabel(selectedStatus) }}</span>
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        </ListboxButton>
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8" v-for="status in statuses" :key="status.value" :value="status.value" v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                            {{ status.label }}
+                                        </span>
+                                        <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                </div>
+
+                <hr class="col-span-full border-gray-200">
+
+                <div class="col-span-full text-sm font-medium text-gray-700 mb-2">
+                    {{ $t('Document metadata') }}
+                </div>
+
+                <!-- Contract Partner -->
+                <div class="">
+                    <BaseInput
+                        v-model="form.contract_partner"
+                        id="contractPartner"
+                        :label="$t('Contract partner')"
+                    />
+                    <!-- CRM Contact Link -->
+                    <div class="mt-2">
+                        <div v-if="selectedCrmContact" class="rounded-md border border-gray-200 bg-gray-50 overflow-hidden">
+                            <div class="flex items-center gap-2 px-3 py-2">
+                                <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
+                                <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
+                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
+                                <a :href="route('crm.contacts.show', selectedCrmContact.id)" class="ml-auto text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                                    {{ $t('View in CRM') }}
+                                </a>
+                                <button type="button" @click="toggleCrmDetails" class="text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
+                                    <PropertyIcon :name="showCrmDetails ? 'IconChevronUp' : 'IconChevronDown'" stroke-width="1.5" class="h-4 w-4" />
+                                </button>
+                                <button type="button" @click="removeCrmContact" class="text-gray-400 hover:text-red-500">
+                                    <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
+                                </button>
+                            </div>
+                            <!-- Collapsible CRM Details -->
+                            <div v-if="showCrmDetails" class="border-t border-gray-200 px-3 py-3">
+                                <div v-if="loadingCrmDetails" class="text-center text-sm text-gray-500 py-2">
+                                    {{ $t('Loading...') }}
+                                </div>
+                                <div v-else-if="crmContactData && crmVisibleGroups.length > 0" class="space-y-3">
+                                    <CrmPropertyGroupSection
+                                        v-for="group in crmVisibleGroups"
+                                        :key="group.id"
+                                        :group="group"
+                                        :contact="crmContactData.contact"
+                                        :editing="false"
+                                    />
+                                </div>
+                                <div v-else class="text-sm text-gray-500 py-2">
+                                    {{ $t('No CRM data available.') }}
+                                </div>
+                            </div>
+                        </div>
+                        <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ $t('Link CRM contact') }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contract Value -->
+                <div class="">
+                    <BaseInput
+                        type="number"
+                        step="0.01"
+                        v-model="form.contract_value"
+                        id="contractValue"
+                        :label="$t('Contract value')"
+                    />
+                </div>
+
+                <!-- Legal Form -->
+                <div class="">
+                    <Listbox as="div" class="flex relative" v-model="selectedLegalForm">
+                        <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
+                            <div>{{ selectedLegalForm.name }}</div>
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        </ListboxButton>
+                        <ListboxButton v-else class="menu-button">
+                            <span>{{ $t('Legal form')}}</span>
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        </ListboxButton>
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                            {{ legalForm.name }}
+                                        </span>
+                                        <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                </div>
+
+                <!-- Contract Type -->
+                <div class="">
+                    <Listbox as="div" class="flex relative" v-model="selectedContractType">
+                        <ListboxButton v-if="selectedContractType !== null" class="menu-button">
+                            <span>{{ selectedContractType.name }}</span>
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        </ListboxButton>
+                        <ListboxButton v-else class="menu-button">
+                            <span>{{ $t('Contract type')}}</span>
+                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        </ListboxButton>
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                            {{ contractType.name }}
+                                        </span>
+                                        <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                </div>
+
+                <!-- KSK -->
+                <div class="col-span-full">
+                    <div class="flex items-center mb-2">
+                        <input id="kskLiableEdit" type="checkbox" v-model="form.ksk_liable" class="input-checklist"/>
+                        <label for="kskLiableEdit" :class="form.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'" class="ml-2">
+                            {{ $t('KSK-liable')}}
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 my-2">
+                        <BaseInput
+                            v-if="form.ksk_liable"
+                            type="number"
+                            step="0.01"
+                            id="kskAmountEdit"
+                            v-model="form.ksk_amount"
+                            :label="$t('KSK Amount')"
+                        />
+                        <BaseTextarea
+                            v-if="!form.ksk_liable"
+                            :label="$t('KSK Reason')"
+                            id="kskReasonEdit"
+                            v-model="form.ksk_reason"
+                            rows="2"
+                        />
+                    </div>
+                </div>
+
+                <!-- Foreign Tax -->
+                <div class="col-span-full">
+                    <div class="flex items-center mb-2">
+                        <input id="foreignTaxEdit" type="checkbox" v-model="form.foreign_tax" class="input-checklist"/>
+                        <label for="foreignTaxEdit" :class="form.foreign_tax ? 'xsDark' : 'xsLight subpixel-antialiased'" class="ml-2">
+                            {{ $t('Foreign tax')}}
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-2" v-if="form.foreign_tax">
+                        <BaseInput
+                            type="number"
+                            step="0.01"
+                            id="foreignTaxAmountEdit"
+                            v-model="form.foreign_tax_amount"
+                            :label="$t('Foreign tax amount')"
+                        />
+                        <div></div>
+                        <BaseInput
+                            id="foreignTaxCityEdit"
+                            v-model="form.foreign_tax_city"
+                            :label="$t('City')"
+                        />
+                        <BaseInput
+                            id="foreignTaxCountryEdit"
+                            v-model="form.foreign_tax_country"
+                            :label="$t('Country')"
+                        />
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 my-2" v-if="!form.foreign_tax">
+                        <BaseTextarea
+                            :label="$t('Foreign tax reason')"
+                            id="foreignTaxReasonEdit"
+                            v-model="form.foreign_tax_reason"
+                            rows="2"
+                        />
+                    </div>
+                </div>
+
+                <!-- Reverse Charge -->
+                <div class="">
+                    <BaseInput
+                        type="number"
+                        step="0.01"
+                        id="reverseChargeAmountEdit"
+                        v-model="form.reverse_charge_amount"
+                        :label="$t('Reverse Charge Amount')"
+                    />
+                </div>
+
+                <!-- Deadline Date -->
+                <div class="">
+                    <BaseInput
+                        type="date"
+                        id="deadlineDateEdit"
+                        v-model="form.deadline_date"
+                        :label="$t('Deadline date')"
+                    />
+                </div>
+
+                <!-- Comment -->
+                <div class="col-span-full">
+                    <BaseTextarea
+                        :label="$t('Comment / Note')"
+                        id="commentEdit"
+                        v-model="form.comment"
+                        rows="3"
+                    />
+                </div>
+
+                <!-- Contract State -->
+                <div class="">
+                    <BaseInput
+                        id="contractStateEdit"
+                        v-model="form.contract_state"
+                        :label="$t('Contract status')"
+                    />
+                </div>
+                <div class="col-span-full">
+                    <BaseTextarea
+                        :label="$t('Contract status comment')"
+                        id="contractStateCommentEdit"
+                        v-model="form.contract_state_comment"
+                        rows="3"
+                    />
+                </div>
+            </div>
+
+            <div class="justify-end flex w-full my-6">
+                <BaseUIButton
+                    :label="$t('Save changes')"
+                    is-add-button
+                    :disabled="false"
+                    @click="updateRequest"
+                />
+            </div>
+        </div>
+        <!-- CRM Contact Search Modal -->
+        <CrmContactSearchModal
+            v-if="showCrmSearch"
+            :contact-types="crmContactTypes"
+            @close="showCrmSearch = false"
+            @contact-selected="onCrmContactSelected"
+        />
+    </ArtworkBaseModal>
+</template>
+
+<script>
+import { useForm } from "@inertiajs/vue3";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import CrmContactSearchModal from "./CrmContactSearchModal.vue";
+import CrmPropertyGroupSection from "@/Pages/CRM/Components/CrmPropertyGroupSection.vue";
+
+export default {
+    name: "DocumentRequestEditModal",
+    emits: ['close'],
+    props: {
+        show: Boolean,
+        documentRequest: Object,
+        contractTypes: {
+            type: Array,
+            default: () => []
+        },
+        companyTypes: {
+            type: Array,
+            default: () => []
+        },
+        crmContactTypes: {
+            type: Array,
+            default: () => []
+        }
+    },
+    components: {
+        CrmPropertyGroupSection,
+        CrmContactSearchModal,
+        PropertyIcon,
+        UserSearch,
+        BaseUIButton,
+        ArtworkBaseModal,
+        BaseTextarea,
+        BaseInput,
+        Listbox,
+        ListboxOption,
+        ListboxOptions,
+        ListboxButton,
+    },
+    data() {
+        return {
+            selectedUser: this.documentRequest?.requested || null,
+            user_query: '',
+            selectedStatus: this.documentRequest?.status || 'open',
+            selectedLegalForm: this.documentRequest?.company_type || null,
+            selectedContractType: this.documentRequest?.contract_type || null,
+            showCrmSearch: false,
+            selectedCrmContact: this.documentRequest?.crm_contact || null,
+            showCrmDetails: false,
+            loadingCrmDetails: false,
+            crmContactData: null,
+            statuses: [
+                { value: 'open', label: this.$t('Open') },
+                { value: 'in_progress', label: this.$t('In Progress') },
+                { value: 'completed', label: this.$t('Completed') },
+            ],
+            form: useForm({
+                requested_id: this.documentRequest?.requested_id || null,
+                status: this.documentRequest?.status || 'open',
+                contract_partner: this.documentRequest?.contract_partner || '',
+                contract_value: this.documentRequest?.contract_value || null,
+                ksk_liable: this.documentRequest?.ksk_liable || false,
+                ksk_amount: this.documentRequest?.ksk_amount || null,
+                ksk_reason: this.documentRequest?.ksk_reason || '',
+                foreign_tax: this.documentRequest?.foreign_tax || false,
+                foreign_tax_amount: this.documentRequest?.foreign_tax_amount || null,
+                foreign_tax_city: this.documentRequest?.foreign_tax_city || '',
+                foreign_tax_country: this.documentRequest?.foreign_tax_country || '',
+                foreign_tax_reason: this.documentRequest?.foreign_tax_reason || '',
+                reverse_charge_amount: this.documentRequest?.reverse_charge_amount || null,
+                deadline_date: this.documentRequest?.deadline_date || null,
+                contract_type_id: this.documentRequest?.contract_type?.id || null,
+                company_type_id: this.documentRequest?.company_type?.id || null,
+                comment: this.documentRequest?.comment || '',
+                contract_state: this.documentRequest?.contract_state || '',
+                contract_state_comment: this.documentRequest?.contract_state_comment || '',
+                crm_contact_id: this.documentRequest?.crm_contact_id || null,
+            }),
+        }
+    },
+    computed: {
+        crmVisibleGroups() {
+            if (!this.crmContactData) return [];
+            const typePropertyIds = new Set(
+                (this.crmContactData.contact.contact_type?.properties ?? []).map(p => p.id)
+            );
+            const pivotMap = {};
+            for (const p of (this.crmContactData.contact.contact_type?.properties ?? [])) {
+                pivotMap[p.id] = p.pivot ?? {};
+            }
+            return (this.crmContactData.propertyGroups ?? [])
+                .map(group => ({
+                    ...group,
+                    properties: (group.properties ?? [])
+                        .filter(p => typePropertyIds.has(p.id))
+                        .map(p => ({ ...p, pivot: pivotMap[p.id] ?? {} })),
+                }))
+                .filter(group => group.properties.length > 0);
+        },
+    },
+    methods: {
+        selectUser(user) {
+            this.selectedUser = user;
+            this.user_query = '';
+        },
+        getStatusLabel(status) {
+            const found = this.statuses.find(s => s.value === status);
+            return found ? found.label : status;
+        },
+        onCrmContactSelected(contact) {
+            this.selectedCrmContact = contact;
+            this.form.contract_partner = contact.display_name;
+            this.showCrmSearch = false;
+            this.showCrmDetails = false;
+            this.crmContactData = null;
+        },
+        removeCrmContact() {
+            this.selectedCrmContact = null;
+            this.form.crm_contact_id = null;
+            this.form.contract_partner = '';
+            this.showCrmDetails = false;
+            this.crmContactData = null;
+        },
+        toggleCrmDetails() {
+            this.showCrmDetails = !this.showCrmDetails;
+            if (this.showCrmDetails && !this.crmContactData) {
+                this.loadCrmDetails();
+            }
+        },
+        loadCrmDetails() {
+            this.loadingCrmDetails = true;
+            axios.get(this.route('crm.contacts.data', this.selectedCrmContact.id))
+                .then(response => { this.crmContactData = response.data; })
+                .catch(() => { this.crmContactData = null; })
+                .finally(() => { this.loadingCrmDetails = false; });
+        },
+        closeModal() {
+            this.$emit('close');
+        },
+        updateRequest() {
+            this.form.status = this.selectedStatus;
+            this.form.requested_id = this.selectedUser?.id || null;
+            this.form.company_type_id = this.selectedLegalForm?.id;
+            this.form.contract_type_id = this.selectedContractType?.id;
+            this.form.crm_contact_id = this.selectedCrmContact?.id || null;
+
+            this.form.patch(this.route('document-requests.update', this.documentRequest.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.closeModal();
+                },
+            });
+        }
+    },
+}
+</script>

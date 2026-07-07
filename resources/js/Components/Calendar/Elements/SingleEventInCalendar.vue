@@ -14,21 +14,26 @@
             :verifierForEventTypIds="verifierForEventTypIds"
             :is-planning="isPlanning"
             :is-in-daily-view="isInDailyView"
+            :is-height-full="isHeightFull"
             @editEvent="e => emit('editEvent', e)"
             @editSubEvent="e => openAddSubEventModal"
             @openAddSubEventModal="openAddSubEventModal"
             @openConfirmModal="(e, type) => emit('open-confirm-modal', e, type)"
             @showDeclineEventModal="e => emit('show-decline-event-modal', e)"
+            @acceptRoomRequest="e => emit('accept-room-request', e)"
             @changedMultiEditCheckbox="(...args) => emit('changed-multi-edit-checkbox', ...args)"
         />
     </div>
 </template>
 
 <script setup>
-import { defineAsyncComponent, defineComponent } from 'vue'
+import { defineComponent } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 
-// Async laden (Original-Datei vorhanden)
-const FullEventInCalendar = defineAsyncComponent(() => import("@/Components/Calendar/Elements/Events/FullEventInCalendar.vue"))
+// Synchron importieren – der äußere defineAsyncComponent in BaseCalendar
+// sorgt bereits für Code-Splitting. Ein zweiter Async-Layer erzeugt eine
+// Waterfall (2–3 Frames Verzögerung pro Event → Events "poppen" einzeln auf).
+import FullEventInCalendar from "@/Components/Calendar/Elements/Events/FullEventInCalendar.vue"
 
 // Minimale Inline-Variante, falls event.isMinimal true ist
 const MinimalEventInCalendar = defineComponent({
@@ -37,9 +42,14 @@ const MinimalEventInCalendar = defineComponent({
         event: { type: Object, required: true },
         width: { type: String, default: '248px' }
     },
+    setup() {
+        // Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (wie FullEventInCalendar)
+        const zoomFactor = usePage().props.auth.user.zoom_factor ?? 1
+        return { contentZoom: zoomFactor > 1 ? zoomFactor : 1 }
+    },
     template: `
     <div class="rounded-lg border border-gray-200 bg-white px-2 py-1 overflow-hidden"
-         :style="{ minWidth: width, maxWidth: width, width: width }">
+         :style="{ minWidth: width, maxWidth: width, width: width, zoom: contentZoom }">
       <div class="text-xs font-medium truncate">{{ event.title ?? event.eventName ?? 'Event' }}</div>
     </div>`
 })
@@ -50,6 +60,7 @@ const emit = defineEmits([
     'openAddSubEventModal',
     'openConfirmModal',
     'showDeclineEventModal',
+    'acceptRoomRequest',
     'changedMultiEditCheckbox'
 ]);
 

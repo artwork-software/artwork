@@ -49,7 +49,7 @@
                     </div>
 
                     <button class="ui-button-add" @click="openAddStateModal">
-                        <component :is="IconPlus" stroke-width="1" class="size-5" />
+                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add Status') }}
                     </button>
                 </div>
@@ -72,16 +72,6 @@
                     @add="addCompanyType"
                     @openDeleteModal="openDeleteCompanyTypeModal"
                     @openEditModal="openEditCompanyTypeModal"
-                />
-
-                <ProjectSettingsItem
-                    :title="$t('Collecting Societies')"
-                    :description="$t('Define collecting societies that can be assigned to projects later.')"
-                    :input-label="$t('Enter Collecting Society')"
-                    :items="collectingSocieties"
-                    @add="addCollectingSociety"
-                    @openDeleteModal="openDeleteCollectingSocietyModal"
-                    @openEditModal="openEditCollectingSocietyModal"
                 />
 
                 <ProjectSettingsItem
@@ -171,9 +161,17 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.budget_deadline" id="budget_deadline" aria-describedby="budget_deadline-description" name="budget_deadline" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="budget_deadline" class="font-medium text-gray-900">
-                            {{ $t('Project Budget Deadline') }}
-                        </label>
+                        <div class="flex items-center gap-1.5">
+                            <label for="budget_deadline" class="font-medium text-gray-900">
+                                {{ $t('Budget deadline') }}
+                            </label>
+                            <ToolTipComponent
+                                :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
+                                direction="right"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                            />
+                        </div>
                         <p id="budget_deadline-description" class="text-gray-500 text-xs">
                             {{ $t('Would you like to enter the project budget deadline when you create a project?') }}
                         </p>
@@ -243,14 +241,6 @@
         />
 
         <ProjectSettingsDeleteModal
-            :show="deletingCollectingSociety"
-            :title="$t('Delete collecting society')"
-            :description="$t('Are you sure you want to delete the collecting society {collectingSociety} from the system?',{ collectingSociety: collectingSocietyToDelete?.name})"
-            @delete="deleteCollectingSociety"
-            @closeModal="closeDeleteCollectingSocietyModal"
-        />
-
-        <ProjectSettingsDeleteModal
             :show="deletingCurrency"
             :title="$t('Delete Currency')"
             :description="$t('Are you sure you want to delete the currency {currency} from the system?',{ currency: currencyToDelete?.name})"
@@ -272,7 +262,8 @@
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid"
-import {IconPlus} from '@tabler/icons-vue';
+import {IconInfoCircle, IconCirclePlus} from '@tabler/icons-vue';
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -310,7 +301,9 @@ export default {
         DotsVerticalIcon,
         TrashIcon,
         PencilAltIcon,
-        XIcon
+        XIcon,
+        ToolTipComponent,
+        IconInfoCircle,
     },
     props: [
         'genres',
@@ -318,7 +311,6 @@ export default {
         'sectors',
         'contractTypes',
         'companyTypes',
-        'collectingSocieties',
         'currencies',
         'states',
         'createSettings'
@@ -335,8 +327,6 @@ export default {
             contractTypeToDelete: null,
             deletingCompanyType: false,
             companyTypeToDelete: null,
-            deletingCollectingSociety: false,
-            collectingSocietyToDelete: null,
             deletingCurrency: false,
             currencyToDelete: null,
             deletingState: false,
@@ -355,7 +345,7 @@ export default {
         }
     },
     methods: {
-        IconPlus,
+        IconCirclePlus,
         openEditGenreModal(genre) {
             this.$inertia.patch(route('genres.update', genre.id), {name: genre.name, color: genre.color}, { preserveScroll: true});
         },
@@ -370,9 +360,6 @@ export default {
         },
         openEditCompanyTypeModal(companyType) {
             this.$inertia.patch(route('company_types.update', companyType.id), {name: companyType.name, color: companyType.color}, { preserveScroll: true});
-        },
-        openEditCollectingSocietyModal(collectingSociety) {
-            this.$inertia.patch(route('collecting_societies.update', collectingSociety.id), {name: collectingSociety.name, color: collectingSociety.color}, { preserveScroll: true});
         },
         openEditCurrencyModal(currency) {
             this.$inertia.patch(route('currencies.update', currency.id), {name: currency.name, color: currency.color}, { preserveScroll: true});
@@ -520,23 +507,6 @@ export default {
             this.companyTypeToDelete = null
         },
 
-        addCollectingSociety(collectingSocietyInput, color) {
-            if (collectingSocietyInput !== '') {
-                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput, color: color}, { preserveScroll: true});
-            }
-        },
-        deleteCollectingSociety() {
-            this.$inertia.delete(`/collecting_societies/${this.collectingSocietyToDelete.id}`, { preserveScroll: true});
-            this.closeDeleteCollectingSocietyModal();
-        },
-        openDeleteCollectingSocietyModal(collectingSociety) {
-            this.collectingSocietyToDelete = collectingSociety;
-            this.deletingCollectingSociety = true
-        },
-        closeDeleteCollectingSocietyModal() {
-            this.deletingCollectingSociety = false
-            this.collectingSocietyToDelete = null
-        },
         addCurrency(currencyInput, color){
           if(currencyInput !== ''){
               this.$inertia.post(route('currencies.store'), {name: currencyInput, color: color}, { preserveScroll: true});
@@ -575,7 +545,7 @@ export default {
                     }
                 })
             }
-        }
+        },
     },
     setup() {
         return {}

@@ -1,0 +1,316 @@
+<?php
+
+namespace Artwork\Modules\Shift\Services;
+
+use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Holidays\Models\Holiday;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Serializers\ShiftListViewSerializer;
+use Artwork\Modules\User\Models\UserFilter;
+use Artwork\Modules\User\Models\UserShiftListViewSettings;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+
+readonly class ShiftListViewService
+{
+    public function __construct(
+        private ShiftListViewSerializer $serializer,
+    ) {
+    }
+    public function getGroupedShifts(
+        Carbon $startDate,
+        Carbon $endDate,
+        UserShiftListViewSettings $settings,
+        ?UserFilter $userFilter = null
+    ): array {
+        // Abwesenheiten im Zeitraum für das is_unavailable-Flag (ohne N+1)
+        $vacationsScope = fn ($q) => $q
+            ->without(['series', 'conflicts'])
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+
+        $query = Shift::query()
+            ->with([
+                'craft:id,name,abbreviation,color,position',
+                'craft.qualifications:id,name',
+                'room:id,name,position',
+                'project:id,name',
+                'event:id,event_type_id,project_id',
+                'event.project:id,name',
+                'users:id,first_name,last_name',
+                'users.vacations' => $vacationsScope,
+                'freelancer:id,first_name,last_name',
+                'freelancer.vacations' => $vacationsScope,
+                'serviceProvider:id,provider_name',
+                'serviceProvider.vacations' => $vacationsScope,
+                'shiftsQualifications:id,shift_id,shift_qualification_id,value',
+                'shiftGroup:id,name',
+                'globalQualifications',
+            ])
+            ->eventStartDayAndEventEndDayBetween($startDate, $endDate);
+
+        if ($userFilter) {
+            if (!empty($userFilter->craft_ids)) {
+                $query->whereIn('craft_id', $userFilter->craft_ids);
+            }
+
+            if (!empty($userFilter->room_ids)) {
+                $query->whereIn('room_id', $userFilter->room_ids);
+            }
+
+            if (!empty($userFilter->event_type_ids)) {
+                $query->whereHas('event', function ($q) use ($userFilter): void {
+                    $q->whereIn('event_type_id', $userFilter->event_type_ids);
+                });
+            }
+
+            if (!empty($userFilter->area_ids)) {
+                $query->whereHas('room', function ($q) use ($userFilter): void {
+                    $q->whereIn('area_id', $userFilter->area_ids);
+                });
+            }
+
+            if (!empty($userFilter->room_category_ids)) {
+                $query->whereHas('room.categories', function ($q) use ($userFilter): void {
+                    $q->whereIn('room_categories.id', $userFilter->room_category_ids);
+                });
+            }
+
+            if (!empty($userFilter->room_attribute_ids)) {
+                $query->whereHas('room.attributes', function ($q) use ($userFilter): void {
+                    $q->whereIn('room_attributes.id', $userFilter->room_attribute_ids);
+                });
+            }
+
+            if (!empty($userFilter->event_property_ids)) {
+                $query->whereHas('event.eventProperties', function ($q) use ($userFilter): void {
+                    $q->whereIn('event_properties.id', $userFilter->event_property_ids);
+                });
+            }
+        }
+
+        $shifts = $query->get();
+
+        if (!$settings->show_fully_staffed_shifts) {
+            $shifts = $shifts->filter(function (Shift $shift) {
+                $assignedCount = $shift->users->count()
+                    + $shift->freelancer->count()
+                    + $shift->serviceProvider->count();
+                $requiredCount = $shift->shiftsQualifications->sum('value');
+
+                // Always show shifts that have no staffing requirements set (0/0),
+                // since they are not "fully staffed" but simply unconfigured.
+                if ($requiredCount === 0) {
+                    return true;
+                }
+
+                if ($assignedCount < $requiredCount) {
+                    return true;
+                }
+
+                // Eine Schicht mit eingeplanter, aber nicht (mehr) verfügbarer Person
+                // zählt nicht als voll besetzt — es besteht weiter Belegungsbedarf.
+                foreach ([$shift->users, $shift->freelancer, $shift->serviceProvider] as $workers) {
+                    foreach ($workers as $worker) {
+                        if (ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker)) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        $shifts = $shifts->sortBy([
+            ['start_date', 'asc'],
+            fn (Shift $a, Shift $b) => ($a->room->position ?? 0) <=> ($b->room->position ?? 0),
+            fn (Shift $a, Shift $b) => ($a->craft->position ?? 0) <=> ($b->craft->position ?? 0),
+            ['start', 'asc'],
+        ]);
+
+        // Group by day, then by room — using arrays (not objects with numeric keys)
+        // to preserve room.position ordering in JavaScript
+        $dayMap = [];
+        foreach ($shifts as $shift) {
+            $day = Carbon::parse($shift->start_date)->format('Y-m-d');
+            $roomId = $shift->room_id ?? 0;
+
+            if (!isset($dayMap[$day])) {
+                $dayMap[$day] = [];
+            }
+            if (!isset($dayMap[$day][$roomId])) {
+                $dayMap[$day][$roomId] = [
+                    'room_id' => $roomId,
+                    'room' => [
+                        'id' => $roomId,
+                        'name' => $shift->room?->name,
+                        'position' => $shift->room?->position ?? 0,
+                    ],
+                    'shifts' => [],
+                    'events' => [],
+                ];
+            }
+            $dayMap[$day][$roomId]['shifts'][] = $this->serializer->serializeShift($shift);
+        }
+
+        if ($settings->show_appointments) {
+            $events = $this->getEventsForRange($startDate, $endDate, $userFilter);
+
+            foreach ($events as $event) {
+                $serializedEvent = $this->serializer->serializeListViewEvent($event);
+                // An event can span multiple days; emit it on each day in range
+                $eventStart = $event->start_time->copy()->startOfDay();
+                $eventEnd = $event->end_time->copy()->startOfDay();
+                $rangeStart = $startDate->copy()->startOfDay();
+                $rangeEnd = $endDate->copy()->startOfDay();
+
+                $loopStart = $eventStart->lt($rangeStart) ? $rangeStart : $eventStart;
+                $loopEnd = $eventEnd->gt($rangeEnd) ? $rangeEnd : $eventEnd;
+
+                for ($day = $loopStart->copy(); $day->lte($loopEnd); $day->addDay()) {
+                    $dayKey = $day->format('Y-m-d');
+                    $roomId = $event->room_id ?? 0;
+
+                    if (!isset($dayMap[$dayKey])) {
+                        $dayMap[$dayKey] = [];
+                    }
+                    if (!isset($dayMap[$dayKey][$roomId])) {
+                        $dayMap[$dayKey][$roomId] = [
+                            'room_id' => $roomId,
+                            'room' => [
+                                'id' => $roomId,
+                                'name' => $event->room?->name,
+                                'position' => $event->room?->position ?? 0,
+                            ],
+                            'shifts' => [],
+                            'events' => [],
+                        ];
+                    }
+                    $dayMap[$dayKey][$roomId]['events'][] = $serializedEvent;
+                }
+            }
+        }
+
+        ksort($dayMap);
+
+        // Sort rooms within each day by room.position; sort events within each room by start_time
+        foreach ($dayMap as $day => $rooms) {
+            uasort($rooms, function ($a, $b) {
+                return ($a['room']['position'] ?? 0) <=> ($b['room']['position'] ?? 0);
+            });
+            foreach ($rooms as $roomId => $roomData) {
+                if (!empty($roomData['events'])) {
+                    usort($rooms[$roomId]['events'], function (array $a, array $b) {
+                        return $a['start_time'] <=> $b['start_time'];
+                    });
+                }
+            }
+            $dayMap[$day] = $rooms;
+        }
+
+        // Load holidays for the date range
+        $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
+            ->groupBy(fn (CalendarHolidayDTO $h) => $h->date);
+
+        // Convert to sequential arrays so JS preserves insertion order
+        $result = [];
+        foreach ($dayMap as $day => $rooms) {
+            $result[] = [
+                'day' => $day,
+                'rooms' => array_values($rooms),
+                'holidays' => ($holidaysByDate->get($day, collect()))->values()->toArray(),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Event>
+     */
+    private function getEventsForRange(
+        Carbon $startDate,
+        Carbon $endDate,
+        ?UserFilter $userFilter
+    ): \Illuminate\Database\Eloquent\Collection {
+        // Note: only the relations actually rendered in the appointments column are eager-loaded.
+        // event_type → abbreviation+color, project → name, room → position for sort.
+        $query = Event::query()
+            ->with([
+                'room:id,name,position',
+                'event_type:id,name,abbreviation,hex_code',
+                'project:id,name',
+            ])
+            ->where(function (Builder $q) use ($startDate, $endDate): void {
+                $q->whereBetween('start_time', [$startDate, $endDate])
+                    ->orWhereBetween('end_time', [$startDate, $endDate])
+                    ->orWhere(function (Builder $nested) use ($startDate, $endDate): void {
+                        $nested->where('start_time', '<=', $startDate)
+                            ->where('end_time', '>=', $endDate);
+                    });
+            });
+
+        if ($userFilter) {
+            if (!empty($userFilter->room_ids)) {
+                $query->whereIn('room_id', $userFilter->room_ids);
+            }
+
+            if (!empty($userFilter->event_type_ids)) {
+                $query->whereIn('event_type_id', $userFilter->event_type_ids);
+            }
+
+            if (!empty($userFilter->area_ids)) {
+                $query->whereHas('room', function ($q) use ($userFilter): void {
+                    $q->whereIn('area_id', $userFilter->area_ids);
+                });
+            }
+
+            if (!empty($userFilter->room_category_ids)) {
+                $query->whereHas('room.categories', function ($q) use ($userFilter): void {
+                    $q->whereIn('room_categories.id', $userFilter->room_category_ids);
+                });
+            }
+
+            if (!empty($userFilter->room_attribute_ids)) {
+                $query->whereHas('room.attributes', function ($q) use ($userFilter): void {
+                    $q->whereIn('room_attributes.id', $userFilter->room_attribute_ids);
+                });
+            }
+
+            if (!empty($userFilter->event_property_ids)) {
+                $query->whereHas('eventProperties', function ($q) use ($userFilter): void {
+                    $q->whereIn('event_properties.id', $userFilter->event_property_ids);
+                });
+            }
+        }
+
+        return $query->get();
+    }
+
+    private function getHolidaysForRange(Carbon $start, Carbon $end): \Illuminate\Support\Collection
+    {
+        return Holiday::select(['id', 'name', 'date', 'end_date', 'color', 'yearly'])
+            ->where(function (Builder $q) use ($start, $end): void {
+                $q->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                    ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
+                    ->orWhere(function (Builder $nested) use ($start, $end): void {
+                        $nested->where('date', '<=', $start->toDateString())
+                            ->where('end_date', '>=', $end->toDateString());
+                    })
+                    ->orWhere(function (Builder $nested) use ($start, $end): void {
+                        $nested->where('yearly', true)
+                            ->whereBetween(\DB::raw('DATE_FORMAT(date, "%m-%d")'), [$start->format('m-d'), $end->format('m-d')]);
+                    });
+            })
+            ->with(['subdivisions' => fn ($q) => $q->select('name')])
+            ->get()
+            ->map(fn ($holiday) => new CalendarHolidayDTO(
+                name: $holiday->name,
+                date: $holiday->date->toDateString(),
+                end_date: $holiday->end_date->toDateString(),
+                color: $holiday->color,
+                subdivisions: $holiday->subdivisions->pluck('name')->toArray(),
+            ));
+    }
+}

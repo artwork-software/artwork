@@ -2,15 +2,19 @@
 
 namespace Artwork\Modules\Project\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\BusinessIntelligence\Models\BiEventData;
+use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
+use Artwork\Modules\BusinessIntelligence\Models\BiProjectRoomCapacity;
+use Artwork\Modules\BusinessIntelligence\Models\BiSnapshot;
+use Artwork\Modules\BusinessIntelligence\Models\BiTimeEffort;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\CostCenter\Models\CostCenter;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
@@ -31,12 +35,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Scout\Searchable;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
  * @property string $name
- * @property string $own_copyright
+ * @property bool $gema
+ * @property string $cost_center_description
  * @property string $artists
  * @property string $description
  * @property string $shift_description
@@ -67,12 +75,12 @@ use Laravel\Scout\Searchable;
  * @property Collection<Genre> $genres
  * @property Collection<Room> $rooms
  * @property CostCenter $costCenter
- * @property CollectingSociety $collectingSociety
  * @property Collection<Project> $groups
  * @property Collection<Project> $projectsOfGroup
  * @property Collection<Comment> $comments
  * @property Collection<ArtistResidency> $artistResidencies
  * @property Collection<ProjectState> $status
+ * @property Collection<CrmContact> $crmContacts
  */
 class Project extends Model
 {
@@ -80,7 +88,16 @@ class Project extends Model
     use SoftDeletes;
     use Prunable;
     use Searchable;
-    use HasChangesHistory;
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('project')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'name',
@@ -92,10 +109,7 @@ class Project extends Model
         'state',
         'budget_deadline',
         'pinned_by_users',
-        'own_copyright',
-        'live_music',
-        'collecting_society_id',
-        'law_size',
+        'gema',
         'cost_center_description',
         'is_group',
         'user_id',
@@ -106,14 +120,12 @@ class Project extends Model
 
     protected $casts = [
         'pinned_by_users' => 'array',
-        'live_music' => 'boolean',
-        'own_copyright' => 'boolean',
+        'gema' => 'boolean',
         'is_group' => 'boolean',
         'marked_as_done' => 'boolean',
     ];
 
     protected $appends = [
-        'first_and_last_event_date',
     ];
 
     protected $with = [
@@ -146,15 +158,16 @@ class Project extends Model
         return $this->hasMany(ArtistResidency::class, 'project_id', 'id');
     }
 
+    public function crmContacts(): BelongsToMany
+    {
+        return $this->belongsToMany(CrmContact::class, 'crm_contact_project')->withTimestamps();
+    }
+
     public function costCenter(): BelongsTo
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id', 'id', 'cost_center');
     }
 
-    public function collectingSociety(): BelongsTo
-    {
-        return $this->belongsTo(CollectingSociety::class, 'collecting_society_id', 'id', 'collecting_society');
-    }
 
     public function shiftRelevantEventTypes(): BelongsToMany
     {
@@ -242,17 +255,29 @@ class Project extends Model
 
     public function sectors(): BelongsToMany
     {
-        return $this->belongsToMany(Sector::class);
+        $relation = $this->belongsToMany(Sector::class);
+        if (Schema::hasColumn('project_sector', 'is_main')) {
+            $relation->withPivot('is_main');
+        }
+        return $relation;
     }
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class);
+        $relation = $this->belongsToMany(Category::class);
+        if (Schema::hasColumn('category_project', 'is_main')) {
+            $relation->withPivot('is_main');
+        }
+        return $relation;
     }
 
     public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class);
+        $relation = $this->belongsToMany(Genre::class);
+        if (Schema::hasColumn('genre_project', 'is_main')) {
+            $relation->withPivot('is_main');
+        }
+        return $relation;
     }
 
     public function rooms(): BelongsToMany
@@ -312,8 +337,21 @@ class Project extends Model
 
     public function getFirstAndLastEventDateAttribute(): ?array
     {
-        $firstEvent = $this->events()->orderBy('start_time', 'ASC')->first();
-        $lastEvent = $this->events()->orderBy('end_time', 'DESC')->first();
+        $firstEvent = $this->events()
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('start_time', 'ASC')
+                ->first()
+            ?? $this->events()->orderBy('start_time', 'ASC')->first();
+
+        $lastEvent = $this->events()
+                ->select('events.*')
+                ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                ->where('event_types.relevant_for_project_period', true)
+                ->orderBy('end_time', 'DESC')
+                ->first()
+            ?? $this->events()->orderBy('end_time', 'DESC')->first();
 
         if ($firstEvent && $lastEvent) {
             return [
@@ -323,6 +361,31 @@ class Project extends Model
         }
 
         return null;
+    }
+
+    public function biData(): HasOne
+    {
+        return $this->hasOne(BiProjectData::class, 'project_id', 'id');
+    }
+
+    public function biEventData(): HasMany
+    {
+        return $this->hasMany(BiEventData::class, 'project_id', 'id');
+    }
+
+    public function biRoomCapacities(): HasMany
+    {
+        return $this->hasMany(BiProjectRoomCapacity::class, 'project_id', 'id');
+    }
+
+    public function biSnapshots(): HasMany
+    {
+        return $this->hasMany(BiSnapshot::class, 'project_id', 'id');
+    }
+
+    public function biTimeEfforts(): HasMany
+    {
+        return $this->hasMany(BiTimeEffort::class, 'project_id', 'id');
     }
 
     public function scopeWhereNotDeleted(Builder $builder): Builder

@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
@@ -73,7 +74,7 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
             $moneySource->name
         );
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];

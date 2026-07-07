@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class SendDeadlineNotificationsCommand extends Command
@@ -98,6 +99,9 @@ class SendDeadlineNotificationsCommand extends Command
                         $task->update(['sent_deadline_notification' => true]);
                     }
                 } elseif ($deadline <= $now->copy()->addDay() && $deadline >= $now) {
+                    if ($task->getAttribute('sent_deadline_tomorrow_notification')) {
+                        continue;
+                    }
                     if ($isPrivateChecklist && $checklistUser) {
                         $this->sendDeadlineNotification(
                             __(
@@ -108,6 +112,7 @@ class SendDeadlineNotificationsCommand extends Command
                             $checklistUser,
                             $task
                         );
+                        $task->update(['sent_deadline_tomorrow_notification' => true]);
                         continue;
                     }
                     if (!$isPrivateChecklist) {
@@ -149,6 +154,7 @@ class SendDeadlineNotificationsCommand extends Command
                                 $task
                             );
                         }
+                        $task->update(['sent_deadline_tomorrow_notification' => true]);
                     }
                 }
             }
@@ -160,7 +166,7 @@ class SendDeadlineNotificationsCommand extends Command
     private function sendDeadlineNotification(string $notificationTitle, User $user, Task $task): void
     {
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle,
         ];

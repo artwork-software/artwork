@@ -21,10 +21,10 @@
                 <div class="cursor-pointer">
                     <div v-if="!time.clicked" @click="canEditComponent ? openCloseTimeEditor(true) : ''">
                         <div v-if="time.start_or_end && time.start === time.end && time.start_date === time.end_date">
-                            <p class="text-xs">{{ $t('From') }} {{ time.start }}</p>
+                            <p class="text-xs">{{ $t('from (time)') }} {{ time.start }}</p>
                         </div>
                         <div v-else-if="!time.start_or_end && time.start === time.end && time.start_date === time.end_date">
-                            <p class="text-xs">{{ $t('Until') }} {{ time.end }}</p>
+                            <p class="text-xs">{{ $t('until (time)') }} {{ time.end }}</p>
                         </div>
                         <div v-else-if="time.start_date !== time.end_date">
                             <p class="text-xs">{{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.formatted_dates.end_date }} {{ time.end }}</p>

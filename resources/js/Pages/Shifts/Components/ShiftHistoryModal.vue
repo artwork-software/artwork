@@ -1,128 +1,335 @@
 <!-- resources/js/Components/Shift/ShiftActivityLogModal.vue -->
 <template>
-    <BaseModal
-        v-if="true"
-        modal-image="/Svgs/Overlays/illu_project_history.svg"
-        @closed="handleClose"
+    <ArtworkBaseModal
+        modal-size="sm:max-w-5xl"
+        :title="t('Shift history')"
+        :description="t('Select a craft and date range to load shift history. Use filters to narrow down results.')"
+        @close="handleClose"
     >
-        <div class="px-4 py-4 space-y-4">
-            <div v-if="!sortedLogs.length" class="text-xs text-gray-500">
-                {{ t('No history entries available for this shift yet.') }}
+        <div class="space-y-6">
+            <!-- Stats (luftiger, ohne gequetschte Divider) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-xl border border-gray-100 bg-white p-4">
+                    <div class="text-[10px] text-gray-500">{{ t('Shifts') }}</div>
+                    <div class="mt-1 text-lg text-gray-900">
+                        <CountUp :value="shifts.length" />
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-100 bg-white p-4">
+                    <div class="text-[10px] text-gray-500">{{ t('Entries') }}</div>
+                    <div class="mt-1 text-lg text-gray-900">
+                        <CountUp :value="meta.total" />
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-100 bg-white p-4">
+                    <div class="text-[10px] text-gray-500">{{ t('Visible') }}</div>
+                    <div class="mt-1 text-lg text-gray-900">
+                        <CountUp :value="filteredLogs.length" />
+                    </div>
+                </div>
             </div>
 
-            <ol v-else class="space-y-3">
-                <li
-                    v-for="entry in sortedLogs"
-                    :key="entry.id"
-                    class="flex gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2 text-xs"
-                >
-                    <!-- Icon-Badge -->
-                    <div class="pt-1">
-                        <span
-                            class="inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold"
-                            :class="bubbleClass(entry)"
-                        >
-                            {{ entry.iconLetter }}
-                        </span>
+            <!-- Controls Card -->
+            <div class="rounded-xl border border-gray-100 bg-white p-5 space-y-6">
+                <!-- Selection row (mehr gap, Buttons stacked) -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <div class="col-span-full">
+                        <ArtworkBaseListbox
+                            v-model="selectedCraft"
+                            :items="craftsWithAll"
+                            :disabled="loading"
+                            :useTranslations="false"
+                            :placeholder="t('Select craft')"
+                            :emptyText="t('No options available')"
+                            label="Craft"
+                            optionLabel="name"
+                            optionKey="id"
+                        />
                     </div>
 
-                    <!-- Inhalt -->
-                    <div class="flex-1 space-y-1.5">
-                        <!-- Nachricht -->
-                        <div class="flex items-start justify-between gap-2">
-                            <p class="text-[11px] leading-snug text-gray-900">
-                                {{ entry.message }}
-                            </p>
-                        </div>
-
-                        <!-- Meta: Zeit, Kontext, Auslöser -->
-                        <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
-                            <span>{{ entry.createdAtFormatted }}</span>
-
-                            <span v-if="entry.contextLabel" class="inline-flex items-center gap-1">
-                                ·
-                                <span
-                                    class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px]"
-                                    :class="contextBadgeClass(entry)"
-                                >
-                                    {{ entry.contextLabel }}
-                                </span>
-                            </span>
-
-                            <span v-if="entry.causerName" class="inline-flex items-center gap-1">
-                                ·
-                                <span
-                                    class="inline-flex h-4 w-4 items-center justify-center rounded-full bg-gray-100 text-[9px]"
-                                >
-                                    {{ entry.causerInitials }}
-                                </span>
-                                <span>{{ entry.causerName }}</span>
-                            </span>
-                        </div>
-
-                        <!-- Detail-Änderungen (über extractActivityChanges) -->
-                        <div
-                            v-if="entry.changes.length"
-                            class="mt-1.5 rounded-md bg-gray-50/80 p-2"
-                        >
-                            <table class="w-full border-collapse text-[10px]">
-                                <thead>
-                                <tr class="text-gray-500 text-[9px]">
-                                    <th class="text-left font-medium pb-1">
-                                        {{ t('Field') }}
-                                    </th>
-                                    <th class="text-left font-medium pb-1">
-                                        {{ t('Before') }}
-                                    </th>
-                                    <th class="text-left font-medium pb-1">
-                                        {{ t('After') }}
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr
-                                    v-for="change in entry.changes"
-                                    :key="change.fieldName + '-' + change.index"
-                                    class="align-top"
-                                >
-                                    <td class="pr-2 py-0.5 text-gray-700">
-                                        {{ fieldLabel(change.fieldName) }}
-                                    </td>
-                                    <td class="pr-2 py-0.5 text-gray-500">
-                                        {{ formatFieldValue(change.fieldName, change.oldValue) }}
-                                    </td>
-                                    <td class="py-0.5 text-gray-900">
-                                        {{ formatFieldValue(change.fieldName, change.newValue) }}
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="col-span-full flex items-center gap-1">
+                        <span class="text-xs font-medium text-gray-700">{{ t('Shift start') }}</span>
+                        <ToolTipComponent
+                            direction="right"
+                            :tooltip-text="t('This period refers to the start of the shifts to be displayed in the history, not when the change was made. Only shift entries of shifts starting in the specified period are shown in the history.')"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
                     </div>
-                </li>
-            </ol>
+
+                    <div class="md:col-span-6">
+                        <BaseInput
+                            v-model="startDate"
+                            id="shift-history-start"
+                            type="date"
+                            label="From"
+                            :disabled="loading"
+                            @focusout="onDateBlur"
+                        />
+                    </div>
+
+                    <div class="md:col-span-6">
+                        <BaseInput
+                            v-model="endDate"
+                            id="shift-history-end"
+                            type="date"
+                            label="To"
+                            :disabled="loading"
+                            @focusout="onDateBlur"
+                        />
+                    </div>
+
+                    <!-- Actions: vertikal, dadurch nicht gequetscht -->
+                    <div class="col-span-full flex gap-4">
+                        <BaseUIButton
+                            :disabled="loading"
+                            :icon="loadBtnIcon"
+                            @click="fetchHistory(true)"
+                            class="w-full justify-center"
+                        >
+                            {{ loading ? t('Loading...') : t('Load') }}
+                        </BaseUIButton>
+
+                        <BaseUIButton
+                            :disabled="loading"
+                            icon="IconX"
+                            @click="resetFilters"
+                            class="w-full justify-center"
+                            :title="t('Reset filters')"
+                        >
+                            {{ t('Reset') }}
+                        </BaseUIButton>
+                    </div>
+                </div>
+
+                <DividerChip :label="t('Filters')" variant="brand" />
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <!-- Search: mehr Platz -->
+                    <div class="col-span-full">
+                        <BaseInput
+                            v-model="search"
+                            id="shift-history-search"
+                            type="text"
+                            label="Search"
+                            :placeholder="t('Search in history...')"
+                            :disabled="loading"
+                            @focusout="onSearchBlur"
+                            @keyup.enter="onSearchBlur"
+                        />
+                    </div>
+
+                    <div class="md:col-span-4">
+                        <ArtworkBaseListbox
+                            v-model="selectedContext"
+                            :items="contextItems"
+                            :disabled="loading"
+                            :useTranslations="true"
+                            label="Context"
+                            placeholder="All contexts"
+                            emptyText="No options available"
+                            optionLabel="name"
+                            optionKey="id"
+                        />
+                    </div>
+
+                    <div class="md:col-span-4">
+                        <ArtworkBaseListbox
+                            v-model="selectedLevel"
+                            :items="levelItems"
+                            :disabled="loading"
+                            :useTranslations="true"
+                            label="Type"
+                            placeholder="All types"
+                            emptyText="No options available"
+                            optionLabel="name"
+                            optionKey="id"
+                        />
+                    </div>
+
+                    <div class="md:col-span-4">
+                        <ArtworkBaseListbox
+                            v-model="selectedShift"
+                            :items="shiftOptions"
+                            :disabled="loading"
+                            :useTranslations="false"
+                            :placeholder="t('All shifts')"
+                            :emptyText="t('No shifts in selected range')"
+                            label="Shift"
+                            :optionLabel="(s) => shiftLabel(s)"
+                            optionKey="id"
+                        />
+                    </div>
+                </div>
+
+                <!-- Sortier-Umschalter: nach Schichttag (statt nach Änderungsdatum) gruppieren -->
+                <div class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-3">
+                    <ArtworkBaseToggle
+                        v-model="groupByShiftDay"
+                        :label="t('Group by shift day')"
+                        :description="t('Sort entries by the day of the shift they belong to instead of by the date of the change.')"
+                    />
+                </div>
+
+                <div v-if="error" class="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-artwork-messages-error">
+                    {{ error }}
+                </div>
+            </div>
+
+            <!-- Empty states -->
+            <div v-if="!filteredLogs.length && !loading" class="rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
+                <div class="font-medium text-gray-900">{{ t('No history entries available for this selection yet.') }}</div>
+                <div class="mt-1 text-gray-600">{{ t('Try adjusting filters or expanding the date range.') }}</div>
+            </div>
+
+            <!-- Results -->
+            <div v-else class="rounded-xl border border-gray-100 bg-white">
+                <!-- Scroll area, damit nichts zusammengedrückt wirkt -->
+                <div class="px-5 py-5 max-h-[60vh] overflow-y-auto pr-4 space-y-6">
+                    <div v-for="group in groupedLogs" :key="group.dayKey" class="space-y-3">
+                        <DividerChip :label="group.unknown ? t('Unknown date') : formatDate(group.dayLabel)" variant="brand" />
+
+                        <ol class="space-y-4">
+                            <li
+                                v-for="entry in group.items"
+                                :key="entry.id"
+                                class="rounded-xl border-2 border-zinc-900 bg-white overflow-hidden hover:shadow-md transition"
+                            >
+                                <!-- Schicht-Card: die betroffenen Schichtdaten klar dargestellt -->
+                                <div class="bg-gray-50/70 px-4 py-3 border-b border-gray-100">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ t('Shift') }}
+                                            <span v-if="entry.shiftDetails.id" class="text-gray-400">#{{ entry.shiftDetails.id }}</span>
+                                        </p>
+                                        <span
+                                            v-if="entry.shiftDetails.deleted"
+                                            class="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-medium text-rose-600"
+                                        >
+                                            <IconTrash class="h-3 w-3" />
+                                            {{ t('Subsequently deleted') }}
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Date') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900">{{ entry.shiftDetails.dateLabel }}</p>
+                                        </div>
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Time') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900">{{ entry.shiftDetails.timeLabel }}</p>
+                                        </div>
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Craft') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.craft }}</p>
+                                        </div>
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Room') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.room }}</p>
+                                        </div>
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100 col-span-2 sm:col-span-4">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Project') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.project }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Vorgang: getrennt unter der Schicht-Card – was, was geändert & von wem -->
+                                <div class="px-4 py-3">
+                                    <p class="text-sm leading-5 text-gray-900 whitespace-pre-wrap">
+                                        {{ entry.message }}
+                                    </p>
+
+                                    <!-- Änderung (Vorher/Nachher-Vergleich) -->
+                                    <div v-if="entry.changes.length" class="mt-3">
+                                        <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                                            {{ t('Modification') }}
+                                        </p>
+                                        <div class="rounded-lg border border-gray-100 bg-gray-50/70 p-3">
+                                            <table class="w-full border-collapse text-[11px]">
+                                                <thead>
+                                                <tr class="text-gray-500 text-[10px]">
+                                                    <th class="text-left font-medium pb-2 pr-3">{{ t('Field') }}</th>
+                                                    <th class="text-left font-medium pb-2 pr-3">{{ t('Before') }}</th>
+                                                    <th class="text-left font-medium pb-2">{{ t('After') }}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100">
+                                                <tr
+                                                    v-for="change in entry.changes"
+                                                    :key="change.fieldName + '-' + change.index"
+                                                    class="align-top"
+                                                >
+                                                    <td class="py-2 pr-3 text-gray-700">
+                                                        {{ fieldLabel(change.fieldName) }}
+                                                    </td>
+                                                    <td class="py-2 pr-3 text-gray-500">
+                                                        {{ formatFieldValue(change.fieldName, change.oldValue) }}
+                                                    </td>
+                                                    <td class="py-2 text-gray-900">
+                                                        {{ formatFieldValue(change.fieldName, change.newValue) }}
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- Verursacher-Badge: wer & wann – immer unten rechts -->
+                                    <div class="mt-3 flex justify-end">
+                                        <span class="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1 text-[11px] font-medium text-white">
+                                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[9px]">
+                                                {{ entry.causerInitials }}
+                                            </span>
+                                            {{ t('Changed by {causer} on {datetime}', { causer: entry.causerName, datetime: entry.createdAtFormatted }) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <!-- Load more -->
+                    <div v-if="meta.current_page < meta.last_page" class="pt-2">
+                        <BaseUIButton
+                            :disabled="loading"
+                            :icon="loading ? 'IconLoader2' : 'IconChevronDown'"
+                            :isSmall="true"
+                            @click="fetchHistory(false)"
+                            class="w-full justify-center"
+                        >
+                            {{ loading ? t('Loading...') : t('Load more') }}
+                        </BaseUIButton>
+                    </div>
+                </div>
+            </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import BaseModal from '@/Components/Modals/BaseModal.vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import axios from 'axios'
+
 import { useShiftPlanRequest } from '../../ShiftPlanRequests/components/useShiftPlanRequest.js'
 
-type AnyRecord = Record<string, any>
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import CountUp from "@/Artwork/Visual/CountUp.vue";
+import DividerChip from "@/Artwork/Divider/DividerChip.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ArtworkBaseToggle from "@/Artwork/Toggles/ArtworkBaseToggle.vue";
+import { IconTrash } from "@tabler/icons-vue";
 
 type ShiftActivityProperties = {
     translation_key?: string | null
     translation_key_placeholder_values?: any[] | null
     context?: 'normal' | 'in_workflow' | 'post_commit' | string | null
     shift_id?: number | null
-    craft_id?: number | null
-    project_id?: number | null
-    current_request_id?: number | null
-    attributes?: AnyRecord
-    old?: AnyRecord
-    field_changes?: AnyRecord
     [key: string]: any
 }
 
@@ -130,30 +337,43 @@ type RawShiftActivity = {
     id: number
     log_name: string
     description: string
-    subject_type: string
     event: string
     subject_id: number
     created_at: string
-    updated_at: string
     properties: ShiftActivityProperties
     causer: {
         id: number
         first_name: string | null
         last_name: string | null
         full_name: string | null
-        profile_photo_url: string | null
-        type: string | null
     } | null
 }
 
-// Props / Emits
+type CraftLite = { id: number; name: string; abbreviation?: string | null }
+
+type ShiftLite = {
+    id: number
+    start_date: string | null
+    end_date: string | null
+    start: string | null
+    end: string | null
+    room?: { id: number; name: string | null } | null
+    project?: { id: number; name: string | null } | null
+    deleted_at?: string | null
+}
+
 const props = defineProps<{
-    logs: RawShiftActivity[]
+    crafts: CraftLite[]
+    initialCraftId?: number | null
+    initialStartDate?: string | null
+    initialEndDate?: string | null
+    // Optionaler Vorbelegungs-Wert für das Suchfeld. Wird im Einsatzplan eines Users
+    // mit dessen Namen befüllt; im (globalen) Dienstplan bleibt es leer.
+    prefillSearch?: string | null
 }>()
 
-const emit = defineEmits<{
-    (e: 'close'): void
-}>()
+const emit = defineEmits<{ (e: 'close'): void }>()
+const handleClose = () => emit('close')
 
 const {
     t,
@@ -163,20 +383,275 @@ const {
     activityContext,
     extractActivityChanges,
     activityTranslation,
+    formatDate
 } = useShiftPlanRequest()
 
-const handleClose = () => {
-    emit('close')
+// Defaults (lokal, ohne UTC shift)
+const toYmd = (d: Date) => new Intl.DateTimeFormat('sv-SE').format(d)
+const defaultStartOfMonth = () => {
+    const n = new Date()
+    return toYmd(new Date(n.getFullYear(), n.getMonth(), 1))
+}
+const defaultEndOfMonth = () => {
+    const n = new Date()
+    return toYmd(new Date(n.getFullYear(), n.getMonth() + 1, 0))
 }
 
-// Normalisierte Struktur für das Frontend
-type NormalizedChange = {
-    index: number
-    fieldName: string
-    oldValue: any
-    newValue: any
+// "Alle Gewerke" option + Selection
+const allCraftsOption: CraftLite = { id: 0, name: t('All crafts') }
+const craftsWithAll = computed(() => [allCraftsOption, ...props.crafts])
+
+const selectedCraft = ref<CraftLite | null>(
+    props.initialCraftId
+        ? (props.crafts.find(c => c.id === props.initialCraftId) ?? allCraftsOption)
+        : allCraftsOption
+)
+const craftId = computed(() => selectedCraft.value?.id ?? 0)
+
+const startDate = ref<string>(props.initialStartDate ?? defaultStartOfMonth())
+const endDate   = ref<string>(props.initialEndDate ?? defaultEndOfMonth())
+
+// Data
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+const shifts = ref<ShiftLite[]>([])
+const rawLogs = ref<RawShiftActivity[]>([])
+const meta = ref({ current_page: 1, last_page: 1, per_page: 50, total: 0 })
+
+// Button icons (safe: IconLoader2 & IconRefresh exist bei dir)
+const loadBtnIcon = computed(() => (loading.value ? 'IconLoader2' : 'IconRefresh'))
+
+// Vorbelegung des Suchfelds: nur wenn ein Wert übergeben wird (Einsatzplan eines Users).
+// Im globalen Dienstplan wird kein Name vorbelegt.
+const initialSearch = (props.prefillSearch ?? '').trim()
+
+// Filters
+const search = ref(initialSearch)
+const selectedContext = ref<{ id: string; name: string } | null>({ id: 'all', name: 'All contexts' })
+const selectedLevel   = ref<{ id: string; name: string } | null>({ id: 'all', name: 'All types' })
+const selectedShift   = ref<ShiftLite | null>(null)
+
+// Sortierung: false = nach Änderungsdatum (created_at, Default), true = nach Schichttag.
+const groupByShiftDay = ref(false)
+
+const contextItems = [
+    { id: 'all',         name: 'All contexts' },
+    { id: 'normal',      name: 'Normal' },
+    { id: 'in_workflow', name: 'Workflow' },
+    { id: 'post_commit', name: 'Post-commit' },
+]
+
+const levelItems = [
+    { id: 'all',     name: 'All types' },
+    { id: 'success', name: 'Added/Assigned' },
+    { id: 'warning', name: 'Updated/Reverted' },
+    { id: 'danger',  name: 'Removed' },
+    { id: 'default', name: 'Other' },
+]
+
+const shiftOptions = computed(() => shifts.value ?? [])
+
+const shiftLabel = (s: ShiftLite) => {
+    const d1 = s.start_date ?? ''
+    const d2 = s.end_date ?? ''
+    const time = [s.start, s.end].filter(Boolean).join('–')
+    const room = s.room?.name ? ` · ${s.room.name}` : ''
+    const proj = s.project?.name ? ` · ${s.project.name}` : ''
+    const datePart = d1 === d2 ? d1 : `${d1}–${d2}`
+    return `${datePart}${time ? ' · ' + time : ''}${room}${proj}`
 }
 
+const shiftsById = computed<Record<string, ShiftLite>>(() => {
+    const map: Record<string, ShiftLite> = {}
+    for (const s of shifts.value) map[String(s.id)] = s
+    return map
+})
+
+const shiftLabelById = (id: number) => {
+    const s = shiftsById.value[String(id)]
+    return s ? `#${id} · ${shiftLabel(s)}` : `#${id}`
+}
+
+// Monats-Abkürzungen (DE/EN) → für Alt-Einträge, deren properties.old das Datum als
+// "21. Sep 2026" / "30. Jun 2026" speichert (Backend ->format('d. M Y')).
+const MONTH_ABBR: Record<string, string> = {
+    jan: '01', feb: '02', mar: '03', 'mär': '03', maerz: '03', apr: '04',
+    may: '05', mai: '05', jun: '06', jul: '07', aug: '08', sep: '09',
+    oct: '10', okt: '10', nov: '11', dec: '12', dez: '12',
+}
+
+// Wandelt verschiedene Datumsdarstellungen nach DD.MM.YYYY. ISO/DD.MM.YYYY laufen über
+// formatDate; das gespeicherte "21. Sep 2026" wird per Monats-Map konvertiert.
+const normalizeDate = (value?: string | null): string => {
+    if (!value) return ''
+    const m = String(value).match(/^(\d{1,2})\.\s*([^\s.]+)\.?\s*(\d{4})$/)
+    if (m) {
+        const mon = MONTH_ABBR[m[2].toLowerCase()]
+        if (mon) return `${m[1].padStart(2, '0')}.${mon}.${m[3]}`
+    }
+    return formatDate(value)
+}
+
+// Liefert einen sortierbaren ISO-Tagesschlüssel (YYYY-MM-DD) aus ISO, DD.MM.YYYY oder
+// "21. Sep 2026". Wird für die Gruppierung nach Schichttag benötigt.
+const toIsoDay = (value?: string | null): string => {
+    if (!value) return ''
+    const s = String(value)
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (m) return `${m[1]}-${m[2]}-${m[3]}`
+    m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/)
+    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+    m = s.match(/^(\d{1,2})\.\s*([^\s.]+)\.?\s*(\d{4})$/)
+    if (m) {
+        const mon = MONTH_ABBR[m[2].toLowerCase()]
+        if (mon) return `${m[3]}-${mon}-${m[1].padStart(2, '0')}`
+    }
+    return ''
+}
+
+// Strukturierte Schichtdaten für die "Schicht-Card" pro Verlaufseintrag.
+// Priorität: Snapshot (Stand zum Zeitpunkt des Eintrags) → aktuelle Live-Schicht →
+// properties.old des Log-Eintrags (enthält bei Alt-Einträgen die Schichtdaten zum
+// Zeitpunkt, z.B. bei Lösch-/Update-Einträgen). So zeigen auch alte Einträge zu
+// (force-)gelöschten Schichten echte Daten statt nur "–".
+const buildShiftDetails = (log: RawShiftActivity): EntryShiftDetails => {
+    const snap = (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null
+    const id = (
+        (log.properties?.shift_id as number | null | undefined) ??
+        (log.subject_id as number | null | undefined) ??
+        snap?.id ??
+        null
+    )
+    const live = id != null ? shiftsById.value[String(id)] as any : null
+    const old = (log.properties as any)?.old ?? null
+
+    const sd = snap?.start_date || live?.start_date || old?.start_date || ''
+    const ed = snap?.end_date || live?.end_date || old?.end_date || ''
+    const dateLabel = sd
+        ? (ed && ed !== sd ? `${normalizeDate(sd)} – ${normalizeDate(ed)}` : normalizeDate(sd))
+        : '–'
+
+    const start = snap?.start || live?.start || old?.start || ''
+    const end = snap?.end || live?.end || old?.end || ''
+    const timeLabel = (start || end) ? [start, end].filter(Boolean).join(' – ') : '–'
+
+    const craft = snap?.craft || live?.craft?.name || live?.craft?.abbreviation || old?.['craft.name'] || '–'
+    const room = snap?.room || live?.room?.name || old?.['room.name'] || '–'
+    const project = snap?.project || live?.project?.name || old?.['project.name'] || '–'
+
+    // "Nicht mehr existent": Live-Schicht ist (soft-)gelöscht ODER es gibt gar keine
+    // Live-Row mehr (force-deleted, nur über Snapshot/old rekonstruiert). Wiederhergestellte
+    // Schichten haben eine Live-Row ohne deleted_at → werden NICHT markiert.
+    const deleted = id != null && (!live || !!live?.deleted_at)
+
+    const dayKey = toIsoDay(snap?.start_date || live?.start_date || old?.start_date)
+
+    return {
+        id: id ?? null,
+        dayKey,
+        dateLabel,
+        timeLabel,
+        craft: craft || '–',
+        room: room || '–',
+        project: project || '–',
+        deleted,
+    }
+}
+
+const resetFilters = () => {
+    search.value = initialSearch
+    selectedContext.value = { id: 'all', name: 'All contexts' }
+    selectedLevel.value   = { id: 'all', name: 'All types' }
+    selectedShift.value   = null
+}
+
+// Fetch
+const fetchHistory = async (reset: boolean) => {
+    loading.value = true
+    error.value = null
+
+    try {
+        const nextPage = reset ? 1 : meta.value.current_page + 1
+
+        const res = await axios.get(route('shift.history.index'), {
+            params: {
+                craftId: craftId.value,
+                start_date: startDate.value,
+                end_date: endDate.value,
+                per_page: meta.value.per_page,
+                page: nextPage,
+                // Serverseitige Suche: stellt sicher, dass auch Treffer auf späteren Seiten
+                // gefunden werden (nicht nur in der aktuell geladenen Seite).
+                search: search.value?.trim() || undefined,
+                // Sortierung: nach Schichttag, damit die Paginierung vollständige Tage von
+                // oben befüllt (statt nur die neuesten Änderungen quer über alle Tage).
+                sort: groupByShiftDay.value ? 'shift_day' : undefined,
+            },
+        })
+
+        const payload = res.data
+        // Die Shift-Liste wird nur beim Reset (erste Seite) vom Server geschickt und
+        // aktualisiert. Beim "Mehr laden" bleibt die bestehende Liste erhalten.
+        if (reset) {
+            shifts.value = payload.shifts ?? []
+        }
+
+        const newLogs: RawShiftActivity[] = payload.logs?.data ?? []
+        meta.value = payload.logs?.meta ?? { current_page: 1, last_page: 1, per_page: 50, total: 0 }
+
+        rawLogs.value = reset ? newLogs : [...rawLogs.value, ...newLogs]
+    } catch (e: any) {
+        error.value = e?.response?.data?.message || e?.message || t('Failed to load history.')
+    } finally {
+        loading.value = false
+    }
+}
+
+// Auto-refresh (debounced) NUR für die Gewerk-Auswahl. Suchbegriff UND Zeitraum werden
+// hier BEWUSST nicht beobachtet: ein Reload beim Tippen würde die Liste neu laden und den
+// Scroll-/Modalinhalt springen lassen. Such-Reload + Datums-Reload passieren erst beim
+// Verlassen des jeweiligen Feldes (onSearchBlur / onDateBlur).
+let timer: number | null = null
+watch([craftId], () => {
+    if (timer) window.clearTimeout(timer)
+    timer = window.setTimeout(() => fetchHistory(true), 250)
+})
+
+// Serverseitige Suche erst beim Verlassen des Suchfeldes auslösen – so werden auch
+// Treffer auf späteren Seiten gefunden, ohne dass das Tippen den Inhalt springen lässt.
+const onSearchBlur = () => {
+    fetchHistory(true)
+}
+
+// Zeitraum-Reload erst beim Verlassen des Datumsfeldes (nicht schon beim Ändern des Tages),
+// damit eine halb eingegebene Eingabe nicht sofort eine teure Abfrage auslöst.
+const onDateBlur = () => {
+    fetchHistory(true)
+}
+
+// Beim Umschalten der Sortierung neu laden: die Server-Paginierung ändert sich (nach
+// Schichttag vs. nach Änderungsdatum), damit auch vollständige Tage von oben geladen werden.
+watch(groupByShiftDay, () => {
+    fetchHistory(true)
+})
+
+onMounted(() => {
+    fetchHistory(true)
+})
+
+// Normalized logs
+type NormalizedChange = { index: number; fieldName: string; oldValue: any; newValue: any }
+type EntryShiftDetails = {
+    id: number | null
+    dayKey: string
+    dateLabel: string
+    timeLabel: string
+    craft: string
+    room: string
+    project: string
+    deleted: boolean
+}
 type NormalizedLogEntry = {
     id: number
     message: string
@@ -189,109 +664,85 @@ type NormalizedLogEntry = {
     iconLetter: string
     level: 'default' | 'success' | 'warning' | 'danger'
     changes: NormalizedChange[]
+    shiftId: number | null
+    snapshot: ShiftSnapshot | null
+    shiftDetails: EntryShiftDetails
+    haystack: string
 }
 
-// Causer-Name + Initialen wie im Drawer
-const getCauserName = (log: RawShiftActivity): { name: string | null; initials: string | null } => {
+// Zustand der Schicht zum Zeitpunkt des Log-Eintrags (aus properties.shift_snapshot).
+type ShiftSnapshot = {
+    id?: number | null
+    start_date?: string | null
+    end_date?: string | null
+    start?: string | null
+    end?: string | null
+    craft_id?: number | null
+    craft?: string | null
+    room?: string | null
+    project?: string | null
+}
+
+const getCauserName = (log: RawShiftActivity) => {
     const causer = log.causer
-    if (!causer) {
-        return {
-            name: t('System'),
-            initials: 'S',
-        }
-    }
+    if (!causer) return { name: t('System'), initials: 'S' }
 
     const name =
         causer.full_name ||
         [causer.first_name, causer.last_name].filter(Boolean).join(' ') ||
         null
 
-    if (!name) {
-        return {
-            name: t('Unknown user'),
-            initials: '?',
-        }
-    }
+    if (!name) return { name: t('Unknown user'), initials: '?' }
 
     const initials = name
         .split(' ')
         .filter(Boolean)
         .slice(0, 2)
-        .map((p) => p.charAt(0))
+        .map(p => p.charAt(0))
         .join('')
         .toUpperCase()
 
-    return {
-        name,
-        initials: initials || name.charAt(0).toUpperCase(),
-    }
+    return { name, initials: initials || name.charAt(0).toUpperCase() }
 }
 
-// Level anhand von description / event / translation_key erkennen (nur fürs Styling)
 const detectLevel = (log: RawShiftActivity): NormalizedLogEntry['level'] => {
     const desc = log.description || ''
     const ev = log.event || ''
     const key = log.properties?.translation_key || ''
 
-    if (
-        desc.includes('assigned') ||
-        ev === 'assigned' ||
-        key.includes('added to shift') ||
-        key.includes('assigned_to_shift')
-    ) {
-        return 'success'
-    }
-
-    if (
-        desc.includes('removed') ||
-        ev === 'removed' ||
-        key.includes('removed from shift') ||
-        key.includes('removed_from_shift')
-    ) {
-        return 'danger'
-    }
-
-    if (
-        desc.includes('updated') ||
-        ev.includes('updated') ||
-        key.includes('updated') ||
-        key === 'shift_updated'
-    ) {
-        return 'warning'
-    }
-
-    if (key === 'committed_shift_change_reverted' || desc.includes('reverted')) {
-        return 'warning'
-    }
-
+    if (desc.includes('assigned') || ev === 'assigned' || key.includes('assigned_to_shift')) return 'success'
+    if (desc.includes('removed')  || ev === 'removed'  || key.includes('removed_from_shift')) return 'danger'
+    if (desc.includes('deleted')  || ev === 'deleted'  || key.includes('deleted')) return 'danger'
+    if (desc.includes('restored') || ev === 'restored' || key.includes('restored')) return 'success'
+    if (desc.includes('updated')  || ev.includes('updated') || key.includes('updated') || key === 'shift_updated') return 'warning'
+    if (key === 'committed_shift_change_reverted' || desc.includes('reverted')) return 'warning'
     return 'default'
 }
 
-// Icon-Buchstabe für das Badge
-const iconForLevel = (level: NormalizedLogEntry['level']): string => {
+const iconForLevel = (level: NormalizedLogEntry['level']) => {
     switch (level) {
-        case 'success':
-            return 'A' // Assigned / Added
-        case 'danger':
-            return 'R' // Removed
-        case 'warning':
-            return 'U' // Updated / Reverted
-        default:
-            return 'H' // History
+        case 'success': return 'A'
+        case 'danger':  return 'R'
+        case 'warning': return 'U'
+        default:        return 'H'
     }
 }
 
-// Label für Kontext (nutzt activityContext aus useShiftPlanRequest)
-const getContextLabel = (log: RawShiftActivity): string | null => {
-    const label = activityContext(log)
-    // activityContext gibt bereits übersetzte Texte zurück (Workflow, Post-commit, Normal)
-    return label || null
+const messageForLog = (log: RawShiftActivity) => {
+    const msgFromKey = activityTranslation(log)
+    if (msgFromKey) return msgFromKey
+    // Lösch-Einträge klar benennen ("Schicht gelöscht") statt nur "gelöscht" – gilt auch
+    // für Alt-Einträge ohne translation_key. Die betroffene Schicht steht im Kontext-Chip.
+    if (log.event === 'deleted') return t('Shift was deleted')
+    // "restored" allein ist unklar – klar benennen ("Schicht wiederhergestellt").
+    if (log.event === 'restored' || log.description === 'restored') return t('Shift was restored')
+    if (log.description) return t(log.description)
+    if (log.event) return t(log.event)
+    return t('Change in shift')
 }
 
-// Detail-Änderungen über extractActivityChanges (wie im Drawer)
 const normalizeChanges = (log: RawShiftActivity): NormalizedChange[] => {
     const changes = extractActivityChanges(log) || []
-
     return changes.map((fc: any, index: number) => ({
         index,
         fieldName: fc.fieldName,
@@ -300,42 +751,40 @@ const normalizeChanges = (log: RawShiftActivity): NormalizedChange[] => {
     }))
 }
 
-// Nachrichtentext – **korrekt über i18n-Keys**:
-// 1. activityTranslation(activity) → nutzt translation_key + translation_key_placeholder_values
-//    z.B. "User {0} removed from shift", "Change reverted ({0})", "{0} removed from shift as {1} for {2} ({3})"
-// 2. Fallback auf description / event als i18n-Key
-const messageForLog = (log: RawShiftActivity): string => {
-    const msgFromTranslationKey = activityTranslation(log)
-    if (msgFromTranslationKey) {
-        return msgFromTranslationKey
-    }
-
-    if (log.description) {
-        return t(log.description)
-    }
-
-    if (log.event) {
-        return t(log.event)
-    }
-
-    return t('Change in shift')
-}
-
-// Sortierung + Normalisierung
-const sortedLogs = computed<NormalizedLogEntry[]>(() => {
-    const raw = props.logs || []
-
-    return [...raw]
-        .sort((a, b) => (a.created_at > b.created_at ? -1 : 1)) // neueste zuerst
-        .map<NormalizedLogEntry>((log) => {
+const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
+    return [...(rawLogs.value || [])]
+        .sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
+        .map((log) => {
             const level = detectLevel(log)
             const { name: causerName, initials: causerInitials } = getCauserName(log)
+
+            const context = log.properties?.context || null
+            const contextLabel = activityContext(log) || null
+
             const createdAt = log.created_at
             const createdAtFormatted = formatDateTime(createdAt)
-            const context = log.properties?.context || null
-            const contextLabel = getContextLabel(log)
+
+            const shiftId =
+                (log.properties?.shift_id as number | null | undefined) ??
+                (log.subject_id as number | null | undefined) ??
+                null
+
             const message = messageForLog(log)
-            const changes = normalizeChanges(log)
+
+            // Such-Haystack enthält neben der gerenderten Nachricht auch die rohen
+            // Platzhalterwerte (z.B. zugewiesene Mitarbeiternamen) und die Beschreibung,
+            // damit die clientseitige Suche keinen serverseitigen Treffer ausblendet.
+            const placeholderValues = Array.isArray(log.properties?.translation_key_placeholder_values)
+                ? log.properties!.translation_key_placeholder_values!.map((v) => String(v ?? '')).join(' ')
+                : ''
+            const haystack = [
+                message,
+                log.description ?? '',
+                placeholderValues,
+                causerName ?? '',
+                contextLabel ?? '',
+                shiftId ? shiftLabelById(shiftId) : '',
+            ].join(' ').toLowerCase()
 
             return {
                 id: log.id,
@@ -348,27 +797,76 @@ const sortedLogs = computed<NormalizedLogEntry[]>(() => {
                 causerInitials,
                 iconLetter: iconForLevel(level),
                 level,
-                changes,
+                changes: normalizeChanges(log),
+                shiftId,
+                snapshot: (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null,
+                shiftDetails: buildShiftDetails(log),
+                haystack,
             }
         })
 })
 
-// Styling: Icon-Badge
-const bubbleClass = (entry: NormalizedLogEntry): string => {
+const filteredLogs = computed(() => {
+    const q = search.value.trim().toLowerCase()
+    const ctx = selectedContext.value?.id ?? 'all'
+    const lvl = selectedLevel.value?.id ?? 'all'
+    const shiftId = selectedShift.value?.id ?? null
+
+    return normalizedLogs.value.filter((e) => {
+        if (ctx !== 'all' && e.context !== ctx) return false
+        if (lvl !== 'all' && e.level !== lvl) return false
+        if (shiftId && e.shiftId !== shiftId) return false
+
+        if (q) {
+            if (!e.haystack.includes(q)) return false
+        }
+        return true
+    })
+})
+
+// Gruppierung: nach Änderungsdatum (created_at, Default) ODER nach Schichttag (Toggle).
+// Innerhalb einer Gruppe bleibt die Reihenfolge "neueste Änderung zuerst" (filteredLogs
+// erbt die created_at-DESC-Sortierung aus normalizedLogs). Gruppen absteigend nach Tag,
+// "ohne Datum" ganz unten.
+const groupedLogs = computed(() => {
+    const byShiftDay = groupByShiftDay.value
+    const groups: Record<string, NormalizedLogEntry[]> = {}
+
+    for (const item of filteredLogs.value) {
+        let key: string
+        if (byShiftDay) {
+            key = item.shiftDetails.dayKey || 'unknown'
+        } else {
+            const k = String(item.createdAt ?? '').slice(0, 10)
+            key = k && k.length === 10 ? k : 'unknown'
+        }
+        if (!groups[key]) groups[key] = []
+        groups[key].push(item)
+    }
+
+    const orderedKeys = Object.keys(groups).sort((a, b) => {
+        if (a === 'unknown') return 1
+        if (b === 'unknown') return -1
+        return a > b ? -1 : 1
+    })
+    return orderedKeys.map((k) => ({
+        dayKey: k,
+        dayLabel: k === 'unknown' ? '' : k,
+        unknown: k === 'unknown',
+        items: groups[k],
+    }))
+})
+
+const bubbleClass = (entry: NormalizedLogEntry) => {
     switch (entry.level) {
-        case 'success':
-            return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
-        case 'warning':
-            return 'bg-amber-50 text-amber-700 ring-1 ring-amber-100'
-        case 'danger':
-            return 'bg-rose-50 text-rose-700 ring-1 ring-rose-100'
-        default:
-            return 'bg-gray-50 text-gray-700 ring-1 ring-gray-100'
+        case 'success': return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'
+        case 'warning': return 'bg-amber-50 text-amber-700 ring-1 ring-amber-100'
+        case 'danger':  return 'bg-rose-50 text-rose-700 ring-1 ring-rose-100'
+        default:        return 'bg-gray-50 text-gray-700 ring-1 ring-gray-100'
     }
 }
 
-// Styling: Kontext-Badge
-const contextBadgeClass = (entry: NormalizedLogEntry): string => {
+const contextBadgeClass = (entry: NormalizedLogEntry) => {
     switch (entry.context) {
         case 'in_workflow':
         case 'workflow':
@@ -382,14 +880,3 @@ const contextBadgeClass = (entry: NormalizedLogEntry): string => {
     }
 }
 </script>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.15s ease-out;
-}
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-</style>

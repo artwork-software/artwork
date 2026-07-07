@@ -58,6 +58,31 @@
                         <BaseInput :label="$t('Placeholder')" v-model="textData.placeholder" id="placeholder" />
                     </div>
 
+                    <!-- Placeholder Label -->
+                    <div v-if="'placeholder_label' in textData">
+                        <BaseInput :label="$t('Placeholder label')" v-model="textData.placeholder_label" id="placeholder_label" />
+                    </div>
+
+                    <!-- Placeholder URL -->
+                    <div v-if="'placeholder_url' in textData">
+                        <BaseInput :label="$t('Placeholder URL')" v-model="textData.placeholder_url" id="placeholder_url" />
+                    </div>
+
+                    <!-- Max Items -->
+                    <div v-if="'max_items' in textData">
+                        <label for="max_items" class="text-xs text-gray-500">
+                            {{ $t('Max links') }}
+                        </label>
+                        <input
+                            id="max_items"
+                            type="number"
+                            min="1"
+                            max="200"
+                            v-model.number="textData.max_items"
+                            class="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        />
+                    </div>
+
                     <!-- Höhe (Range) -->
                     <div v-if="'height' in textData">
                         <label for="height" class="text-xs text-gray-500">
@@ -406,7 +431,9 @@ const props = defineProps({
     mode: { type: String, default: 'create' }, // 'create' | 'edit'
     tabComponentTypes: { type: Object, default: () => ({}) },
     componentToEdit: { type: Object, default: null }, // Legacy: for backward compatibility
-    componentId: { type: [Number, String], default: null } // New: for lazy loading
+    componentId: { type: [Number, String], default: null }, // New: for lazy loading
+    storeRouteName: { type: String, default: 'component.store' },
+    updateRouteName: { type: String, default: 'component.update' },
 })
 const emit = defineEmits(['close'])
 
@@ -605,10 +632,10 @@ function updateOrSaveComponent() {
     }
 
     if (isCreateMode.value) {
-        router.post(route('component.store'), payload, options)
+        router.post(route(props.storeRouteName), payload, options)
     } else {
         const componentId = props.componentId || componentToEdit.value?.id
-        router.patch(route('component.update', { component: componentId }), payload, options)
+        router.patch(route(props.updateRouteName, { component: componentId }), payload, options)
     }
 }
 

@@ -1,7 +1,14 @@
 <template>
-    <ArtworkBaseModal @close="$emit('close')"  :title="timelineToEdit ? $t('Edit timeline') : $t('Add timeline')" :description="$t('Define the shift-relevant times. You can create shifts along this timeline.')">
+    <ArtworkBaseModal @close="$emit('close')"  :title="preset ? $t('Edit timeline preset') : (timelineToEdit ? $t('Edit timeline') : $t('Add timeline'))" :description="$t('Define the shift-relevant times. You can create shifts along this timeline.')">
         <form @submit.prevent="updateOrCreate" class="w-full">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-if="preset" class="col-span-full">
+                    <BaseInput
+                        v-model="presetName"
+                        :label="$t('Name')"
+                        id="preset_name"
+                    />
+                </div>
                 <div class="col-span-full">
                     <div class="flex items-center justify-end">
                         <div class="flex items-center gap-x-1 cursor-pointer select-none underline underline-offset-2 text-blue-500 text-xs" @click="showExamples = !showExamples">
@@ -72,6 +79,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import axios from "axios";
 
 const props = defineProps({
@@ -80,6 +88,10 @@ const props = defineProps({
         default: null
     },
     event: {
+        type: Object,
+        default: null
+    },
+    preset: {
         type: Object,
         default: null
     }
@@ -247,11 +259,19 @@ const addExample = (example) => {
     rawText.value += example;
 };
 
+const presetName = ref(props.preset?.name || '');
+
 const updateOrCreate = async () => {
     try {
         const payload = { dataset: dataset.value };
 
-        if(props.timelineToEdit){
+        if (props.preset) {
+            // Preset-Modus: Update des Timeline-Presets
+            await axios.patch(route('timeline-presets.update', {shiftPresetTimeline: props.preset.id}), {
+                name: presetName.value,
+                dataset: dataset.value
+            });
+        } else if(props.timelineToEdit){
             await axios.post(route('edit.timeline.event', {event: props.event.id}), payload);
         } else {
             await axios.post(route('create.timeline.event', {event: props.event.id}), payload);
@@ -266,7 +286,15 @@ const updateOrCreate = async () => {
 onMounted(() => {
     generateRandomExamples();
 
-    if (props.timelineToEdit){
+    if (props.preset) {
+        // Preset-Modus: Lade die Zeiten des Presets
+        const times = props.preset.times || [];
+        rawText.value = times.map((time) => {
+            const start = time.start ? time.start.substring(0, 5) : '';
+            const end = time.end ? time.end.substring(0, 5) : '';
+            return `${start} ${end ? `- ${end}` : ''} ${time.description || ''}`;
+        }).join('\n');
+    } else if (props.timelineToEdit){
         // add presetToEdit.times to rawText
         rawText.value = props.timelineToEdit.map((time) => {
             return `${time.start ? `${time.start}` : ''} ${time.end ? `- ${time.end}` : ''} ${time.description ? time.description : ''}`;

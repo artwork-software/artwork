@@ -13,17 +13,22 @@ class MinDaysBeforeCommitCheck extends AbstractRuleCheck
     public function check(ShiftRule $rule, User $user, Carbon $startDate, Carbon $endDate): Collection
     {
         $violations = collect();
-        $today = now();
+        // startOfDay: start_date ist eine DATE-Spalte (Vergleichswert 00:00) — mit
+        // Zeitanteil fiel eine HEUTE beginnende Schicht aus dem Fenster, ausgerechnet
+        // der dringendste Fall.
+        $today = now()->startOfDay();
         $futureDate = $today->copy()->addDays($rule->individual_number_value);
 
-        // Get all non-committed shifts within the rule's time frame
+        // Get non-committed shifts assigned to this user within the rule's time frame
         $shifts = Shift::where('is_committed', false)
             ->whereBetween('start_date', [$today, $futureDate])
+            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
             ->get();
 
         foreach ($shifts as $shift) {
             $violations->push($this->createViolation($rule, $shift, $user, Carbon::parse($shift->start_date), [
-                'days_until_shift' => $today->diffInDays(Carbon::parse($shift->start_date)),
+                // Carbon 3 liefert Float-Tage — ganzzahlig ausgeben
+                'days_until_shift' => (int) $today->diffInDays(Carbon::parse($shift->start_date)->startOfDay()),
                 'min_required' => $rule->individual_number_value
             ]));
         }

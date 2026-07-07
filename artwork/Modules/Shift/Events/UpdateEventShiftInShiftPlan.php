@@ -37,10 +37,19 @@ class UpdateEventShiftInShiftPlan implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
+        $this->shift->loadMissing([
+            'craft:id,name,abbreviation,color',
+            'shiftsQualifications',
+            'globalQualifications',
+            'users.globalQualifications',
+            'freelancer.globalQualifications',
+            'serviceProvider.globalQualifications',
+            'project',
+        ]);
+
         return [
-            'shift' => ShiftDTO::fromModel($this->shift),
+            'shift' => ShiftDTO::fromModel($this->shift, $this->shift->project),
             'roomId' => $this->roomId,
-            'daysOfShift' => $this->shift->getAttribute('days_of_shift'), // Tag der Schicht
         ];
     }
 }

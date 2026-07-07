@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Work time change requests')">
 
         <div class="container mx-auto max-w-6xl px-4 py-6 space-y-6">
             <WorkTimeTabComponent />

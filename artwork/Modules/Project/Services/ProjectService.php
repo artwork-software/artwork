@@ -5,6 +5,8 @@ namespace Artwork\Modules\Project\Services;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
@@ -27,6 +29,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -95,7 +98,11 @@ class ProjectService
                 'status',
                 'delete_permission_users' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-                }
+                },
+                'biData',
+                'biEventData.event',
+                'biRoomCapacities',
+                'events.room',
             ])
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt
@@ -108,7 +115,11 @@ class ProjectService
 
                             $query
                                 ->where('name', 'like', $like)
-                                ->orWhere('artists', 'like', $like);
+                                ->orWhere('artists', 'like', $like)
+                                ->orWhereHas(
+                                    'crmContacts',
+                                    fn(Builder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
+                                );
                         });
                     }
                 )
@@ -163,6 +174,19 @@ class ProjectService
                         });
                     }
                 )
+                // Only show productions that actually carry BI key figures
+                ->when(
+                    $projectFilters?->contains('showOnlyWithBiData'),
+                    function (Builder $builder): void {
+                        $builder->where(function (Builder $query): void {
+                            $query->whereHas('biData', function (Builder $biQuery): void {
+                                $biQuery->whereNotNull('visitors_total')
+                                    ->orWhereNotNull('sold_tickets_total')
+                                    ->orWhereNotNull('revenue_total');
+                            })->orWhereHas('biEventData');
+                        });
+                    }
+                )
                 // Apply project type filters (groups/non-groups)
                 ->when(
                     $projectFilters?->isNotEmpty(),
@@ -181,84 +205,53 @@ class ProjectService
                                 $hasProjectTypeFilter = true;
                             }
 
-                            // If neither project type filter is active, don't return any projects
+                            // If neither project type filter is active, show both projects and project groups
                             if (!$hasProjectTypeFilter) {
-                                $builder->whereRaw('1 = 0');
+                                $builder->whereRaw('1 = 1');
                             }
                         });
 
-                        // Special case: When both showExpiredProjects and showFutureProjects are false
-                        // Hide all projects with any events, regardless of when they occur
-                        if (!$projectFilters->contains('showExpiredProjects') && !$projectFilters->contains('showFutureProjects')) {
-                            $builder->where(function (Builder $builder) use ($projectFilters): void {
-                                // If showProjectsWithoutEvents is true, only show projects without events
-                                if ($projectFilters->contains('showProjectsWithoutEvents')) {
-                                    $builder->whereDoesntHave('events');
-                                } else {
-                                    // If showProjectsWithoutEvents is false, don't show any projects
-                                    // (since all projects either have events or don't have events)
-                                    $builder->whereRaw('1 = 0');
+                        // Handle time filters with same logic as type filters:
+                        // Only filter when at least one time filter is active
+                        $hasExpiredFilter = $projectFilters->contains('showExpiredProjects');
+                        $hasFutureFilter = $projectFilters->contains('showFutureProjects');
+
+                        if ($hasExpiredFilter || $hasFutureFilter) {
+                            $todayMidnight = $this->carbonService->getTodayMidnight();
+
+                            $builder->where(function (Builder $builder) use ($hasExpiredFilter, $hasFutureFilter, $todayMidnight, $projectFilters): void {
+                                if ($hasExpiredFilter && $hasFutureFilter) {
+                                    // Both active: show all projects (no time restriction)
+                                    $builder->whereRaw('1 = 1');
+                                } elseif ($hasExpiredFilter) {
+                                    // Only expired: show projects with past events
+                                    $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
+                                        $query->where('start_time', '<', $todayMidnight);
+                                    });
+                                    if (!$projectFilters->contains('hideProjectsWithoutEvents')) {
+                                        $builder->orWhereDoesntHave('events');
+                                    }
+                                } elseif ($hasFutureFilter) {
+                                    // Only future: show projects with future events
+                                    $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
+                                        $query->where(function (Builder $q) use ($todayMidnight): void {
+                                            $q->where('start_time', '>=', $todayMidnight)
+                                              ->orWhere('end_time', '>=', $todayMidnight);
+                                        });
+                                    });
+                                    if (!$projectFilters->contains('hideProjectsWithoutEvents')) {
+                                        $builder->orWhereDoesntHave('events');
+                                    }
                                 }
                             });
-                        } else {
-                            // Handle showExpiredProjects filter - when false, exclude projects with no future events
-                            if (!$projectFilters->contains('showExpiredProjects')) {
-                                $builder->where(function (Builder $builder) use ($projectFilters): void {
-                                    $todayMidnight = $this->carbonService->getTodayMidnight();
-
-                                    // Allow projects without events if showProjectsWithoutEvents is true
-                                    if ($projectFilters->contains('showProjectsWithoutEvents')) {
-                                        $builder->where(function (Builder $subQuery) use ($todayMidnight): void {
-                                            // Either has future events
-                                            $subQuery->whereHas('events', function (Builder $query) use ($todayMidnight): void {
-                                                $query->where(function (Builder $q) use ($todayMidnight): void {
-                                                    $q->where('start_time', '>=', $todayMidnight)
-                                                      ->orWhere('end_time', '>=', $todayMidnight);
-                                                });
-                                            })
-                                            // Or has no events at all
-                                            ->orWhereDoesntHave('events');
-                                        });
-                                    } else {
-                                        // Original behavior when showProjectsWithoutEvents is false
-                                        $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
-                                            $query->where(function (Builder $q) use ($todayMidnight): void {
-                                                $q->where('start_time', '>=', $todayMidnight)
-                                                  ->orWhere('end_time', '>=', $todayMidnight);
-                                            });
-                                        });
-                                    }
-                                });
-                            }
-
-                            // Handle showFutureProjects filter - when false, exclude projects with only future events
-                            if (!$projectFilters->contains('showFutureProjects')) {
-                                $builder->where(function (Builder $builder) use ($projectFilters): void {
-                                    $todayMidnight = $this->carbonService->getTodayMidnight();
-
-                                    // Allow projects without events if showProjectsWithoutEvents is true
-                                    if ($projectFilters->contains('showProjectsWithoutEvents')) {
-                                        $builder->where(function (Builder $subQuery) use ($todayMidnight): void {
-                                            // Either has past events
-                                            $subQuery->whereHas('events', function (Builder $query) use ($todayMidnight): void {
-                                                $query->where('start_time', '<', $todayMidnight);
-                                            })
-                                            // Or has no events at all
-                                            ->orWhereDoesntHave('events');
-                                        });
-                                    } else {
-                                        // Original behavior when showProjectsWithoutEvents is false
-                                        $builder->whereHas('events', function (Builder $query) use ($todayMidnight): void {
-                                            $query->where('start_time', '<', $todayMidnight);
-                                        });
-                                    }
-                                });
-                            }
                         }
 
-                        // Handle showProjectsWithoutEvents filter - when false, exclude projects without events
-                        if (!$projectFilters->contains('showProjectsWithoutEvents')) {
-                            $builder->whereHas('events');
+                        // Handle hideProjectsWithoutEvents filter - when checked, exclude projects without events
+                        if ($projectFilters->contains('hideProjectsWithoutEvents')) {
+                            // Only show projects that have at least one event
+                            if (!$hasExpiredFilter && !$hasFutureFilter) {
+                                $builder->whereHas('events');
+                            }
                         }
 
                         // Handle showOnlyProjectsWithoutGroup filter - when true, exclude project groups and projects with assigned groups
@@ -383,7 +376,9 @@ class ProjectService
             $shiftService,
             $subEventService,
             $notificationService,
-            $projectTabService
+            $projectTabService,
+            // Project deletion sends one consolidated notification instead of per-event ones.
+            sendPerEventNotifications: false
         );
         $checklistService->deleteAll($project->checklists, $taskService);
         $projectFileService->deleteAll($project->project_files);
@@ -570,8 +565,8 @@ class ProjectService
         $checklistService->restoreAll($project->checklists()->onlyTrashed()->get(), $taskService);
 
         $table = $project->table()->onlyTrashed()->first();
-        $table->restore();
         if ($table) {
+            $table->restore();
             $columns = $table->columns()->onlyTrashed()->get();
             foreach ($columns as $column) {
                 $column->restore();
@@ -719,49 +714,54 @@ class ProjectService
         }
 
         $eventsWithRelevant = [];
-        foreach (
-            $project
-                ->events()
-                ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
-                ->with(['timelines', 'shifts', 'event_type'])
-                ->orderBy('start_time', 'asc')
-                ->get() as $event
-        ) {
-            $timeline = $event->timelines()
-                ->orderBy('start_date')
-                ->orderBy('start')
-                ->orderBy('end_date')
-                ->orderBy('end')
-                ->get()
-                ->toArray();
+        // Alle Relationen einmalig eager laden statt pro Event/Schicht/Person nachzuladen
+        // (vorher: timelines-Requery, $shift->load() und room()->first() je Event → hunderte Queries)
+        $events = $project
+            ->events()
+            ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
+            ->with([
+                'event_type',
+                'room' => fn ($query) => $query->without(['creator', 'admins']),
+                'timelines' => fn ($query) => $query
+                    ->orderBy('start_date')
+                    ->orderBy('start')
+                    ->orderBy('end_date')
+                    ->orderBy('end'),
+                'shifts.craft',
+                'shifts.committedBy',
+                'shifts.shiftsQualifications',
+                // Personen inkl. globaler Qualifikationen, damit sie im Payload enthalten sind
+                'shifts.users.globalQualifications',
+                'shifts.users.vacations',
+                'shifts.freelancer.globalQualifications',
+                'shifts.serviceProvider.globalQualifications',
+            ])
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        // Urlaubs-Tage nur einmal pro User berechnen, auch wenn er in mehreren Schichten steckt
+        $vacationDaysByUserId = [];
+
+        foreach ($events as $event) {
+            $timeline = $event->timelines->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
             }
 
             foreach ($event->shifts as $shift) {
-                // Eager Load: Schicht- und Personen-bezogene Relationen, damit
-                // die zugewiesenen Personen ihre globalen Qualifikationen im Payload enthalten
-                $shift->load([
-                    'shiftsQualifications',
-                    // Personen inkl. globaler Qualifikationen
-                    'users.globalQualifications',
-                    'freelancer.globalQualifications',
-                    'serviceProvider.globalQualifications',
-                ]);
-
                 foreach ($shift->users as $user) {
-                    $user->formatted_vacation_days = $user->getFormattedVacationDays();
+                    $user->formatted_vacation_days = $vacationDaysByUserId[$user->id]
+                        ??= $user->getFormattedVacationDays();
                 }
             }
-
 
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
                 'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
-                'room' => $event->room()->without(['creator', 'admins'])->first()
+                'room' => $event->room,
             ];
         }
         return $this->sortEventsWithRelevant($eventsWithRelevant);
@@ -861,6 +861,42 @@ class ProjectService
         return $this->projectRepository->scoutSearch($query);
     }
 
+    public function searchProjectsByNameOrArtists(string $search): Collection
+    {
+        return $this->projectRepository->searchByNameOrArtists($search);
+    }
+
+    /**
+     * Verknüpft CRM-Kontakte vom Typ Künstler*in mit dem Projekt.
+     * IDs anderer Kontakttypen werden verworfen.
+     *
+     * @param array<int|string> $crmContactIds
+     */
+    public function syncCrmArtistContacts(Project $project, array $crmContactIds): void
+    {
+        $project->crmContacts()->sync($this->filterArtistCrmContactIds($crmContactIds));
+    }
+
+    /**
+     * @param array<int|string> $crmContactIds
+     * @return array<int>
+     */
+    private function filterArtistCrmContactIds(array $crmContactIds): array
+    {
+        if ($crmContactIds === []) {
+            return [];
+        }
+
+        return CrmContact::query()
+            ->whereIn('id', $crmContactIds)
+            ->whereHas(
+                'contactType',
+                fn($query) => $query->where('slug', CrmSystemContactTypeEnum::ARTIST->value)
+            )
+            ->pluck('id')
+            ->all();
+    }
+
     public function pinnedProjects(int $userId): Collection
     {
         return $this->projectRepository->pinnedProjects($userId);
@@ -902,19 +938,34 @@ class ProjectService
         ]);
     }
 
-    public function syncCategories(Project $project, IlluminateCollection $categories): void
+    public function syncCategories(Project $project, IlluminateCollection $categories, ?int $mainCategoryId = null): void
     {
-        $project->categories()->sync($categories);
+        $syncData = $this->buildSyncDataWithMain($categories, $mainCategoryId, 'category_project');
+        $project->categories()->sync($syncData);
     }
 
-    public function syncGenres(Project $project, IlluminateCollection $genres): void
+    public function syncGenres(Project $project, IlluminateCollection $genres, ?int $mainGenreId = null): void
     {
-        $project->genres()->sync($genres);
+        $syncData = $this->buildSyncDataWithMain($genres, $mainGenreId, 'genre_project');
+        $project->genres()->sync($syncData);
     }
 
-    public function syncSectors(Project $project, IlluminateCollection $sectors): void
+    public function syncSectors(Project $project, IlluminateCollection $sectors, ?int $mainSectorId = null): void
     {
-        $project->sectors()->sync($sectors);
+        $syncData = $this->buildSyncDataWithMain($sectors, $mainSectorId, 'project_sector');
+        $project->sectors()->sync($syncData);
+    }
+
+    private function buildSyncDataWithMain(IlluminateCollection $ids, ?int $mainId, string $pivotTable = 'category_project'): array
+    {
+        $syncData = [];
+        $hasIsMain = Schema::hasColumn($pivotTable, 'is_main');
+        foreach ($ids as $id) {
+            $syncData[$id] = $hasIsMain
+                ? ['is_main' => $mainId !== null && (int) $id === $mainId]
+                : [];
+        }
+        return $syncData;
     }
 
     public function detachManagementUsers(Project $project, bool $detachingAll = false, array $userIds = []): void
@@ -923,6 +974,38 @@ class ProjectService
             $project->managerUsers()->detach();
         } else {
             $project->managerUsers()->detach($userIds);
+        }
+    }
+
+    /**
+     * Replace the manager list without wiping other pivot flags: continuing
+     * managers keep access_budget/can_write/roles (the previous detach-all +
+     * re-attach reset them on every project update).
+     */
+    public function syncManagementUsers(Project $project, array $userIds): void
+    {
+        $newManagerIds = collect($userIds)->map(fn ($id) => (int) $id)->unique();
+        $currentManagerIds = $project->managerUsers()->pluck('users.id');
+
+        // Managers removed from the list leave the project (previous behaviour).
+        $removedIds = $currentManagerIds->diff($newManagerIds);
+        if ($removedIds->isNotEmpty()) {
+            $project->users()->detach($removedIds->all());
+        }
+
+        $existingUserIds = $project->users()->pluck('users.id');
+
+        foreach ($newManagerIds as $userId) {
+            if ($existingUserIds->contains($userId)) {
+                $project->users()->updateExistingPivot($userId, ['is_manager' => true]);
+            } else {
+                $project->users()->attach($userId, [
+                    'access_budget' => false,
+                    'is_manager' => true,
+                    'can_write' => false,
+                    'delete_permission' => false,
+                ]);
+            }
         }
     }
 

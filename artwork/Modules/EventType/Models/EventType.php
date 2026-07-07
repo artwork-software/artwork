@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\EventType\Models;
 
+use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\User\Models\User;
@@ -74,5 +75,15 @@ class EventType extends Model
     public function subEvents(): HasMany
     {
         return $this->hasMany(Event::class, 'event_type_id', 'id');
+    }
+
+    public function biTags(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            BiEventTypeTag::class,
+            'bi_event_type_tag_event_type',
+            'event_type_id',
+            'bi_event_type_tag_id'
+        );
     }
 }

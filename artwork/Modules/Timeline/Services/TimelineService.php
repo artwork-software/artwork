@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Timeline\Services;
 
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Artwork\Modules\Shift\Models\ShiftPresetTimeline;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Repositories\TimelineRepository;

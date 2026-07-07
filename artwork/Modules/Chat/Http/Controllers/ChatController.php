@@ -226,6 +226,7 @@ class ChatController extends Controller
 
     public function getChatMessages(Chat $chat, Request $request)
     {
+        $this->authorize('view', $chat);
         /** @var User $user */
         $user = $this->auth->user();
 
@@ -261,6 +262,7 @@ class ChatController extends Controller
 
     public function sendMessage(Chat $chat, Request $request)
     {
+        $this->authorize('view', $chat);
         // Ursprünglichen Text (mit aktuellem nl2br-Verhalten) holen
         $plain = nl2br($request->get('message'));
 
@@ -290,6 +292,7 @@ class ChatController extends Controller
 
     public function markAsRead(ChatMessage $message)
     {
+        $this->authorize('view', $message->chat);
         /** @var User $user */
         $user = $this->auth->user();
 
@@ -315,6 +318,8 @@ class ChatController extends Controller
 
         $messages = ChatMessage::whereIn('id', $messageIds)
             ->where('sender_id', '!=', $user->id)
+            // Nur Nachrichten aus Chats, in denen der User Mitglied ist.
+            ->whereHas('chat.users', fn ($q) => $q->where('users.id', $user->id))
             ->with('reads')
             ->get();
 

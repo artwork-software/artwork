@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Inventory\Models;
 
 use Artwork\Modules\Inventory\Models\Traits\HasInventoryProperties;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,21 +21,25 @@ class InventoryDetailedQuantityArticle extends Model
         'description',
         'quantity',
         'inventory_article_status_id',
-        'type_number'
+        'external_id',
+        'inventory_number',
+        'detail_number',
+    ];
+
+    protected $casts = [
+        'detail_number' => 'integer',
     ];
 
 
 
     protected $appends = ['room', 'manufacturer'];
 
-    public function getRoomAttribute(): array
+    public function getRoomAttribute(): ?array
     {
         $roomProperty = $this->properties->firstWhere('type', 'room');
 
         if (!$roomProperty || !$roomProperty->pivot->value) {
-            return [
-                'name' => 'Room not found',
-            ];
+            return null;
         }
 
         // Optimierung: Verwende Relation oder eager loading statt einzelner Query
@@ -50,11 +54,7 @@ class InventoryDetailedQuantityArticle extends Model
         $room = $roomCache[$roomId];
 
         if (!$room) {
-            return [
-                'id' => $roomId,
-                'name' => 'Room not found',
-                'property_id' => $roomProperty->id,
-            ];
+            return null;
         }
 
         return [
@@ -64,14 +64,12 @@ class InventoryDetailedQuantityArticle extends Model
         ];
     }
 
-    public function getManufacturerAttribute(): array
+    public function getManufacturerAttribute(): ?array
     {
         $manufacturerProperty = $this->properties->firstWhere('type', 'manufacturer');
 
         if (!$manufacturerProperty || !$manufacturerProperty->pivot->value) {
-            return [
-                'name' => 'Manufacturer not found',
-            ];
+            return null;
         }
 
         // Optimierung: Verwende Relation oder eager loading statt einzelner Query
@@ -80,17 +78,13 @@ class InventoryDetailedQuantityArticle extends Model
         $manufacturerId = $manufacturerProperty->pivot->value;
 
         if (!isset($manufacturerCache[$manufacturerId])) {
-            $manufacturerCache[$manufacturerId] = Manufacturer::select('id', 'name')->find($manufacturerId);
+            $manufacturerCache[$manufacturerId] = CrmContact::select('id', 'display_name as name')->find($manufacturerId);
         }
 
         $manufacturer = $manufacturerCache[$manufacturerId];
 
         if (!$manufacturer) {
-            return [
-                'id' => $manufacturerId,
-                'name' => 'Manufacturer not found',
-                'property_id' => $manufacturerProperty->id,
-            ];
+            return null;
         }
 
         return [

@@ -27,6 +27,7 @@ class ShiftController extends Controller
             'day'            => ['required'],
             'preset_ids'     => ['required', 'array', 'min:1'],
             'preset_ids.*'   => ['integer', 'exists:single_shift_presets,id'],
+            'project_id'     => ['nullable', 'integer', 'exists:projects,id'],
         ]);
 
         $dayDate = Carbon::parse($data['day']);
@@ -71,6 +72,7 @@ class ShiftController extends Controller
                 $shift = Shift::query()->create([
                     'room_id'        => (int) $data['room_id'],
                     'craft_id'       => (int) $preset->craft_id,
+                    'project_id'     => $data['project_id'] ?? null,
 
                     'start_date'     => $startDate->toDateString(),
                     'end_date'       => $endDate->toDateString(),

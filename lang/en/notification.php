@@ -28,6 +28,7 @@ return [
             'deleted' => 'A document has been deleted'
         ],
         'delete' => ':project has been deleted',
+        'delete_with_events' => ':project with :count events has been deleted',
     ],
     'contract' => [
         'add' => 'A contract has been shared with you',
@@ -68,6 +69,8 @@ return [
         'new_commit_request_title' => 'New shift commit request',
         'new_commit_request' => 'New shift commit request :start_time - :end_time from :user',
         'link_label_new_commit_request' => 'Go to shift commit request',
+        'commit_request_approved' => 'Shift plan request :craft (week :week) was approved',
+        'commit_request_rejected' => 'Shift plan request :craft (week :week) was rejected',
     ],
     'event' => [
         'with_adjoining_audience' => 'Event with audience in adjoining room',
@@ -90,7 +93,7 @@ return [
     'scheduling' => [
         'deadline_tomorrow' => 'Deadline of :checklist is reached tomorrow',
         'deadline_over' => ':checklist has exceeded its deadline',
-        'new_tasks' => ':count new tasks for you',
+        'new_tasks' => ':count new tasks for you in: :checklists',
         'changes_project' => 'There have been changes to :project',
         'changes_task' => 'Changes to :task',
         'changes_room' => 'Changes to :room',

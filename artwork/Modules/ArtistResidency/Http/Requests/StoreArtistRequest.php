@@ -23,7 +23,8 @@ class StoreArtistRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'civil_name' => 'nullable|string|max:255',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
         ];

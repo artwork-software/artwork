@@ -6,6 +6,7 @@ use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
@@ -14,7 +15,7 @@ class WorkTimeBookingService
     public function __construct(
         protected GeneralSettings $settings,
         protected WorkTimeBookingRepository $repository,
-
+        protected WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -47,6 +48,21 @@ class WorkTimeBookingService
                 $wantedMinutes = 0;
             }
 
+            // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
+            // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> der freie Tag erzeugt ein
+            // Minus-Delta = Überstundenabbau.
+            $holidayCompValue = (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
+                ->where('user_id', $user->id)
+                ->where('for_holiday', true)
+                ->whereNotNull('granted_date')
+                ->whereDate('granted_date', $today->toDateString())
+                ->sum('value');
+            if ($holidayCompValue >= 1.0) {
+                $wantedMinutes = 0;
+            } elseif ($holidayCompValue > 0) {
+                $wantedMinutes = (int) round($wantedMinutes * (1 - $holidayCompValue));
+            }
+
             $workedTimes = $this->calculateShiftMinutes($today, $user);
             $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
                 $workedTimes['total'],
@@ -77,6 +93,9 @@ class WorkTimeBookingService
                 );
             }
 
+            // Buchung UND Saldo-Anpassung atomar in einer Transaktion (vorher war das
+            // Balance-Update separat danach -> bei Worker-Crash dazwischen blieb der Saldo
+            // dauerhaft falsch, da der Re-Run wegen vorhandener Buchung delta=0 errechnet).
             $this->repository->storeBookingAndUpdateBalanceInTransaction($user, $today, $weekdayIndex, [
                 'name' => "daily_work_time_booking_{$today->toDateString()}",
                 'wanted_working_hours' => $wantedMinutes,
@@ -84,11 +103,12 @@ class WorkTimeBookingService
                 'nightly_working_hours' => $workedTimes['night'],
                 'is_special_day' => false,
                 'work_time_balance_change' => $workTimeBalanceChange,
-            ]);
+            ], $delta);
 
-            if ($delta !== 0) {
-                $this->repository->updateUserBalance($user, $delta);
-            }
+            $this->workingHourCacheService->forgetForEntity('user', $user->id);
+
+            // Rebuild overtime entries + deadlines (flips expired open entries to "payable").
+            app(OvertimeService::class)->recomputeForUser($user);
         }
     }
 
@@ -133,7 +153,13 @@ class WorkTimeBookingService
             $workEnd = min($end, $dayEnd);
 
             if ($workStart->lt($workEnd)) {
-                $duration = $workStart->diffInMinutes($workEnd) - $break;
+                $duration = $workStart->diffInMinutes($workEnd);
+                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
+                $shiftStartDay = $start->copy()->startOfDay();
+                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
+                if ($isFirstDayOfShift) {
+                    $duration -= $break;
+                }
                 $total += max(0, $duration);
 
                 $nightOverlap1Start = max($workStart, $night1Start);

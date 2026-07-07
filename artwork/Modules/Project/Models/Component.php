@@ -30,6 +30,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property bool $special
  * @property bool $sidebar_enabled
  * @property string $permission_type
+ * @property bool $is_bi_field
+ * @property int|null $bi_order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  *
@@ -41,6 +43,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Component notSpecial()
  * @method static \Illuminate\Database\Eloquent\Builder|Component isSpecial()
+ * @method static \Illuminate\Database\Eloquent\Builder|Component isBiField()
  */
 class Component extends Model
 {
@@ -53,14 +56,17 @@ class Component extends Model
         'data',
         'special',
         'sidebar_enabled',
-        'permission_type'
+        'permission_type',
+        'is_bi_field',
+        'bi_order',
     ];
 
 
     protected $casts = [
         'data' => 'array',
         'special' => 'boolean',
-        'sidebar_enabled' => 'boolean'
+        'sidebar_enabled' => 'boolean',
+        'is_bi_field' => 'boolean',
     ];
 
 
@@ -142,6 +148,14 @@ class Component extends Model
     public function scopeIsSpecial(\Illuminate\Database\Eloquent\Builder $query): Builder
     {
         return $query->where('special', true);
+    }
+
+    /**
+     * Scope a query to only include BI field components.
+     */
+    public function scopeIsBiField(\Illuminate\Database\Eloquent\Builder $query): Builder
+    {
+        return $query->where('is_bi_field', true);
     }
 
     public function componentInPrintLayouts(): HasMany

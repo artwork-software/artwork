@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Shift\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
@@ -20,6 +19,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\Contracts\Activity;
@@ -64,10 +64,27 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Shift extends Model
 {
     use HasFactory;
-    use HasChangesHistory;
     use SoftDeletes;
     use LogsActivity;
 
+    protected static function booted(): void
+    {
+        // Für event-lose Schichten event_start_day/event_end_day immer mit
+        // start_date/end_date synchron halten: Ruhezeit-Check und Kollisions-
+        // berechnung lesen diese Felder, und Carbon::parse(null) ergäbe "jetzt".
+        static::saving(function (Shift $shift): void {
+            if ($shift->event_id !== null) {
+                return;
+            }
+
+            $shift->event_start_day = $shift->start_date
+                ? Carbon::parse($shift->start_date)->toDateString()
+                : null;
+            $shift->event_end_day = $shift->end_date
+                ? Carbon::parse($shift->end_date)->toDateString()
+                : null;
+        });
+    }
 
     protected $fillable = [
         'event_id',
@@ -100,13 +117,10 @@ class Shift extends Model
         'end_date' => 'datetime:d. M Y',
     ];
 
-    protected $with = [
-        'craft',
-        'users',
-        'freelancer',
-        'serviceProvider',
-        'committedBy'
-    ];
+    // Kein globales $with mehr: craft/users/freelancer/serviceProvider/committedBy wurden
+    // vorher bei JEDER Shift-Query mitgeladen — auch bei internen Operationen (Rule-Checks,
+    // Observer, Bulk-Aktionen), die sie nie brauchen. Serialisierende Pfade laden sie
+    // explizit eager (Kalender, ShiftPlan, Projekt-Tab, PushesShiftModification::broadcastWith()).
 
     protected $appends = [
         'break_formatted',
@@ -136,15 +150,97 @@ class Shift extends Model
             ->dontSubmitEmptyLogs();
     }
 
+    /**
+     * Namen der zum Löschzeitpunkt zugewiesenen Mitarbeiter.
+     * Wird im `deleting`-Observer befüllt (da die shift_workers-Pivots nach dem Löschen
+     * per DB-Cascade verschwinden) und in tapActivity() in den Lösch-Eintrag geschrieben.
+     *
+     * @var array<int,string>|null
+     */
+    public ?array $deletionAffectedWorkers = null;
+
+    /**
+     * Erfasst die Namen der aktuell zugewiesenen Mitarbeiter (User/Freelancer/Dienstleister).
+     * MUSS vor dem eigentlichen Löschen aufgerufen werden (Pivots noch vorhanden).
+     */
+    public function captureDeletionAffectedWorkers(): void
+    {
+        $names = [];
+
+        try {
+            foreach ($this->users as $user) {
+                $name = $user->getFullNameAttribute();
+                if ($name) {
+                    $names[] = $name;
+                }
+            }
+            foreach ($this->freelancer as $freelancer) {
+                $name = $freelancer->getNameAttribute();
+                if ($name) {
+                    $names[] = $name;
+                }
+            }
+            foreach ($this->serviceProvider as $serviceProvider) {
+                $name = $serviceProvider->getNameAttribute();
+                if ($name) {
+                    $names[] = $name;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Defensiv: lieber kein Name als ein Crash beim Löschen.
+        }
+
+        $this->deletionAffectedWorkers = array_values(array_unique($names));
+    }
+
     public function tapActivity(Activity $activity, string $eventName): void
     {
-        $activity->properties = $activity->properties->merge([
+        $merge = [
             'context'       => $this->is_committed ? 'post_commit' : ($this->in_workflow ? 'in_workflow' : 'normal'),
             'shift_id'      => $this->id,
             'craft_id'      => $this->craft_id,
             'project_id'    => $this->project_id,
             'current_request_id' => $this->current_request_id,
-        ]);
+            // Snapshot des Schicht-Zustands zum Zeitpunkt dieses Log-Eintrags.
+            // Wird im Verlauf für den Kontext-Chip genutzt, damit dort der damalige
+            // Stand erscheint und nicht der aktuelle (Live-)Stand der Schicht. Außerdem
+            // bleibt so der Eintrag nach dem Löschen der Schicht eigenständig lesbar.
+            'shift_snapshot' => $this->toActivitySnapshot(),
+        ];
+
+        // Lösch-Eintrag um die betroffenen Mitarbeiter anreichern: macht den Eintrag
+        // aussagekräftig ("Schicht gelöscht. Betroffen: …") UND über die Namens-Suche
+        // auffindbar (die Namen landen in den Properties).
+        if ($eventName === 'deleted' && ! empty($this->deletionAffectedWorkers)) {
+            $merge['translation_key'] = 'Shift was deleted. Affected: {0}';
+            $merge['translation_key_placeholder_values'] = [implode(', ', $this->deletionAffectedWorkers)];
+            $merge['affected_workers'] = $this->deletionAffectedWorkers;
+        }
+
+        $activity->properties = $activity->properties->merge($merge);
+    }
+
+    /**
+     * Identitäts-Snapshot der Schicht für Activity-Log-Einträge.
+     *
+     * Enthält bewusst nur darstellungsrelevante Felder. start_date/end_date als
+     * ISO (Y-m-d) für serverseitige Zeitraum-Filter; start/end als 'H:i' (Cast).
+     *
+     * @return array<string,mixed>
+     */
+    public function toActivitySnapshot(): array
+    {
+        return [
+            'id'         => $this->id,
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'end_date'   => $this->end_date?->format('Y-m-d'),
+            'start'      => $this->start,
+            'end'        => $this->end,
+            'craft_id'   => $this->craft_id,
+            'craft'      => $this->craft?->abbreviation,
+            'room'       => $this->room?->name,
+            'project'    => $this->project?->name,
+        ];
     }
 
     public function committedBy(): BelongsTo
@@ -203,29 +299,35 @@ class Shift extends Model
         )->without(['components', 'users']);
     }
 
-    public function users(): BelongsToMany
+    public function users(): MorphToMany
     {
         return $this
-            ->belongsToMany(User::class, 'shift_user')
-            ->using(ShiftUser::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time'])
+            ->morphedByMany(User::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
+            ->using(ShiftWorker::class)
+            ->where('shift_workers.employable_type', User::class)
+            ->whereNull('shift_workers.deleted_at')
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason'])
             ->without('calendar_settings');
     }
 
-    public function freelancer(): BelongsToMany
+    public function freelancer(): MorphToMany
     {
         return $this
-            ->belongsToMany(Freelancer::class, 'shifts_freelancers')
-            ->using(ShiftFreelancer::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
+            ->morphedByMany(Freelancer::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
+            ->using(ShiftWorker::class)
+            ->where('shift_workers.employable_type', Freelancer::class)
+            ->whereNull('shift_workers.deleted_at')
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason']);
     }
 
-    public function serviceProvider(): BelongsToMany
+    public function serviceProvider(): MorphToMany
     {
         return $this
-            ->belongsToMany(ServiceProvider::class, 'shifts_service_providers')
-            ->using(ShiftServiceProvider::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time']);
+            ->morphedByMany(ServiceProvider::class, 'employable', 'shift_workers', 'shift_id', 'employable_id')
+            ->using(ShiftWorker::class)
+            ->where('shift_workers.employable_type', ServiceProvider::class)
+            ->whereNull('shift_workers.deleted_at')
+            ->withPivot(['id', 'shift_qualification_id', 'is_overbooked', 'shift_count', 'craft_abbreviation', 'short_description', 'start_date', 'end_date', 'start_time', 'end_time', 'workflow_rejection_reason']);
     }
 
     /**
@@ -263,7 +365,7 @@ class Shift extends Model
 
     public function getHistoryAttribute(): Collection
     {
-        return $this->historyChanges()->sortByDesc('created_at');
+        return $this->activities()->latest()->get();
     }
 
     public function getBreakFormattedAttribute(): string
@@ -279,10 +381,38 @@ class Shift extends Model
         return $formattedHours . ':' . $formattedMinutes;
     }
 
+    /**
+     * Anzeige-Label "06.05.2026 09:00 - 17:00" (bzw. mit End-Datum bei Über-Mitternacht).
+     *
+     * shifts.start/end sind reine Uhrzeiten — Carbon::parse('18:00') ergäbe das
+     * HEUTIGE Datum; Notifications zeigten dadurch das Versanddatum statt des Schichtdatums.
+     */
+    public function getTimeSpanLabelAttribute(): string
+    {
+        $startDay = $this->start_date ? Carbon::parse($this->start_date)->format('d.m.Y') : '';
+        $endDay = $this->end_date ? Carbon::parse($this->end_date)->format('d.m.Y') : $startDay;
+        $startTime = $this->start ? Carbon::parse($this->start)->format('H:i') : '';
+        $endTime = $this->end ? Carbon::parse($this->end)->format('H:i') : '';
+
+        if ($startDay === $endDay) {
+            return trim("{$startDay} {$startTime} - {$endTime}");
+        }
+
+        return trim("{$startDay} {$startTime} - {$endDay} {$endTime}");
+    }
+
     public function getInfringementAttribute(): bool
     {
         $start = Carbon::parse($this->start);
         $end = Carbon::parse($this->end);
+
+        // Über-Mitternacht-Schichten: end < start am selben Tag → Ende +1 Tag,
+        // sonst wäre der Diff in Carbon 3 negativ und der Pausen-Check
+        // (z.B. 10h-Nachtschicht ohne Pause) würde NIE anschlagen.
+        if ($end->lessThanOrEqualTo($start)) {
+            $end->addDay();
+        }
+
         $diff = $start->diffInRealMinutes($end);
         $break = $this->break_minutes;
 
@@ -307,45 +437,58 @@ class Shift extends Model
         Carbon $eventStartDay,
         Carbon $eventEndDay
     ): Builder {
-        return $builder
-            ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('shifts.start_date', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('shifts.end_date', [$eventStartDay, $eventEndDay]);
+        // Gruppierung wie bei scopeStartAndEndDateOverlap: ohne sie würden die
+        // OR-Zweige vorgelagerte Filter (z.B. shift_uuid oder craft_id) aushebeln.
+        return $builder->where(function (Builder $builder) use ($eventStartDay, $eventEndDay): void {
+            $builder
+                ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
+                ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay])
+                ->orWhereBetween('shifts.start_date', [$eventStartDay, $eventEndDay])
+                ->orWhereBetween('shifts.end_date', [$eventStartDay, $eventEndDay]);
+        });
     }
 
     public function scopeStartAndEndOverlap(Builder $builder, string $start, string $end): Builder
     {
-        return $builder
-            ->whereBetween('shifts.start', [$start, $end])
-            ->orWhereBetween('shifts.end', [$start, $end])
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start', '>', $start)
-                    ->where('shifts.end', '<', $end);
-            })
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start', '<', $start)
-                    ->where('shifts.end', '>', $end);
-            });
+        // Gruppierung wie bei scopeStartAndEndDateOverlap (siehe Kommentar dort).
+        return $builder->where(function (Builder $builder) use ($start, $end): void {
+            $builder
+                ->whereBetween('shifts.start', [$start, $end])
+                ->orWhereBetween('shifts.end', [$start, $end])
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start', '>', $start)
+                        ->where('shifts.end', '<', $end);
+                })
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start', '<', $start)
+                        ->where('shifts.end', '>', $end);
+                });
+        });
     }
 
     public function scopeStartAndEndDateOverlap(Builder $builder, string $start, string $end): Builder
     {
-        return $builder
-            ->whereBetween('shifts.start_date', [$start, $end])
-            ->orWhereBetween('shifts.end_date', [$start, $end])
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start_date', '>', $start)
-                    ->where('shifts.end_date', '<', $end);
-            })
-            ->orWhere(function (Builder $builder) use ($start, $end): void {
-                $builder
-                    ->where('shifts.start_date', '<', $start)
-                    ->where('shifts.end_date', '>', $end);
-            });
+        // Die Überlappungsbedingungen müssen in einer eigenen Gruppe gekapselt werden,
+        // damit sie sich korrekt mit vorgelagerten Filtern (z.B. craft_id) per AND verbinden.
+        // Ohne die Gruppierung würde durch die OR-Verknüpfung ein vorheriges where('craft_id')
+        // nur auf die erste Bedingung wirken und Shifts anderer Gewerke einschließen.
+        return $builder->where(function (Builder $builder) use ($start, $end): void {
+            $builder
+                ->whereBetween('shifts.start_date', [$start, $end])
+                ->orWhereBetween('shifts.end_date', [$start, $end])
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start_date', '>', $start)
+                        ->where('shifts.end_date', '<', $end);
+                })
+                ->orWhere(function (Builder $builder) use ($start, $end): void {
+                    $builder
+                        ->where('shifts.start_date', '<', $start)
+                        ->where('shifts.end_date', '>', $end);
+                });
+        });
     }
 
 

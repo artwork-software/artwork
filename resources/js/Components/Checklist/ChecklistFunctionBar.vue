@@ -26,7 +26,7 @@
             <slot name="sort">
 
             </slot>
-            <div class="ml-5" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists') && isInOwnTaskManagement">
+            <div class="ml-5" v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id)) || can('can use checklists')">
                 <BaseUIButton label="New checklist" use-translation is-add-button @click="openAddChecklistModal = true" />
             </div>
         </div>
@@ -47,7 +47,7 @@
 <script setup>
 
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import {IconLayoutKanban, IconLayoutList, IconPlus} from "@tabler/icons-vue";
+import {IconLayoutKanban, IconLayoutList, IconCirclePlus} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
@@ -113,11 +113,19 @@ const props = defineProps({
 const openAddChecklistModal = ref(false);
 
 const selectedFilter = ref(props.filters.find(filter => filter.type ===  Number(usePage().props.urlParameters.filter)) || props.filters[0]);
+const emit = defineEmits(['update:checklistStyle']);
+
 const updateChecklistStyle = (type) => {
+    // Update local page props immediately for reactive UI
+    usePage().props.auth.user.checklist_style = type;
+    emit('update:checklistStyle', type);
+
+    // Persist to backend without reloading
     router.patch(route('user.checklist.style', {user: usePage().props.auth.user.id}), {
         checklist_style: type,
     }, {
         preserveScroll: true,
+        preserveState: true,
     });
 }
 

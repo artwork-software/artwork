@@ -8,12 +8,27 @@ import Icons from 'unplugin-icons/vite'
 import IconsResolver from 'unplugin-icons/resolver'
 
 const port = 5173;
-const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
+// DDEV_PRIMARY_URL includes the router port when it is non-standard (e.g. :8443).
+// Use the portless DDEV URL for Vite, and let Vite infer the origin outside DDEV.
+const ddevPrimaryUrl = process.env.DDEV_PRIMARY_URL_WITHOUT_PORT
+    ?? process.env.DDEV_PRIMARY_URL?.replace(/:\d+$/, '');
+const origin = ddevPrimaryUrl ? `${ddevPrimaryUrl}:${port}` : undefined;
 
 export default defineConfig({
     build: {
         // for modern browsers / node versions — ESNext includes top-level await
         target: 'esnext',
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    // Bundle all Tabler icons into one chunk instead of ~130 tiny
+                    // per-icon files (HTTP/1.1 connection-limit queueing on prod).
+                    if (id.includes('@tabler/icons-vue')) {
+                        return 'tabler-icons';
+                    }
+                },
+            },
+        },
     },
     // you can also tweak esbuildOptions directly:
     esbuild: {
@@ -35,7 +50,10 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ['resources/js/app.js'],
+            input: [
+                'resources/js/app.js',
+                'resources/js/app-external.js',
+            ],
             refresh: true,
         }),
         vue({

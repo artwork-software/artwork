@@ -40,32 +40,54 @@
                     </div>
                 </div>
                 <div class="flex items-center mt-16 mr-8">
-                    <div class="mt-3" v-if="teamForm.users.length === 0">
+                    <button class="ui-button-add" @click="openChangeTeamMembersModal">
+                        {{ $t('Edit team')}}
+                    </button>
+                </div>
+
+                <!-- Team Members Table -->
+                <div class="mt-8">
+                    <div v-if="teamForm.users.length === 0">
                         <span class="xsLight">{{ $t('No team members added yet')}}</span>
                     </div>
-                    <div v-else class="mt-3" v-for="(user, index) in teamForm.users">
-                        <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9" :class="index !== 0 ? '-ml-3' : ''"/>
-                    </div>
-                    <BaseMenu right>
-                        <MenuItem v-slot="{ active }">
-                            <a @click="openChangeTeamMembersModal"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <PencilAltIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                    aria-hidden="true"/>
-                                {{ $t('Edit team')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a @click="openDeleteAllTeamMembersModal"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <TrashIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                    aria-hidden="true"/>
-                                {{ $t('Remove all team members')}}
-                            </a>
-                        </MenuItem>
-                    </BaseMenu>
+                    <BaseTable
+                        v-else
+                        :rows="teamForm.users"
+                        :columns="userCols"
+                        row-key="id"
+                        empty-title="Keine Teammitglieder"
+                        empty-message="Derzeit sind keine Teammitglieder vorhanden."
+                    >
+                        <!-- Name (Avatar + Name) -->
+                        <template #cell-name="{ row }">
+                            <div class="flex items-center">
+                                <UserPopoverTooltip :id="row.id" :user="row" height="11" width="11" />
+                                <div class="ml-4">
+                                    <div class="font-medium text-gray-900">{{ row.first_name }} {{ row.last_name }}</div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Position -->
+                        <template #cell-position="{ row }">
+                            <span class="text-gray-600">{{ row.position || '-' }}</span>
+                        </template>
+
+                        <!-- Actions -->
+                        <template #row-actions="{ row }">
+                            <BaseMenu has-no-offset white-menu-background>
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="removeUserFromTeam(row)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            aria-hidden="true"/>
+                                        {{ $t('Remove person from team')}}
+                                    </a>
+                                </MenuItem>
+                            </BaseMenu>
+                        </template>
+                    </BaseTable>
                 </div>
                 <div class="flex mt-12">
                     <span @click="openDeleteTeamModal()" class="xsLight cursor-pointer">{{ $t('Delete team permanently')}}</span>
@@ -162,9 +184,7 @@
                         <span v-for="(user,index) in teamForm.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full object-cover"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
+                                <UserPopoverTooltip :id="user.id" :user="user" height="11" width="11" />
                                 <span class="flex ml-4 sDark">
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
@@ -208,6 +228,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import BaseTable from "@/Artwork/Table/BaseTable.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -247,6 +268,7 @@ export default {
     components: {
         BaseModal,
         BaseMenu,
+        BaseTable,
         FormButton,
         UserPopoverTooltip,
         TeamIconCollection,
@@ -283,6 +305,10 @@ export default {
                 svg_name: this.department.svg_name,
                 users: this.department.users,
             }),
+            userCols: [
+                { key: 'name', label: 'Name', sortable: false },
+                { key: 'position', label: 'Position', sortable: false },
+            ],
         }
     },
     methods: {
@@ -310,6 +336,10 @@ export default {
         },
         deleteUserFromTeam(user) {
             this.teamForm.users.splice(this.teamForm.users.indexOf(user), 1);
+        },
+        removeUserFromTeam(user) {
+            this.teamForm.users.splice(this.teamForm.users.indexOf(user), 1);
+            this.teamForm.patch(route('departments.edit', {department: this.department.id}));
         },
         showSuccessButton() {
             this.showSuccess = true;

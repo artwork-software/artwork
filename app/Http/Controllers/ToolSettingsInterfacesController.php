@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\Api\Models\ApiLog;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Modules\Budget\Services\SageBookingDataDeleteService;
 use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
@@ -21,6 +23,7 @@ class ToolSettingsInterfacesController extends Controller
 {
     public function __construct(
         private readonly SageApiSettingsService $sageApiSettingsService,
+        private readonly SageBookingDataDeleteService $sageBookingDataDeleteService,
         private readonly TableColumnOrderService $tableColumnOrderService
     ) {
     }
@@ -56,6 +59,26 @@ class ToolSettingsInterfacesController extends Controller
                 'tokens' => $tokens,
             ]
         );
+    }
+
+    public function tokenLogs(Request $request, Token $token)
+    {
+        $this->authorize('view', Token::class);
+
+        $logs = ApiLog::where('token_id', '=', $token->apiAccessToken->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(50);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'logs' => $logs,
+            ]);
+        }
+
+        return Inertia::render('Interfaces/TokenLogs', [
+            'logs' => $logs,
+            'token' => $token,
+        ]);
     }
 
     /**
@@ -96,11 +119,15 @@ class ToolSettingsInterfacesController extends Controller
 
     public function initializeSageSpecificDay(Request $request): RedirectResponse
     {
+        $specificDayFrom = $request->get('specificDayFrom');
+        $specificDayTo = $request->get('specificDayTo') ?? $specificDayFrom;
+
         if (
             Artisan::call(
                 ImportSage100ApiDataCommand::class,
                 [
-                    'specificDay' => $request->get('specificDay')
+                    'specificDayFrom' => $specificDayFrom,
+                    'specificDayTo' => $specificDayTo,
                 ]
             ) === 0
         ) {
@@ -122,5 +149,31 @@ class ToolSettingsInterfacesController extends Controller
         }
 
         return Redirect::back()->with('error', 'Es ist ein unerwarteter Fehler aufgetreten.');
+    }
+
+    public function deleteSageBookingDays(Request $request): RedirectResponse
+    {
+        $ktr = $request->get('ktr');
+        $ktr = is_string($ktr) ? trim($ktr) : null;
+        $dateFrom = $request->get('dateFrom');
+        $dateTo = $request->get('dateTo') ?? $dateFrom;
+        $deleteAssignedData = (bool) $request->get('deleteAssignedData', false);
+
+        if (!$ktr && !$dateFrom) {
+            return Redirect::back()->with('error', __('flash-messages.interfaces.date_or_ktr_required'));
+        }
+
+        try {
+            $this->sageBookingDataDeleteService->deleteByBookingCriteria(
+                $ktr,
+                $dateFrom ?: null,
+                $dateTo ?: null,
+                $deleteAssignedData
+            );
+
+            return Redirect::back()->with('success', __('flash-messages.interfaces.booking_days_deleted_successfully'));
+        } catch (Throwable $t) {
+            return Redirect::back()->with('error', $t->getMessage());
+        }
     }
 }

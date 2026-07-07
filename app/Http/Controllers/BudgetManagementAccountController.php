@@ -25,12 +25,24 @@ class BudgetManagementAccountController extends Controller
         $this->authorizeResource(BudgetManagementAccount::class, 'budgetManagementAccount');
     }
 
-    public function indexTrash(): Response
+    public function indexTrash(Request $request): Response
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedAccounts = BudgetManagementAccount::onlyTrashed()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where('account_number', 'like', '%' . $search . '%')
+                    ->orWhere('title', 'like', '%' . $search . '%');
+            })
+            ->orderBy('account_number')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render(
             'Trash/BudgetManagementAccount',
             [
-                'trashedAccounts' => $this->budgetManagementAccountService->getAllTrashed()
+                'trashedAccounts' => $trashedAccounts
             ]
         );
     }
@@ -113,6 +125,16 @@ class BudgetManagementAccountController extends Controller
         );
 
         return Redirect::back();
+    }
+
+    public function forceDeleteAll(
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): RedirectResponse {
+        BudgetManagementAccount::onlyTrashed()->each(function ($account) use ($projectService, $columnCellService) {
+            $this->budgetManagementAccountService->forceDelete($account, $projectService, $columnCellService);
+        });
+        return Redirect::route('budget-settings.account-management.trash-accounts');
     }
 
     public function search(Request $request): Collection

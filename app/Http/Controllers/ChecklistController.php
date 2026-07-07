@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Checklist\Events\ChecklistUpdated;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -62,6 +63,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist added')
                     ->setTranslationKeyPlaceholderValues([$request->name])
             );
+            broadcast(new ChecklistUpdated($request->integer('project_id')))->toOthers();
         }
         return Redirect::back();
     }
@@ -87,7 +89,9 @@ class ChecklistController extends Controller
                 'done' => false,
                 'checklist_id' => $checklist->id,
                 'order' => Task::max('order') + 1,
-                'deadline' => Carbon::now()->addDays(3)
+                'deadline' => $task_template->deadline_days_after_creation !== null
+                    ? Carbon::now()->addDays($task_template->deadline_days_after_creation)->endOfDay()
+                    : null
             ]);
             $task->task_users()->sync(
                 $template->users->map(function ($user) {
@@ -193,6 +197,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist modified')
                     ->setTranslationKeyPlaceholderValues([$checklist->name])
             );
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
         }
         return Redirect::back();
     }
@@ -215,6 +220,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist removed')
                     ->setTranslationKeyPlaceholderValues([$checklist->name])
             );
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
         }
 
         return Redirect::back();
@@ -249,6 +255,7 @@ class ChecklistController extends Controller
                     ->setTranslationKey('Checklist duplicated')
                     ->setTranslationKeyPlaceholderValues([$newChecklist->name])
             );
+            broadcast(new ChecklistUpdated($newChecklist->project_id))->toOthers();
         }
 
         $newChecklist->users()->sync($checklist->users->pluck('id'));
@@ -265,6 +272,9 @@ class ChecklistController extends Controller
             $request->boolean('done'),
             $this->authManager->id()
         );
+        if ($checklist->hasProject()) {
+            broadcast(new ChecklistUpdated($checklist->project_id))->toOthers();
+        }
         return Redirect::back();
     }
 }

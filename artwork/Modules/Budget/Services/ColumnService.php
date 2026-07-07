@@ -10,6 +10,7 @@ use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\ColumnRepository;
+use Artwork\Modules\Project\Events\UpdateBudget;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
@@ -84,6 +85,7 @@ readonly class ColumnService
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): void {
+        $columnProjectId = $column->table->project_id;
         $column->subPositionSumDetails->each(
             function (SubPositionSumDetail $subPositionSumDetail) use (
                 $sumCommentService,
@@ -145,6 +147,171 @@ readonly class ColumnService
         );
 
         $this->columnRepository->forceDelete($column);
+        broadcast(new UpdateBudget($columnProjectId));
+
+    }
+
+    public function softDelete(
+        Column $column,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        $columnProjectId = $column->table->project_id;
+        $column->subPositionSumDetails->each(
+            function (SubPositionSumDetail $subPositionSumDetail) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionSumDetailService
+            ): void {
+                $subPositionSumDetailService->softDelete(
+                    $subPositionSumDetail,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $column->mainPositionSumDetails->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService
+            ): void {
+                $mainPositionDetailsService->softDelete(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $column->budgetSumDetails->each(
+            function (BudgetSumDetails $budgetSumDetails) use (
+                $budgetSumDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $budgetSumDetailsService->softDelete(
+                    $budgetSumDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $column->cells->each(
+            function (ColumnCell $columnCell) use (
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnCellService->softDelete(
+                    $columnCell,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $this->columnRepository->delete($column);
+        broadcast(new UpdateBudget($columnProjectId));
+
+    }
+
+    public function restore(
+        Column $column,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        // Wichtig: table kann softdeleted sein -> withTrashed()
+        $table = $column->table()->withTrashed()->first();
+        $columnProjectId = $table?->project_id;
+
+        $column->subPositionSumDetails()->withTrashed()->get()->each(
+            function (SubPositionSumDetail $subPositionSumDetail) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionSumDetailService
+            ): void {
+                $subPositionSumDetailService->restore(
+                    $subPositionSumDetail,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $column->mainPositionSumDetails()->withTrashed()->get()->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService
+            ): void {
+                $mainPositionDetailsService->restore(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $column->budgetSumDetails()->withTrashed()->get()->each(
+            function (BudgetSumDetails $budgetSumDetails) use (
+                $budgetSumDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $budgetSumDetailsService->restore(
+                    $budgetSumDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
+
+        $column->cells()->withTrashed()->get()->each(
+            function (ColumnCell $columnCell) use (
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnCellService->restore(
+                    $columnCell,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
+
+        $this->columnRepository->restore($column);
+
+        if ($columnProjectId) {
+            broadcast(new UpdateBudget($columnProjectId));
+        }
     }
 
     public function getColumnsGroupedByTableId(): SupportCollection

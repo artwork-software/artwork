@@ -12,6 +12,8 @@ use Artwork\Modules\Inventory\Notifications\InventoryArticleNotification;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Events\NewNotificationBroadcast;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification;
+use Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\Room\Notifications\RoomRequestNotification;
@@ -71,6 +73,8 @@ class NotificationService
     public int|null $positionVerifyRequestId = null;
 
     public string|null $positionVerifyRequestType = null;
+
+    public ?User $createdBy = null;
 
     public function __construct(
         private readonly EventService $eventService,
@@ -306,6 +310,16 @@ class NotificationService
         return $this;
     }
 
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?User $createdBy): void
+    {
+        $this->createdBy = $createdBy;
+    }
+
     public function clearNotificationData(): void
     {
         $this->setTitle('');
@@ -327,6 +341,7 @@ class NotificationService
         $this->setShiftId(null);
         $this->setPositionVerifyRequestId(null);
         $this->setPositionVerifyRequestType(null);
+        $this->setCreatedBy(null);
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
@@ -354,7 +369,7 @@ class NotificationService
         $body->projectId = $this->getProjectId();
         $body->departmentId = $this->departmentId;
         $body->taskId = $this->getTaskId();
-        $body->created_by = Auth::user() ? Auth::user()->withoutRelations() : null;
+        $body->created_by = $this->createdBy ?? (Auth::user() ? Auth::user()->withoutRelations() : null);
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
         $body->budgetData = $this->getBudgetData();
         $body->notificationKey = $this->getNotificationKey();
@@ -374,7 +389,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
-                if ($this->getNotificationTo() !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new EventNotification($body, $this->getBroadcastMessage())
@@ -492,6 +507,31 @@ class NotificationService
                     );
                 }
                 break;
+            case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_CREATED:
+            case NotificationEnum::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new BudgetVerified($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
+            case NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ExternalCrmSubmissionNotification($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
+            case NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED:
+                if ($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ExternalTabComponentUpdatedNotification($body, $this->getBroadcastMessage())
+                    );
+                }
+                break;
         }
 
         $this->sendBroadcastMessage($this->getNotificationTo());
@@ -543,14 +583,27 @@ class NotificationService
     public function checkIfShortBreakBetweenTwoShifts(User $user, Shift $shift): stdClass
     {
         $minDurationHours = 12;
-        $formattedEndTime = Carbon::parse($shift->event_end_day . ' ' . $shift->end);
+        // Fallback auf start_date/end_date: Carbon::parse(null . ' ' . $start) ergäbe
+        // das heutige Datum und macht den Ruhezeit-Check für solche Schichten unbrauchbar.
+        $shiftStartDay = $shift->event_start_day
+            ?? ($shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null);
+        $shiftEndDay = $shift->event_end_day
+            ?? ($shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : $shiftStartDay);
+        $newShiftStart = Carbon::parse($shiftStartDay . ' ' . $shift->start);
+        $newShiftEnd = Carbon::parse($shiftEndDay . ' ' . $shift->end);
 
-        $shifts = $user->shifts()
+        // If the shift crosses midnight (end time < start time on same day), advance end by 1 day
+        if ($newShiftEnd->lessThanOrEqualTo($newShiftStart)) {
+            $newShiftEnd->addDay();
+        }
+
+        $otherShifts = $user->shifts()
+            ->where('shifts.id', '!=', $shift->id)
             ->whereBetween(
                 'event_start_day',
                 [
-                    Carbon::parse($shift->event_start_day)->subDay(),
-                    Carbon::parse($shift->event_start_day)->addDay()
+                    Carbon::parse($shiftStartDay)->subDay(),
+                    Carbon::parse($shiftStartDay)->addDay()
                 ]
             )
             ->without(['craft'])
@@ -559,29 +612,100 @@ class NotificationService
         $notificationObj = new stdClass();
         $notificationObj->shortBreak = false;
 
-        foreach ($shifts as $shift) {
-            $formattedStartTime = Carbon::parse($shift->event_start_day . ' ' . $shift->start);
-            $diffInHours = $formattedStartTime->diffInRealHours($formattedEndTime);
-            if ($diffInHours < $minDurationHours) {
+        foreach ($otherShifts as $otherShift) {
+            $otherStartDay = $otherShift->event_start_day
+                ?? ($otherShift->start_date ? Carbon::parse($otherShift->start_date)->toDateString() : null);
+            $otherEndDay = $otherShift->event_end_day
+                ?? ($otherShift->end_date ? Carbon::parse($otherShift->end_date)->toDateString() : $otherStartDay);
+            $otherStart = Carbon::parse($otherStartDay . ' ' . $otherShift->start);
+            $otherEnd = Carbon::parse($otherEndDay . ' ' . $otherShift->end);
+
+            // If the other shift crosses midnight, advance end by 1 day
+            if ($otherEnd->lessThanOrEqualTo($otherStart)) {
+                $otherEnd->addDay();
+            }
+
+            // Rest period = gap between consecutive shifts (the smaller of the two gaps)
+            $restAfterNew = abs($otherStart->diffInRealHours($newShiftEnd));
+            $restAfterOther = abs($newShiftStart->diffInRealHours($otherEnd));
+            $restHours = min($restAfterNew, $restAfterOther);
+
+            if ($restHours < $minDurationHours) {
                 $notificationObj->shortBreak = true;
-                $notificationObj->firstShift = $shifts->first();
-                $notificationObj->lastShift = $shifts->last();
+                $notificationObj->firstShift = $otherShift;
+                $notificationObj->lastShift = $shift;
             }
         }
 
         return $notificationObj;
     }
 
+    public function updateExistingRoomRequestNotification(int $eventId, int $recipientUserId, array $newDescription): bool
+    {
+        $existingNotification = DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->where('notifiable_id', $recipientUserId)
+            ->whereNull('data->handledStatus')
+            ->first();
+
+        if (!$existingNotification) {
+            return false;
+        }
+
+        $data = json_decode($existingNotification->data, true);
+        $data['isModified'] = true;
+        $data['modifiedAt'] = now()->translatedFormat('d.m.Y H:i');
+        $data['modifiedCount'] = ($data['modifiedCount'] ?? 0) + 1;
+        $data['description'] = $newDescription;
+
+        DB::table('notifications')
+            ->where('id', $existingNotification->id)
+            ->update([
+                'data' => json_encode($data),
+                'updated_at' => now(),
+                'read_at' => null,
+            ]);
+
+        return true;
+    }
+
+    public function updateRoomRequestNotificationStatus(int $eventId, string $status, ?User $handledBy = null): void
+    {
+        $notifications = DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->get();
+
+        foreach ($notifications as $notification) {
+            $data = json_decode($notification->data, true);
+            $data['handledStatus'] = $status;
+            $data['handledBy'] = $handledBy
+                ? ['id' => $handledBy->id, 'name' => $handledBy->display_name]
+                : null;
+            $data['handledAt'] = now()->translatedFormat('d.m.Y H:i');
+            $data['buttons'] = [];
+            DB::table('notifications')
+                ->where('id', $notification->id)
+                ->update(['data' => json_encode($data)]);
+        }
+    }
+
+    public function deleteUnhandledRoomRequestNotificationsByEventId(int $eventId): void
+    {
+        DB::table('notifications')
+            ->where('data->type', NotificationEnum::NOTIFICATION_ROOM_REQUEST->value)
+            ->where('data->eventId', $eventId)
+            ->whereNull('data->handledStatus')
+            ->delete();
+    }
+
     public function deleteUpsertRoomRequestNotificationByEventId(int $eventId): void
     {
-        $notificationCollection = DB::table('notifications')
-            ->where('type', EventNotification::class)
-            ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST)
+        DB::table('notifications')
+            ->where('type', RoomRequestNotification::class)
+            ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
             ->where('data->eventId', $eventId)
-            ->get('id');
-
-        if ($notificationCollection->isNotEmpty()) {
-            DB::table('notifications')->delete($notificationCollection->first()->id);
-        }
+            ->delete();
     }
 }

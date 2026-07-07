@@ -1,5 +1,9 @@
 import { ref } from "vue";
 
+// Modul-globaler State: Payload der aktuell gezogenen Komponente,
+// damit Drop-Zonen schon während des Draggings prüfen können, ob das Ziel gültig ist.
+const draggedComponent = ref(null);
+
 export function EventListenerForDragging(event) {
     const isDragging = ref(false);
 
@@ -8,14 +12,14 @@ export function EventListenerForDragging(event) {
             detail: { message: "Drag operation started", content: content },
         }));
 
+        draggedComponent.value = content;
         isDragging.value = true; // Wert aktualisieren
-        console.log("dispatchEventStart: isDragging", isDragging.value, content);
     }
 
     function dispatchEventEnd(event) {
         window.dispatchEvent(new Event("dragging-ended"));
+        draggedComponent.value = null;
         isDragging.value = false; // Wert zurücksetzen
-        console.log("dispatchEventEnd: isDragging", isDragging.value);
     }
 
     function addEventListenerForDraggingStart() {
@@ -41,6 +45,7 @@ export function EventListenerForDragging(event) {
 
     return {
         isDragging,
+        draggedComponent,
         dispatchEventStart,
         dispatchEventEnd,
         addEventListenerForDraggingStart,

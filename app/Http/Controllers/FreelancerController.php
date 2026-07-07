@@ -38,9 +38,16 @@ class FreelancerController extends Controller
     ) {
     }
 
-    public function store(): \Symfony\Component\HttpFoundation\Response
+    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
-        $freelancer = Freelancer::create();
+        $this->authorize('updateWorkProfile', Freelancer::class);
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+        ]);
+
+        $freelancer = Freelancer::create($validated);
+        $freelancer->createCrmContact();
 
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
@@ -115,8 +122,23 @@ class FreelancerController extends Controller
 
     public function update(Request $request, Freelancer $freelancer): void
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'email' => 'nullable|email',
+            'position' => 'nullable|string',
+            'business' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+            'street' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'location' => 'nullable|string',
+            'note' => 'nullable|string',
+        ]);
+
         $freelancer->update($request->only([
                 'position',
+                'business',
                 'first_name',
                 'last_name',
                 'email',
@@ -126,6 +148,8 @@ class FreelancerController extends Controller
                 'location',
                 'note',
             ]));
+
+        $freelancer->syncToCrm();
     }
 
     /**
@@ -139,6 +163,8 @@ class FreelancerController extends Controller
             'salary_per_hour',
             'salary_description',
         ]));
+
+        $freelancer->syncToCrm();
     }
 
     /**
@@ -153,6 +179,8 @@ class FreelancerController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
+        $freelancer->syncToCrm();
+
         return Redirect::back();
     }
 
@@ -166,6 +194,8 @@ class FreelancerController extends Controller
         $freelancer->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts')
         ]);
+
+        $freelancer->syncToCrm();
 
         return Redirect::back();
     }
@@ -226,6 +256,8 @@ class FreelancerController extends Controller
 
     public function updateProfileImage(Request $request, Freelancer $freelancer): void
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
+        $request->validate(['profileImage' => 'required|image']);
         if (!Storage::exists("public/profile-photos")) {
             Storage::makeDirectory("public/profile-photos");
         }
@@ -241,6 +273,7 @@ class FreelancerController extends Controller
 
     public function destroy(Freelancer $freelancer): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', Freelancer::class);
         $freelancer->delete();
 
         return Redirect::back();

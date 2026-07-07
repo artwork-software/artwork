@@ -3,20 +3,20 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, getCurrentInstance
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
 
-import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import MultiAlertComponent from '@/Components/Alerts/MultiAlertComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
+import { isInlinePrintableFile, useInlineFilePrinter } from '@/Composeables/useInlineFilePrinter'
 
 /** Optionales Preview (Bilder/PDFs) */
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
 import FilePreview from '@/Artwork/Files/FilePreview.vue'
 
 /** Nur benötigte Icons lokal einbinden (Tree-Shaking) */
-import { IconFileUpload, IconFileText } from '@tabler/icons-vue'
-import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import { IconFileUpload, IconFileText, IconEyeOff, IconPrinter } from '@tabler/icons-vue'
+import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 
 interface ProjectFile {
     id?: number | string
@@ -43,6 +43,7 @@ const isLoadingDocuments = ref(false)
 const loadDocumentsError = ref('')
 const remoteProjectWriteIds = ref<Array<number | string>>(props.projectWriteIds ?? [])
 const remoteProjectManagerIds = ref<Array<number | string>>(props.projectManagerIds ?? [])
+const hiddenTabNames = ref<string[]>([])
 
 const documentForm = reactive<{ errors: Record<string, string[] | string> }>({ errors: {} })
 const uploadDocumentFeedback = ref('')
@@ -55,6 +56,7 @@ const totalToUpload = ref(0)
 
 const isDragging = ref(false)
 const fileInputEl = ref<HTMLInputElement | null>(null)
+const { destroyPrintFrame, printInlineFile } = useInlineFilePrinter()
 
 const page = usePage()
 const userId = computed(() => (page.props as any)?.auth?.user?.id ?? null)
@@ -107,6 +109,8 @@ async function fetchDocuments() {
         if (Array.isArray(data?.projectManagerIds)) {
             remoteProjectManagerIds.value = data.projectManagerIds
         }
+
+        hiddenTabNames.value = Array.isArray(data?.hiddenTabNames) ? data.hiddenTabNames : []
     } catch (error) {
         console.error(error)
         loadDocumentsError.value = 'Unable to load project documents.'
@@ -120,7 +124,10 @@ onMounted(() => {
     window.addEventListener('keydown', onKey)
 })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKey)
+    destroyPrintFrame()
+})
 
 /** ---- Upload ---- */
 function selectNewFiles() {
@@ -247,8 +254,12 @@ function isPreviewable(file: ProjectFile) {
 }
 
 function fileUrl(file: ProjectFile) {
-    // Falls dein Server `attachment` erzwingt, dort `?inline=1` o. ä. unterstützen
-    return file.url || route('download_file', { project_file: file as any })
+    return file.url || route('download_file', { project_file: file.id ?? file })
+}
+
+function printFile(file: ProjectFile) {
+    if (!isInlinePrintableFile(file)) return
+    printInlineFile(fileUrl(file))
 }
 
 /** Lightbox State */
@@ -303,6 +314,18 @@ function closePreview() {
             />
             <InfoButtonComponent :component="component" />
         </div>
+        <!-- Sichtbarkeitshinweis -->
+        <div
+            v-if="hiddenTabNames.length > 0"
+            class="group/hint relative inline-flex items-center gap-1.5 text-xs text-zinc-400"
+        >
+            <IconEyeOff class="size-4 shrink-0" />
+            <span class="invisible group-hover/hint:visible absolute left-6 z-10 w-max max-w-xs rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white shadow-lg">
+                {{ $t('Due to missing visibility rights, you cannot see the documents from tab') }}
+                '{{ hiddenTabNames.join("', '") }}'
+            </span>
+        </div>
+
         <div v-if="loadDocumentsError" class="mb-2 text-xs text-rose-600">
             {{ loadDocumentsError }}
         </div>
@@ -399,6 +422,16 @@ function closePreview() {
                     <!-- Aktionen -->
                     <div class="shrink-0 flex items-center gap-3 print:hidden">
                         <button
+                            v-if="isInlinePrintableFile(file)"
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            :aria-label="`${$t('Print')}: ${file.name}`"
+                            @click="printFile(file)"
+                        >
+                            <IconPrinter class="size-4" aria-hidden="true" />
+                            {{ $t('Print') }}
+                        </button>
+                        <button
                             type="button"
                             class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                             @click="downloadFile(file)"
@@ -493,4 +526,3 @@ function closePreview() {
         </teleport>
     </div>
 </template>
-

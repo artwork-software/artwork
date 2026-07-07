@@ -34,7 +34,8 @@ enum PermissionEnum : string
     case CAN_COMMIT_SHIFTS = 'can commit shifts';
     case EDIT_EXTERNAL_USERS_CONDITIONS = 'can edit external users conditions';
 
-    case VIEW_AND_DELETE_SAGE100_API_DATA = 'can view and delete sage100-api-data';
+    case VIEW_PROJECT_SAGE_DATA = 'can view project sage data';
+    case VIEW_GLOBAL_SAGE_DATA = 'can view global sage data';
 
     case CHECKLIST_USE_PERMISSION = 'can use checklists';
     case CHECKLIST_EDIT_PERMISSION = 'can edit checklist';
@@ -47,17 +48,40 @@ enum PermissionEnum : string
 
     case INVENTORY_PLANER = 'can plan inventory';
 
+    case INVENTORY_SETTINGS = 'inventory.settings';
+
     case CAN_VIEW_PRIVATE_USER_INFO = 'can view private user info';
 
     case CAN_SEE_PLANNING_CALENDAR = 'can see planning calendar';
 
     case CAN_EDIT_PLANNING_CALENDAR = 'can edit planning calendar';
 
+    case CAN_PLAN_FIXED_IN_PLANNING_CALENDAR = 'can plan fixed in planning calendar';
+
     case SET_CREATE_EDIT = 'set.create_edit';
     case SET_DELETE = 'set.delete';
     case INVENTORY_CREATE_EDIT = 'inventory.create_edit';
     case INVENTORY_DELETE = 'inventory.delete';
     case INVENTORY_DISPOSITION = 'inventory.disposition';
+    case MATERIAL_ISSUE_LOG_VIEW = 'can view material issue log';
     case SHIFT_SETTINGS_VIEW_EDIT = 'shift.settings_view_edit';
 
+    case DOCUMENT_REQUEST_CREATE = 'can create document requests';
+    case DOCUMENT_REQUEST_EDIT = 'can edit document requests';
+
+    case CRM_VIEW = 'can view crm';
+    case CRM_MANAGER = 'crm manager';
+
+    case BI_EXPORT = 'can export bi data';
+
+    case BI_DASHBOARD = 'can view bi dashboard';
+
+    case INVITE_EXTERNAL = 'can invite externals';
+
+    case CAN_VIEW_OWN_ROSTER = 'can view own roster';
+    case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
+
+    case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';
+
+    case CAN_PAY_OUT_OVERTIME = 'can pay out overtime';
 }

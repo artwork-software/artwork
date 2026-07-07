@@ -1,5 +1,6 @@
 <template>
-    <AppLayout :title="`${project?.name} (${currentTab?.name})`">
+    <AppLayout :title="pageTitle">
+        <div :style="{ '--project-header-height': `${headerHeight}px` }">
         <!-- Copy Toast -->
         <transition name="fade" appear>
             <div
@@ -18,7 +19,7 @@
         </transition>
 
         <!-- ===== STICKY PROJECT NAVIGATOR ===== -->
-        <div class="sticky top-0 z-50 w-full inset-x-0 ">
+        <div ref="stickyHeaderEl" class="sticky top-0 z-40 w-full inset-x-0 ">
             <!-- Glassy background layer -->
             <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70">
                 <div class="artwork-container pb-0! py-3">
@@ -167,6 +168,35 @@
                         </div>
                     </div>
 
+                    <!-- Project belongs to groups -->
+                    <div v-if="project.groups && project.groups.length > 0" class="mt-1">
+                        <div class="flex items-center gap-2">
+                            <div class="text-[11px] font-semibold text-zinc-500 shrink-0">
+                                {{ $t('Project is part of project group') }}:
+                            </div>
+
+                            <div class="flex-1 overflow-x-auto no-scrollbar">
+                                <div class="flex gap-2 min-w-max">
+                                    <a
+                                        v-for="group in project.groups"
+                                        :key="group.id"
+                                        :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"
+                                        class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white/60 px-2 py-1 text-[12px] text-zinc-700 hover:bg-white hover:border-zinc-300 transition"
+                                    >
+                                        <img
+                                            class="size-5 rounded-full object-cover ring-1 ring-white"
+                                            :src="group?.key_visual_path ? `/storage/keyVisual/${group.key_visual_path}` : fallbackLogoSrc"
+                                            alt=""
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                        <span class="max-w-[15rem] truncate">{{ group.name }}</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Middle: Tabs (immer sichtbar) -->
                     <div class="flex items-center">
                         <BaseTabs :tabs="tabsForBaseTabComponent" :use-translation="false" />
@@ -219,7 +249,7 @@
                                                     <div class="truncate font-semibold text-sm text-zinc-900">
                                                         {{ p.name }}
                                                     </div>
-                                                    <!-- ✅ Type Badge -->
+                                                    <!-- Type Badge -->
                                                     <span class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-semibold text-zinc-600">
                                                         <img
                                                             v-if="p.is_group"
@@ -285,6 +315,7 @@
             :create-settings="createSettings"
             :project="projectForCreateModal"
             :selected-group="selectedGroup"
+            :projects-of-group="projectsOfGroup"
         />
 
         <project-history-component @closed="closeProjectHistoryModal" v-if="showProjectHistory" :project_id="project.id" />
@@ -317,11 +348,12 @@
 
         <ProjectStateChangeModal :project-id="project.id" v-if="showProjectStateChangeModal" @close="closeProjectStateChangeModal" />
         <ProjectPlanningStateChangeModal :project-id="project.id" v-if="showProjectPlanningStateChangeModal" @close="closePlanningStateChangeModal" />
+        </div>
     </AppLayout>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
@@ -352,6 +384,20 @@ const props = defineProps({
 });
 
 const page = usePage();
+
+const stickyHeaderEl = ref(null);
+const headerHeight = ref(0);
+let headerResizeObserver = null;
+
+const updateHeaderHeight = () => {
+    try {
+        const el = stickyHeaderEl.value;
+        if (!el) return;
+        headerHeight.value = el.getBoundingClientRect().height || 0;
+    } catch {
+        // ignore
+    }
+};
 
 const showProjectHistory = ref(false);
 const editingProject = ref(false);
@@ -418,6 +464,28 @@ const stickySubline = computed(() => {
         return [s, e].filter(Boolean).join(" – ");
     }
     return "";
+});
+
+const formatDateGerman = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+};
+
+const pageTitle = computed(() => {
+    let title = `${props.project?.name} (${props.currentTab?.name})`;
+    if (hasProjectPeriod.value) {
+        const startDate = props.headerObject?.firstEventInProject?.start_time;
+        const endDate = props.headerObject?.lastEventInProject?.end_time;
+        if (startDate && endDate) {
+            title += ` ${formatDateGerman(startDate)} - ${formatDateGerman(endDate)}`;
+        }
+    }
+    return title;
 });
 
 const projectsOfGroup = computed(() => props.headerObject?.projectsOfGroup || []);
@@ -598,6 +666,26 @@ const copyProjectUrlToClipboard = async () => {
 
 onBeforeUnmount(() => {
     if (copyToastTimer) clearTimeout(copyToastTimer);
+
+    if (headerResizeObserver) {
+        try { headerResizeObserver.disconnect(); } catch { /* ignore */ }
+        headerResizeObserver = null;
+    }
+});
+
+onMounted(() => {
+    updateHeaderHeight();
+
+    if (typeof ResizeObserver !== 'undefined') {
+        headerResizeObserver = new ResizeObserver(() => updateHeaderHeight());
+        if (stickyHeaderEl.value) headerResizeObserver.observe(stickyHeaderEl.value);
+    }
+
+    window.addEventListener('resize', updateHeaderHeight, { passive: true });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateHeaderHeight);
 });
 </script>
 

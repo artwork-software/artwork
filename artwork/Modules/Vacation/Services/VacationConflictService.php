@@ -10,6 +10,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Repository\VacationConflictRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 readonly class VacationConflictService
 {
@@ -42,6 +43,7 @@ readonly class VacationConflictService
             $shifts = $user->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $vacations = $user
                 ->vacations()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -49,6 +51,7 @@ readonly class VacationConflictService
             $shifts = $freelancer->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $vacations = $freelancer
                 ->vacations()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -61,7 +64,7 @@ readonly class VacationConflictService
                     $user->language
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -102,7 +105,7 @@ readonly class VacationConflictService
                         $this->create([
                             'vacation_id' => $vacation->id,
                             'shift_id' => $shift->id,
-                            'user_name' => $shiftCommittedBy->full_name,
+                            'user_name' => $shiftCommittedBy?->full_name,
                             'date' => $shift?->event_start_day ?? $shift->start_date,
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,
@@ -122,7 +125,7 @@ readonly class VacationConflictService
                             $conflict = $this->create([
                                 'vacation_id' => $vacation->id,
                                 'shift_id' => $shift->id,
-                                'user_name' => $shiftCommittedBy->full_name,
+                                'user_name' => $shiftCommittedBy?->full_name,
                                 'date' => $shift?->event_start_day ?? $shift->start_date,
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,
@@ -145,8 +148,10 @@ readonly class VacationConflictService
         ?Freelancer $freelancer = null,
     ): void {
 
-        $shiftStartDate = $shift?->event_start_day ?? $shift->start_date;
-        $shiftEndDate = $shift?->event_end_day ?? $shift->end_date;
+        $shiftStartDate = $shift->event_start_day ?? Carbon::parse($shift->start_date)->toDateString();
+        $shiftEndDate = $shift->end_date
+            ? Carbon::parse($shift->end_date)->toDateString()
+            : $shiftStartDate;
 
         $vacations = collect();
         if ($user) {
@@ -182,7 +187,7 @@ readonly class VacationConflictService
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];

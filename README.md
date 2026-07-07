@@ -2,317 +2,145 @@
 
 ![Artwork Logo](https://artwork.software/wp-content/uploads/2023/05/artwork-logo.svg)
 
-Artwork is a project organization tool that allows you to schedule projects with multiple events, tasks, and responsibilities. It helps you keep track of all the essential components of your projects. The project can be run using Laravel Sail. A light-weight command-line interface for interacting with Laravel's default Docker development environment.
-Consult the [official documentation](https://laravel.com/docs/10.x/sail) for more information.
+Artwork is a project organization tool for scheduling projects with events, tasks, and responsibilities. It helps teams keep track of all essential project components.
 
-# Update from v1.3.0 to v1.4.0
+# Update from 1.5 to 1.6
 
-- Checkout the v1.3.0 version 
-- Make sure you backup your database and run all database migrations ``php artisan migrate``
-- Update all the dependencies by running ``composer update``
+- Make sure you ran the latest database migrations via ``php artisan migrate`` before updating. In this release we consolidated the migration to a new base dump. Since some migrations were moving and/or transforming data make sure you are up to date with the latest migrations from 1.5.1
 
-- ** Backup your database **
-- Checkout the v1.4.0 version
-- Run the following commands to update your database and components:
-- ``composer install``
-- ``php artisan migrate``
-- ``php artisan artwork:update``
 
-# Maintenance
+# Update from 1.4 to 1.5
 
-For artwork-instances that are already in usage, we will add commands here in the readme, that need to be used to add new permissions or components to the existing db. Dont worry, these commands cant harm your db, they only fill in things if they arent in the db already.
-
-Command to add new permissions for newly added Modules:
-
- ``php artisan artwork:update-permissions``
-
-Command to add new components to the project-tab-library:
-
-``artwork:add-new-components``
-
-Try these after major updates to be sure, that you are not missing new features.
-
-# Frequent Setup Bugs
-
-If you have problems migrating after doing the newest upgrade and get this migration to fail:
-
-2024_11_23_165534_add_show_qualifications_to_user
-
-Then it is a compatibility issue between MySql and MariaDB, for the ongoing development we decided to use MariaDB, so you will need to swap to MariaDB. To help with the switch we built a script in the .install folder to do this for you. Important: Do a backup of your db before using this script, then run the script .install/db-install.sh, after that the migration will work.
+- Soketi has been removed as websocket service. We switched to Laravel Reverb. For an example configuration please take a look at dockerfiles/artwork-php.84.vhost.conf
+- We added wkhtmltopdf as pdf rendering engine. The binaries must be available on the server under `/usr/bin/wkhtmltopdf` please take a look at https://wkhtmltopdf.org/ for more information and retrieve the binaries
 
 # Installation
 
-Artwork supports to be installed as a standalone application for dedicated servers or as a multi container app powered by docker
+Artwork can be installed standalone on a dedicated server or as a multi-container app via Docker, we recommend to use the Docker-approach.
+
+## Docker
+
+> **This Docker setup is for demo purposes only. To get a productive-ready installation you need to fill in your credentials according to your server circumstances in the .env-file especially take care to have the emailing-service setup correctly and that the settings fit to your firewall settings of your setup. When doing this it can be needed, that you also adjust the dockerfiles to your setup.**
+
+### Setup
+
+1. Copy ``.env.example`` to ``.env`` and adjust the values
+2. Build and start:
+   ```bash
+   docker compose build artwork
+   docker compose up -d
+   ```
+3. Generate an app key:
+   ```bash
+   docker compose exec artwork php artisan key:generate --show
+   ```
+   Copy the output into the ``APP_KEY`` variable in your ``.env`` file.
+   It should look like `APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=` please do **NOT** use the key from the example.
+   
+   If you receive an error regarding missing files wait a few minutes for the application to load the missing dependencies and set everything up. This may take up to 10 minutes depending on your setup.
+4. Restart to load the new key:
+   ```bash
+   docker compose up -d
+   ```
+5. The frontend should be available at http://localhost
+
 
 ## Standalone
 
-### Prerequisites
+Artwork supports standalone installation on any Linux server.
+Since we do not know your specific setup we cannot provide a sophisticated installation guide for any linux distribution.
 
-**Currently only Ubuntu is supported!**
+### Requirements
 
-Either `root` account or a user with `sudo` rights. The installation is fully automated and without prompts.
+- PHP 8.4 with extensions:
+  cli, fpm, mysql, gd, imagick, curl, imap, mbstring, xml, zip, bcmath, soap, intl, readline, ldap, redis, swoole, igbinary, msgpack, memcached, pcov
+- wkhtmltopdf 0.12.6 (patched Qt)
+- MariaDB 11
+- Redis
+- Node.js 22+
+- Meilisearch 1.22
 
-### Installation
+### Additional Requirements 
 
-Login to your server and run ``sudo curl -fsSL https://raw.githubusercontent.com/artwork-software/artwork/main/ubuntu-install.sh | sh``
+- Artwork requires Websockets to be accessible. We use Laravel Reverb as host. Which need to be accessible from the system and frontend-
+- Run composer install and npm install after every update
+- Rebuild the the frontend via ``npm run build`` after every update
+- You should have a minutely cronjob running to run the ``php artisan schedule:run`` command.
+- You need to make sure the queue is running via ``php artisan queue:work``
+- After every update remember to run database migrations and the ``php artisan artwork:update`` command.
 
-Alternatively copy the ``ubuntu-install.sh`` script to your server. No other files, like the rest of the repository, or software installations needed.
+Example configurations for the nginx, redis and php services can be found in the ``dockerfiles`` folder.
 
-Simple give the script executable permissions ``chmod +x ubuntu-install.sh``
+### Setup
 
-and run it ``./ubuntu-install.sh`` 
+1. Copy ``.env.example`` to ``.env`` and adjust the values to match your environment
+2. Install dependencies:
+   ```bash
+   php composer.phar install
+   npm install
+   ```
+3. Generate an app key:
+   ```bash
+   php artisan key:generate --show
+   ```
+   Copy the output into the ``APP_KEY`` variable in your ``.env`` file.
+4. Set ``APP_URL`` in ``.env`` to your domain (including ``http://`` or ``https://``)
+5. Run the setup command:
+   ```bash
+   php artisan artwork:update
+   ```
 
-What it will do:
-- Install nginx as webserver and setups up a default config. **This will override the default config. Create a backup if you have other services running**
-- Install mysql-8 and create a user account for the application and fills the database
-- Install NodeJs in version 18.x (LTS) 
-- Create a service for the queue worker
-- Setup a cronjob for the planned schedules
-- Install Soketi (global) as Pusher compatible service and daemonizes it
-- Setup and install PHP with all needed plugins
-- Install meilisearch
-- Installs Artwork itself
+### E-Mail
 
-**It is highly discouraged to run the installer multiple times as some steps are intended to be executed once.**
+Artwork relies on emails for many features like account verification and password resets.
+To get emails working, fill in the following block in your ``.env`` file with your mail server settings:
 
-### After installation
-
-Edit the ``.env`` file located in `/var/www/html/.env`
-
-Locate the string ``APP_URL=http://localhost`` and replace `http://localhost` with your domain. `http` or `https` are required.
-
-For e-mail support locate the following block in the same file and fill in your credentials
-````
+```
 MAIL_HOST=
 MAIL_PORT=
 MAIL_MAILER=
-MAIL_USERNAME=Inbox-Name
+MAIL_USERNAME=
 MAIL_PASSWORD=
 MAIL_ENCRYPTION=
-````
+```
 
 ### SSL
 
-We do not ship dummy or selfsigned certificates with the installation.
-
-SSL should be configured like you would your regular nginx instance https://nginx.org/en/docs/http/configuring_https_servers.html
-
-Soketi, the websocket service, also needs to be configured. See the official documentation https://docs.soketi.app/getting-started/ssl-configuration on how to achieve this.
-
-## Docker installation Standalone
-
-Artwork offers a stand alone containerized version of the application. This is useful if you want to run the application on a dedicated server or in a cloud environment.
-
-### Prerequisites
-
-Clone the repository `git clone git@github.com:artwork-software/artwork.git`.
-You need [Docker](https://www.docker.com/) and the .env of the repository. It is advised to use the `.env.standalone.example` file and rename it to `.env`
-
-Everytime the container is built it will perform an auto update on database and components. To update Artwork itself please update the Github repository.
+We do not ship certificates. Configure SSL as you would for any nginx installation:
+https://nginx.org/en/docs/http/configuring_https_servers.html
 
 
-### Installation
+Dependencies (Composer & NPM) are installed automatically on container start.
 
-*Please note that the docker setup is currently not ready for production usage*
+### Test Credentials
 
-To boot the container you can simply run the following command:
+If you seed the database with dummy data, you can log in with:
 
-`docker compose up -d`
-
-The application needs an app key variable set. For this please run the command ``docker compose  exec artwork php artisan key:generate --show``
-
-This will output a key. Copy this key and paste it into the .env file under the APP_KEY variable.
-
-Afterwards reload the container to load the new ``.env`` by running `docker compose up -d` again.
-
-Make sure you adjust the values in your .env file.
-
-### Updates
-
-You can modify the `$ARTWORK_VERSION` variable in the .env file. By default it is set to `main` which is the latest stable version of Artwork.
-The always pull policy ensures, that it will automatically update to the latest version on the next restart. It will also automatically migrate the database if necessary.
-
-## Docker installation (Laravel Sail)
-
-### Prerequisites
-
-Laravel Sail is supported on macOS, Linux, and Windows (via [WSL2](https://learn.microsoft.com/en-us/windows/wsl/about)).
-
-[Docker](https://www.docker.com/) and [composer](https://getcomposer.org/) have to be installed to run the project.
-
-### Introduction
-
-Laravel Sail will create 4 Docker images. 
-- The PHP project, 
-- a [MySQL](https://www.mysql.com/de/) instance (database), 
-- a [meilisearch](https://www.meilisearch.com/) instance (to enable fuzzy search)
-- a [mailpit](https://github.com/axllent/mailpit) instance (to preview emails sent by the application)
-
-It is recommended to not have any services running on the ports 80 and 3306.
-
-### Installation
-
-1. Clone the repository to your local machine:
-
-```shell
-git clone https://github.com/artwork-software/artwork.git
-```
-2. Access the project in the terminal and copy the .env.example file and rename it to .env
-
-```shell
-composer install --ignore-platform-reqs
-```
-
-2. Now start the Docker container by running:
-
-```shell
-./vendor/bin/sail up
-```
-
-The images will start building. It is recommended to replace the ./vendor/bin/sail command with a shell alias. 
-Consult the [documentation](https://laravel.com/docs/10.x/sail#configuring-a-shell-alias) to achieve that.
-We will use the alias `sail` for the following commands.
-
-3. Once the images are created you may have to open a new terminal window and install the frontend dependencies with a secret project key by running:
-
-```shell
-sail npm install
-```
-
-```shell
-sail artisan key:generate
-```
-
-4. To migrate the database with dummy data, use the following command:
-
-```shell
-sail artisan migrate:fresh --seed
-```
-
-To Delete your current database use this command:
-```shell
-sail artisan migrate:fresh
-```
-
-If you want to set up the database fresh for production without dummy data, use this command to fill the database with the necessary tables:
-
-```shell
-sail artisan db:seed:production
-```
-5. Start the queue using:
-
-```shell
-sail artisan queue:work
-```
-
-6. Start the frontend by running
-
-```shell
-sail npm run dev 
-```
-7. Publish the app storage folder to display the artwork logo by running
-
-```shell
-sail artisan storage:link
-```
-
-The site should be running now under http://localhost 🚀
-
-You can also visit your:
-- Mails under http://localhost:8025
-- Meilisearch under http://localhost:7700/
-
-To connect to your application's MySQL database from your local machine, you may use a graphical database management application such as TablePlus. By default, the MySQL database is accessible at localhost port 3306 and the access credentials correspond to the values of your DB_USERNAME and DB_PASSWORD environment variables. Or, you may connect as the root user, which also utilizes the value of your DB_PASSWORD environment variable as its password.
-
-----------------
-
-If you have problems installing the project or find any other bugs please open a issue [here](https://github.com/artwork-software/artwork/issues).
-
-----------------
-
-
-To run various commands in the project, you can use the following instructions:
-
-- To run `npm` commands, use the following command:
-
-```shell
-sail npm <command>
-```
-
-- To see all your changes to the code directly you can also run this command besides the ones from above:
-
-```shell
-sail npm run hot
-```
-
-For example, to install dependencies, you can run:
-
-```shell
-sail npm install
-```
-
-- To run `artisan` commands, use the following command:
-
-```shell
-sail artisan <command>
-```
-
-For example, to generate a new migration file, you can run:
-
-```shell
-sail artisan make:migration create_users_table
-```
-
-Feel free to use these commands to interact with the project and execute the necessary tasks efficiently.
+| Account | E-Mail | Password |
+|---------|--------|----------|
+| Admin (all permissions) | anna.musterfrau@artwork.software | TestPass1234!$ |
+| User (limited permissions) | lisa.musterfrau@artwork.software | TestPass1234!$ |
 
 ----------------
 
 # Branch Structure
 
-- **`dev` Branch**: This is where developers test their building blocks. It serves as the primary development branch for integrating new features and experiments.
-
-- **`staging` Branch**: This branch acts as the test server environment and can be considered as the Beta version. It is used for pre-release testing to ensure stability before deployment to production.
-
-- **`main` Branch**: This is our stable branch and should serve as the basis for all production systems. It contains the most reliable and tested version of our code.
+- **``main``** — Stable/production branch
+- **``staging``** — Pre-release testing (Beta)
+- **``dev``** — Development and feature integration
 
 ----------------
 
-# Test Instance
-
-If you use the docker installation and filled the database with dummy data you can use the following credentials to login to the test instance:
-
-For the admin account (with all permissions):
-Mail: anna.musterfrau@artwork.software
-Password: TestPass1234!$
-
-For the user account (with limited permissions):
-Mail: lisa.musterfrau@artwork.software
-Password: TestPass1234!$
-
-a full documentation of all features will be released and found here, when we have finished developement of version 1.0
-
-To be able to invite new Users you need to update the .env file with your mail credentials and the APP_URL
-
-If you have questions, feel free to open an issue :) 
-
-Feel free to explore the features of Artwork and manage your projects effectively!
-
 # API
 
-## Prerequisites
-
-Before you can use the Inventory API endpoint, you need to generate an API key:
+## Setup
 
 1. Log in to Artwork
 2. Navigate to **Tool Settings → Interfaces**
-3. Click on "Create API Key"
-4. Enter a name for your API key
-5. Optional: Set an expiration date
-6. Click on "Create"
-7. Copy the generated API key and store it securely
+3. Click "Create API Key"
+4. Enter a name and optionally set an expiration date
+5. Copy the generated key and store it securely
 
-## Routes and usage
+----------------
 
-We provide a postman collection and openapi.yaml.
-
-For detailed information on the API routes, please refer to the OpenAPI documentation.
+If you have questions, feel free to open an issue.

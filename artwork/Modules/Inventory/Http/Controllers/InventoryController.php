@@ -52,40 +52,6 @@ class InventoryController extends Controller
         );
     }
 
-    /**
-     * @throws Throwable
-     */
-    public function scheduling(
-        UserService $userService,
-    ): Response {
-        $user = $userService->getAuthUser();
-
-
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault(
-            $user->userFilters()->calendarFilter()->first(),
-        );
-
-        $showCalendar = $this->calendarDataService->createCalendarData(
-            $startDate,
-            $endDate,
-            $userService->getAuthUser()->userFilters()->calendarFilter()->first(),
-            null,
-            null,
-            true
-        );
-
-        $crafts = $this->craftService->getCraftsWithInventory($startDate, $endDate);
-
-        return Inertia::render('Inventory/Scheduling', [
-            'dateValue' => $showCalendar['dateValue'],
-            'calendar' => $showCalendar['roomsWithEvents'],
-            'days' => $showCalendar['days'],
-            'crafts' => $crafts,
-            'craftFilters' => $this->inventoryManagementUserFilterService
-                ->getFilterOfUser($this->authManager->id())
-        ]);
-    }
-
     public function dropItemToEvent(
         DropItemOnInventoryRequest $request,
         CraftInventoryItem $item,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
+import axios from 'axios';
 
 type LastedProject = {
     id: number | string;
@@ -43,6 +44,40 @@ function load() {
         items.value = [];
     } finally {
         isLoading.value = false;
+    }
+
+    // Inzwischen gelöschte Projekte aus der (rein clientseitigen) Liste entfernen,
+    // damit sie nicht mehr ausgewählt werden können.
+    pruneDeletedProjects();
+}
+
+async function pruneDeletedProjects() {
+    const ids = items.value
+        .map(p => Number(p.id))
+        .filter(id => Number.isInteger(id) && id > 0);
+
+    if (ids.length === 0) return;
+
+    try {
+        const { data } = await axios.post(route('project.filterExistingIds'), { ids });
+        const existing = new Set((Array.isArray(data) ? data : []).map((id: any) => Number(id)));
+
+        const stillVisible = items.value.filter(p => existing.has(Number(p.id)));
+        if (stillVisible.length === items.value.length) return;
+
+        // localStorage konsistent halten: die vollständige gespeicherte Liste prunen
+        // (nicht nur die hier via limit gekürzte Ansicht).
+        const raw = localStorage.getItem(props.storageKey || 'lastedProjects');
+        const stored = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(stored)) {
+            const cleaned = stored.filter((p: any) => existing.has(Number(p.id)));
+            localStorage.setItem(props.storageKey || 'lastedProjects', JSON.stringify(cleaned));
+            items.value = cleaned.slice(0, props.limit);
+        } else {
+            items.value = stillVisible;
+        }
+    } catch {
+        // Netzwerk-/Serverfehler: Liste unverändert lassen.
     }
 }
 

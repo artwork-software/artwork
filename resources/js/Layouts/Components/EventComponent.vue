@@ -3,7 +3,7 @@
         :title="modalTitle"
         :description="modalDescription"
         modal-size="max-w-4xl"
-        @close="closeModal"
+        @close="handleCloseAttempt"
     >
         <div class="space-y-4">
 
@@ -58,7 +58,7 @@
                             color-property="color"
                         >
                         </ArtworkBaseListbox>
-                        <div>
+                        <div :class="statusModule ? '' : 'pt-5'">
                             <BaseInput
                                 v-model="eventName"
                                 id="eventTitle"
@@ -94,14 +94,14 @@
 
                     <div class="ui-grid-2 mt-2">
                         <div class="flex gap-2 items-end">
-                            <BaseInput type="date" id="startDate" v-model="startDate" :label="$t('Start')" @change="checkChanges" class="ui-input" />
+                            <BaseInput type="date" id="startDate" v-model="startDate" :label="$t('Start')" @change="() => { shiftEndByStartDelta('date'); checkChanges() }" class="ui-input" />
                             <BaseInput
                                 v-if="!allDayEvent"
                                 type="time"
                                 id="startTime"
                                 v-model="startTime"
                                 :label="$t('Start time')"
-                                @change="() => { endAutoFilled = !endTime; checkChanges() }"
+                                @change="() => { shiftEndByStartDelta('time'); endAutoFilled = !endTime; checkChanges() }"
                                 class="ui-input"
                             />
                         </div>
@@ -200,6 +200,11 @@
                         <span class="ui-dot bg-rose-400"></span>
                         <h3 class="ui-card-title">{{ $t('Room') }}</h3>
                     </header>
+
+                    <div v-if="declinedRoomId" class="flex items-center gap-2 text-[12px] text-red-600 mb-1">
+                        <span>{{ $t('Previously declined from') }}:</span>
+                        <span class="font-medium line-through">{{ declinedRoomName }}</span>
+                    </div>
 
                     <div class="mb-1 flex items-center justify-between">
                         <span class="ui-hint">{{ $t('Pick a room for this event.') }}</span>
@@ -331,7 +336,13 @@
                 <section class="ui-card">
                     <header class="ui-card-header">
                         <span class="ui-dot bg-violet-400"></span>
-                        <h3 class="ui-card-title">{{ $t('Notes & booking') }}</h3>
+                        <h3 class="ui-card-title">{{ $t('Description') }}</h3>
+                        <ToolTipComponent
+                            :tooltip-text="$t('Other users can see this description in the project\'s event list and in the calendar.')"
+                            direction="right"
+                            icon="IconInfoCircle"
+                            icon-size="h-4 w-4"
+                        />
                     </header>
 
                     <div class="space-y-3">
@@ -522,12 +533,39 @@
             :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [event?.title ?? ''])"
             @closed="afterConfirm"
         />
-        <ChangeAllSubmitModal
-            v-if="showSeriesEdit"
-            @closed="closeSeriesEditModal"
-            @all="saveAllSeriesEvents"
-            @single="singleSaveEvent"
-        />
+    </ArtworkBaseModal>
+
+    <ChangeAllSubmitModal
+        v-if="showSeriesEdit"
+        @close-modal="closeSeriesEditModal"
+        @allEvents="saveAllSeriesEvents"
+        @single="singleSaveEvent"
+    />
+
+    <!-- Bestätigungsdialog beim Schließen -->
+    <ArtworkBaseModal
+        v-if="showDiscardConfirmation"
+        @close="showDiscardConfirmation = false"
+        modal-size="sm:max-w-md"
+        :title="$t('Discard data')"
+        :description="$t('Should the entered data be discarded?')"
+    >
+        <div class="flex justify-end gap-3 mt-4">
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition"
+                @click="showDiscardConfirmation = false"
+            >
+                {{ $t('No, continue editing') }}
+            </button>
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+                @click="confirmDiscard"
+            >
+                {{ $t('Discard') }}
+            </button>
+        </div>
     </ArtworkBaseModal>
 </template>
 
@@ -555,6 +593,7 @@ import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 const { t } = useI18n(), $t = t;
@@ -576,6 +615,7 @@ const props = defineProps({
     eventStatuses: { type: Array, default: () => [] },
     isPlanning: { type: Boolean, default: false },
     wantedDate: { type: String, default: null },
+    declinedRoomId: { type: [Number, String], default: null },
 })
 const emit = defineEmits(['closed'])
 
@@ -615,7 +655,7 @@ const selectedEventType = ref(props.eventTypes?.[0] ?? null)
 const selectedEventStatus = ref(props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null)
 
 const showProjectInfo = ref(Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id))
-const allDayEvent = ref(false)
+const allDayEvent = ref(!!usePage().props.event_all_day_default)
 const selectedProject = ref(null)
 const selectedRoom = ref(null)
 const error = ref(null)
@@ -656,12 +696,16 @@ function setEndFromDuration() {
 // Manche Aufrufer liefern rooms als Objekt-Map statt als Array – hier vereinheitlichen
 const roomsList = computed(() => Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {}))
 const isRoomAdmin = computed(() => {
-    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.some(a => a.id === page.props.auth.user.id) || false
+    return roomsList.value.find(r => r.id === props.event?.roomId)?.admins?.includes(page.props.auth.user.id) || false
 })
 const isCreator = computed(() => (props.event ? props.event.created_by?.id === page.props.auth.user.id : false))
 const hasAdminRole = () => props.isAdmin || page.props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
 
-const roomAdminIds = computed(() => selectedRoom.value?.room_admins?.map(a => a.id) ?? [])
+const roomAdminIds = computed(() => selectedRoom.value?.admins ?? [])
+const declinedRoomName = computed(() => {
+    if (!declinedRoomId.value) return null
+    return roomsList.value.find(r => r.id === Number(declinedRoomId.value))?.name ?? null
+})
 
 const modalTitle = computed(() => {
     if (props.event?.id) {
@@ -686,7 +730,7 @@ const modalDescription = computed(() => {
 const checkedEventProperties = computed(() => (event_properties ?? []).filter(p => p.checked))
 
 const canCreateDirect = computed(
-    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || can('create events without request')
+    () => hasAdminRole() || selectedRoom.value?.everyone_can_book || roomAdminIds.value.includes(page.props.auth.user.id) || can('create events without request') || (props.isPlanning && can('can plan fixed in planning calendar'))
 )
 
 const isPrimaryDisabled = computed(() => {
@@ -703,10 +747,16 @@ const primaryButtonText = computed(() => {
     if (adminComment.value) return $t('Send message')
     return $t('Save')
 })
+const isRequestableForRoom = computed(() => {
+    return selectedRoom.value?.requestable_by?.includes(page.props.auth.user.id) || false
+})
+
 const requestDisabled = computed(() => {
     const invalidSeries = series.value && (!seriesEndDate.value || !selectedFrequency.value || (endDate.value && seriesEndDate.value && endDate.value > seriesEndDate.value))
     if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
-    if (!can('request room occupancy') && !props.isPlanning) return true
+    const canRequestGlobal = can('request room occupancy')
+    const canRequestRoom = isRequestableForRoom.value
+    if (!canRequestGlobal && !canRequestRoom && !props.isPlanning) return true
     if (!can('can see planning calendar') && props.isPlanning) return true
     return false
 })
@@ -728,10 +778,9 @@ watch(
 )
 
 onMounted(() => {
-    console.log(props)
     if (props.wantedDate) {
         startDate.value = props.wantedDate
-        startTime.value = '09:00'
+        startTime.value = page.props.event_start_time || '09:00'
         setEndFromDuration()
     }
     if (props.wantedRoomId) {
@@ -763,15 +812,14 @@ function findRoomById(rawId) {
     return list.find(r => Number(r?.id) === rid || Number(r?.roomId) === rid) || null
 }
 function openModal() {
-    canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole()
-
+    canEdit.value = (!props.event?.id) || isCreator.value || isRoomAdmin.value || hasAdminRole() || can('create events without request')
     if (!props.event) {
         selectedEventType.value = props.eventTypes?.[0] ?? null
         selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
         // Direkt vorbelegen: Datum/Zeit und Raum, falls gewünscht
         if (props.wantedDate) {
             startDate.value = props.wantedDate
-            startTime.value = '09:00'
+            startTime.value = page.props.event_start_time || '09:00'
             setEndFromDuration()
         }
         if (props.wantedRoomId && !selectedRoom.value) {
@@ -844,6 +892,7 @@ function openModal() {
     }
 
     initialRoomId.value = selectedRoom.value?.id ?? null
+    declinedRoomId.value = props.declinedRoomId ?? props.event.declinedRoomId ?? null
     description.value = props.event.description ?? ''
 
     ;(event_properties ?? []).forEach(ep => {
@@ -872,7 +921,7 @@ function closeModal(closedOnPurpose = false) {
     selectedProject.value = selectedRoom.value = null
     selectedEventType.value = props.eventTypes?.[0] ?? null
     selectedEventStatus.value = props.eventStatuses?.find(s => s.default) ?? props.eventStatuses?.[0] ?? null
-    allDayEvent.value = false
+    allDayEvent.value = !!page.props.event_all_day_default
     series.value = false
     seriesEndDate.value = null
     showProjectInfo.value = Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id)
@@ -886,6 +935,22 @@ function closeModal(closedOnPurpose = false) {
     ;(event_properties ?? []).forEach(p => (p.checked = false))
     initialRoomId.value = null
 }
+
+const showDiscardConfirmation = ref(false)
+
+function handleCloseAttempt() {
+    if (!props.event?.id) {
+        showDiscardConfirmation.value = true
+        return
+    }
+    closeModal()
+}
+
+function confirmDiscard() {
+    showDiscardConfirmation.value = false
+    closeModal()
+}
+
 function formatDate(date, time, toUTC = true) {
     // fehlende Werte abfangen
     if (!date || !time) return null
@@ -922,7 +987,7 @@ async function checkCollisions() {
         const startFull = formatDate(startDate.value, startTime.value ?? '00:00')
         const endFull = formatDate(endDate.value, endTime.value ?? '23:59')
         try {
-            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull } })
+            const { data } = await axios.post('/collision/room', { params: { start: startFull, end: endFull, currentEventId: props.event?.id ?? null } })
             roomCollisionArray.value = data
         } catch { /* ignore */ }
     }
@@ -961,6 +1026,38 @@ function applyQuickDuration(minutes) {
 
     validateStartBeforeEndTime()
     checkCollisions()
+}
+
+function shiftEndByStartDelta(type) {
+    // Nur bei bestehenden Terminen (oldStart-Werte vorhanden)
+    if (!oldStartDate.value || !endDate.value) return
+
+    if (type === 'date') {
+        const oldStart = dayjs(oldStartDate.value)
+        const newStart = dayjs(startDate.value)
+        if (!oldStart.isValid() || !newStart.isValid()) return
+
+        const diffDays = newStart.diff(oldStart, 'day')
+        if (diffDays === 0) return
+
+        endDate.value = dayjs(endDate.value).add(diffDays, 'day').format('YYYY-MM-DD')
+        oldStartDate.value = startDate.value
+    } else if (type === 'time') {
+        if (!oldStartTime.value || !startTime.value || !endTime.value || !endDate.value) return
+
+        const oldDT = dayjs(`${oldStartDate.value}T${oldStartTime.value}`)
+        const newDT = dayjs(`${startDate.value}T${startTime.value}`)
+        if (!oldDT.isValid() || !newDT.isValid()) return
+
+        const diffMinutes = newDT.diff(oldDT, 'minute')
+        if (diffMinutes === 0) return
+
+        const newEnd = dayjs(`${endDate.value}T${endTime.value}`).add(diffMinutes, 'minute')
+        endDate.value = newEnd.format('YYYY-MM-DD')
+        endTime.value = newEnd.format('HH:mm')
+        oldStartTime.value = startTime.value
+        oldStartDate.value = startDate.value
+    }
 }
 
 function updateTimes() {
@@ -1074,7 +1171,6 @@ function payload() {
     }
 }
 async function updateOrCreateEvent(isOptionParam = false) {
-    isLoading.value = true
     isOption.value = isOptionParam
 
     if (allDayEvent.value) {
@@ -1085,6 +1181,12 @@ async function updateOrCreateEvent(isOptionParam = false) {
         isOption.value = true
     }
 
+    // Normales Bearbeiten: immer nur diesen einen Termin speichern
+    allSeriesEvents.value = false
+    await doSaveEvent()
+}
+async function doSaveEvent() {
+    isLoading.value = true
     const data = payload()
 
     if (!props.requiresAxiosRequests &&
@@ -1132,29 +1234,14 @@ async function updateOrCreateEvent(isOptionParam = false) {
     }
 }
 async function singleSaveEvent() {
-    isLoading.value = true
-    try {
-        await axios.put(`/events/${props.event?.id}`, payload())
-        isLoading.value = false
-        closeModal(true)
-        closeSeriesEditModal()
-    } catch (e) {
-        isLoading.value = false
-        error.value = e?.response?.data?.errors ?? e
-    }
+    allSeriesEvents.value = false
+    closeSeriesEditModal()
+    await doSaveEvent()
 }
 async function saveAllSeriesEvents() {
-    isLoading.value = true
     allSeriesEvents.value = true
-    try {
-        await axios.put(`/events/${props.event?.id}`, payload())
-        isLoading.value = false
-        closeModal(true)
-        closeSeriesEditModal()
-    } catch (e) {
-        isLoading.value = false
-        error.value = e?.response?.data?.errors ?? e
-    }
+    closeSeriesEditModal()
+    await doSaveEvent()
 }
 function closeSeriesEditModal() {
     showSeriesEdit.value = false

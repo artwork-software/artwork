@@ -9,24 +9,23 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
-use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\Shift\Models\ShiftFreelancer;
+use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\Shift\Models\FreelancerShiftQualification;
-use Artwork\Modules\Shift\Models\ShiftQualification;
+use Artwork\Modules\Shift\Models\Traits\HasShifts;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
+use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
  * @property string $position
+ * @property string $business
  * @property string $profile_image
  * @property string $first_name
  * @property string $last_name
@@ -55,7 +54,7 @@ use Laravel\Scout\Searchable;
  * @property-read Collection<int, \Artwork\Modules\Shift\Models\GlobalQualification> $globalQualifications
  *
  */
-class Freelancer extends Model implements Vacationer, Available, DayServiceable
+class Freelancer extends Model implements Vacationer, Available, DayServiceable, Employable, CrmEntity
 {
     use HasFactory;
     use GoesOnVacation;
@@ -63,7 +62,11 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use HasShifts;
     use Searchable;
+    use HasProfilePhotoCustom;
+    use HasCrmContact;
+    use HasCrmFields;
 
     /**
      * @var string[]
@@ -71,6 +74,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     //phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $fillable = [
         'position',
+        'business',
         'profile_image',
         'first_name',
         'last_name',
@@ -99,23 +103,6 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         'can_work_shifts' => 'boolean'
     ];
 
-    public function shifts(): BelongsToMany
-    {
-        return $this
-            ->belongsToMany(Shift::class, 'shifts_freelancers')
-            ->using(ShiftFreelancer::class)
-            ->withPivot([
-                'id',
-                'shift_qualification_id',
-                'shift_count',
-                'craft_abbreviation',
-                'short_description',
-                'start_date',
-                'end_date',
-                'start_time',
-                'end_time'
-            ]);
-    }
 
     public function getProfilePhotoUrlAttribute(): string
     {
@@ -123,9 +110,42 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         if ($isUrl) {
             return $this->profile_image;
         }
-        return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
-            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
+
+        if ($this->profile_image) {
+            return asset('storage/' . $this->profile_image);
+        }
+
+        // Verwende makeAvatarSvg aus HasProfilePhotoCustom Trait
+        $letters = $this->initials();
+        $bg = (string) config('artwork.avatar.bg', '#4F46E5');
+        $fg = (string) config('artwork.avatar.fg', '#FFFFFF');
+
+        $svg = $this->makeAvatarSvg($letters, $bg, $fg);
+
+        return $this->svgToDataUri($svg);
+    }
+
+    private function initials(): string
+    {
+        $first = trim((string) ($this->first_name ?? ''));
+        $last  = trim((string) ($this->last_name ?? ''));
+
+        $a = $first !== '' ? Str::upper(Str::substr($first, 0, 1)) : '';
+        $b = $last  !== '' ? Str::upper(Str::substr($last, 0, 1)) : '';
+
+        $letters = $a . $b;
+
+        if ($letters === '') {
+            $fallback = trim((string) ($this->work_name ?? $this->email ?? 'F'));
+
+            if (str_contains($fallback, '@')) {
+                $fallback = Str::before($fallback, '@');
+            }
+
+            $letters = Str::upper(Str::substr($fallback, 0, 2));
+        }
+
+        return $letters;
     }
 
     public function getNameAttribute(): string
@@ -143,97 +163,27 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    public function assignedCrafts(): morphToMany
+    public function getCrmFields(): array
     {
-        return $this->morphToMany(Craft::class, 'craftable')->with('qualifications');
-    }
-
-    public function managingCrafts(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    /**
-     * @return array<int>
-     */
-    public function getAssignedCraftIdsAttribute(): array
-    {
-        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
-    }
-
-    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\ShiftQualification::class,
-            'qualifiable',
-            'shift_qualifiables',
-            'qualifiable_id',
-            'shift_qualification_id'
-        )->withPivot('craft_id');
-    }
-
-    public function getShiftIdsBetweenStartDateAndEndDate(
-        Carbon $startDate,
-        Carbon $endDate
-    ): Collection {
-        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
-    }
-
-    //@todo refactor this too
-    public function plannedWorkingHours($startDate, $endDate): float|int
-    {
-        $shiftsInDateRange = $this->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->get();
-
-        $plannedWorkingHours = 0;
-
-        $individualTimes = $this->individualTimes()
-            ->individualByDateRange($startDate, $endDate)->sum('working_time_minutes');
-
-        foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
-            $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
-            $breakMinutes = $shift->break_minutes;
-
-            $shiftStart = Carbon::parse($shiftStart);
-            $shiftEnd = Carbon::parse($shiftEnd);
-
-
-            $shiftDuration = (($shiftEnd->diffInRealMinutes($shiftStart) + $individualTimes) - $breakMinutes) / 60;
-            $plannedWorkingHours += $shiftDuration;
-        }
-
-
-        return $plannedWorkingHours;
-    }
-
-    public function scopeCanWorkShifts(Builder $builder): Builder
-    {
-        return $builder->where('can_work_shifts', true);
-    }
-
-    public function craftsToManage(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    public function getManagingCraftIds(): array
-    {
-        return $this->craftsToManage()->pluck('id')->toArray();
-    }
-
-    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\GlobalQualification::class,
-            'qualifiable',
-            'global_qualifiables',
-            'qualifiable_id',
-            'global_qualification_id'
+        return array_merge(
+            $this->getSharedCrmFields(),
+            [
+                'Position' => 'position',
+                'Business' => 'business',
+            ],
+            $this->getWorkProfileCrmFields(),
+            $this->getAddressCrmFields(),
+            ['Notiz' => 'note'],
         );
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'freelancer';
     }
 }

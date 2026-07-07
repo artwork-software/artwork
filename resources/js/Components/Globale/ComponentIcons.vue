@@ -46,13 +46,19 @@ export default {
     <PropertyIcon name="IconSeparator" class="w-6 h-6" v-if="type === 'SeparatorComponent'" />
     <PropertyIcon name="IconCurrencyEuro" class="w-6 h-6" v-if="type === 'BudgetInformations'" />
     <PropertyIcon name="IconApps" class="w-6 h-6" v-if="type === 'BulkBody'" />
-    <PropertyIcon name="IconHomeStar" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
+    <PropertyIcon name="IconPalette" class="w-6 h-6" v-if="type === 'ArtistResidenciesComponent'" />
     <PropertyIcon name="IconCornerDownRightDouble" class="w-6 h-6" v-if="type === 'GroupProjectDisplayComponent'" />
     <PropertyIcon name="IconDeviceProjector" class="w-6 h-6" v-if="type === 'ProjectGroupDisplayComponent'" />
     <PropertyIcon name="IconLayoutNavbarCollapse" class="w-6 h-6" v-if="type === 'DisclosureComponent'" />
     <PropertyIcon name="IconLink" class="w-6 h-6" v-if="type === 'Link'" />
     <PropertyIcon name="IconInfoSquare" class="w-6 h-6" v-if="type === 'ProjectBasicDataDisplayComponent'" />
     <PropertyIcon name="IconPackage" class="w-6 h-6" v-if="type === 'ProjectMaterialIssueComponent'" />
+    <PropertyIcon name="IconBuildingBank" class="w-6 h-6" v-if="type === 'ProjectCostCenterDisplayComponent'" />
+    <PropertyIcon name="IconPalette" class="w-6 h-6" v-if="type === 'ArtistNameDisplayComponent'" />
+    <PropertyIcon name="IconLink" class="w-6 h-6" v-if="type === 'LinkList'" />
+    <PropertyIcon name="IconFileText" class="w-6 h-6" v-if="type === 'ProjectContractsDocumentsComponent'" />
+    <PropertyIcon name="IconChartHistogram" class="w-6 h-6" v-if="type === 'BusinessIntelligenceComponent'" />
+    <PropertyIcon name="IconChartBar" class="w-6 h-6" v-if="type === 'BiKeyFiguresDisplay'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Duty rosters & shift templates')">
+    <app-layout :title="title ?? $t('Shift plan')">
         <div class="-ml-4">
             <slot></slot>
         </div>
@@ -14,6 +14,12 @@ import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/solid";
 export default defineComponent({
     name: "ShiftHeader",
     components: {AppLayout, ShiftTabs, ChevronDownIcon, ChevronUpIcon},
+    props: {
+        title: {
+            type: String,
+            default: null,
+        },
+    },
     data() {
         return {
             showHeadLine: true,

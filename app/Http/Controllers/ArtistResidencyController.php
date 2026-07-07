@@ -79,6 +79,19 @@ class ArtistResidencyController extends Controller
         $artistResidency->delete();
     }
 
+    public function updateName(ArtistResidency $artistResidency): void
+    {
+        if (!$artistResidency->do_not_save_artist) {
+            abort(403);
+        }
+
+        $data = request()->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $artistResidency->update(['name' => $data['name']]);
+    }
+
     public function duplicate(ArtistResidency $artistResidency): void
     {
         $artistResidency->replicate()->save();
@@ -92,6 +105,11 @@ class ArtistResidencyController extends Controller
     public function exportExcel(Project $project, string $language = 'en'): \Symfony\Component\HttpFoundation\Response
     {
         return $this->artistResidencyService->exportService($project, ExportType::EXCEL->value, $language);
+    }
+
+    public function exportPerDiemPdf(Project $project, string $language = 'en'): \Symfony\Component\HttpFoundation\Response
+    {
+        return $this->artistResidencyService->exportPerDiemPdf($project, $language);
     }
 
     public function exportPdfDownload(string $filename): \Symfony\Component\HttpFoundation\BinaryFileResponse

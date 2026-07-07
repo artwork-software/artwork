@@ -4,9 +4,10 @@ namespace Artwork\Modules\Inventory\Repositories;
 
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
+use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class InventoryArticleRepository
 {
@@ -18,6 +19,51 @@ class InventoryArticleRepository
     public function search(string $term)
     {
         return InventoryArticle::search($term)->get();
+    }
+
+    /**
+     * Ref 1.28: SQL-based search across all property values (incl. serial number),
+     * name, inventory number and category. Supports wildcard syntax (`*158`) and an
+     * optional scope to a single property. Used when Meilisearch cannot express the
+     * query (wildcard or attribute-scoped search).
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, InventoryArticle>
+     */
+    public function searchAdvanced(string $term, ?int $propertyId = null)
+    {
+        // Translate wildcard `*` to SQL `%`; a plain term matches as substring.
+        $pattern = str_contains($term, '*')
+            ? str_replace('*', '%', $term)
+            : '%' . $term . '%';
+
+        return InventoryArticle::query()
+            ->withoutTrashed()
+            ->where(function ($q) use ($pattern, $propertyId): void {
+                // Main article property values
+                $q->whereHas('properties', function ($pq) use ($pattern, $propertyId): void {
+                    $pq->where('inventory_property_values.value', 'like', $pattern);
+                    if ($propertyId) {
+                        $pq->where('inventory_article_properties.id', $propertyId);
+                    }
+                });
+
+                // Detailed article (single inventory) property values
+                $q->orWhereHas('detailedArticleQuantities.properties', function ($pq) use ($pattern, $propertyId): void {
+                    $pq->where('inventory_property_values.value', 'like', $pattern);
+                    if ($propertyId) {
+                        $pq->where('inventory_article_properties.id', $propertyId);
+                    }
+                });
+
+                // When not scoped to a single property, also match the basics.
+                if (!$propertyId) {
+                    $q->orWhere('inventory_articles.name', 'like', $pattern)
+                        ->orWhere('inventory_articles.inventory_number', 'like', $pattern)
+                        ->orWhereHas('category', fn ($c) => $c->where('name', 'like', $pattern))
+                        ->orWhereHas('subCategory', fn ($c) => $c->where('name', 'like', $pattern));
+                }
+            })
+            ->get(['inventory_articles.id']);
     }
 
     public function baseQuery()
@@ -50,20 +96,22 @@ class InventoryArticleRepository
                             'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
                             'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
                             'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
+                            default => null,
                         };
 
                         return;
                     }
 
                     if ($property && $property->type === 'manufacturer') {
-                        $q->join('manufacturers', 'inventory_property_values.value', '=', 'manufacturers.id');
+                        $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
 
                         match ($filter['operator']) {
-                            'like' => $q->where('manufacturers.name', 'like', '%' . $filter['value'] . '%'),
-                            'starts_with' => $q->where('manufacturers.name', 'like', $filter['value'] . '%'),
-                            'ends_with' => $q->where('manufacturers.name', 'like', '%' . $filter['value']),
-                            'exact', 'equals' => $q->where('manufacturers.name', '=', $filter['value']),
-                            'not_equals' => $q->where('manufacturers.name', '!=', $filter['value']),
+                            'like' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value'] . '%'),
+                            'starts_with' => $q->where('crm_contacts.display_name', 'like', $filter['value'] . '%'),
+                            'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
+                            'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
+                            'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
+                            default => null,
                         };
 
                         return;
@@ -106,20 +154,22 @@ class InventoryArticleRepository
                                     'ends_with' => $q->where('rooms.name', 'like', '%' . $filter['value']),
                                     'exact', 'equals' => $q->where('rooms.name', '=', $filter['value']),
                                     'not_equals' => $q->where('rooms.name', '!=', $filter['value']),
+                                    default => null,
                                 };
 
                                 return;
                             }
 
                             if ($property && $property->type === 'manufacturer') {
-                                $q->join('manufacturers', 'inventory_property_values.value', '=', 'manufacturers.id');
+                                $q->join('crm_contacts', 'inventory_property_values.value', '=', 'crm_contacts.id');
 
                                 match ($filter['operator']) {
-                                    'like' => $q->where('manufacturers.name', 'like', '%' . $filter['value'] . '%'),
-                                    'starts_with' => $q->where('manufacturers.name', 'like', $filter['value'] . '%'),
-                                    'ends_with' => $q->where('manufacturers.name', 'like', '%' . $filter['value']),
-                                    'exact', 'equals' => $q->where('manufacturers.name', '=', $filter['value']),
-                                    'not_equals' => $q->where('manufacturers.name', '!=', $filter['value']),
+                                    'like' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value'] . '%'),
+                                    'starts_with' => $q->where('crm_contacts.display_name', 'like', $filter['value'] . '%'),
+                                    'ends_with' => $q->where('crm_contacts.display_name', 'like', '%' . $filter['value']),
+                                    'exact', 'equals' => $q->where('crm_contacts.display_name', '=', $filter['value']),
+                                    'not_equals' => $q->where('crm_contacts.display_name', '!=', $filter['value']),
+                                    default => null,
                                 };
 
                                 return;
@@ -160,6 +210,12 @@ class InventoryArticleRepository
 
     public function addImages(InventoryArticle $article, array $images, ?int $mainImageIndex = null): void
     {
+        // A new main image replaces the previous one — otherwise two images
+        // end up flagged and the sorting lets the old one win.
+        if ($mainImageIndex !== null) {
+            $article->images()->update(['is_main_image' => false]);
+        }
+
         foreach ($images as $index => $image) {
             $created = $article->images()->create([
                 'image' => $image->store('inventory_articles', 'public'),
@@ -196,27 +252,6 @@ class InventoryArticleRepository
         $article->statusValues()->detach();
     }
 
-    public function addDetailedArticles(InventoryArticle $article, Collection $detailedArticles): void
-    {
-        foreach ($detailedArticles as $detailedArticleData) {
-            $detailedArticle = $article->detailedArticleQuantities()->create([
-                'name' => $detailedArticleData['name'],
-                'quantity' => $detailedArticleData['quantity'],
-                'description' => $detailedArticleData['description'],
-                'inventory_article_status_id' => $detailedArticleData['status']['id'] ?? null,
-                'type_number' => Str::uuid()->toString(),
-            ]);
-
-            if(array_key_exists('properties', $detailedArticleData)) {
-                foreach ($detailedArticleData['properties'] as $property) {
-                    $detailedArticle->properties()->attach((int)$property['id'], [
-                        'value' => (string)$property['value']
-                    ]);
-                }
-            }
-        }
-    }
-
     public function update(InventoryArticle $article, array $data): void
     {
         $article->update($data);
@@ -227,24 +262,15 @@ class InventoryArticleRepository
         $article->properties()->detach();
     }
 
-    public function detachAllDetailedArticleProperties(InventoryArticle $article): void
-    {
-        foreach ($article->detailedArticleQuantities as $detailedArticle) {
-            $detailedArticle->properties()->detach();
-        }
-    }
-
-    public function deleteAllDetailedArticles(InventoryArticle $article): void
-    {
-        $article->detailedArticleQuantities()->delete();
-    }
-
 
     public function delete(InventoryArticle $article): void
     {
         $article->images()->delete();
         $article->detailedArticleQuantities()->delete();
-        $article->statusValues()->detach();
+        // Keep status value pivots: this is only a soft delete — detaching here
+        // would irreversibly wipe the stock quantities and restore() would
+        // bring the article back with stock 0. forceDelete() cleans the
+        // pivots via FK ON DELETE CASCADE.
         $article->delete();
     }
 
@@ -277,8 +303,13 @@ class InventoryArticleRepository
             $image->forceDelete();
         }
 
-        // delete detailed articles
         $detailedArticles = $article->detailedArticleQuantities()->withTrashed()->get();
+
+        // remove uploaded files of "file" type properties (article + detailed articles)
+        // before the pivot rows are detached, so the paths are still resolvable.
+        $this->deletePropertyFiles($article, $detailedArticles);
+
+        // delete detailed articles
         foreach ($detailedArticles as $detailedArticle) {
             $detailedArticle->properties()->detach();
             $detailedArticle->forceDelete();
@@ -287,6 +318,58 @@ class InventoryArticleRepository
         // delete article
         $article->properties()->detach();
         $article->forceDelete();
+    }
+
+    /**
+     * Permanently delete the stored files of "file" type property values that
+     * belong to the given article and its detailed articles. A file is only
+     * removed when no other (kept) property value still references the same
+     * path – this protects shared paths created by article duplication.
+     *
+     * @param \Illuminate\Support\Collection<int, InventoryDetailedQuantityArticle> $detailedArticles
+     */
+    private function deletePropertyFiles(InventoryArticle $article, Collection $detailedArticles): void
+    {
+        $values = InventoryPropertyValue::query()
+            ->whereHas('property', fn ($query) => $query->where('type', 'file'))
+            ->where(function ($query) use ($article, $detailedArticles) {
+                $query->where(function ($q) use ($article) {
+                    $q->where('inventory_propertyable_type', InventoryArticle::class)
+                        ->where('inventory_propertyable_id', $article->id);
+                });
+
+                if ($detailedArticles->isNotEmpty()) {
+                    $query->orWhere(function ($q) use ($detailedArticles) {
+                        $q->where('inventory_propertyable_type', InventoryDetailedQuantityArticle::class)
+                            ->whereIn('inventory_propertyable_id', $detailedArticles->pluck('id')->all());
+                    });
+                }
+            })
+            ->get(['id', 'value']);
+
+        $removedIds = $values->pluck('id')->all();
+
+        foreach ($values->pluck('value')->filter()->unique() as $path) {
+            // Only ever touch files inside the dedicated property uploads directory.
+            if (!str_starts_with((string) $path, 'uploads/inventory-properties/')) {
+                continue;
+            }
+
+            // Skip if another, non-removed property value still points to this file.
+            $stillReferenced = InventoryPropertyValue::query()
+                ->where('value', $path)
+                ->whereNotIn('id', $removedIds)
+                ->exists();
+
+            if ($stillReferenced) {
+                continue;
+            }
+
+            if (Storage::exists($path)) {
+                Storage::delete($path);
+                Storage::deleteDirectory(dirname($path));
+            }
+        }
     }
 
     public function restore(InventoryArticle $article): void

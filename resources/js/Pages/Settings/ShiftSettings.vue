@@ -408,6 +408,74 @@
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
+
+            <div class="flex flex-col gap-2 card white p-5 mb-10">
+                <BasePageTitle
+                    :title="$t('Shifts in shift plan subscription')"
+                    :description="$t('When a user subscribes to their own shift plan, the following shifts should appear:')"
+                />
+                <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
+                    <SwitchLabel as="span" class="text-sm">
+                        <span class="flex items-center gap-x-1">
+                            <span :class="[!shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                                {{ $t('Only committed shifts') }}
+                            </span>
+                            <ToolTipComponent
+                                direction="right"
+                                :tooltip-text="$t('A committed shift is a shift that has been declared as finished in the duty roster by a shift planner using the button Commit all shifts and, if active, has been approved by the duty roster release workflow.')"
+                                icon="IconInfoCircle"
+                                icon-size="h-4 w-4"
+                                classes-button=""
+                                no-relative
+                            />
+                        </span>
+                    </SwitchLabel>
+                    <Switch v-model="shiftSettings.calendar_abo_show_all_shifts"
+                            @update:model-value="updateCalendarAboShowAllShifts"
+                            :class="[
+                                shiftSettings.calendar_abo_show_all_shifts ?
+                                    'bg-artwork-buttons-create' :
+                                    'bg-gray-200',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                            ]">
+                        <span aria-hidden="true" :class="[shiftSettings.calendar_abo_show_all_shifts ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            {{ $t('All shifts') }}
+                        </span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
+
+            <div class="flex flex-col gap-2 card white p-5 mb-10">
+                <BasePageTitle
+                    :title="$t('Overbooking of shifts')"
+                    :description="$t('If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.')"
+                />
+                <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[!shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            {{ $t('Deactivated') }}
+                        </span>
+                    </SwitchLabel>
+                    <Switch v-model="shiftSettings.allow_shift_overbooking"
+                            @update:model-value="updateAllowShiftOverbooking"
+                            :class="[
+                                shiftSettings.allow_shift_overbooking ?
+                                    'bg-artwork-buttons-create' :
+                                    'bg-gray-200',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                            ]">
+                        <span aria-hidden="true" :class="[shiftSettings.allow_shift_overbooking ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            {{ $t('Allow overbooking') }}
+                        </span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
         <ShiftQualificationModal
             v-if="this.showShiftQualificationModal"
             :show="this.showShiftQualificationModal"
@@ -473,7 +541,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import Button from "@/Jetstream/Button.vue";
-import {IconCheck, IconEdit, IconGripVertical, IconPlus, IconTrash} from "@tabler/icons-vue";
+import {IconCheck, IconEdit, IconGripVertical, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
@@ -483,12 +551,14 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import GlobalQualificationsSettingsCard from "@/Pages/Settings/ShiftSettingsComponents/GlobalQualificationsSettingsCard.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
         GlobalQualificationsSettingsCard,
+        ToolTipComponent,
         PropertyIcon,
         SwitchIconTooltip,
         BaseMenuItem,
@@ -564,8 +634,7 @@ export default defineComponent({
             confirmDeleteTitle: '',
             confirmDeleteDescription: '',
             userForWorkflowForm: useForm({
-                // users form this.shiftCommitWorkflowUsers but only id is needed
-                users: this.shiftCommitWorkflowUsers.map(user => user.id) || []
+                users: []
             }),
             deleteType: '',
             tabs: [
@@ -638,7 +707,7 @@ export default defineComponent({
         IconCheck,
         IconEdit,
         IconTrash,
-        IconPlus,
+        IconCirclePlus,
         IconGripVertical,
         addUserToWorkflow(user) {
             const userAlreadyExistsOnServer =
@@ -811,6 +880,28 @@ export default defineComponent({
                 route('shift.settings.update.shift-settings.use-first-name-for-sort'),
                 {
                     use_first_name_for_sort: useFirstNameForSort
+                },
+                {
+                    preserveScroll: true
+                }
+            )
+        },
+        updateCalendarAboShowAllShifts(calendarAboShowAllShifts) {
+            router.patch(
+                route('shift.settings.update.calendar-abo-show-all-shifts'),
+                {
+                    calendar_abo_show_all_shifts: calendarAboShowAllShifts
+                },
+                {
+                    preserveScroll: true
+                }
+            )
+        },
+        updateAllowShiftOverbooking(allowShiftOverbooking) {
+            router.patch(
+                route('shift.settings.update.allow-shift-overbooking'),
+                {
+                    allow_shift_overbooking: allowShiftOverbooking
                 },
                 {
                     preserveScroll: true

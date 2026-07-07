@@ -3,12 +3,14 @@
 namespace Artwork\Modules\Event\Services;
 
 use Artwork\Core\Casts\TranslatedDateTimeCast;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Events\BroadcastToReloadEventVerificationRequests;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Carbon;
@@ -19,8 +21,44 @@ class EventVerificationService
 {
 
     public function __construct(
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly ChangeService $changeService,
+        private readonly RoomRequestNotificationService $roomRequestNotificationService,
     ){
+    }
+
+    /**
+     * Stellt einen geplanten Termin auf einen "richtigen" Termin um.
+     * War der Termin als Raumanfrage angelegt (occupancy_option), bleibt die Anfrage bestehen
+     * und die Raumadmins werden erst jetzt benachrichtigt - nicht schon im Planungskalender.
+     */
+    private function confirmEvent(Event $event): void
+    {
+        $this->trackIsPlanningChange($event, false);
+        $event->update(['is_planning' => false]);
+
+        if ($event->occupancy_option && $event->room_id) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($event);
+        }
+    }
+
+    private function trackIsPlanningChange(Event $event, bool $newIsPlanning): void
+    {
+        if ((bool) $event->is_planning === $newIsPlanning) {
+            return;
+        }
+
+        $translationKey = $newIsPlanning
+            ? 'Event converted to planning event'
+            : 'Event confirmed';
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey($translationKey)
+        );
     }
 
     public function getAllByUser(User $user, int $paginate = 5, string $filterVerificationRequest = '') {
@@ -89,7 +127,7 @@ class EventVerificationService
 
             // Setze Farbe basierend auf Verifizierungsmodus und Status
             $eventType = $event->event_type;
-            $verificationMode = $eventType->verification_mode;
+            $verificationMode = $eventType?->verification_mode;
             $statusColor = 'gray';
 
             if ($statusCounts['rejected'] > 0) {
@@ -162,10 +200,10 @@ class EventVerificationService
         $eventCreator = $event->creator;
         $notificationTitle = '';
 
-        switch ($eventType->verification_mode) {
+        switch ($eventType?->verification_mode) {
             case 'any':
-                $event->update(['is_planning' => false, 'occupancy_option' => false]);
-                $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
+                $this->confirmEvent($event);
+                $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator?->language);
                 $event->verifications()->where('status', 'pending')->delete();
                 break;
 
@@ -173,21 +211,26 @@ class EventVerificationService
                 $approvedCount = $event->verifications()->where('status', 'approved')->where('uuid', $verification->uuid )->count();
                 $totalCount = $event->verifications()->whereIn('status', ['approved', 'rejected'])->where('uuid', $verification->uuid )->count();
                 $notificationTitle = __('notification.request-verification.user-approved', [
-                    'name' => $verification->verifier->full_name,
-                ], $eventCreator->language);
+                    'name' => $verification->verifier?->full_name ?? '',
+                ], $eventCreator?->language);
                 if ($approvedCount === $totalCount) {
-                    $event->update(['is_planning' => false, 'occupancy_option' => false]);
-                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
+                    $this->confirmEvent($event);
+                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator?->language);
                 }
                 break;
 
             case 'specific':
                 $specificVerifier = $eventType->specificVerifier;
-                if ($verification->verifier_id === $specificVerifier->id) {
-                    $event->update(['is_planning' => false, 'occupancy_option' => false]);
-                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator->language);
+                if ($specificVerifier !== null && $verification->verifier_id === $specificVerifier->id) {
+                    $this->confirmEvent($event);
+                    $notificationTitle = __('notification.request-verification.approved-finished', [], $eventCreator?->language);
                 }
                 break;
+        }
+
+        // Ersteller gelöscht – Status ist gesetzt, aber es gibt keinen Benachrichtigungs-Empfänger mehr
+        if ($eventCreator === null) {
+            return;
         }
 
         $this->notificationService->setIcon('green');
@@ -195,7 +238,7 @@ class EventVerificationService
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
 
         $broadcastMessage = [
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -257,16 +300,22 @@ class EventVerificationService
             'status' => 'rejected',
             'rejection_reason' => $reason
         ]);
+        $this->trackIsPlanningChange($event, true);
         $verification->event->update(['is_planning' => true]);
+
+        // Ersteller gelöscht – Status ist gesetzt, aber es gibt keinen Benachrichtigungs-Empfänger mehr
+        if ($eventCreator === null) {
+            return;
+        }
 
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_VERIFICATION_REQUESTS);
         $notificationTitle = __('notification.request-verification.user-rejected', [
-            'name' => $verification->verifier->full_name,
+            'name' => $verification->verifier?->full_name ?? '',
         ], $eventCreator->language);
         $broadcastMessage = [
-            'id' => random_int(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];
@@ -291,18 +340,20 @@ class EventVerificationService
         $eventType = $event->event_type;
         $uuid = Str::uuid()->toString();
 
-        if ($eventType->verification_mode === 'none') {
-            $event->update(['is_planning' => false, 'occupancy_option' => false]);
+        // Ohne Event-Typ gibt es keinen Verifizierungsmodus – wie 'none' behandeln
+        if ($eventType === null || $eventType->verification_mode === 'none') {
+            $this->confirmEvent($event);
             return;
         }
 
         $verifiers = match ($eventType->verification_mode) {
-            'specific' => collect([$eventType->specificVerifier]),
+            // filter(): gelöschter spezifischer Verifizierer darf nicht als null-Eintrag landen
+            'specific' => collect([$eventType->specificVerifier])->filter(),
             'any', 'all' => $eventType->verifiers,
             'none' => collect([]),
         };
 
-        if ($eventType->verification_mode === 'specific' && $eventType->specificVerifier->id === $user->id) {
+        if ($eventType->verification_mode === 'specific' && $eventType->specificVerifier?->id === $user->id) {
             $event->verifications()->create([
                 'uuid' => $uuid,
                 'verifier_type' => get_class($user),
@@ -310,7 +361,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
-            $event->update(['is_planning' => false, 'occupancy_option' => false]);
+            $this->confirmEvent($event);
             return;
         }
 
@@ -322,7 +373,7 @@ class EventVerificationService
                 'status' => 'approved',
                 'request_user_id' => $user->id,
             ]);
-            $event->update(['is_planning' => false, 'occupancy_option' => false]);
+            $this->confirmEvent($event);
             return;
         }
 
@@ -350,7 +401,7 @@ class EventVerificationService
             if ($status === 'pending') {
                 $notificationTitle = __('notification.request-verification.new', [], $verifier->language);
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle,
                 ];
@@ -376,7 +427,9 @@ class EventVerificationService
 
     public function cancelVerification(Event $event): void
     {
+        $this->trackIsPlanningChange($event, true);
         $event->update(['is_planning' => true]);
+        $this->notificationService->deleteUnhandledRoomRequestNotificationsByEventId($event->id);
         foreach ($event->verifications as $verification) {
             $verifier = $verification->verifier;
             $verification->delete();

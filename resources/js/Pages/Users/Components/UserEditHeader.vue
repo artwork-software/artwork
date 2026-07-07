@@ -66,7 +66,7 @@ export default {
         return {
             show: false,
             tabs: [
-                { name: 'Operational plan', href: route('user.edit.shiftplan', {user: this.user_to_edit.id}), current: route().current('user.edit.shiftplan'), permission: this.$can('can plan shifts') || this.hasAdminRole(), icon: 'IconCalendarUser'},
+                { name: 'Operational plan', href: route('user.edit.shiftplan', {user: this.user_to_edit.id}), current: route().current('user.edit.shiftplan'), permission: this.$can('can plan shifts') || this.hasAdminRole() || (this.$can('can view own roster') && this.user_to_edit.id === this.$page.props.auth.user.id), icon: 'IconCalendarUser'},
                 //{id: 2, name: 'Conditions', href: route('user.edit.terms', {user: this.user_to_edit.id}), current: route().current('user.edit.terms'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconTaxEuro'},
                 {name: 'Personal data', href: route('user.edit.info', {user: this.user_to_edit.id}), current: route().current('user.edit.info'), permission: true, icon: 'IconUser'},
                 {name: 'User permissions', href: route('user.edit.permissions', {user: this.user_to_edit.id}), current: route().current('user.edit.permissions'), permission: this.hasAdminRole(), icon: 'IconLicense'},
@@ -74,6 +74,8 @@ export default {
                 {name: 'Work Time Pattern', href: route('user.edit.work-time-pattern', {user: this.user_to_edit.id}), current: route().current('user.edit.work-time-pattern'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClockHour10'},
                 {name: 'Employment contract', href: route('user.edit.contract', {user: this.user_to_edit.id}), current: route().current('user.edit.contract'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconContract'},
                 {name: 'Work Times', href: route('user.edit.worktimes', {user: this.user_to_edit.id}), current: route().current('user.edit.worktimes'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconCalendarTime'},
+                {name: 'Substitute days off', href: route('user.edit.compensationDays', {user: this.user_to_edit.id}), current: route().current('user.edit.compensationDays'), permission: this.$can('can plan shifts') || this.hasAdminRole(), icon: 'IconCalendarOff'},
+                {name: 'Overtime', href: route('user.edit.overtime', {user: this.user_to_edit.id}), current: route().current('user.edit.overtime'), permission: this.$can('can manage workers') || this.hasAdminRole(), icon: 'IconClock'},
             ],
             title: this.user_to_edit.id === this.$page.props.auth.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }

@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\QueryBuilders\ShiftsQualificationsBuilder;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,15 +18,18 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int $shift_id
  * @property int $shift_qualification_id
  * @property int $value
+ * @property int $overbooked_value
  */
 class ShiftsQualifications extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
         'shift_id',
         'shift_qualification_id',
-        'value'
+        'value',
+        'overbooked_value'
     ];
 
     public function shift(): BelongsTo

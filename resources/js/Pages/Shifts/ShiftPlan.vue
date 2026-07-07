@@ -1,6 +1,6 @@
 <template>
-    <div class="w-full flex flex-col">
-        <ShiftHeader>
+    <div id="shiftPlan" class="w-full flex flex-col bg-white">
+        <ShiftHeader :title="$t('Duty rosters')">
             <div aria-live="assertive"
                  class="pointer-events-none fixed inset-0 z-100 flex items-end px-4 py-6 sm:items-start sm:p-6">
                 <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
@@ -60,6 +60,7 @@
                 </div>
             </transition>
             <div class="bg-white grow">
+
                 <ShiftPlanFunctionBar
                     @previousTimeRange="previousTimeRange"
                     @next-time-range="nextTimeRange"
@@ -71,12 +72,13 @@
                     @enterFullscreenMode="openFullscreen"
                     @openHistoryModal="openHistoryModal"
                     :user_filters="user_filters"
-                    :crafts="crafts"
+                    :crafts="craftsResolved"
                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                     :firstProjectShiftTabId="firstProjectShiftTabId"
                     @select-go-to-next-mode="selectGoToNextMode"
                     @select-go-to-previous-mode="selectGoToPreviousMode"
-                    :event-types="eventTypes">
+                    :event-types="eventTypes"
+                    :is-daily-view="false">
                     <template #multiEditCalendar>
                         <div v-if="multiEditModeCalendar">
                             <div class="flex items-center justify-center gap-x-4">
@@ -97,12 +99,14 @@
                     <template #moreButtons>
                         <SwitchIconTooltip v-model="dailyViewMode" :tooltip-text="$t('Daily view')" size="md"
                                            @change="changeDailyViewMode" icon="IconCalendarWeek"/>
-                        <SwitchIconTooltip v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md"
+                        <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditModeCalendar" :tooltip-text="$t('Edit')" size="md"
                                            @change="toggleMultiEditModeCalendar" icon="IconPencil"/>
                     </template>
                 </ShiftPlanFunctionBar>
             </div>
-            <div class="z-40 min-h-0" :style="{ '--dynamic-height': windowHeight + 'px' }">
+
+
+            <div class="z-40 min-h-0" :style="{ '--dynamic-height': showUserOverview ? windowHeight + 'px' : '100%' }">
                 <div
                     class="min-h-0 h-[calc(var(--dynamic-height))]"
                     :class="[isFullscreen ? '' : '']"
@@ -113,13 +117,20 @@
                         :rows="shiftRows"
                         :cols="shiftCols"
                         :row-height="shiftRowHeight"
+                        :row-heights="shiftRowHeights"
                         :col-width="shiftColWidth"
+                        :col-widths="shiftColWidths"
                         :sticky-col-width="shiftLeftWidth"
                         :header-height="shiftHeaderHeight"
+                        :no-virtualize="false"
                     >
                         <!-- Corner (oben links) -->
                         <template #corner>
-                            <div :style="{ width: shiftLeftWidth + 'px' }" class="bg-artwork-navigation-background"></div>
+                            <div :style="{ width: shiftLeftWidth + 'px' }" class="bg-artwork-navigation-background flex items-center justify-end pr-2">
+                                <span v-if="visibleKW != null" class="text-[10px] font-semibold text-white/80 tracking-wide">
+                                    KW {{ visibleKW }}
+                                </span>
+                            </div>
                         </template>
 
                         <!-- Column Header (Tage) -->
@@ -130,12 +141,14 @@
                                    bg-artwork-navigation-background/95 backdrop-blur
                                    border-b border-white/10 border-r
                                    hover:bg-artwork-navigation-background transition-colors"
+                                :class="day.isExtraRow ? 'border-l-2 border-l-white/40' : ''"
                             >
                                 <!-- ExtraRow (KW) -->
                                 <div v-if="day.isExtraRow" class="flex items-center gap-1">
                                   <span class="text-[10px] font-semibold tracking-wide opacity-90">
                                     KW {{ day.weekNumber }}
                                   </span>
+                                  <span class="text-[10px] opacity-70">&rarr;</span>
                                 </div>
 
                                 <!-- Normal day -->
@@ -154,7 +167,7 @@
 
                                     <!-- Holiday badge -->
                                     <div v-if="day.holidays?.length" class="shrink-0">
-                                        <HolidayToolTip>
+                                        <HolidayToolTip icon-color-class="text-white">
                                             <button
                                                 type="button"
                                                 class="inline-flex items-center gap-1 rounded-full
@@ -203,78 +216,88 @@
                         </template>
 
                         <!-- Cell -->
-                        <template #cell="{ room, day }">
+                        <template #cell="{ room, day, rowIndex }">
                             <div
                                 class="day-container relative h-full w-full align-top px-[1px] border-gray-400"
                                 :class="[
         day.isWeekend ? 'bg-backgroundGray' : 'bg-white',
-        usePage().props.auth.user.calendar_settings.expand_days ? '' : 'h-full',
+        expandDays ? '' : 'h-full',
       ]"
                             >
                                 <!-- MultiEditCalendar Overlay -->
                                 <div
                                     v-if="!day.isExtraRow && multiEditModeCalendar"
-                                    class="absolute inset-0"
+                                    class="absolute inset-0 z-100"
                                     :class="[
-          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
-            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
-            : '',
-          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
-        ]"
+                                          multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
+                                            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
+                                            : '',
+                                          checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
+                                    ]"
                                     @click="addDayAndRoomToMultiEditCalendar(day.fullDay, room.roomId)"
                                 ></div>
 
                                 <!-- ExtraRow -->
-                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-gray-800"></div>
+                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-l-2 border-gray-400"></div>
 
                                 <!-- Normal cell -->
                                 <div
                                     v-else
                                     class="cell group relative"
-                                    :class="usePage().props.auth.user.calendar_settings.expand_days ? 'min-h-12 h-full' : 'h-full overflow-y-auto'"
+                                    :class="expandDays ? 'min-h-12 h-full overflow-visible' : 'h-full overflow-y-auto'"
+                                    :data-sp-row="rowIndex"
                                 >
-                                    <!-- Project Groups in Events -->
-                                    <template v-if="usePage().props.auth.user.calendar_settings.display_project_groups && room.content?.[day.fullDay]?.events">
-                                        <template
-                                            v-for="group in getAllProjectGroupsInEventsByDay(room.content[day.fullDay].events)"
-                                            :key="group.id"
-                                        >
-                                            <Link
-                                                :disabled="checkIfUserIsAdminOrInGroup(group)"
-                                                :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
-                                                class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white"
+                                    <!-- Events einmal pro Zelle auflösen statt mehrfach je Render -->
+                                    <template v-for="dayEvents in [getRoomDayEvents(room, day.fullDay)]" :key="`cell-events-${day.fullDay}`">
+                                        <!-- Project Groups in Events -->
+                                        <template v-if="displayProjectGroups && dayEvents.length">
+                                            <template
+                                                v-for="group in getProjectGroupsForCell(room, day.fullDay)"
+                                                :key="group.id"
                                             >
-                                                <PropertyIcon :name="group.icon" class="size-4" />
-                                                <span>{{ group.name }}</span>
-                                            </Link>
+                                                <Link
+                                                    data-sp-pgbar
+                                                    :disabled="checkIfUserIsAdminOrInGroup(group)"
+                                                    :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
+                                                    class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white"
+                                                >
+                                                    <PropertyIcon :name="group.icon" class="size-4" />
+                                                    <span>{{ group.name }}</span>
+                                                </Link>
+                                            </template>
                                         </template>
-                                    </template>
 
-                                    <!-- Events -->
-                                    <template v-if="room.content?.[day.fullDay]?.events">
-                                        <div v-for="event in room.content[day.fullDay].events" :key="event.id || event.uuid || event.name" class="mb-1">
-                                            <SingleEventInShiftPlan
-                                                v-if="!checkIfEventHasShiftsToDisplay(event)"
-                                                :event="event"
-                                                :day="day"
-                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                            />
-                                        </div>
+                                        <!-- Events -->
+                                        <template v-if="dayEvents.length">
+                                            <div v-for="event in dayEvents" :key="event.id || event.uuid || event.name" class="mb-1" data-sp-eventwrap>
+                                                <SingleEventInShiftPlan
+                                                    v-if="!checkIfEventHasShiftsToDisplay(event)"
+                                                    :event="event"
+                                                    :day="day"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                />
+                                            </div>
+                                        </template>
                                     </template>
 
                                     <!-- Shifts -->
                                     <div class="space-y-0.5">
-                                        <template v-if="room.content?.[day.fullDay]?.shifts?.length">
+                                        <template v-if="getRoomDayShifts(room, day.fullDay)?.length">
                                             <template
-                                                v-for="group in groupShiftsByProject(room.content[day.fullDay].shifts, day.fullDay)"
+                                                v-for="group in getGroupedShiftsForCell(room, day.fullDay)"
                                                 :key="group.projectId ?? `no-project-${day.fullDay}`"
                                             >
                                                 <div
                                                     class="rounded-lg border duration-200 ease-in-out"
-                                                    :class="group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50'"
+                                                    :class="[
+                                                        group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50',
+                                                        isGroupProjectHighlighted(group) ? '!border-2 !border-pink-500' : '',
+                                                        isGroupProjectDimmed(group) ? 'opacity-30' : ''
+                                                    ]"
                                                 >
                                                     <div
                                                         v-if="group.project"
+                                                        data-sp-shiftgroupheader
                                                         class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800"
                                                     >
                                                         <span>{{ group.project.name }}</span>
@@ -288,10 +311,12 @@
                                                         <div
                                                             v-for="shift in group.shifts"
                                                             :key="shift.id || shift.dwId || shift.uuid"
+                                                            data-sp-shiftrow
                                                             class="rounded-lg duration-200 ease-in-out"
                                                             :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'"
                                                         >
                                                             <SingleShiftInRoom
+                                                                v-memo="[shift, room.__v, multiEditMode, userForMultiEdit, highlightMode, idToHighlight, typeToHighlight, highlightedShiftId]"
                                                                 :multiEditMode="multiEditMode"
                                                                 :user-for-multi-edit="userForMultiEdit"
                                                                 :highlightMode="highlightMode"
@@ -304,6 +329,9 @@
                                                                 @dropFeedback="showDropFeedback"
                                                                 @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
                                                                 @click-on-edit="openEditShiftModal"
+                                                                :highlightedShiftId="highlightedShiftId"
+                                                                @highlight-shift-users="highlightUsersOfShift"
+                                                                @hover-shift-users="setHoverUsersOfShift"
                                                             />
                                                         </div>
                                                     </div>
@@ -319,6 +347,7 @@
                                             :tooltip-text="$t('Add Shift based on templates')"
                                             icon="IconCopyPlus"
                                             icon-size="size-4"
+                                            v-if="can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftByPresetOrGroup(day, room)"
                                             classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -328,9 +357,9 @@
                                         <ToolTipComponent
                                             direction="left"
                                             :tooltip-text="$t('Add Shift')"
-                                            icon="IconPlus"
+                                            icon="IconCirclePlus"
                                             icon-size="size-4"
-                                            v-if="!multiEditModeCalendar"
+                                            v-if="!multiEditModeCalendar && can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
                                             classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -391,16 +420,17 @@
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
                         <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
-                                <SwitchIconTooltip v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
+                                <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Create individual time series')"
                                     icon="IconClockShield"
                                     icon-size="h-5 w-5"
+                                    v-if="can('can plan shifts') || is('artwork admin')"
                                     @click="showIndividualTimeSeriesModal = true"
                                     classesButton="ui-button-small"
                                 />
-                                <div v-if="dayServices && selectedDayService" class="flex items-center gap-x-2">
+                                <div v-if="dayServices && selectedDayService && (can('can plan shifts') || is('artwork admin'))" class="flex items-center gap-x-2">
                                     <SwitchIconTooltip v-model="dayServiceMode" :tooltip-text="$t('Day Services')"
                                                        size="md" @change="toggleDayServiceMode"
                                                        :icon="selectedDayService?.icon"/>
@@ -449,7 +479,7 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <CraftFilter :crafts="crafts" :filtered-craft-ids="user_filters.craft_ids"
+                                        <CraftFilter :crafts="craftsResolved" :filtered-craft-ids="user_filters.craft_ids"
                                                      is_tiny/>
                                         <div class="py-4">
                                             <div>
@@ -458,8 +488,8 @@
                                                     <div class="flex items-center text-xs text-white">
                                                         {{ $t('Shift qualifications') }}
                                                         <PropertyIcon name="IconChevronDown" v-if="!showShiftQualificationFilter"
-                                                                      class="ml-2 h-4 w-4"/>
-                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4"/>
+                                                                      class="ml-2 h-4 w-4 text-white"/>
+                                                        <PropertyIcon name="IconChevronUp" v-else class="ml-2 h-4 w-4 text-white"/>
                                                     </div>
                                                 </div>
                                                 <div v-if="showShiftQualificationFilter">
@@ -494,6 +524,16 @@
                                             {{ $t('Reset') }}
                                         </span>
                                     </div>
+                                    <MenuItem v-slot="{ active }">
+                                        <div @click="toggleSortWorkersByQualification"
+                                             :class="[active ? 'text-gray-500' : 'text-secondary','group flex cursor-pointer items-center justify-between gap-x-4 px-4 py-2 text-sm subpixel-antialiased']">
+                                            <span :class="sortWorkersByQualification ? 'font-bold' : ''">
+                                                {{ $t('Group by function') }}
+                                            </span>
+                                            <PropertyIcon name="IconCheck" v-if="sortWorkersByQualification"
+                                                          class="h-5 w-5"/>
+                                        </div>
+                                    </MenuItem>
                                     <MenuItem
                                         v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                         :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
@@ -502,23 +542,23 @@
                                             <template
                                                 v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                 <span
-                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                             <template
                                                 v-else-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
                                                 <span
-                                                    :class="usePage().props.auth.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
 
@@ -529,7 +569,7 @@
                                                 }}
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                             <template
@@ -537,7 +577,7 @@
                                                 {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
                                                 <PropertyIcon name="IconCheck"
-                                                              v-if="usePage().props.auth.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
+                                                              v-if="authUser.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'"
                                                               class="h-5 w-5"/>
                                             </template>
                                         </div>
@@ -553,6 +593,7 @@
                             :cols="gridCols"
                             :row-height="rowHeight"
                             :col-width="202"
+                            :col-widths="gridColWidths"
                             :sticky-col-width="191.5"
                             class="h-full"
                             :top-padding="10"
@@ -577,9 +618,42 @@
                                         <PropertyIcon
                                             name="IconChevronDown"
                                             class="h-4 w-4 transition-transform duration-200"
-                                            :class="closedCrafts.includes(row.craft.id) ? '' : 'rotate-180'"
+                                            :class="openedCrafts?.includes(row.craft.id) ? 'rotate-180' : ''"
                                         />
                                     </div>
+                                </div>
+
+                                <div v-else-if="row.kind === 'qualificationGroup'" class="w-full px-2">
+                                    <div
+                                        class="flex w-96 cursor-pointer items-center justify-between pl-3 pb-1"
+                                        @click="changeQualificationGroupVisibility(row.groupKey)"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-lexend text-[10px] uppercase tracking-wide text-gray-300">
+                                                {{ row.qualification ? row.qualification.name : $t('Without assigned function') }}
+                                            </span>
+                                            <span
+                                                class="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-normal text-gray-100"
+                                            >
+                                                {{ row.workerCount }}
+                                            </span>
+                                        </div>
+
+                                        <PropertyIcon
+                                            name="IconChevronDown"
+                                            class="h-3 w-3 text-[#A7A6B1] transition-transform duration-200"
+                                            :class="!closedQualificationGroups.includes(row.groupKey) ? 'rotate-180' : ''"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div v-else-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center gap-x-2 px-2">
+                                    <span class="flex items-center gap-x-1 whitespace-nowrap font-lexend text-[10px] uppercase tracking-wide text-gray-300">
+                                        {{ $t('External') }}
+                                        <PropertyIcon :name="row.externBelow ? 'IconArrowDown' : 'IconArrowUp'"
+                                                      class="h-3 w-3 text-[#A7A6B1]"/>
+                                    </span>
+                                    <div class="grow border-t border-white/30"></div>
                                 </div>
 
                                 <div v-else class="w-full">
@@ -591,6 +665,8 @@
                                         :color="row.craft.color"
                                         :craft="row.craft"
                                         :is-managing-craft="row.worker.element.managing_craft_ids.includes(row.craft.id)"
+                                        :enable-info-modal="true"
+                                        @open-user-info-modal="openUserInfoModal"
                                     />
                                     <MultiEditUserCell
                                         v-else-if="multiEditMode && !highlightMode"
@@ -620,19 +696,27 @@
                             </template>
 
                             <template #cell="{ row, day }">
-                                <!-- Craft row: keine Zellen -->
-                                <div v-if="row.kind === 'craft'" class="h-full w-full"></div>
+
+                                <!-- Intern/Extern-Trennzeile: durchgehende Linie -->
+                                <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center">
+                                    <div class="w-full border-t border-white/30"></div>
+                                </div>
+
+                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen -->
+                                <div v-else-if="row.kind !== 'worker'" class="h-full w-full"></div>
 
                                 <!-- Worker row -->
                                 <div v-else class="relative h-full w-full">
                                     <!-- ExtraRow / Wochenarbeitszeit -->
                                     <div
                                         v-if="day.isExtraRow"
-                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white"
+                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white border-l-2 border-gray-400"
                                         :class="cellWrapperClass(row, day)"
                                     >
                                         <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
-                                            <div class="text-[9px]">Arbeitszeit KW {{ day.weekNumber }}</div>
+                                            <div class="text-[9px] whitespace-nowrap">
+                                                 Arbeitszeit KW {{ day.weekNumber }}<span class="opacity-60">&rarr;</span>
+                                            </div>
                                             <div
                                                 class="font-lexend text-xs"
                                                 :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'"
@@ -640,6 +724,7 @@
                                                 {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference }}
                                             </div>
                                         </div>
+
                                     </div>
 
                                     <!-- Normaler ShiftCell -->
@@ -685,15 +770,26 @@
             <ShowUserShiftsModal
                 v-if="showUserShifts"
                 @closed="showUserShifts = false"
+                @desires-reload="handleWorkerReload"
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"
             />
+            <UserShiftInfoModal
+                v-if="showUserInfoModal && userInfoModalUserId"
+                :user-id="userInfoModalUserId"
+                :user-name="userInfoModalUserName"
+                @closed="showUserInfoModal = false"
+            />
             <ShiftHistoryModal
                 v-if="showHistoryModal"
                 :logs="history"
-                @closed="showHistoryModal = false"
+                :crafts="craftsResolved"
+                :initialStartDate="dateValue[0]"
+                :initialEndDate="dateValue[1]"
+                @close="showHistoryModal = false"
             />
+
         </ShiftHeader>
     </div>
     <SideNotification
@@ -726,7 +822,7 @@
     />
     <AddShiftModal
         v-if="showAddShiftModal"
-        :crafts="crafts"
+        :crafts="craftsResolved"
         :event="null"
         :shift="shiftToEdit"
         :current-user-crafts="currentUserCrafts"
@@ -752,10 +848,13 @@
     />
 
     <AddShiftsByPresetsAndGroupsModal
-        :single-shift-presets="page.props.singleShiftPresets"
-        :preset-groups="shiftGroupPresets"
+        :single-shift-presets="singleShiftPresetsResolved"
+        :preset-groups="shiftGroupPresetsResolved"
         :day="dayForPreset"
         :room="roomForPreset"
+        :projects="props.projects"
+        :initial-project-id="props.projectId"
+        :initial-project="pageProps?.currentProject ?? null"
         v-if="showAddShiftByPresetOrGroupModal"
         @close="showAddShiftByPresetOrGroupModal = false"
         />
@@ -773,7 +872,8 @@ import BaseFilter from '@/Layouts/Components/BaseFilter.vue'
 import {
     computed,
     defineAsyncComponent,
-    getCurrentInstance,
+    getCurrentInstance, inject, provide,
+    nextTick,
     onBeforeUnmount,
     onMounted,
     reactive,
@@ -785,8 +885,11 @@ import {
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import {useSortEnumTranslation} from '@/Composeables/SortEnumTranslation.js'
 import dayjs from 'dayjs'
+import debounce from 'lodash.debounce'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import {useShiftCalendarListener} from '@/Composeables/Listener/useShiftCalendarListener.js'
+import {enrichDays, getDaysInRange, computeShiftFormattedDates, computeEventFormattedDates, clearDayPropsCache} from '@/Composeables/calendarDateUtils.js'
+import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js'
 import SwitchIconTooltip from '@/Artwork/Toggles/SwitchIconTooltip.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {can, is} from 'laravel-permission-to-vuejs'
@@ -798,6 +901,7 @@ import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventCompon
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import UserShiftInfoModal from "@/Pages/Shifts/Components/UserShiftInfoModal.vue";
 import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
@@ -814,49 +918,49 @@ defineOptions({
 const ShowUserShiftsModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShowUserShiftsModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const ShiftsQualificationsAssignmentModal = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const CellMultiEditModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/CellMultiEditModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const DeleteEntriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/DeleteEntriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const DeleteCalendarRoomShiftEntriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/DeleteCalendarRoomShiftEntriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const AddShiftModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 const IndividualTimeSeriesModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue'),
     delay: 200,
-    timeout: 3000,
+    timeout: 30000,
 })
 
 type ShiftPlanProps = {
@@ -937,6 +1041,18 @@ const showHistoryModal = ref(false)
 const showUserShifts = ref(false)
 const userToShow = ref<any | null>(null)
 const dayToShow = ref<any | null>(null)
+
+/* DP-07/2.20: Projektmodus — der ganze Projektblock (Tag+Raum+Projekt) wird pink
+   umrandet, fremde/projektlose Blöcke abgedimmt. */
+const shiftPlanSettings = computed<any>(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
+const projectModeActive = computed(() =>
+    !!shiftPlanSettings.value?.use_project_time_period && !!shiftPlanSettings.value?.time_period_project_id
+)
+const isGroupProjectHighlighted = (group: any): boolean =>
+    projectModeActive.value && group?.projectId != null && group.projectId === shiftPlanSettings.value.time_period_project_id
+const isGroupProjectDimmed = (group: any): boolean =>
+    projectModeActive.value && !isGroupProjectHighlighted(group)
+
 const highlightMode = ref(false)
 const idToHighlight = ref<number | string | null>(null)
 const typeToHighlight = ref<number | null>(null)
@@ -947,13 +1063,183 @@ const userForMultiEdit = ref<any | null>(null)
 const userToMultiEditCurrentShifts = ref<number[]>([])
 const userToMultiEditCheckedShiftsAndEvents = ref<any[]>([])
 const dropFeedback = ref<string | null>(null)
-const closedCrafts = ref<number[]>([])
+
 const dayForPreset = ref()
 const roomForPreset = ref()
 const showAddShiftByPresetOrGroupModal = ref(false)
 const shiftsToHandleOnMultiEdit = reactive<{ assignToShift: any[]; removeFromShift: any[] }>({
     assignToShift: [],
     removeFromShift: [],
+})
+
+// Presets from meta API when loading per-room (otherwise from props)
+const singleShiftPresetsLocal = ref<any[]>([])
+const shiftGroupPresetsLocal = ref<any>([])
+const shiftGroupPresetsResolved = computed(() =>
+    (shiftGroupPresetsLocal.value?.length ? shiftGroupPresetsLocal.value : props.shiftGroupPresets) ?? {},
+)
+const singleShiftPresetsResolved = computed(() =>
+    (singleShiftPresetsLocal.value?.length ? singleShiftPresetsLocal.value : (usePage().props as any).singleShiftPresets) ?? [],
+)
+
+// Crafts loaded asynchronously from API
+const craftsLoaded = ref<any[]>([])
+const craftsResolved = computed(() =>
+    ((craftsLoaded.value?.length ? craftsLoaded.value : (props.crafts ?? [])) as any[]).slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+)
+
+// Provide crafts for child components (e.g. ShiftDropElement)
+provide('shiftPlanCrafts', craftsResolved)
+
+// Provide lookup maps for normalized DTO resolution
+const { setLookups, mergeLookups, resolveCraft, resolveEventType, resolveProject, resolveShiftGroup } = provideShiftPlanLookups()
+
+// Workers loaded asynchronously from API (craft-first)
+const workersLoaded = ref<{
+    usersForShifts: any[]
+    freelancersForShifts: any[]
+    serviceProvidersForShifts: any[]
+}>({
+    usersForShifts: [],
+    freelancersForShifts: [],
+    serviceProvidersForShifts: [],
+})
+const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts)
+const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
+const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
+
+let workersLoadGeneration = 0
+async function loadShiftPlanWorkers() {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end) return
+    const gen = ++workersLoadGeneration
+    try {
+        const params: Record<string, any> = { start_date: start, end_date: end }
+        const craftIds = props.user_filters?.craft_ids
+        if (craftIds?.length) {
+            params.craft_ids = craftIds
+        }
+        const { data } = await axios.get(route('shifts.workers'), { params })
+        // Only apply if this is still the latest request (prevents stale data from overwriting fresh)
+        if (gen !== workersLoadGeneration) return
+        workersLoaded.value = {
+            usersForShifts: data.usersForShifts ?? [],
+            freelancersForShifts: data.freelancersForShifts ?? [],
+            serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
+        }
+    } catch {
+        if (gen !== workersLoadGeneration) return
+        workersLoaded.value = {
+            usersForShifts: [],
+            freelancersForShifts: [],
+            serviceProvidersForShifts: [],
+        }
+    }
+}
+
+// Websocket-Bursts (z.B. Bulk-Zuweisungen fremder Nutzer) feuern onWorkersNeedReload
+// mehrfach hintereinander. Ohne Entprellung wäre das je ein voller Netzwerk-Reload +
+// komplettes Re-Render der Worker-Übersicht → sichtbares Ruckeln beim Scrollen.
+// Trailing-Debounce (350ms) fasst den Burst zu EINEM Reload zusammen; einzelne Worker
+// werden gezielt über reloadSingleWorker aktualisiert.
+const debouncedLoadShiftPlanWorkers = debounce(() => { loadShiftPlanWorkers() }, 350)
+
+function numericTypeToWorkerType(type: number|string): string {
+    const map: Record<number, string> = { 0: 'user', 1: 'freelancer', 2: 'serviceProvider' }
+    return map[type as number] ?? type
+}
+
+type WorkerReloadState = {
+    promise: Promise<void>
+    shouldReloadAgain: boolean
+}
+
+// Coalesce overlapping reloads per worker, then fetch once more if another
+// change arrived while the first request was still in flight.
+const workerReloads = new Map<string, WorkerReloadState>()
+
+async function runWorkerReloadQueue(
+    state: WorkerReloadState,
+    key: string,
+    workerId: number|string,
+    workerType: string,
+): Promise<void> {
+    try {
+        do {
+            state.shouldReloadAgain = false
+            await loadSingleWorker(workerId, workerType)
+        } while (state.shouldReloadAgain)
+    } finally {
+        workerReloads.delete(key)
+    }
+}
+
+async function reloadSingleWorker(workerId: number|string, workerType: string): Promise<void> {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end || !workerId || !workerType) {
+        return loadShiftPlanWorkers()
+    }
+
+    const key = `${workerType}:${workerId}`
+    const activeReload = workerReloads.get(key)
+
+    if (activeReload) {
+        activeReload.shouldReloadAgain = true
+        return activeReload.promise
+    }
+
+    const state: WorkerReloadState = {
+        promise: Promise.resolve(),
+        shouldReloadAgain: false,
+    }
+
+    state.promise = runWorkerReloadQueue(state, key, workerId, workerType)
+    workerReloads.set(key, state)
+
+    return state.promise
+}
+
+async function loadSingleWorker(workerId: number|string, workerType: string): Promise<void> {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end || !workerId || !workerType) {
+        return loadShiftPlanWorkers()
+    }
+
+    try {
+        const { data } = await axios.get(route('shifts.worker.single'), {
+            params: { worker_id: workerId, worker_type: workerType, start_date: start, end_date: end }
+        })
+        if (!data.worker) return
+
+        const targetKey = workerType === 'user' ? 'usersForShifts'
+            : workerType === 'freelancer' ? 'freelancersForShifts'
+            : 'serviceProvidersForShifts'
+        const workerKey = workerType === 'user' ? 'user'
+            : workerType === 'freelancer' ? 'freelancer'
+            : 'service_provider'
+
+        const arr = workersLoaded.value[targetKey]
+        const idx = arr.findIndex((w: any) => w[workerKey]?.id === Number(workerId))
+        if (idx >= 0) {
+            arr[idx] = data.worker
+        } else {
+            arr.push(data.worker)
+        }
+    } catch {
+        // Fallback to full reload on error
+        return loadShiftPlanWorkers()
+    }
+}
+
+// closed crafts filter
+const closedCrafts = computed(() => {
+    const opened: number[] = openedCrafts.value || []
+    return craftsResolved.value
+        .map((c: any) => c.id)
+        .filter((craftId: number) => !opened.includes(craftId))
 })
 
 const currentDayOnView = ref<Day | null>(
@@ -978,7 +1264,7 @@ const showAddShiftModal = ref(false)
 const shiftToEdit = ref<any | null>(null)
 const newShiftPlanData = ref(props.shiftPlan)
 const openCellMultiEditCalendarDelete = ref(false)
-const dailyViewMode = ref(!!usePage().props.auth.user.daily_view)
+const dailyViewMode = ref(!!usePage().props.auth.user.shift_plan_daily_view)
 const showCalendarWarning = ref<string>(props.calendarWarningText || '')
 const saveQueue = ref<Promise<any>>(Promise.resolve())
 const savingShiftIds = ref<Set<number>>(new Set())
@@ -988,6 +1274,25 @@ const waitForModalClose = ref(false)
 const resolveModalClose = ref<null | (() => void)>(null)
 const _singlePickResolve = ref<any | null>(null)
 const _singlePickShiftId = ref<number | null>(null)
+
+type HighlightSelectionKind = 'user' | 'shift' | null
+const highlightSelectionKind = ref<HighlightSelectionKind>(null)
+
+const shiftUsersToHighlight = ref<{
+    userIds: Array<number | string>
+    freelancerIds: Array<number | string>
+    providerIds: Array<number | string>
+} | null>(null)
+
+const hoverShiftUsersToHighlight = ref<{
+    userIds: Array<number | string>
+    freelancerIds: Array<number | string>
+    providerIds: Array<number | string>
+} | null>(null)
+
+// optional (falls du später Shift oben optisch markieren willst)
+const highlightedShiftId = ref<number | string | null>(null)
+
 const multiEditSessionId = ref(0)
 const notice = reactive<{
     show: boolean;
@@ -1006,9 +1311,25 @@ const notice = reactive<{
 const instance = getCurrentInstance()
 const $t = (instance?.proxy as any)?.$t ?? ((s: string) => s)
 const $toast = (instance?.proxy as any)?.$toast
-
-const showUserOverview = ref(true)
+const shiftClickedInHighlightMode = ref(null)
 const pageProps = usePage().props
+const auth = pageProps.auth.user;
+
+// Cached computeds for usePage().props – avoid redundant reactive access in hot paths
+const authUser = computed(() => usePage().props.auth.user)
+const calendarSettings = computed(() => {
+    if (dailyViewMode.value) {
+        return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
+    }
+    return usePage().props.shift_plan_settings ?? authUser.value.calendar_settings
+})
+const showUserOverview = ref(calendarSettings.value?.show_user_overview ?? true)
+const expandDays = computed(() => calendarSettings.value?.expand_days)
+const displayProjectGroups = computed(() => calendarSettings.value?.display_project_groups)
+const compactMode = computed(() => authUser.value.compact_mode)
+const openedCrafts = computed(() => authUser.value.opened_crafts ?? [])
+const sortWorkersByQualification = computed(() => authUser.value.sort_workers_by_qualification ?? true)
+const closedQualificationGroups = ref<string[]>([...(authUser.value.closed_qualification_groups ?? [])])
 
 const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOverviewLayout(showUserOverview, {
     headerHeight: 100,
@@ -1019,7 +1340,7 @@ const {userOverviewHeight, windowHeight, startResize, updateLayout} = useUserOve
 })
 
 const rowHeight = computed(() => {
-    return usePage().props.auth.user.compact_mode ? 32 : 48 // px
+    return compactMode.value ? 32 : 48 // px
 })
 
 const userOverviewGridRef = shallowRef<InstanceType<typeof Virtual2DGrid> | null>(null)
@@ -1071,14 +1392,463 @@ const shiftCols = computed(() =>
 
 const shiftHeaderHeight = 32 // wie dein h-8
 const shiftColWidth = 202
+const kwColWidth = 130
 const shiftLeftWidth = 191.5
 
-// WICHTIG: Virtualisierung braucht fixe Row-Höhe.
-// Wenn expand_days wirklich "unendlich" sein soll, muss die Zelle innen scrollen.
-const shiftRowHeight = computed(() =>
-    usePage().props.auth.user.calendar_settings.expand_days ? 360 : 112
+const shiftColWidths = computed(() =>
+    shiftCols.value.map((col: any) => col.data?.isExtraRow ? kwColWidth : shiftColWidth)
 )
 
+const gridColWidths = computed(() =>
+    (days.value ?? []).map((d: any) => d.isExtraRow ? kwColWidth : shiftColWidth)
+)
+
+const visibleKW = computed(() => {
+    const idx = shiftGridRef.value?.firstVisibleColIndex ?? 0
+    const cols = shiftCols.value
+    if (!cols?.length) return null
+    // Find the first visible non-extra-row column and return its weekNumber
+    for (let i = idx; i < cols.length; i++) {
+        const day = cols[i]?.data
+        if (day && !day.isExtraRow && day.weekNumber != null) {
+            return day.weekNumber
+        }
+    }
+    return null
+})
+
+const shiftRowHeight = computed(() =>
+    expandDays.value ? 360 : 112
+)
+
+// Reactive metrics for cell height estimation – defaults until measured from DOM
+const cellMetrics = reactive({
+    pgBarWithMb: 26,          // Link + mb-0.5
+    eventContentHeight: 54,   // SingleEvent content area (py-2 + name text-xs/4 + mt-0.5 + time text-xs/5)
+    eventProjectBar: 25,      // project name bar inside event (py-1 + text + border-b)
+    eventGroupBar: 25,        // project group bar inside event (py-1 + text + border-b)
+    eventMarginBottom: 4,     // mb-1 between events
+    eventOnlyMb: 4,           // Event wrapper when event has shifts (only mb-1)
+    shiftRow: 28,             // SingleShift row
+    shiftRowGap: 2,           // space-y-0.5
+    shiftDivider: 1,          // divide-y border
+    shiftGroupBorder: 2,      // 1px top + 1px bottom
+    shiftGroupGap: 2,         // space-y-0.5 between groups
+    shiftGroupHeader: 18,     // project header
+    basePadding: 12,          // breathing room top/bottom
+    safetyPadding: 4,         // extra safety margin
+})
+
+function outerHeightWithMargin(el: HTMLElement): number {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    const mt = parseFloat(cs.marginTop || '0')
+    const mb = parseFloat(cs.marginBottom || '0')
+    return r.height + mt + mb
+}
+
+/** Measure real DOM heights for baseline metrics – samples up to 10 elements per selector */
+async function measureBaselineMetrics() {
+    await nextTick()
+    const root =
+        shiftGridRef.value?.getViewportEl?.() ??
+        shiftGridRef.value?.viewportEl?.value ??
+        null
+    if (!root) return
+
+    // Echte Schrift der Zelltexte lesen — Canvas misst damit exakt das, was der
+    // jeweilige Browser rendert (inkl. Font-Fallback und Mindestschriftgröße)
+    const fontSample = root.querySelector('[data-sp-pgbar] span, [data-sp-eventwrap] span') as HTMLElement | null
+    const fontStyle = getComputedStyle(fontSample ?? root)
+    const fontFamily = fontStyle.fontFamily || ''
+    const fontSize = fontSample ? (parseFloat(fontStyle.fontSize) || 12) : 12
+    if (fontFamily !== cellFont.family || fontSize !== cellFont.size) {
+        cellFont.family = fontFamily
+        cellFont.size = fontSize
+        textLinesCache.clear()
+        cellSummaryCache.clear()
+    }
+
+    const measureMax = (selector: string, measurer: (el: HTMLElement) => number, count = 10): number | null => {
+        const els = root.querySelectorAll(selector) as NodeListOf<HTMLElement>
+        if (!els.length) return null
+        let max = 0
+        const limit = Math.min(els.length, count)
+        for (let i = 0; i < limit; i++) {
+            const v = measurer(els[i])
+            if (v > max) max = v
+        }
+        return max
+    }
+
+    const pg = measureMax('[data-sp-pgbar]', outerHeightWithMargin)
+    if (pg !== null) cellMetrics.pgBarWithMb = pg
+
+    const sr = measureMax('[data-sp-shiftrow]', el => el.getBoundingClientRect().height)
+    if (sr !== null) cellMetrics.shiftRow = sr
+
+    const gh = measureMax('[data-sp-shiftgroupheader]', el => el.getBoundingClientRect().height)
+    if (gh !== null) cellMetrics.shiftGroupHeader = gh
+
+    // After measuring, recompute row heights
+    recomputeRowHeights()
+}
+
+// --- Text wrapping measurement for expanded mode ---
+// Zeilenzahl per Canvas-measureText mit der real gerenderten Schrift statt fester
+// Zeichenbreite: Browser rendern unterschiedlich breit (Safari breiter, Chrome
+// schmaler) — eine Heuristik schneidet daher entweder ab oder erzeugt Weißraum.
+const AVG_CHAR_WIDTH = 7 // nur noch Fallback, falls kein Canvas verfügbar
+
+// Available text widths derived from shiftColWidth (202) and CSS padding/gaps
+const cellInnerWidth = shiftColWidth - 2                 // px-[1px]*2 des day-containers
+const pgBarTextWidth = cellInnerWidth - 16 - 4 - 16      // Projektgruppen-Link: px-2, gap-x-1, Icon size-4
+const eventBarTextWidth = cellInnerWidth - 16            // Projekt-/Gruppenbalken im Event: px-2
+
+let _measureCtx: CanvasRenderingContext2D | null | undefined
+function getMeasureCtx(): CanvasRenderingContext2D | null {
+    if (_measureCtx === undefined) {
+        _measureCtx = document.createElement('canvas').getContext('2d') ?? null
+    }
+    return _measureCtx
+}
+
+// Schriftfamilie/-größe werden in measureBaselineMetrics vom echten DOM gelesen,
+// damit Font-Fallbacks und Browser-Mindestschriftgrößen in die Messung einfließen
+const cellFont = reactive({ family: '', size: 12 })
+const textLinesCache = new Map<string, number>()
+
+function estimateTextLinesFallback(text: string, availableWidth: number): number {
+    const charsPerLine = Math.max(1, Math.floor(availableWidth / AVG_CHAR_WIDTH))
+    return Math.max(1, Math.ceil(text.length / charsPerLine))
+}
+
+function measureTextLines(text: string | undefined | null, availableWidth: number, fontWeight = 600): number {
+    if (!text || availableWidth <= 0) return 1
+    const ctx = getMeasureCtx()
+    if (!ctx || !cellFont.family) return estimateTextLinesFallback(String(text), availableWidth)
+    const cacheKey = `${fontWeight}|${availableWidth}|${text}`
+    const cached = textLinesCache.get(cacheKey)
+    if (cached !== undefined) return cached
+
+    ctx.font = `${fontWeight} ${cellFont.size}px ${cellFont.family}`
+    // Leicht konservativ messen: Subpixel-/Kerning-Differenzen zwischen Canvas und
+    // DOM-Layout sollen eher eine Zeile zu viel als eine zu wenig ergeben
+    const width = availableWidth * 0.98
+    const spaceWidth = ctx.measureText(' ').width
+    let lines = 1
+    let lineWidth = 0
+    for (const word of String(text).trim().split(/\s+/)) {
+        if (!word) continue
+        const wordWidth = ctx.measureText(word).width
+        if (wordWidth > width) {
+            // overflow-wrap: break-word — überlanges Wort wird hart umbrochen
+            if (lineWidth > 0) lines++
+            const fullLines = Math.ceil(wordWidth / width)
+            lines += fullLines - 1
+            lineWidth = wordWidth - (fullLines - 1) * width
+            continue
+        }
+        const needed = lineWidth === 0 ? wordWidth : lineWidth + spaceWidth + wordWidth
+        if (needed <= width) {
+            lineWidth = needed
+        } else {
+            lines++
+            lineWidth = wordWidth
+        }
+    }
+    return boundedCacheSet(textLinesCache, cacheKey, lines)
+}
+
+// --- CellSummary cache ---
+type CellSummary = {
+    pgTotalHeight: number
+    totalEventHeight: number
+    shiftGroups: Array<{ hasProject: boolean; shiftCount: number }>
+}
+
+const cellSummaryCache = new Map<string, CellSummary>()
+const groupedShiftsCache = new Map<string, ShiftGroup[]>()
+// Caches für die pro Zelle im Template aufgerufenen Resolver — ohne sie laufen die
+// Funktionen bei jedem Re-Render für jede sichtbare Zelle erneut (Räume × Tage)
+const roomDayEventsCache = new Map<string, any[]>()
+const roomDayShiftsCache = new Map<string, any[]>()
+const cellProjectGroupsCache = new Map<string, any[]>()
+
+// Die Keys enthalten room.__v und akkumulieren zwischen den Komplett-Clears (z. B. bei
+// vielen Websocket-Updates in einer langen Sitzung) — Obergrenze gegen Memory-Wachstum
+const CELL_CACHE_LIMIT = 20000
+function boundedCacheSet<T>(cache: Map<string, T>, key: string, value: T): T {
+    if (cache.size >= CELL_CACHE_LIMIT) cache.clear()
+    cache.set(key, value)
+    return value
+}
+
+function getGroupedShiftsForCell(room: any, dayKey: string): ShiftGroup[] {
+    const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
+    const roomVersion = room.__v ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
+    if (!groupedShiftsCache.has(cacheKey)) {
+        boundedCacheSet(groupedShiftsCache, cacheKey, groupShiftsByProject(getRoomDayShifts(room, dayKey), dayKey))
+    }
+    return groupedShiftsCache.get(cacheKey)!
+}
+
+function summarizeCell(room: any, dayKey: string): CellSummary {
+    const roomId = room.roomId ?? room.room_id ?? room.id ?? 0
+    const roomVersion = room.__v ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${roomVersion}`
+
+    const cached = cellSummaryCache.get(cacheKey)
+    if (cached) return cached
+
+    const events = getRoomDayEvents(room, dayKey)
+    const shifts = getRoomDayShifts(room, dayKey)
+    const showProjectGroups = displayProjectGroups.value
+    const expanded = expandDays.value
+
+    // --- Project group bars ---
+    let pgTotalHeight = 0
+    if (showProjectGroups && events.length) {
+        const groups = getProjectGroupsForCell(room, dayKey)
+        for (const group of groups) {
+            const lines = expanded ? measureTextLines(group.name, pgBarTextWidth, 700) : 1
+            // py-1 (8px) + lines * 16px (text-xs line-height) + mb-0.5 (2px)
+            pgTotalHeight += 8 + lines * 16 + 2
+        }
+    }
+
+    // --- Events ---
+    // Nachbildung der Blöcke aus SingleEventInShiftPlan.vue inkl. aller
+    // settings-abhängigen Zeilen (Künstler*innen, Notizen, Projektleitung, Icons)
+    const settings = calendarSettings.value ?? {}
+    // Content-Breite: px-2 (16) + optional Farbstreifen (8px + gap-x-2) + optional Timeline-Icon (16px + gap-x-2)
+    let contentWidth = cellInnerWidth - 16
+    if (!settings.high_contrast) contentWidth -= 16
+    if (settings.show_timeline) contentWidth -= 24
+
+    let totalEventHeight = 0
+    for (const event of events) {
+        if (!checkIfEventHasShiftsToDisplay(event)) {
+            // Resolve via lookups for normalized data
+            const evtType = event.eventType ?? resolveEventType(event.eventTypeId)
+            const evtProject = event.project ?? resolveProject(event.projectId)
+
+            // Content area: py-2 (16px)
+            let h = 16
+
+            // Künstler*innen-Zeile (text-xs/5 → 20px pro Zeile, font-bold)
+            if (settings.project_artists && evtProject?.artistNames) {
+                const artistLines = expanded ? measureTextLines(evtProject.artistNames, contentWidth, 700) : 1
+                h += artistLines * 20
+            }
+
+            // Namenszeile: Termineigenschafts-Icons (max-w-[45%], flex-wrap) schmälern den Text
+            const propertyCount = event.eventProperties?.length ?? 0
+            let nameWidth = contentWidth
+            let iconsHeight = 0
+            if (propertyCount > 0) {
+                const iconsTotal = propertyCount * 14 + (propertyCount - 1) * 4 // size-3.5 + gap-1
+                const iconsBox = Math.min(iconsTotal, Math.floor(contentWidth * 0.45))
+                nameWidth = contentWidth - iconsBox - 4 // gap-x-1
+                const iconsPerRow = Math.max(1, Math.floor((iconsBox + 4) / 18))
+                const iconRows = Math.ceil(propertyCount / iconsPerRow)
+                iconsHeight = iconRows * 14 + (iconRows - 1) * 4
+            }
+            const nameText = `${evtType?.abbreviation ?? ''}: ${event.eventName ?? ''}`
+            const nameLines = expanded ? measureTextLines(nameText, nameWidth) : 1
+            h += Math.max(nameLines * 16, iconsHeight)
+
+            // Zeitzeile: mt-0.5 (2px) + text-xs/5 (20px)
+            h += 2 + 20
+
+            // Notizen (Anzeigeeinstellung "Notizen einblenden"): mt-0.5 + text-xs
+            if (settings.shift_notes && event.description) {
+                const noteLines = expanded ? measureTextLines(event.description, contentWidth, 400) : 1
+                h += 2 + noteLines * 16
+            }
+
+            // Projektleitung: mt-1 (4px) + Avatar-Zeile h-5 (20px)
+            if (settings.project_management && evtProject?.leaders?.length) {
+                h += 4 + 20
+            }
+
+            // Project name bar: py-1 (8px) + text + border-b (1px); Status-Punkt (size-3.5 + gap-1.5) schmälert
+            if (evtProject?.id) {
+                const barWidth = eventBarTextWidth - (settings.project_status && evtProject?.status ? 20 : 0)
+                const projLines = expanded ? measureTextLines(evtProject?.name, barWidth) : 1
+                h += 8 + projLines * 16 + 1
+            }
+
+            // Group bar inside event: py-1 (8px) + text + border-b (1px)
+            if (showProjectGroups && evtProject?.isInGroup && evtProject?.group?.length > 0 && !evtProject?.isGroup) {
+                const grpLines = expanded ? measureTextLines(evtProject.group[0]?.name, eventBarTextWidth) : 1
+                h += 8 + grpLines * 16 + 1
+            }
+
+            totalEventHeight += h + cellMetrics.eventMarginBottom
+        } else {
+            totalEventHeight += cellMetrics.eventOnlyMb
+        }
+    }
+
+    const shiftGroupsRaw = groupShiftsByProject(shifts, dayKey)
+    const shiftGroups = shiftGroupsRaw.map(g => ({
+        hasProject: !!g.project,
+        shiftCount: g.shifts.length,
+    }))
+
+    const summary: CellSummary = { pgTotalHeight, totalEventHeight, shiftGroups }
+    boundedCacheSet(cellSummaryCache, cacheKey, summary)
+    return summary
+}
+
+/** Compute pixel height from a CellSummary + current metrics */
+function computeHeightFromSummary(summary: CellSummary, metrics: typeof cellMetrics): number {
+    let h = metrics.basePadding
+
+    // Projektgruppenbars (already text-wrapping-aware)
+    h += summary.pgTotalHeight
+
+    // Events (per-event heights already computed in summarizeCell)
+    h += summary.totalEventHeight
+
+    // Shiftgruppen
+    const groups = summary.shiftGroups
+    groups.forEach((group, gi) => {
+        if (gi > 0) h += metrics.shiftGroupGap
+
+        h += metrics.shiftGroupBorder
+
+        if (group.hasProject) h += metrics.shiftGroupHeader
+
+        const n = group.shiftCount
+        if (n > 0) {
+            h += n * metrics.shiftRow
+            if (n > 1) {
+                h += (n - 1) * (metrics.shiftRowGap + metrics.shiftDivider)
+            }
+        }
+    })
+
+    const minHeight = 112
+    return Math.max(minHeight, Math.ceil(h + metrics.safetyPadding))
+}
+
+// --- Row heights with debounce ---
+const shiftRowHeights = ref<number[]>([])
+
+let _recomputeRaf: number | null = null
+let _recomputeTimer: ReturnType<typeof setTimeout> | null = null
+
+function recomputeRowHeights() {
+    if (_recomputeTimer) clearTimeout(_recomputeTimer)
+    _recomputeTimer = setTimeout(() => {
+        if (_recomputeRaf) cancelAnimationFrame(_recomputeRaf)
+        _recomputeRaf = requestAnimationFrame(() => {
+            if (!expandDays.value) {
+                shiftRowHeights.value = []
+                return
+            }
+
+            const rooms = shiftPlanArrayRef.value
+            const dayList = days.value ?? []
+            const result: number[] = []
+
+            for (const room of rooms) {
+                let maxH = 0
+                for (const day of dayList) {
+                    if (day.isExtraRow) continue
+                    const summary = summarizeCell(room, day.fullDay)
+                    const h = computeHeightFromSummary(summary, cellMetrics)
+                    if (h > maxH) maxH = h
+                }
+                result.push(maxH)
+            }
+
+            shiftRowHeights.value = result
+            scheduleVerifyVisibleCellHeights()
+        })
+    }, 80)
+}
+
+/** Sicherheitsnetz gegen abgeschnittene Zellen: misst real gerenderte Zellen nach und
+ *  hebt die Zeilenhöhe an, wenn der Inhalt die Schätzung übersteigt. Nur nach oben —
+ *  das Maximum einer Zeile kann in gerade nicht gerenderten (virtualisierten) Spalten liegen. */
+function verifyVisibleCellHeights() {
+    if (!expandDays.value || !shiftRowHeights.value.length) return
+    const root = shiftPlanEl.value
+    if (!root) return
+    const cells = root.querySelectorAll('.cell[data-sp-row]') as NodeListOf<HTMLElement>
+    let heights: number[] | null = null
+    cells.forEach((el) => {
+        if (el.scrollHeight - el.clientHeight <= 1) return
+        const row = Number(el.dataset.spRow)
+        if (!Number.isInteger(row)) return
+        const needed = Math.ceil(el.scrollHeight + cellMetrics.safetyPadding)
+        if (!heights) heights = [...shiftRowHeights.value]
+        if (needed > (heights[row] ?? 0)) heights[row] = needed
+    })
+    if (heights) shiftRowHeights.value = heights
+}
+
+let _verifyTimer: ReturnType<typeof setTimeout> | null = null
+function scheduleVerifyVisibleCellHeights(delay = 50) {
+    if (_verifyTimer) clearTimeout(_verifyTimer)
+    _verifyTimer = setTimeout(() => {
+        nextTick(() => requestAnimationFrame(verifyVisibleCellHeights))
+    }, delay)
+}
+
+// Beim Scrollen rutschen neue (virtualisierte) Zellen ins Bild — auch die nachmessen
+watch(
+    () => shiftPlanEl.value,
+    (el, _prev, onCleanup) => {
+        if (!el) return
+        const onScroll = () => {
+            if (expandDays.value) scheduleVerifyVisibleCellHeights(150)
+        }
+        el.addEventListener('scroll', onScroll, { passive: true })
+        onCleanup(() => el.removeEventListener('scroll', onScroll))
+    },
+    { immediate: true },
+)
+
+// Trigger recompute + measurement on relevant changes
+// calendarSettings gehört dazu: die Zellhöhe hängt von Anzeigeeinstellungen wie
+// Künstler*innen/Notizen/Projektleitung/Timeline ab (siehe summarizeCell)
+watch(
+    () => [
+        expandDays.value,
+        displayProjectGroups.value,
+        calendarSettings.value,
+        shiftPlanArrayRef.value,
+        days.value,
+    ],
+    () => {
+        cellSummaryCache.clear()
+        groupedShiftsCache.clear()
+        roomDayEventsCache.clear()
+        roomDayShiftsCache.clear()
+        cellProjectGroupsCache.clear()
+        if (expandDays.value) {
+            measureBaselineMetrics()
+        } else {
+            shiftRowHeights.value = []
+        }
+    },
+    { immediate: true, deep: false },
+)
+
+// Also measure after cellMetrics change (reactive trigger from measurement itself)
+watch(
+    () => ({ ...cellMetrics }),
+    () => {
+        if (expandDays.value) {
+            recomputeRowHeights()
+        }
+    },
+)
 
 watchEffect(() => {
     userOverviewEl.value =
@@ -1099,6 +1869,111 @@ type ShiftGroup = {
     project: any | null
     projectId: number | null
     shifts: any[]
+}
+
+/** Resolve events for a room+day – handles both embedded arrays and ID-based lookup */
+function getRoomDayEvents(room: any, day: string): any[] {
+    const roomId = room?.roomId ?? room?.room_id ?? room?.id ?? 0
+    const cacheKey = `${roomId}|${day}|${room?.__v ?? 0}`
+    const cached = roomDayEventsCache.get(cacheKey)
+    if (cached) return cached
+
+    return boundedCacheSet(roomDayEventsCache, cacheKey, resolveRoomDayEvents(room, day))
+}
+
+function resolveRoomDayEvents(room: any, day: string): any[] {
+    const cell = room?.content?.[day]
+    if (!cell) return []
+
+    // Option A: direkt eingebettet
+    if (Array.isArray(cell.events)) return cell.events.filter(Boolean)
+    if (Array.isArray(cell.event_items)) return cell.event_items.filter(Boolean)
+
+    // Option B: IDs + eventsById
+    const ids =
+        cell.eventIds ??
+        cell.event_ids ??
+        cell.eventIDs ??
+        []
+
+    if (Array.isArray(ids) && room?.eventsById) {
+        return ids.map((id: number) => room.eventsById[id]).filter(Boolean)
+    }
+
+    return []
+}
+
+/** Projektgruppen pro Zelle gecacht — wird im Template je Render aufgerufen */
+function getProjectGroupsForCell(room: any, dayKey: string): any[] {
+    const roomId = room?.roomId ?? room?.room_id ?? room?.id ?? 0
+    const cacheKey = `${roomId}|${dayKey}|${room?.__v ?? 0}`
+    let groups = cellProjectGroupsCache.get(cacheKey)
+    if (!groups) {
+        groups = boundedCacheSet(
+            cellProjectGroupsCache,
+            cacheKey,
+            getAllProjectGroupsInEventsByDay(getRoomDayEvents(room, dayKey)),
+        )
+    }
+    return groups
+}
+
+/** Resolve shifts for a room+day – handles both embedded arrays and ID-based lookup */
+function getRoomDayShifts(room: any, day: string): any[] {
+    const roomId = room?.roomId ?? room?.room_id ?? room?.id ?? 0
+    const staffedFlag = calendarSettings.value?.show_only_not_fully_staffed_shifts ? 1 : 0
+    const cacheKey = `${roomId}|${day}|${room?.__v ?? 0}|${staffedFlag}`
+    const cached = roomDayShiftsCache.get(cacheKey)
+    if (cached) return cached
+
+    return boundedCacheSet(roomDayShiftsCache, cacheKey, resolveRoomDayShifts(room, day))
+}
+
+function resolveRoomDayShifts(room: any, day: string): any[] {
+    const cell = room?.content?.[day]
+    if (!cell) return []
+
+    let shifts: any[] = []
+
+    // Option A: direkt eingebettet
+    if (Array.isArray(cell.shifts)) {
+        shifts = cell.shifts.filter(Boolean)
+    } else {
+        // Option B: IDs + shiftsById
+        const ids =
+            cell.shiftIds ??
+            cell.shift_ids ??
+            cell.shiftIDs ??
+            []
+
+        if (Array.isArray(ids) && room?.shiftsById) {
+            shifts = ids.map((id: number) => room.shiftsById[id]).filter(Boolean)
+        }
+    }
+
+    // Filter: nur nicht voll besetzte Schichten anzeigen
+    const showOnlyNotFullyStaffed = calendarSettings.value?.show_only_not_fully_staffed_shifts
+    if (showOnlyNotFullyStaffed) {
+        shifts = shifts.filter((shift: any) => {
+            const qualifications = Array.isArray(shift?.shifts_qualifications)
+                ? shift.shifts_qualifications
+                : Object.values(shift?.shifts_qualifications || {})
+
+            return qualifications.some((q: any) => {
+                const capacity = q?.value ?? 0
+                const qualificationId = q?.shift_qualification_id
+
+                const workers = shift.workers || []
+                const assignedCount = workers.filter(
+                    (item: any) => item?.pivot?.shift_qualification_id === qualificationId
+                ).length
+
+                return capacity > assignedCount
+            })
+        })
+    }
+
+    return shifts
 }
 
 function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[] {
@@ -1151,15 +2026,19 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
 
     // 1) Gruppieren
     for (const shift of shifts) {
-        if (!shift.daysOfShift?.includes(dayLabel)) continue
+        // Nur am Starttag anzeigen, nicht an allen Tagen der Schicht
+        // Compute startOfShift client-side from startDate
+        const startOfShift = shift.startOfShift ?? dayjs(shift.startDate).format('DD.MM.YYYY')
+        if (startOfShift !== dayLabel) continue
 
-        const hasProject = !!shift.project
-        const key = hasProject ? `project_${shift.project.id}` : PROJECTLESS_KEY
+        const project = shift.project ?? resolveProject(shift.projectId)
+        const hasProject = !!project
+        const key = hasProject ? `project_${project.id}` : PROJECTLESS_KEY
 
         if (!groupsMap.has(key)) {
             groupsMap.set(key, {
-                project: hasProject ? shift.project : null,
-                projectId: hasProject ? shift.project.id : null,
+                project: hasProject ? project : null,
+                projectId: hasProject ? project.id : null,
                 shifts: [],
             })
         }
@@ -1170,11 +2049,27 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     const groups = Array.from(groupsMap.values())
 
     // 2) Schichten innerhalb der Gruppe zeitlich sortieren
+    // Craft-Position-Lookup aus craftsResolved für sekundäre Sortierung
+    const craftPositionMap = new Map<number, number>()
+    for (const c of craftsResolved.value ?? []) {
+        if (c?.id != null) craftPositionMap.set(c.id, c.position ?? 0)
+    }
+    const getCraftPosition = (shift: any): number => {
+        const craftId = shift?.craftId ?? shift?.craft?.id ?? shift?.craft_id
+        if (craftId != null && craftPositionMap.has(craftId)) return craftPositionMap.get(craftId)!
+        return 9999
+    }
+
     for (const g of groups) {
         g.shifts.sort((a: any, b: any) => {
             const aStart = getShiftStartMs(a)
             const bStart = getShiftStartMs(b)
             if (aStart !== bStart) return aStart - bStart
+
+            // Bei gleicher Startzeit: Craft-Position aus Settings
+            const aPos = getCraftPosition(a)
+            const bPos = getCraftPosition(b)
+            if (aPos !== bPos) return aPos - bPos
 
             const aEnd = getShiftEndMs(a)
             const bEnd = getShiftEndMs(b)
@@ -1187,8 +2082,10 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
     // 3) Gruppen nach frühester Startzeit sortieren (nicht A-Z)
     return groups.sort((a, b) => {
         // "ohne Projekt" ans Ende
-        if (a.project && !b.project) return -1
-        if (!a.project && b.project) return 1
+        const aProj = a.project ?? resolveProject(a.projectId)
+        const bProj = b.project ?? resolveProject(b.projectId)
+        if (aProj && !bProj) return -1
+        if (!aProj && bProj) return 1
 
         const aMin = getGroupEarliestStartMs(a)
         const bMin = getGroupEarliestStartMs(b)
@@ -1199,7 +2096,7 @@ function groupShiftsByProject(shifts: any[] = [], dayLabel: string): ShiftGroup[
         const bId = b.projectId ?? Number.MAX_SAFE_INTEGER
         if (aId !== bId) return aId - bId
 
-        return (a.project?.name || '').localeCompare(b.project?.name || '')
+        return (aProj?.name || '').localeCompare(bProj?.name || '')
     })
 }
 
@@ -1236,6 +2133,8 @@ function normalizeShiftPlan(sp: any[] | Record<string, any> | null | undefined):
     return Array.isArray(sp) ? sp : Object.values(sp)
 }
 
+
+
 function pickInitialCurrentDay(daysList: any[]) {
     return daysList.find((d: any) => !d.isExtraRow) ?? null
 }
@@ -1252,27 +2151,60 @@ async function initializeShiftPlan() {
         )
 
     if (!hasInitialDays || !hasInitialShiftPlan) {
-        const { data } = await axios.get(route('shift.plan.all'), {
-            params: {
-                start_date: props.dateValue[0],
-                end_date: props.dateValue[1],
-                projectId: props.projectId,
-            },
+        const baseParams = {
+            start_date: props.dateValue?.[0],
+            end_date: props.dateValue?.[1],
+            projectId: props.projectId,
+            isInProjectView: !!props.projectId,
+        }
+
+        const { data: metaData } = await axios.get(route('shift.plan.meta'), {
+            params: baseParams,
         })
 
-        const loadedDays = data.days ?? []
-        const loadedShiftPlan = data.shiftPlan ?? []
+        // Enrich slim CalendarPeriodDTOs with computed display properties
+        clearDayPropsCache()
+        const loadedDays = enrichDays(metaData.days ?? [])
+        const metaRooms = metaData.rooms ?? []
 
         days.value = loadedDays
         daysRef.value = loadedDays
-        rooms.value = normalizeShiftPlan(loadedShiftPlan)
-        newShiftPlanData.value = loadedShiftPlan
+
+        newShiftPlanData.value = metaRooms.map((r: any) => ({
+            roomId: r.roomId,
+            roomName: r.roomName,
+            content: {},
+        }))
+        rooms.value = normalizeShiftPlan(newShiftPlanData.value)
+
+        if (metaData.singleShiftPresets) {
+            singleShiftPresetsLocal.value = metaData.singleShiftPresets
+        }
+        if (metaData.shiftGroupPresets) {
+            shiftGroupPresetsLocal.value = metaData.shiftGroupPresets
+        }
+
+        const { data: batchData } = await axios.get(route('shift.plan.rooms.batch'), {
+            params: baseParams,
+        })
+
+        // Store lookup maps from batch response
+        if (batchData.lookups) {
+            setLookups(batchData.lookups)
+        }
+
+        newShiftPlanData.value = (batchData.rooms ?? []).filter(Boolean)
+        rooms.value = normalizeShiftPlan(newShiftPlanData.value)
     } else {
+        // Enrich days from props (may already be enriched or slim)
         const initialDays = props.days ?? []
+        const enrichedDays = initialDays.length > 0 && initialDays[0]?.date !== undefined && initialDays[0]?.fullDay === undefined
+            ? enrichDays(initialDays)
+            : initialDays
         const initialShiftPlan = props.shiftPlan ?? []
 
-        days.value = initialDays
-        daysRef.value = initialDays
+        days.value = enrichedDays
+        daysRef.value = enrichedDays
 
         rooms.value = normalizeShiftPlan(initialShiftPlan)
         newShiftPlanData.value = initialShiftPlan
@@ -1286,6 +2218,86 @@ async function initializeShiftPlan() {
 
 onMounted(async () => {
     await initializeShiftPlan()
+
+    // Handle highlight query param from list view navigation
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightShiftParam = urlParams.get('highlightShift');
+    if (highlightShiftParam) {
+        highlightMode.value = true;
+        highlightedShiftId.value = parseInt(highlightShiftParam);
+        // Scroll to the highlighted shift element
+        nextTick(() => {
+            setTimeout(() => {
+                const el = document.querySelector(`[data-shift-id="${highlightShiftParam}"]`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+        });
+        setTimeout(() => {
+            highlightedShiftId.value = null;
+            highlightMode.value = false;
+        }, 8000);
+    }
+
+    // Trigger baseline measurement after data is loaded (if expand_days active)
+    if (expandDays.value) {
+        measureBaselineMetrics()
+    }
+
+    // Webfonts laden evtl. erst nach der ersten Messung — dann einmal neu messen,
+    // sonst basiert die Umbruch-Berechnung auf dem Fallback-Font
+    document.fonts?.ready?.then(() => {
+        if (expandDays.value) {
+            textLinesCache.clear()
+            cellSummaryCache.clear()
+            measureBaselineMetrics()
+        }
+    })
+
+    // Load crafts asynchronously for shift plan
+    try {
+        const { data } = await axios.get(route('shifts.crafts'))
+        craftsLoaded.value = data.crafts ?? []
+    } catch {
+        craftsLoaded.value = []
+    }
+
+    await loadShiftPlanWorkers()
+
+    // Dev-only: overflow debug check for visible cells
+    if (import.meta.env.DEV && expandDays.value) {
+        setTimeout(async () => {
+            await nextTick()
+            const root = shiftGridRef.value?.getViewportEl?.() ?? null
+            if (!root) return
+            const cells = root.querySelectorAll('.cell') as NodeListOf<HTMLElement>
+            const limit = Math.min(cells.length, 20)
+            for (let i = 0; i < limit; i++) {
+                const el = cells[i]
+                if (el.scrollHeight > el.clientHeight + 1) {
+                    console.warn('[ShiftPlan] Overflow detected:', {
+                        scrollHeight: el.scrollHeight,
+                        clientHeight: el.clientHeight,
+                        diff: el.scrollHeight - el.clientHeight,
+                    })
+                }
+            }
+        }, 500)
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        isFullscreen.value = !!document.fullscreenElement
+    })
+    document.addEventListener('webkitfullscreenchange', () => {
+        isFullscreen.value = !!(document as any).webkitFullscreenElement
+    })
+    document.addEventListener('mozfullscreenchange', () => {
+        isFullscreen.value = !!(document as any).mozFullScreenElement
+    })
+    document.addEventListener('MSFullscreenChange', () => {
+        isFullscreen.value = !!(document as any).msFullscreenElement
+    })
 
     // currentDayRef folgt immer currentDayOnView
     watch(
@@ -1308,9 +2320,23 @@ onMounted(async () => {
         },
     )
 
+    // Bei Datums- oder Craft-Filter-Änderung Worker neu laden.
+    // Bewusst KEIN deep-Watcher: der feuerte auch bei identischem Inhalt (neue Array-Identität)
+    // und löste damit unnötige Worker-Reloads aus — Wert-Vergleich über serialisierten Key.
+    watch(
+        () => `${props.dateValue?.[0]}|${props.dateValue?.[1]}|${(props.user_filters?.craft_ids ?? []).join(',')}`,
+        () => {
+            loadShiftPlanWorkers()
+        },
+    )
+
     attach()
 
-    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef)
+    const ShiftCalendarListener = useShiftCalendarListener(shiftPlanArrayRef, {
+        onWorkersNeedReload: debouncedLoadShiftPlanWorkers,
+        onWorkerNeedReload: reloadSingleWorker,
+        onLookupsReceived: mergeLookups,
+    })
     ShiftCalendarListener.init()
 
     setupInertiaNavigationGuard()
@@ -1324,6 +2350,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     detach()
+    debouncedLoadShiftPlanWorkers.cancel()
     monthObserver.value?.disconnect()
     monthObserver.value = null
 
@@ -1337,9 +2364,19 @@ function workerMapKey(row: any) {
 }
 
 function isHighlightedRow(row: any) {
-    return !!idToHighlight.value &&
-        idToHighlight.value === row.worker.element.id &&
-        row.worker.type === typeToHighlight.value
+    if (!hasActiveHighlightSelection.value) return false
+
+    if (highlightSelectionKind.value === 'user') {
+        return !!idToHighlight.value &&
+            idToHighlight.value === row.worker.element.id &&
+            row.worker.type === typeToHighlight.value
+    }
+
+    if (highlightSelectionKind.value === 'shift') {
+        return isRowInIds(row, shiftUsersToHighlight.value)
+    }
+
+    return false
 }
 
 function isActiveMultiEditRow(row: any) {
@@ -1356,36 +2393,49 @@ function isSelectedMultiEditCell(row: any, day: any) {
     return entry.type === row.worker.type && entry.days?.includes(day.withoutFormat)
 }
 
+function canClickCell(worker: any) {
+    if (multiEditMode.value || dayServiceMode.value) return true
+    const isOwnCell = worker.type === 0 && worker.element.id === authUser.value.id
+    return isOwnCell || can('can plan shifts') || is('artwork admin')
+}
+
 function cellWrapperClass(row: any, day: any) {
     const classes: string[] = []
 
-    // Highlight-Mode dimmt alles außer den aktiven User
+    if (!day.isExtraRow && canClickCell(row.worker)) {
+        classes.push('cursor-pointer')
+    }
+
     if (highlightMode.value) {
         classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
     }
 
-    // MultiEdit-Mode dimmt alles außer dem aktiven User
     if (multiEditMode.value) {
         classes.push(isActiveMultiEditRow(row) ? '' : 'opacity-30')
     }
 
-    // ausgewählte Zelle in MultiEdit: wieder volle Sichtbarkeit + overflow
     if (multiEditMode.value && isSelectedMultiEditCell(row, day)) {
         classes.push('opacity-100! overflow-hidden!')
+    }
+
+    if (highlightMode.value && hasActiveHighlightSelection.value) {
+        classes.push(isHighlightedRow(row) ? '' : 'opacity-30')
+    }
+
+    if (hoverShiftUsersToHighlight.value && isRowInIds(row, hoverShiftUsersToHighlight.value)) {
+        classes.push('!opacity-100')
     }
 
     return classes
 }
 
 function shiftPlanCellInnerClass(row: any, day: any) {
-    // dein “!opacity-20” wenn die Zelle selected ist
     return (multiEditMode.value && isSelectedMultiEditCell(row, day)) ? '!opacity-20' : ''
 }
 
 function getDayServicesForCell(worker: any, day: any) {
     const key = day.withoutFormat ?? day.fullDay
     if (!key) return null
-    // wenn dayServices ein Object (map) ist:
     return worker?.dayServices?.[key] ?? null
 }
 
@@ -1393,8 +2443,8 @@ function getDayServicesForCell(worker: any, day: any) {
 
 function changeDailyViewMode() {
     router.patch(
-        route('user.update.daily_view', usePage().props.auth.user.id),
-        {daily_view: dailyViewMode.value},
+        route('user.update.daily_view', authUser.value.id),
+        {daily_view: dailyViewMode.value, context: 'shift_plan'},
         {preserveScroll: false, preserveState: false},
     )
 }
@@ -1422,7 +2472,7 @@ function getAllProjectGroupsInEventsByDay(events: any[]) {
 
 function checkIfUserIsAdminOrInGroup(group: any) {
     if ((getCurrentInstance()?.proxy as any)?.hasAdminRole?.()) return false
-    return !group.userIds.includes(usePage().props.auth.user.id)
+    return !group.userIds?.includes(authUser.value.id)
 }
 
 function initializeCalendarMultiEditSave() {
@@ -1439,9 +2489,13 @@ function closeCellMultiEditCalendarDelete(booleanVal: boolean) {
     }
 }
 
-function openEditShiftModal(shift: any) {
-    shiftToEdit.value = shift
-    showAddShiftModal.value = true
+function openEditShiftModal(shift: any, mode = 'normal') {
+    if(mode === 'normal'){
+        shiftToEdit.value = shift
+        showAddShiftModal.value = true
+    } else {
+        shiftClickedInHighlightMode.value = shift.id;
+    }
 }
 
 function openAddShiftForRoomAndDay(day: any, roomId: number) {
@@ -1451,7 +2505,23 @@ function openAddShiftForRoomAndDay(day: any, roomId: number) {
     showAddShiftModal.value = true
 }
 
-function closeAddShiftModal() {
+function closeAddShiftModal(success = false, shift = null) {
+    if (success && shift) {
+        for (const room of newShiftPlanData.value) {
+            if (room.shiftsById && room.shiftsById[shift.id]) {
+                room.shiftsById[shift.id] = shift;
+            }
+            if (room.eventsById) {
+                for (const eventId of Object.keys(room.eventsById)) {
+                    const event = room.eventsById[eventId];
+                    if (Array.isArray(event.shifts)) {
+                        const idx = event.shifts.findIndex((s) => s.id === shift.id);
+                        if (idx !== -1) event.shifts[idx] = shift;
+                    }
+                }
+            }
+        }
+    }
     showAddShiftModal.value = false
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null
@@ -1559,7 +2629,90 @@ const shiftPlanUserSortById = computed<string | null>(() => page.props.auth.user
 
 type GridRow =
     | { key: string; kind: 'craft'; craft: any }
+    | { key: string; kind: 'qualificationGroup'; craft: any; qualification: any; groupKey: string; workerCount: number }
+    | { key: string; kind: 'internExternDivider'; craft: any; externBelow: boolean }
     | { key: string; kind: 'worker'; craft: any; worker: any }
+
+function isExternWorker(w: any): boolean {
+    return w.element?.is_freelancer === true || w.type === 1 || w.type === 2
+}
+
+/**
+ * Worker-Zeilen anhängen; bei aktiver Intern/Extern-Sortierung wird an jedem
+ * Intern↔Extern-Wechsel eine eigene Trennzeile mit "Extern"-Label eingefügt
+ * (externBelow: zeigt der Pfeil nach unten, stehen die Externen unter der Linie).
+ */
+function pushWorkerRows(rows: GridRow[], workers: any[], keyPrefix: string, craft: any) {
+    const markInternExtern = shiftPlanUserSortById.value === 'INTERN_EXTERN_ASCENDING'
+        || shiftPlanUserSortById.value === 'INTERN_EXTERN_DESCENDING'
+
+    let previousIsExtern: boolean | null = null
+
+    for (const w of workers) {
+        const currentIsExtern = isExternWorker(w)
+
+        if (markInternExtern && previousIsExtern !== null && previousIsExtern !== currentIsExtern) {
+            rows.push({
+                key: `divider_${keyPrefix}_${w.key}`,
+                kind: 'internExternDivider',
+                craft,
+                externBelow: currentIsExtern,
+            })
+        }
+
+        rows.push({
+            key: `worker_${keyPrefix}_${w.key}`, // w.key ist schon stabil
+            kind: 'worker',
+            craft,
+            worker: w,
+        })
+
+        previousIsExtern = currentIsExtern
+    }
+}
+
+/**
+ * Worker eines Gewerks nach ihren Funktionen (shift_qualifications mit passender
+ * pivot.craft_id) gruppieren. Personen mit mehreren Funktionen erscheinen in jeder
+ * Gruppe (nur Referenzen, keine Daten-Duplikate). Personen ohne Funktion im Gewerk
+ * landen in einer "Ohne Funktion"-Gruppe am Ende.
+ */
+function buildQualificationGroupsOfCraft(craft: any) {
+    const groupsById = new Map<number, { qualification: any; workers: any[] }>()
+    const withoutQualification: any[] = []
+
+    for (const w of craft.users) {
+        const seen = new Set<number>()
+        let grouped = false
+
+        for (const sq of w.element?.shift_qualifications ?? []) {
+            const pivotCraftId = sq.pivot?.craft_id
+            if (pivotCraftId != null && pivotCraftId !== craft.id) continue
+            if (seen.has(sq.id)) continue
+            seen.add(sq.id)
+
+            if (!groupsById.has(sq.id)) {
+                groupsById.set(sq.id, { qualification: sq, workers: [] })
+            }
+            groupsById.get(sq.id)!.workers.push(w)
+            grouped = true
+        }
+
+        if (!grouped) {
+            withoutQualification.push(w)
+        }
+    }
+
+    const groups = [...groupsById.values()]
+        .sort((a, b) => (a.qualification.name ?? '').localeCompare(b.qualification.name ?? ''))
+        .map((g) => ({ ...g, groupKey: `${craft.id}_${g.qualification.id}` }))
+
+    if (withoutQualification.length > 0) {
+        groups.push({ qualification: null, workers: withoutQualification, groupKey: `${craft.id}_none` })
+    }
+
+    return groups
+}
 
 const gridRows = computed<GridRow[]>(() => {
     const rows: GridRow[] = []
@@ -1569,13 +2722,24 @@ const gridRows = computed<GridRow[]>(() => {
 
         if (closedCrafts.value.includes(craft.id)) continue
 
-        for (const w of craft.users) {
+        if (!sortWorkersByQualification.value) {
+            pushWorkerRows(rows, craft.users, `${craft.id}`, craft)
+            continue
+        }
+
+        for (const group of buildQualificationGroupsOfCraft(craft)) {
             rows.push({
-                key: `worker_${craft.id}_${w.key}`, // w.key ist schon stabil
-                kind: 'worker',
+                key: `qualGroup_${group.groupKey}`,
+                kind: 'qualificationGroup',
                 craft,
-                worker: w,
+                qualification: group.qualification,
+                groupKey: group.groupKey,
+                workerCount: group.workers.length,
             })
+
+            if (closedQualificationGroups.value.includes(group.groupKey)) continue
+
+            pushWorkerRows(rows, group.workers, group.groupKey, craft)
         }
     }
 
@@ -1585,12 +2749,12 @@ const gridRows = computed<GridRow[]>(() => {
 const gridCols = computed(() => days.value) // dein day-array (inkl. extraRow) bleibt “Columns”
 
 /**
- * Alle DropWorker nur EINMAL aus Props bauen
+ * Alle DropWorker aus asynchron geladenen Worker-Daten bauen
  */
 const dropWorkers = computed<any[]>(() => {
     const users: any[] = []
 
-    ;(props.usersForShifts ?? []).forEach((user: any) => {
+    ;(usersForShiftsResolved.value ?? []).forEach((user: any) => {
         if (!showFreelancers.value && user.user.is_freelancer) return
 
         users.push({
@@ -1604,12 +2768,15 @@ const dropWorkers = computed<any[]>(() => {
             dayServices: user.dayServices,
             individual_times: user.individual_times,
             shift_comments: user.shift_comments,
+            violations: user.violations,
+            compensation_day_offs: user.compensation_day_offs,
+            compensation_period: user.compensation_period,
             key: `u_${user.user.id}_0`,
         })
     })
 
     if (showFreelancers.value) {
-        ;(props.freelancersForShifts ?? []).forEach((freelancer: any) => {
+        ;(freelancersForShiftsResolved.value ?? []).forEach((freelancer: any) => {
             users.push({
                 element: freelancer.freelancer,
                 type: 1,
@@ -1625,7 +2792,7 @@ const dropWorkers = computed<any[]>(() => {
         })
     }
 
-    ;(props.serviceProvidersForShifts ?? []).forEach((sp: any) => {
+    ;(serviceProvidersForShiftsResolved.value ?? []).forEach((sp: any) => {
         users.push({
             element: sp.service_provider,
             type: 2,
@@ -1754,7 +2921,7 @@ function filterAndSortWorkersOfCraft(craft: any) {
 // -----------------------------------------------------
 
 const craftsToDisplay = computed(() => {
-    const allCrafts = (props.crafts ?? []).map((craft: any) => ({
+    const allCrafts = (craftsResolved.value ?? []).map((craft: any) => ({
         id: craft.id,
         name: craft.name,
         abbreviation: craft.abbreviation,
@@ -1825,6 +2992,34 @@ function openShowUserShiftModal(user: any, day: any) {
     showUserShifts.value = true
 }
 
+// DP-18: Info-Modal je User
+const showUserInfoModal = ref(false)
+const userInfoModalUserId = ref<number | null>(null)
+const userInfoModalUserName = ref('')
+function openUserInfoModal(userId: number | string) {
+    const worker = dropWorkers.value?.find((w: any) => w.type === 0 && w.element.id === userId)
+    userInfoModalUserId.value = Number(userId)
+    userInfoModalUserName.value = worker
+        ? ((worker.element.full_name) ?? `${worker.element.first_name ?? ''} ${worker.element.last_name ?? ''}`.trim())
+        : ''
+    showUserInfoModal.value = true
+}
+
+async function handleWorkerReload() {
+    if (userToShow.value) {
+        await reloadSingleWorker(userToShow.value.element.id, numericTypeToWorkerType(userToShow.value.type))
+        if (showUserShifts.value) {
+            const key = userToShow.value.key
+            const fresh = dropWorkers.value.find((w: any) => w.key === key)
+            if (fresh) {
+                userToShow.value = fresh
+            }
+        }
+    } else {
+        await loadShiftPlanWorkers()
+    }
+}
+
 function handleCellClick(user: any, day: any) {
     if (multiEditMode.value && !userForMultiEdit.value) {
         handleMultiEdit(user, day)
@@ -1852,15 +3047,21 @@ function handleCellClick(user: any, day: any) {
             const data = response.data
             const dayServicesRef = data.dayServices
             switch (data.type) {
-                case 'user':
-                    ;(props.usersForShifts as any[]).find((u) => u.user.id === data.id).dayServices = dayServicesRef
+                case 'user': {
+                    const u = workersLoaded.value.usersForShifts.find((x: any) => x.user.id === data.id)
+                    if (u) u.dayServices = dayServicesRef
                     break
-                case 'freelancer':
-                    ;(props.freelancersForShifts as any[]).find((f) => f.freelancer.id === data.id).dayServices = dayServicesRef
+                }
+                case 'freelancer': {
+                    const f = workersLoaded.value.freelancersForShifts.find((x: any) => x.freelancer.id === data.id)
+                    if (f) f.dayServices = dayServicesRef
                     break
-                case 'service_provider':
-                    ;(props.serviceProvidersForShifts as any[]).find((s) => s.service_provider.id === data.id).dayServices = dayServicesRef
+                }
+                case 'service_provider': {
+                    const s = workersLoaded.value.serviceProvidersForShifts.find((x: any) => x.service_provider.id === data.id)
+                    if (s) s.dayServices = dayServicesRef
                     break
+                }
             }
         }
 
@@ -1878,8 +3079,11 @@ function handleCellClick(user: any, day: any) {
         }
         return
     }
+    const isOwnCell = user.type === 0 && user.element.id === authUser.value.id
+    if(isOwnCell || can('can plan shifts') || is('artwork admin')){
+        openShowUserShiftModal(user, day)
+    }
 
-    openShowUserShiftModal(user, day)
 }
 
 function updateSelectedDayService(dayService: any) {
@@ -1891,9 +3095,38 @@ function calculateTopPositionOfUserOverView() {
 }
 
 function checkIfEventHasShiftsToDisplay(event: any) {
-    const showCrafts = usePage().props.auth.user?.show_crafts
-    if (!showCrafts || showCrafts.length === 0) return event.shifts?.length > 0
-    return event.shifts?.length > 0 && event.shifts.some((s: any) => showCrafts.includes(s.craft.id))
+    const showCrafts = authUser.value?.show_crafts
+    const showOnlyNotFullyStaffed = calendarSettings.value?.show_only_not_fully_staffed_shifts
+
+    let shifts = event.shifts || []
+
+    // Filter by crafts if set
+    if (showCrafts && showCrafts.length > 0) {
+        shifts = shifts.filter((s: any) => showCrafts.includes(s.craft?.id ?? s.craftId))
+    }
+
+    // Filter by not fully staffed if enabled
+    if (showOnlyNotFullyStaffed) {
+        shifts = shifts.filter((shift: any) => {
+            const qualifications = Array.isArray(shift?.shifts_qualifications)
+                ? shift.shifts_qualifications
+                : Object.values(shift?.shifts_qualifications || {})
+
+            // Check if at least one qualification has capacity (more slots than assigned workers)
+            return qualifications.some((q: any) => {
+                const capacity = q?.value ?? 0
+                const qualificationId = q?.shift_qualification_id
+
+                const assignedCount = (shift.workers || []).filter(
+                    (w: any) => w?.pivot?.shift_qualification_id === qualificationId
+                ).length
+
+                return capacity > assignedCount
+            })
+        })
+    }
+
+    return shifts.length > 0
 }
 
 function showDropFeedback(feedback: string) {
@@ -1906,28 +3139,37 @@ function showDropFeedback(feedback: string) {
 function openFullscreen() {
     const elem = document.getElementById('shiftPlan') as any
     if (!elem) return
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen()
-        isFullscreen.value = true
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen()
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen()
+    if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).msFullscreenElement) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen()
+        } else if ((document as any).webkitExitFullscreen) {
+            (document as any).webkitExitFullscreen()
+        } else if ((document as any).msExitFullscreen) {
+            (document as any).msExitFullscreen()
+        }
+    } else {
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen()
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen()
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen()
+        }
     }
 }
 
 function previousTimeRange() {
     const dateDifference = calculateDateDifference()
-    props.dateValue[0] = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    props.dateValue[1] = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes()
+    const newStart = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    const newEnd = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    updateTimes(newStart, newEnd)
 }
 
 function nextTimeRange() {
     const dateDifference = calculateDateDifference()
-    props.dateValue[0] = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    props.dateValue[1] = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes()
+    const newStart = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    const newEnd = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
+    updateTimes(newStart, newEnd)
 }
 
 function calculateDateDifference() {
@@ -1937,10 +3179,10 @@ function calculateDateDifference() {
     return timeDifference / (1000 * 3600 * 24)
 }
 
-function updateTimes() {
+function updateTimes(startDate: string, endDate: string) {
     router.patch(
-        route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id),
-        {start_date: props.dateValue[0], end_date: props.dateValue[1]},
+        route('update.user.shift.calendar.filter.dates', authUser.value.id),
+        {start_date: startDate, end_date: endDate},
         {preserveScroll: true, preserveState: false},
     )
 }
@@ -1951,10 +3193,15 @@ function openHistoryModal() {
 
 function showCloseUserOverview() {
     showUserOverview.value = !showUserOverview.value
+    router.patch(
+        route('user.calendar_settings.update', { user: authUser.value.id }),
+        { show_user_overview: showUserOverview.value, is_shift_plan: true },
+        { preserveScroll: true, preserveState: true },
+    )
 }
 
 function selectGoToMode(direction: 'next' | 'previous') {
-    const gotoMode = usePage().props.auth.user.goto_mode
+    const gotoMode = authUser.value.goto_mode
     scrollToPeriod(gotoMode, direction)
 }
 
@@ -1978,17 +3225,32 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
         }
     } else {
         const periodKey = period === 'week' ? 'weekNumber' : 'monthNumber'
-        const condition = (d: Day) => (period === 'week' ? d.isMonday : d.isFirstDayOfMonth)
         const periodValue = (currentDayOnView.value as any)?.[periodKey]
 
-        let targetIndex = days.value.findIndex(d => (d as any)[periodKey] === periodValue && condition(d))
-        while (true) {
-            targetIndex += indexModifier
-            if (targetIndex < 0 || targetIndex >= days.value.length) break
-            const day = days.value[targetIndex]
-            if (!day.isExtraRow && condition(day)) {
-                scrollOffset = targetIndex
-                break
+        if (period === 'week') {
+            // Bei Woche: zur KW-Spalte (isExtraRow) scrollen
+            let targetIndex = days.value.findIndex(d => (d as any).weekNumber === periodValue && d.isExtraRow)
+            while (true) {
+                targetIndex += indexModifier
+                if (targetIndex < 0 || targetIndex >= days.value.length) break
+                const day = days.value[targetIndex]
+                if (day.isExtraRow) {
+                    scrollOffset = targetIndex
+                    break
+                }
+            }
+        } else {
+            // Bei Monat: zum ersten Tag des Monats scrollen
+            const condition = (d: Day) => d.isFirstDayOfMonth
+            let targetIndex = days.value.findIndex(d => (d as any)[periodKey] === periodValue && condition(d))
+            while (true) {
+                targetIndex += indexModifier
+                if (targetIndex < 0 || targetIndex >= days.value.length) break
+                const day = days.value[targetIndex]
+                if (!day.isExtraRow && condition(day)) {
+                    scrollOffset = targetIndex
+                    break
+                }
             }
         }
     }
@@ -1997,15 +3259,15 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
 
     currentDayOnView.value = days.value[scrollOffset]
 
-    const colWidth = 202
     const leftWidth = 191.5
     const roomNameOffsetPx = 200
 
-    const targetIndex = scrollOffset // das ist dein Index im days-array
-    const x = targetIndex * colWidth
-
-// “fixer Room-Name”-Punkt soll auf die Mitte der Zielspalte zeigen
-
+    // Compute x offset using variable column widths
+    let x = 0
+    const daysArr = days.value
+    for (let i = 0; i < scrollOffset; i++) {
+        x += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth
+    }
 
     const roomNameElement = document.getElementById('roomNameContainer_0')
     const containerRect = container.getBoundingClientRect()
@@ -2027,6 +3289,7 @@ function toggleHighlightMode() {
     typeToHighlight.value = null
     multiEditMode.value = false
     dayServiceMode.value = false
+    clearHighlightSelection()
 }
 
 function toggleMultiEditMode() {
@@ -2035,6 +3298,7 @@ function toggleMultiEditMode() {
     if (!multiEditMode.value) {
         userForMultiEdit.value = null
         multiEditCellByDayAndUser.value = {}
+        clearHighlightSelection()
     }
 }
 
@@ -2049,10 +3313,11 @@ function toggleMultiEditModeCalendar() {
 function closeMultiEditCellModal(eventData: any) {
     showCellMultiEditModal.value = false
     if (eventData && eventData.saved) {
+        const affectedWorkers = Object.values(multiEditCellByDayAndUser.value)
         multiEditCellByDayAndUser.value = {}
-        router.reload({
-            only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-        })
+        for (const w of affectedWorkers) {
+            reloadSingleWorker(w.id, numericTypeToWorkerType(w.type))
+        }
     }
 }
 
@@ -2076,15 +3341,89 @@ function toggleDayServiceMode() {
 
 function toggleCompactMode() {
     router.post(
-        route('user.compact.mode.toggle', {user: usePage().props.auth.user.id}),
-        {compact_mode: usePage().props.auth.user.compact_mode},
+        route('user.compact.mode.toggle', {user: authUser.value.id}),
+        {compact_mode: compactMode.value},
         {preserveScroll: true, preserveState: true},
     )
 }
 
+const hasActiveHighlightSelection = computed(() => {
+    if (!highlightMode.value) return false
+
+    if (highlightSelectionKind.value === 'user') {
+        return idToHighlight.value != null && typeToHighlight.value != null
+    }
+
+    if (highlightSelectionKind.value === 'shift') {
+        const ids = shiftUsersToHighlight.value
+        if (!ids) return false
+        return (ids.userIds?.length || 0) + (ids.freelancerIds?.length || 0) + (ids.providerIds?.length || 0) > 0
+    }
+
+    return false
+})
+
+function extractShiftUserIds(shift: any) {
+    const ids = {
+            userIds: [] as Array<number | string>,
+            freelancerIds: [] as Array<number | string>,
+            providerIds: [] as Array<number | string>,
+        }
+
+    const workers = Array.isArray(shift?.workers) ? shift.workers : []
+    workers.forEach((w: any) => {
+        if (w.type === 'user') ids.userIds.push(w.id)
+        else if (w.type === 'freelancer') ids.freelancerIds.push(w.id)
+        else if (w.type === 'service_provider') ids.providerIds.push(w.id)
+    })
+
+    return ids
+}
+
+function highlightUsersOfShift(shift: any) {
+    if (!highlightMode.value) return
+
+    highlightSelectionKind.value = 'shift'
+
+
+    idToHighlight.value = null
+    typeToHighlight.value = null
+
+
+    shiftUsersToHighlight.value = extractShiftUserIds(shift)
+    highlightedShiftId.value = shift?.id ?? null
+}
+
+function setHoverUsersOfShift(shift: any | null) {
+    if (!shift) {
+        hoverShiftUsersToHighlight.value = null
+        return
+    }
+
+    // Hover-Preview nur wenn MultiEdit oder Highlight aktiv ist (sonst zu noisy)
+    if (!multiEditMode.value && !highlightMode.value) return
+
+    hoverShiftUsersToHighlight.value = extractShiftUserIds(shift)
+}
+
+function isRowInIds(row: any, ids: any) {
+    if (!ids || !row?.worker) return false
+    const id = row.worker.element?.id
+    const t = row.worker.type
+    if (t === 0) return (ids.userIds || []).includes(id)
+    if (t === 1) return (ids.freelancerIds || []).includes(id)
+    if (t === 2) return (ids.providerIds || []).includes(id)
+    return false
+}
+
 function highlightShiftsOfUser(id: number | string, type: number) {
+    highlightSelectionKind.value = 'user'
     idToHighlight.value = id
     typeToHighlight.value = type
+
+
+    shiftUsersToHighlight.value = null
+    highlightedShiftId.value = null
 }
 
 function addUserToMultiEdit(item: any) {
@@ -2151,14 +3490,15 @@ async function closeShiftsQualificationsAssignmentModal(closedForAssignment: boo
 
         if (singleResolver) {
             const picked = (assignedShifts ?? []).find((s: any) => s.shiftId === singleShiftId)
-            singleResolver(picked ? {id: picked.shiftQualificationId} : null)
+            singleResolver(picked ? {id: picked.shiftQualificationId, isOverbooked: !!picked.isOverbooked} : null)
             return
         }
 
         ;(assignedShifts ?? []).forEach((s: any) => {
             shiftsToHandleOnMultiEdit.assignToShift.push({
                 shiftId: s.shiftId,
-                shiftQualificationId: s.shiftQualificationId
+                shiftQualificationId: s.shiftQualificationId,
+                isOverbooked: !!s.isOverbooked
             })
         })
 
@@ -2181,6 +3521,7 @@ async function saveMultiEdit() {
         shiftsToHandle: shiftsToHandleOnMultiEdit,
     })
     resetMultiEditMode(false)
+    reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
 }
 
 function resetMultiEditMode(closeMultiEdit = true) {
@@ -2202,21 +3543,52 @@ function changeCraftVisibility(id: number) {
     } else {
         closedCrafts.value.push(id)
     }
+
+    router.patch(
+        route('user.update.open.crafts', {user: authUser.value.id}),
+        {opened_crafts: craftsToDisplay.value.filter(c => !closedCrafts.value.includes(c.id)).map(c => c.id)},
+        {preserveState: true, preserveScroll: true},
+    )
+}
+
+function changeQualificationGroupVisibility(groupKey: string) {
+    const index = closedQualificationGroups.value.indexOf(groupKey)
+    if (index > -1) {
+        closedQualificationGroups.value.splice(index, 1)
+    } else {
+        closedQualificationGroups.value.push(groupKey)
+    }
+
+    router.patch(
+        route('user.update.closed_qualification_groups', {user: authUser.value.id}),
+        {closed_qualification_groups: closedQualificationGroups.value},
+        {preserveState: true, preserveScroll: true},
+    )
+}
+
+function toggleSortWorkersByQualification() {
+    authUser.value.sort_workers_by_qualification = !sortWorkersByQualification.value
+
+    router.patch(
+        route('user.update.sort_workers_by_qualification', {user: authUser.value.id}),
+        {sort_workers_by_qualification: authUser.value.sort_workers_by_qualification},
+        {preserveState: true, preserveScroll: true},
+    )
 }
 
 function applySort(shiftPlanWorkerSortEnumName: string) {
-    usePage().props.auth.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
+    authUser.value.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName
     router.patch(
-        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        route('user.update.shiftPlanUserSortBy', {user: authUser.value.id}),
         {sortBy: shiftPlanWorkerSortEnumName},
         {preserveState: true, preserveScroll: true},
     )
 }
 
 function resetSort() {
-    usePage().props.auth.user.shift_plan_user_sort_by_id = null
+    authUser.value.shift_plan_user_sort_by_id = null
     router.patch(
-        route('user.update.shiftPlanUserSortBy', {user: usePage().props.auth.user.id}),
+        route('user.update.shiftPlanUserSortBy', {user: authUser.value.id}),
         {sortBy: null},
         {preserveState: false, preserveScroll: true},
     )
@@ -2242,21 +3614,25 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
         userForMultiEdit.value.shift_ids = Array.from(optimistic)
 
         enqueueSave(async () => {
-            const needsQuali = (shift.shifts_qualifications ?? []).length > 0
+            const needsQuali = requiredQualificationIdsForShift(shift).length > 0
             let qualificationId: number | null = null
+            let isOverbooked = false
 
             if (needsQuali) {
-                qualificationId = await resolveQualificationFor(shift)
-                if (!qualificationId) {
+                const resolved = await resolveQualificationFor(shift)
+                if (!resolved) {
                     userForMultiEdit.value.shift_ids = Array.from(oldIds)
                     const msg = $t('No matching qualification for this shift')
                     $toast?.error?.(msg)
                     showNotice('error', 'Qualification required', 'This user does not have a matching qualification for this shift.')
                     throw new Error('no_qualification')
                 }
+                qualificationId = resolved.id
+                isOverbooked = resolved.isOverbooked
             }
 
-            await persistAssign(shift.id, qualificationId)
+            const shiftCraftId = shift.craft_id ?? shift.craftId ?? shift.craft?.id ?? null
+            await persistAssign(shift.id, qualificationId, shiftCraftId, isOverbooked)
             showNotice('success', 'Assigned', 'The user was successfully added to the shift.')
         })
             .catch((err) => {
@@ -2268,6 +3644,7 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
+                reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     } else {
         const optimistic = new Set(oldIds)
@@ -2285,40 +3662,106 @@ function onToggleShift(checked: boolean, shift: any, event: any) {
             })
             .finally(() => {
                 savingShiftIds.value.delete(shift.id)
+                reloadSingleWorker(userForMultiEdit.value.id, numericTypeToWorkerType(userForMultiEdit.value.type))
             })
     }
 }
 
+// Überbuchung global aktiviert? (Schichteinstellungen)
+const allowOverbooking = computed<boolean>(() => !!(usePage().props as any).allow_shift_overbooking)
+
+// IDs der Funktionen einer Schicht, deren reguläre Plätze bereits voll belegt sind
+function fullQualificationIdsForShift(shift: any): Set<number> {
+    const full = new Set<number>()
+    const quals = Array.isArray(shift?.shifts_qualifications)
+        ? shift.shifts_qualifications
+        : Object.values(shift?.shifts_qualifications || {})
+    const workers = Array.isArray(shift?.workers) ? shift.workers : []
+
+    for (const sq of quals) {
+        const value = sq?.value ?? 0
+        if (value <= 0) continue
+        const regularAssigned = workers.filter(
+            (w: any) => w?.pivot?.shift_qualification_id === sq.shift_qualification_id && !w?.pivot?.is_overbooked
+        ).length
+        if (regularAssigned >= value) full.add(Number(sq.shift_qualification_id))
+    }
+    return full
+}
+
+// IDs aller universell einsetzbaren Crafts (für multi-edit)
+const multiEditUniversalCraftIds = computed<Set<number>>(() => {
+    const ids = new Set<number>()
+    for (const c of craftsResolved.value) {
+        if (c?.universally_applicable) ids.add(Number(c.id))
+    }
+    return ids
+})
+
 async function resolveQualificationFor(desiredShift: any) {
     const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
-    const required = desiredShift.shifts_qualifications ?? []
-    if (required.length === 0) return null
+    const requiredIds = new Set(requiredQualificationIdsForShift(desiredShift))
+    if (requiredIds.size === 0) return null
+
     const shiftCraftId =
         desiredShift.craft_id ??
         desiredShift.craftId ??
         desiredShift.craft?.id ??
         null
-    const available = userQualis.filter((uq: any) => {
-        const matchesQualification = required.some(
-            (req: any) => req.shift_qualification_id === uq.id,
-        )
 
-        if (!matchesQualification) return false
+    // Schritt 1: Direkte Qualifikationen (pivot.craft_id === shiftCraftId)
+    const directMatches = userQualis.filter((uq: any) => {
+        const uqId = Number(uq?.id)
+        if (!requiredIds.has(uqId)) return false
         if (!shiftCraftId) return true
-
         const uqCraftId = uq.pivot?.craft_id ?? null
         if (uqCraftId === null) return true
-        return uqCraftId === shiftCraftId
+        return Number(uqCraftId) === Number(shiftCraftId)
     })
 
+    // Schritt 2: Fallback auf universelle Crafts
+    const available = directMatches.length > 0
+        ? directMatches
+        : userQualis.filter((uq: any) => {
+            const uqId = Number(uq?.id)
+            if (!requiredIds.has(uqId)) return false
+            const uqCraftId = uq.pivot?.craft_id ?? null
+            if (uqCraftId === null) return false
+            return multiEditUniversalCraftIds.value.has(Number(uqCraftId))
+        })
+
     if (available.length === 0) return null
-    if (available.length === 1) return available[0].id
+
+    if (allowOverbooking.value) {
+        // Volle Funktionen bleiben bei aktivierter Überbuchung wählbar — als Überbuchung markiert.
+        const fullIds = fullQualificationIdsForShift(desiredShift)
+        const decorated = available.map((uq: any) => ({...uq, isOverbooked: fullIds.has(Number(uq.id))}))
+
+        // Auto-Zuweisung nur, wenn es genau eine Option gibt und diese ein freier regulärer Platz ist.
+        // Sobald eine Überbuchung im Spiel ist, muss das Auswahlmodal erscheinen.
+        if (decorated.length === 1 && !decorated[0].isOverbooked) {
+            return {id: decorated[0].id, isOverbooked: false}
+        }
+
+        if (openQualificationPicker) {
+            const picked = await openQualificationPicker(desiredShift, decorated)
+            return picked?.id != null ? {id: picked.id, isOverbooked: !!picked.isOverbooked} : null
+        }
+
+        const firstFree = decorated.find((o: any) => !o.isOverbooked)
+        return firstFree ? {id: firstFree.id, isOverbooked: false} : null
+    }
+
+    if (available.length === 1) return {id: available[0].id, isOverbooked: false}
+
     if (openQualificationPicker) {
         const picked = await openQualificationPicker(desiredShift, available)
-        return picked?.id ?? null
+        return picked?.id != null ? {id: picked.id, isOverbooked: !!picked.isOverbooked} : null
     }
-    return available[0].id
+
+    return {id: available[0].id, isOverbooked: false}
 }
+
 
 
 function openQualificationPicker(desiredShift: any, options: any[]) {
@@ -2333,14 +3776,40 @@ function openQualificationPicker(desiredShift: any, options: any[]) {
     })
 }
 
-async function persistAssign(shiftId: number, shiftQualificationId: number | null) {
+function resolveMultiEditCraftAbbreviation(shiftCraftId: number | null, shiftQualificationId: number | null): string {
+    if (shiftQualificationId == null || shiftCraftId == null) return userForMultiEdit.value.craft_abbreviation ?? ''
+
+    const userQualis = userForMultiEdit.value?.shift_qualifications ?? []
+
+    // Direkte Qualifikation?
+    const directMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        Number(uq?.pivot?.craft_id) === Number(shiftCraftId)
+    )
+    if (directMatch) return userForMultiEdit.value.craft_abbreviation ?? ''
+
+    // Universelle Qualifikation?
+    const universalMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        multiEditUniversalCraftIds.value.has(Number(uq?.pivot?.craft_id))
+    )
+    if (universalMatch) {
+        const uCraft = craftsResolved.value.find((c: any) => c.id === Number(universalMatch.pivot.craft_id))
+        return uCraft?.abbreviation ?? userForMultiEdit.value.craft_abbreviation ?? ''
+    }
+
+    return userForMultiEdit.value.craft_abbreviation ?? ''
+}
+
+async function persistAssign(shiftId: number, shiftQualificationId: number | null, shiftCraftId: number | null = null, isOverbooked: boolean = false) {
+    const craftAbbr = resolveMultiEditCraftAbbreviation(shiftCraftId, shiftQualificationId)
     const payload = {
         userType: userForMultiEdit.value.type,
         userTypeId: userForMultiEdit.value.id,
-        craft_abbreviation: userForMultiEdit.value.craft_abbreviation,
+        craft_abbreviation: craftAbbr,
         shiftsToHandle: {
             assignToShift: [
-                ...(shiftQualificationId != null ? [{shiftId, shiftQualificationId}] : [{shiftId}]),
+                ...(shiftQualificationId != null ? [{shiftId, shiftQualificationId, isOverbooked}] : [{shiftId}]),
             ],
             removeFromShift: [],
         },
@@ -2359,20 +3828,50 @@ async function persistRemove(shiftId: number) {
 
 function enqueueSave(taskFn: () => Promise<any>) {
     const session = multiEditSessionId.value
-    saveQueue.value = saveQueue.value
+    // Fehler des VORGÄNGERS schlucken (Queue am Leben halten), den eigenen Task
+    // aber genau EINMAL ausführen. Das frühere .catch hing am eigenen taskFn und
+    // führte ihn bei einem Fehler komplett erneut aus (Qualifikations-Picker nach
+    // Abbruch sofort wieder offen, POST nach Teilverarbeitung doppelt).
+    const run = saveQueue.value
+        .catch(() => {})
         .then(() => {
             if (session !== multiEditSessionId.value) return
             return taskFn()
         })
-        .catch((e) => {
-            if (session !== multiEditSessionId.value) return
-            return taskFn()
-        })
-    return saveQueue.value
+    // Die Queue selbst nie rejected weiterreichen; der Aufrufer bekommt den
+    // echten Task-Promise (inkl. Fehler) zurück.
+    saveQueue.value = run.catch(() => {})
+    return run
 }
 
 function isSaving(shiftId: number) {
     return savingShiftIds.value.has(shiftId)
+}
+
+function isUniversallyApplicablePerson(u: any): boolean {
+    if (!u) return false
+
+    // beide Naming-Varianten + nested craft abdecken
+    return (
+        u.craft_universally_applicable === true ||
+        u.craft_universally_applicable === 1 ||
+        u.craft_are_universally_applicable === true ||
+        u.craft_are_universally_applicable === 1 ||
+        u.craft?.universally_applicable === true ||
+        u.craft?.universally_applicable === 1
+    )
+}
+
+function requiredQualificationIdsForShift(shift: any): number[] {
+    const req = Array.isArray(shift?.shifts_qualifications)
+        ? shift.shifts_qualifications
+        : Object.values(shift?.shifts_qualifications || {})
+
+    // nur Qualis die wirklich Slots haben
+    return req
+        .filter((r: any) => (r?.value ?? 0) > 0)
+        .map((r: any) => Number(r.shift_qualification_id))
+        .filter((n: any) => Number.isFinite(n))
 }
 
 function showNotice(kind: 'success' | 'error' | 'info', title: string, message: string, {timeout = 3500} = {}) {
@@ -2405,7 +3904,7 @@ function saveShiftQualificationFilter(event: any) {
     }
 
     router.patch(
-        route('user.update.show_shift-qualifications', {user: usePage().props.auth.user.id}),
+        route('user.update.show_shift-qualifications', {user: authUser.value.id}),
         {show_qualifications: list},
         {preserveScroll: true, preserveState: true},
     )
@@ -2413,23 +3912,35 @@ function saveShiftQualificationFilter(event: any) {
 
 function handleSeriesUpdated() {
     showIndividualTimeSeriesModal.value = false;
-    router.reload({
-        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-    });
+    loadShiftPlanWorkers();
 }
+
+function clearHighlightSelection() {
+    idToHighlight.value = null
+    typeToHighlight.value = null
+    highlightSelectionKind.value = null
+    shiftUsersToHighlight.value = null
+    hoverShiftUsersToHighlight.value = null
+    highlightedShiftId.value = null
+}
+
 
 </script>
 
 
 <style scoped>
+/* cell scrollbar styling – only applied when NOT expand_days (overflow-y-auto) */
 .cell {
-    overflow: overlay;
+    scrollbar-color: #d4d4d4 #f3f3f3;
+    scrollbar-width: thin;
 }
+.cell::-webkit-scrollbar { width: 2px !important; height: 2px !important; }
+.cell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
+.cell::-webkit-scrollbar-track { background-color: #f3f3f3; }
 
 .stickyHeader {
     position: sticky;
     align-self: flex-start;
-    position: -webkit-sticky;
     display: block;
     top: 0px;
 }
@@ -2437,7 +3948,6 @@ function handleSeriesUpdated() {
 .stickyYAxis {
     position: sticky;
     align-self: flex-start;
-    position: -webkit-sticky;
     left: 60px;
     z-index: 12;
 }
@@ -2445,9 +3955,7 @@ function handleSeriesUpdated() {
 .stickyYAxisNoMarginLeft {
     position: sticky;
     align-self: flex-start;
-    position: -webkit-sticky;
     left: 0;
     z-index: 12;
 }
 </style>
-

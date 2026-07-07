@@ -278,6 +278,7 @@
 
             <!-- Single global Galleria for lightbox -->
             <Galleria
+                v-if="displayCustom"
                 v-model:activeIndex="activeIndex"
                 v-model:visible="displayCustom"
                 :value="lightboxImages"

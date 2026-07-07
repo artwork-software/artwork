@@ -41,7 +41,7 @@ class SubPosition extends Model
         'is_fixed' => 'boolean',
     ];
 
-    protected $appends = ['columnSums'];
+    protected $appends = [];
 
     public function subPositionRows(): HasMany
     {
@@ -58,15 +58,17 @@ class SubPosition extends Model
         return $this->hasMany(SubPositionSumDetail::class);
     }
 
-    public function getColumnSumsAttribute(): \Illuminate\Support\Collection
+    public function getColumnSumsAttribute($value = null): \Illuminate\Support\Collection
     {
+        if ($value !== null) {
+            return $value instanceof \Illuminate\Support\Collection ? $value : collect($value);
+        }
+
         $subPositionRowIds = $this->subPositionRows()
             ->where('commented', false)
             ->pluck('id');
         $sumDetails = $this->groupedSumDetails();
 
-        // @Jakob hier bitte checken
-        // Siehe Notion
         return ColumnCell::query()
             ->whereRelation('column', 'commented', false)
             ->where('commented', false)

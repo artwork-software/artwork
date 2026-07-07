@@ -48,6 +48,12 @@ export default defineComponent({
                     permission: true
                 },
                 {
+                    name: this.$t('Artist residencies'),
+                    href: route('project.settings.artist_residencies'),
+                    current: route().current('project.settings.artist_residencies'),
+                    permission: true
+                },
+                {
                     name: this.$t('Project Role Settings'),
                     href: route('project-roles.index'),
                     current: route().current('project-roles.index'),
@@ -75,6 +81,18 @@ export default defineComponent({
                     name: this.$t('Project overview builder'),
                     href: route('project-management-builder.index'),
                     current: route().current('project-management-builder.index'),
+                    permission: true
+                },
+                {
+                    name: this.$t('BI Field Settings'),
+                    href: route('bi.settings.index'),
+                    current: route().current('bi.settings.index'),
+                    permission: true
+                },
+                {
+                    name: this.$t('BI Export'),
+                    href: route('bi.export.index'),
+                    current: route().current('bi.export.index'),
                     permission: true
                 },
             ]

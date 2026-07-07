@@ -24,6 +24,32 @@ use Illuminate\Support\Facades\Auth;
 class ShiftChangeRecorder
 {
     /**
+     * Wenn true, werden KEINE Änderungs-Einträge (ShiftPlanRequestChange / CommittedShiftChange)
+     * geschrieben. Wird z.B. beim Zurücksetzen einer Änderung (revertChange) gesetzt, damit das
+     * Rückgängigmachen selbst nicht erneut als Änderung im Verlauf auftaucht.
+     */
+    protected static bool $suppressed = false;
+
+    /**
+     * Führt $callback aus, ohne dass dabei ausgelöste Model-Events Änderungs-Einträge erzeugen.
+     *
+     * @template T
+     * @param callable():T $callback
+     * @return T
+     */
+    public static function withoutRecording(callable $callback): mixed
+    {
+        $previous = self::$suppressed;
+        self::$suppressed = true;
+
+        try {
+            return $callback();
+        } finally {
+            self::$suppressed = $previous;
+        }
+    }
+
+    /**
      * Haupteinstiegspunkt: von Observern aus aufrufen.
      *
      * @param \Illuminate\Database\Eloquent\Model $model
@@ -31,6 +57,10 @@ class ShiftChangeRecorder
      */
     public function record(Model $model, string $eventName): void
     {
+        if (self::$suppressed) {
+            return;
+        }
+
         if (! in_array($eventName, ['created', 'updated', 'deleted'], true)) {
             return;
         }
@@ -270,6 +300,16 @@ class ShiftChangeRecorder
 
             $oldValue = $original[$key] ?? null;
 
+            // Datums-Felder lokal normalisieren: getOriginal() liefert durch den
+            // datetime-Cast Carbon-Objekte, die json_encode als UTC-ISO serialisiert
+            // ("2025-11-14T23:00:00Z" für den lokalen 15.11.). Beim Revert würde der
+            // Wert unkonvertiert in die DATE-Spalte geschrieben und die Schicht um
+            // einen Tag verrutschen — gleiche Bug-Klasse wie bei normalizeInitialDates.
+            if (in_array($key, ['start_date', 'end_date'], true)) {
+                $oldValue = $this->normalizeDateValue($oldValue);
+                $newValue = $this->normalizeDateValue($newValue);
+            }
+
             if ($oldValue == $newValue) {
                 continue;
             }
@@ -308,6 +348,10 @@ class ShiftChangeRecorder
 
     public function recordWithOriginal(Model $model, array $original, string $eventName = 'updated'): void
     {
+        if (self::$suppressed) {
+            return;
+        }
+
         if ($eventName !== 'updated') {
             return;
         }
@@ -340,6 +384,10 @@ class ShiftChangeRecorder
 
     public function recordGlobalQualificationDiff(Shift $shift, array $before, array $after): void
     {
+        if (self::$suppressed) {
+            return;
+        }
+
         $changes = [];
 
         $allIds = array_unique(array_merge(array_keys($before), array_keys($after)));
@@ -642,10 +690,16 @@ class ShiftChangeRecorder
      */
     protected function recordCommittedChange(array $meta, array $fieldChanges, string $eventName): void
     {
+        // When a Shift is deleted, the row no longer exists in the shifts table.
+        // Setting shift_id to null avoids FK constraint violation; shift data is preserved in field_changes.
+        $shiftId = ($eventName === 'deleted' && $meta['subject_type'] === Shift::class)
+            ? null
+            : $meta['shift_id'];
+
         // 1) Immer einen "globalen" CommittedShiftChange schreiben
         CommittedShiftChange::create([
             'craft_id'                => $meta['craft_id'],
-            'shift_id'                => $meta['shift_id'],
+            'shift_id'                => $shiftId,
             'subject_type'            => $meta['subject_type'],
             'subject_id'              => $meta['subject_id'],
             'change_type'             => $eventName,
@@ -666,6 +720,34 @@ class ShiftChangeRecorder
      * Hintergrund: DB speichert i.d.R. UTC (z.B. 2025-11-14 23:00:00),
      * wir wollen aber im Log das lokale Datum (z.B. 2025-11-15) sehen.
      */
+    /**
+     * Einzelnen Datumswert (Carbon-Objekt oder ISO-/UTC-String) auf das lokale
+     * Y-m-d-Datum normalisieren — Pendant zu normalizeInitialDates für die
+     * per-Feld old/new-Werte.
+     */
+    protected function normalizeDateValue(mixed $value): mixed
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return $value;
+        }
+
+        if (!is_string($value) && !$value instanceof \DateTimeInterface) {
+            return $value;
+        }
+
+        try {
+            return Carbon::parse($value, 'UTC')
+                ->setTimezone(config('app.timezone', 'Europe/Berlin'))
+                ->toDateString();
+        } catch (\Throwable $e) {
+            return $value;
+        }
+    }
+
     protected function normalizeInitialDates(array $initial): array
     {
         foreach (['start_date', 'end_date'] as $field) {

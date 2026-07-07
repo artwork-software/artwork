@@ -36,14 +36,7 @@ class Table extends Model
         'is_template' => 'boolean'
     ];
 
-    protected $appends = [
-        'costSums',
-        'earningSums',
-        'commentedCostSums',
-        'commentedEarningSums',
-        'costSumDetails',
-        'earningSumDetails'
-    ];
+    protected $appends = [];
 
     public function columns(): HasMany
     {
@@ -100,12 +93,17 @@ class Table extends Model
             ->groupBy('column_id')
             ->skip(3)
             ->mapWithKeys(function (\Illuminate\Database\Eloquent\Collection $cells, $column_id) {
-                return [
-                    $column_id => $cells->sum(
-                        //replace , with . to cast properly to float
-                        fn (ColumnCell $columnCell) => floatval(str_replace(',', '.', $columnCell->value))
-                    )
-                ];
+                // bcadd instead of float addition to avoid cent drift; cast the
+                // exact result back to float to keep the payload shape.
+                $sum = $cells->reduce(function (string $carry, ColumnCell $columnCell): string {
+                    $decimalValue = str_replace(',', '.', $columnCell->value ?: '0');
+                    if (!is_numeric($decimalValue)) {
+                        $decimalValue = '0';
+                    }
+                    return bcadd($carry, $decimalValue, 2);
+                }, '0');
+
+                return [$column_id => (float) $sum];
             });
     }
 
@@ -125,32 +123,47 @@ class Table extends Model
             ]);
     }
 
-    public function getCostSumDetailsAttribute(): Collection
+    public function getCostSumDetailsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         return $this->sumDetails("COST");
     }
 
-    public function getEarningSumDetailsAttribute(): Collection
+    public function getEarningSumDetailsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         return $this->sumDetails("EARNING");
     }
 
-    public function getCostSumsAttribute(): Collection
+    public function getCostSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_COST')->pluck('id');
 
         return $this->calculateSums($mainPositionIds);
     }
 
-    public function getEarningSumsAttribute(): Collection
+    public function getEarningSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_EARNING')->pluck('id');
 
         return $this->calculateSums($mainPositionIds);
     }
 
-    public function getCommentedCostSumsAttribute(): Collection
+    public function getCommentedCostSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this
             ->mainPositions()
             ->where('type', 'BUDGET_TYPE_COST')
@@ -159,8 +172,11 @@ class Table extends Model
         return $this->calculateCommentedSums($mainPositionIds);
     }
 
-    public function getCommentedEarningSumsAttribute(): Collection
+    public function getCommentedEarningSumsAttribute($value = null): Collection
     {
+        if ($value !== null) {
+            return $value instanceof Collection ? $value : collect($value);
+        }
         $mainPositionIds = $this
             ->mainPositions()
             ->where('type', 'BUDGET_TYPE_EARNING')

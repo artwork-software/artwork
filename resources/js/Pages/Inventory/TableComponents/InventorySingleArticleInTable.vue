@@ -1,6 +1,7 @@
 <template>
     <!-- Galleria Component -->
     <Galleria
+        v-if="displayCustom"
         v-model:activeIndex="activeIndex"
         v-model:visible="displayCustom"
         :value="item.images"
@@ -51,10 +52,26 @@
             @click="imageClick(0)"
         >
     </td>
-    <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold"><div class="flex items-center">{{ item?.name }}<IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" /> </div></td>
+    <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold">
+        <div class="flex items-center">
+            {{ item?.name }}
+            <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" />
+        </div>
+        <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-gray-400">
+            {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
+        </div>
+    </td>
     <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>
     <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold" v-for="property in subcategoryProperties" :key="property.id">
-        {{ formatPropertyValue(property) }}
+        <template v-if="property.type === 'file'">
+            <a v-if="filePropertyPath(property)"
+               :href="route('inventory-management.articles.property-file.download', { path: filePropertyPath(property) })"
+               class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
+                {{ fileName(filePropertyPath(property)) }}
+            </a>
+            <span v-else>-</span>
+        </template>
+        <template v-else>{{ formatPropertyValue(property) }}</template>
     </td>
     <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-secondary font-semibold sm:pr-0">
         <div class="flex items-center gap-x-4">
@@ -217,6 +234,15 @@ const formatProperty = (property) => {
 
     return property.pivot.value;
 }
+
+// Resolve the stored file path for a 'file' type property from the article's own properties
+const filePropertyPath = (subcategoryProperty) => {
+    const articleProperty = props.item.properties.find(p => p.id === subcategoryProperty.id);
+    const value = articleProperty?.pivot?.value;
+    return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
 
 // New function to format property values correctly by looking up from article's own properties
 const formatPropertyValue = (subcategoryProperty) => {

@@ -1,10 +1,10 @@
 <template>
-    <div :class="[usePage().props.auth.user.calendar_settings.time_period_project_id === event?.project?.id ? 'border-[3px] border-dashed !border-pink-500' : '']">
+    <div :class="[usePage().props.auth.user.calendar_settings?.time_period_project_id === resolvedProject?.id ? 'border-[3px] border-dashed !border-pink-500' : '']">
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
-                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventType.hex_code ?? eventType?.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventType.hex_code ?? eventType?.hex_code, usePage().props.high_contrast_percent))}">
-                <a v-if="event?.project?.id" :href="route('projects.tab', {project: event.project.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
-                    {{ event.eventType.abbreviation ?? eventType?.abbreviation }}: {{ event.project.name }}
+                 :style="{backgroundColor: backgroundColorWithOpacity(resolvedEventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(resolvedEventType.hex_code, usePage().props.high_contrast_percent))}">
+                <a v-if="resolvedProject?.id" :href="route('projects.tab', {project: resolvedProject.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
+                    {{ resolvedEventType.abbreviation }}: {{ resolvedProject.name }}
                 </a>
                 <div v-if="areAllShiftsCommitted(event)">
                     <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
@@ -16,7 +16,7 @@
                 <!-- Drop Element -->
                 <ShiftDropElement v-if="checkIfShiftInDayString(shift)"
                                   :multiEditMode="multiEditMode"
-                                  :craft-id="shift.craft.id"
+                                  :craft-id="shift.craft?.id ?? shift.craftId"
                                   :userForMultiEdit="userForMultiEdit"
                                   :highlight-mode="highlightMode"
                                   :highlighted-id="highlightedId"
@@ -36,17 +36,19 @@
     </div>
 </template>
 <script setup>
+import {computed} from "vue";
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
 import { IconLock } from "@tabler/icons-vue";
 import {usePage} from "@inertiajs/vue3";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {computeShiftFormattedDates} from "@/Composeables/calendarDateUtils.js";
 const percentage = usePage().props.high_contrast_percent;
 const {
     backgroundColorWithOpacity,
-    detectParentBackgroundColor,
     getTextColorBasedOnBackground,
-    parentBackgroundColor
 } = useColorHelper();
+const { resolveEventType, resolveProject, resolveCraft } = useShiftPlanLookups();
 
 // Define emits
 const emit = defineEmits(['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit', 'clickOnEdit']);
@@ -67,6 +69,8 @@ const props = defineProps({
     firstProjectShiftTabId: [String, Number],
 });
 
+const resolvedEventType = computed(() => props.event?.eventType ?? resolveEventType(props.event?.eventTypeId) ?? {});
+const resolvedProject = computed(() => props.event?.project ?? resolveProject(props.event?.projectId));
 
 // Methods converted to functions
 const getDropFeedback = (event) => {
@@ -83,10 +87,12 @@ const areAllShiftsCommitted = (event) => {
 
 const checkIfShiftInDayString = (shift) => {
     const user = usePage().props.auth.user;
+    const formattedDates = shift.formatted_dates ?? computeShiftFormattedDates(shift.startDate, shift.endDate, shift.start, shift.end);
+    const shiftCraftId = shift.craft?.id ?? shift.craftId;
     if (user?.show_crafts?.length === 0 || user?.show_crafts === null) {
-        return shift.formatted_dates.start === props.dayString['fullDay'];
+        return formattedDates.start === props.dayString['fullDay'];
     } else {
-        return shift.formatted_dates.start === props.dayString['fullDay'] && user?.show_crafts?.includes(shift.craft.id);
+        return formattedDates.start === props.dayString['fullDay'] && user?.show_crafts?.includes(shiftCraftId);
     }
 }
 

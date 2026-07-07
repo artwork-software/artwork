@@ -20,11 +20,15 @@ class ShiftRule extends Model
         'trigger_type',
         'individual_number_value',
         'warning_color',
+        'default_compensation_days',
+        'default_compensation_deadline_days',
         'is_active'
     ];
 
     protected $casts = [
         'individual_number_value' => 'float',
+        'default_compensation_days' => 'float',
+        'default_compensation_deadline_days' => 'integer',
         'is_active' => 'boolean'
     ];
 

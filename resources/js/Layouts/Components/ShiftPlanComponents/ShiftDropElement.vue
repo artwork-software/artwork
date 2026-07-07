@@ -1,7 +1,14 @@
 <template>
-    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer">
+    <div class="w-full group/shift duration-300 ease-in-out cursor-pointer" :data-shift-id="shift?.id">
         <div
-            :class="[!highlightMode || !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30 px-1' : 'bg-pink-500 !text-white px-1', multiEditMode ?'text-[10px]' : '']"
+            :class="[
+              'px-1',
+              (highlightMode && hasAnyHighlightSelection && !matchesAnyHighlight) ? 'opacity-30' : '',
+              (highlightMode && matchesAnyHighlight) ? 'bg-pink-500 ring-2 ring-pink-500 ring-offset-1 ring-offset-white !text-white' : '',
+              (highlightMode && isThisShiftHighlighted) ? 'ring-2 ring-pink-500 ring-offset-1 ring-offset-white' : '',
+
+              multiEditMode ? 'text-[10px]' : 'text-[11px]'
+            ]"
             class="flex items-center xsLight text-shiftText subpixel-antialiased"
             @dragover="onDragOver"
             @drop="onDrop"
@@ -18,7 +25,7 @@
                 <div class="flex items-start justify-between gap-x-1.5 w-full">
                     <div>
 
-                        <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-[8px]">({{ shift.shiftGroup.name }})</div>
+                        <div v-if="resolvedShiftGroup && usePage().props.auth.user.calendar_settings?.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
                             <PropertyIcon name="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
                             <ToolTipComponent
@@ -31,37 +38,45 @@
                                 black-icon
                             />
                             <span>
-                                {{ shift.craft.abbreviation }}
+                                {{ resolvedCraft.abbreviation }}
                                 {{ shift.start }} - {{ shift.end }}
                             </span>
                         </div>
                     </div>
+
                     <div v-if="!showRoom" class="ml-0.5 flex items-center justify-end" :class="multiEditMode ? 'text-[10px]' : 'text-[10px]'">
                         ({{ computedUsedWorkerCount }}/{{ computedMaxWorkerCount }})
-                        <span class="inline-block w-2.5 h-2.5 rounded-full ml-1"
+                        <!-- Eingeplante Person nicht (mehr) verfügbar: Warndreieck statt Besetzungs-Punkt -->
+                        <svg v-if="unavailableWorkers.length"
+                             class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                             fill="currentColor" viewBox="0 0 20 20">
+                            <title>{{ unavailableWorkersTooltip }}</title>
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <span v-else class="inline-block w-2.5 h-2.5 rounded-full ml-1"
                               :class="{
                                 'bg-red-500': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
                                 'bg-yellow-500': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
-                                'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount
+                                'bg-green-500': computedUsedWorkerCount === computedMaxWorkerCount,
+                                'bg-amber-500': computedUsedWorkerCount > computedMaxWorkerCount
                               }">
                         </span>
-
-
-
                     </div>
-                    <div v-else-if="room" class="truncate">
+
+                    <div v-else-if="room" :class="expandDays ? 'break-words' : 'truncate'">
                         , {{ room?.name }}
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings.show_qualifications">
+        <div class="w-full px-1" v-if="usePage().props.auth.user.calendar_settings?.show_qualifications">
             <div class="w-full flex flex-row flex-wrap text-[10px] text-zinc-400">
                 <div
                     v-for="(row) in computedShiftsQualificationsWithWorkerCount"
                     :key="row.shift_qualification_id"
                     class="flex items-center"
+                    :class="{ 'text-amber-600 font-semibold': row.workerCount > row.maxWorkerCount }"
                 >
                     {{ row.workerCount }}/{{ row.maxWorkerCount }}
                     <PropertyIcon
@@ -86,9 +101,10 @@
                     />
                 </div>
             </div>
+
         </div>
 
-        <div v-if="usePage().props.auth.user.calendar_settings.shift_notes" class="px-1 xsLight">
+        <div v-if="usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 xsLight">
             {{ shift.description }}
         </div>
     </div>
@@ -109,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch, getCurrentInstance } from 'vue'
+import {computed, reactive, ref, watch, getCurrentInstance, provide, inject} from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
@@ -120,6 +136,7 @@ import IconLib from '@/Mixins/IconLib.vue'
 import Permissions from '@/Mixins/Permissions.vue'
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
 // In <script setup> können Optionen inkl. Mixins gesetzt werden
 defineOptions({
@@ -142,6 +159,7 @@ const props = defineProps<{
     highlightedType?: 0 | 1 | 2 | null
     multiEditMode?: boolean
     userForMultiEdit?: any
+    highlightedShiftId?: number | string | null
     shiftQualifications: Array<{ id: number; icon?: any }>
 }>()
 
@@ -150,6 +168,8 @@ const emit = defineEmits<{
     (e: 'desiresReload', droppedId: number | string, type: 0 | 1 | 2, seriesShiftData?: any): void
     (e: 'handleShiftAndEventForMultiEdit', checked: boolean, shift: any, event: any): void
     (e: 'clickOnEdit', shift: any): void
+    (e: 'highlightShiftUsers', shift: any): void
+    (e: 'hoverShiftUsers', shift: any | null): void
 }>()
 
 /* ---------------- Lokaler State ---------------- */
@@ -161,13 +181,10 @@ const buffer = reactive({
     dayOfWeek: null as number | null
 })
 
-const selectedUser = ref<any>(null)
-const dropFeedback = ref<string | null>(null)
-const showQualificationRowExpander = ref(false)
-
 const showMultipleShiftQualificationSlotsAvailableModal = ref(false)
 const showMultipleShiftQualificationSlotsAvailableModalSlots = ref<any[] | null>(null)
 const showMultipleShiftQualificationSlotsAvailableModalDroppedUser = ref<any | null>(null)
+
 
 const droppedUser = ref<any | null>(null)
 const seriesShiftData = ref<any | null>(null)
@@ -175,6 +192,11 @@ const seriesShiftData = ref<any | null>(null)
 /* ---------------- Helpers ---------------- */
 const page = usePage()
 const { proxy } = getCurrentInstance() || {}
+const expandDays = computed(() => page.props.auth.user.calendar_settings?.expand_days ?? false)
+
+const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
+const resolvedCraft = computed(() => props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {});
+const resolvedShiftGroup = computed(() => props.shift?.shiftGroup ?? resolveShiftGroup(props.shift?.shiftGroupId));
 
 /* ---------------- Computed ---------------- */
 // Meta-Infos zu globalen Qualifikationen (Icon/Name)
@@ -212,26 +234,14 @@ function getPersonGlobalQualificationIds(person: any): number[] {
 
 // Basiszählung: Wie viele aktuell zugewiesene Personen besitzen eine bestimmte GQ?
 function countAssignedForGlobalQualificationBase(globalQualificationId: number): number {
-    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []]
-    return groups.reduce((acc, list: any[]) => acc + list.filter((p: any) => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0)
+    return shiftWorkers.value.filter(
+        (w: any) => getPersonGlobalQualificationIds(w).includes(globalQualificationId)
+    ).length
 }
 
-// Optimistische Deltas, damit Zähler nach Zuweisung sofort steigen
-const globalQualificationDeltas = ref<Record<number, number>>({})
-
+// Zählung direkt aus dem Shift-Objekt (ohne Delta-System)
 function countAssignedForGlobalQualification(globalQualificationId: number): number {
-    const base = countAssignedForGlobalQualificationBase(globalQualificationId)
-    const delta = globalQualificationDeltas.value[globalQualificationId] ?? 0
-    return base + delta
-}
-
-function adjustDeltaForUser(person: any, direction = 1) {
-    if (!person) return
-    const demanded = new Set((demandedGlobalQualifications.value || []).map((g: any) => g.id))
-    getPersonGlobalQualificationIds(person).forEach((id) => {
-        if (!demanded.has(id)) return
-        globalQualificationDeltas.value[id] = (globalQualificationDeltas.value[id] ?? 0) + direction
-    })
+    return countAssignedForGlobalQualificationBase(globalQualificationId)
 }
 const computedMaxWorkerCount = computed(() => {
     let maxWorkerCount = 0
@@ -241,33 +251,38 @@ const computedMaxWorkerCount = computed(() => {
     return maxWorkerCount
 })
 
-const computedUsedWorkerCount = computed(() => {
-    return (props.shift.users?.length || 0) +
-        (props.shift.freelancer?.length || 0) +
-        (props.shift.serviceProviders?.length || 0)
+const shiftWorkers = computed(() => props.shift.workers || [])
+
+const computedUsedWorkerCount = computed(() => shiftWorkers.value.length)
+
+// Eingeplant, aber am Schichttag nicht verfügbar (z.B. nachträglich krank gemeldet).
+// Die Zuweisung bleibt bestehen (Stundenabrechnung bei festgeschriebenen Schichten),
+// die Schicht gilt aber nicht mehr als voll besetzt.
+const unavailableWorkers = computed(() => shiftWorkers.value.filter((w: any) => w?.is_unavailable))
+
+const unavailableWorkersTooltip = computed(() => {
+    const names = unavailableWorkers.value.map((w: any) => w.name || `${w.first_name ?? ''} ${w.last_name ?? ''}`.trim()).filter(Boolean)
+    const label = (proxy as any)?.$t?.('Assigned but not available') ?? 'Assigned but not available'
+    return names.length ? `${label}: ${names.join(', ')}` : label
 })
 
+const allowOverbooking = computed(() => !!(page.props as any).allow_shift_overbooking)
+
 const computedShiftsQualificationsWithWorkerCount = computed(() => {
-    const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number }> = []
+    const rows: Array<{ shift_qualification_id: number, maxWorkerCount: number, workerCount: number, regularWorkerCount: number }> = []
     props.shift?.shifts_qualifications?.forEach((sq: any) => {
         if (sq.value === null || sq.value === 0) return
 
-        let assigned = 0
-
-        props.shift.users?.forEach((u: any) => {
-            if (u.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
-        })
-        props.shift.freelancer?.forEach((f: any) => {
-            if (f.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
-        })
-        props.shift.serviceProviders?.forEach((p: any) => {
-            if (p.pivot?.shift_qualification_id === sq.shift_qualification_id) assigned++
-        })
+        const assignedWorkers = shiftWorkers.value.filter(
+            (w: any) => w.pivot?.shift_qualification_id === sq.shift_qualification_id
+        )
 
         rows.push({
             shift_qualification_id: sq.shift_qualification_id,
             maxWorkerCount: sq.value,
-            workerCount: assigned
+            workerCount: assignedWorkers.length,
+            // Überbuchte Zuweisungen belegen keine regulären Plätze
+            regularWorkerCount: assignedWorkers.filter((w: any) => !w.pivot?.is_overbooked).length
         })
     })
     return rows
@@ -279,28 +294,27 @@ const shiftUserIds = computed(() => {
         freelancerIds: [] as Array<number | string>,
         providerIds: [] as Array<number | string>
     }
-    props.shift.users?.forEach((u: any) => ids.userIds.push(u.id))
-    props.shift.freelancer?.forEach((f: any) => ids.freelancerIds.push(f.id))
-    props.shift.serviceProviders?.forEach((p: any) => ids.providerIds.push(p.id))
+    shiftWorkers.value.forEach((w: any) => {
+        if (w.type === 'user') ids.userIds.push(w.id)
+        else if (w.type === 'freelancer') ids.freelancerIds.push(w.id)
+        else if (w.type === 'service_provider') ids.providerIds.push(w.id)
+    })
     return ids
 })
 
 
-const checkIfUserIsInCraft = computed<boolean>(() => {
+const checkIfUserIsInCraft = computed(() => {
     const u = props.userForMultiEdit
-    const craftId = props.shift?.craft?.id
-
-    // Fehlende Daten → kein Match
+    const craftId = props.shift?.craft?.id ?? props.shift?.craftId
     if (!u || craftId == null) return false
+    if (isUniversallyApplicablePerson(u)) return true
 
-    // Universell anwendbar → immer true
-    if (u.craft_are_universally_applicable) return true
+    const assigned = new Set((u.assigned_craft_ids ?? u.craft_ids ?? []).map(Number))
+    if (assigned.has(Number(craftId)) || Number(u.craftId) === Number(craftId)) return true
 
-    // IDs normalisieren (z. B. string → number) und performant prüfen
-    const assigned = new Set((u.assigned_craft_ids ?? []).map(Number))
-
-    // Treffer, wenn explizit zugeteilt ODER Primärcraft identisch
-    return assigned.has(Number(craftId)) || u.craftId === craftId
+    // Prüfe ob Person über ein universelles Craft eine passende Qualifikation für diese Schicht hat
+    const userQualis = Array.isArray(u?.shift_qualifications) ? u.shift_qualifications : Object.values(u?.shift_qualifications || {})
+    return userQualis.some((uq: any) => universalCraftIds.value.has(Number(uq?.pivot?.craft_id)))
 })
 
 /* ---------------- Watcher ---------------- */
@@ -331,24 +345,164 @@ function isIdHighlighted(highlightedId?: number | null, highlightedType?: 0 | 1 
 
 function handleClickEvent() {
     if (props.multiEditMode) return
-    // Zugriff auf $can/hasAdminRole über Mixin (global am proxy)
-    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
-    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
 
-    if (canPlan || isAdmin) {
+
+    if (props.highlightMode) {
+        emit('highlightShiftUsers', props.shift)
+        return
+    }
+
+    if (canPlanShifts()) {
         emit('clickOnEdit', props.shift)
     }
 }
 
+function getTargetCraftIdFromShift(): number | null {
+    const id =
+        props.shift?.craft?.id ??
+        props.shift?.craft_id ??
+        props.shift?.craftId ??
+        props.craftId ??
+        null
+    return id == null ? null : Number(id)
+}
+
+function getPersonCraftId(person: any): number | null {
+    const id = person?.craft_id ?? person?.craftId ?? person?.craft?.id ?? null
+    return id == null ? null : Number(id)
+}
+
+// Injected crafts from parent ShiftPlan (provide/inject)
+const injectedCrafts = inject<any>('shiftPlanCrafts', ref([]))
+
+const craftsById = computed<Record<number, any>>(() => {
+    // Bevorzuge injected crafts (von ShiftPlan.vue), dann page props als Fallback
+    const injected = injectedCrafts?.value ?? injectedCrafts ?? []
+    const raw = (Array.isArray(injected) && injected.length > 0)
+        ? injected
+        : ((page?.props as any)?.crafts ??
+           (page?.props as any)?.allCrafts ??
+           (page?.props as any)?.craftList ??
+           [])
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {})
+    const map: Record<number, any> = {}
+    arr.forEach((c: any) => {
+        if (c?.id != null) map[Number(c.id)] = c
+    })
+    return map
+})
+
+function isUniversallyApplicablePerson(person: any): boolean {
+    if (!person) return false
+
+    // akzeptiere beide Naming-Varianten + ggf. nested craft
+    if (person.craft_universally_applicable === true) return true
+    if (person.craft_are_universally_applicable === true) return true
+    if (person.craft?.universally_applicable === true) return true
+
+    // manchmal kommen booleans als 0/1
+    if (person.craft_universally_applicable === 1) return true
+    if (person.craft_are_universally_applicable === 1) return true
+    if (person.craft?.universally_applicable === 1) return true
+
+    // Fallback: craftId lookup (wenn crafts in page props vorhanden)
+    const cid = getPersonCraftId(person)
+    if (cid != null && craftsById.value[cid] != null) {
+        return !!craftsById.value[cid]?.universally_applicable
+    }
+
+    return false
+}
+
+function personCanWorkOnCraft(person: any, targetCraftId: number): boolean {
+    if (isUniversallyApplicablePerson(person)) return true
+
+    const ids = new Set<number>([
+        ...(person.craft_ids ?? []),
+        ...(person.assigned_craft_ids ?? []),
+    ].map(Number).filter((n) => Number.isFinite(n)))
+
+    const primary = getPersonCraftId(person)
+    if (ids.has(Number(targetCraftId)) || (primary != null && primary === Number(targetCraftId))) return true
+
+    // Prüfe ob Person über ein universelles Craft eine passende Qualifikation hat
+    const userQualis = Array.isArray(person?.shift_qualifications)
+        ? person.shift_qualifications
+        : Object.values(person?.shift_qualifications || {})
+    return userQualis.some((uq: any) => universalCraftIds.value.has(Number(uq?.pivot?.craft_id)))
+}
+
+function requiredQualificationIdsForShift(): number[] {
+    const sq = Array.isArray(props.shift?.shifts_qualifications)
+        ? props.shift.shifts_qualifications
+        : Object.values(props.shift?.shifts_qualifications || {})
+
+    // nur Qualis mit echten Slots (>0)
+    return sq
+        .filter((x: any) => (x?.value ?? 0) > 0)
+        .map((x: any) => Number(x.shift_qualification_id))
+        .filter((n: any) => Number.isFinite(n))
+}
+
+// IDs aller universell einsetzbaren Crafts
+const universalCraftIds = computed<Set<number>>(() => {
+    const arr = Object.values(craftsById.value)
+    const ids = new Set<number>()
+    arr.forEach((c: any) => {
+        if (c?.universally_applicable) ids.add(Number(c.id))
+    })
+    return ids
+})
+
+function matchingUserQualisForShift(person: any, targetCraftId: number): any[] {
+    const requiredIds = new Set(requiredQualificationIdsForShift())
+    const userQualis = Array.isArray(person?.shift_qualifications)
+        ? person.shift_qualifications
+        : Object.values(person?.shift_qualifications || {})
+
+    // Bevorzuge direkte Qualifikationen (pivot.craft_id === targetCraftId)
+    const directMatches = userQualis.filter((uq: any) => {
+        const uqId = Number(uq?.id)
+        if (!requiredIds.has(uqId)) return false
+        const uqCraftId = uq?.pivot?.craft_id
+        if (uqCraftId == null) return true
+        return Number(uqCraftId) === Number(targetCraftId)
+    })
+
+    if (directMatches.length > 0) return directMatches
+
+    // Fallback: Qualifikationen über universell einsetzbare Crafts
+    return userQualis.filter((uq: any) => {
+        const uqId = Number(uq?.id)
+        if (!requiredIds.has(uqId)) return false
+        const uqCraftId = uq?.pivot?.craft_id
+        if (uqCraftId == null) return false
+        return universalCraftIds.value.has(Number(uqCraftId))
+    })
+}
+
+function canPlanShifts(): boolean {
+    const canPlan = typeof proxy?.$can === 'function' ? proxy.$can('can plan shifts') : false
+    const isAdmin = typeof (proxy as any)?.hasAdminRole === 'function' ? (proxy as any).hasAdminRole() : false
+    return canPlan || isAdmin
+}
+
 function onDragOver(event: DragEvent) {
+    if (!canPlanShifts()) return
     event.preventDefault()
 }
 
 function onDrop(event: DragEvent) {
     event.preventDefault()
+    if (!canPlanShifts()) return
+
+    const raw =
+        event.dataTransfer?.getData('application/json') ||
+        event.dataTransfer?.getData('text/plain') ||
+        ''
+
     try {
-        const data = event.dataTransfer?.getData('application/json')
-        droppedUser.value = data ? JSON.parse(data) : null
+        droppedUser.value = raw ? JSON.parse(raw) : null
     } catch {
         droppedUser.value = null
     }
@@ -373,7 +527,7 @@ function setSeriesShiftData(data: any) {
 function droppedUserHasQualificationForCraft(user: any) {
     if (user?.craft_universally_applicable) return true
     if (!user?.shift_qualifications?.length) return false
-    const cid = props.shift?.craft?.id ?? props.craftId
+    const cid = props.shift?.craft?.id ?? props.shift?.craftId ?? props.craftId
     return user.shift_qualifications.some((q: any) => q.pivot && (q.pivot.craft_id === cid))
 }
 
@@ -422,13 +576,13 @@ function openMultipleShiftQualificationSlotsAvailableModal(user: any, slots: any
     showMultipleShiftQualificationSlotsAvailableModal.value = true
 }
 
-function closeMultipleShiftQualificationSlotsAvailableModal(user?: any, selectedShiftQualificationId?: number) {
+function closeMultipleShiftQualificationSlotsAvailableModal(user?: any, selectedShiftQualificationId?: number, closeOnButton?: boolean, isOverbooked?: boolean) {
     showMultipleShiftQualificationSlotsAvailableModal.value = false
     showMultipleShiftQualificationSlotsAvailableModalSlots.value = null
     showMultipleShiftQualificationSlotsAvailableModalDroppedUser.value = null
 
     if (user && selectedShiftQualificationId) {
-        assignUser(user, selectedShiftQualificationId)
+        assignUser(user, selectedShiftQualificationId, !!isOverbooked)
     }
 }
 
@@ -436,34 +590,44 @@ function saveUser() {
     const user = droppedUser.value
     if (!user) return
 
-    const craftId = props.shift?.craft?.id ?? props.craftId
-    const qualificationsForCraft = (user.shift_qualifications || []).filter((q: any) => q.pivot && q.pivot.craft_id === craftId)
+    const targetCraftId = getTargetCraftIdFromShift()
+    if (targetCraftId == null) return
 
-    if (!user.craft_universally_applicable) {
-        if (!user.craft_ids || !user.craft_ids.includes(craftId)) {
-            const label = user.type === 0
-                ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
-                : user.type === 1
-                    ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
-                    : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
+    // 1) Craft-Zulassung (universal => immer ok)
+    if (!personCanWorkOnCraft(user, targetCraftId)) {
+        const label = user.type === 0
+            ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
+            : user.type === 1
+                ? (proxy as any)?.$t?.('Freelancer') ?? 'Freelancer'
+                : (proxy as any)?.$t?.('ServiceProvider') ?? 'ServiceProvider'
 
-            emit('dropFeedback',
-                (proxy as any)?.$t?.('{0} cannot be assigned to shifts of this craft.', [label]) ??
-                `${label} cannot be assigned to shifts of this craft.`
-            )
-            return
-        }
+        emit('dropFeedback',
+            (proxy as any)?.$t?.('{0} cannot be assigned to shifts of this craft.', [label]) ??
+            `${label} cannot be assigned to shifts of this craft.`
+        )
+        return
     }
 
+    // 2) Already assigned?
     if (droppedUserAlreadyWorksOnShift(user)) {
         dropFeedbackUserAlreadyWorksOnShift(user.type)
         return
     }
-    if (droppedUserHasNoQualifications(user)) {
-        dropFeedbackUserHasNoQualifications(user.type)
+
+    // 3) Slots/Qualifikationen prüfen
+    const requiredIds = requiredQualificationIdsForShift()
+
+    // wenn die Schicht keine Slots hat (alle 0 / leer), bleibt das Verhalten wie bisher:
+    // -> keine offene Funktion
+    if (requiredIds.length === 0) {
+        dropFeedbackNoSlotsForQualification(user.type)
         return
     }
-    if (qualificationsForCraft.length === 0) {
+
+    // User muss passende Quali haben (bei universal: craft-unabhängig matchen!)
+    const matches = matchingUserQualisForShift(user, targetCraftId)
+
+    if (!matches.length) {
         const label = user.type === 0
             ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
             : user.type === 1
@@ -477,19 +641,27 @@ function saveUser() {
         return
     }
 
-    // Check if there are available slots for any of the user's qualifications
-    const qualificationsWithAvailableSlots = qualificationsForCraft.filter((q: any) => {
+    // 4) freie Slots je Quali prüfen
+    const qualificationsWithAvailableSlots = matches.filter((q: any) => {
         const qualificationData = computedShiftsQualificationsWithWorkerCount.value.find(
             (sq: any) => sq.shift_qualification_id === q.id
         )
-        // If no data found or maxWorkerCount is 0, no slots available
         if (!qualificationData || qualificationData.maxWorkerCount === 0) return false
-        // Check if there are free slots (workerCount < maxWorkerCount)
-        return qualificationData.workerCount < qualificationData.maxWorkerCount
+        return qualificationData.regularWorkerCount < qualificationData.maxWorkerCount
     })
 
-    // If no qualifications have available slots, show error message
-    if (qualificationsWithAvailableSlots.length === 0) {
+    // Volle Funktionen sind bei aktivierter Überbuchung trotzdem wählbar (als Überbuchung)
+    const overbookableQualifications = allowOverbooking.value
+        ? matches.filter((q: any) => {
+            const qualificationData = computedShiftsQualificationsWithWorkerCount.value.find(
+                (sq: any) => sq.shift_qualification_id === q.id
+            )
+            if (!qualificationData || qualificationData.maxWorkerCount === 0) return false
+            return qualificationData.regularWorkerCount >= qualificationData.maxWorkerCount
+        })
+        : []
+
+    if (qualificationsWithAvailableSlots.length === 0 && overbookableQualifications.length === 0) {
         const label = user.type === 0
             ? (proxy as any)?.$t?.('Employee') ?? 'Employee'
             : user.type === 1
@@ -503,15 +675,48 @@ function saveUser() {
         return
     }
 
-    if (qualificationsWithAvailableSlots.length === 1) {
+    // Auto-Zuweisung nur bei genau einer regulären Option ohne Überbuchungs-Alternative.
+    // Sobald eine Überbuchung im Spiel ist, muss das Auswahlmodal erscheinen.
+    if (qualificationsWithAvailableSlots.length === 1 && overbookableQualifications.length === 0) {
         assignUser(user, qualificationsWithAvailableSlots[0].id)
         return
     }
 
-    openMultipleShiftQualificationSlotsAvailableModal(user, qualificationsWithAvailableSlots)
+    openMultipleShiftQualificationSlotsAvailableModal(user, [
+        ...qualificationsWithAvailableSlots.map((q: any) => ({ ...q, isOverbooked: false })),
+        ...overbookableQualifications.map((q: any) => ({ ...q, isOverbooked: true })),
+    ])
 }
 
-function assignUser(user: any, shiftQualificationId: number) {
+
+function resolveCraftAbbreviationForAssignment(user: any, shiftQualificationId: number): string {
+    const targetCraftId = getTargetCraftIdFromShift()
+    const userQualis = Array.isArray(user?.shift_qualifications)
+        ? user.shift_qualifications
+        : Object.values(user?.shift_qualifications || {})
+
+    // Prüfe ob die Qualifikation direkt zum Schicht-Craft gehört
+    const directMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        Number(uq?.pivot?.craft_id) === Number(targetCraftId)
+    )
+    if (directMatch) return user.craft_abbreviation ?? ''
+
+    // Sonst: Qualifikation kommt über ein universelles Craft
+    const universalMatch = userQualis.find((uq: any) =>
+        Number(uq?.id) === shiftQualificationId &&
+        universalCraftIds.value.has(Number(uq?.pivot?.craft_id))
+    )
+    if (universalMatch) {
+        const uCraft = craftsById.value[Number(universalMatch.pivot.craft_id)]
+        return uCraft?.abbreviation ?? user.craft_abbreviation ?? ''
+    }
+
+    return user.craft_abbreviation ?? ''
+}
+
+function assignUser(user: any, shiftQualificationId: number, isOverbooked: boolean = false) {
+    const craftAbbr = resolveCraftAbbreviationForAssignment(user, shiftQualificationId)
     axios.post(
         route('shift.assignUserByType', { shift: props.shift.id }),
         {
@@ -519,18 +724,45 @@ function assignUser(user: any, shiftQualificationId: number) {
             userType: user.type,
             shiftQualificationId,
             seriesShiftData: seriesShiftData.value,
-            craft_abbreviation: user.craft_abbreviation
+            craft_abbreviation: craftAbbr,
+            isOverbooked
         }
     ).then(() => {
-        // Optimistisch GQ-Zähler erhöhen, wenn Nutzer geforderte globale Qualifikationen besitzt
-        adjustDeltaForUser(user, +1)
         emit('desiresReload', user.id, user.type, seriesShiftData.value || undefined)
+    }).catch(() => {
+        emit('dropFeedback',
+            (proxy as any)?.$t?.('Saving failed') ?? 'Saving failed'
+        )
     })
 }
+
 
 function handleShiftAndEventForMultiEdit(checked: boolean, shift: any, event: any) {
     emit('handleShiftAndEventForMultiEdit', checked, shift, event)
 }
 
-/* ---------------- Expose in Template (script setup exportiert automatisch) ---------------- */
+const hasUserHighlightSelection = computed(() => {
+    return !!props.highlightMode && props.highlightedId != null && props.highlightedType != null
+})
+
+const hasShiftHighlightSelection = computed(() => {
+    return !!props.highlightMode && props.highlightedShiftId != null
+})
+
+const hasAnyHighlightSelection = computed(() => {
+    return hasUserHighlightSelection.value || hasShiftHighlightSelection.value
+})
+
+const isThisShiftHighlighted = computed(() => {
+    return !!props.highlightMode && props.highlightedShiftId != null && props.shift?.id === props.highlightedShiftId
+})
+
+const matchesUserHighlight = computed(() => {
+    if (!hasUserHighlightSelection.value) return false
+    return isIdHighlighted(props.highlightedId, props.highlightedType)
+})
+
+const matchesAnyHighlight = computed(() => {
+    return isThisShiftHighlighted.value || matchesUserHighlight.value
+})
 </script>

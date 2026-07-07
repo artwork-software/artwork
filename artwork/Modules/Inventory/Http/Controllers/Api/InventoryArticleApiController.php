@@ -42,7 +42,7 @@ class InventoryArticleApiController extends Controller
             $subCategory = InventorySubCategory::find($subCategoryId);
         }
 
-        $articles = $this->articleService->getArticleList($category, $subCategory, $search, $perPage);
+        $articles = $this->articleService->getArticleList($category, $subCategory, $search);
 
         $paginatedDTO = PaginatedInventoryArticleDTO::fromPaginator($articles);
 

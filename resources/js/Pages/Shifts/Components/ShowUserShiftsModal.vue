@@ -325,11 +325,129 @@
                     </section>
                 </div>
 
+                <!-- Regelverstöße -->
+                <section v-if="(can('can plan shifts') || hasAdminRole()) && user.type === 0" class="space-y-3 mt-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                {{ t('Rule violations') }}
+                            </h3>
+                            <p class="text-[11px] text-zinc-400 mt-0.5">
+                                {{ t('Rule violations for this person on this day.') }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                            @click="showAddViolationModal = true"
+                        >
+                            <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
+                            <span>{{ t('Add rule violation') }}</span>
+                        </button>
+                    </div>
+
+                    <div v-if="violationsForDay.length" class="space-y-2">
+                        <div
+                            v-for="violation in violationsForDay"
+                            :key="violation.id"
+                            class="flex items-center justify-between rounded-lg border border-zinc-100 bg-white px-3 py-2 cursor-pointer hover:bg-zinc-50/80 transition-colors"
+                            @click="openViolationEditModal(violation)"
+                        >
+                            <div class="flex items-center gap-2 text-xs text-zinc-700">
+                                <span
+                                    class="inline-block h-2.5 w-2.5 rounded-full"
+                                    :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
+                                ></span>
+                                <span class="font-medium">{{ violation.shift_rule?.name }}</span>
+                                <span
+                                    :class="violation.severity === 'error' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
+                                    class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
+                                >
+                                    {{ violation.severity === 'error' ? t('Error') : t('Warning') }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span v-if="violation.is_manual" class="text-[10px] text-zinc-400">
+                                    {{ t('Manual violation') }}
+                                </span>
+                                <span v-if="violation.compensation_days" class="text-[10px] text-emerald-600">
+                                    {{ violation.compensation_days }} {{ t('Days') }}
+                                </span>
+                                <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-zinc-400" />
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        v-else
+                        class="flex items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-3 text-xs text-zinc-500"
+                    >
+                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
+                        <span>{{ t('No rule violations for this day.') }}</span>
+                    </div>
+                </section>
+
+                <!-- Compensation day off info -->
+                <section v-if="compensationDayForDate.length && (can('can plan shifts') || hasAdminRole())" class="mt-5">
+                    <div
+                        v-for="compDay in compensationDayForDate"
+                        :key="compDay.id"
+                        class="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 mb-2"
+                    >
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-block h-2 w-2 rounded-full bg-teal-500"></span>
+                            <span class="text-xs font-semibold text-teal-800">
+                                {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
+                                <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
+                                    ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
+                                </template>
+                            </span>
+                        </div>
+                        <div class="text-xs text-teal-700">
+                            <span class="font-medium">{{ t('Compensation day off for:') }}</span>
+                            {{ compDay.violation?.shift_rule?.name || t('Manual') }}
+                        </div>
+                        <div v-if="compDay.granted_by_user" class="text-xs text-teal-600 mt-0.5">
+                            <span class="font-medium">{{ t('Assigned by') }}:</span>
+                            {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
+                        </div>
+                        <button
+                            type="button"
+                            class="mt-1 text-[11px] text-teal-600 hover:text-teal-800 underline"
+                            @click="revokeCompensationDay(compDay.id)"
+                        >
+                            {{ t('Revoke') }}
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Grant compensation day button -->
+                <section
+                    v-if="!compensationDayForDate.length && user.type === 0 && (can('can plan shifts') || hasAdminRole())"
+                    class="mt-3"
+                >
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2.5 py-1 text-[11px] text-teal-700 hover:border-teal-400 hover:text-teal-800 transition-colors"
+                        @click="showGrantCompensationModal = true"
+                    >
+                        <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
+                        <span>{{ t('Grant compensation day') }}</span>
+                    </button>
+                </section>
+
                 <!-- Rechte Spalte: Availability + Kommentar -->
                 <div class="space-y-6 mt-5">
+                    <!-- Info: Availability locked by compensation day -->
+                    <section
+                        v-if="compensationDayForDate.length && (user.type === 0 || user.type === 1)"
+                        class="rounded-xl border border-teal-200 bg-teal-50/60 px-3.5 py-3 text-xs text-teal-700"
+                    >
+                        {{ t('Availability cannot be changed — compensation day off granted.') }}
+                    </section>
+
                     <!-- Verfügbarkeits-Typ (nur intern & extern) -->
                     <section
-                        v-if="user.type === 0 || user.type === 1"
+                        v-if="(user.type === 0 || user.type === 1) && !compensationDayForDate.length"
                         class="space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3.5 py-3"
                     >
                         <div class="flex items-center justify-between gap-2">
@@ -391,6 +509,24 @@
                                 </ListboxOption>
                             </ListboxOptions>
                         </Listbox>
+                    </section>
+
+                    <!-- DP-18: "Frei" als ganzer oder halber freier Tag (Vormittag/Nachmittag) -->
+                    <section v-if="checked && checked.type === 'FREE_WORK'"
+                             class="space-y-2 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
+                        <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                            {{ t('Free day type') }}
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            <label v-for="opt in freeDayPartOptions" :key="opt.value"
+                                   class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm cursor-pointer"
+                                   :class="freeDayPart === opt.value
+                                       ? 'border-artwork-buttons-create text-artwork-buttons-create bg-artwork-buttons-create/5'
+                                       : 'border-zinc-200 text-zinc-600'">
+                                <input type="radio" class="hidden" :value="opt.value" v-model="freeDayPart" />
+                                {{ t(opt.label) }}
+                            </label>
+                        </div>
                     </section>
 
                     <!-- Kommentar -->
@@ -509,6 +645,93 @@
             @created="handleSeriesUpdated"
             @updated="handleSeriesUpdated"
         />
+
+        <AddManualViolationModal
+            v-if="showAddViolationModal"
+            :user-id="user.element.id"
+            :date="day.withoutFormat"
+            :available-rules="availableRulesForUser"
+            @close="showAddViolationModal = false"
+            @created="handleViolationCreated"
+        />
+
+        <ViolationEditModal
+            v-if="showViolationEditModal && selectedViolation"
+            :violation="selectedViolation"
+            :compensation-period="user.compensation_period || 0"
+            @close="showViolationEditModal = false"
+            @updated="handleViolationUpdated"
+        />
+
+        <GrantCompensationDayModal
+            v-if="showGrantCompensationModal"
+            :user-id="user.element.id"
+            :preselected-date="day.withoutFormat"
+            :user-name="user.element.first_name + ' ' + user.element.last_name"
+            @close="showGrantCompensationModal = false"
+            @granted="handleCompensationGranted"
+        />
+
+        <!-- Warnung: Person aus startenden Schichten entfernen / individuelle Zeiten löschen -->
+        <ArtworkBaseModal
+            v-if="showAvailabilityCleanupModal"
+            :title="t('Change availability status')"
+            :description="t('Should the person also be removed from all shifts on this day and their individual times deleted?')"
+            @close="showAvailabilityCleanupModal = false"
+        >
+            <div class="mt-4 space-y-4">
+                <div v-if="cleanupShifts.length">
+                    <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-2">
+                        {{ t('Assigned shifts') }}
+                    </h3>
+                    <ul class="space-y-1.5">
+                        <li
+                            v-for="shift in cleanupShifts"
+                            :key="`shift-${shift.pivot_id}`"
+                            class="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+                        >
+                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                            <span class="font-medium">{{ shift.start }} - {{ shift.end }}</span>
+                            <span v-if="shift.event_name" class="text-zinc-500 truncate">· {{ shift.event_name }}</span>
+                            <span v-if="shift.craft_abbreviation" class="text-zinc-400">· {{ shift.craft_abbreviation }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div v-if="cleanupIndividualTimes.length">
+                    <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-2">
+                        {{ t('Individual times') }}
+                    </h3>
+                    <ul class="space-y-1.5">
+                        <li
+                            v-for="it in cleanupIndividualTimes"
+                            :key="`it-${it.id}`"
+                            class="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+                        >
+                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                            <span v-if="it.title" class="font-medium truncate">{{ it.title }}</span>
+                            <span v-if="it.start_time || it.end_time" class="text-zinc-500">
+                                · {{ it.start_time }} - {{ it.end_time }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button type="button" class="ui-button-cancel" @click="keepShiftsAndSetStatus">
+                    {{ t('No, only change status') }}
+                </button>
+                <button
+                    type="button"
+                    class="ui-button-add"
+                    :disabled="cleanupProcessing"
+                    @click="confirmCleanupAndSetStatus"
+                >
+                    {{ t('Yes, remove') }}
+                </button>
+            </div>
+        </ArtworkBaseModal>
     </ArtworkBaseModal>
 </template>
 
@@ -533,9 +756,13 @@ import SingleShiftInShiftOverviewUser from '@/Pages/Shifts/Components/SingleShif
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import IndividualTimeSeriesModal from '@/Pages/Shifts/Components/IndividualTimeSeriesModal.vue';
+import AddManualViolationModal from '@/Pages/Shifts/Components/AddManualViolationModal.vue';
+import ViolationEditModal from '@/Pages/Shifts/Components/ViolationEditModal.vue';
+import GrantCompensationDayModal from '@/Pages/Shifts/Components/GrantCompensationDayModal.vue';
 import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
 import { useLegalBreak } from '@/Composeables/useLegalBreak';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { usePermission } from '@/Composeables/Permission.js';
 
 defineOptions({
     name: 'ShowUserShiftsModal',
@@ -559,7 +786,8 @@ const props = defineProps({
 const emit = defineEmits(['closed', 'delete', 'desiresReload']);
 
 const { t } = useI18n();
-const page = usePage(); // aktuell nicht genutzt, aber da, falls später benötigt
+const page = usePage();
+const { can, hasAdminRole } = usePermission(page.props);
 
 // Verfügbarkeits-Typen
 const vacationTypes = ref([
@@ -568,6 +796,14 @@ const vacationTypes = ref([
     { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE' },
     { name: 'Frei', type: 'FREE_WORK' },
 ]);
+
+// DP-18: Ganzer/Halber freier Tag für den "Frei"-Status
+const freeDayPart = ref('full');
+const freeDayPartOptions = [
+    { value: 'full', label: 'Full free day' },
+    { value: 'morning', label: 'Half free day (morning)' },
+    { value: 'afternoon', label: 'Half free day (afternoon)' },
+];
 
 const checked = ref(null);
 const vacationTypeBeforeUpdate = ref(null);
@@ -582,6 +818,13 @@ const showConfirmDeleteModal = ref(false);
 const wantedShiftId = ref(null);
 const wantedUserId = ref(null);
 
+// Warnung beim Setzen von "Frei"/"Nicht Verfügbar" trotz aktiver Schichtzuweisung/Zeiten.
+// Die Listen werden autoritativ vom Backend befüllt (nicht aus dem evtl. veralteten Frontend-State).
+const showAvailabilityCleanupModal = ref(false);
+const cleanupProcessing = ref(false);
+const cleanupShifts = ref([]);
+const cleanupIndividualTimes = ref([]);
+
 const showRequestWorkTimeChangeModal = ref(false);
 const selectedShift = ref(null);
 
@@ -591,6 +834,48 @@ const activeSeriesSubject = ref(null);
 
 // Edit-Modus-Flag (bisher nicht verwendet, aber Logik bleibt erhalten)
 const editMode = ref(false);
+
+// Violations
+const showAddViolationModal = ref(false);
+const showViolationEditModal = ref(false);
+const selectedViolation = ref(null);
+
+// Compensation day offs
+const showGrantCompensationModal = ref(false);
+
+const compensationDayForDate = computed(() => {
+    const dayOffs = props.user?.compensation_day_offs?.[props.day.withoutFormat];
+    if (!dayOffs) return [];
+    return Array.isArray(dayOffs) ? dayOffs : Object.values(dayOffs);
+});
+
+const violationsForDay = computed(() => {
+    const violations = props.user?.violations?.[props.day.withoutFormat];
+    if (!violations) return [];
+    return Array.isArray(violations) ? violations : Object.values(violations);
+});
+
+const availableRulesForUser = ref([]);
+
+function openViolationEditModal(violation) {
+    selectedViolation.value = violation;
+    showViolationEditModal.value = true;
+}
+
+function handleViolationCreated() {
+    emit('desiresReload');
+}
+
+function handleViolationUpdated() {
+    showViolationEditModal.value = false;
+    selectedViolation.value = null;
+    emit('desiresReload');
+}
+
+function handleCompensationGranted() {
+    showGrantCompensationModal.value = false;
+    emit('desiresReload');
+}
 
 // Kommentar
 const shiftPlanComment = ref(
@@ -702,7 +987,7 @@ function dotClassForType(type) {
 }
 
 // Initialer Vacation-Type
-onMounted(() => {
+onMounted(async () => {
     const vacation = props.user.vacations?.find(
         (v) => v.date === props.day.withoutFormat,
     );
@@ -713,9 +998,21 @@ onMounted(() => {
         );
         checked.value = vacationType ?? vacationTypes.value[0];
         vacationTypeBeforeUpdate.value = vacationType ?? vacationTypes.value[0];
+        freeDayPart.value = vacation.day_part ?? 'full';
     } else {
         checked.value = vacationTypes.value[0];
         vacationTypeBeforeUpdate.value = vacationTypes.value[0];
+        freeDayPart.value = 'full';
+    }
+
+    // Load active rules for manual violation creation
+    if (can('can plan shifts') || hasAdminRole()) {
+        try {
+            const response = await axios.get(route('shift-rules.active'));
+            availableRulesForUser.value = response.data ?? [];
+        } catch {
+            // silently ignore
+        }
     }
 });
 
@@ -735,21 +1032,32 @@ function closeSeriesModal() {
 }
 
 function handleSeriesUpdated() {
-    router.reload({
-        only: ['usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts'],
-    });
+    emit('desiresReload');
     closeSeriesModal();
 }
 
-function deleteIndividualTimeById(individualTime) {
-    if (individualTime.id) {
-        router.delete(
-            route('delete.individualTimes', { individualTime }),
-            {
-                preserveScroll: true,
-                preserveState: false,
-            },
-        );
+function removeIndividualTimeFromModal(individualTimeId) {
+    props.user.individual_times = (props.user.individual_times || []).filter(
+        (individualTime) => individualTime.id !== individualTimeId,
+    );
+    originalIndividualTimes.value = originalIndividualTimes.value.filter(
+        (individualTime) => individualTime.id !== individualTimeId,
+    );
+}
+
+async function deleteIndividualTimeById(individualTime) {
+    const individualTimeId = individualTime?.id;
+
+    if (!individualTimeId) {
+        return;
+    }
+
+    try {
+        await axios.delete(route('delete.individualTimes', { individualTime: individualTimeId }));
+        removeIndividualTimeFromModal(individualTimeId);
+        emit('desiresReload');
+    } catch {
+        // Keep the current modal state if the delete request fails.
     }
 }
 
@@ -758,6 +1066,11 @@ const shiftsForDay = computed(() => {
         shift.days_of_shift?.includes(props.day.fullDay),
     );
 });
+
+// "Frei"/"Nicht Verfügbar" sind die Status, die eine Bereinigung erfordern können.
+function isBlockingAvailabilityStatus() {
+    return checked.value?.type === 'FREE_WORK' || checked.value?.type === 'NOT_AVAILABLE';
+}
 
 function addIndividualTime() {
     if (!props.user.individual_times) {
@@ -862,7 +1175,19 @@ function sendIndividualTimes() {
         });
 }
 
+function revokeCompensationDay(id) {
+    router.post(route('compensation-day-offs.revoke', { compensationDayOff: id }), {}, {
+        preserveScroll: true,
+        onSuccess: () => emit('desiresReload'),
+    });
+}
+
 function sendCheckVacation() {
+    if (compensationDayForDate.value.length > 0) {
+        closeModal(true);
+        return;
+    }
+
     if (props.user.type === 0) {
         router.patch(
             route('user.check.vacation', { user: props.user.element.id }),
@@ -870,16 +1195,23 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
+                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+                // daher hier nie automatisch detachen.
+                remove_from_shifts: false,
             },
             {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },
         );
-    } else if (props.user.type === 1) {
+    } else if (props.user.type === 2) {
         router.patch(
             route('service_provider.check.vacation', {
                 service_provider: props.user.element.id,
@@ -888,17 +1220,47 @@ function sendCheckVacation() {
                 checked: checked.value,
                 day: props.day.fullDay,
                 vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
+                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+                // daher hier nie automatisch detachen.
+                remove_from_shifts: false,
             },
             {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },
         );
     } else {
-        closeModal(false);
+        router.patch(
+            route('freelancer.check.vacation', {
+                freelancer: props.user.element.id,
+            }),
+            {
+                checked: checked.value,
+                day: props.day.fullDay,
+                vacationTypeBeforeUpdate: vacationTypeBeforeUpdate.value,
+                dayPart: checked.value?.type === 'FREE_WORK' ? freeDayPart.value : null,
+                // Schicht-Entfernung wird ausschließlich über die Rückfrage gesteuert,
+                // daher hier nie automatisch detachen.
+                remove_from_shifts: false,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
+                    closeModal(true);
+                },
+            },
+        );
     }
 }
 
@@ -928,7 +1290,86 @@ function checkVacation() {
         }
     }
 
+    // Bei "Frei"/"Nicht Verfügbar" autoritativ im Backend prüfen, ob an dem Tag aktive
+    // Schichtzuweisungen oder individuelle Zeiten existieren. Falls ja -> Rückfrage.
+    if (isBlockingAvailabilityStatus()) {
+        cleanupProcessing.value = true;
+        axios
+            .get(route('shift.dayAssignments'), {
+                params: {
+                    model_type: props.user.type,
+                    model_id: props.user.element.id,
+                    date: props.day.withoutFormat,
+                },
+            })
+            .then(({ data }) => {
+                cleanupProcessing.value = false;
+                cleanupShifts.value = data.shifts ?? [];
+                cleanupIndividualTimes.value = data.individual_times ?? [];
+
+                if (cleanupShifts.value.length || cleanupIndividualTimes.value.length) {
+                    showAvailabilityCleanupModal.value = true;
+                } else {
+                    sendIndividualTimes();
+                }
+            })
+            .catch(() => {
+                // Prüfung fehlgeschlagen: Status trotzdem setzen statt zu blockieren.
+                cleanupProcessing.value = false;
+                sendIndividualTimes();
+            });
+        return;
+    }
+
     sendIndividualTimes();
+}
+
+// "Nein, nur Status ändern": Schichten/Zeiten bleiben erhalten, regulärer Speicherablauf.
+function keepShiftsAndSetStatus() {
+    showAvailabilityCleanupModal.value = false;
+    sendIndividualTimes();
+}
+
+// "Ja, entfernen": Person aus den startenden Schichten entfernen und die startenden
+// individuellen Zeiten löschen, danach den Status setzen.
+function confirmCleanupAndSetStatus() {
+    cleanupProcessing.value = true;
+
+    const shiftPivotIds = cleanupShifts.value
+        .map((shift) => shift.pivot_id)
+        .filter((id) => id != null);
+    const individualTimeIds = cleanupIndividualTimes.value
+        .map((it) => it.id)
+        .filter((id) => id != null);
+
+    axios
+        .post(route('shift.removeWorkerFromDay'), {
+            model_type: props.user.type,
+            model_id: props.user.element.id,
+            shift_pivot_ids: shiftPivotIds,
+            individual_time_ids: individualTimeIds,
+        })
+        .then(() => {
+            // Lokalen Zustand bereinigen, damit das Zurücksetzen beim Schließen die gelöschten
+            // Zeiten nicht wiederherstellt.
+            const deletedIds = new Set(individualTimeIds);
+            props.user.individual_times = (props.user.individual_times || []).filter(
+                (it) => !deletedIds.has(it.id),
+            );
+            originalIndividualTimes.value = JSON.parse(
+                JSON.stringify(props.user.individual_times),
+            );
+            props.user.element.shifts = (props.user.element.shifts || []).filter(
+                (shift) => !shiftPivotIds.includes(shift.pivotId),
+            );
+
+            showAvailabilityCleanupModal.value = false;
+            cleanupProcessing.value = false;
+            sendCheckVacation();
+        })
+        .catch(() => {
+            cleanupProcessing.value = false;
+        });
 }
 
 function openRequestWorkTimeChangeModal(shift) {

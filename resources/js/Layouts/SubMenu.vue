@@ -75,9 +75,9 @@
     <!-- Static sidebar for desktop -->
     <div
         class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
-        :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'"
+        :class="isFullSideBar ? 'lg:w-88' : 'lg:w-16'"
     >
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-artwork-navigation-background">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-hidden bg-artwork-navigation-background">
             <!-- Brand -->
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
@@ -117,7 +117,7 @@
                                     :prefetch="item.prefetch"
                                     :aria-current="item.current ? 'page' : undefined"
                                     :class="[
-                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                       item.current
                                         ? 'bg-white/10 text-white'
@@ -140,7 +140,7 @@
                                         class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
                                         aria-hidden="true"
                                     />
-                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                    <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
 
                                 <!-- Menü-Eintrag -->
@@ -151,7 +151,7 @@
                                         :prefetch="item.prefetch"
                                         :aria-current="getSingleVisibleSubMenu(item).current ? 'page' : undefined"
                                         :class="[
-                                          'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                          'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
                                           isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                           getSingleVisibleSubMenu(item).current
                                             ? 'bg-white/10 text-white'
@@ -174,14 +174,48 @@
                                             class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"
                                         />
-                                        <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                        <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                     </Link>
+
+                                    <template v-else-if="isFullSideBar">
+                                        <div class="w-full flex items-center justify-start gap-3 px-2 rounded-lg min-h-10 py-1.5 select-none text-white">
+                                            <PropertyIcon
+                                                :name="item.icon"
+                                                :stroke-width="1.5"
+                                                class="size-6 min-w-6 min-h-6 text-white"
+                                                aria-hidden="true"
+                                            />
+                                            <span class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
+                                        </div>
+                                        <ul class="ml-5 pl-2 border-l border-white/10 space-y-1">
+                                            <li v-for="subMenu in getVisibleSubMenus(item)" :key="subMenu.name">
+                                                <Link
+                                                    :href="subMenu.href"
+                                                    :aria-current="subMenu.current ? 'page' : undefined"
+                                                    :class="[
+                                                      'group flex items-center gap-3 rounded-lg min-h-9 py-1 px-2 text-sm select-none transition-colors',
+                                                      subMenu.current
+                                                        ? 'bg-white/10 text-white'
+                                                        : 'text-white/80 hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                                    ]"
+                                                >
+                                                    <PropertyIcon
+                                                        :name="subMenu.icon"
+                                                        :stroke-width="1.5"
+                                                        class="size-5 min-w-5 min-h-5"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(subMenu.name) }}</span>
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    </template>
 
                                     <div
                                         v-else
                                         :class="[
                                         'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
-                                        isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                        'justify-center px-0',
                                         item.current ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/10 hover:text-white'
                                       ]"
                                     >
@@ -227,7 +261,7 @@
                                     v-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
                                     :class="[
-                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                       item.current
                                         ? 'bg-gray-50/10 text-white'
@@ -239,7 +273,7 @@
                                         :stroke-width="1"
                                         class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
                                     />
-                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                    <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
 
                                 <!-- Falls subNavigation Einträge mit Menüs bekommt -->
@@ -512,6 +546,16 @@ const navigation = ref([
         prefetch: ['projects']
     },
     {
+        name: 'BI Dashboard',
+        href: route('bi.dashboard'),
+        icon: 'IconChartHistogram',
+        current: route().current('bi.dashboard'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: moduleIsVisible('business_intelligence') && usePage().props.canViewBiDashboard,
+        prefetch: false
+    },
+    {
         name: 'Calendar',
         href: '#',
         icon: 'IconCalendarClock',
@@ -533,14 +577,14 @@ const navigation = ref([
                 href: route('planning-event-calendar.index'),
                 icon: 'IconCalendarCog',
                 current: route().current('planning-event-calendar.index'),
-                has_permission: can('can see planning calendar') || is('artwork admin'),
+                has_permission: usePage().props.module_settings['planning_calendar'] !== false && (can('can see planning calendar') || is('artwork admin')),
             },
             {
                 name: 'Event Verifications',
                 href: route('event-verifications.index'),
                 icon: 'IconCalendarCheck',
-                current: route().current('event-verifications.index'),
-                has_permission: can('can see planning calendar | can edit planning calendar') || is('artwork admin'),
+                current: route().current('event-verifications.index') || route().current('event-verifications.sent'),
+                has_permission: usePage().props.canSeeEventVerifications,
             },
         ]
     },
@@ -562,11 +606,18 @@ const navigation = ref([
                 has_permission: can('can view shift plan') || is('artwork admin'),
             },
             {
+                name: 'Shift plan list view',
+                href: route('shifts.plan.list-view'),
+                icon: 'IconList',
+                current: route().current('shifts.plan.list-view'),
+                has_permission: can('can view shift plan') || is('artwork admin'),
+            },
+            {
                 name: 'My Operational plan',
                 href: route('user.operationPlan', usePage().props.auth.user.id),
                 icon: 'IconCalendarUser',
                 current: route().current('user.operationPlan'),
-                has_permission: moduleIsVisible('shift_plan'),
+                has_permission: moduleIsVisible('shift_plan') && (can('can view own roster') || is('artwork admin')),
             },
             /* routes to old page, now we have new shift templates in shift-admin-settings, maybe build in link to new page in admin settings or just leave it out
             {
@@ -610,6 +661,13 @@ const navigation = ref([
                 icon: 'IconCalendarCheck',
                 current: route().current('shifts.approvals.requests'),
                 has_permission: usePage().props.canSeeShiftPlanRequestedPlans,
+            },
+            {
+                name: 'Compensation days overview',
+                href: route('compensation-day-offs.dashboard'),
+                icon: 'IconCalendarOff',
+                current: route().current('compensation-day-offs.dashboard'),
+                has_permission: can('can plan shifts') || is('artwork admin'),
             },
         ]
     },
@@ -677,14 +735,40 @@ const navigation = ref([
         prefetch: false,
     },
     {
-        name: 'Contracts',
-        href: route('contracts.index'),
-        icon: 'IconFileText',
-        current: route().current('contracts.index'),
+        name: 'CRM',
+        href: route('crm.index'),
+        icon: 'IconAddressBook',
+        current: route().current('crm.*'),
         isMenu: false,
         showToolTipForItem: false,
-        has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules') || is('artwork admin')),
+        has_permission: moduleIsVisible('crm') && (can('can view crm') || is('artwork admin')),
         prefetch: false,
+    },
+    {
+        name: 'Documents',
+        href: '#',
+        icon: 'IconFileText',
+        current: route().current('contracts.index') || route().current('document-requests.index'),
+        isMenu: true,
+        showToolTipForItem: false,
+        has_permission: moduleIsVisible('contracts') && (can('view edit upload contracts | can see and download contract modules | can create document requests | can edit document requests') || is('artwork admin')),
+        prefetch: false,
+        subMenus: [
+            {
+                name: 'Contracts',
+                href: route('contracts.index'),
+                icon: 'IconFileText',
+                current: route().current('contracts.index'),
+                has_permission: can('view edit upload contracts | can see and download contract modules') || is('artwork admin')
+            },
+            {
+                name: 'Document requests',
+                href: route('document-requests.index'),
+                icon: 'IconFileDescription',
+                current: route().current('document-requests.index'),
+                has_permission: can('view edit upload contracts') || can('can create document requests') || can('can edit document requests') || is('artwork admin')
+            },
+        ]
     },
     {
         name: 'System',
@@ -694,7 +778,7 @@ const navigation = ref([
         isMenu: true,
         showToolTipForItem: false,
         prefetch: false,
-        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit') || is('artwork admin'),
+        has_permission: can('change tool settings | create, delete and update rooms | change project settings | change event settings | admin checklistTemplates | set.create_edit | set.delete | shift.settings_view_edit | crm manager | inventory.settings') || is('artwork admin'),
         subMenus: [
             {
                 name: 'Tool Settings',
@@ -711,11 +795,26 @@ const navigation = ref([
                 has_permission: is('artwork admin') || can('shift.settings_view_edit')
             },
             {
+                name: 'CRM Settings',
+                href: route('crm.settings.index'),
+                icon: 'IconAddressBook',
+                current: route().current('crm.settings.*'),
+                has_permission: can('crm manager') || is('artwork admin')
+            },
+            // Externe-Zugriff-Feature vorerst ausgeblendet (noch nicht ausgereift)
+            // {
+            //     name: 'External access settings',
+            //     href: route('settings.external-access.index'),
+            //     icon: 'IconAddressBook',
+            //     current: route().current('settings.external-access.*'),
+            //     has_permission: is('artwork admin')
+            // },
+            {
                 name: 'Inventory',
                 href: route('inventory-management.settings.category'),
                 icon: 'IconBuildingWarehouse',
                 current: route().current('inventory-management.settings.category'),
-                has_permission: is('artwork admin')
+                has_permission: is('artwork admin') || can('inventory.settings')
             },
             {
                 name: 'Material Sets',

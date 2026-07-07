@@ -71,8 +71,80 @@ return [
     'get_sum' => 'Amount received',
     'total_sum' => 'Total Amount',
     'total_days' => 'Total Days',
+    'total_daily_allowance' => 'Total Daily Allowance',
+    'breakfast_count' => 'Number of Breakfasts',
+    'breakfast_deduction_total' => 'Less Breakfast at Hotel',
+    'payout_per_diem' => 'Payout Per Diem',
+    'per_diem_number' => 'Per Diem Number',
+    'production' => 'Production',
+    'cost_bearer' => 'Cost Bearer',
+    'details' => 'Details',
+    'confirmation_title' => 'Confirmation of factual accuracy',
+    'confirmation_text' => 'It is hereby confirmed that the above-mentioned persons were active in the context of the production and that the meal allowances comply with the applicable guidelines.',
     'name_artist' => 'Name Artist',
-    'civil_name' => 'Civil Name',
+    'first_name' => 'First Name',
+    'last_name' => 'Last Name',
     'phone_number' => 'Phone Number',
     'position' => 'Position',
+
+    // Contract export translations
+    'contract_name' => 'Contract Name',
+    'contract_partner' => 'Contract Partner',
+    'project' => 'Project',
+    'contract_type' => 'Contract Type',
+    'company_type' => 'Legal Form',
+    'amount' => 'Amount',
+    'currency' => 'Currency',
+    'description' => 'Description',
+    'ksk_liable' => 'KSK-liable',
+    'ksk_amount' => 'KSK Amount',
+    'ksk_reason' => 'KSK Reason',
+    'resident_abroad' => 'Resident Abroad',
+    'foreign_tax' => 'Foreign Tax',
+    'foreign_tax_amount' => 'Foreign Tax Amount',
+    'foreign_tax_reason' => 'Foreign Tax Reason',
+    'foreign_tax_city' => 'Foreign Tax City',
+    'foreign_tax_country' => 'Foreign Tax Country',
+    'reverse_charge_amount' => 'Reverse Charge Amount',
+    'deadline_date' => 'Deadline',
+    'is_freed' => 'Released',
+    'has_power_of_attorney' => 'Has Power of Attorney',
+    'creator' => 'Creator',
+    'created_at' => 'Created At',
+    'yes' => 'Yes',
+    'no' => 'No',
+
+    'shift_plan' => [
+        'title'  => ':project staffing plan',
+        'period' => 'Period',
+
+        'sections' => [
+            'shifts'     => 'Shifts',
+            'work_hours' => 'Work hours',
+        ],
+
+        'subsections' => [
+            'internal' => 'internal',
+            'external' => 'external',
+            'total'    => 'Total',
+        ],
+
+        'columns' => [
+            'craft'      => 'Shift',
+            'date'       => 'Date',
+            'room'       => 'Room',
+            'start'      => 'Start',
+            'end'        => 'End time',
+            'duration'   => 'Total hours',
+            'break_time' => 'Break time',
+        ],
+
+        'symbols' => [
+            'sum' => '∑',
+        ],
+
+        'defaults' => [
+            'zero_duration' => '0 h 00 min',
+        ],
+    ],
 ];

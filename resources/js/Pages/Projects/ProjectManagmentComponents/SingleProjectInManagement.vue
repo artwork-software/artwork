@@ -23,10 +23,21 @@
                     <div
                         v-for="component in components"
                         :key="component.name"
-                        class="px-3 py-6 min-h-11 flex items-center"
+                        class="px-3 py-3 min-h-11 max-h-16 flex items-center"
                         :class="component.type === 'ActionsComponent' ? 'justify-end' : 'justify-start'"
                         @click="openProject(component, project)"
                     >
+
+                        <!-- Selection checkbox (only in selection mode, on the title column) -->
+                        <input
+                            v-if="selectionMode && canDelete && component.type === 'ProjectTitleComponent'"
+                            type="checkbox"
+                            :checked="selected"
+                            @click.stop
+                            @change="$emit('toggle-selection', project.id)"
+                            class="mr-3 h-4 w-4 shrink-0 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                            :aria-label="$t('Select project')"
+                        />
 
                         <!-- Visible content -->
                         <component
@@ -131,9 +142,11 @@ import BuilderShiftContactPersonsComponent from "@/Pages/Projects/BuilderCompone
 import BuilderRelevantDatesForShiftPlanningComponent from "@/Pages/Projects/BuilderComponents/BuilderRelevantDatesForShiftPlanningComponent.vue";
 import BuilderGeneralShiftInformationComponent from "@/Pages/Projects/BuilderComponents/BuilderGeneralShiftInformationComponent.vue";
 import BuilderProjectBudgetDeadlineComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectBudgetDeadlineComponent.vue";
+import BuilderProjectPeriodComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectPeriodComponent.vue";
 import BuilderProjectAttributesComponent from "@/Pages/Projects/BuilderComponents/BuilderProjectAttributesComponent.vue";
 import BuilderBudgetInformations from "@/Pages/Projects/BuilderComponents/BuilderBudgetInformation.vue";
 import BuilderArtistNameDisplayComponent from "@/Pages/Projects/BuilderComponents/BuilderArtistNameDisplayComponent.vue";
+import BuilderBiKeyFiguresDisplay from "@/Pages/Projects/BuilderComponents/BuilderBiKeyFiguresDisplay.vue";
 import { computed, nextTick, ref } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import BuilderTextField from "@/Pages/Projects/BuilderComponents/BuilderTextField.vue";
@@ -155,7 +168,15 @@ const props = defineProps({
     createSettings: { type: Object, required: true },
     fullProject: { type: Object, required: true },
     gridTemplateColumns: { type: String, required: true },
+    selectionMode: { type: Boolean, required: false, default: false },
+    selected: { type: Boolean, required: false, default: false },
 });
+
+const emit = defineEmits(['toggle-selection']);
+
+const canDelete = computed(() =>
+    role('artwork admin') || can('delete projects') || checkPermission(props.project, 'delete')
+);
 
 const menuVisible = ref(false);
 const menuPosition = ref({ x: 0, y: 0 });
@@ -174,12 +195,14 @@ const componentMapping = {
     BuilderRelevantDatesForShiftPlanningComponent,
     BuilderGeneralShiftInformationComponent,
     BuilderProjectBudgetDeadlineComponent,
+    BuilderProjectPeriodComponent,
     BuilderProjectAttributesComponent,
     BuilderBudgetInformations,
     BuilderTextField,
     BuilderCheckbox,
     BuilderDropDown,
     BuilderLink,
+    BuilderBiKeyFiguresDisplay,
 };
 
 const page = ref(route().params.page ?? 1);
@@ -199,12 +222,26 @@ const openMenu = (projectId, event) => {
     });
 };
 
-const closeEditProjectModal = () => (editingProject.value = false);
+const closeEditProjectModal = () => {
+    editingProject.value = false;
+    router.reload({
+        preserveScroll: true,
+        data: {
+            page: page.value,
+            entitiesPerPage: perPage.value,
+            query: query.value,
+        },
+    });
+};
 
 const openProject = (component, project) => {
-    if (component.type !== "ActionsComponent") {
-        router.visit(route("projects.tab", { project: project.id, projectTab: project.firstTabId }));
+    if (component.type === "ActionsComponent") return;
+    // In selection mode a row click toggles selection instead of navigating.
+    if (props.selectionMode) {
+        if (canDelete.value) emit("toggle-selection", project.id);
+        return;
     }
+    router.visit(route("projects.tab", { project: project.id, projectTab: project.firstTabId }));
 };
 
 const openProjectInNewTab = (project) => {

@@ -60,6 +60,38 @@
                     </div>
 
                     <div>
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input id="overtime_rule_active" aria-describedby="overtime-rule-description" v-model="userContractForm.overtime_rule_active" name="overtime_rule_active" type="checkbox" class="input-checklist" />
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="overtime_rule_active" class="font-medium text-gray-900 flex items-center">
+                                    {{ $t('Overtime rule active') }}
+                                    <ToolTipComponent
+                                        :icon="IconInfoCircle"
+                                        icon-size="h-4 w-4 ml-2"
+                                        :tooltip-text="$t('If activated, overtime must be compensated within the given number of days; otherwise it is shown in the \'Overtime\' tab as \'overtime to be paid out\' and must be booked out manually.')"
+                                        direction="bottom"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+                        <p v-if="userContractForm.errors.overtime_rule_active" class="text-red-500 mt-0.5 text-xs"></p>
+                    </div>
+
+                    <div v-if="userContractForm.overtime_rule_active">
+                        <BaseInput
+                            v-model="userContractForm.overtime_compensation_period"
+                            label="Compensation period (days)"
+                            type="number"
+                            :min="1"
+                            id="overtime_compensation_period" />
+                        <p v-if="userContractForm.errors.overtime_compensation_period" class="text-red-500 mt-0.5 text-xs"></p>
+                    </div>
+
+                    <div>
                         <BaseInput
                             v-model="userContractForm.free_sundays_per_season"
                             label="Free Sundays Per Season"
@@ -93,13 +125,21 @@
 
         <div v-else class="mt-5">
             <div class="mt-5">
+                <p class="text-xs text-gray-400 mb-2">
+                    {{ $t('Values applying to this user (may differ from the contract template).') }}
+                </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-700">
-                    <div><b>{{ $t('Free Full Days Per Week') }}:</b> {{ selectedContract?.free_full_days_per_week }}</div>
-                    <div><b>{{ $t('Free Half Days Per Week') }}:</b> {{ selectedContract?.free_half_days_per_week }}</div>
-                    <div><b>{{ $t('Special Day Rule Active') }}:</b> {{ selectedContract?.special_day_rule_active ? $t('Yes') : $t('No') }}</div>
-                    <div><b>{{ $t('Compensation Period (in days)') }}:</b> {{ selectedContract?.compensation_period }}</div>
-                    <div><b>{{ $t('Free Sundays Per Season') }}:</b> {{ selectedContract?.free_sundays_per_season }}</div>
-                    <div><b>{{ $t('Days Off First 26 Weeks') }}:</b> {{ Number(selectedContract?.days_off_first_26_weeks).toFixed(2) }}</div>
+                    <div><b>{{ $t('Free Full Days Per Week') }}:</b> {{ userContractForm.free_full_days_per_week }}</div>
+                    <div><b>{{ $t('Free Half Days Per Week') }}:</b> {{ userContractForm.free_half_days_per_week }}</div>
+                    <div><b>{{ $t('Special Day Rule Active') }}:</b> {{ userContractForm.special_day_rule_active ? $t('Yes') : $t('No') }}</div>
+                    <div><b>{{ $t('Compensation Period (in days)') }}:</b> {{ userContractForm.compensation_period }}</div>
+                    <div><b>{{ $t('Free Sundays Per Season') }}:</b> {{ userContractForm.free_sundays_per_season }}</div>
+                    <div><b>{{ $t('Days Off First 26 Weeks') }}:</b> {{ Number(userContractForm.days_off_first_26_weeks ?? 0).toFixed(2) }}</div>
+                    <div><b>{{ $t('Overtime rule active') }}:</b> {{ userContractForm.overtime_rule_active ? $t('Yes') : $t('No') }}</div>
+                    <div v-if="userContractForm.overtime_rule_active">
+                        <b>{{ $t('Period within which overtime must be reduced (days)') }}:</b>
+                        {{ userContractForm.overtime_compensation_period ?? '-' }}
+                    </div>
                 </div>
             </div>
 
@@ -151,8 +191,9 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import SelectUserContractModal from "@/Pages/Users/Components/SelectUserContractModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
-import {IconFileSearch, IconRepeat} from "@tabler/icons-vue";
+import {IconFileSearch, IconRepeat, IconInfoCircle} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const props = defineProps({
     userToEdit: {
@@ -194,6 +235,8 @@ const removePattern = () => {
     userContractForm.free_half_days_per_week = 0;
     userContractForm.special_day_rule_active = false;
     userContractForm.compensation_period = 0;
+    userContractForm.overtime_rule_active = false;
+    userContractForm.overtime_compensation_period = null;
     userContractForm.free_sundays_per_season = 0;
     userContractForm.days_off_first_26_weeks = 0.00;
     showConfirmRemoveContractModal.value = false;
@@ -208,6 +251,8 @@ const userContractForm = useForm({
     free_half_days_per_week: props.contract?.free_half_days_per_week,
     special_day_rule_active: props.contract?.special_day_rule_active,
     compensation_period: props.contract?.compensation_period,
+    overtime_rule_active: props.contract?.overtime_rule_active ?? false,
+    overtime_compensation_period: props.contract?.overtime_compensation_period,
     free_sundays_per_season: props.contract?.free_sundays_per_season,
     days_off_first_26_weeks: props.contract?.days_off_first_26_weeks
 })
@@ -218,6 +263,8 @@ const selectUserContract = (contract) => {
     userContractForm.free_half_days_per_week = contract.free_half_days_per_week;
     userContractForm.special_day_rule_active = contract.special_day_rule_active;
     userContractForm.compensation_period = contract.compensation_period;
+    userContractForm.overtime_rule_active = contract.overtime_rule_active ?? false;
+    userContractForm.overtime_compensation_period = contract.overtime_compensation_period;
     userContractForm.free_sundays_per_season = contract.free_sundays_per_season;
     userContractForm.days_off_first_26_weeks = contract.days_off_first_26_weeks;
     showSelectUserContractModal.value = false;
@@ -235,7 +282,7 @@ const selectedContract = computed(() => {
 
 
 const submit = () => {
-    userContractForm.patch(route('user-contract-settings.update-user', usePage().props.auth.user), {
+    userContractForm.patch(route('user-contract-settings.update-user', props.userToEdit), {
         onSuccess: () => {
             showVisualFeedback.value = true;
             setTimeout(() => {

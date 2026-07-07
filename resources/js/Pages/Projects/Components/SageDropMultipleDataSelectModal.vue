@@ -25,7 +25,7 @@ export default {
         }
     },
     props: ['cellData', 'cell', 'type'],
-    emits: ['close'],
+    emits: ['close', 'budget-updated'],
     computed: {
         checkIfAllSelected(){
             return this.cellData.sage_assigned_data.every(data => data.checked);
@@ -58,6 +58,7 @@ export default {
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
+                        this.$emit('budget-updated');
                         this.closeModal(false);
                     },
                 });
@@ -76,6 +77,7 @@ export default {
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
+                        this.$emit('budget-updated');
                         this.closeModal(false);
                     },
                 });

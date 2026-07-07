@@ -20,10 +20,17 @@
         <div class="mt-4 space-y-3">
             <div v-for="row in rows" :key="row.key" class="space-y-0.5">
                 <div
-                    class="text-[11px] font-semibold uppercase tracking-wide"
+                    class="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5"
                     :class="inSidebar ? 'text-zinc-200' : 'text-secondary'"
                 >
                     {{ row.label }}
+                    <ToolTipComponent
+                        v-if="row.key === 'budget_deadline'"
+                        :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
+                        direction="right"
+                        icon="IconInfoCircle"
+                        icon-size="h-3.5 w-3.5"
+                    />
                 </div>
 
                 <!-- default value rendering -->
@@ -42,14 +49,15 @@
                         :item="property"
                         :property="property"
                         :hide-x="true"
+                        :class="{'ring-2 ring-amber-400 rounded-full': property.is_main}"
                     />
                 </div>
 
                 <!-- state badge -->
                 <div v-else-if="row.type === 'state'" class="pt-0.5">
                     <span
-                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex text-white"
-                        :style="{ backgroundColor: row.value?.color ?? undefined }"
+                        class="rounded-full items-center font-medium px-3 py-1 text-sm inline-flex"
+                        :style="getStateStyles(row.value?.color)"
                     >
                         {{ row.value?.name ?? '' }}
                     </span>
@@ -79,10 +87,11 @@ import {can, is} from 'laravel-permission-to-vuejs';
 import ProjectCreateModal from '@/Layouts/Components/ProjectCreateModal.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import SidebarTagComponent from '@/Layouts/Components/SidebarTagComponent.vue';
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 
 export default defineComponent({
     name: 'ProjectBasicDataDisplayComponent',
-    components: {SidebarTagComponent, PropertyIcon, ProjectCreateModal},
+    components: {ToolTipComponent, SidebarTagComponent, PropertyIcon, ProjectCreateModal},
     props: {
         project: {
             type: Object,
@@ -161,15 +170,21 @@ export default defineComponent({
                     ...item,
                     key: `${type}-${item?.id ?? name}`,
                     name,
-                    color: item?.color ? item.color : '#ffffff'
+                    color: item?.color ? item.color : '#ffffff',
+                    is_main: !!item?.pivot?.is_main
                 };
             };
 
-            return [
+            const badges = [
                 ...(this.projectCategories ?? []).map((c) => toBadge(c, 'category')),
                 ...(this.projectGenres ?? []).map((g) => toBadge(g, 'genre')),
                 ...(this.projectSectors ?? []).map((s) => toBadge(s, 'sector')),
             ].filter(Boolean);
+
+            // Sort main items first
+            badges.sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0));
+
+            return badges;
         },
         rows() {
             const rows = [];
@@ -250,6 +265,30 @@ export default defineComponent({
         }
     },
     methods: {
+        getStateStyles(color) {
+            if (!color) return {};
+            const hexColor = color.startsWith('#') ? color : '#' + color;
+            return {
+                backgroundColor: hexColor,
+                color: this.getTextColorForHex(color)
+            };
+        },
+        getTextColorForHex(color) {
+            if (!color) return '#000000';
+            const hexMatch = color.match(/^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/);
+            if (hexMatch) {
+                let hex = hexMatch[1];
+                if (hex.length === 3) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                return luminance > 0.5 ? '#000000' : '#ffffff';
+            }
+            return '#ffffff';
+        },
         formatDate(dateValue) {
             if (!dateValue) {
                 return '';

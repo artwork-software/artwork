@@ -5,8 +5,10 @@ namespace Artwork\Modules\Inventory\Services;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
+use Artwork\Modules\Inventory\Services\TypeNumberGenerator;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
 use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Repositories\InventoryCategoryRepository;
@@ -16,8 +18,10 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
@@ -44,13 +48,17 @@ class InventoryArticleService
     public function getArticleList(
         ?InventoryCategory $category = null,
         ?InventorySubCategory $subCategory = null,
-        ?string $search = ''
+        ?string $search = '',
+        ?array $resolvedFilters = null,
+        ?array $resolvedTagIds = null,
+        ?int $statusId = null,
+        ?int $searchPropertyId = null
     ): LengthAwarePaginator {
-        $query = $this->buildArticleQuery($category, $subCategory, $search);
+        $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
 
         $query->with([
-            'category',
-            'subCategory',
+            'category.properties',
+            'subCategory.properties',
             'properties',
             'images' => function ($query): void {
                 $query->orderBy('is_main_image', 'desc')->orderBy('id');
@@ -63,26 +71,66 @@ class InventoryArticleService
         ]);
 
         // Property-Filter
-        $filters = json_decode(Request::get('filters', '[]'), true, 512, JSON_THROW_ON_ERROR);
+        $filters = $resolvedFilters ?? [];
         $query = $this->articleRepository->applyFilters($query, $filters);
 
-        // 🔹 Tag-Filter
-        $tagIds = Request::input('tag_ids', []);
-
-        if (!empty($tagIds) && is_array($tagIds)) {
-            $tagIds = array_filter(array_map('intval', $tagIds));
-
-            if (!empty($tagIds)) {
-                $query->whereHas('tags', function ($q) use ($tagIds): void {
-                    $q->whereIn('inventory_tags.id', $tagIds);
-                });
-            }
+        // Tag-Filter
+        $tagIds = $resolvedTagIds ?? [];
+        if (!empty($tagIds)) {
+            $query->whereHas('tags', function ($q) use ($tagIds): void {
+                $q->whereIn('inventory_tags.id', $tagIds);
+            });
         }
 
-        $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
+        // Status-Filter: nur Artikel mit mindestens Menge 1 bei diesem Status
+        if ($statusId !== null) {
+            $query->where(function (Builder $q) use ($statusId): void {
+                $q->whereHas('statusValues', function ($sq) use ($statusId): void {
+                    $sq->where('inventory_article_status_id', $statusId)
+                       ->where('inventory_article_status_values.value', '>=', 1);
+                })
+                ->orWhereHas('detailedArticleQuantities', function ($sq) use ($statusId): void {
+                    $sq->where('inventory_article_status_id', $statusId)
+                       ->where('quantity', '>=', 1);
+                });
+            });
+        }
 
+        // Cap page size to avoid loading the whole inventory incl. relations at once.
+        $perPage = min(max((int) Request::get('per_page', Request::integer('entitiesPerPage', 50)), 1), 100);
+        $this->applyStableOrdering($query, $category, $subCategory);
         return $query->paginate($perPage);
     }
+
+    protected function applyStableOrdering(Builder $query, ?InventoryCategory $category, ?InventorySubCategory $subCategory): void
+    {
+        // Wenn eine Subkategorie fix ist: innerhalb einfach nach Name
+        if ($subCategory) {
+            $query->orderBy('inventory_articles.name', 'asc')
+                ->orderBy('inventory_articles.id', 'asc');
+            return;
+        }
+
+        // Wenn Kategorie fix ist: nach Subkategorie-Name, dann Artikelname
+        if ($category) {
+            $query->leftJoin('inventory_sub_categories as isc', 'isc.id', '=', 'inventory_articles.inventory_sub_category_id')
+                ->select('inventory_articles.*')
+                ->orderBy('isc.name', 'asc')
+                ->orderBy('inventory_articles.name', 'asc')
+                ->orderBy('inventory_articles.id', 'asc');
+            return;
+        }
+
+        // Global: Kategorie -> Subkategorie -> Artikelname
+        $query->leftJoin('inventory_categories as ic', 'ic.id', '=', 'inventory_articles.inventory_category_id')
+            ->leftJoin('inventory_sub_categories as isc', 'isc.id', '=', 'inventory_articles.inventory_sub_category_id')
+            ->select('inventory_articles.*')
+            ->orderBy('ic.name', 'asc')
+            ->orderBy('isc.name', 'asc')
+            ->orderBy('inventory_articles.name', 'asc')
+            ->orderBy('inventory_articles.id', 'asc');
+    }
+
 
     /**
      * Build the base query for article list with filters
@@ -95,21 +143,29 @@ class InventoryArticleService
     protected function buildArticleQuery(
         ?InventoryCategory $category = null,
         ?InventorySubCategory $subCategory = null,
-        ?string $search = ''
-    ): Builder|HasMany {
-        $query = $this->articleRepository->baseQuery();
+        ?string $search = '',
+        ?int $searchPropertyId = null
+    ): Builder {
+        $query = $this->articleRepository->baseQuery()->withoutTrashed();
 
-        if ($search) {
-            $ids = $this->articleRepository->search($search)->pluck('id');
-            $query->whereIn('id', $ids);
+        // Kategorie/Subkategorie IMMER anwenden (auch bei Search)
+        if ($category) {
+            $query->where('inventory_articles.inventory_category_id', $category->id);
         }
 
-        if ($category && !$subCategory && !$search) {
-            return $category->articles();
+        if ($subCategory) {
+            $query->where('inventory_articles.inventory_sub_category_id', $subCategory->id);
         }
 
-        if ($category && $subCategory && !$search) {
-            return $subCategory->articles();
+        // Search anwenden (innerhalb der gewählten Kategorie/Subkategorie)
+        if (!empty($search)) {
+            // Ref 1.28: Wildcard- oder attribut-scoped Suche per SQL, sonst Meilisearch.
+            if ($searchPropertyId !== null || str_contains($search, '*')) {
+                $ids = $this->articleRepository->searchAdvanced($search, $searchPropertyId)->pluck('id');
+            } else {
+                $ids = $this->articleRepository->search($search)->pluck('id');
+            }
+            $query->whereIn('inventory_articles.id', $ids);
         }
 
         return $query;
@@ -180,6 +236,88 @@ class InventoryArticleService
         return $merged;
     }
 
+    /**
+     * Performante SQL-Aggregation der Status-Zähler über ALLE gefilterten Artikel.
+     */
+    public function getCountsByStatusAggregated(
+        ?InventoryCategory $category = null,
+        ?InventorySubCategory $subCategory = null,
+        ?string $search = '',
+        ?array $resolvedFilters = null,
+        ?array $resolvedTagIds = null,
+        ?int $searchPropertyId = null,
+    ): array {
+        $query = $this->buildArticleQuery($category, $subCategory, $search, $searchPropertyId);
+
+        $filters = $resolvedFilters ?? [];
+        $query = $this->articleRepository->applyFilters($query, $filters);
+
+        $tagIds = $resolvedTagIds ?? [];
+        if (!empty($tagIds)) {
+            $query->whereHas('tags', fn($q) => $q->whereIn('inventory_tags.id', $tagIds));
+        }
+
+        $articleIds = $query->select('inventory_articles.id');
+
+        // 1) Haupt-Artikel: Pivot-Tabelle summieren
+        $main = DB::table('inventory_article_status_values as sv')
+            ->join('inventory_article_statuses as s', 's.id', '=', 'sv.inventory_article_status_id')
+            ->whereIn('sv.inventory_article_id', $articleIds)
+            ->groupBy('s.id', 's.name', 's.color', 's.order')
+            ->select([
+                's.id',
+                's.name',
+                's.color',
+                's.order',
+                DB::raw('COALESCE(SUM(sv.value), 0) as total'),
+            ])
+            ->get()
+            ->keyBy('id');
+
+        // 2) Detail-Artikel: detailed_quantity summieren
+        $detail = DB::table('inventory_detailed_quantity_articles as dq')
+            ->join('inventory_article_statuses as s', 's.id', '=', 'dq.inventory_article_status_id')
+            ->whereIn('dq.inventory_article_id', $articleIds)
+            ->whereNotNull('dq.inventory_article_status_id')
+            ->groupBy('s.id', 's.name', 's.color', 's.order')
+            ->select([
+                's.id',
+                's.name',
+                's.color',
+                's.order',
+                DB::raw('COALESCE(SUM(dq.quantity), 0) as total'),
+            ])
+            ->get()
+            ->keyBy('id');
+
+        // 3) Mergen
+        $merged = [];
+        foreach ($main as $id => $row) {
+            $merged[$id] = [
+                'name'  => $row->name,
+                'color' => $row->color ?? '#ccc',
+                'order' => (int) ($row->order ?? 0),
+                'count' => (int) $row->total,
+            ];
+        }
+        foreach ($detail as $id => $row) {
+            if (!isset($merged[$id])) {
+                $merged[$id] = [
+                    'name'  => $row->name,
+                    'color' => $row->color ?? '#ccc',
+                    'order' => (int) ($row->order ?? 0),
+                    'count' => 0,
+                ];
+            }
+            $merged[$id]['count'] += (int) $row->total;
+        }
+
+        // Ref 1.29: nach konfigurierbarer Status-Reihenfolge (`order`) sortieren,
+        // Schlüssel (Status-IDs) bleiben erhalten.
+        uasort($merged, fn($a, $b) => ($a['order'] <=> $b['order']));
+        return $merged;
+    }
+
 
 
     /**
@@ -203,6 +341,8 @@ class InventoryArticleService
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ]);
 
+            $this->assignInventoryNumber($article);
+
             $this->processArticleImages($article, $request);
             $this->processArticleProperties($article, $request);
             $this->processStatusValues($article, $request->get('statusValues', []));
@@ -212,6 +352,21 @@ class InventoryArticleService
 
             return $article->load(['properties', 'images', 'statusValues', 'tags']);
         });
+    }
+
+    /**
+     * Vergibt die fortlaufende Inventarnummer (z. B. "00042").
+     * external_id wird automatisch im Model-Boot gesetzt.
+     */
+    protected function assignInventoryNumber(InventoryArticle $article): void
+    {
+        if (!empty($article->inventory_number)) {
+            return;
+        }
+
+        $article->update([
+            'inventory_number' => TypeNumberGenerator::generateInventoryNumber(),
+        ]);
     }
 
     /**
@@ -232,30 +387,18 @@ class InventoryArticleService
             // Vorherige Werte sichern mit Null-Handling
             $oldQuantity = $article->quantity ?? null;
 
-            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            // Sicheres Zugreifen auf statusValues — suche nach Name statt ID
             $oldStatus1 = null;
-            if ($article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
-                $oldStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            if ($article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+                $oldStatus1 = $readyStatus->pivot->value ?? null;
             }
 
-            // Detailed Articles: Status 1 Werte sichern mit Null-Handling
+            // Detailed Articles: Einsatzbereit-Mengen sichern
             $oldDetailedStatus1 = [];
-            // Prüfe, ob detailedArticleQuantities existiert, bevor darauf zugegriffen wird
-            if ($article && isset($article->detailedArticleQuantities)) {
+            if ($article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    // Stelle sicher, dass detailed, status und id existieren
-                    if (
-                        $detailed && isset($detailed->status) && isset($detailed->status->id) &&
-                        $detailed->status->id == 1 && isset($detailed->id)
-                    ) {
-                        // Sicheres Zugreifen auf pivot und value
-                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
-                            $oldDetailedStatus1[$detailed->id] = $detailed->status->pivot->value;
-                        } elseif (isset($detailed->status->value)) {
-                            $oldDetailedStatus1[$detailed->id] = $detailed->status->value;
-                        } else {
-                            $oldDetailedStatus1[$detailed->id] = null;
-                        }
+                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
+                        $oldDetailedStatus1[$detailed->id] = $detailed->quantity;
                     }
                 }
             }
@@ -268,8 +411,25 @@ class InventoryArticleService
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ];
 
-            if ($request->filled('inventory_sub_category_id')) {
-                $data['inventory_sub_category_id'] = $request->integer('inventory_sub_category_id');
+            if ($request->exists('inventory_sub_category_id')) {
+                // Explicitly sent null clears the sub category (previously it could never be removed).
+                $data['inventory_sub_category_id'] = $request->filled('inventory_sub_category_id')
+                    ? $request->integer('inventory_sub_category_id')
+                    : null;
+            }
+
+            // Consistency: the sub category must belong to the (possibly changed) category.
+            $subCategoryId = array_key_exists('inventory_sub_category_id', $data)
+                ? $data['inventory_sub_category_id']
+                : $article->inventory_sub_category_id;
+            if (
+                $subCategoryId !== null &&
+                !InventorySubCategory::query()
+                    ->where('id', $subCategoryId)
+                    ->where('inventory_category_id', $data['inventory_category_id'])
+                    ->exists()
+            ) {
+                $data['inventory_sub_category_id'] = null;
             }
 
             $this->articleRepository->update($article, $data);
@@ -290,26 +450,18 @@ class InventoryArticleService
             // Nachherige Werte prüfen mit verbessertem Null-Handling
             $newQuantity = $article ? ($article->quantity ?? null) : null;
 
-            // Sicheres Zugreifen auf statusValues mit mehrfacher Null-Prüfung
+            // Nachherige Statuswerte prüfen — suche nach Name statt ID
             $newStatus1 = null;
-            if ($article && $article->statusValues && ($status1 = $article->statusValues->firstWhere('id', 1))) {
-                $newStatus1 = isset($status1->pivot) && isset($status1->pivot->value) ? $status1->pivot->value : null;
+            if ($article && $article->statusValues && ($readyStatus = $article->statusValues->firstWhere('name', 'Einsatzbereit'))) {
+                $newStatus1 = $readyStatus->pivot->value ?? null;
             }
 
             $detailedStatus1Changed = false;
-            // Ensure detailedArticleQuantities exists before iterating
             if ($article && $article->detailedArticleQuantities) {
                 foreach ($article->detailedArticleQuantities as $detailed) {
-                    // Ensure detailed and status objects exist and have required properties
-                    if ($detailed && $detailed->status && $detailed->status->id == 1 && isset($detailed->id)) {
+                    if ($detailed->status && $detailed->status->name === 'Einsatzbereit') {
                         $old = $oldDetailedStatus1[$detailed->id] ?? null;
-                        // Ensure pivot exists before accessing its properties
-                        $new = null;
-                        if (isset($detailed->status->pivot) && isset($detailed->status->pivot->value)) {
-                            $new = $detailed->status->pivot->value;
-                        } elseif (isset($detailed->status->value)) {
-                            $new = $detailed->status->value;
-                        }
+                        $new = $detailed->quantity;
 
                         if (is_numeric($old) && is_numeric($new) && $new < $old) {
                             $detailedStatus1Changed = true;
@@ -355,7 +507,7 @@ class InventoryArticleService
                     ]
                 ];
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'warning',
                     'message' => $notificationTitle
                 ];
@@ -389,7 +541,7 @@ class InventoryArticleService
                     ]
                 ];
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'warning',
                     'message' => $notificationTitle
                 ];
@@ -434,7 +586,7 @@ class InventoryArticleService
                         ]
                     ];
                     $broadcastMessage = [
-                        'id' => random_int(1, 1000000),
+                        'id' => Str::uuid()->toString(),
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
@@ -471,7 +623,7 @@ class InventoryArticleService
                     ]
                 ];
                 $broadcastMessage = [
-                    'id' => random_int(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -499,13 +651,17 @@ class InventoryArticleService
     {
         $images = $request->file('newImages') ?? [];
         if (count($images) > 0) {
-            $mainImageIndex = $request->integer('main_image_index');
+            // Only treat main_image_index as set when it was actually sent —
+            // integer() would silently default to 0 (= first new image).
+            $mainImageIndex = $request->filled('main_image_index')
+                ? $request->integer('main_image_index')
+                : null;
             $this->articleRepository->addImages($article, $images, $mainImageIndex);
         }
     }
 
     /**
-     * Process and store article properties and detailed articles
+     * Process and store article properties and detailed articles.
      *
      * @param InventoryArticle $article
      * @param StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request
@@ -514,7 +670,93 @@ class InventoryArticleService
     protected function processArticleProperties(InventoryArticle $article, StoreInventoryArticleRequest|UpdateInventoryArticleRequest $request): void
     {
         $this->articleRepository->attachProperties($article, $request->collect('properties'));
-        $this->articleRepository->addDetailedArticles($article, $request->collect('detailed_article_quantities'));
+        $this->syncDetailedArticles($article, $request->collect('detailed_article_quantities'));
+    }
+
+    /**
+     * Synchronisiert DetailArticles per ID:
+     * - vorhandene IDs => Update + Property-Sync
+     * - fehlende IDs (im Request nicht mehr vorhanden) => Soft-Delete (Properties detachen, inventory_number bleibt belegt)
+     * - ohne ID => Neu anlegen mit nächster freier detail_number (max+1, inkl. trashed)
+     */
+    protected function syncDetailedArticles(InventoryArticle $article, SupportCollection $incoming): void
+    {
+        $incomingIds = $incoming
+            ->pluck('id')
+            ->filter(static fn ($id): bool => $id !== null && $id !== '')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        // 1) Fehlende DetailArticles soft-deleten (deren Properties detachen)
+        $toDelete = $article->detailedArticleQuantities()
+            ->when(!empty($incomingIds), static fn ($q) => $q->whereNotIn('id', $incomingIds))
+            ->get();
+
+        foreach ($toDelete as $detail) {
+            $detail->properties()->detach();
+            $detail->delete();
+        }
+
+        // 2) Vorhandene updaten / neue anlegen
+        $nextDetailNumber = (int) $article->detailedArticleQuantities()
+            ->withTrashed()
+            ->max('detail_number') + 1;
+
+        foreach ($incoming as $detailData) {
+            if (!empty($detailData['id'])) {
+                /** @var InventoryDetailedQuantityArticle|null $detail */
+                $detail = $article->detailedArticleQuantities()
+                    ->whereKey((int) $detailData['id'])
+                    ->first();
+
+                if ($detail === null) {
+                    continue;
+                }
+
+                $detail->update([
+                    'name' => $detailData['name'],
+                    'description' => $detailData['description'] ?? null,
+                    'quantity' => $detailData['quantity'],
+                    'inventory_article_status_id' => $detailData['status']['id'] ?? null,
+                ]);
+            } else {
+                /** @var InventoryDetailedQuantityArticle $detail */
+                $detail = $article->detailedArticleQuantities()->create([
+                    'name' => $detailData['name'],
+                    'description' => $detailData['description'] ?? null,
+                    'quantity' => $detailData['quantity'],
+                    'inventory_article_status_id' => $detailData['status']['id'] ?? null,
+                    'detail_number' => $nextDetailNumber,
+                    'external_id' => TypeNumberGenerator::generateDetailExternalId($article->external_id, $nextDetailNumber),
+                    'inventory_number' => TypeNumberGenerator::generateDetailInventoryNumber($article->inventory_number, $nextDetailNumber),
+                ]);
+                $nextDetailNumber++;
+            }
+
+            $this->syncDetailedArticleProperties($detail, $detailData['properties'] ?? []);
+        }
+    }
+
+    /**
+     * Synchronisiert die Property-Pivot-Werte eines DetailArticles per Property-ID.
+     *
+     * @param array<int, array<string, mixed>> $properties
+     */
+    protected function syncDetailedArticleProperties(InventoryDetailedQuantityArticle $detail, array $properties): void
+    {
+        $syncData = [];
+
+        foreach ($properties as $property) {
+            if (!isset($property['id'])) {
+                continue;
+            }
+
+            $syncData[(int) $property['id']] = [
+                'value' => isset($property['value']) ? (string) $property['value'] : '',
+            ];
+        }
+
+        $detail->properties()->sync($syncData);
     }
 
     /**
@@ -533,16 +775,13 @@ class InventoryArticleService
     }
 
     /**
-     * Reset all article relations before re-attaching
-     *
-     * @param InventoryArticle $article
-     * @return void
+     * Reset article relations before re-attaching.
+     * DetailArticles werden NICHT mehr hier gelöscht – sie werden in syncDetailedArticles()
+     * per ID gematcht (Match-and-Update), damit Typnummern und Auto-Increment-IDs stabil bleiben.
      */
     protected function resetArticleRelations(InventoryArticle $article): void
     {
         $this->articleRepository->detachAllProperties($article);
-        $this->articleRepository->detachAllDetailedArticleProperties($article);
-        $this->articleRepository->deleteAllDetailedArticles($article);
         $this->articleRepository->detachAllStatusValues($article);
     }
 
@@ -666,6 +905,14 @@ class InventoryArticleService
         $userDepartmentIds = method_exists($user, 'departments')
             ? $user->departments()->pluck('departments.id')->all()
             : [];
+
+        // Admins dürfen immer alle Tags verwenden
+        if ($user->hasRole('artwork admin')) {
+            if (method_exists($article, 'tags')) {
+                $article->tags()->sync($tags->pluck('id')->all());
+            }
+            return;
+        }
 
         $unauthorized = [];
 

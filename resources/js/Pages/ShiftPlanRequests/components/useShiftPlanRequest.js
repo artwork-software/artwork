@@ -19,9 +19,27 @@ export function useShiftPlanRequest() {
         }
     };
 
+    // Robustes Parsen: Werte kommen teils als ISO ("2026-06-05"), teils bereits als
+    // deutsches Format ("05.06.2026" / "05.06.2026 10:30") vom Backend (formatted_dates.start
+    // nutzt d.m.Y). new Date("05.06.2026") interpretiert den String als US-Format (MM.DD) und
+    // vertauscht so Tag und Monat. Deshalb hier explizit auf DD.MM.YYYY prüfen.
+    const parseDate = (value) => {
+        if (value instanceof Date) return value;
+        if (typeof value === 'string') {
+            const match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[ T](\d{1,2}):(\d{2}))?/);
+            if (match) {
+                const [, day, month, year, hour = '0', minute = '0'] = match;
+                return new Date(
+                    Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute)
+                );
+            }
+        }
+        return new Date(value);
+    };
+
     const formatDateTime = (value) => {
         if (!value) return '-';
-        const date = new Date(value);
+        const date = parseDate(value);
         if (Number.isNaN(date.getTime())) {
             return String(value);
         }
@@ -34,9 +52,22 @@ export function useShiftPlanRequest() {
         });
     };
 
+    const formatDate = (value) => {
+        if (!value) return '-';
+        const date = parseDate(value);
+        if (Number.isNaN(date.getTime())) {
+            return String(value);
+        }
+        return date.toLocaleDateString(undefined, {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+    }
+
     const formatDateShort = (value) => {
         if (!value) return '-';
-        const date = new Date(value);
+        const date = parseDate(value);
         if (Number.isNaN(date.getTime())) {
             return String(value);
         }
@@ -265,9 +296,13 @@ export function useShiftPlanRequest() {
                 const oldPayload = 'old' in field ? field.old : field;
                 const newPayload = 'new' in field ? field.new : field;
 
+                // Der Name der betroffenen Person wird NICHT mehr in die "Vorher"-Spalte
+                // gemischt, sondern prominent als eigene Zeile in der Card angezeigt
+                // (siehe affectedPersonName / ShiftHistoryDrawer). "Vorher" zeigt daher
+                // nur noch z.B. "frei", "Nachher" die Schichtzeit.
                 const oldLabel = buildLabelFromPayload(oldPayload, {
                     fallbackKey: 'before_label',
-                    includeUser: true,  // -> Hier wird "Max Schmidt" etc. eingefügt
+                    includeUser: false,
                 });
 
                 const newLabel = buildLabelFromPayload(newPayload, {
@@ -311,6 +346,23 @@ export function useShiftPlanRequest() {
     };
 
 
+
+    // Name der von einer Änderung betroffenen Person. Steckt im assignment-Payload der
+    // field_changes (user_name), bevorzugt im alten Stand, sonst im neuen. Wird in der
+    // Card prominent über der Vorher/Nachher-Tabelle angezeigt.
+    const affectedPersonName = (change) => {
+        if (change?.affected_user) {
+            const u = change.affected_user;
+            return u.full_name || [u.first_name, u.last_name].filter(Boolean).join(' ') || u.name || null;
+        }
+        const fc = change?.field_changes;
+        if (!fc || typeof fc !== 'object') return null;
+        const assignment = fc.assignment;
+        if (!assignment || typeof assignment !== 'object') return null;
+        const oldPayload = 'old' in assignment ? assignment.old : assignment;
+        const newPayload = 'new' in assignment ? assignment.new : assignment;
+        return oldPayload?.user_name || newPayload?.user_name || null;
+    };
 
     const extractInitialState = (fieldChanges = {}) => fieldChanges && typeof fieldChanges === 'object' ? fieldChanges._initial || null : null;
 
@@ -386,6 +438,7 @@ export function useShiftPlanRequest() {
         hasOpenPostCommitChange,
         hasOpenWorkflowChange,
         extractFieldEntries,
+        affectedPersonName,
         extractInitialState,
         pickInitialFields,
         activityContext,
@@ -393,5 +446,6 @@ export function useShiftPlanRequest() {
         hasActivityTranslations,
         activityTranslation,
         formatDrawerHeader,
+        formatDate
     };
 }

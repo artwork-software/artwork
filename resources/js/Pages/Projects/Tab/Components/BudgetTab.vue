@@ -10,13 +10,15 @@
                              :selectedCell="budget?.selectedCell ?? effectiveBudgetData?.budget?.selectedCell"
                              :selectedRow="budget?.selectedRow ?? effectiveBudgetData?.budget?.selectedRow"
                              :templates="budget?.templates ?? effectiveBudgetData?.budget?.templates"
-                             :selected-sum-detail="budget?.selectedSumDetail ?? effectiveBudgetData?.budget?.selectedSumDetail"
+                             :selected-sum-detail="localSelectedSumDetail ?? effectiveBudgetData?.selectedSumDetail"
                              :money-sources="moneySources ?? effectiveBudgetData?.moneySources"
-                             :budget-access="project?.access_budget ?? headerObject?.access_budget"
-                             :project-manager="project?.managerUsers ?? headerObject?.managerUsers"
+                             :budget-access="access_budget ?? project?.access_budget ?? headerObject?.access_budget"
+                             :project-manager="managerUsers ?? project?.managerUsers ?? headerObject?.managerUsers"
                              :first_project_budget_tab_id="first_project_budget_tab_id"
                              :can-edit-component="canEditComponent"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
+                             @budget-updated="handleBudgetUpdated"
+                             @sumDetailLoaded="handleSumDetailLoaded"
             />
             <div v-else class="w-full py-8">
                 <div v-if="loadBudgetError" class="text-error text-sm">
@@ -71,7 +73,14 @@ export default{
             hideProjectHeader: false,
             isLoadingBudget: false,
             loadBudgetError: '',
-            localBudgetData: this.loadedProjectInformation?.['BudgetTab'] || null
+            localBudgetData: this.loadedProjectInformation?.['BudgetTab'] || null,
+            localSelectedSumDetail: null,
+            access_budget: null,
+            managerUsers: null,
+
+            // 🔥 Broadcast state
+            echoChannelName: null,
+            lastReloadAt: 0,
         }
     },
     computed: {
@@ -84,49 +93,91 @@ export default{
     },
     mounted() {
         this.fetchBudgetData();
+        this.initBudgetBroadcast();
+    },
+    beforeUnmount() {
+        this.destroyBudgetBroadcast();
     },
     methods: {
         usePage,
-        async fetchBudgetData() {
-            if (this.localBudgetData) {
-                return;
-            }
+
+        initBudgetBroadcast() {
+            const projectId = this.project?.id;
+            if (!projectId) return;
+
+            // falls schon aktiv
+            this.destroyBudgetBroadcast();
+
+            this.echoChannelName = `project.${projectId}`;
+
+            // Echo ist meist global (window.Echo). Falls bei dir global: einfach Echo statt window.Echo.
+            (window.Echo ?? Echo)
+                .private(this.echoChannelName)
+                .listen(".budget.update", (payload) => {
+                    // optional: nur reagieren, wenn es wirklich unser Projekt ist
+                    if (payload?.projectId && payload.projectId !== projectId) return;
+
+                    // optional: kleines Debounce/Throttle gegen Spam
+                    const now = Date.now();
+                    if (now - this.lastReloadAt < 400) return;
+                    this.lastReloadAt = now;
+
+                    this.fetchBudgetData(true);
+                });
+        },
+
+        destroyBudgetBroadcast() {
+            if (!this.echoChannelName) return;
+
+            // leave = unsub + cleanup
+            (window.Echo ?? Echo).leave(this.echoChannelName);
+            this.echoChannelName = null;
+        },
+
+        async fetchBudgetData(force = false) {
+            if (this.isLoadingBudget) return;
+            if (!force && this.localBudgetData) return;
 
             const projectId = this.project?.id;
-            if (!projectId) {
-                return;
-            }
+            if (!projectId) return;
 
             this.isLoadingBudget = true;
-            this.loadBudgetError = '';
+            this.loadBudgetError = "";
 
             try {
-                // Query-Parameter aus URL auslesen
                 const urlParams = new URLSearchParams(window.location.search);
-                const selectedCell = urlParams.get('selectedCell');
+                const selectedCell = urlParams.get("selectedCell");
 
                 const { data } = await axios.get(
-                    route('projects.tabs.budget', { project: projectId }),
-                    {
-                        params: {
-                            selectedCell: selectedCell
-                        }
-                    }
+                    route("projects.tabs.budget", { project: projectId }),
+                    { params: { selectedCell } }
                 );
+
                 this.localBudgetData = data?.BudgetTab || null;
+                this.access_budget = data?.access_budget || null;
+                this.managerUsers = data?.managerUsers || null;
+
                 if (data?.users && this.headerObject?.project) {
                     this.headerObject.project.users = data.users;
                 }
             } catch (error) {
                 console.error(error);
-                this.loadBudgetError = 'Unable to load budget data.';
+                this.loadBudgetError = "Unable to load budget data.";
             } finally {
                 this.isLoadingBudget = false;
             }
         },
+
         changeProjectHeaderVisualisation(boolean) {
             this.hideProjectHeader = boolean;
         },
+        handleBudgetUpdated() {
+            // Force reload budget data after deletion
+            this.fetchBudgetData(true);
+        },
+        handleSumDetailLoaded(sumDetail) {
+            this.localSelectedSumDetail = sumDetail;
+        }
     },
 }
 </script>

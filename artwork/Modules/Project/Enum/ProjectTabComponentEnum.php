@@ -12,6 +12,8 @@ enum ProjectTabComponentEnum: string
     case TITLE = 'Title';
     case LINK = 'Link';
 
+    case LINK_LIST = 'LinkList';
+
 
     // default tab component types
     case PROJECT_GROUP_DISPLAY = 'ProjectGroupDisplayComponent';
@@ -32,6 +34,7 @@ enum ProjectTabComponentEnum: string
     case GENERAL_SHIFT_INFORMATION = 'GeneralShiftInformationComponent';
     case BUDGET = 'BudgetTab';
     case PROJECT_BUDGET_DEADLINE = 'ProjectBudgetDeadlineComponent';
+    case PROJECT_PERIOD = 'ProjectPeriodComponent';
     case COMMENT_TAB = 'CommentTab';
     case COMMENT_ALL_TAB = 'CommentAllTab';
     case PROJECT_DOCUMENTS = 'ProjectDocumentsComponent';
@@ -46,7 +49,119 @@ enum ProjectTabComponentEnum: string
     case ARTIST_RESIDENCIES = 'ArtistResidenciesComponent';
     case ARTIST_NAME_DISPLAY = 'ArtistNameDisplayComponent';
     case PROJECT_BASIC_DATA_DISPLAY = 'ProjectBasicDataDisplayComponent';
+    case PROJECT_COST_CENTER_DISPLAY = 'ProjectCostCenterDisplayComponent';
     case PROJECT_MATERIAL_ISSUE_COMPONENT = 'ProjectMaterialIssueComponent';
+    case PROJECT_CONTRACTS_DOCUMENTS = 'ProjectContractsDocumentsComponent';
+    case BUSINESS_INTELLIGENCE = 'BusinessIntelligenceComponent';
+    case BI_KEY_FIGURES = 'BiKeyFiguresDisplay';
+
+    /**
+     * Component types that may be rendered in the external tab view.
+     * Internal visibility settings (ComponentUser/ComponentDepartment) are
+     * deliberately ignored for external users — this is the only filter that
+     * decides whether the external renderer can show a component at all.
+     */
+    private const EXTERNALLY_READABLE = [
+        // Custom components (user-configurable) — all readable
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::TITLE,
+        self::LINK,
+        self::LINK_LIST,
+        self::SEPARATOR,
+        self::DISCLOSURE_COMPONENT,
+        // Default components that make sense to expose read-only to externals
+        self::PROJECT_TITLE,
+        self::PROJECT_BASIC_DATA_DISPLAY,
+        self::ARTIST_NAME_DISPLAY,
+    ];
+
+    /**
+     * Component types an external user with a write scope may edit. Only custom
+     * components — no default/system components (layout-only or side-effect heavy).
+     */
+    private const EXTERNALLY_WRITABLE = [
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::LINK,
+        self::LINK_LIST,
+        self::DISCLOSURE_COMPONENT,
+    ];
+
+    /**
+     * Component types that can be placed into a project print layout. This is the
+     * single source of truth for the selectable palette: a type is offered here
+     * ONLY if it has both (a) a dedicated print renderer (PrintLayoutBuilder* Vue
+     * component registered in ProjectPrintLayoutWindow.vue's componentMapping) and
+     * (b) data preparation in ProjectPrintLayoutController::show(). This guarantees
+     * "every selectable component is actually visible on the generated PDF".
+     *
+     * Keep in sync with `componentMapping` in ProjectPrintLayoutWindow.vue.
+     */
+    private const PRINTABLE = [
+        // Custom (user-configurable) components — rendered from stored values
+        self::CHECKBOX,
+        self::TEXT_FIELD,
+        self::DROPDOWN,
+        self::TEXT_AREA,
+        self::TITLE,
+        self::LINK,
+        self::LINK_LIST,
+        self::SEPARATOR,
+        // Special / system components with a dedicated print renderer
+        self::PROJECT_TITLE,
+        self::PROJECT_STATUS,
+        self::PROJECT_GROUP,
+        self::PROJECT_TEAM,
+        self::PROJECT_ATTRIBUTES,
+        self::PROJECT_PERIOD,
+        self::RELEVANT_DATES_FOR_SHIFT_PLANNING,
+        self::SHIFT_CONTACT_PERSONS,
+        self::GENERAL_SHIFT_INFORMATION,
+        self::SHIFT_TAB,
+        self::PROJECT_BUDGET_DEADLINE,
+        self::BUDGET_INFORMATIONS,
+        self::BULK_EDIT,
+        self::ARTIST_RESIDENCIES,
+        self::BUSINESS_INTELLIGENCE,
+        self::BI_KEY_FIGURES,
+        self::PROJECT_ALL_DOCUMENTS,
+        self::COMMENT_ALL_TAB,
+        self::CHECKLIST_ALL,
+        self::ARTIST_NAME_DISPLAY,
+        self::PROJECT_BASIC_DATA_DISPLAY,
+        self::PROJECT_COST_CENTER_DISPLAY,
+        self::PROJECT_MATERIAL_ISSUE_COMPONENT,
+        self::PROJECT_CONTRACTS_DOCUMENTS,
+    ];
+
+    public function isPrintable(): bool
+    {
+        return in_array($this, self::PRINTABLE, true);
+    }
+
+    /**
+     * Enum string values of all print-layout-capable component types.
+     * @return array<int, string>
+     */
+    public static function printableValues(): array
+    {
+        return array_map(static fn (self $case): string => $case->value, self::PRINTABLE);
+    }
+
+    public function isExternallyReadable(): bool
+    {
+        return in_array($this, self::EXTERNALLY_READABLE, true);
+    }
+
+    public function isExternallyWritable(): bool
+    {
+        return in_array($this, self::EXTERNALLY_WRITABLE, true);
+    }
 
     /**
      * Get all available values
@@ -117,7 +232,17 @@ enum ProjectTabComponentEnum: string
                 'availableFields' => [
                     'label' => '',
                 ]
-            ]
+            ],
+            self::LINK_LIST->value => [
+                'name' => 'LinkList',
+                'availableFields' => [
+                    'title' => '',
+                    'label' => 'Linkliste',
+                    'placeholder_label' => 'Anzeige',
+                    'placeholder_url' => 'https://…',
+                    'max_items' => 20,
+                ],
+            ],
         ];
     }
 }

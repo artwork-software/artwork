@@ -17,12 +17,25 @@
                             v-model="searchArticleInput"
                             :label="$t('Search Articles')"
                             />
+                        <p class="mt-1 text-xs text-gray-400">{{ $t('Searches all properties (incl. serial number). Use * as a wildcard, e.g. *158.') }}</p>
+                    </div>
+
+                    <!-- Ref 1.28: optionale Einschränkung auf eine bestimmte Eigenschaft -->
+                    <div class="max-w-xs pt-3">
+                        <ArtworkBaseListbox
+                            :model-value="selectedSearchProperty"
+                            @update:model-value="onSearchPropertyChange"
+                            :items="propertySearchOptions"
+                            by="id"
+                            option-label="name"
+                            :label="$t('Search in property (optional)')"
+                        />
                     </div>
                 </div>
 
 
                 <div class="mt-5">
-                    <BaseUIButton is-add-button v-if="can('inventory.create_edit') || is('artwork admin')"@click="showAddEditArticleModal = true" label="Add Article" use-translation />
+                    <BaseUIButton is-add-button v-if="can('inventory.create_edit') || hasAdminRole()"@click="showAddEditArticleModal = true" label="Add Article" use-translation />
                 </div>
 
             </div>
@@ -60,7 +73,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <StatusOverview :counts-by-status="props.countsByStatus" />
+                        <StatusOverview :counts-by-status="props.countsByStatus" :active-status-id="props.activeStatusId" />
                     </div>
                     <div class="mb-3" v-if="filterableProperties?.length > 0">
                         <InventoryFilterComponent :filterableProperties="filterableProperties" />
@@ -202,7 +215,9 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import {can, is} from "laravel-permission-to-vuejs";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import {can} from "laravel-permission-to-vuejs";
+import {usePermission} from "@/Composeables/Permission.js";
 import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -212,6 +227,7 @@ import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.v
 import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation()
+const { hasAdminRole } = usePermission(usePage().props)
 
 const props = defineProps({
     categories: {
@@ -260,6 +276,11 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    activeStatusId: {
+        type: Number,
+        required: false,
+        default: null
+    },
     productBaskets: {
         type: Object,
         required: false,
@@ -301,6 +322,19 @@ const showIssueOfMaterialModal = ref(false)
 const internOrExternIssue = ref(false)
 const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
 const showAddEditArticleModal = ref(false);
+
+// Ref 1.28: optionaler Such-Scope auf eine bestimmte Eigenschaft (null = alle).
+const searchPropertyId = ref(usePage().props?.urlParameters?.search_property_id ?? null)
+const propertySearchOptions = computed(() => [
+    { id: null, name: $t('All properties') },
+    ...(props.properties ?? []),
+])
+const selectedSearchProperty = computed(() =>
+    propertySearchOptions.value.find((p) => p.id === searchPropertyId.value) ?? propertySearchOptions.value[0]
+)
+const onSearchPropertyChange = (value) => {
+    searchPropertyId.value = (value && typeof value === 'object') ? (value.id ?? null) : (value ?? null)
+}
 
 const AddEditArticleModal = defineAsyncComponent({
     loader: () => import('@/Pages/Inventory/Components/Article/Modals/AddEditArticleModal.vue'),
@@ -353,23 +387,17 @@ const groupedArticles = computed(() => {
         }
 
         if (!grouped[categoryId].subcategories[subCategoryId]) {
+            // Load properties directly from subcategory or category definition
+            const definedProperties = article.sub_category?.properties || article.category?.properties || []
             grouped[categoryId].subcategories[subCategoryId] = {
                 id: subCategoryId,
                 name: subCategoryName,
                 articles: [],
-                properties: []
+                properties: [...definedProperties]
             }
         }
 
         grouped[categoryId].subcategories[subCategoryId].articles.push(article)
-
-        // Collect unique properties for this subcategory
-        article.properties.forEach((property) => {
-            const subCat = grouped[categoryId].subcategories[subCategoryId]
-            if (!subCat.properties.find((p) => p.id === property.id)) {
-                subCat.properties.push(property)
-            }
-        })
     })
 
     return grouped
@@ -379,10 +407,11 @@ const searchArticles = debounce(() => {
     // search for articles
     router.reload({
         data: {
-            search: searchArticleInput.value
+            search: searchArticleInput.value,
+            search_property_id: searchPropertyId.value,
         },
         preserveScroll: true,
-        only: ['articles']
+        only: ['articles', 'countsByStatus']
     })
 }, 500)
 
@@ -411,6 +440,11 @@ const findBasketForArticle = (articleId) => {
 // watch for search input
 watch(searchArticleInput, (value) => {
     // search for articles with debounce
+    searchArticles()
+})
+
+// re-run search when the optional property scope changes
+watch(searchPropertyId, () => {
     searchArticles()
 })
 

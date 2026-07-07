@@ -28,6 +28,10 @@
 </head>
 <body class="p-4">
 
+<div style="font-size: 11px; color: #6b7280;">
+    Erstellt am {{ $createdAt }} von {{ $createdBy }}
+</div>
+
 <div class="text-center mb-6">
     <h2 class="font-bold text-xl">Leihschein Nr. {{ $issue->id }}</h2>
     <p class="text-sm">Ausgabe: {{ $issue->issue_date->format('d.m.Y') }} | Rückgabe: {{ $issue->return_date->format('d.m.Y') }}</p>

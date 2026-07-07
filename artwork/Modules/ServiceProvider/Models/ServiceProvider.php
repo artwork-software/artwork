@@ -5,22 +5,22 @@ namespace Artwork\Modules\ServiceProvider\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProviderContacts;
-use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\Shift\Models\ShiftServiceProvider;
+use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
-use Artwork\Modules\Shift\Models\ServiceProviderShiftQualification;
-use Artwork\Modules\Shift\Models\ShiftQualification;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
+use Artwork\Modules\Shift\Models\Traits\HasShifts;
+use Artwork\Modules\User\Models\Traits\HasProfilePhotoCustom;
+use Artwork\Modules\Vacation\Models\GoesOnVacation;
+use Artwork\Modules\Vacation\Models\Vacationer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 
 /**
@@ -41,14 +41,19 @@ use Laravel\Scout\Searchable;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class ServiceProvider extends Model implements DayServiceable
+class ServiceProvider extends Model implements Vacationer, DayServiceable, Employable, CrmEntity
 {
     use HasFactory;
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use HasShifts;
+    use GoesOnVacation;
     use Searchable;
     use HasContacts;
+    use HasProfilePhotoCustom;
+    use HasCrmContact;
+    use HasCrmFields;
 
     protected $fillable = [
         'profile_image',
@@ -83,70 +88,6 @@ class ServiceProvider extends Model implements DayServiceable
         return $this->hasMany(ServiceProviderContacts::class);
     }
 
-    public function shifts(): BelongsToMany
-    {
-        return $this
-            ->belongsToMany(Shift::class, 'shifts_service_providers')
-            ->using(ShiftServiceProvider::class)
-            ->withPivot([
-                'id',
-                'shift_qualification_id',
-                'shift_count',
-                'craft_abbreviation',
-                'short_description',
-                'start_date',
-                'end_date',
-                'start_time',
-                'end_time'
-            ]);
-    }
-
-    public function assignedCrafts(): morphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craftable')->with('qualifications');
-    }
-
-    public function managingCrafts(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\ShiftQualification::class,
-            'qualifiable',
-            'shift_qualifiables',
-            'qualifiable_id',
-            'shift_qualification_id'
-        )->withPivot('craft_id');
-    }
-
-    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\GlobalQualification::class,
-            'qualifiable',
-            'global_qualifiables',
-            'qualifiable_id',
-            'global_qualification_id'
-        );
-    }
-
-    /**
-     * @return array<int>
-     */
-    public function getAssignedCraftIdsAttribute(): array
-    {
-        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
-    }
-
-    public function getShiftIdsBetweenStartDateAndEndDate(
-        Carbon $startDate,
-        Carbon $endDate
-    ): Collection {
-        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
-    }
 
     public function getNameAttribute(): string
     {
@@ -164,52 +105,56 @@ class ServiceProvider extends Model implements DayServiceable
         if ($isUrl) {
             return $this->profile_image;
         }
-        return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
-            : route('generate-avatar-image', ['letters' => $this->provider_name[0] ?? 'S']);
-    }
 
-    public function plannedWorkingHours($startDate, $endDate): float|int
-    {
-        $shiftsInDateRange = $this->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->get();
-
-        $plannedWorkingHours = 0;
-        $individualTimes = $this->individualTimes()
-            ->individualByDateRange($startDate, $endDate)->sum('working_time_minutes');
-
-        foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
-            $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
-            $breakMinutes = $shift->break_minutes;
-
-            $shiftStart = Carbon::parse($shiftStart);
-            $shiftEnd = Carbon::parse($shiftEnd);
-
-
-            $shiftDuration = (($shiftEnd->diffInRealMinutes($shiftStart) + $individualTimes) - $breakMinutes) / 60;
-            $plannedWorkingHours += $shiftDuration;
+        if ($this->profile_image) {
+            return asset('storage/' . $this->profile_image);
         }
 
-        return $plannedWorkingHours;
+        // Verwende makeAvatarSvg aus HasProfilePhotoCustom Trait
+        $letters = $this->initials();
+        $bg = (string) config('artwork.avatar.bg', '#4F46E5');
+        $fg = (string) config('artwork.avatar.fg', '#FFFFFF');
+
+        $svg = $this->makeAvatarSvg($letters, $bg, $fg);
+
+        return $this->svgToDataUri($svg);
     }
 
-    public function scopeCanWorkShifts(Builder $builder): Builder
+    private function initials(): string
     {
-        return $builder->where('can_work_shifts', true);
+        $name = trim((string) ($this->provider_name ?? ''));
+
+        if ($name === '') {
+            $fallback = trim((string) ($this->work_name ?? $this->email ?? 'SP'));
+
+            if (str_contains($fallback, '@')) {
+                $fallback = Str::before($fallback, '@');
+            }
+
+            return Str::upper(Str::substr($fallback, 0, 2));
+        }
+
+        // Für provider_name: nimm die ersten 2 Buchstaben
+        return Str::upper(Str::substr($name, 0, 2));
     }
 
-    public function craftsToManage(): MorphToMany
+    public function getCrmFields(): array
     {
-        return $this->morphToMany(Craft::class, 'craft_manager');
+        return array_merge(
+            $this->getSharedCrmFields(),
+            $this->getWorkProfileCrmFields(),
+            $this->getAddressCrmFields(),
+            ['Notiz' => 'note'],
+        );
     }
 
-    /**
-     * @return array<int, int>
-     */
-    public function getManagingCraftIds(): array
+    public function getCrmDisplayName(): string
     {
-        return $this->craftsToManage()->pluck('id')->toArray();
+        return $this->provider_name;
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'service_provider';
     }
 }

@@ -21,7 +21,7 @@
                         <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
                             {{ checklist.tasks.length }}
                         </span>
-                    <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click.stop="openAddTaskModal = true"/>
+                    <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click.stop="openAddTaskModal = true"/>
                     <BaseMenu has-no-offset white-menu-background v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
                         <BaseMenuItem icon="IconUserPlus" title="Assign users" white-menu-background v-if="!checklist.private" @click="openEditChecklistTeamsModal = true"/>
                         <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background v-if="checklist" @click="showChecklistEditModal = true"/>
@@ -31,26 +31,26 @@
                         <BaseMenuItem icon="IconCopy" title="Duplicate" white-menu-background  @click="duplicateChecklist"/>
                         <BaseMenuItem icon="IconTrash" title="Delete" white-menu-background  @click="showDeleteChecklistModal = true" v-if="can('can use checklists') && checklist.user_id === usePage().props.auth.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.auth.user.id"/>
                     </BaseMenu>
-                    <component :is="IconChevronDown" class="h-6 w-6 cursor-pointer" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" @click.stop="changeChecklistStatus(checklist)" />
+                    <div class="h-6 w-6 cursor-pointer" @click.stop="changeChecklistStatus(checklist)">
+                        <IconChevronDown class="h-6 w-6" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
+                    </div>
                 </div>
             </div>
             <div class="my-4 border-b border-dashed border-gray-200 pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
                 <div class="">
-                    <div class="" v-for="element in orderTasksByDeadline" :key="element.id">
-                        <SingleTaskInListView
-                            :can-edit-component="canEditComponent"
-                            :project-manager-ids="projectManagerIds"
-                            :project-can-write-ids="projectCanWriteIds"
-                            :is-admin="isAdmin"
-                            :task="element"
-                            :project="project ?? checklist?.project"
-                            :tab_id="tab_id"
-                            :checklist="checklist"
-                            :is-in-own-task-management="isInOwnTaskManagement"
-                            v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
-
-                        />
-                    </div>
+                    <SingleTaskInListView
+                        v-for="element in orderTasksByDeadline"
+                        :key="`task-${element.id}`"
+                        :can-edit-component="canEditComponent"
+                        :project-manager-ids="projectManagerIds"
+                        :project-can-write-ids="projectCanWriteIds"
+                        :is-admin="isAdmin"
+                        :task="element"
+                        :project="project ?? checklist?.project"
+                        :tab_id="tab_id"
+                        :checklist="checklist"
+                        :is-in-own-task-management="isInOwnTaskManagement"
+                    />
                 </div>
             </div>
 
@@ -107,6 +107,7 @@ import {
     IconTrash, IconUserPlus, IconChevronRight, IconCirclePlus
 } from "@tabler/icons-vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
+import axios from "axios";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import SingleTaskInListView from "@/Components/Checklist/Components/SingleTaskInListView.vue";
@@ -217,37 +218,34 @@ const orderTasksByDeadline = computed(() => {
 });
 
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
-    // if isInOwnTaskManagement is true, check if the current user ist in the task
+    // if isInOwnTaskManagement is true, check if the current user is in the task or checklist
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task?.users.map(user => user.id)?.includes(usePage().props.auth.user.id);
+        const userId = usePage().props.auth.user.id;
+        // User is assigned to the task directly
+        const isInTask = task?.users?.map(user => user.id)?.includes(userId);
+        // User is assigned to the checklist itself → show all tasks
+        const isInChecklist = props.checklist?.users?.some(user => user.id === userId);
+        return isInTask || isInChecklist;
     } else {
         return true;
     }
 };
 
 const changeChecklistStatus = (checklist) => {
-    if (!usePage().props.auth.user.opened_checklists.includes(checklist.id)) {
-        const openedChecklists = usePage().props.auth.user.opened_checklists;
+    const user = usePage().props.auth.user;
+    const isOpen = user.opened_checklists.includes(checklist.id);
 
-        openedChecklists.push(checklist.id)
-
-        router.patch(route('user.checklists.update', usePage().props.auth.user.id), {
-            "opened_checklists": openedChecklists
-        }, {
-            preserveState: true,
-            preserveScroll: true
-        });
+    // Update local state immediately for instant UI feedback
+    if (isOpen) {
+        user.opened_checklists = user.opened_checklists.filter(id => id !== checklist.id);
     } else {
-        const filteredList = usePage().props.auth.user.opened_checklists.filter(function (value) {
-            return value !== checklist.id;
-        })
-        router.patch(route('user.checklists.update', usePage().props.auth.user.id), {
-            "opened_checklists": filteredList
-        }, {
-            preserveState: true,
-            preserveScroll: true
-        });
+        user.opened_checklists = [...user.opened_checklists, checklist.id];
     }
+
+    // Persist to backend via axios (no page reload)
+    axios.patch(route('user.checklists.update', user.id), {
+        opened_checklists: user.opened_checklists
+    });
 }
 
 const doneOrUndoneAllTasks = (bool) => {

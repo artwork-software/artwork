@@ -73,6 +73,14 @@
                             <div v-if="entry.is_special_day" class="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded inline-block mt-2">
                                 {{ $t('Special Day') }}
                             </div>
+                            <div v-if="entry.is_compensation_day_off" class="text-xs text-teal-700 bg-teal-100 px-2 py-0.5 rounded inline-block mt-2">
+                                <span v-for="(comp, idx) in entry.compensation_day_off_info" :key="idx">
+                                    {{ comp.value >= 1 ? $t('Compensation day off') : $t('Half compensation day off') }}
+                                    <template v-if="comp.rule_name"> — {{ comp.rule_name }}</template>
+                                    <template v-if="comp.granted_by"> — {{ $t('Granted by') }}: {{ comp.granted_by }}</template>
+                                    <template v-if="idx < entry.compensation_day_off_info.length - 1">, </template>
+                                </span>
+                            </div>
                         </div>
                         <!-- Rechte Spalte -->
                         <div class="w-full md:w-2/3">
@@ -134,7 +142,10 @@
                                 ></div>
                             </div>
                             <div class="flex flex-wrap gap-3 text-xs text-gray-700 mt-1">
-                                <div><strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h</div>
+                                <div>
+                                    <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h
+                                    <span v-if="entry.is_compensation_day_off" class="text-teal-600 text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
+                                </div>
                                 <div><strong>{{ $t('Planned') }}: </strong>
                                     <span v-if="!entry.worked_hours">{{ entry.planned_hours }}h</span>
                                     <span v-else>{{ entry.worked_hours_formatted }}h</span>

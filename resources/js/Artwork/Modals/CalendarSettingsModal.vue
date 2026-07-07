@@ -7,8 +7,173 @@
     >
         <div class="p-5 space-y-6">
 
+            <!-- List-View: nur die zwei relevanten Einstellungen -->
+            <template v-if="isListView">
+                <div>
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Detailed function overview per shift -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.detailed_shift_overview"
+                                        @change="onDetailedShiftOverviewChange"
+                                        id="lv_detailed_shift_overview"
+                                        aria-describedby="lv_detailed_shift_overview-description"
+                                        name="lv_detailed_shift_overview"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_detailed_shift_overview" class="font-medium text-gray-900">{{ $t('Detailed function overview per shift') }}</label>
+                                <p id="lv_detailed_shift_overview-description" class="text-gray-500 text-xs">
+                                    {{ $t('Shows assigned persons and unoccupied slots directly under each shift in the list view.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Hide shift row (only available when detailed_shift_overview is on) -->
+                        <div class="flex gap-3 pl-6" :class="{ 'opacity-50': !userCalendarSettings.detailed_shift_overview }">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.hide_shift_row"
+                                        :disabled="!userCalendarSettings.detailed_shift_overview"
+                                        id="lv_hide_shift_row"
+                                        aria-describedby="lv_hide_shift_row-description"
+                                        name="lv_hide_shift_row"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_hide_shift_row" class="font-medium text-gray-900">{{ $t('Hide shift row') }}</label>
+                                <p id="lv_hide_shift_row-description" class="text-gray-500 text-xs">
+                                    {{ $t('Hides the shift header row and shows the craft abbreviation in front of each user row time.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Show fully staffed shifts -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.show_fully_staffed_shifts"
+                                        id="lv_show_fully_staffed_shifts"
+                                        aria-describedby="lv_show_fully_staffed_shifts-description"
+                                        name="lv_show_fully_staffed_shifts"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_show_fully_staffed_shifts" class="font-medium text-gray-900">{{ $t('Show fully staffed shifts') }}</label>
+                                <p id="lv_show_fully_staffed_shifts-description" class="text-gray-500 text-xs">
+                                    {{ $t('Also displays shifts that are already fully staffed in the list view.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Show appointments -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.show_appointments"
+                                        id="lv_show_appointments"
+                                        aria-describedby="lv_show_appointments-description"
+                                        name="lv_show_appointments"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_show_appointments" class="font-medium text-gray-900">{{ $t('Show appointments') }}</label>
+                                <p id="lv_show_appointments-description" class="text-gray-500 text-xs">
+                                    {{ $t('Shows appointments alongside shifts in a separate column.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Show notes -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.shift_notes"
+                                        id="lv_shift_notes"
+                                        aria-describedby="lv_shift_notes-description"
+                                        name="lv_shift_notes"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_shift_notes" class="font-medium text-gray-900">{{ $t('Show notes') }}</label>
+                                <p id="lv_shift_notes-description" class="text-gray-500 text-xs">
+                                    {{ $t('Shows stored notes of shifts and appointments on a separate line in the list view.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Group by shift groups -->
+                        <div class="flex gap-3">
+                            <div class="flex h-6 shrink-0 items-center">
+                                <div class="group grid size-4 grid-cols-1">
+                                    <input
+                                        v-model="userCalendarSettings.group_by_shift_groups"
+                                        id="lv_group_by_shift_groups"
+                                        aria-describedby="lv_group_by_shift_groups-description"
+                                        name="lv_group_by_shift_groups"
+                                        type="checkbox"
+                                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    />
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="text-sm/6">
+                                <label for="lv_group_by_shift_groups" class="font-medium text-gray-900">{{ $t('Sort by shift groups') }}</label>
+                                <p id="lv_group_by_shift_groups-description" class="text-gray-500 text-xs">
+                                    {{ $t('Groups shifts by their shift group within each room.') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
             <!-- Abschnitt: Darstellung & Barrierefreiheit -->
-            <div>
+            <div v-if="!isListView">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">
                     {{ $t('Appearance & Accessibility') }}
                 </h3>
@@ -76,6 +241,7 @@
                                     name="use_event_status_color"
                                     type="checkbox"
                                     class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    @change="onStatusColorChange"
                                 />
                                 <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -90,13 +256,40 @@
                             </p>
                         </div>
                     </div>
+
+                    <!-- Use main category colour (nicht Schichtplan) -->
+                    <div class="flex gap-3" v-if="!inShiftPlan">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.use_main_category_color"
+                                    id="use_main_category_color"
+                                    aria-describedby="use_main_category_color-description"
+                                    name="use_main_category_color"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                    @change="onMainCategoryColorChange"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="use_main_category_color" class="font-medium text-gray-900">{{ $t('Event colour by main category') }}</label>
+                            <p id="use_main_category_color-description" class="text-gray-500 text-xs">
+                                {{ $t('Colors calendar entries according to the main category of the project. Events without a main category are shown in anthracite, events without a project in grey.') }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <hr class="border-gray-200">
+            <hr v-if="!isListView" class="border-gray-200">
 
             <!-- Abschnitt: Sichtbarkeit & Filter -->
-            <div>
+            <div v-if="!isListView">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">
                     {{ $t('Visibility & Filters') }}
                 </h3>
@@ -123,6 +316,87 @@
                             <label for="hide_unoccupied_rooms" class="font-medium text-gray-900">{{ $t('Hide unoccupied rooms') }}</label>
                             <p id="hide_unoccupied_rooms-description" class="text-gray-500 text-xs">
                                 {{ $t('Hides rooms in the calendar in which no events are entered, for a clearer display of active areas.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Show planned events (nicht Schichtplan, nicht Planungsansicht, mit Permission) -->
+                    <div
+                        class="flex gap-3"
+                        v-if="!isPlanning && !inShiftPlan && (can('can see planning calendar') || can('can edit planning calendar') || is('artwork admin'))"
+                    >
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_planned_events"
+                                    id="show_planned_events"
+                                    aria-describedby="show_planned_events-description"
+                                    name="show_planned_events"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show planned events') }}</label>
+                            <p id="show_planned_events-description" class="text-gray-500 text-xs">
+                                {{ $t('Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Show only not fully staffed shifts (nur Schichtplan) -->
+                    <div class="flex gap-3" v-if="inShiftPlan">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_only_not_fully_staffed_shifts"
+                                    id="show_only_not_fully_staffed_shifts"
+                                    aria-describedby="show_only_not_fully_staffed_shifts-description"
+                                    name="show_only_not_fully_staffed_shifts"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_only_not_fully_staffed_shifts" class="font-medium text-gray-900">{{ $t('Only show shifts that are not fully staffed') }}</label>
+                            <p id="show_only_not_fully_staffed_shifts-description" class="text-gray-500 text-xs">
+                                {{ $t('Only displays shifts where at least one position still has capacity for additional staff.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Show fully staffed shifts (nur Listenansicht) -->
+                    <div class="flex gap-3" v-if="isListView">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_fully_staffed_shifts"
+                                    id="show_fully_staffed_shifts_filter"
+                                    aria-describedby="show_fully_staffed_shifts_filter-description"
+                                    name="show_fully_staffed_shifts_filter"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_fully_staffed_shifts_filter" class="font-medium text-gray-900">{{ $t('Show fully staffed shifts') }}</label>
+                            <p id="show_fully_staffed_shifts_filter-description" class="text-gray-500 text-xs">
+                                {{ $t('Also displays shifts that are already fully staffed in the list view.') }}
                             </p>
                         </div>
                     </div>
@@ -224,9 +498,9 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="work_shifts" class="font-medium text-gray-900">{{ $t('Shifts') }}</label>
+                            <label for="work_shifts" class="font-medium text-gray-900">{{ $t('Show shifts') }}</label>
                             <p id="work_shifts-description" class="text-gray-500 text-xs">
-                                {{ $t('Shows entered work or deployment shifts in the calendar, useful for clear personnel and deployment planning.') }}
+                                {{ $t('Shows standalone shifts as separate cards in the matching room-day cells of the calendar, mixed with the events and sorted by start time.') }}
                             </p>
                         </div>
                     </div>
@@ -259,10 +533,10 @@
                 </div>
             </div>
 
-            <hr class="border-gray-200">
+            <hr v-if="!isListView" class="border-gray-200">
 
             <!-- Abschnitt: Inhalte in Events -->
-            <div>
+            <div v-if="!isListView">
                 <h3 class="text-sm font-semibold text-gray-900 mb-3">
                     {{ $t('Event Content') }}
                 </h3>
@@ -320,7 +594,7 @@
                     </div>
 
                     <!-- Project status -->
-                    <div class="flex gap-3" v-if="!inShiftPlan">
+                    <div class="flex gap-3">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
                                 <input
@@ -346,7 +620,7 @@
                     </div>
 
                     <!-- Project managers -->
-                    <div class="flex gap-3" v-if="!inShiftPlan">
+                    <div class="flex gap-3">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
                                 <input
@@ -372,7 +646,7 @@
                     </div>
 
                     <!-- Artists -->
-                    <div class="flex gap-3" v-if="!inShiftPlan">
+                    <div class="flex gap-3">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
                                 <input
@@ -398,7 +672,7 @@
                     </div>
 
                     <!-- Qualifications (nur Schichtplan) -->
-                    <div class="flex gap-3" v-if="inShiftPlan">
+                    <div class="flex gap-3" v-if="inShiftPlan || isListView">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
                                 <input
@@ -424,7 +698,7 @@
                     </div>
 
                     <!-- Shift notes (nur Schichtplan) -->
-                    <div class="flex gap-3" v-if="inShiftPlan">
+                    <div class="flex gap-3" v-if="inShiftPlan || isListView">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
                                 <input
@@ -450,7 +724,7 @@
                     </div>
 
                     <!-- show_shift_group_tag (nur Schichtplan) -->
-                    <div class="flex gap-3" v-if="inShiftPlan">
+                    <div class="flex gap-3" v-if="inShiftPlan || isListView">
                         <div class="flex h-6 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
                                 <input
@@ -471,6 +745,32 @@
                             <label for="show_shift_group_tag" class="font-medium text-gray-900">{{ $t('Show Shift group tag') }}</label>
                             <p id="shift_notes-description" class="text-gray-500 text-xs">
                                 {{ $t('Displays the assigned shift group tags in the calendar, useful for quickly identifying and categorizing shifts.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Detailed function overview per shift (nur Listenansicht) -->
+                    <div class="flex gap-3" v-if="isListView">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.detailed_shift_overview"
+                                    id="detailed_shift_overview"
+                                    aria-describedby="detailed_shift_overview-description"
+                                    name="detailed_shift_overview"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="detailed_shift_overview" class="font-medium text-gray-900">{{ $t('Detailed function overview per shift') }}</label>
+                            <p id="detailed_shift_overview-description" class="text-gray-500 text-xs">
+                                {{ $t('Shows assigned persons and unoccupied slots directly under each shift in the list view.') }}
                             </p>
                         </div>
                     </div>
@@ -512,34 +812,6 @@
                         </div>
                     </div>
 
-                    <!-- Show planned events (außerhalb Planning, nicht Schichtplan, mit Permission) -->
-                    <div
-                        class="flex gap-3"
-                        v-if="!isPlanning && !inShiftPlan && (can('can see planning calendar | can edit planning calendar') || is('artwork admin'))"
-                    >
-                        <div class="flex h-6 shrink-0 items-center">
-                            <div class="group grid size-4 grid-cols-1">
-                                <input
-                                    v-model="userCalendarSettings.show_planned_events"
-                                    id="show_planned_events"
-                                    aria-describedby="show_planned_events-description"
-                                    name="show_planned_events"
-                                    type="checkbox"
-                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
-                                />
-                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
-                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="text-sm/6">
-                            <label for="show_planned_events" class="font-medium text-gray-900">{{ $t('Show planned events') }}</label>
-                            <p id="show_planned_events-description" class="text-gray-500 text-xs">
-                                {{ $t('Shows provisionally entered, not yet confirmed dates, helpful for orientation in further planning.') }}
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -578,34 +850,92 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const props = defineProps({
     isPlanning: { type: Boolean, default: false },
     inShiftPlan: { type: Boolean, default: false },
+    isDailyView: { type: Boolean, default: false },
+    isListView: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["close"]);
 
-const userCalendarSettings = useForm({
-    project_status: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_status : false,
-    project_artists: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_artists : false,
-    options: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.options : false,
-    project_management: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.project_management : false,
-    repeating_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.repeating_events : false,
-    work_shifts: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.work_shifts : false,
-    description: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.description : false,
-    event_name: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.event_name : false,
-    high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
-    expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
-    use_event_status_color: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.use_event_status_color : false,
-    hide_unoccupied_rooms: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_rooms : false,
-    hide_unoccupied_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.hide_unoccupied_days : false,
-    display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
-    show_unplanned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_unplanned_events : false,
-    show_planned_events: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_planned_events : false,
-    show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
-    shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
-    show_shift_group_tag: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_shift_group_tag : false,
-    show_timeline: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_timeline : false,
-});
+const listViewSettings = props.isListView ? usePage().props.listViewSettings : null;
+
+const activeSettings = props.isListView
+    ? listViewSettings
+    : props.inShiftPlan
+        ? (props.isDailyView
+            ? (usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)
+            : (usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings))
+        : (props.isDailyView
+            ? (usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings)
+            : usePage().props.auth.user.calendar_settings);
+
+const userCalendarSettings = props.isListView
+    ? useForm({
+        show_qualifications: activeSettings ? activeSettings.show_qualifications : false,
+        shift_notes: activeSettings ? activeSettings.shift_notes : false,
+        show_shift_group_tag: activeSettings ? activeSettings.show_shift_group_tag : false,
+        show_fully_staffed_shifts: activeSettings ? activeSettings.show_fully_staffed_shifts : false,
+        detailed_shift_overview: activeSettings ? activeSettings.detailed_shift_overview : false,
+        show_appointments: activeSettings ? activeSettings.show_appointments : false,
+        group_by_shift_groups: activeSettings ? activeSettings.group_by_shift_groups : false,
+        hide_shift_row: activeSettings ? activeSettings.hide_shift_row : false,
+    })
+    : useForm({
+        is_daily_view: props.isDailyView,
+        is_shift_plan: props.inShiftPlan,
+        project_status: activeSettings ? activeSettings.project_status : false,
+        project_artists: activeSettings ? activeSettings.project_artists : false,
+        options: activeSettings ? activeSettings.options : false,
+        project_management: activeSettings ? activeSettings.project_management : false,
+        repeating_events: activeSettings ? activeSettings.repeating_events : false,
+        work_shifts: activeSettings ? activeSettings.work_shifts : false,
+        description: activeSettings ? activeSettings.description : false,
+        event_name: activeSettings ? activeSettings.event_name : false,
+        high_contrast: activeSettings ? activeSettings.high_contrast : false,
+        expand_days: activeSettings ? activeSettings.expand_days : false,
+        use_event_status_color: activeSettings ? activeSettings.use_event_status_color : false,
+        use_main_category_color: activeSettings ? activeSettings.use_main_category_color : false,
+        hide_unoccupied_rooms: activeSettings ? activeSettings.hide_unoccupied_rooms : false,
+        hide_unoccupied_days: activeSettings ? activeSettings.hide_unoccupied_days : false,
+        display_project_groups: activeSettings ? activeSettings.display_project_groups : false,
+        show_unplanned_events: activeSettings ? activeSettings.show_unplanned_events : false,
+        show_planned_events: activeSettings ? activeSettings.show_planned_events : false,
+        show_qualifications: activeSettings ? activeSettings.show_qualifications : false,
+        shift_notes: activeSettings ? activeSettings.shift_notes : false,
+        show_shift_group_tag: activeSettings ? activeSettings.show_shift_group_tag : false,
+        show_timeline: activeSettings ? activeSettings.show_timeline : false,
+        show_only_not_fully_staffed_shifts: activeSettings ? activeSettings.show_only_not_fully_staffed_shifts : false,
+    });
+
+const onStatusColorChange = () => {
+    if (userCalendarSettings.use_event_status_color) {
+        userCalendarSettings.use_main_category_color = false;
+    }
+};
+
+const onDetailedShiftOverviewChange = () => {
+    if (!userCalendarSettings.detailed_shift_overview) {
+        userCalendarSettings.hide_shift_row = false;
+    }
+};
+
+const onMainCategoryColorChange = () => {
+    if (userCalendarSettings.use_main_category_color) {
+        userCalendarSettings.use_event_status_color = false;
+    }
+};
 
 const saveUserCalendarSettings = () => {
+    if (props.isListView) {
+        userCalendarSettings.patch(
+            route("user.shift_list_view_settings.update", { user: usePage().props.auth.user.id }),
+            {
+                preserveScroll: true,
+                preserveState: false,
+            }
+        );
+        return;
+    }
+
     const valuesToReload = [];
     let preserveState = true;
 

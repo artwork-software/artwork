@@ -14,6 +14,14 @@
                 <p class="text-sm text-zinc-500">{{ $t('Linked material issues for this project.')}}</p>
             </div>
             <div class="flex items-center gap-2">
+                <ToolTipComponent
+                    v-if="can('can view material issue log') || is('artwork admin')"
+                    direction="bottom"
+                    :tooltip-text="$t('Material issue log')"
+                    icon="IconHistory"
+                    icon-size="h-4 w-4"
+                    @click="showLogModal = true"
+                />
                 <button
                     type="button"
                     class="new-button"
@@ -30,7 +38,7 @@
                     type="button"
                     class="new-button"
                     @click="openCreateMaterialIssue">
-                    <IconPlus class="size-4" />
+                    <IconCirclePlus class="size-4" />
                     {{ $t('New')}}
                 </button>
             </div>
@@ -156,6 +164,10 @@
                               <IconClock class="size-4" />
                               ~ {{ diffDays(issue) }} {{ $t('Days')}}
                             </span>
+                        <span v-if="issue.room" class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
+                              <IconHome class="size-4" />
+                              {{ issue.room.name }}
+                            </span>
                         <span v-if="issue.special_items?.length > 0"
                             class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1"
                             :class="issue.special_items_done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
@@ -163,6 +175,9 @@
                           <component :is="issue.special_items_done ? IconCircleCheck : IconAlertTriangle" class="size-4"  />
                           {{ issue.special_items_done ? $t('Special items Completed') : $t('Special items not completed') }}
                         </span>
+                    </div>
+                    <div v-if="issue.notes" class="mt-1 text-sm text-zinc-600 whitespace-pre-line">
+                        {{ issue.notes }}
                     </div>
                 </div>
 
@@ -173,6 +188,13 @@
                         @click="openEditIssue(issue)">
                         <IconEdit class="size-4" />
                         {{ $t('Edit')}}
+                    </button>
+                    <button
+                        type="button"
+                        class="new-button text-red-500 hover:text-red-700"
+                        @click="openDeleteModal(issue)">
+                        <IconTrash class="size-4" />
+                        {{ $t('Delete')}}
                     </button>
                 </div>
             </header>
@@ -244,7 +266,7 @@
                                         </div>
                                         <div
                                             v-if="a.description"
-                                            class="mt-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] text-zinc-600 ring-1 ring-zinc-200"
+                                            class="mt-1 text-[11px] text-zinc-500"
                                         >
                                             {{ a.description }}
                                         </div>
@@ -453,12 +475,14 @@
 
     <!-- Article Images Galleria -->
     <Galleria
+        v-if="articleDisplayCustom"
         v-model:activeIndex="articleActiveIndex"
         v-model:visible="articleDisplayCustom"
         :value="articleLightboxImages"
         :responsiveOptions="responsiveOptions"
         :numVisible="7"
         :pt="{ mask: { onClick: onArticleMaskClick } }"
+        containerStyle="max-width: 850px"
         :circular="true"
         :fullScreen="true"
         :showItemNavigators="true"
@@ -482,17 +506,36 @@
         :first-event="headerObject?.firstEventInProject"
         :last-event="headerObject?.lastEventInProject"
     />
+
+    <ConfirmDeleteModal
+        v-if="showDeleteModal"
+        :title="$t('Delete material issue')"
+        :description="$t('Are you sure you want to delete this material issue?')"
+        @closed="showDeleteModal = false"
+        @delete="confirmDelete"
+    />
+
+    <MaterialIssueLogModal
+        v-if="showLogModal"
+        :projects="logProjects"
+        :initial-project-id="Number(project.id)"
+        @close="showLogModal = false"
+    />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount, watch, onMounted, provide } from 'vue'
 import axios from 'axios'
 import {
-    IconPlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
+    IconCirclePlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
-    IconSticker2, IconCircleCheck, IconWindowMaximize,
+    IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash,
 } from '@tabler/icons-vue'
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
+import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {can, is} from "laravel-permission-to-vuejs";
+import { router } from '@inertiajs/vue3';
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import FilePreview from "@/Artwork/Files/FilePreview.vue";
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
@@ -519,6 +562,7 @@ type InternalIssue = {
     project?: Project | null;
     start_date:string; start_time:string; end_date:string; end_time:string;
     start_date_time:string; end_date_time:string;
+    notes?:string|null;
     special_items_done:boolean; articles:Article[]; special_items:SpecialItem[]; files:FileItem[];
 }
 type Project = {
@@ -543,7 +587,11 @@ const emit = defineEmits<{
 }>()
 
 const showIssueOfMaterialModal = ref(false)
+const showLogModal = ref(false)
+const logProjects = computed(() => usePage().props.projects ?? [])
 const materialIssueToEdit = ref(null)
+const showDeleteModal = ref(false)
+const issueToDelete = ref<InternalIssue | null>(null)
 const isLoadingMaterials = ref(false)
 const loadMaterialsError = ref('')
 const localMaterials = ref<InternalIssue[]>(props.materials ?? [])
@@ -736,6 +784,26 @@ const openCreateMaterialIssue = () => {
 
 const handleMaterialIssueSaved = () => {
     fetchMaterials()
+}
+
+const openDeleteModal = (issue: InternalIssue) => {
+    issueToDelete.value = issue
+    showDeleteModal.value = true
+}
+
+const confirmDelete = () => {
+    if (!issueToDelete.value) return
+    router.delete(route('issue-of-material.destroy', issueToDelete.value.id), {
+        onSuccess: () => {
+            showDeleteModal.value = false
+            issueToDelete.value = null
+            fetchMaterials()
+        },
+        onError: () => {
+            showDeleteModal.value = false
+            issueToDelete.value = null
+        }
+    })
 }
 
 /** Article Lightbox Functions */

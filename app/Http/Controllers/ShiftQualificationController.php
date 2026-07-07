@@ -13,6 +13,7 @@ use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -69,8 +70,47 @@ class ShiftQualificationController extends Controller
 
     public function updateValue(Shift $shift, Request $request): void
     {
+        // Unbekannte qualification_id würde sonst als FK-Verletzung mit 500 enden
+        $request->validate([
+            'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+        ]);
+
         $this->shiftsQualificationsService
             ->increaseValueOrCreateWithOneByQualification($shift->id, $request->integer('qualification_id'));
+
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+    }
+
+    public function increaseOverbookedValue(Shift $shift, Request $request): void
+    {
+        if (!app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
+            abort(403, 'Shift overbooking is not enabled for this instance.');
+        }
+
+        $request->validate([
+            'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+        ]);
+
+        $this->shiftsQualificationsService
+            ->increaseOverbookedValue($shift->id, $request->integer('qualification_id'));
+
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
+    }
+
+    public function decreaseOverbookedValue(Shift $shift, Request $request): void
+    {
+        if (!app(\App\Settings\ShiftSettings::class)->allow_shift_overbooking) {
+            abort(403, 'Shift overbooking is not enabled for this instance.');
+        }
+
+        $request->validate([
+            'qualification_id' => ['required', 'integer', 'exists:shift_qualifications,id'],
+        ]);
+
+        $this->shiftsQualificationsService
+            ->decreaseOverbookedValue($shift->id, $request->integer('qualification_id'));
+
+        broadcast(new \Artwork\Modules\Shift\Events\UpdateShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
     }
 
     public function destroy(
@@ -81,47 +121,58 @@ class ShiftQualificationController extends Controller
         }
 
         try {
-            $shiftsQualificationsToHandle = $this->shiftsQualificationsService->findAllByShiftQualificationId(
-                $shiftQualificationIdToDelete
-            );
+            DB::transaction(function () use ($shiftQualification, $shiftQualificationIdToDelete): void {
+                $shiftsQualificationsToHandle = $this->shiftsQualificationsService->findAllByShiftQualificationId(
+                    $shiftQualificationIdToDelete
+                );
 
-            /** @var ShiftsQualifications $shiftsQualification */
-            foreach ($shiftsQualificationsToHandle as $shiftsQualification) {
-                /** @var Shift $shiftByQualification */
-                $shiftByQualification = $shiftsQualification
-                    ->shift()
-                    ->first();
+                /** @var ShiftsQualifications $shiftsQualification */
+                foreach ($shiftsQualificationsToHandle as $shiftsQualification) {
+                    /** @var Shift|null $shiftByQualification */
+                    $shiftByQualification = $shiftsQualification
+                        ->shift()
+                        ->withTrashed()
+                        ->first();
 
-                $shiftHasDefaultQualification = $shiftByQualification
-                        ->shiftsQualifications()
-                        ->where('shift_qualification_id', 1)
-                        ->count() > 0;
+                    if ($shiftByQualification === null) {
+                        $this->shiftsQualificationsService->forceDelete($shiftsQualification);
+                        continue;
+                    }
 
-                if (!$shiftHasDefaultQualification) {
-                    $this->shiftsQualificationsService->createShiftsQualificationForShift(
-                        $shiftByQualification->getAttribute('id'),
-                        [
-                            'shift_qualification_id' => 1,
-                            'value' => 1
-                        ]
+                    $shiftHasDefaultQualification = $shiftByQualification
+                            ->shiftsQualifications()
+                            ->where('shift_qualification_id', 1)
+                            ->count() > 0;
+
+                    if (!$shiftHasDefaultQualification) {
+                        $this->shiftsQualificationsService->createShiftsQualificationForShift(
+                            $shiftByQualification->getAttribute('id'),
+                            [
+                                'shift_qualification_id' => 1,
+                                'value' => 1
+                            ]
+                        );
+                    }
+
+                    $this->shiftWorkerService->updateShiftWorkerQualificationToDefault(
+                        $shiftByQualification,
+                        $shiftQualificationIdToDelete,
                     );
+
+                    $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
+                        $shiftByQualification->getAttribute('id'),
+                        1
+                    );
+
+                    $this->shiftsQualificationsService->forceDelete($shiftsQualification);
                 }
 
-                $this->shiftWorkerService->updateShiftWorkerQualificationToDefault(
-                    $shiftByQualification,
-                    $shiftQualificationIdToDelete,
-                );
-
-                $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
-                    $shiftByQualification->getAttribute('id'),
-                    1
-                );
-
-                $this->shiftsQualificationsService->forceDelete($shiftsQualification);
-            }
-
-            $this->shiftQualificationService->delete($shiftQualification);
+                $this->shiftQualificationService->delete($shiftQualification);
+            });
         } catch (Throwable $t) {
+            $this->logger->error(
+                'Failed to delete shift qualification ' . $shiftQualificationIdToDelete . ': ' . $t->getMessage()
+            );
 
             return $this->redirector->back()->with(
                 'error',

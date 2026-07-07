@@ -3,7 +3,7 @@
         <EventSettingHeader>
             <template #actions>
                 <button class="ui-button-add" @click="showEventPropertyModal = true">
-                    <component :is="IconPlus" stroke-width="1" class="size-5" />
+                    <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('New Event Property') }}
                 </button>
             </template>
@@ -80,7 +80,7 @@ import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 

@@ -71,8 +71,80 @@ return [
     'get_sum' => 'Betrag erhalten',
     'total_sum' => 'Gesamtbetrag',
     'total_days' => 'Gesamt Tage',
+    'total_daily_allowance' => 'Summe Tagegeld',
+    'breakfast_count' => 'Anzahl Frühstück',
+    'breakfast_deduction_total' => 'Abzüglich Anzahl Frühstück im Hotel',
+    'payout_per_diem' => 'Summe Auszahlung per DIEM',
+    'per_diem_number' => 'Per Diem Nummer',
+    'production' => 'Produktion',
+    'cost_bearer' => 'Kostenträger',
+    'details' => 'Details',
+    'confirmation_title' => 'Bestätigung der sachlichen Richtigkeit',
+    'confirmation_text' => 'Hiermit wird bestätigt, dass die oben genannten Personen im Rahmen der Produktion tätig waren und die Verpflegungspauschalen den geltenden Richtlinien entsprechen.',
     'name_artist' => 'Name Künstler',
-    'civil_name' => 'Zivilname',
+    'first_name' => 'Vorname',
+    'last_name' => 'Nachname',
     'phone_number' => 'Telefonnummer',
     'position' => 'Position',
+
+    // Contract export translations
+    'contract_name' => 'Vertragsname',
+    'contract_partner' => 'Vertragspartner',
+    'project' => 'Projekt',
+    'contract_type' => 'Vertragstyp',
+    'company_type' => 'Rechtsform',
+    'amount' => 'Betrag',
+    'currency' => 'Währung',
+    'description' => 'Beschreibung',
+    'ksk_liable' => 'KSK-pflichtig',
+    'ksk_amount' => 'KSK-Betrag',
+    'ksk_reason' => 'KSK-Begründung',
+    'resident_abroad' => 'Wohnsitz im Ausland',
+    'foreign_tax' => 'Auslandssteuer',
+    'foreign_tax_amount' => 'Auslandssteuer-Betrag',
+    'foreign_tax_reason' => 'Auslandssteuer-Begründung',
+    'foreign_tax_city' => 'Auslandssteuer-Stadt',
+    'foreign_tax_country' => 'Auslandssteuer-Land',
+    'reverse_charge_amount' => 'Reverse-Charge-Betrag',
+    'deadline_date' => 'Stichtag',
+    'is_freed' => 'Freigegeben',
+    'has_power_of_attorney' => 'Vollmacht vorhanden',
+    'creator' => 'Ersteller',
+    'created_at' => 'Erstellt am',
+    'yes' => 'Ja',
+    'no' => 'Nein',
+
+    'shift_plan' => [
+        'title'  => ':project Personalplanung',
+        'period' => 'Zeitraum',
+
+        'sections' => [
+            'shifts'     => 'Schichten',
+            'work_hours' => 'Arbeitsstunden',
+        ],
+
+        'subsections' => [
+            'internal' => 'intern',
+            'external' => 'extern',
+            'total'    => 'Gesamt',
+        ],
+
+        'columns' => [
+            'craft'      => 'Schicht',
+            'date'       => 'Datum',
+            'room'       => 'Raum',
+            'start'      => 'Start',
+            'end'        => 'Endzeit',
+            'duration'   => 'Stunden insgesamt',
+            'break_time' => 'Pausenzeit',
+        ],
+
+        'symbols' => [
+            'sum' => '∑',
+        ],
+
+        'defaults' => [
+            'zero_duration' => '0 Std. 00 min',
+        ],
+    ],
 ];

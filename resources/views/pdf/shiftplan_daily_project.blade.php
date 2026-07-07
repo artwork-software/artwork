@@ -4,12 +4,12 @@
     <meta charset="utf-8">
 
     <style>
-        /* ✅ Drucker-sicherer Rand (mm statt px) */
+
         @page { margin: 10mm 10mm 5mm 10mm; }  /* oben/rechts/unten/links */
 
         :root{
             --ink:#0b1220;
-            --muted:#64748b;
+            --muted:#475569;
             --line:#cbd5e1;
             --lineStrong:#0f172a;
             --paper:#ffffff;
@@ -18,8 +18,8 @@
             --radius: 10px;
         }
 
-        /* ✅ 300dpi: pt statt px, klein & lesbar */
-        /* ✅ Browser/Dompdf Default-Body-Margins ausschalten (sonst “doppelt”/komisch) */
+
+
         body{
             margin: 0;
             padding: 0;
@@ -31,7 +31,7 @@
             line-height: 1.20;
         }
 
-        .page:last-child{ page-break-after: auto; }
+        /* page-breaks werden von .day gesteuert */
 
         /* ---------- HEADER (flach) ---------- */
         .hdr{
@@ -171,18 +171,19 @@
         }
 
         .page{
-            page-break-after: always;
-            page-break-inside: avoid;
+            /* kein page-break – physische Umbrüche steuert .day */
         }
 
-        /* Dompdf: thead/tbody Separation-Bug */
+        /* thead nur einmal pro Tag-Tabelle anzeigen (kein doppelter Header bei Seitenumbruch) */
         table.grid thead{ display: table-row-group; }
         table.grid tr{ page-break-inside: avoid; }
 
         .day{
             border: 1px solid var(--lineStrong);
             overflow: hidden;
-            margin-bottom: 20px;    /* +20% */
+            margin-bottom: 20px;
+            /* Tag-Teile sind serverseitig auf Seitenhöhe zugeschnitten und
+               werden im Ganzen auf die nächste Seite geschoben statt geteilt */
             page-break-inside: avoid;
         }
         .day-head{
@@ -192,13 +193,27 @@
             font-weight: 900;
             font-size: 6.8pt;
         }
+        .day-head-cont{
+            font-weight: 900;
+            color: rgba(15,23,42,0.60);
+            margin-left: 6px;
+        }
+        .day-head-arrow{
+            float: right;
+            font-size: 7pt;
+            color: rgba(15,23,42,0.50);
+            margin-left: 8px;
+        }
+        /* Tagesbalken + Events als Einheit: verhindert verwaisten Balken am Seitenende */
+        .day-head-group{
+            page-break-inside: avoid;
+        }
 
         /* Events */
         .events{
             padding: 9px 12px 8px 12px; /* +20% */
             background: #fff;
             border-bottom: 1px solid var(--line);
-            page-break-inside: avoid;
         }
         .event-grid{
             display: table;
@@ -217,19 +232,19 @@
         .event-card{
             border: 1px solid rgba(15,23,42,0.18);
             overflow: hidden;
+            page-break-inside: avoid;
         }
         .event-body{ padding: 8px 10px; } /* +20% */
-        .event-name{ font-weight: 900; font-size: 6.4pt; margin-bottom: 2px; } /* margin leicht mitgezogen */
+        .event-name{ font-weight: 900; font-size: 6.4pt; margin-bottom: 2px; color: #1e293b; } /* margin leicht mitgezogen */
         .event-time{ font-weight: 900; font-size: 5.8pt; color: #0f172a; }
         .event-desc{ margin-top: 4px; color: var(--muted); font-size: 5.4pt; } /* +20% */
 
-        /* Grid */
+        /* Grid – erlaubt Seitenumbrüche zwischen Zeilen, thead wird wiederholt */
         table.grid{
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
             background: #fff;
-            page-break-inside: avoid;
         }
         table.grid th, table.grid td{
             border: 1px solid var(--line);
@@ -245,9 +260,25 @@
             padding: 6px 5px;       /* +20% */
         }
 
-        /* Zeit kompakt */
+        /* Zeitachse links: jede Segmentzeile zeigt ihre Startzeit */
+        table.grid td.timeCell{
+            background: var(--head);
+            padding: 2px 2px;
+            text-align: center;
+        }
         .timeRange{ font-weight: 900; font-size: 6.0pt; text-align:center; line-height: 1.05; }
         .timeSub{ color: var(--muted); font-size: 5.4pt; margin-top: 3px; text-align:center; } /* +20% */
+        .timeMarker{ font-weight: 900; font-size: 5.4pt; color: #166534; text-align:center; }
+        table.grid tr.endRow td{
+            background: var(--head);
+            padding: 2px 2px;
+        }
+        .endTime{
+            font-weight: 900;
+            font-size: 5.4pt;
+            color: var(--muted);
+            text-align: center;
+        }
 
         .gapRow td{ background: var(--gap); }
         .gapMsg{
@@ -262,7 +293,7 @@
         .cellBox{ overflow: hidden; }
         .cellBody{ padding: 6px 8px; } /* +20% */
         .cellTitle{ font-weight: 900; font-size: 6.0pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .cellMeta{ margin-top: 3px; color: var(--muted); font-size: 5.5pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* +20% */
+        .cellMeta{ margin-top: 3px; color: var(--muted); font-size: 5.5pt; word-wrap:break-word; overflow-wrap:break-word; } /* +20% */
 
         .shiftSummary{ padding: 5px 0 0 0; } /* +20% */
         .shiftQualLine{
@@ -308,8 +339,23 @@
         }
 
         /* Timeline Text */
-        .tlMeta{ font-weight: 900; font-size: 5.7pt; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .tlBody{ padding: 4px 3px; }
+        .tlMeta{ font-weight: 900; font-size: 5.7pt; word-wrap:break-word; overflow-wrap:break-word; }
+        .tlTitle{ margin-top:1px; font-weight:900; font-size: 5.3pt; color: var(--muted); word-wrap:break-word; overflow-wrap:break-word; }
+
+        /* Empty day compact – eigenes Element, kein .day */
+        .day-empty {
+            margin-bottom: 6px;
+            page-break-inside: avoid;
+        }
+        .day-empty-head {
+            font-size: 6pt;
+            font-weight: 900;
+            padding: 5px 12px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid var(--line);
+        }
     </style>
 </head>
 <body>
@@ -344,9 +390,7 @@
                     ];
                 }
 
-                $maxRoleCards = 6;
-                $roleCardsVisible = array_slice($roleCards, 0, $maxRoleCards);
-                $hiddenRoleCount = max(0, count($roleCards) - count($roleCardsVisible));
+                $roleCardsVisible = $roleCards;
             @endphp
 
             <div class="hdr">
@@ -398,7 +442,6 @@
 
                                                     $entries[] = $label;
                                                 }
-                                                $entries = array_slice($entries, 0, 2);
                                                 $peopleLine = !empty($entries) ? implode(' • ', $entries) : '—';
                                             }
                                         @endphp
@@ -409,12 +452,6 @@
                                         </li>
                                     @endforeach
 
-                                    @if($hiddenRoleCount > 0)
-                                        <li class="roleItem">
-                                            <div class="roleLine">Weitere Rollen</div>
-                                            <div class="rolePeople">+{{ $hiddenRoleCount }}</div>
-                                        </li>
-                                    @endif
                                 </ul>
                             @else
                                 <div class="roleItem">
@@ -468,20 +505,36 @@
             </div>
         @endif
 
-        {{-- pro Seite: 1 Tag --}}
+        {{-- Tage fließen natürlich – kein erzwungener Seitenumbruch --}}
         @foreach($page as $chunk)
+            @if(!empty($chunk['isEmpty']))
+                <div class="day-empty">
+                    <div class="day-empty-head">{{ $chunk['dateLabel'] }} — Keine Termine</div>
+                </div>
+                @continue
+            @endif
+
             @php
                 $layout    = $chunk['layout'] ?? ['timeCol'=>44,'timelineCol'=>42,'timelineMax'=>84];
                 $timeW     = (int)($layout['timeCol'] ?? 44);
                 $tlW       = (int)($layout['timelineCol'] ?? 42);
                 $tlCols    = (int)($chunk['timelineLanes'] ?? 1);
                 $craftCols = count($chunk['laneColumns'] ?? []);
+                $isContinuation = !empty($chunk['isContinuation']);
             @endphp
 
             <div class="day">
-                <div class="day-head">{{ $chunk['dateLabel'] }}</div>
+                <div class="day-head-group">
+                <div class="day-head">
+                    <span class="day-head-arrow">{{ !empty($chunk['continues']) ? 'Fortsetzung folgt ▼' : '▼' }}</span>
+                    {{ $chunk['dateLabel'] }}
+                    @if(!empty($chunk['contLabel']))
+                        <span class="day-head-cont">— {{ $chunk['contLabel'] }}</span>
+                    @endif
+                </div>
 
-                {{-- EVENTS --}}
+                {{-- EVENTS (nur im ersten Teil eines Tages) --}}
+                @if(!$isContinuation)
                 <div class="events">
                     @php $cards = $chunk['eventCards'] ?? []; @endphp
                     @if(!empty($cards))
@@ -516,11 +569,13 @@
                         <div style="color: #64748b; font-weight: 900;">Keine Events</div>
                     @endif
                 </div>
+                @endif
+                </div>{{-- /day-head-group --}}
 
-                {{-- GRID --}}
+                {{-- GRID (fehlt bei reinen Kopf/Events-Teilen, deren Grid separat folgt) --}}
+                @if(!empty($chunk['rows']))
                 <table class="grid">
 
-                    {{-- ✅ Dompdf-wrap verhindern: harte col widths für Zeit + Timeline --}}
                     <colgroup>
                         <col style="width: {{ $timeW }}px;">
                         @for($tl = 0; $tl < $tlCols; $tl++)
@@ -534,7 +589,9 @@
                     <thead>
                     <tr>
                         <th rowspan="2">Zeit</th>
-                        <th colspan="{{ $tlCols }}">Timeline</th>
+                        @if($tlCols > 0)
+                            <th colspan="{{ $tlCols }}">Timeline</th>
+                        @endif
 
                         @if(!empty($chunk['craftGroups']))
                             @foreach($chunk['craftGroups'] as $g)
@@ -564,13 +621,7 @@
 
                         @if($row['isGap'])
                             <tr class="gapRow" style="height: {{ $h }}px;">
-                                <td>
-                                    <div class="timeRange">{{ $row['t1'] ?? $row['label'] }}</div>
-                                    <div class="timeSub">-</div>
-                                    <div class="timeSub">{{ $row['t2'] ?? '' }}</div>
-                                </td>
-
-                                <td colspan="{{ $tlCols + $craftCols }}">
+                                <td colspan="{{ 1 + $tlCols + $craftCols }}">
                                     <div class="gapMsg {{ !empty($row['prominent']) ? 'gapMsgStrong' : '' }}">
                                         {{ $row['message'] }}
                                     </div>
@@ -580,11 +631,13 @@
                         @endif
 
                         <tr style="height: {{ $h }}px;">
-                            {{-- TIME --}}
-                            <td>
-                                <div class="timeRange">{{ $row['t1'] ?? $row['label'] }}</div>
-                                <div class="timeSub">-</div>
-                                <div class="timeSub">{{ $row['t2'] ?? '' }}</div>
+                            {{-- ZEITACHSE --}}
+                            <td class="timeCell">
+                                @if(!empty($row['markerLabel']))
+                                    <div class="timeMarker">{{ $row['markerLabel'] }}</div>
+                                @elseif(empty($row['suppressT1']))
+                                    <div class="timeRange">{{ $row['t1'] }}</div>
+                                @endif
                             </td>
 
                             {{-- TIMELINE Lanes --}}
@@ -596,16 +649,14 @@
 
                                 @if($tm && !empty($tm['skip']))
                                 @elseif($tm)
-                                    <td rowspan="{{ $tm['rowspan'] }}" style="background: {{ $tm['data']['bg'] }};">
+                                    <td rowspan="{{ $tm['rowspan'] }}" style="background: {{ $tm['data']['bg'] }}; border-left: 3px solid {{ $tm['data']['color'] ?? $tm['data']['bg'] }};">
                                         <div class="cellBox">
-                                            <div class="cellBody">
+                                            <div class="tlBody">
                                                 <div class="tlMeta">{{ $tm['data']['meta'] }}</div>
                                                 @if(!empty($tm['data']['title']) && $tm['data']['title'] !== $tm['data']['meta'])
                                                     <div class="tlTitle">{{ $tm['data']['title'] }}</div>
                                                 @endif
                                             </div>
-
-                                            {!! $ph((int)($tm['heightPx'] ?? $h)) !!}
                                         </div>
                                     </td>
                                 @else
@@ -630,7 +681,7 @@
                                     @if($cm && !empty($cm['skip']))
                                         {{-- skip --}}
                                     @elseif($cm)
-                                        <td rowspan="{{ $cm['rowspan'] }}" style="background: {{ $cBg }};">
+                                        <td rowspan="{{ $cm['rowspan'] }}" style="background: {{ $cBg }}; border-left: 3px solid {{ $craft['color'] ?? $cBg }};">
                                             <div class="cellBox">
                                                 <div class="cellBody">
                                                     <div class="cellTitle">{{ $craft['key'] }}</div>
@@ -687,8 +738,6 @@
                                                         </div>
                                                     @endif
                                                 </div>
-
-                                                {!! $ph((int)($cm['heightPx'] ?? $h)) !!}
                                             </div>
                                         </td>
                                     @else
@@ -700,8 +749,23 @@
                             @endif
                         </tr>
                     @endforeach
+
+                    {{-- Abschlusszeile: Ende des (Teil-)Tages auf der Zeitachse --}}
+                    @php
+                        $lastActive = null;
+                        foreach (array_reverse($chunk['rows']) as $r) {
+                            if (empty($r['isGap'])) { $lastActive = $r; break; }
+                        }
+                    @endphp
+                    @if($lastActive)
+                        <tr class="endRow" style="height: 12px;">
+                            <td class="endTime">{{ $lastActive['t2'] }}</td>
+                            <td colspan="{{ $tlCols + $craftCols }}"></td>
+                        </tr>
+                    @endif
                     </tbody>
                 </table>
+                @endif
             </div>
         @endforeach
     </div>

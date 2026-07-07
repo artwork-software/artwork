@@ -1,6 +1,6 @@
 <template>
     <div class="py-4 px-7 bg-white border-b border-zinc-200 shadow-sm">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-y-2">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <!-- Date Shortcuts - 3 vertical icons -->
@@ -24,7 +24,7 @@
                             classesButton="ui-button"
                         />
                     </div>
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning"/>
+                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning" :is_daily_view="dailyView"/>
                     <div class="flex items-center">
                         <ToolTipComponent
                             v-if="!dailyView"
@@ -73,7 +73,7 @@
                         />
                     </div>
 
-                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance && startAndEndDateInDifferentMonths" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
@@ -83,16 +83,22 @@
                         v-model="projectSearch"
                         :no-margin-top="true"
                         ref="projectSearchInput"
-                        label="Search project"
+                        label="Search project or artist"
                         is-small
                     />
                     <div v-if="projectSearchResults.length > 0"
-                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
+                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-64 rounded-lg z-50">
                         <div v-for="(project, index) in projectSearchResults"
                              :key="index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                            {{ project.name }}
+                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer flex flex-col">
+                            <div>{{ project.name }}</div>
+                            <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
+                                {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
+                            </div>
+                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                                {{ $t('Artist') }}: {{ project.artists }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -108,7 +114,7 @@
                 </div>
                 <SwitchIconTooltip
                     v-if="!project"
-                    v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                    v-model="activeCalSettings.use_project_time_period"
                     :tooltip-text="$t('Project search')"
                     size="md"
                     @change="handleUseTimePeriodChange"
@@ -205,10 +211,10 @@
                         :user_filters="user_filters"
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
-                        :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
+                        :filter-type="isPlanning ? (dailyView ? 'planning_daily_filter' : 'planning_filter') : (dailyView ? 'calendar_daily_filter' : 'calendar_filter')"
                     />
 
-                    <FunctionBarSetting :is-planning="isPlanning" />
+                    <FunctionBarSetting :is-planning="isPlanning" :is-daily-view="dailyView" />
 
                     <!--<ToolTipComponent
                         direction="bottom"
@@ -256,10 +262,10 @@
                         :user_filters="user_filters"
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
-                        :filter-type="isPlanning ? 'planning_filter' : 'calendar_filter'"
+                        :filter-type="isPlanning ? (dailyView ? 'planning_daily_filter' : 'planning_filter') : (dailyView ? 'calendar_daily_filter' : 'calendar_filter')"
                     />
 
-                    <FunctionBarSetting :is-planning="isPlanning" />
+                    <FunctionBarSetting :is-planning="isPlanning" :is-daily-view="dailyView" />
 
                     <ToolTipComponent
                         direction="bottom"
@@ -321,6 +327,7 @@
                   @close="showExportModal = false"
                   :enums="[
                       exportTabEnums.PDF_CALENDAR_EXPORT,
+                      exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
                       exportTabEnums.EXCEL_CALENDAR_EXPORT
                   ]"
@@ -404,7 +411,8 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
         route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
         {
             use_project_time_period: enabled,
-            project_id: projectId
+            project_id: projectId,
+            is_daily_view: props.dailyView
         },
         {
             preserveState: false
@@ -426,6 +434,10 @@ const getExportModalConfiguration = () => {
         project: props.project
     };
 
+    cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
+        project: props.project
+    };
+
     cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
         project: props.project,
         show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
@@ -440,7 +452,7 @@ const getExportModalConfiguration = () => {
 };
 
 const handleUseTimePeriodChange = (enabled) => {
-    if (!enabled && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0) {
+    if (!enabled && getTimePeriodProjectId() > 0) {
         toggleProjectTimePeriodAndRedirect(0, false);
     }
 };
@@ -488,14 +500,30 @@ const props = defineProps({
     }
 })
 
-const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const dailyViewMode = ref(usePage().props.auth.user.calendar_daily_view ?? false);
 const enableVerification = ref(false);
+const activeCalSettings = computed(() => {
+    if (props.dailyView) {
+        return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
+    }
+    return usePage().props.auth.user.calendar_settings;
+});
+
 const isCalendarUsingProjectTimePeriod = computed(() => {
-    return usePage().props.auth.user.calendar_settings.use_project_time_period;
+    return activeCalSettings.value?.use_project_time_period;
+});
+
+const startAndEndDateInDifferentMonths = computed(() => {
+    if (!dateValue || !dateValue[0] || !dateValue[1]) {
+        return false;
+    }
+    const startDate = new Date(dateValue[0]);
+    const endDate = new Date(dateValue[1]);
+    return startDate.getMonth() !== endDate.getMonth() || startDate.getFullYear() !== endDate.getFullYear();
 });
 
 const getTimePeriodProjectId = () => {
-    return usePage().props.auth.user.calendar_settings.time_period_project_id;
+    return activeCalSettings.value?.time_period_project_id;
 }
 
 const formatDateStringToGermanFormat = (dateString) => {
@@ -513,7 +541,8 @@ const closeCalendarAboSettingModal = (bool) => {
 
 const changeDailyViewMode = () => {
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
+        daily_view: dailyViewMode.value,
+        context: 'calendar'
     }, {
         preserveScroll: false,
         preserveState: false
@@ -584,11 +613,25 @@ const getNextDay = (dateString) => {
 }
 
 const previousDay = () => {
-    emits('previousDay')
+    const dayDifference = calculateDateDifference();
+    const newStart = new Date(dateValueCopy.value[0]);
+    newStart.setDate(newStart.getDate() - (dayDifference + 1));
+    const newEnd = new Date(dateValueCopy.value[0]);
+    newEnd.setDate(newEnd.getDate() - 1);
+    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
+    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
+    updateTimes();
 }
 
 const nextDay = () => {
-    emits('nextDay')
+    const dayDifference = calculateDateDifference();
+    const newStart = new Date(dateValueCopy.value[1]);
+    newStart.setDate(newStart.getDate() + 1);
+    const newEnd = new Date(dateValueCopy.value[1]);
+    newEnd.setDate(newEnd.getDate() + dayDifference + 1);
+    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
+    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
+    updateTimes();
 }
 
 const getPreviousDay = (dateString) => {
@@ -603,7 +646,8 @@ const updateTimes = () => {
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
         end_date: dateValueCopy.value[1],
-        isPlanning: props.isPlanning
+        isPlanning: props.isPlanning,
+        isDailyView: props.dailyView
     }, {
         preserveScroll: false,
         preserveState: false
@@ -624,7 +668,8 @@ const jumpToToday = () => {
     if (!dailyViewMode.value) {
         dailyViewMode.value = true;
         router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: true
+            daily_view: true,
+            context: 'calendar'
         }, {
             preserveScroll: false,
             preserveState: false,
@@ -676,7 +721,8 @@ const jumpToCurrentMonth = () => {
     if (dailyViewMode.value) {
         dailyViewMode.value = false;
         router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: false
+            daily_view: false,
+            context: 'calendar'
         }, {
             preserveScroll: false,
             preserveState: false,
@@ -715,12 +761,10 @@ watch(() => projectSearch.value, (searchValue) => {
     );
 });
 
-// watch on usePage().props.auth.user.calendar_settings.use_project_time_period
-watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period, (newValue) => {
-    // if to focus on input field
+watch(() => activeCalSettings.value?.use_project_time_period, (newValue) => {
     if (newValue) {
         nextTick(() => {
-            document.getElementById('calendarProjectSearch').focus();
+            document.getElementById('calendarProjectSearch')?.focus();
         });
     }
 });

@@ -18,6 +18,7 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\BudgetCacheService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\CellCalculationService;
@@ -48,8 +49,6 @@ use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
-use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\Contract\Models\ContractType;
@@ -86,6 +85,9 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\DTOs\ProjectSearchDTO;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
+use Artwork\Modules\Project\Events\UpdateBudget;
+use Artwork\Modules\Project\Jobs\ForceDeleteProjectJob;
+use Artwork\Modules\Project\Jobs\SoftDeleteProjectJob;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
@@ -96,6 +98,7 @@ use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
@@ -153,8 +156,10 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -198,6 +203,8 @@ class ProjectController extends Controller
         private readonly ProjectPrintLayoutService $projectPrintLayoutService,
         protected readonly SingleShiftPresetService $singleShiftPresetService,
         private readonly FilterService $filterService,
+        private readonly \Artwork\Modules\Inventory\Services\InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService,
     ) {
     }
 
@@ -308,11 +315,16 @@ class ProjectController extends Controller
      */
     private function mapProjectsToComponents($projects, $components, $componentData)
     {
-        return $projects->map(function ($project) use ($components, $componentData) {
+        // Cache these values outside the loop to avoid N+1 queries
+        $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
+        $projectStates = ProjectState::all()->keyBy('id');
+
+        return $projects->map(function ($project) use ($components, $componentData, $firstTabId, $projectStates) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
-            $projectData->firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
+            $projectData->updated_at = $project->updated_at;
+            $projectData->firstTabId = $firstTabId;
             $projectData->project_managers = $project->managerUsers;
             $projectData->write_auth = $project->writeUsers;
             $projectData->delete_permission_users = $project->delete_permission_users;
@@ -331,8 +343,17 @@ class ProjectController extends Controller
                     case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
                         $projectData->artist_name = $project->artists;
                         break;
+                    case ProjectTabComponentEnum::BI_KEY_FIGURES->value:
+                        $tickets = $this->biProjectMetricsService->soldTickets($project);
+                        $capacity = $this->biProjectMetricsService->seatsCapacity($project);
+                        $projectData->bi_key_figures = [
+                            'visitors' => $this->biProjectMetricsService->visitors($project),
+                            'revenue' => $this->biProjectMetricsService->revenue($project),
+                            'occupancy' => $this->biProjectMetricsService->occupancyRate($tickets, $capacity),
+                        ];
+                        break;
                     case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                        $projectData->state = ProjectState::find($project->state);
+                        $projectData->state = $projectStates->get($project->state);
                         break;
                     case ProjectTabComponentEnum::PROJECT_GROUP->value:
                         $projectData->group = $project->groups;
@@ -362,10 +383,15 @@ class ProjectController extends Controller
                             ? Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y')
                             : null;
                         break;
+                    case ProjectTabComponentEnum::PROJECT_PERIOD->value:
+                        // Derived from the project's events (event types flagged
+                        // relevant_for_project_period, falling back to all events). Soft-deleted
+                        // events are excluded because the accessor uses the events() relation.
+                        $projectData->project_period = $project->first_and_last_event_date;
+                        break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                        $projectData->collecting_society = $project->collectingSociety;
                         $projectData->cost_center = $project->costCenter;
-                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->gema = $project->gema;
                         $projectData->cost_center_description = $project->cost_center_description;
                         break;
                 }
@@ -391,6 +417,34 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    public function updateArtistResidencySettings(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'breakfast_deduction_per_day' => 'required|numeric|min:0',
+            'artist_residency_do_not_save_default' => 'required|boolean',
+            'artist_residency_daily_allowance_default' => 'required|numeric|min:0',
+            'artist_residency_name_columns' => 'required|array',
+            'artist_residency_name_columns.*.key' => 'required|string|in:name,first_name,last_name',
+            'artist_residency_name_columns.*.enabled' => 'required|boolean',
+        ]);
+
+        $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+        $settings->breakfast_deduction_per_day = (float) $validated['breakfast_deduction_per_day'];
+        $settings->artist_residency_do_not_save_default = (bool) $validated['artist_residency_do_not_save_default'];
+        $settings->artist_residency_daily_allowance_default =
+            (float) $validated['artist_residency_daily_allowance_default'];
+        $settings->artist_residency_name_columns = array_map(
+            static fn (array $column): array => [
+                'key' => $column['key'],
+                'enabled' => (bool) $column['enabled'],
+            ],
+            $validated['artist_residency_name_columns']
+        );
+        $settings->save();
+
+        return Redirect::back();
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -404,7 +458,9 @@ class ProjectController extends Controller
             'departments' => Auth::user()->can(PermissionEnum::TEAM_UPDATE->value) ?
                 Department::nameLike($query)->get() :
                 [],
-            'users' => UserWithoutShiftsResource::collection(User::nameOrLastNameLike($query)->get())->resolve()
+            'users' => UserWithoutShiftsResource::collection(
+                User::nameOrLastNameLike($query)->with('defaultProjectRoles')->get()
+            )->resolve()
         ];
     }
 
@@ -416,7 +472,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        $projects = $projectService->scoutSearch($request->get('query'))->get();
+        $projects = $projectService->searchProjectsByNameOrArtists($request->get('query'));
 
         return $projects->map(fn(Project $project) => ProjectSearchDTO::fromModel($project));
         //return ProjectIndexResource::collection($projects)->resolve();
@@ -435,6 +491,23 @@ class ProjectController extends Controller
             }
         }
         return $filteredObjects;
+    }
+
+    /**
+     * Get basic project information including budget_deadline.
+     */
+    public function showBasic(Project $project): JsonResponse
+    {
+        $budgetDeadline = $project->budget_deadline;
+        if ($budgetDeadline instanceof \Carbon\Carbon) {
+            $budgetDeadline = $budgetDeadline->format('Y-m-d');
+        }
+
+        return response()->json([
+            'id' => $project->id,
+            'name' => $project->name,
+            'budget_deadline' => $budgetDeadline,
+        ]);
     }
 
     public function create(): Response|ResponseFactory
@@ -467,12 +540,16 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        // Do not automatically add the creator to the project team.
-        // Only attach the creator if they are explicitly included in assignedUsers.
         $assignedUsers = collect($request->get('assignedUsers'));
-        if ($assignedUsers->contains(Auth::id())) {
-            // If the creator is explicitly assigned, they should be a manager
-            // as per previous behaviour when present in assignedUsers.
+        $currentUser = Auth::user();
+
+        // Users without "view all projects" permission should automatically be added to the project team
+        // Users with this permission should NOT be automatically added (unless explicitly assigned)
+        if (!$currentUser->can(PermissionEnum::PROJECT_VIEW->value)) {
+            // User doesn't have global read access, so add them to the project team
+            $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
+        } elseif ($assignedUsers->contains(Auth::id())) {
+            // User has global read access but is explicitly included in assignedUsers
             $this->projectService->attachUserToProject($project, $this->authManager->id(), true);
         }
 
@@ -494,23 +571,29 @@ class ProjectController extends Controller
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
 
+        if (is_array($request->input('crm_artist_contact_ids'))) {
+            $this->projectService->syncCrmArtistContacts($project, $request->input('crm_artist_contact_ids'));
+        }
+
         if ($request->boolean('isGroup')) {
             $project->update(['is_group' => true]);
             $project->projectsOfGroup()->sync($request->get('projects'));
         } elseif (!empty($request->selectedGroup)) {
-            $group = Project::find($request->selectedGroup['id']);
-            $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            $group = Project::find($request->selectedGroup['id'] ?? null);
+            if ($group) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
 
-            // Ensure the group's is_group flag is set to true
-            if (!$group->is_group) {
-                $group->is_group = true;
-                $group->save();
+                // Ensure the group's is_group flag is set to true
+                if (!$group->is_group) {
+                    $group->is_group = true;
+                    $group->save();
+                }
             }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
 
         $project->departments()->sync($departments->pluck('id'));
 
@@ -692,7 +775,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function verifiedRequestMainPosition(Request $request): RedirectResponse
+    public function verifiedRequestMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->id);
         $project = $mainPosition->table()->first()->project()->first();
@@ -700,32 +783,34 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
+            if ($user !== null) {
+                $notificationTitle = __('notification.project.budget.add', ['project' => $project->name], $user->language);
+                $broadcastMessage = [
+                    'id' => Str::uuid()->toString(),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('green');
-            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->createNotification();
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('green');
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
         }
         $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
             'notification.project.budget.new_verify_request',
             [],
-            User::find($request->user)->language
+            User::find($request->user)?->language ?? 'de'
         );
         $budgetData = new stdClass();
         $budgetData->position_id = $mainPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -750,18 +835,21 @@ class ProjectController extends Controller
                     ) : null,
             ]
         ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-        $this->notificationService->setPositionVerifyRequestType('main');
-        $this->notificationService->setPositionVerifyRequestId($mainPosition->getAttribute('id'));
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setButtons(['calculation_check', 'delete_request']);
-        $this->notificationService->setBudgetData($budgetData);
-        $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationTo(User::find($request->user));
-        $this->notificationService->createNotification();
+        $requestedUser = User::find($request->user);
+        if ($requestedUser !== null) {
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('blue');
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService->setPositionVerifyRequestType('main');
+            $this->notificationService->setPositionVerifyRequestId($mainPosition->getAttribute('id'));
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setButtons(['calculation_check', 'delete_request']);
+            $this->notificationService->setBudgetData($budgetData);
+            $this->notificationService->setProjectId($project->id);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationTo($requestedUser);
+            $this->notificationService->createNotification();
+        }
 
         $mainPosition->verified()->create([
             'requested_by' => Auth::id(),
@@ -778,22 +866,26 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
+
+        //return Redirect::back();
     }
 
-    public function takeBackVerification(Request $request): RedirectResponse
+    public function takeBackVerification(Request $request): void
     {
 
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
+        $mainPosition = null;
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_TAKE_BACK;
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $table = $mainPosition->table()->first();
             $project = $table->project()->first();
@@ -801,7 +893,7 @@ class ProjectController extends Controller
             $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -825,16 +917,18 @@ class ProjectController extends Controller
                     ) : null,
                 ]
             ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->createNotification();
+            }
             $verifiedRequest->forceDelete();
             $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
 
@@ -854,17 +948,18 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.delete_verify_request',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -889,16 +984,18 @@ class ProjectController extends Controller
                 ]
             ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
             $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
 
@@ -912,7 +1009,9 @@ class ProjectController extends Controller
                     ->setTranslationKeyPlaceholderValues([$subPosition->name])
             );
         }
-        return Redirect::back();
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        //return Redirect::back();
     }
 
     private function deleteOldNotification($positionId, $requestedId): void
@@ -930,24 +1029,25 @@ class ProjectController extends Controller
     public function removeVerification(
         Request $request,
         DatabaseNotificationService $databaseNotificationService
-    ): RedirectResponse {
+    ): void {
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_DELETED;
-
+        $mainPosition = null;
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $this->removeMainPositionCellVerifiedValue($mainPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -971,17 +1071,19 @@ class ProjectController extends Controller
                     ) : null,
                 ]
             ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
             $mainPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
 
@@ -1000,16 +1102,17 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            $requestedUser = User::find($verifiedRequest->requested);
             $notificationTitle = __(
                 'notification.project.budget.verify_removed',
                 [],
-                User::find($verifiedRequest->requested)->language
+                $requestedUser?->language ?? 'de'
             );
             $this->removeSubPositionCellVerifiedValue($subPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1034,17 +1137,19 @@ class ProjectController extends Controller
                 ]
             ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setBudgetData($budgetData);
-            $this->notificationService->setProjectId($project->id);
-            $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($requestedUser !== null) {
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setBudgetData($budgetData);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($requestedUser);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
             $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
 
@@ -1063,10 +1168,10 @@ class ProjectController extends Controller
             $databaseNotificationService->deleteByKey($notificationKey);
         }
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
-    public function verifiedRequestSubPosition(Request $request): RedirectResponse
+    public function verifiedRequestSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->id);
         $mainPosition = $subPosition->mainPosition()->first();
@@ -1074,60 +1179,62 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            // Notification
-            $notificationTitle = __(
-                'notification.project.budget.add',
-                [],
-                $user->language
-            );
-            $project = $mainPosition->table()->first()->project()->first();
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => $subPosition->name,
-                    'href' => null
-                ],
-                2 => [
-                    'type' => 'link',
-                    'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route(
-                        'projects.tab',
-                        [
-                            $project->id,
-                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
-                                ProjectTabComponentEnum::BUDGET
-                            )
-                        ]
-                    ) : null,
-                ]
-            ];
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->createNotification();
+            if ($user !== null) {
+                // Notification
+                $notificationTitle = __(
+                    'notification.project.budget.add',
+                    [],
+                    $user->language
+                );
+                $project = $mainPosition->table()->first()->project()->first();
+                $broadcastMessage = [
+                    'id' => Str::uuid()->toString(),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
+                $notificationDescription = [
+                    1 => [
+                        'type' => 'string',
+                        'title' => $subPosition->name,
+                        'href' => null
+                    ],
+                    2 => [
+                        'type' => 'link',
+                        'title' =>  $project ? $project->name : '',
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::BUDGET
+                                )
+                            ]
+                        ) : null,
+                    ]
+                ];
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->createNotification();
+            }
         }
         $subPosition->update(['is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $notificationTitle = __(
             'notification.project.budget.new_verify_request',
             [],
-            User::find($request->user)->language
+            User::find($request->user)?->language ?? 'de'
         );
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -1151,19 +1258,22 @@ class ProjectController extends Controller
                 ) : null,
             ]
         ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-        $this->notificationService->setPositionVerifyRequestType('sub');
-        $this->notificationService->setPositionVerifyRequestId($subPosition->getAttribute('id'));
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setNotificationTo(User::find($request->user));
-        $this->notificationService->setButtons(['calculation_check', 'delete_request']);
-        $this->notificationService->setBudgetData($budgetData);
-        $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->createNotification();
+        $requestedUser = User::find($request->user);
+        if ($requestedUser !== null) {
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService->setPositionVerifyRequestType('sub');
+            $this->notificationService->setPositionVerifyRequestId($subPosition->getAttribute('id'));
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setNotificationTo($requestedUser);
+            $this->notificationService->setButtons(['calculation_check', 'delete_request']);
+            $this->notificationService->setBudgetData($budgetData);
+            $this->notificationService->setProjectId($project->id);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->createNotification();
+        }
 
         $subPosition->verified()->create([
             'requested_by' => Auth::id(),
@@ -1180,10 +1290,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
-    public function verifiedSubPosition(Request $request): RedirectResponse
+    public function verifiedSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $verifiedRequest = $subPosition->verified()->first();
@@ -1206,10 +1316,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
-    public function fixSubPosition(Request $request): RedirectResponse
+    public function fixSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $this->setSubPositionCellVerifiedValue($subPosition);
@@ -1228,7 +1338,7 @@ class ProjectController extends Controller
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1275,10 +1385,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
-    public function unfixSubPosition(Request $request): RedirectResponse
+    public function unfixSubPosition(Request $request): void
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $this->removeSubPositionCellVerifiedValue($subPosition);
@@ -1296,7 +1406,7 @@ class ProjectController extends Controller
                 $user->language
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -1343,10 +1453,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
-    public function fixMainPosition(Request $request): RedirectResponse
+    public function fixMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
@@ -1362,10 +1472,10 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
-    public function unfixMainPosition(Request $request): RedirectResponse
+    public function unfixMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->removeMainPositionCellVerifiedValue($mainPosition);
@@ -1381,7 +1491,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function resetTable(
@@ -1404,7 +1514,7 @@ class ProjectController extends Controller
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService,
-    ): RedirectResponse {
+    ): void {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
             $project,
@@ -1430,10 +1540,10 @@ class ProjectController extends Controller
             $project,
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($project->id));
     }
 
-    public function verifiedMainPosition(Request $request): RedirectResponse
+    public function verifiedMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
@@ -1457,7 +1567,7 @@ class ProjectController extends Controller
                 ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
-        return Redirect::back();
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void
@@ -1469,6 +1579,7 @@ class ProjectController extends Controller
                 $cell->update(['verified_value' => $cell->value]);
             }
         }
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function removeSubPositionCellVerifiedValue(SubPosition $subPosition): void
@@ -1480,6 +1591,7 @@ class ProjectController extends Controller
                 $cell->update(['verified_value' => null]);
             }
         }
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function setMainPositionCellVerifiedValue(MainPosition $mainPosition): void
@@ -1494,6 +1606,8 @@ class ProjectController extends Controller
                 }
             }
         }
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition): void
@@ -1508,6 +1622,7 @@ class ProjectController extends Controller
                 }
             }
         }
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function updateCellSource(
@@ -1545,6 +1660,8 @@ class ProjectController extends Controller
         $column->update([
             'name' => $request->columnName
         ]);
+
+        broadcast(new UpdateBudget($column->project_id));
     }
     public function updateTableName(Request $request): void
     {
@@ -1552,6 +1669,9 @@ class ProjectController extends Controller
         $table->update([
             'name' => $request->table_name
         ]);
+
+
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     public function columnDelete(
@@ -1591,6 +1711,8 @@ class ProjectController extends Controller
         $mainPosition->update([
             'name' => $request->mainPositionName
         ]);
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function updateSubPositionName(Request $request): void
@@ -1599,6 +1721,8 @@ class ProjectController extends Controller
         $subPosition->update([
             'name' => $request->subPositionName
         ]);
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     private function setColumnSubName(int $table_id): void
@@ -1759,18 +1883,26 @@ class ProjectController extends Controller
                 ]);
             }
         }
+
+
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     public function updateCellValue(
         Request $request,
         MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
-        MoneySourceCalculationService $moneySourceCalculationService
+        MoneySourceCalculationService $moneySourceCalculationService,
+        ColumnCellService $columnCellService
     ): void {
         $column = Column::find($request->column_id);
-        $project = $column->table()->first()->project()->first();
+        $project = $column->table->project;
         $cell = ColumnCell::where('column_id', $request->column_id)
             ->where('sub_position_row_id', $request->sub_position_row_id)
             ->first();
+
+        if ($cell === null) {
+            return;
+        }
 
         if ($request->is_verified) {
             $this->changeService->saveFromBuilder(
@@ -1788,7 +1920,7 @@ class ProjectController extends Controller
         }
 
         $cell->update(['value' => $request->value]);
-        $this->updateAutomaticCellValues($request->sub_position_row_id);
+        $columnCellService->recalculateAutomaticColumns($request->sub_position_row_id);
 
         if ($cell->linked_money_source_id) {
             $moneySourceThresholdReminderService->handleThresholdReminders(
@@ -1797,13 +1929,18 @@ class ProjectController extends Controller
                 $this->notificationService
             );
         }
+
+        broadcast(new UpdateBudget($project->id))->toOthers();
     }
 
-    public function changeColumnColor(Request $request): RedirectResponse
+    public function changeColumnColor(Request $request): void
     {
         $column = Column::find($request->columnId);
         $column->update(['color' => $request->color]);
-        return Redirect::back();
+
+        broadcast(new UpdateBudget($column->table->project_id));
+
+        //return Redirect::back();
     }
 
     public function addSubPositionRow(Request $request): void
@@ -1850,9 +1987,11 @@ class ProjectController extends Controller
                 'verified_value' => ''
             ]);
         }
+
+        broadcast(new UpdateBudget($table->project_id))->toOthers();
     }
 
-    public function reorderSubPositionRows(Request $request): RedirectResponse
+    public function reorderSubPositionRows(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
     {
         $validated = $request->validate([
             'updates' => ['required', 'array', 'min:1'],
@@ -1888,8 +2027,87 @@ class ProjectController extends Controller
             }
         });
 
+        // Cache invalidieren
+        $firstSubPositionId = $updates[0]['sub_position_id'] ?? null;
+        if ($firstSubPositionId) {
+            $subPosition = SubPosition::find($firstSubPositionId);
+            if ($subPosition) {
+                $mainPosition = MainPosition::find($subPosition->main_position_id);
+                if ($mainPosition) {
+                    $table = Table::find($mainPosition->table_id);
+                    if ($table && $table->project_id) {
+                        $project = Project::find($table->project_id);
+                        if ($project) {
+                            $budgetCacheService->forgetForProjectGroup($project);
+                        }
+                    }
+                }
+            }
+        }
+
         // Inertia expects a redirect (or a valid Inertia response). Without this,
         // the client will not treat the request as successful.
+        return Redirect::back();
+    }
+
+    public function reorderMainPositions(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'table_id' => ['required', 'integer', 'exists:tables,id'],
+            'type' => ['required', 'string'],
+            'main_position_ids' => ['required', 'array', 'min:1'],
+            'main_position_ids.*' => ['required', 'integer', 'exists:main_positions,id'],
+        ]);
+
+        DB::transaction(function () use ($validated): void {
+            foreach ($validated['main_position_ids'] as $index => $mainPositionId) {
+                MainPosition::query()
+                    ->whereKey($mainPositionId)
+                    ->update(['position' => $index + 1]);
+            }
+        });
+
+        $table = Table::find($validated['table_id']);
+        if ($table && $table->project_id) {
+            $project = Project::find($table->project_id);
+            if ($project) {
+                $budgetCacheService->forgetForProjectGroup($project);
+            }
+        }
+
+        return Redirect::back();
+    }
+
+    public function reorderSubPositions(Request $request, BudgetCacheService $budgetCacheService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'main_position_id' => ['required', 'integer', 'exists:main_positions,id'],
+            'sub_position_ids' => ['required', 'array', 'min:1'],
+            'sub_position_ids.*' => ['required', 'integer', 'exists:sub_positions,id'],
+        ]);
+
+        DB::transaction(function () use ($validated): void {
+            foreach ($validated['sub_position_ids'] as $index => $subPositionId) {
+                SubPosition::query()
+                    ->whereKey($subPositionId)
+                    ->update([
+                        'main_position_id' => $validated['main_position_id'],
+                        'position' => $index + 1,
+                    ]);
+            }
+        });
+
+        $mainPosition = MainPosition::find($validated['main_position_id']);
+        if ($mainPosition) {
+            $table = Table::find($mainPosition->table_id);
+            if ($table && $table->project_id) {
+                $project = Project::find($table->project_id);
+                if ($project) {
+                    $budgetCacheService->forgetForProjectGroup($project);
+                }
+            }
+        }
+
         return Redirect::back();
     }
 
@@ -1927,6 +2145,7 @@ class ProjectController extends Controller
         );
 
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     public function addSubPosition(Request $request): void
@@ -1946,6 +2165,7 @@ class ProjectController extends Controller
         ]);
 
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
+        broadcast(new UpdateBudget($table->project_id));
     }
 
     private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns): void
@@ -1984,6 +2204,8 @@ class ProjectController extends Controller
                 'verified_value' => ''
             ]);
         }
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function updateCellCalculation(Request $request)
@@ -2084,68 +2306,23 @@ class ProjectController extends Controller
             ]);
         }
 
-        // Für normale Requests: Void (backward compatible)
-        return;
+        return Redirect::back();
     }
 
-    /**
-     * This function automatically recalculates the linked columns when changes are made.
-     * @param $subPositionRowId
-     * @return void
-     */
-    private function updateAutomaticCellValues($subPositionRowId): void
-    {
-
-        $rows = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
-
-        foreach ($rows as $row) {
-            $column = Column::find($row->column_id);
-
-            if ($column->type === 'empty' || $column->type === 'sage') {
-                continue;
-            }
-            $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)
-                ->where('sub_position_row_id', $subPositionRowId)
-                ->first()
-                ?->value;
-            $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)
-                ->where('sub_position_row_id', $subPositionRowId)
-                ->first()
-                ?->value;
-            $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)
-                ->where('column_id', $column->id)
-                ->first();
-
-            if ($column->type === 'sum') {
-                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
-                $sum = bcadd($firstDecimal, $secondDecimal, 2);
-                $updateColumn->update([
-                    'value' => $sum
-                ]);
-            } else {
-                $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
-                $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
-                $sum = bcsub($firstDecimal, $secondDecimal, 2);
-                $updateColumn->update([
-                    'value' => $sum
-                ]);
-            }
-        }
-    }
-
-    public function lockColumn(Request $request): RedirectResponse
+    public function lockColumn(Request $request): void
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
-        return Redirect::back();
+        broadcast(new UpdateBudget($column->table->project_id));
+        //return Redirect::back();
     }
 
-    public function unlockColumn(Request $request): RedirectResponse
+    public function unlockColumn(Request $request): void
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => false, 'locked_by' => null]);
-        return Redirect::back();
+        broadcast(new UpdateBudget($column->table->project_id));
+        //return Redirect::back();
     }
 
     public function updateProjectState(Request $request, Project $project): void
@@ -2155,11 +2332,11 @@ class ProjectController extends Controller
 
 
 
-        // Aktualisiere nur, wenn wirklich eine neue State-ID kommt
-        // (kleine Absicherung, damit wir nicht sinnlos speichern)
+        // Aktualisiere nur, wenn wirklich eine Änderung vorliegt
         $newStateId = $request->input('state');
 
-        if ($newStateId !== null && (int) $project->state !== (int) $newStateId) {
+        // Prüfe ob sich der State geändert hat (auch wenn auf null gesetzt wird)
+        if ($project->state !== $newStateId && ($newStateId === null || (int) $project->state !== (int) $newStateId)) {
             $project->update([
                 'state' => $newStateId,
             ]);
@@ -2196,6 +2373,20 @@ class ProjectController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
 
+    private function inertiaProjectError(Request $request, int $status, string $title, string $message)
+    {
+        $projectsIndexHref = Route::has('projects.index') ? route('projects.index') : url('/projects');
+        $homeHref = Route::has('dashboard') ? route('dashboard') : url('/');
+
+        return inertia('Errors/ProjectError', [
+            'status' => $status,
+            'title' => $title,
+            'message' => $message,
+            'projectsIndexHref' => $projectsIndexHref,
+            'homeHref' => $homeHref,
+        ])->toResponse($request)->setStatusCode($status);
+    }
+
 
     /**
      * @throws Throwable
@@ -2212,7 +2403,6 @@ class ProjectController extends Controller
         ContractTypeService $contractTypeService,
         CompanyTypeService $companyTypeService,
         CurrencyService $currencyService,
-        CollectingSocietyService $collectingSocietyService,
         ProjectService $projectService,
         UserService $userService,
         FreelancerService $freelancerService,
@@ -2226,26 +2416,35 @@ class ProjectController extends Controller
         ProjectCreateSettings $projectCreateSettings,
         EventPropertyService $eventPropertyService,
         ShiftTimePresetService $shiftTimePresetService
-    ): Response|ResponseFactory {
-        // Header-Objekt initialisieren (wird von Frontend-Komponenten erwartet)
+    ) {
+
+
+        if (method_exists($project, 'trashed') ? $project->trashed() : (bool) $project->deleted_at) {
+            return $this->inertiaProjectError(
+                $request,
+                410,
+                'Project has been deleted',
+                'This project has been deleted and is no longer available.'
+            );
+        }
+
         $headerObject = new stdClass();
-        $headerObject->project = $project;
-        // explizit setzen, wie zuvor verwendet
+        $headerObject->project = $project->append('first_and_last_event_date');
         $headerObject->project->cost_center = $project->costCenter;
 
         $loadedProjectInformation = [];
 
         /** @var User|null $authUser */
         $authUser = $userService->getAuthUser();
+
         if ($authUser?->last_project_id !== $project->id) {
             $authUser?->update(['last_project_id' => $project->id]);
         }
 
-        $firstEvent = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEvent = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        // Tab + benötigte Relationen laden (inkl. Sortierung)
         $projectTab->load([
+            'visibleUsers:id,first_name,last_name',
+            'visibleDepartments:id,name,svg_name',
+
             // Hauptkomponenten inkl. ProjectValue
             'components.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
@@ -2253,7 +2452,8 @@ class ProjectController extends Controller
             'components' => function ($query): void {
                 $query->orderBy('order');
             },
-            // WICHTIG: Berechtigungsdaten der Hauptkomponenten (nur ID und can_write vom Pivot)
+
+            // Berechtigungsdaten der Hauptkomponenten (nur ID und can_write vom Pivot)
             'components.component.users' => function ($query): void {
                 $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
             },
@@ -2268,7 +2468,6 @@ class ProjectController extends Controller
             'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
                 $query->where('project_id', $project->id);
             },
-            // WICHTIG: Berechtigungsdaten der Sidebar-Komponenten (nur ID und can_write vom Pivot)
             'sidebarTabs.componentsInSidebar.component.users' => function ($query): void {
                 $query->select('users.id', 'users.first_name', 'users.last_name')->withPivot('can_write');
             },
@@ -2294,10 +2493,23 @@ class ProjectController extends Controller
             },
         ]);
 
-        // Alle Komponenten des Tabs inkl. Sidebar (unique, Reihenfolge beibehalten)
+        if (!$projectTab->visibleForUser($authUser)) {
+            return $this->inertiaProjectError(
+                $request,
+                410,
+                'Project Tab not accessible',
+                'You do not have permission to access this project tab.'
+            );
+        }
+
+        $this->inventoryUserFilterShareService->getFilterDataForUser($authUser);
+
+        $firstEvent = $this->projectService->getFirstEventInProject($project);
+        $lastEvent  = $this->projectService->getLatestEndingEventInProject($project);
+
         $projectTabComponents = $projectTab
             ->components()
-            ->with('component')
+            ->with(['component'])
             ->get()
             ->concat(
                 $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
@@ -2323,18 +2535,15 @@ class ProjectController extends Controller
                 'genres',
                 'sectors',
             ]);
-
-            // keep frontend contract (`project.cost_center`)
             $headerObject->project->cost_center = $project->costCenter;
         }
 
-        $hasShiftTab = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
+        $hasShiftTab    = in_array(ProjectTabComponentEnum::SHIFT_TAB->value, $componentTypes, true);
         $hasCalendarTab = in_array(ProjectTabComponentEnum::CALENDAR->value, $componentTypes, true);
-        $hasBudgetTab = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);
+        $hasBudgetTab   = in_array(ProjectTabComponentEnum::BUDGET->value, $componentTypes, true);
 
         foreach ($projectTabComponents as $componentInTab) {
             $component = $componentInTab->component;
-
             if ($component->type == ProjectTabComponentEnum::SHIFT_TAB->value) {
                 $this->singleShiftPresetService->shareSingleShiftPresets();
             }
@@ -2346,131 +2555,142 @@ class ProjectController extends Controller
         $headerObject->firstEventInProject = $firstEvent;
         $headerObject->lastEventInProject  = $lastEvent;
 
-        $headerObject->roomsWithAudience   = Room::withAudience($project->id)->pluck('name', 'id');
-        // eventTypes, eventStatuses, event_properties müssen in headerObject sein, weil TabContent.vue sie an Child-Komponenten weitergibt
-        $headerObject->eventTypes          = $this->eventTypeService->getAll();
-        $headerObject->eventStatuses       = app(EventSettings::class)->enable_status
+        // Schichten können auch außerhalb des Event-Zeitraums liegen (z.B. Auf-/Abbau);
+        // der Schichttab richtet seinen Zeitraum am Min/Max über Events UND Schichten aus.
+        $headerObject->firstShiftInProject = $project->shifts()->min('start_date');
+        $headerObject->lastShiftInProject  = $project->shifts()->max('end_date');
+
+        $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
+        $headerObject->eventTypes        = $this->eventTypeService->getAll();
+        $headerObject->eventStatuses     = app(EventSettings::class)->enable_status
             ? EventStatus::orderBy('order')->get()
             : [];
-        $headerObject->event_properties    = $eventPropertyService->getAll();
-        $headerObject->states              = $this->projectStateService->getAll();
+        $headerObject->event_properties  = $eventPropertyService->getAll();
+        $headerObject->states            = $this->projectStateService->getAll();
 
-        $headerObject->projectGroups       = $project->groups;
+        $headerObject->projectGroups     = $project->groups;
 
-        // Quick Win Step 4: GroupProjects nur laden wenn ProjectGroupComponent vorhanden (5-10% Reduktion)
+        // Append first_and_last_event_date to groups so the frontend can show project periods
+        $project->loadMissing('groups');
+        $project->groups->each->append('first_and_last_event_date');
+
         $hasGroupComponent = in_array('ProjectGroupComponent', $componentTypes, true);
         if ($hasGroupComponent) {
             $headerObject->groupProjects = Project::where('is_group', 1)->get();
         } else {
-            $headerObject->groupProjects = collect(); // Leere Collection für Konsistenz
+            $headerObject->groupProjects = collect();
         }
 
-        $headerObject->projectsOfGroup     = $project->projectsOfGroup()->get();
+        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get()->each->append('first_and_last_event_date');
 
-        // Quick Win Step 3: Categories/Genres/Sectors nur laden wenn nötig.
-        // Achtung: Auch ohne ProjectAttributesComponent können die Daten im Header (z.B. Projekt-Basisdaten-Modal)
-        // benötigt werden. Daher zusätzlich über die CreateSettings absichern.
         $hasAttributesComponent = in_array('ProjectAttributesComponent', $componentTypes, true);
         $needsProjectAttributesData = $hasAttributesComponent || (bool) ($projectCreateSettings->attributes ?? false);
         if ($needsProjectAttributesData) {
             $headerObject->categories = $this->categoryService->getAll();
-            $headerObject->genres = $this->genreService->getAll();
-            $headerObject->sectors = $this->sectorService->getAll();
+            $headerObject->genres     = $this->genreService->getAll();
+            $headerObject->sectors    = $this->sectorService->getAll();
         } else {
-            // Leere Arrays für Konsistenz
             $headerObject->categories = [];
-            $headerObject->genres = [];
-            $headerObject->sectors = [];
+            $headerObject->genres     = [];
+            $headerObject->sectors    = [];
         }
 
-        // Projekt-spezifische Kategorien/Genres/Sektoren immer laden (für Anzeige)
-        $headerObject->projectCategories   = $project->categories;
-        $headerObject->projectGenres       = $project->genres;
-        $headerObject->projectSectors      = $project->sectors;
+        $headerObject->projectCategories = $project->categories;
+        $headerObject->projectGenres     = $project->genres;
+        $headerObject->projectSectors    = $project->sectors;
 
-        // Optimiert: Nur id und name laden statt alle Events und Admins
-        $headerObject->rooms               = Room::select('id', 'name')->whereNull('deleted_at')->get();
+        $headerObject->rooms = Room::select('id', 'name')->whereNull('deleted_at')->get();
 
-        $headerObject->projectState        = $project->state;
+        $headerObject->projectState = $project->state;
 
-        // Load full state object with is_planning for BulkBody component
         $project->load('status');
         $headerObject->project->state = $project->status;
 
         $tabInformation = [];
-        ProjectTab::orderBy('order')->get()->each(function ($tab) use (&$tabInformation): void {
-            $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
-        });
+        ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->orderBy('order')
+            ->get(['id', 'name'])
+            ->each(function ($tab) use (&$tabInformation): void {
+                $tabInformation[] = ['id' => $tab->id, 'name' => $tab->name];
+            });
+        $headerObject->tabs = $tabInformation;
 
-        $headerObject->tabs  = $tabInformation;
+        $headerObject->currentTabId = $projectTab->id;
+        $headerObject->currentGroup = $groupOutput;
 
-        $headerObject->currentTabId        = $projectTab->id;
-        $headerObject->currentGroup        = $groupOutput;
+        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
+        $headerObject->projectWriteIds   = $project->writeUsers()->pluck('user_id');
+        $headerObject->projectDeleteIds  = $project->delete_permission_users()->pluck('user_id');
 
-        // IDs über Pivot-Tabellen beibehalten (wie bisher)
-        $headerObject->projectManagerIds   = $project->managerUsers()->pluck('user_id');
-        $headerObject->projectWriteIds     = $project->writeUsers()->pluck('user_id');
-        $headerObject->projectDeleteIds    = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
+        $headerObject->projectGenreIds    = $project->genres()->pluck('genre_id');
+        $headerObject->projectSectorIds   = $project->sectors()->pluck('sector_id');
 
-        $headerObject->projectCategoryIds  = $project->categories()->pluck('category_id');
-        $headerObject->projectGenreIds     = $project->genres()->pluck('genre_id');
-        $headerObject->projectSectorIds    = $project->sectors()->pluck('sector_id');
-
-        // Achtung: wird an mehreren Stellen gesetzt – Reihenfolge/Name unverändert lassen
         $headerObject->project->project_managers = $project->managerUsers;
 
-        // Safely fetch latest history entry; can be null if no history exists
-        $latestHistory = $project->historyChanges()->first();
-
+        $latestActivity = $project->activities()->latest()->first();
         $latestChange  = [];
-        if ($latestHistory !== null) {
+        if ($latestActivity !== null) {
+            $properties = $latestActivity->properties;
             $latestChange = [[
-                'changes'    => $latestHistory->changes
-                    ? json_decode($latestHistory->changes, false, 512, JSON_THROW_ON_ERROR)
-                    : null,
-                'created_at' => $latestHistory->created_at->diffInHours() < 24
-                    ? $latestHistory->created_at->diffForHumans()
-                    : $latestHistory->created_at->format('d.m.Y, H:i'),
-                'changer'    => $latestHistory->changer()
+                'changes'    => $properties instanceof \Illuminate\Support\Collection
+                    ? $properties->all()
+                    : ($properties ?? null),
+                'created_at' => $latestActivity->created_at->diffInHours() < 24
+                    ? $latestActivity->created_at->diffForHumans()
+                    : $latestActivity->created_at->format('d.m.Y, H:i'),
+                'changer'    => $latestActivity->causer()
                     ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
                     ->first(),
             ]];
         }
         $headerObject->project_history = $latestChange;
 
-        // Basis-Daten die immer gebraucht werden
         /** @var User $user */
         $user = $this->authManager->user();
 
-        // Basis-Return-Daten
+
+        $firstVisibleTabId = ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->orderBy('order')
+            ->value('id');
+
+        $firstVisibleCalendarTabId = ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->byComponentsComponentType(ProjectTabComponentEnum::CALENDAR->value)
+            ->orderBy('order')
+            ->value('id') ?? $firstVisibleTabId;
+
+        $firstVisibleBudgetTabId = ProjectTab::query()
+            ->visibleForUser($authUser)
+            ->byComponentsComponentType(ProjectTabComponentEnum::BUDGET->value)
+            ->orderBy('order')
+            ->value('id') ?? $firstVisibleTabId;
+
         $baseData = [
-            'currentTab'                  => $projectTab,
-            'headerObject'                => $headerObject,
-            'loadedProjectInformation'    => $loadedProjectInformation,
-            'first_project_tab_id'        => $this->projectTabService->getFirstProjectTabId(),
-            'first_project_calendar_tab_id' => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
-            'first_project_budget_tab_id'   => $this->projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
-            'createSettings'              => app(ProjectCreateSettings::class),
-            'printLayouts'                => $this->projectPrintLayoutService->getAll(),
-            'project'                     => $headerObject->project,
-            'eventTypes'                  => $this->eventTypeService->getAll(),
-            'eventStatuses'               => app(EventSettings::class)->enable_status
+            'currentTab'                   => $projectTab,
+            'headerObject'                 => $headerObject,
+            'loadedProjectInformation'     => $loadedProjectInformation,
+            'first_project_tab_id'         => $firstVisibleTabId,
+            'first_project_calendar_tab_id'=> $firstVisibleCalendarTabId,
+            'first_project_budget_tab_id'  => $firstVisibleBudgetTabId,
+            'createSettings'               => app(ProjectCreateSettings::class),
+            'printLayouts'                 => $this->projectPrintLayoutService->getAll(),
+            'project'                      => $headerObject->project,
+            'eventTypes'                   => $this->eventTypeService->getAll(),
+            'eventStatuses'                => app(EventSettings::class)->enable_status
                 ? EventStatus::orderBy('order')->get()
                 : [],
-            'event_properties'            => $eventPropertyService->getAll(),
-            'projectId'                   => $project->id,
+            'event_properties'             => $eventPropertyService->getAll(),
+            'projectId'                    => $project->id,
         ];
 
-        // Tab-spezifische Daten nur bei Bedarf laden
         $tabSpecificData = [];
 
         if ($hasShiftTab) {
-            // ShiftTab-Daten laden (analog EventController::viewShiftPlan)
             $this->loadShiftTabData($headerObject, $project);
 
-            // Ensure project shift filter exists for the user
             $userCalendarFilter = $user->userFilters()->firstOrCreate(
                 ['filter_type' => UserFilterTypes::PROJECT_SHIFT_FILTER->value],
                 [
@@ -2485,12 +2705,12 @@ class ProjectController extends Controller
                     'craft_ids' => null,
                 ]
             );
+
             $userCalendarSettings = $user->getAttribute('calendar_settings');
 
             $startDate = $firstEvent?->getAttribute('start_time')?->copy()?->startOfDay() ?? Carbon::now()->startOfDay();
-            $endDate = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
+            $endDate   = $lastEvent?->getAttribute('end_time')?->copy()?->endOfDay() ?? $startDate->copy()->endOfDay();
 
-            // Räume gefiltert analog Shift-Plan (berücksichtigt auch Schichten für Belegung)
             /** @var CalendarDataService $calendarDataService */
             $calendarDataService = app(CalendarDataService::class);
             $rooms = $calendarDataService->getFilteredRooms(
@@ -2501,12 +2721,13 @@ class ProjectController extends Controller
                 true
             );
 
-            // Transform Room models to RoomDTOs for frontend compatibility
             $roomDTOs = $rooms->map(fn($room) => new RoomDTO(
                 id: $room->id,
                 name: $room->name,
                 has_events: $room->events_count > 0,
-                admins: $room->admins->pluck('id')->toArray()
+                admins: $room->admins->pluck('id')->toArray(),
+                everyone_can_book: $room->everyone_can_book,
+                requestable_by: $room->requestableBy->pluck('id')->toArray(),
             ));
 
             $dateValue = [
@@ -2529,7 +2750,6 @@ class ProjectController extends Controller
                 $history
             ));
 
-            // Zusätzliche ShiftTab-Props
             $tabSpecificData['rooms'] = $roomDTOs;
             $tabSpecificData['user_filters'] = $userCalendarFilter;
         }
@@ -2542,26 +2762,45 @@ class ProjectController extends Controller
             $tabSpecificData = array_merge($tabSpecificData, $this->getBudgetTabInertiaData());
         }
 
+        // Load data for PROJECT_CONTRACTS_DOCUMENTS component
+        $hasContractsDocumentsComponent = in_array(
+            ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value,
+            $componentTypes,
+            true
+        );
+
+        if ($hasContractsDocumentsComponent) {
+            $tabSpecificData = array_merge($tabSpecificData, $this->getContractsDocumentsTabInertiaData(
+                $project,
+                $authUser,
+                $contractTypeService,
+                $companyTypeService,
+                $currencyService
+            ));
+        }
+
         return inertia('Projects/Tab/TabContent', array_merge($baseData, $tabSpecificData));
     }
 
+
     public function history(Project $project): JsonResponse
     {
-        $historyComplete = $project->historyChanges()->all();
-        $history = array_map(
-            static function ($history) {
-                return [
-                    'changes'    => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
-                    'created_at' => $history->created_at->diffInHours() < 24
-                        ? $history->created_at->diffForHumans()
-                        : $history->created_at->format('d.m.Y, H:i'),
-                    'changer'    => $history->changer()
-                        ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
-                        ->first(),
-                ];
-            },
-            $historyComplete
-        );
+        $activities = $project->activities()->latest()->get();
+        $history = $activities->map(static function ($activity) {
+            $properties = $activity->properties;
+
+            return [
+                'changes'    => $properties instanceof \Illuminate\Support\Collection
+                    ? $properties->all()
+                    : ($properties ?? null),
+                'created_at' => $activity->created_at->diffInHours() < 24
+                    ? $activity->created_at->diffForHumans()
+                    : $activity->created_at->format('d.m.Y, H:i'),
+                'changer'    => $activity->causer()
+                    ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                    ->first(),
+            ];
+        })->all();
 
          $access_budget = $project->access_budget;
 
@@ -2617,15 +2856,13 @@ class ProjectController extends Controller
             ])->without(['craftShiftPlaner', 'craftInventoryPlaner'])->get(),
             // Step 2: Tags/TagGroups entfernt - werden nicht im ShiftTab verwendet
             // Step 3: History entfernt - wird per API geladen (/projects/{project}/history)
-            'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::SHIFT_FILTER->value),
+            'personalFilters' => $filterService->getPersonalFilter($user, UserFilterTypes::PROJECT_SHIFT_FILTER->value),
             'filterOptions' => $filterService->getCalendarFilterDefinitions(),
             'dateValue' => $dateValue,
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
             'firstProjectShiftTabId' => $this->projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
-            'currentUserCrafts' => $userService->getAuthUserCrafts()->merge(
-                $craftService->getAssignableByAllCrafts()
-            ),
+            'currentUserCrafts' => $this->getCurrentUserCraftsForShiftTab($user, $craftService),
             'shiftTimePresets' => $shiftTimePresetService->getAll(),
             'globalQualifications' => app(GlobalQualificationService::class)->getAll(),
             'shiftGroups' => app(ShiftGroupService::class)->getAllShiftGroups(),
@@ -2656,6 +2893,149 @@ class ProjectController extends Controller
         // BudgetTab-spezifische Daten können hier hinzugefügt werden
         // Aktuell werden diese bei Bedarf geladen
         return [];
+    }
+
+    /**
+     * Liefert Contracts & Documents Tab-spezifische Daten als Array für Inertia.
+     *
+     * @return array<string,mixed>
+     */
+    private function getContractsDocumentsTabInertiaData(
+        Project $project,
+        ?User $authUser,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService
+    ): array {
+        $userId = $authUser?->id;
+
+        // Load contracts for this project with necessary relations
+        $contracts = $project->contracts()
+            ->with(['accessingUsers', 'accessingDepartments', 'contract_type', 'company_type', 'currency'])
+            ->get()
+            ->map(function ($contract) use ($project) {
+                return [
+                    'id' => $contract->id,
+                    'name' => $contract->name,
+                    'basename' => $contract->basename,
+                    'partner' => $contract->contract_partner,
+                    'accessibleUsers' => $contract->accessingUsers->map(fn($user) => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
+                    ]),
+                    'accessibleDepartments' => $contract->accessingDepartments->map(fn($dept) => [
+                        'id' => $dept->id,
+                        'name' => $dept->name,
+                        'svg_name' => $dept->svg_name,
+                    ]),
+                    'project' => [
+                        'id' => $project->id,
+                        'name' => $project->name,
+                    ],
+                    'contract_type' => $contract->contract_type,
+                    'company_type' => $contract->company_type,
+                    'currency' => $contract->currency,
+                    'ksk_liable' => $contract->ksk_liable,
+                    'ksk_amount' => $contract->ksk_amount,
+                    'ksk_reason' => $contract->ksk_reason,
+                    'resident_abroad' => $contract->resident_abroad,
+                    'has_foreign_tax' => $contract->foreign_tax,
+                    'foreign_tax_amount' => $contract->foreign_tax_amount,
+                    'foreign_tax_reason' => $contract->foreign_tax_reason,
+                    'reverse_charge_amount' => $contract->reverse_charge_amount,
+                    'has_power_of_attorney' => $contract->has_power_of_attorney,
+                    'is_freed' => $contract->is_freed,
+                    'deadline_date' => $contract->deadline_date,
+                    'amount' => $contract->amount,
+                    'description' => $contract->description,
+                    'currency_id' => $contract->currency_id,
+                ];
+            });
+
+        // Load document requests for this project (created by user or assigned to user)
+        $docRequestEagerLoad = ['requester', 'requested', 'project', 'contract', 'contractType', 'companyType', 'crmContact.contactType'];
+
+        $createdRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requester_id', $userId)
+            ->where('project_id', $project->id)
+            ->with($docRequestEagerLoad)
+            ->get()
+            ->map(fn($request) => $this->mapDocumentRequest($request));
+
+        $assignedRequests = \Artwork\Modules\DocumentRequest\Models\DocumentRequest::where('requested_id', $userId)
+            ->where('project_id', $project->id)
+            ->with($docRequestEagerLoad)
+            ->get()
+            ->map(fn($request) => $this->mapDocumentRequest($request));
+
+        return [
+            'projectContracts' => $contracts,
+            'projectCreatedRequests' => $createdRequests,
+            'projectAssignedRequests' => $assignedRequests,
+            'contractTypes' => $contractTypeService->getAll(),
+            'companyTypes' => $companyTypeService->getAll(),
+            'currencies' => $currencyService->getAll(),
+            'crmContactTypes' => app(\Artwork\Modules\Crm\Services\CrmContactTypeService::class)->getActive(),
+        ];
+    }
+
+    /**
+     * Map a document request to an array for frontend.
+     *
+     * @return array<string,mixed>
+     */
+    private function mapDocumentRequest(\Artwork\Modules\DocumentRequest\Models\DocumentRequest $request): array
+    {
+        return [
+            'id' => $request->id,
+            'title' => $request->title,
+            'description' => $request->description,
+            'status' => $request->status,
+            'deadline_date' => $request->deadline_date?->format('Y-m-d'),
+            'contract_partner' => $request->contract_partner,
+            'crm_contact_id' => $request->crm_contact_id,
+            'crm_contact' => $request->crmContact ? [
+                'id' => $request->crmContact->id,
+                'display_name' => $request->crmContact->display_name,
+                'profile_photo_url' => $request->crmContact->profile_photo_url,
+                'contact_type' => $request->crmContact->contactType ? [
+                    'id' => $request->crmContact->contactType->id,
+                    'name' => $request->crmContact->contactType->name,
+                ] : null,
+            ] : null,
+            'contract_value' => $request->contract_value,
+            'ksk_liable' => $request->ksk_liable,
+            'ksk_amount' => $request->ksk_amount,
+            'ksk_reason' => $request->ksk_reason,
+            'foreign_tax' => $request->foreign_tax,
+            'foreign_tax_amount' => $request->foreign_tax_amount,
+            'foreign_tax_reason' => $request->foreign_tax_reason,
+            'reverse_charge_amount' => $request->reverse_charge_amount,
+            'comment' => $request->comment,
+            'contract_type' => $request->contractType,
+            'company_type' => $request->companyType,
+            'requester' => $request->requester ? [
+                'id' => $request->requester->id,
+                'first_name' => $request->requester->first_name,
+                'last_name' => $request->requester->last_name,
+                'profile_photo_url' => $request->requester->profile_photo_url,
+            ] : null,
+            'requested' => $request->requested ? [
+                'id' => $request->requested->id,
+                'first_name' => $request->requested->first_name,
+                'last_name' => $request->requested->last_name,
+                'profile_photo_url' => $request->requested->profile_photo_url,
+            ] : null,
+            'project' => $request->project ? [
+                'id' => $request->project->id,
+                'name' => $request->project->name,
+            ] : null,
+            'contract' => $request->contract ? [
+                'id' => $request->contract->id,
+                'name' => $request->contract->name,
+            ] : null,
+        ];
     }
 
     /**
@@ -2696,6 +3076,26 @@ class ProjectController extends Controller
             ->first();
 
         return $groupLink ? Project::find($groupLink->group_id) : null;
+    }
+
+    /**
+     * Get crafts that the current user is allowed to assign in shift planning.
+     */
+    private function getCurrentUserCraftsForShiftTab(User $user, CraftService $craftService): \Illuminate\Database\Eloquent\Collection
+    {
+        // If user is admin, return all crafts with qualifications
+        if ($user->hasRole('artwork admin')) {
+            return $craftService->getAll(['qualifications']);
+        }
+
+        // Get crafts that are assignable by all (not restricted)
+        $assignableByAllCrafts = $craftService->getAssignableByAllCrafts();
+
+        // Get crafts where user is explicitly allowed (restricted crafts via craft_users table)
+        $userRestrictedCrafts = $user->crafts()->with(['qualifications'])->get();
+
+        // Merge both collections and remove duplicates by craft id
+        return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
     }
 
     public function addTimeLineRow(Event $event): void
@@ -2762,22 +3162,25 @@ class ProjectController extends Controller
     {
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
-            'users' => User::all(),
-            'departments' => Department::all()
+            'users' => User::select(['id', 'first_name', 'last_name', 'email', 'profile_photo_path'])->get(),
+            'departments' => Department::select(['id', 'name'])->get()
         ]);
     }
 
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
+        $this->authorize('update', $project);
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
-            $group = Project::find($request->get('selectedGroup')['id']);
-            $group->projectsOfGroup()->syncWithoutDetaching($project->id);
+            $group = Project::find($request->get('selectedGroup')['id'] ?? null);
+            if ($group) {
+                $group->projectsOfGroup()->syncWithoutDetaching($project->id);
 
-            // Ensure the group's is_group flag is set to true
-            if (!$group->is_group) {
-                $group->is_group = true;
-                $group->save();
+                // Ensure the group's is_group flag is set to true
+                if (!$group->is_group) {
+                    $group->is_group = true;
+                    $group->save();
+                }
             }
 
             // Ensure the project has at least one column marked as relevant for project groups
@@ -2810,14 +3213,52 @@ class ProjectController extends Controller
             'marked_as_done' => $request->boolean('marked_as_done'),
         ]);
 
-        $this->projectService->detachManagementUsers($project, true);
-        if (!empty($request->assignedUsers)) {
-            $this->projectService->attachManagementUsers($project, $request->assignedUsers);
+        // Nur syncen, wenn das Feld explizit als Array mitkommt – andere Aufrufer von
+        // projects.update würden sonst bestehende CRM-Verknüpfungen löschen.
+        if (is_array($request->input('crm_artist_contact_ids'))) {
+            $oldLinkedCrmContactIds = $project->crmContacts()->pluck('crm_contacts.id')->sort()->values()->all();
+            $this->projectService->syncCrmArtistContacts($project, $request->input('crm_artist_contact_ids'));
+            $newLinkedCrmContactIds = $project->crmContacts()->pluck('crm_contacts.id')->sort()->values()->all();
+
+            if ($oldLinkedCrmContactIds !== $newLinkedCrmContactIds) {
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($project->id)
+                        ->setTranslationKey('Project artists changed')
+                );
+                $this->setPublicChangesNotification($project->id);
+            }
         }
 
-        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
+        $this->projectService->syncManagementUsers($project, $request->assignedUsers ?? []);
+
+        if ($request->boolean('isGroup')) {
+            $project->update(['is_group' => true]);
+            $project->projectsOfGroup()->sync($request->get('projects', []));
+
+            foreach ($request->get('projects', []) as $projectId) {
+                $childProject = Project::find($projectId);
+                if ($childProject) {
+                    $table = $childProject->table()->first();
+                    if ($table) {
+                        $columns = $table->columns()->get();
+                        if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
+                            $lastColumn = $columns->sortBy('position')->last();
+                            if ($lastColumn) {
+                                $lastColumn->update(['relevant_for_project_groups' => true]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'), $request->input('mainCategoryId'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'), $request->input('mainSectorId'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'), $request->input('mainGenreId'));
 
         $this->updateProjectState($request, $project);
 
@@ -2862,7 +3303,23 @@ class ProjectController extends Controller
         $projectUsers = $project->users()->get();
         $oldProjectDepartments = $project->departments()->get();
 
-        $project->users()->sync(collect($request->assigned_user_ids));
+        // only persist role ids that actually exist; anything else would linger
+        // in the project_user.roles JSON forever (role deletion can't clean it up)
+        $validRoleIds = ProjectRole::pluck('id');
+        $assignedUsers = collect($request->assigned_user_ids)->map(
+            static function ($pivotData) use ($validRoleIds) {
+                // plain user id without pivot attributes — leave untouched
+                if (!is_array($pivotData)) {
+                    return $pivotData;
+                }
+
+                $pivotData['roles'] = $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all();
+
+                return $pivotData;
+            }
+        );
+
+        $project->users()->sync($assignedUsers);
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
         $newProjectDepartments = $project->departments()->get();
@@ -2891,16 +3348,49 @@ class ProjectController extends Controller
 
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $mainCategoryId = $request->input('mainCategoryId');
+        $mainGenreId = $request->input('mainGenreId');
+        $mainSectorId = $request->input('mainSectorId');
+
+        // Cache schema checks in a static variable to avoid repeated DB introspection per request
+        static $schemaCache = [];
+        if (empty($schemaCache)) {
+            $schemaCache['category_is_main'] = Schema::hasColumn('category_project', 'is_main');
+            $schemaCache['genre_is_main'] = Schema::hasColumn('genre_project', 'is_main');
+            $schemaCache['sector_is_main'] = Schema::hasColumn('project_sector', 'is_main');
+        }
+        $hasCategoryIsMain = $schemaCache['category_is_main'];
+        $hasGenreIsMain = $schemaCache['genre_is_main'];
+        $hasSectorIsMain = $schemaCache['sector_is_main'];
+
         $oldProjectCategories = $project->categories()->get();
-        $project->categories()->sync($request->assignedCategoryIds);
+        $categorySyncData = [];
+        foreach (($request->assignedCategoryIds ?? []) as $id) {
+            $categorySyncData[$id] = $hasCategoryIsMain
+                ? ['is_main' => $mainCategoryId !== null && (int) $id === (int) $mainCategoryId]
+                : [];
+        }
+        $project->categories()->sync($categorySyncData);
         $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $project->categories()->get());
 
         $oldProjectGenres = $project->genres()->get();
-        $project->genres()->sync($request->assignedGenreIds);
+        $genreSyncData = [];
+        foreach (($request->assignedGenreIds ?? []) as $id) {
+            $genreSyncData[$id] = $hasGenreIsMain
+                ? ['is_main' => $mainGenreId !== null && (int) $id === (int) $mainGenreId]
+                : [];
+        }
+        $project->genres()->sync($genreSyncData);
         $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $project->genres()->get());
 
         $oldProjectSectors = $project->sectors()->get();
-        $project->sectors()->sync($request->assignedSectorIds);
+        $sectorSyncData = [];
+        foreach (($request->assignedSectorIds ?? []) as $id) {
+            $sectorSyncData[$id] = $hasSectorIsMain
+                ? ['is_main' => $mainSectorId !== null && (int) $id === (int) $mainSectorId]
+                : [];
+        }
+        $project->sectors()->sync($sectorSyncData);
         $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $project->sectors()->get());
 
         return Redirect::back();
@@ -3268,7 +3758,7 @@ class ProjectController extends Controller
                     'project' => $project->name
                 ], $managerAfter->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3294,7 +3784,7 @@ class ProjectController extends Controller
                     'project' => $project->name
                 ], $budgetAfter->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3315,11 +3805,14 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore) {
             if (!in_array($managerBefore, $managerIdsAfter)) {
                 $user = User::find($managerBefore);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.leader.remove', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -3336,11 +3829,14 @@ class ProjectController extends Controller
         foreach ($budgetIdsBefore as $budgetBefore) {
             if (!in_array($budgetBefore, $budgetIdsAfter)) {
                 $user = User::find($budgetBefore);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.budget.remove', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -3357,11 +3853,14 @@ class ProjectController extends Controller
         foreach ($userIdsAfter as $userIdAfter) {
             if (!in_array($userIdAfter, $userIdsBefore)) {
                 $user = User::find($userIdAfter);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.member.add', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3387,11 +3886,14 @@ class ProjectController extends Controller
         foreach ($userIdsBefore as $userIdBefore) {
             if (!in_array($userIdBefore, $userIdsAfter)) {
                 $user = User::find($userIdBefore);
+                if ($user === null) {
+                    continue;
+                }
                 $notificationTitle = __('notification.project.member.remove', [
                     'project' => $project->name
                 ], $user->language);
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -3446,18 +3948,35 @@ class ProjectController extends Controller
             'number_of_participants' => $project->number_of_participants,
             'cost_center' => $project->cost_center,
             'state' => $project->state,
+            'is_group' => $project->is_group,
         ]);
 
         $this->budgetService->generateBasicBudgetValues(
             $newProject,
         );
 
-        $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));
         $newProject->sectors()->sync($project->sectors->pluck('id'));
         $newProject->genres()->sync($project->genres->pluck('id'));
         $newProject->departments()->sync($project->departments->pluck('id'));
-        $newProject->users()->sync($project->users->pluck('id'));
+
+        // Copy team including pivot flags (access_budget, is_manager, can_write, ...)
+        // and make sure the duplicating user keeps access to the copy.
+        $usersWithPivotFlags = $project->users->mapWithKeys(fn($user) => [
+            $user->id => [
+                'access_budget' => $user->pivot->access_budget,
+                'is_manager' => $user->pivot->is_manager,
+                'can_write' => $user->pivot->can_write,
+                'delete_permission' => $user->pivot->delete_permission,
+                'roles' => $user->pivot->roles,
+            ],
+        ])->all();
+
+        if (!array_key_exists(Auth::id(), $usersWithPivotFlags)) {
+            $usersWithPivotFlags[Auth::id()] = ['access_budget' => true];
+        }
+
+        $newProject->users()->sync($usersWithPivotFlags);
 
         if ($projectTab = $this->projectTabService->findFirstProjectTabWithShiftsComponent()) {
             return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
@@ -3472,30 +3991,19 @@ class ProjectController extends Controller
 
     public function destroy(
         Project $project,
-        ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService,
-        CommentService $commentService,
-        ChecklistService $checklistService,
-        ProjectFileService $projectFileService,
-        EventService $eventService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        ProjectTabService $projectTabService,
-        TaskService $taskService,
         Request $request
     ): RedirectResponse {
+        $this->authorize('delete', $project);
+        // Single, consolidated notification instead of one per deleted event.
+        $eventCount = $project->events()->count();
+
         foreach ($project->users()->get() as $user) {
-            $notificationTitle = __('notification.project.delete', [
-                'project' => $project->name
+            $notificationTitle = __('notification.project.delete_with_events', [
+                'project' => $project->name,
+                'count' => $eventCount,
             ], $user->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
@@ -3510,25 +4018,14 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->projectService->softDelete(
-            $project,
-            $shiftsQualificationsService,
-            $shiftUserService,
-            $shiftFreelancerService,
-            $shiftServiceProviderService,
-            $changeService,
-            $commentService,
-            $checklistService,
-            $projectFileService,
-            $eventService,
-            $eventCommentService,
-            $timelineService,
-            $shiftService,
-            $subEventService,
-            $notificationService,
-            $projectTabService,
-            $taskService
-        );
+        // Soft-delete the project row itself synchronously so it disappears from the overview
+        // immediately on reload. The heavy cascade (events, shifts, sub-events, timelines,
+        // budget table, ...) is offloaded to a queued job so the request still returns fast –
+        // projects with very many events (e.g. 10k) would otherwise exceed the PHP/HTTP
+        // timeout. Requires an async QUEUE_CONNECTION (not "sync") and a running queue worker.
+        $project->delete();
+
+        SoftDeleteProjectJob::dispatch($project->id, Auth::id());
 
         return redirect()->route('projects', [
             'page' => $request->get('page'),
@@ -3537,51 +4034,91 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function forceDelete(
-        int $id,
-        CommentService $commentService,
-        ChecklistService $checklistService,
-        EventService $eventService,
-        ProjectFileService $projectFileService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        TaskService $taskService
-    ): RedirectResponse {
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'project_ids' => 'required|array|min:1',
+            'project_ids.*' => 'integer|exists:projects,id',
+        ]);
 
-        $events = Event::onlyTrashed()->where('project_id', $id)->get();
+        $projects = Project::whereIn('id', $validated['project_ids'])->get();
 
-        /** @var Project $project */
-        $project = Project::onlyTrashed()->findOrFail($id);
+        foreach ($projects as $project) {
+            // Skip projects the user is not allowed to delete instead of failing the whole batch.
+            if (Auth::user()?->cannot('delete', $project)) {
+                continue;
+            }
 
-        $eventService->forceDeleteAll(
-            $events,
-            $eventCommentService,
-            $timelineService,
-            $shiftService,
-            $subEventService,
-            $notificationService
-        );
+            $eventCount = $project->events()->count();
 
-        if ($project) {
-            $this->projectService->forceDelete(
-                $project,
-                $commentService,
-                $checklistService,
-                $eventService,
-                $projectFileService,
-                $eventCommentService,
-                $timelineService,
-                $shiftService,
-                $subEventService,
-                $notificationService,
-                $taskService
-            );
+            foreach ($project->users()->get() as $user) {
+                $notificationTitle = __('notification.project.delete_with_events', [
+                    'project' => $project->name,
+                    'count' => $eventCount,
+                ], $user->language);
+                $broadcastMessage = [
+                    'id' => Str::uuid()->toString(),
+                    'type' => 'error',
+                    'message' => $notificationTitle
+                ];
+
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setProjectId($project->id);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
+
+            // Same strategy as destroy(): soft-delete synchronously, offload the cascade to a job.
+            $project->delete();
+            SoftDeleteProjectJob::dispatch($project->id, Auth::id());
         }
 
+        return redirect()->route('projects', [
+            'page' => $request->get('page'),
+            'entitiesPerPage' => $request->get('entitiesPerPage'),
+            'query' => $request->get('query'),
+        ]);
+    }
+
+    public function forceDelete(int $id): RedirectResponse
+    {
+        // 404 for ids that don't reference a trashed project (avoids queueing junk jobs).
+        $project = Project::onlyTrashed()->findOrFail($id);
+        $this->authorize('delete', $project);
+
+        // Offloaded to a queued job: the cascade (events, shifts, sub-events, timelines,
+        // budget table, ...) would exceed the PHP/HTTP timeout for projects with very many
+        // events. Requires an async QUEUE_CONNECTION (not "sync") and a running queue worker.
+        ForceDeleteProjectJob::dispatch($project->id, Auth::id());
+
         return Redirect::route('projects.trashed');
+    }
+
+    public function forceDeleteAll(): RedirectResponse
+    {
+        abort_unless(Auth::user()?->can(PermissionEnum::PROJECT_DELETE->value), 403);
+        // One bounded job per trashed project instead of force-deleting everything inline.
+        Project::onlyTrashed()
+            ->pluck('id')
+            ->each(fn (int $projectId) => ForceDeleteProjectJob::dispatch($projectId, Auth::id()));
+
+        return Redirect::route('projects.trashed');
+    }
+
+    public function forceDeleteAllSettings(): RedirectResponse
+    {
+        Genre::onlyTrashed()->forceDelete();
+        Category::onlyTrashed()->forceDelete();
+        Sector::onlyTrashed()->forceDelete();
+        ProjectState::onlyTrashed()->forceDelete();
+        ContractType::onlyTrashed()->forceDelete();
+        CompanyType::onlyTrashed()->forceDelete();
+        Currency::onlyTrashed()->forceDelete();
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(
@@ -3603,6 +4140,7 @@ class ProjectController extends Controller
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
+        $this->authorize('delete', $project);
 
         if ($project) {
             $this->projectService->restore(
@@ -3635,15 +4173,24 @@ class ProjectController extends Controller
             'trashed_project_states' => ProjectState::onlyTrashed()->get(),
             'trashed_contract_types' => ContractType::onlyTrashed()->get(),
             'trashed_company_types' => CompanyType::onlyTrashed()->get(),
-            'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),
             'trashed_currencies' => Currency::onlyTrashed()->get(),
         ]);
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedProjects = Project::onlyTrashed()
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderByDesc('deleted_at')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (Project $project) => (new ProjectIndexResource($project))->resolve());
+
         return inertia('Trash/Projects', [
-            'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
+            'trashed_projects' => $trashedProjects
         ]);
     }
 
@@ -3715,6 +4262,97 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
+    public function softTable(
+        Table $table,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+        $tableService->softDelete(
+            $table,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
+
+        return Redirect::back();
+    }
+
+    public function restoreTable(
+        Table $table,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+
+        $tableService->restore(
+            $table,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
+
+        return Redirect::back();
+    }
+
     public function deleteMainPosition(
         MainPosition $mainPosition,
         MainPositionService $mainPositionService,
@@ -3751,6 +4389,8 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
+
         return Redirect::back();
     }
 
@@ -3769,6 +4409,9 @@ class ProjectController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
+
+        $projectId = $subPosition->mainPosition->table->project_id;
+
         $subPositionService->forceDelete(
             $subPosition,
             $sumCommentService,
@@ -3784,24 +4427,27 @@ class ProjectController extends Controller
             $sageAssignedDataService
         );
 
+        broadcast(new UpdateBudget($projectId));
+
         return Redirect::back();
     }
 
-    public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse
+    public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): void
     {
         $row->update(['commented' => $request->commented]);
 
         $cellIds = $row->cells->skip(3)->pluck('id');
 
         $row->cells()->whereIntegerInRaw('id', $cellIds)->update(['commented' => $request->commented]);
-
-        return Redirect::back();
+        broadcast(new UpdateBudget($row->subPosition->mainPosition->table->project_id));
+        //return Redirect::back();
     }
 
-    public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse
+    public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): void
     {
         $columnCell->update(['commented' => $request->commented]);
-        return Redirect::back();
+        broadcast(new UpdateBudget($columnCell->column->table->project_id));
+        //return Redirect::back();
     }
 
     public function updateKeyVisual(Request $request, Project $project): RedirectResponse
@@ -3901,6 +4547,8 @@ class ProjectController extends Controller
         $newColumn->update(['name' => $column->name . ' (Kopie)']);
         $newColumn->cells()->forceDelete();
         $newColumn->cells()->createMany($column->cells()->get()->toArray());
+
+        broadcast(new UpdateBudget($column->project_id));
     }
 
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
@@ -3913,15 +4561,22 @@ class ProjectController extends Controller
             $newSubPosition->update(['main_position_id' => $mainPositionId]);
         }
 
-        foreach ($subPosition->subPositionRows()->get() as $subPositionRow) {
+        // Eager load cells to avoid N+1 queries during duplication
+        $rows = $subPosition->subPositionRows()->with('cells')->get();
+        foreach ($rows as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
+            $newSubPositionRow->name = $subPositionRow->name . ' (Kopie)';
+            $newSubPositionRow->sub_position_id = $newSubPosition->id;
             $newSubPositionRow->save();
-            $newSubPositionRow->update(
-                ['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]
-            );
             $newSubPositionRow->cells()->forceDelete();
-            $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
+
+            $cellsData = $subPositionRow->cells->map(fn($cell) => $cell->toArray())->toArray();
+            if (!empty($cellsData)) {
+                $newSubPositionRow->cells()->createMany($cellsData);
+            }
         }
+
+        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
     }
 
     public function duplicateMainPosition(MainPosition $mainPosition): void
@@ -3934,6 +4589,8 @@ class ProjectController extends Controller
         foreach ($mainPosition->subPositions()->get() as $subPosition) {
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
+
+        broadcast(new UpdateBudget($mainPosition->table->project_id));
     }
 
     public function duplicateRow(SubPositionRow $subPositionRow): void
@@ -3947,12 +4604,15 @@ class ProjectController extends Controller
             $subPositionRowCellReplicate->sub_position_row_id = $subPositionRowReplicate->id;
             $subPositionRowCellReplicate->save();
         }
+        broadcast(new UpdateBudget($subPositionRow->subPosition->mainPosition->table->project_id));
     }
 
     public function updateCommentedStatusOfColumn(Request $request, Column $column): void
     {
         $validated = $request->validate(['commented' => 'required|boolean']);
         $column->update(['commented' => $validated['commented']]);
+
+        broadcast(new UpdateBudget($column->table->project_id));
     }
 
     public function projectBudgetExport(Project $project): BinaryFileResponse
@@ -3961,7 +4621,7 @@ class ProjectController extends Controller
             ->download(
                 sprintf(
                     '%s_budget_stand_%s.xlsx',
-                    Str::snake($project->name),
+                    Str::snake(str_replace(['/', '\\'], '_', $project->name)),
                     Carbon::now()->format('d-m-Y_H_i_s')
                 )
             )
@@ -3987,7 +4647,14 @@ class ProjectController extends Controller
         }
 
         if ($request->integer('type') === 1) {
-            return (new DetailedBudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+            $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+            $budgetColumnSettings = \Artwork\Modules\Budget\Models\BudgetColumnSetting::all();
+            return (new DetailedBudgetsByBudgetDeadlineExport(
+                $startBudgetDeadline,
+                $endBudgetDeadline,
+                $generalSettings->budget_account_management_global,
+                $budgetColumnSettings,
+            ))
                 ->download(
                     sprintf(
                         'detaillierter_budget_export_%s-%s_stand_%s.xlsx',
@@ -4020,11 +4687,26 @@ class ProjectController extends Controller
         }
         $project->update([
             'cost_center_id' => $costCenter->id ?? null,
-            'own_copyright' => $request->own_copyright,
-            'live_music' => $request->live_music,
-            'collecting_society_id' => $request->collecting_society_id,
-            'law_size' => $request->law_size,
+            'gema' => $request->boolean('gema'),
             'cost_center_description' => $request->description,
+        ]);
+
+        $this->checkProjectCostCenterChanges($project->id, $oldCostCenter, $costCenter->id ?? null);
+
+        return Redirect::back();
+    }
+
+    public function updateCostCenter(Request $request, Project $project): RedirectResponse
+    {
+        $oldCostCenter = $project->cost_center_id;
+        $costCenter = null;
+
+        if (!empty($request->cost_center_name)) {
+            $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center_name]);
+        }
+
+        $project->update([
+            'cost_center_id' => $costCenter->id ?? null,
         ]);
 
         $this->checkProjectCostCenterChanges($project->id, $oldCostCenter, $costCenter->id ?? null);
@@ -4080,6 +4762,7 @@ class ProjectController extends Controller
                         'key_visual_path' => $project->key_visual_path,
                         'is_group' => $project->is_group,
                         'marked_as_done' => $project->getAttribute('marked_as_done'),
+                        'first_and_last_event_date' => $project->first_and_last_event_date,
                     ];
 
                     $addEventsToReturnProject = [];
@@ -4095,6 +4778,32 @@ class ProjectController extends Controller
         }
 
         return $projects;
+    }
+
+    /**
+     * Liefert aus einer Liste von Projekt-IDs nur die zurück, die noch (nicht gelöscht)
+     * existieren. Wird von der "Zuletzt geöffnete Projekte"-Komponente genutzt, deren
+     * Liste clientseitig in localStorage liegt und sonst auf gelöschte Projekte verweisen
+     * würde.
+     *
+     * @return array<int, int>
+     */
+    public function filterExistingProjectIds(Request $request): array
+    {
+        $ids = collect($request->input('ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return Project::whereIn('id', $ids)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void

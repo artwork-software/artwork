@@ -19,14 +19,14 @@ class ShiftSeeder extends Seeder
     public function run(): void
     {
 
-        $dateRange = ['2025-10-25', '2025-11-24'];
+        $dateRange = ['2026-01-01', '2026-01-30'];
 
         $projects = Project::all()->pluck('id')->toArray();
 
         $rooms = Room::all()->pluck('id')->toArray();
 
         foreach ($rooms as $roomId) {
-            $numberOfShifts = random_int(5, 15);
+            $numberOfShifts = random_int(5, 20);
             for ($i = 0; $i < $numberOfShifts; $i++) {
                 $startDate = date('Y-m-d', random_int(strtotime($dateRange[0]), strtotime($dateRange[1])));
                 $startTime = date('H:i:s', random_int(strtotime('08:00:00'), strtotime('18:00:00')));

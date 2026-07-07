@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $description
  * @property int $done
  * @property int $checklist_template_id
+ * @property int|null $order
+ * @property int|null $deadline_days_after_creation
  * @property Collection $task_users
  * @property string $created_at
  * @property string $updated_at
@@ -28,11 +30,14 @@ class TaskTemplate extends Model
         'name',
         'description',
         'done',
-        'checklist_template_id'
+        'checklist_template_id',
+        'order',
+        'deadline_days_after_creation'
     ];
 
     protected $casts = [
-        'done' => 'boolean'
+        'done' => 'boolean',
+        'deadline_days_after_creation' => 'integer'
     ];
 
     //@todo: fix phpcs error - refactor function name to checklistTemplate

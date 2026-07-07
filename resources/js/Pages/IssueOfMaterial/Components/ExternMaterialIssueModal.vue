@@ -142,17 +142,17 @@
             </section>
 
             <!-- Search & select items -->
-            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
                 <!-- Left: search -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
+                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1 flex flex-col lg:max-h-[calc(80vh-12rem)] lg:sticky lg:top-0">
                     <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
                         <div class="flex items-center w-full gap-x-3">
                             <BaseInput
                                 id="articleSearchFilter"
                                 v-model="articleSearchFilter"
                                 class="w-full"
-                                :label="$t('Search Articles')"
-                                :placeholder="$t('Filter articles by name...')"
+                                :label="$t('Search article, (sub)category...')"
+                                :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
@@ -169,7 +169,7 @@
                         </div>
                     </div>
 
-                    <div ref="scrollContainer" class="max-h-[28rem] overflow-y-auto px-5 pb-5">
+                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
                         <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
                             <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                 <div class="flex items-start gap-3">
@@ -232,7 +232,7 @@
                                                 <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
                                             </h4>
                                             <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
-                                                {{ $t('Available stock in period') }}:
+                                                {{ props.planningDate ? $t('Available stock on date') : $t('Available stock in period') }}:
                                                 <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
                                                   'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
                                                   'text-red-600': (article.availableStock?.available ?? 0) === 0
@@ -246,7 +246,7 @@
                                                     <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
                                                 </span>
                                             </div>
-                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date))" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
                                                 <span>
                                                     {{ $t('You have selected more items than are available.') }}
                                                     <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
@@ -287,7 +287,7 @@
                                     <span>{{ $t('Special items done') }}</span>
                                 </label>
                                 <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700" @click="addSpecialItem">
-                                    <component :is="IconPlus" class="h-3.5 w-3.5" />
+                                    <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
                                     {{ $t('Add special article') }}
                                 </button>
                             </div>
@@ -390,6 +390,7 @@
 
         <!-- Single global Galleria for lightbox -->
         <Galleria
+            v-if="displayCustom"
             v-model:activeIndex="activeIndex"
             v-model:visible="displayCustom"
             :value="lightboxImages"
@@ -453,7 +454,7 @@ import {
     IconInfoCircle,
     IconListDetails,
     IconLoader, IconParentheses,
-    IconPlus,
+    IconCirclePlus,
     IconTrash,
     IconWindowMaximize
 } from "@tabler/icons-vue";
@@ -483,6 +484,11 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false,
+    },
+    planningDate: {
+        type: String,
+        required: false,
+        default: null,
     },
 })
 
@@ -565,7 +571,7 @@ const conflicts = computed(() => {
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
 
-// Filtered articles based on search input
+// Filtered articles based on search input (name, category, subcategory)
 const filteredArticles = computed(() => {
     if (!articleSearchFilter.value) {
         return articles.value;
@@ -573,7 +579,9 @@ const filteredArticles = computed(() => {
 
     const searchTerm = articleSearchFilter.value.toLowerCase();
     return articles.value.filter(article =>
-        article.name?.toLowerCase().includes(searchTerm)
+        article.name?.toLowerCase().includes(searchTerm) ||
+        article.category?.name?.toLowerCase().includes(searchTerm) ||
+        article.sub_category?.name?.toLowerCase().includes(searchTerm)
     );
 })
 
@@ -716,7 +724,9 @@ const reloadArticlesWithNewFilter = async () => {
 }
 
 const getArticleDataForUsage = async (article) => {
-    if (!article?.id || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date) {
+    const startDate = props.planningDate || externMaterialIssueForm.issue_date;
+    const endDate = props.planningDate || externMaterialIssueForm.return_date;
+    if (!article?.id || !startDate || !endDate) {
         return;
     }
     article.availableStockRequestIsLoading = true;
@@ -724,8 +734,8 @@ const getArticleDataForUsage = async (article) => {
         const response = await axios.get(route('inventory.articles.usage'), {
             params: {
                 article_id: article.id,
-                start_date: externMaterialIssueForm.issue_date,
-                end_date: externMaterialIssueForm.return_date,
+                start_date: startDate,
+                end_date: endDate,
             }
         });
         // Die Nutzungsdaten werden im Modal angezeigt
@@ -790,12 +800,14 @@ const submit = () => {
         externMaterialIssueForm._method = 'PATCH'
         externMaterialIssueForm.post(route('extern-issue-of-material.update', props.externMaterialIssue.id), {
             onSuccess: () => {
+                clearConsumedBasket()
                 emits('close')
             }
         })
     } else {
         externMaterialIssueForm.post(route('extern-issue-of-material.store'), {
             onSuccess: () => {
+                clearConsumedBasket()
                 emits('close')
             }
         })
@@ -804,7 +816,10 @@ const submit = () => {
 
 
 const checkAvailableStock = async () => {
-    if (!externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || externMaterialIssueForm.articles.length === 0) {
+    const startDate = props.planningDate || externMaterialIssueForm.issue_date;
+    const endDate = props.planningDate || externMaterialIssueForm.return_date;
+
+    if (!startDate || !endDate || externMaterialIssueForm.articles.length === 0) {
         return
     }
 
@@ -822,8 +837,8 @@ const checkAvailableStock = async () => {
                 article_ids: ids,
                 type: 'extern',
                 issue_id: externMaterialIssueForm?.id || null,
-                start_date: externMaterialIssueForm.issue_date,
-                end_date: externMaterialIssueForm.return_date,
+                start_date: startDate,
+                end_date: endDate,
             }
         )
 
@@ -926,10 +941,11 @@ const loadBaskets = async () => {
             currentBasket.value = baskets.value[0].id;
         }
 
-        // >>> NEU: Automatisch Basket 1 übernehmen
-        const basketOne = baskets.value.find(b => b.id === 1);
-        if (basketOne) {
-            addBasketArticlesToIssue(basketOne);
+        // Automatisch den eigenen Warenkorb übernehmen — die API liefert nur
+        // die Baskets des eingeloggten Users (eine feste ID gibt es nicht).
+        const ownBasket = baskets.value.find(b => b.id === currentBasket.value) ?? baskets.value[0];
+        if (ownBasket) {
+            addBasketArticlesToIssue(ownBasket);
         }
     } catch (e) {
         console.error(e);
@@ -995,10 +1011,19 @@ function addBasketArticlesToIssue(basket) {
     // Verfügbarkeiten nachziehen
     checkAvailableStock();
 
-    // remove articles from basket after adding to issue
-    router.post(route("inventory.product_basket.remove_articles", {productBasket: basket.id}), {
-        basket_id: basket.id
+    // Der Korb wird erst nach ERFOLGREICHEM Speichern der Ausgabe geleert —
+    // beim Abbrechen bleiben die Artikel im Warenkorb erhalten.
+    pendingBasketClearId.value = basket.id;
+}
+
+const pendingBasketClearId = ref(null);
+
+function clearConsumedBasket() {
+    if (!pendingBasketClearId.value) return;
+    router.post(route("inventory.product_basket.remove_articles", {productBasket: pendingBasketClearId.value}), {
+        basket_id: pendingBasketClearId.value
     });
+    pendingBasketClearId.value = null;
 }
 
 </script>

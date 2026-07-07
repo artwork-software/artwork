@@ -5,23 +5,45 @@ namespace Artwork\Modules\Project\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\ProjectTab;
+use Artwork\Modules\User\Models\User;
 
 class ProjectTabRepository extends BaseRepository
 {
-    public function findFirstProjectTab(): ProjectTab|null
+    public function findFirstProjectTab(?User $user = null): ProjectTab|null
     {
         /** @var ProjectTab $projectTab */
-        $projectTab = ProjectTab::query()->without(['components', 'sidebarTabs'])->first();
+        $query = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
+            ->orderBy('order');
+
+        if ($user) {
+            $query->visibleForUser($user);
+        } else {
+            $query->where('visible_for_all', true);
+        }
+
+        $projectTab = $query->first();
 
         return $projectTab;
     }
 
-    public function findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum $type): ProjectTab|null
-    {
+    public function findFirstProjectTabByComponentsComponentType(
+        ProjectTabComponentEnum $type,
+        ?User $user = null
+    ): ProjectTab|null {
         /** @var ProjectTab $projectTab */
-        $projectTab = ProjectTab::query()
+        $query = ProjectTab::query()
+            ->without(['components', 'sidebarTabs'])
             ->byComponentsComponentType($type->value)
-            ->first();
+            ->orderBy('order');
+
+        if ($user) {
+            $query->visibleForUser($user);
+        } else {
+            $query->where('visible_for_all', true);
+        }
+
+        $projectTab = $query->first();
 
         return $projectTab;
     }
@@ -38,11 +60,19 @@ class ProjectTabRepository extends BaseRepository
         return ProjectTab::find($id);
     }
 
-    public function getDefaultOrFirstProjectTab(): ?ProjectTab
+    public function getDefaultOrFirstProjectTab(?User $user = null): ?ProjectTab
     {
-        return ProjectTab::query()
+        $query = ProjectTab::query()
             ->without(['components', 'sidebarTabs'])
             ->where('default', true)
-            ->first() ?? $this->findFirstProjectTab();
+            ->orderBy('order');
+
+        if ($user) {
+            $query->visibleForUser($user);
+        } else {
+            $query->where('visible_for_all', true);
+        }
+
+        return $query->first() ?? $this->findFirstProjectTab($user);
     }
 }

@@ -16,6 +16,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -73,5 +74,23 @@ class FortifyServiceProvider extends ServiceProvider
                     );
             }
         );
+
+        // Custom Login Response für Inertia.js - erzwingt Full-Page-Reload nach Login
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    $intended = redirect()->intended(RouteServiceProvider::HOME)->getTargetUrl();
+
+                    // Für Inertia-Requests: Force Full-Page-Reload
+                    if ($request->header('X-Inertia')) {
+                        return response('', 409)
+                            ->header('X-Inertia-Location', $intended);
+                    }
+
+                    return redirect()->intended(RouteServiceProvider::HOME);
+                }
+            };
+        });
     }
 }

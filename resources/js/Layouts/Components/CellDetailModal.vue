@@ -124,7 +124,7 @@
                         @click="addCalculation"
                         class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-artwork-buttons-create hover:text-artwork-buttons-create hover:bg-blue-50 transition-all duration-200 flex items-center justify-center font-medium text-sm"
                     >
-                        <IconPlus class="w-5 h-5 mr-2" stroke-width="2" />
+                        <IconCirclePlus class="w-5 h-5 mr-2" stroke-width="2" />
                         {{ $t('Add calculation item') }}
                     </button>
 
@@ -299,6 +299,11 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     {{ $t('Funding source') }}
                                 </label>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                                    <p class="text-xs text-yellow-800">
+                                        {{ $t('Important: You will only find funding sources here that have specified the current project as a "Funded Project" in the sidebar.') }}
+                                    </p>
+                                </div>
                                 <div class="relative">
                                     <input
                                         v-model="moneySourceQuery"
@@ -382,7 +387,7 @@ import {
     IconCalculator,
     IconMessage,
     IconLink,
-    IconPlus,
+    IconCirclePlus,
     IconTrash,
     IconChevronDown,
     IconCheck,
@@ -404,7 +409,7 @@ export default {
         IconCalculator,
         IconMessage,
         IconLink,
-        IconPlus,
+        IconCirclePlus,
         IconTrash,
         IconChevronDown,
         IconCheck,
@@ -429,22 +434,31 @@ export default {
         initialTab: {
             type: String,
             default: null
+        },
+        budgetType: {
+            type: String,
+            default: null
         }
     },
     data() {
+        // Default linkedType basierend auf budgetType setzen
+        const defaultLinkedType = this.budgetType === 'BUDGET_TYPE_COST'
+            ? { name: this.$t('Expenses'), type: 'COST' }
+            : { name: this.$t('Revenue'), type: 'EARNING' };
+
         return {
             activeTab: 'calculation',
             calculations: [],
             newComment: '',
             isLinked: false,
-            linkedType: { name: this.$t('Revenue'), type: 'EARNING' },
+            linkedType: defaultLinkedType,
             selectedMoneySource: null,
             moneySourceQuery: '',
             moneySourceSearchResults: [],
             hoveredCommentId: null,
             linkTypes: [
                 { name: this.$t('Revenue'), type: 'EARNING' },
-                { name: this.$t('Expenses'), type: 'SPENDING' }
+                { name: this.$t('Expenses'), type: 'COST' }
             ],
             tempIdCounter: 0,
             isLoading: true,
@@ -737,11 +751,15 @@ export default {
                     if (this.newComment && this.newComment.trim() !== '') {
                         await this.saveCommentOnly();
                     }
+                    // Emit budget-updated to refresh the table (for comment icons)
+                    this.$emit('budget-updated');
                     // Close modal nach erfolgreichem Speichern
                     this.$emit('closed', true);
                 } else if (this.activeTab === 'linking') {
                     // Linking Tab: Speichere Verlinkungen
                     await this.saveLinking();
+                    // Emit budget-updated to refresh the table (for money source icons)
+                    this.$emit('budget-updated');
                     // Close modal nach erfolgreichem Speichern
                     this.$emit('closed', true);
                 }

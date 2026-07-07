@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryCategoryRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryCategoryRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryArticleFilterPreset;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
@@ -13,11 +14,13 @@ use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Inventory\Repositories\InventoryPropertyRepository;
+use Artwork\Modules\Inventory\Services\InventoryArticleFilterResolver;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryCategoryService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -31,6 +34,7 @@ class InventoryCategoryController extends Controller
         protected InventoryArticleService $inventoryArticleService,
         protected ProductBasketService $productBasketService,
         protected InventoryUserFilterService $filterService,
+        protected InventoryArticleFilterResolver $filterResolver,
     ) {
     }
 
@@ -41,7 +45,6 @@ class InventoryCategoryController extends Controller
         ?InventoryCategory $inventoryCategory = null,
         ?InventorySubCategory $inventorySubCategory = null
     ): \Inertia\Response {
-        // Optimiere durch gezieltes Eager Loading
         $inventoryCategory?->load([
             'subcategories' => function ($query): void {
                 $query->orderBy('name');
@@ -68,14 +71,14 @@ class InventoryCategoryController extends Controller
         if ($inventoryCategory) {
             $filterableProperties = $inventoryCategory->properties()
                 ->filterable()
-                ->orderBy('name')
+                ->orderBy('inventory_article_properties.order')
                 ->get();
         }
 
         if ($inventorySubCategory) {
             $subProperties = $inventorySubCategory->properties()
                 ->filterable()
-                ->orderBy('name')
+                ->orderBy('inventory_article_properties.order')
                 ->get();
 
             $filterableProperties = $filterableProperties
@@ -87,11 +90,27 @@ class InventoryCategoryController extends Controller
             $filterableProperties = $this->propertyRepository->filterable();
         }
 
+        $resolved = $this->filterResolver->resolve($inventoryCategory?->id, $inventorySubCategory?->id);
+        $statusId = request()->integer('status_id') ?: null;
+        $searchPropertyId = request()->integer('search_property_id') ?: null;
+
         $articles = $this->articleService->getArticleList(
             $inventoryCategory,
             $inventorySubCategory,
-            request('search')
+            request('search'),
+            $resolved['filters'],
+            $resolved['tag_ids'],
+            $statusId,
+            $searchPropertyId,
         );
+
+        $articles->appends([
+            'filters' => json_encode($resolved['filters']),
+            'tag_ids' => $resolved['tag_ids'],
+            'filter_preset_id' => $resolved['filter_preset_id'],
+            'status_id' => $statusId,
+            'search_property_id' => $searchPropertyId,
+        ]);
 
         return Inertia::render('Inventory/Index', [
             'categories' => $this->categoryService->getAllWithRelations(),
@@ -102,9 +121,21 @@ class InventoryCategoryController extends Controller
             'filterableProperties' => $filterableProperties->values(), // Reset keys
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::select('id', 'name')->orderBy('name')->get(),
-            'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
+            'manufacturers' => CrmContact::query()
+                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->select('id', 'display_name as name')
+                    ->orderBy('display_name')
+                    ->get(),
             'statuses' => InventoryArticleStatus::select('id', 'name', 'color')->orderBy('order')->get(),
-            'countsByStatus' => $this->articleService->getCountsByStatus($articles),
+            'countsByStatus' => $this->articleService->getCountsByStatusAggregated(
+                $inventoryCategory,
+                $inventorySubCategory,
+                request('search'),
+                $resolved['filters'],
+                $resolved['tag_ids'],
+                $searchPropertyId,
+            ),
+            'activeStatusId' => $statusId,
             'productBaskets' => $this->productBasketService->getUserBasket(),
             'tagGroups' => InventoryTagGroup::with([
                 'tags' => function ($query): void {
@@ -115,7 +146,16 @@ class InventoryCategoryController extends Controller
             'tags' => InventoryTag::with(['allowedUsers', 'allowedDepartments'])
                 ->orderBy('position')
                 ->get(),
-            'inventoryGridLayout' => auth()->user()->inventory_grid_layout ?? true
+            'inventoryGridLayout' => auth()->user()->inventory_grid_layout ?? true,
+            'filterPresets' => InventoryArticleFilterPreset::query()
+                ->where('user_id', auth()->id())
+                ->orderByDesc('is_default')
+                ->orderBy('name')
+                ->get(['id','name','is_default','inventory_category_id','inventory_sub_category_id']),
+
+            'appliedFilters' => $resolved['filters'],
+            'appliedTagIds' => $resolved['tag_ids'],
+            'activeFilterPresetId' => $resolved['filter_preset_id'],
         ]);
     }
 
@@ -144,7 +184,11 @@ class InventoryCategoryController extends Controller
             'categories' => $this->categoryService->paginateWithRelations(),
             'properties' => $this->propertyRepository->all(),
             'rooms' => Room::all(),
-            'manufacturers' => Manufacturer::all(),
+            'manufacturers' => CrmContact::query()
+                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->select('id', 'display_name as name')
+                    ->orderBy('display_name')
+                    ->get(),
         ]);
     }
 
@@ -173,10 +217,12 @@ class InventoryCategoryController extends Controller
         $user = Auth::user();
 
         // Get filtered article IDs based on user's saved filters (including tags)
-        $filteredArticleIds = $this->filterService
-            ->getFilteredArticlesNew($user)
-            ->pluck('id')
-            ->toArray();
+        $filteredArticleIds = $user
+            ? $this->filterService
+                ->getFilteredArticlesNew($user)
+                ->pluck('id')
+                ->toArray()
+            : [];
 
         // Load categories with filtered articles
         $categories = InventoryCategory::with([

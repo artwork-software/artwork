@@ -1,5 +1,8 @@
 <template>
-    <div :class="!isInModal ? 'my-10' : ''" class="relative">
+    <div
+        :class="!isInModal ? 'mb-10' : ''"
+        :style="{ '--bulk-function-bar-height': `${bulkFunctionBarHeight}px` }"
+    >
         <!-- Loading -->
         <div class="absolute w-full h-full bg-artwork-buttons-context/50 top-0 z-50" v-if="isLoading">
             <div class="h-full flex items-center justify-center text-white">
@@ -16,52 +19,26 @@
                 classes="!items-center"
             />
         </div>
-        <!-- Top bar -->
-        <div class="flex items-center justify-between gap-x-4 print:hidden" v-if="!isInModal">
-            <div
-                class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-zinc-600"
-                role="list"
-            >
-                <!-- Last edited -->
-                <div class="flex items-center gap-2" role="listitem">
-                    <span
-                        aria-hidden="true"
-                        class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70 bg-blue-50/40"
-                    ></span>
-                                    <span class="uppercase tracking-wide font-medium">
-                      {{ $t('Last edited events') }}
-                    </span>
-                </div>
-
-                <!-- Most recently created -->
-                <div class="flex items-center gap-2" role="listitem">
-                    <span
-                        aria-hidden="true"
-                        class="h-4 w-10 rounded-full border-2 border-dashed border-pink-500/70 bg-pink-50/40"
-                    ></span>
-                                    <span class="uppercase tracking-wide font-medium">
-                      {{ $t('Most recently created events') }}
-                    </span>
-                                </div>
-
-                                <!-- Planned Event -->
-                                <div class="flex items-center gap-2" role="listitem">
-                    <span
-                        aria-hidden="true"
-                        class="block h-4 w-1.5 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"
-                    ></span>
-                                    <span class="uppercase tracking-wide font-medium">
-                      {{ $t('Planned Event') }}
-                    </span>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-x-4 print:hidden">
+        <!-- Function Bar -->
+        <div
+            v-if="!isInModal"
+            ref="bulkFunctionBarEl"
+            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80 w-fit mx-auto"
+        >
+            <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
                 <MultiEditSwitch
                     :multi-edit="multiEdit"
                     :room-mode="false"
                     @update:multi-edit="UpdateMultiEditEmits"
-                    :disabled="!hasCreateEventsPermission"
+                    v-if="hasCreateEventsPermission && canEditComponent"
+                />
+
+                <SwitchIconTooltip
+                    v-model="showDescriptionInBulk"
+                    :tooltip-text="$t('Show descriptions')"
+                    :icon="IconNote"
+                    size="md"
+                    @change="onToggleShowDescriptionInBulk"
                 />
 
                 <div class="flex items-center gap-x-2">
@@ -69,6 +46,7 @@
                         :planning="isPlanningEvent"
                         @update:planning="isPlanningEvent = $event"
                         :disabled="!hasCreateEventsPermission"
+                        v-if="hasCreateEventsPermission && canEditComponent"
                     />
                 </div>
 
@@ -105,64 +83,154 @@
                     classes-button="ui-button"
                 />
 
-                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button" :disabled="!hasCreateEventsPermission">
+                <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button">
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(1) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(1)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by room') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(2) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(2)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by appointment type') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(3) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(3)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by day') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
-                        <div @click="hasCreateEventsPermission ? updateUserSortId(0) : null"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased', hasCreateEventsPermission ? 'cursor-pointer' : 'cursor-not-allowed opacity-50']">
+                        <div @click="updateUserSortId(0)"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Reset sorting') }}
                         </div>
                     </MenuItem>
                 </BaseMenu>
             </div>
+
         </div>
+        <!-- Header + Events (horizontal scroll container)
+             Nicht-Modal: feste Maximalhöhe → dieser Container wird zum echten vertikalen
+             Scroll-Parent. Das ist nötig, weil der DynamicScroller (page-mode) seinen
+             Scroll-Listener an den ersten scrollbaren Vorfahren hängt; ohne eigene Scrollhöhe
+             würde er an diesen overflow-x-Container binden, der vertikal aber nie scrollt
+             (das Dokument scrollt) → virtualisierte Zeilen würden beim Scrollen nicht
+             nachgeladen. Header und Zeilen bleiben so im selben Container horizontal synchron. -->
+        <div ref="bulkScrollContainer"
+             class="overflow-x-auto w-full"
+             :class="isInModal ? '' : 'overflow-y-auto'"
+             :style="isInModal ? '' : 'max-height: calc(100vh - var(--project-header-height, 130px) - var(--bulk-function-bar-height, 60px) - 32px)'"
+             @scroll="onMainScroll">
+            <div class="w-fit mx-auto">
+                <!-- Function bar (sticky unter ProjectHeader) -->
+                <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal"
+                            :multi-edit="multiEdit"/>
+                <!-- Legend row-->
+                <div
+                    v-if="!isInModal"
+                    class="px-3 py-3 border-b border-zinc-200/70 bg-white"
+                >
+                    <div
+                        class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-zinc-600"
+                        role="list"
+                    >
+                        <!-- Last edited -->
+                        <div class="flex items-center gap-2" role="listitem">
+                            <span
+                                aria-hidden="true"
+                                class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70 bg-blue-50/40"
+                            ></span>
+                            <span class="uppercase tracking-wide font-medium">
+                                {{ $t('Last edited events') }}
+                            </span>
+                        </div>
 
-        <!-- Header + Events -->
-        <div :class="isInModal ? 'overflow-x-auto relative w-full' : 'overflow-x-auto relative w-max'">
-            <BulkHeader v-model="timeArray" v-model:showEndDate="showEndDate" :is-in-modal="isInModal" :multi-edit="multiEdit"/>
-            <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll w-max' : ''">
-                <div v-if="sortedEvents.length > 0 && showEvents">
-                    <!-- Render events by groups -->
-                    <div v-for="(group, groupIndex) in getEventGroups()" :key="group.key" class="mb-6">
-                        <!-- Group Divider -->
-                        <DividerChip
-                            v-if="group.label && usePage().props.auth.user.bulk_sort_id !== 0"
-                            class="mb-6"
-                            variant="brand"
-                            :label="group.label"
-                        />
+                        <!-- Most recently created -->
+                        <div class="flex items-center gap-2" role="listitem">
+                            <span
+                                aria-hidden="true"
+                                class="h-4 w-10 rounded-full border-2 border-dashed border-pink-500/70 bg-pink-50/40"
+                            ></span>
+                            <span class="uppercase tracking-wide font-medium">
+                                {{ $t('Most recently created events') }}
+                            </span>
+                        </div>
 
-                        <!-- Events in this group -->
-                        <div v-for="(event, eventIndex) in group.events" :key="event.id ?? `tmp-${event.index || eventIndex}`" class="mb-2">
-                            <div :id="eventIndex" class="mx-1">
+                        <!-- Planned Event -->
+                        <div class="flex items-center gap-2" role="listitem">
+                            <span
+                                aria-hidden="true"
+                                class="block h-4 w-1.5 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"
+                            ></span>
+                            <span class="uppercase tracking-wide font-medium">
+                                {{ $t('Planned Event') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal: kein w-max — die virtualisierten Zeilen sind absolut positioniert und
+                     geben keine intrinsische Breite; w-max ließe den Scroller auf 0px kollabieren.
+                     Die Breite kommt vom w-fit-Elternelement (BulkHeader). -->
+                <div :class="isInModal ? 'min-h-96' : ''">
+                    <!--
+                        A: Virtualisierte Event-Liste. Statt aller (sehr schweren) BulkSingleEvent-
+                        Komponenten wird nur die sichtbare Teilmenge gerendert. Gruppen-Divider,
+                        Events und "Hinzufügen"-Buttons sind zu einer flachen Zeilenliste (flatRows)
+                        zusammengeführt, damit der DynamicScroller sie einheitlich virtualisieren kann.
+                    -->
+                    <DynamicScroller
+                        v-if="flatRows.length > 0 && showEvents"
+                        :items="flatRows"
+                        :min-item-size="64"
+                        key-field="id"
+                        :page-mode="!isInModal"
+                        :style="isInModal ? 'height: 384px' : ''"
+                        :class="isInModal ? 'overflow-y-auto' : ''"
+                        v-slot="{ item, index, active }"
+                    >
+                        <DynamicScrollerItem
+                            :item="item"
+                            :active="active"
+                            :data-index="index"
+                            :size-dependencies="[
+                                item.kind,
+                                multiEdit,
+                                timeArray,
+                                showEndDate,
+                                showDescriptionInBulk,
+                                item.event ? item.event.description : null,
+                                item.event ? item.event.name : null,
+                            ]"
+                        >
+                            <!-- Group Divider
+                                 Abstände in allen Zeilentypen als Padding statt Margin: der
+                                 DynamicScrollerItem misst offsetHeight, Kind-Margins zählen da
+                                 nicht mit — mit Margins überlappen sich die virtuellen Zeilen. -->
+                            <DividerChip
+                                v-if="item.kind === 'divider'"
+                                class="pb-6"
+                                :class="usePage().props.auth.user.bulk_sort_id === 3 ? 'cursor-pointer' : ''"
+                                variant="brand"
+                                :label="item.group.label"
+                                @click="usePage().props.auth.user.bulk_sort_id === 3 ? navigateToCalendarForDay(item.group.key, $event) : null"
+                            />
+
+                            <!-- Single Event -->
+                            <div v-else-if="item.kind === 'event'" :id="item.eventIndex" class="mx-1 pb-2">
                                 <BulkSingleEvent
                                     :can-edit-component="canEditComponent && hasCreateEventsPermission"
                                     :rooms="rooms"
                                     :event_types="eventTypes"
                                     :time-array="timeArray"
-                                    :event="event"
+                                    :event="item.event"
                                     :copy-types="copyTypes"
-                                    :index="eventIndex"
+                                    :index="item.eventIndex"
                                     :is-in-modal="isInModal"
                                     @open-event-component="onOpenEventComponent"
                                     @edit-event="onOpenEventComponent"
@@ -175,36 +243,49 @@
                                     :show-end-date="showEndDate"
                                 />
                             </div>
-                        </div>
 
-                        <!-- Add Event Button for this group -->
-                        <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit" class="flex justify-center mt-4 mb-2">
+                            <!-- Add Event Button for this group -->
+                            <div v-else-if="item.kind === 'add'"
+                                 class="flex justify-center pt-4 pb-6">
+                                <IconCirclePlus
+                                    @click="addEmptyEventForGroup(item.group)"
+                                    class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                    stroke-width="2"
+                                />
+                            </div>
+                        </DynamicScrollerItem>
+                    </DynamicScroller>
+
+                    <div v-else class="flex items-center h-24 print:hidden">
+                        <AlertComponent
+                            :text="$t('No events found. Click on the plus (+) icon to create an event')"
+                            type="info"
+                            show-icon icon-size="h-5 w-5"
+                            classes="!items-center"
+                        />
+                        <!-- Add Event Button when no events exist -->
+                        <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit"
+                             class="flex justify-center mt-4">
                             <IconCirclePlus
-                                @click="addEmptyEventForGroup(group)"
+                                @click="addEmptyEvent"
                                 class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                                 stroke-width="2"
                             />
                         </div>
                     </div>
                 </div>
-
-                <div v-else class="flex items-center h-24 print:hidden">
-                    <AlertComponent
-                        :text="$t('No events found. Click on the plus (+) icon to create an event')"
-                        type="info"
-                        show-icon icon-size="h-5 w-5"
-                        classes="!items-center"
-                    />
-                    <!-- Add Event Button when no events exist -->
-                    <div v-if="canEditComponent && hasCreateEventsPermission && !multiEdit" class="flex justify-center mt-4">
-                        <IconCirclePlus
-                            @click="addEmptyEvent"
-                            class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
-                            stroke-width="2"
-                        />
-                    </div>
-                </div>
             </div>
+        </div>
+
+        <!-- Sticky horizontal scrollbar proxy -->
+        <div
+            v-if="!isInModal && showStickyScrollbar"
+            ref="stickyScrollbarEl"
+            class="sticky bottom-0 z-20 overflow-x-auto overflow-y-hidden print:hidden"
+            style="height: 14px; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border-top: 1px solid rgba(0,0,0,0.06);"
+            @scroll="onStickyScroll"
+        >
+            <div :style="{ width: scrollContentWidth + 'px', height: '1px' }"></div>
         </div>
 
         <!-- Bottom actions -->
@@ -224,7 +305,7 @@
         </div>
 
         <!-- Multi-Edit Action Bar -->
-        <div v-else class="fixed inset-x-0 bottom-3 z-40 print:hidden">
+        <div v-else class="fixed inset-x-0 left-10 bottom-3 z-40 print:hidden">
             <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
                 <div class="relative">
                     <!-- top fade -->
@@ -237,23 +318,24 @@
                px-4 sm:px-6 py-3 sm:py-4">
                         <!-- left: label + selected count -->
                         <div class="flex items-center gap-3 min-w-0">
-                          <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-200 dark:ring-zinc-700">
+                          <span
+                              class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-200 dark:ring-zinc-700">
                             {{ $t('Multi-Edit') }}
                           </span>
                             <span class="text-sm text-zinc-600 dark:text-zinc-300 truncate">
-                                {{ getEventIdsWhereSelectedForMultiEdit().length }} {{ $t('selected') }}
+                                {{ selectedMultiEditIds.length }} {{ $t('selected') }}
                             </span>
                         </div>
 
                         <!-- right: actions -->
                         <div class="flex items-center gap-2 sm:gap-3">
                             <BaseUIButton :label="$t('Edit')" is-add-button
-                                @click="hasCreateEventsPermission ? openMultiEditModal() : null"
-                                :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
+                                          @click="hasCreateEventsPermission ? openMultiEditModal() : null"
+                                          :disabled="selectedMultiEditIds.length === 0 || !hasCreateEventsPermission"
                             />
                             <BaseUIButton :label="$t('Delete')" is-delete-button
-                                @click="hasCreateEventsPermission ? (showConfirmDeleteModal = true) : null"
-                                :disabled="getEventIdsWhereSelectedForMultiEdit().length === 0 || !hasCreateEventsPermission"
+                                          @click="hasCreateEventsPermission ? (showConfirmDeleteModal = true) : null"
+                                          :disabled="selectedMultiEditIds.length === 0 || !hasCreateEventsPermission"
                             />
                         </div>
                     </div>
@@ -321,10 +403,11 @@ import {
     IconCheck,
     IconCirclePlus,
     IconCircuitCapacitorPolarized,
-    IconFileExport
+    IconFileExport,
+    IconNote
 } from "@tabler/icons-vue";
 import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vue";
-import {onMounted, ref, watch, provide, computed} from "vue";
+import {onBeforeUnmount, onMounted, ref, watch, provide, computed} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
@@ -339,12 +422,16 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import BulkMultiEditModal from "@/Pages/Projects/Components/BulkComponents/BulkMultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import IndividualColumnSizeConfigModal from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
+import IndividualColumnSizeConfigModal
+    from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 import DividerChip from "@/Artwork/Divider/DividerChip.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
-import { useBulkEventsBroadcastUpdater } from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
+import {useBulkEventsBroadcastUpdater} from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import axios from 'axios';
 
 const exportTabEnums = useExportTabEnums();
@@ -352,21 +439,21 @@ const {hasAdminRole, can} = usePermission(usePage().props);
 const $t = useTranslation();
 
 const props = defineProps({
-    project: { type: Object, required: true },
-    eventTypes: { type: Array, required: true },
-    rooms: { type: Array, required: true },
-    isInModal: { type: Boolean, default: false },
-    eventsInProject: { type: Array, default: () => [] },
-    canEditComponent: { type: Boolean, required: true },
-    first_project_calendar_tab_id: { type: Number, required: false },
-    eventStatuses: { type: Array, default: () => [] },
-    event_properties: { type: Array, default: () => [] },
+    project: {type: Object, required: true},
+    eventTypes: {type: Array, required: true},
+    rooms: {type: Array, required: true},
+    isInModal: {type: Boolean, default: false},
+    eventsInProject: {type: Array, default: () => []},
+    canEditComponent: {type: Boolean, required: true},
+    first_project_calendar_tab_id: {type: Number, required: false},
+    eventStatuses: {type: Array, default: () => []},
+    event_properties: {type: Array, default: () => []},
 });
 
 const emits = defineEmits(['closed']);
 
 let showEvents = ref(true);
-const hasCreateEventsPermission = ref(can('create events without request') || hasAdminRole());
+const hasCreateEventsPermission = ref(can('create events without request') || can('can edit planning calendar') || hasAdminRole());
 const roomCollisions = ref([]);
 const timeArray = ref(true);
 
@@ -394,18 +481,43 @@ const lastEditEventIds = ref(usePage()?.props?.headerObject?.project.lastEditEve
 const isLoadingBulkData = ref(false);
 const loadBulkDataError = ref('');
 
+const bulkFunctionBarEl = ref(null);
+const bulkScrollContainer = ref(null);
+const stickyScrollbarEl = ref(null);
+const showStickyScrollbar = ref(false);
+const scrollContentWidth = ref(0);
+let isSyncingScroll = false;
+const bulkFunctionBarHeight = ref(0);
+let bulkFunctionBarResizeObserver = null;
+
+const updateBulkFunctionBarHeight = () => {
+    try {
+        const el = bulkFunctionBarEl.value;
+        if (!el) return;
+        bulkFunctionBarHeight.value = el.getBoundingClientRect().height || 0;
+    } catch {
+        // ignore
+    }
+};
+
 const copyTypes = ref([
-    { id: 1, name: 'Täglich', type: 'daily' },
-    { id: 2, name: 'Wöchentlich', type: 'weekly' },
-    { id: 3, name: 'Monatlich', type: 'monthly' },
-    { id: 4, name: 'am gleichen Tag', type: 'same_day' },
+    {id: 1, name: 'Täglich', type: 'daily'},
+    {id: 2, name: 'Wöchentlich', type: 'weekly'},
+    {id: 3, name: 'Monatlich', type: 'monthly'},
+    {id: 4, name: 'am gleichen Tag', type: 'same_day'},
 ]);
 
 // BESSER: ref statt reactive([]) für zuverlässiges Re-Rendering bei Reassign/Filter
 const events = ref([]);
 
+// Noch nicht persistierte Zeilen (Modal, Kopien) haben keine event.id — der DynamicScroller
+// braucht aber pro Zeile einen eindeutigen Key, sonst kollabieren mehrere neue Zeilen
+// zu einer einzigen (key-field-Kollision auf "event-undefined").
+let localRowUid = 0;
+const nextLocalRowUid = () => `local-${++localRowUid}`;
+
 // --- BulkEventsBroadcastUpdater Integration
-useBulkEventsBroadcastUpdater(events, {
+useBulkEventsBroadcastUpdater(events, computed(() => props.project?.id), {
     onEvent: (event, action) => {
         // add event id if not existing in lastEditEventIds
         if (action === 'updated') {
@@ -423,7 +535,7 @@ useBulkEventsBroadcastUpdater(events, {
 });
 
 // globally provided
-const focusRegistry = ref({ id: null, type: null });
+const focusRegistry = ref({id: null, type: null});
 const storeFocus = (id, type = null) => {
     focusRegistry.value.id = id;
     focusRegistry.value.type = type;
@@ -431,6 +543,21 @@ const storeFocus = (id, type = null) => {
 provide('focusRegistry', focusRegistry);
 provide('storeFocusGlobal', storeFocus);
 provide('event_properties', props.event_properties);
+// B: Multi-Edit-Status zentral bereitstellen, statt ihn als Prop durch jede (virtualisierte)
+// Event-Zeile zu reichen. Reduziert Prop-Drilling und Re-Render-Aufwand beim Umschalten.
+provide('bulkMultiEdit', multiEdit);
+
+// Show description inline toggle
+const showDescriptionInBulk = ref(usePage().props.auth.user.show_description_in_bulk ?? false);
+provide('showDescriptionInBulk', showDescriptionInBulk);
+
+const onToggleShowDescriptionInBulk = () => {
+    router.patch(
+        route('user.update.show_description_in_bulk', {user: usePage().props.auth.user.id}),
+        {show_description_in_bulk: showDescriptionInBulk.value},
+        {preserveScroll: true, preserveState: true}
+    );
+};
 
 // --- Helpers
 const toISO = (d) => d.toISOString().split('T')[0];
@@ -439,7 +566,7 @@ const formatFullDate = (iso) => new Date(iso).toLocaleDateString('de-DE', {
 });
 
 // Group events by current sorting criteria
-const getEventGroups = () => {
+const eventGroups = computed(() => {
     const groups = [];
     const sortId = usePage().props.auth.user?.bulk_sort_id;
 
@@ -499,7 +626,12 @@ const getEventGroups = () => {
                 currentDay = event.day;
                 currentGroup = {
                     key: `day_${currentDay}`,
-                    label: currentDay ? new Date(currentDay).toLocaleDateString('de-DE', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}) : null,
+                    label: currentDay ? new Date(currentDay).toLocaleDateString('de-DE', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }) : null,
                     events: []
                 };
             }
@@ -509,12 +641,39 @@ const getEventGroups = () => {
     }
 
     return groups;
-};
+});
+
+// Flache Zeilenliste für die Virtualisierung (DynamicScroller).
+// Jede Zeile ist entweder ein Gruppen-Divider, ein Event oder ein "Event hinzufügen"-Button.
+// Dadurch wird nur die sichtbare Teilmenge der (sehr schweren) BulkSingleEvent-Komponenten gerendert.
+const flatRows = computed(() => {
+    const rows = [];
+    const sortId = usePage().props.auth.user?.bulk_sort_id;
+    const showAddButtons = props.canEditComponent && hasCreateEventsPermission.value && !multiEdit.value;
+
+    eventGroups.value.forEach((group) => {
+        if (group.label && sortId !== 0 && sortId) {
+            rows.push({id: `divider-${group.key}`, kind: 'divider', group});
+        }
+
+        group.events.forEach((event, eventIndex) => {
+            rows.push({id: `event-${event.id ?? event.localUid}`, kind: 'event', event, eventIndex, group});
+        });
+
+        if (showAddButtons) {
+            rows.push({id: `add-${group.key}`, kind: 'add', group});
+        }
+    });
+
+    return rows;
+});
 
 // Nur bei Sortierung nach Tag (3) lokal sortieren – sonst Server-Reihenfolge belassen.
 const sortedEvents = computed(() => {
     const list = [...events.value];
-    if (usePage().props.auth.user?.bulk_sort_id === 3) {
+    const sortId = usePage().props.auth.user?.bulk_sort_id;
+
+    if (sortId === 3) {
         list.sort((a, b) => {
             if ((a.day || '') === (b.day || '')) {
                 const as = a.start_time || '';
@@ -528,15 +687,57 @@ const sortedEvents = computed(() => {
             }
             return (a.day || '').localeCompare(b.day || '');
         });
+    } else if (sortId === 1) {
+        // Sort by room, then by time
+        list.sort((a, b) => {
+            const roomA = a.room?.name || '';
+            const roomB = b.room?.name || '';
+            if (roomA === roomB) {
+                const dayA = a.day || '';
+                const dayB = b.day || '';
+                if (dayA === dayB) {
+                    return (a.start_time || '').localeCompare(b.start_time || '');
+                }
+                return dayA.localeCompare(dayB);
+            }
+            return roomA.localeCompare(roomB);
+        });
+    } else if (sortId === 2) {
+        // Sort by type, then by time
+        list.sort((a, b) => {
+            const typeA = a.type?.name || '';
+            const typeB = b.type?.name || '';
+            if (typeA === typeB) {
+                const dayA = a.day || '';
+                const dayB = b.day || '';
+                if (dayA === dayB) {
+                    return (a.start_time || '').localeCompare(b.start_time || '');
+                }
+                return dayA.localeCompare(dayB);
+            }
+            return typeA.localeCompare(typeB);
+        });
+    } else {
+        // Default: chronologisch
+        list.sort((a, b) => {
+            const dayA = a.day || '';
+            const dayB = b.day || '';
+            if (dayA === dayB) {
+                return (a.start_time || '').localeCompare(b.start_time || '');
+            }
+            return dayA.localeCompare(dayB);
+        });
     }
     return list;
 });
 
-const getEventIdsWhereSelectedForMultiEdit = () =>
-    events.value.filter(e => e.isSelectedForMultiEdit).map(e => e.id);
+const selectedMultiEditIds = computed(() =>
+    events.value.filter(e => e.isSelectedForMultiEdit).map(e => e.id));
 
 // --- Actions
-const UpdateMultiEditEmits = (value) => { multiEdit.value = value; };
+const UpdateMultiEditEmits = (value) => {
+    multiEdit.value = value;
+};
 
 const mapBulkEventToModalEvent = (e) => {
     if (!e || typeof e !== 'object') return null;
@@ -553,8 +754,8 @@ const mapBulkEventToModalEvent = (e) => {
         title: e.name ?? '',
         eventName: e.name ?? '',
         start,
-    end,
-    allDay: !hasTimes,
+        end,
+        allDay: !hasTimes,
         eventType: e.type ?? e.eventType ?? null,
         eventTypeId: e.type?.id ?? e.eventTypeId ?? e.eventType?.id ?? null,
         eventStatus: e.status ?? e.eventStatus ?? null,
@@ -582,7 +783,7 @@ const onOpenEventComponent = async (payload) => {
     try {
         isLoading.value = true;
         if (!id) throw new Error('Missing event id');
-        const { data } = await axios.get(route('events.show.json', { event: id }));
+        const {data} = await axios.get(route('events.show.json', {event: id}));
         // Laravel JSON Resource may wrap payload under data
         const payloadData = data?.data ?? data;
         if (props.project) payloadData.project = props.project;
@@ -590,15 +791,16 @@ const onOpenEventComponent = async (payload) => {
         try {
             const fb = fallbackModel();
             if (fb?.start && fb?.end) {
-                const sd = String(fb.start).slice(0,10);
-                const ed = String(fb.end).slice(0,10);
+                const sd = String(fb.start).slice(0, 10);
+                const ed = String(fb.end).slice(0, 10);
                 if (sd && ed && sd !== ed) {
                     payloadData.start = fb.start;
                     payloadData.end = fb.end;
                     payloadData.allDay = fb.allDay;
                 }
             }
-        } catch { /* ignore */ }
+        } catch { /* ignore */
+        }
         eventToEdit.value = payloadData;
         eventComponentIsVisible.value = true;
     } catch (e) {
@@ -619,7 +821,9 @@ const onEventComponentClosed = () => {
 const addEmptyEvent = () => {
     //isLoading.value = true;
 
-    events.value.forEach(e => { e.isNew = false; });
+    events.value.forEach(e => {
+        e.isNew = false;
+    });
 
     let newDate = new Date();
     if (events.value.length > 0) {
@@ -629,6 +833,7 @@ const addEmptyEvent = () => {
     }
 
     const base = {
+        localUid: nextLocalRowUid(),
         index: events.value.length + 1,
         status: props.eventStatuses?.find(s => s.default) ?? null,
         type: props.eventTypes?.[0] ?? null,
@@ -659,14 +864,16 @@ const addEmptyEvent = () => {
         onFinish: () => { isLoading.value = false; },
     });*/
 
-    axios.post(route('event.store.bulk.single', {project: props.project}), { event: base })
+    axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
         .finally(() => {
             //isLoading.value = false;
         });
 };
 
 const addEmptyEventForGroup = (group) => {
-    events.value.forEach(e => { e.isNew = false; });
+    events.value.forEach(e => {
+        e.isNew = false;
+    });
 
     let newDate = new Date();
     let baseEvent = null;
@@ -685,10 +892,11 @@ const addEmptyEventForGroup = (group) => {
     }
 
     const base = {
+        localUid: nextLocalRowUid(),
         index: events.value.length + 1,
         status: baseEvent?.status || props.eventStatuses?.find(s => s.default) || null,
         type: baseEvent?.type || props.eventTypes?.[0] || null,
-        name: props.isInModal ? '' : 'Blocker',
+        name: baseEvent?.name || '',
         room: baseEvent?.room || props.rooms?.[0] || null,
         day: toISO(newDate),
         end_day: toISO(newDate),
@@ -708,7 +916,7 @@ const addEmptyEventForGroup = (group) => {
     }
 
     // Persist, wenn nicht im Modal
-    axios.post(route('event.store.bulk.single', {project: props.project}), { event: base })
+    axios.post(route('event.store.bulk.single', {project: props.project}), {event: base})
         .finally(() => {
             //isLoading.value = false;
         });
@@ -743,7 +951,9 @@ const createCopyByEventWithData = (event) => {
             const d1 = new Date(event.day);
             const d2 = new Date(event.end_day ?? event.day);
             return Math.max(0, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
-        } catch { return 0; }
+        } catch {
+            return 0;
+        }
     })();
 
     for (let i = 0; i < event.copyCount; i++) {
@@ -756,6 +966,7 @@ const createCopyByEventWithData = (event) => {
         endCursor.setDate(endCursor.getDate() + spanDays);
 
         const clone = {
+            localUid: nextLocalRowUid(),
             index: events.value.length + 1,
             status: event.status,
             type: event.type,
@@ -771,6 +982,8 @@ const createCopyByEventWithData = (event) => {
             description: event.description,
             isNew: true,
             is_planning: isPlanningEvent.value,
+            is_series: false,
+            series_id: null,
         };
         createdEvents.push(clone);
     }
@@ -793,12 +1006,12 @@ const createCopyByEventWithData = (event) => {
             onFinish: () => { isLoading.value = false; },
         });*/
 
-        axios.post(route('events.bulk.store', {project: props.project}), { events: createdEvents })
+        axios.post(route('events.bulk.store', {project: props.project}), {events: createdEvents})
             .finally(() => {
                 //isLoading.value = false;
             });
     } else {
-       // isLoading.value = false;
+        // isLoading.value = false;
     }
 };
 
@@ -817,8 +1030,10 @@ const submit = () => {
         return;
     }
     showEvents.value = false;
-    axios.post(route('events.bulk.store', {project: props.project}), { events: events.value })
-        .then(() => { emits('closed'); })
+    axios.post(route('events.bulk.store', {project: props.project}), {events: events.value})
+        .then(() => {
+            emits('closed');
+        })
         .catch((e) => {
             console.error('Bulk create failed', e);
             showEvents.value = true;
@@ -829,21 +1044,23 @@ const updateUserSortId = (id) => {
     isLoading.value = true;
     router.patch(
         route('user.update_bulk_sort_id', {user: usePage().props.auth.user.id}),
-        { bulk_sort_id: id },
+        {bulk_sort_id: id},
         {
             preserveScroll: true,
             preserveState: true,
-            onFinish: () => { isLoading.value = false; }
+            onFinish: () => {
+                isLoading.value = false;
+            }
         }
     );
 };
 
 const deleteSelectedEvents = () => {
     isLoading.value = true;
-    const selectedIds = getEventIdsWhereSelectedForMultiEdit();
+    const selectedIds = selectedMultiEditIds.value;
 
     axios.delete(route('event.bulk.multi-edit.delete'), {
-        data: { eventIds: selectedIds }
+        data: {eventIds: selectedIds}
     })
         .then(() => {
             // Close the confirmation modal
@@ -860,7 +1077,7 @@ const deleteSelectedEvents = () => {
 };
 
 const openMultiEditModal = () => {
-    eventIdsForMultiEdit.value = getEventIdsWhereSelectedForMultiEdit();
+    eventIdsForMultiEdit.value = selectedMultiEditIds.value;
     showMultiEditModal.value = true;
 };
 
@@ -876,15 +1093,28 @@ const getExportModalConfiguration = () => {
         show_artists: usePage().props.createSettings?.show_artists,
         project: props.project,
     };
-    cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = { project: props.project };
+    cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {project: props.project};
     return cfg;
 };
 
 const useProjectTimePeriodAndRedirect = () => {
     router.patch(
         route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
-        { use_project_time_period: true, project_id: props.project.id }
+        {use_project_time_period: true, project_id: props.project.id}
     );
+};
+
+const navigateToCalendarForDay = (groupKey, event) => {
+    // groupKey format: "day_YYYY-MM-DD"
+    const dateStr = groupKey.replace('day_', '');
+    const url = route('calendar.redirect-by-day', { day: dateStr });
+
+    // Open in new tab if cmd+click (Mac) or ctrl+click (Windows/Linux)
+    if (event?.metaKey || event?.ctrlKey) {
+        window.open(url, '_blank');
+    } else {
+        window.location.href = url;
+    }
 };
 
 // Lifecycle
@@ -898,8 +1128,8 @@ async function fetchBulkEditData() {
     loadBulkDataError.value = '';
 
     try {
-        const { data } = await axios.get(
-            route('projects.tabs.bulk-edit', { project: projectId })
+        const {data} = await axios.get(
+            route('projects.tabs.bulk-edit', {project: projectId})
         );
 
         if (data?.events && Array.isArray(data.events)) {
@@ -922,7 +1152,10 @@ async function fetchBulkEditData() {
                     index: events.value.length + 1,
                     description: event.description,
                     isNew: false,
-                    is_planning: event.is_planning
+                    is_planning: event.is_planning,
+                    is_series: event.is_series || false,
+                    series_id: event.series_id || null,
+                    eventProperties: event.eventProperties || event.event_properties || [],
                 });
             });
         }
@@ -942,7 +1175,6 @@ async function fetchBulkEditData() {
             usePage().props.filterOptions = data.filterOptions;
         }
     } catch (error) {
-        console.error(error);
         loadBulkDataError.value = 'Unable to load bulk edit data.';
     } finally {
         isLoadingBulkData.value = false;
@@ -950,6 +1182,17 @@ async function fetchBulkEditData() {
 }
 
 onMounted(async () => {
+    updateBulkFunctionBarHeight();
+
+    if (typeof ResizeObserver !== 'undefined') {
+        bulkFunctionBarResizeObserver = new ResizeObserver(() => updateBulkFunctionBarHeight());
+        if (bulkFunctionBarEl.value) bulkFunctionBarResizeObserver.observe(bulkFunctionBarEl.value);
+    }
+
+    window.addEventListener('resize', updateBulkFunctionBarHeight, {passive: true});
+    window.addEventListener('scroll', onScrollOrResize, {passive: true});
+    window.addEventListener('resize', onScrollOrResize, {passive: true});
+
     // persist showEndDate changes
     watch(showEndDate, (v) => {
         localStorage.setItem(showEndDateStorageKey.value, v ? 'true' : 'false');
@@ -980,7 +1223,10 @@ onMounted(async () => {
                 index: events.value.length + 1,
                 description: event.description,
                 isNew: false,
-                is_planning: event.is_planning
+                is_planning: event.is_planning,
+                is_series: event.is_series || false,
+                series_id: event.series_id || null,
+                eventProperties: event.eventProperties || event.event_properties || [],
             });
         });
 
@@ -1005,6 +1251,23 @@ onMounted(async () => {
     }
 
     isLoading.value = false;
+
+    // Initial sticky scrollbar check
+    requestAnimationFrame(updateStickyScrollbar);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateBulkFunctionBarHeight);
+    window.removeEventListener('scroll', onScrollOrResize);
+    window.removeEventListener('resize', onScrollOrResize);
+    if (stickyScrollRAF) cancelAnimationFrame(stickyScrollRAF);
+    if (bulkFunctionBarResizeObserver) {
+        try {
+            bulkFunctionBarResizeObserver.disconnect();
+        } catch { /* ignore */
+        }
+        bulkFunctionBarResizeObserver = null;
+    }
 });
 
 // reactive fixes
@@ -1019,4 +1282,74 @@ watch(() => events.value, (newEvents) => {
 watch(isPlanningEvent, (newValue) => {
     localStorage.setItem(`isPlanningEvent_${props.project.id}`, newValue.toString());
 });
+
+// Virtualisierte Zeilen mounten asynchron – Sticky-Scrollbar-Breite neu vermessen,
+// sobald sich die Zeilenanzahl ändert (initial laden, filtern, Multi-Edit umschalten).
+watch(() => flatRows.value.length, () => {
+    requestAnimationFrame(updateStickyScrollbar);
+});
+
+// --- Sticky scrollbar logic ---
+const onMainScroll = () => {
+    if (isSyncingScroll) return;
+    isSyncingScroll = true;
+    if (stickyScrollbarEl.value && bulkScrollContainer.value) {
+        stickyScrollbarEl.value.scrollLeft = bulkScrollContainer.value.scrollLeft;
+    }
+    isSyncingScroll = false;
+    updateStickyScrollbar();
+};
+
+const onStickyScroll = () => {
+    if (isSyncingScroll) return;
+    isSyncingScroll = true;
+    if (bulkScrollContainer.value && stickyScrollbarEl.value) {
+        bulkScrollContainer.value.scrollLeft = stickyScrollbarEl.value.scrollLeft;
+    }
+    isSyncingScroll = false;
+};
+
+const updateStickyScrollbar = () => {
+    const container = bulkScrollContainer.value;
+    if (!container || props.isInModal) {
+        showStickyScrollbar.value = false;
+        return;
+    }
+    const contentWidth = container.scrollWidth;
+    const viewportWidth = container.clientWidth;
+    const hasOverflow = contentWidth > viewportWidth;
+
+    if (!hasOverflow) {
+        showStickyScrollbar.value = false;
+        return;
+    }
+
+    scrollContentWidth.value = contentWidth;
+
+    // Show sticky scrollbar only when the native scrollbar is not visible in viewport
+    const rect = container.getBoundingClientRect();
+    const containerBottom = rect.bottom;
+    const viewportHeight = window.innerHeight;
+    showStickyScrollbar.value = containerBottom > viewportHeight;
+};
+
+let stickyScrollRAF = null;
+const onScrollOrResize = () => {
+    if (stickyScrollRAF) cancelAnimationFrame(stickyScrollRAF);
+    stickyScrollRAF = requestAnimationFrame(updateStickyScrollbar);
+};
 </script>
+
+<style scoped>
+/*
+  vue-virtual-scroller setzt .vue-recycle-scroller__item-wrapper auf overflow:hidden und
+  fixiert die item-views auf width:100% (= sichtbare Viewport-Breite). Die Bulk-Zeilen sind
+  jedoch breiter als der Viewport (horizontaler Scroll über den äußeren Container). Dadurch
+  wurden die rechtsbündigen Spalten – Notiz-Icon und das Aktions-/Kontextmenü – abgeschnitten.
+  overflow:visible gibt den überstehenden Zeileninhalt wieder frei; der horizontale Scroll
+  des äußeren Containers macht ihn weiterhin erreichbar und hält ihn mit dem Header synchron.
+*/
+:deep(.vue-recycle-scroller__item-wrapper) {
+    overflow: visible;
+}
+</style>

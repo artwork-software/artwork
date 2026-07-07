@@ -3,7 +3,7 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
             <div class="col-span-2 flex items-center gap-x-2">
                 <PropertyIcon name="IconLock" v-if="shift.isCommitted" class="w-4 h-4" />
-                <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: shift.craft.color + '22', borderColor: blackColorIfColorIsWhite(shift.craft.color) + '55', color: blackColorIfColorIsWhite(shift.craft.color) }">
+                <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: (craft.color ?? '#ccc') + '22', borderColor: blackColorIfColorIsWhite(craft.color ?? '#ccc') + '55', color: blackColorIfColorIsWhite(craft.color ?? '#ccc') }">
                     {{ shift.craftAbbreviation }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
                         [{{ shift.craftAbbreviationUser }}]
@@ -105,6 +105,9 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {Float} from "@headlessui-float/vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+
+const { resolveCraft } = useShiftPlanLookups();
 
 const props = defineProps({
     user: {
@@ -118,7 +121,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['shiftDeleted'])
+const page = usePage()
 
+const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
 const showConfirmDeleteModal = ref(false);
 const showRequestWorkTimeChangeModal = ref(false);
 const isDeletingUser = ref(false);
@@ -164,8 +169,15 @@ const blackColorIfColorIsWhite = (color) => {
 }
 
 const isCurrentUserPlannerOfShiftCraft = computed(() => {
-    return props.shift.craft.craft_shift_planer.some(planner => planner.id === usePage().props.auth.user.id);
-});
+    const currentUserId = page.props.auth?.user?.id
+    if (!currentUserId) return false
+
+    const planners = craft.value?.craft_shift_planer
+
+    if (!Array.isArray(planners)) return false
+
+    return planners.some((planner) => planner?.id === currentUserId)
+})
 
 const typMapping = {
     0: 'user',

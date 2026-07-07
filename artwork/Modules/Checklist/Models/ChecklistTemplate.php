@@ -36,7 +36,9 @@ class ChecklistTemplate extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_templates(): HasMany
     {
-        return $this->hasMany(TaskTemplate::class);
+        return $this->hasMany(TaskTemplate::class)
+            ->orderByRaw('`order` IS NULL, `order` ASC')
+            ->orderBy('id');
     }
 
     public function users(): BelongsToMany

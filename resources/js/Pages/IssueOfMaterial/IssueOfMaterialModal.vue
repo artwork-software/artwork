@@ -1,6 +1,6 @@
 <template>
     <ArtworkBaseModal
-        @close="$emit('close')"
+        @close="handleClose"
         modal-size="max-w-7xl"
         :title="issueOfMaterial?.id ?  $t('Edit issue of material') : $t('New issue of material')"
         :description="issueOfMaterial?.id ? $t('Edit the details of the issue of material') : $t('Create a new issue of material')"
@@ -33,13 +33,39 @@
 
         <div class="px-5 pb-5 pt-2">
             <div v-if="internOrExternal" class="flex flex-col gap-y-4">
-                <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" @close="$emit('close')" />
+                <ExternMaterialIssueModal :load-article-form-basket="true" :extern-material-issue="externMaterialIssue" :planning-date="planningDate" @close="$emit('close')" />
             </div>
             <div v-else>
-                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" @close="$emit('close')" @saved="handleSaved" />
+                <CreateInternMaterialIssueModul :load-article-form-basket="true" :project="project" :issue-of-material="issueOfMaterial" :is-in-project-component="isInProjectComponent" :first-event="firstEvent" :last-event="lastEvent" :planning-date="planningDate" :project-tab-id="projectTabId" @close="$emit('close')" @saved="handleSaved" />
             </div>
         </div>
 
+    </ArtworkBaseModal>
+
+    <!-- Bestätigungsdialog beim Schließen -->
+    <ArtworkBaseModal
+        v-if="showDiscardConfirmation"
+        @close="showDiscardConfirmation = false"
+        modal-size="sm:max-w-md"
+        :title="$t('Discard data')"
+        :description="$t('Should the entered data be discarded?')"
+    >
+        <div class="flex justify-end gap-3 mt-4">
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition"
+                @click="showDiscardConfirmation = false"
+            >
+                {{ $t('No, continue editing') }}
+            </button>
+            <button
+                type="button"
+                class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+                @click="confirmDiscard"
+            >
+                {{ $t('Discard') }}
+            </button>
+        </div>
     </ArtworkBaseModal>
 </template>
 <script setup>
@@ -116,10 +142,34 @@ const props = defineProps({
         required: false,
         default: null,
     },
+    planningDate: {
+        type: String,
+        required: false,
+        default: null,
+    },
+    projectTabId: {
+        type: Number,
+        required: false,
+        default: 1,
+    },
 })
 
 
 const internOrExternal = ref(props.isExternOrIntern)
+const showDiscardConfirmation = ref(false)
+
+const handleClose = () => {
+    if (!checkIfEditMode.value) {
+        showDiscardConfirmation.value = true
+        return
+    }
+    emit('close')
+}
+
+const confirmDiscard = () => {
+    showDiscardConfirmation.value = false
+    emit('close')
+}
 
 const CreateInternMaterialIssueModul = defineAsyncComponent({
     loader: () => import('@/Pages/IssueOfMaterial/Components/CreateInternMaterialIssueModul.vue'),

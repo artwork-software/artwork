@@ -4,6 +4,7 @@ namespace Artwork\Modules\IndividualTimes\Services;
 
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Repositories\IndividualTimeRepository;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -11,6 +12,7 @@ class IndividualTimeService
 {
     public function __construct(
         private readonly IndividualTimeRepository $individualTimeRepository,
+        private readonly WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -70,7 +72,14 @@ class IndividualTimeService
         if (!empty($individualTime->series_uuid)) {
             $updateData['series_uuid'] = null;
         }
-        return $individualTime->update($updateData);
+        $result = $individualTime->update($updateData);
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($modelInstance),
+            $modelInstance->id
+        );
+
+        return $result;
     }
 
     public function createForModel(
@@ -115,7 +124,14 @@ class IndividualTimeService
             'break_minutes' => $breakMinutes ?? 0,
         ];
 
-        return $this->individualTimeRepository->createNewIndividualTime($modelInstance, $individualTimeObject);
+        $result = $this->individualTimeRepository->createNewIndividualTime($modelInstance, $individualTimeObject);
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($modelInstance),
+            $modelInstance->id
+        );
+
+        return $result;
     }
 
     public function deleteForModel($modelInstance, string $date): void
@@ -128,6 +144,11 @@ class IndividualTimeService
         $individualTime->each(function ($individualTime): void {
             $individualTime->delete();
         });
+
+        $this->workingHourCacheService->forgetForEntity(
+            WorkingHourCacheService::entityType($modelInstance),
+            $modelInstance->id
+        );
     }
 
     /**

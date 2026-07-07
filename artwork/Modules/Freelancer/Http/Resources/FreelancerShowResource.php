@@ -18,6 +18,7 @@ class FreelancerShowResource extends JsonResource
         return [
             'id' => $this->id,
             'position' => $this->position,
+            'business' => $this->business,
             'profile_image' => $this->profile_image,
             'profile_photo_url' => $this->profile_photo_url,
             'first_name' => $this->first_name,
@@ -33,7 +34,7 @@ class FreelancerShowResource extends JsonResource
             'work_name' => $this->work_name,
             'work_description' => $this->work_description,
             'can_work_shifts' => $this->can_work_shifts,
-            'assignedCrafts' => $this->assignedCrafts,
+            'assignedCrafts' => $this->assignedCrafts->load('qualifications'),
             'assignableCrafts' => Craft::query()->get()->filter(
                 fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
             )->toArray(),

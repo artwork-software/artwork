@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Availability\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -28,15 +29,25 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Availability extends Model
 {
     use HasFactory;
-    use HasChangesHistory;
+    use LogsActivity;
 
     protected $table = 'availabilities';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('availability')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'start_time',
         'end_time',
         'date',
         'full_day',
+        'day_part',
         'comment',
         'is_series',
         'series_id',
@@ -79,7 +90,9 @@ class Availability extends Model
 
     public function getHasConflictsAttribute(): bool
     {
-        return $this->conflicts()->exists();
+        return $this->relationLoaded('conflicts')
+            ? $this->conflicts->isNotEmpty()
+            : $this->conflicts()->exists();
     }
 
     public function series(): HasOne

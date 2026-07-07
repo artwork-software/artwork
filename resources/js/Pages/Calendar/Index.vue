@@ -69,6 +69,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { WhenVisible } from '@inertiajs/vue3'
 import { defineAsyncComponent, onMounted, onUnmounted, provide, ref, computed, type PropType } from 'vue'
 import { IconAlertSquareRounded, IconX } from '@tabler/icons-vue'
+import { enrichDays } from '@/Composeables/calendarDateUtils.js'
 
 // Async Code-Splitting
 const BaseCalendar = defineAsyncComponent(() => import('@/Components/Calendar/BaseCalendar.vue'))
@@ -125,7 +126,7 @@ onUnmounted(() => { if (timer) clearTimeout(timer) })
 const isCalendarLazy = computed(() => typeof props.calendar === 'undefined')
 const calendar = computed(() => props.calendar ?? [])
 const rooms = computed(() => props.rooms)
-const period = computed(() => props.period)
+const period = computed(() => enrichDays(props.period))
 </script>
 
 <style scoped>

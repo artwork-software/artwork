@@ -141,7 +141,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const columnSizeForm = useForm({
     bulk_column_size: { ...usePage().props.auth.user.bulk_column_size }
@@ -153,7 +153,7 @@ const columnSizeMinMax = {
     3: { min: 100, max: 450 },
     4: { min: 100, max: 450 },
     5: { min: 146, max: 450 },
-    6: { min: 195, max: 450 }
+    6: { min: 110, max: 450 }
 }
 
 // sinnvolle, harmonische Vorschläge (Mitte zwischen min/max bzw. Domain-Wissen)
@@ -163,7 +163,7 @@ const suggested = {
     3: 220,
     4: 144,
     5: 180,
-    6: 250
+    6: 150
 }
 
 const columns = computed(() =>
@@ -194,7 +194,7 @@ const setColumnSizeToDefault = () => {
         3: 144,
         4: 144,
         5: 144,
-        6: 250
+        6: 150
     }
     submit()
 }
@@ -204,13 +204,11 @@ const submit = () => {
         route('user.bulk-column-size.update', usePage().props.auth.user.id),
         {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
-                // optional: Toast einblenden
-                // useToast().success($t('Saved'))
-                // close modal
-                // Emit hier, damit der Parent den Refresh/Close steuert
-                // (du hast das bereits so gemacht)
-                // eslint-disable-next-line no-undef
+                // Geteilte Prop sofort aktualisieren, damit Header + Event-Zeilen die
+                // neuen Spaltenbreiten ohne Reload übernehmen (sie lesen daraus).
+                usePage().props.auth.user.bulk_column_size = { ...columnSizeForm.bulk_column_size }
                 emit('close')
             }
         }

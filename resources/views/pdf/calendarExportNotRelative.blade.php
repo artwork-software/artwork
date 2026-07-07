@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Kalender</title>
+    @php
+        $scaleFactor = match(strtolower($paperSize ?? 'a4')) {
+            'a3' => 1.4,
+            'a5' => 0.85,
+            'a6' => 0.7,
+            default => 1.0, // a4
+        };
+        $scaleFactor *= 0.9; // globally reduce font sizes by ~10%
+        $s = fn(float $base) => round($base * $scaleFactor, 1) . 'px';
+    @endphp
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             color: #111;
             -webkit-font-smoothing: antialiased;
         }
@@ -24,46 +34,46 @@
             width: 100%;
             margin-bottom: 10px;
             padding-bottom: 6px;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             line-height: 1.3;
             border: none;
-            border-collapse: collapse; /* keine sichtbaren Rahmen */
+            border-collapse: collapse;
         }
 
         .header-table td {
-            vertical-align: top; /* gleiche Höhe oben */
+            vertical-align: top;
             padding: 0;
             border: none;
         }
 
         .header-left {
             width: 60%;
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             color: #111;
         }
 
         .header-right {
             width: 40%;
             text-align: right;
-            font-size: 7px;
+            font-size: {{ $s(7) }};
             color: #71717a;
             line-height: 1.4;
         }
 
         .title {
-            font-size: 12px;
+            font-size: {{ $s(12) }};
             font-weight: 600;
             color: #0a0a0a;
             line-height: 1.3;
         }
         .subtitle {
-            font-size: 8px;
+            font-size: {{ $s(8) }};
             color: #52525b;
             margin-top: 2px;
             line-height: 1.4;
         }
         .chunk-info {
-            font-size: 7px;
+            font-size: {{ $s(7) }};
             color: #71717a;
             line-height: 1.4;
             margin-top: 2px;
@@ -73,17 +83,15 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;   /* <--- WICHTIG */
+            table-layout: fixed;
             border: 1px solid #404040;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             font-weight: 500;
         }
 
-        /* Damit Inhalte nicht über die Zelle hinausquellen */
         th, td {
             word-wrap: break-word;
         }
-
 
         thead th {
             border-bottom: 1px solid #404040;
@@ -91,14 +99,14 @@
             background: #f9fafb;
             vertical-align: top;
             word-wrap: break-word;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             font-weight: 500;
         }
 
         /* Kopfspalten */
         .th-room-head {
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.3;
             text-align: left;
             padding: 4px;
@@ -113,11 +121,11 @@
             line-height: 1.3;
             padding: 4px 2px;
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
         }
         .th-daygroup-meta {
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.2;
             color: #4b5563;
         }
@@ -148,15 +156,15 @@
             line-height: 1.2;
             font-weight: 500;
             color: #000;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             word-break: break-word;
             max-height: 24px;
             overflow: hidden;
         }
 
-        /* Slot/Zeitraum Spalte (jetzt schlanker) */
+        /* Slot/Zeitraum Spalte */
         .td-slot-label {
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.2;
             color: #4b5563;
             font-weight: 500;
@@ -164,21 +172,19 @@
             text-align: center;
             padding: 1px;
             white-space: nowrap;
-            /* gleiche Mindesthöhe wie Eventzellen */
             min-height: 32px;
         }
 
         .slot-cell {
             vertical-align: top;
-            font-size: 6px;
+            font-size: {{ $s(6) }};
             line-height: 1.25;
             padding: 3px;
             word-wrap: break-word;
-            /* Mindesthöhe für leere Zeilen: Platz für einen 4-zeiligen Termin */
             min-height: 80px;
         }
 
-        /* Innen-Wrapper in Slot-Zellen, damit DomPDF min-height zuverlässig anwendet */
+        /* Innen-Wrapper in Slot-Zellen */
         .slot-inner {
             min-height: 64px;
         }
@@ -190,7 +196,7 @@
             border-style: solid;
             margin-bottom: 2px;
             padding: 3px 4px;
-            font-size: 6px;
+            font-size: {{ $s(10) }};
             line-height: 1.3;
             font-weight: 500;
             display: block;
@@ -201,15 +207,19 @@
             align-items: flex-start;
             gap: 2px;
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(10) }};
             line-height: 1.3;
         }
-        .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; }
+        .event-left { flex: 1 1 auto; min-width: 0; word-break: break-word; color: #000000 !important; }
+        .event-project {
+            word-break: break-word;
+            line-height: 1.2;
+        }
         .event-abbr { font-weight: 600; }
         .event-time {
             flex: 0 0 auto;
             font-weight: 500;
-            font-size: 6px;
+            font-size: {{ $s(8) }};
             line-height: 1.2;
             word-wrap: break-word;
         }
@@ -221,16 +231,8 @@
     /**
      * Holt alle Events eines Raums an einem Tag.
      */
-    function __getEventsForRoomAndDay($calendar, $roomId, $dayDisplay) {
-        if (empty($calendar) || empty($calendar->rooms)) {
-            return [];
-        }
-        foreach ($calendar->rooms as $roomBlock) {
-            if (($roomBlock['roomId'] ?? null) === $roomId) {
-                return $roomBlock['content'][$dayDisplay]['events'] ?? [];
-            }
-        }
-        return [];
+    function __getEventsForRoomAndDay($calendarLookup, $roomId, $dayDisplay) {
+        return $calendarLookup[$roomId][$dayDisplay]['events'] ?? [];
     }
 
     /**
@@ -238,14 +240,25 @@
      * Wenn ein Event über Zeitfenster geht, taucht es in mehreren Slots auf,
      * weil eventOverlapsSlot() für mehrere Slots true sein kann.
      */
-    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) {
+    $renderEventsForSlot = function(array $events, string $dayDisplay, string $slot) use ($colorSource) {
         foreach ($events as $event) {
             if (!\App\Http\Controllers\ExportPDFController::eventOverlapsSlot($event, $dayDisplay, $slot)) {
                 continue;
             }
 
             $abbr      = $event->eventType?->abbreviation ?? '';
-            $hexColor  = $event->eventType?->hex_code ?? '#000000';
+            // Color based on colorSource setting
+            if (($colorSource ?? 'eventType') === 'mainCategory') {
+                if (!$event->project) {
+                    $hexColor = '#9E9E9E';
+                } elseif ($event->mainCategoryColor ?? null) {
+                    $hexColor = $event->mainCategoryColor;
+                } else {
+                    $hexColor = '#3A3A3A';
+                }
+            } else {
+                $hexColor = $event->eventType?->hex_code ?? '#000000';
+            }
             $name      = $event->eventName ?? '';
             $projectNm = $event->project->name ?? null;
             $allDay    = $event->allDay ?? false;
@@ -263,27 +276,36 @@
                 $timeString = $startCarbon->format('H:i') . '–' . $endCarbon->format('H:i');
             }
 
-            // Farben aus Hex auf rgba runterbrechen
-            $r = hexdec(substr($hexColor, 1, 2));
-            $g = hexdec(substr($hexColor, 3, 2));
-            $b = hexdec(substr($hexColor, 5, 2));
-            $bgRGBA     = "rgba($r,$g,$b,0.15)";
-            $borderRGBA = "rgba($r,$g,$b,0.3)";
-            $textRGBA   = "rgba($r,$g,$b,1)";
+            // Farben: aufgehellte HEX-Farben statt rgba (vermeidet DomPDF-Rendering-Artefakte)
+            $mixWithWhite = function(string $hex, float $t): string {
+                $hex = ltrim($hex, '#');
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+                $r2 = (int) round($r + (255 - $r) * $t);
+                $g2 = (int) round($g + (255 - $g) * $t);
+                $b2 = (int) round($b + (255 - $b) * $t);
+                return sprintf('#%02X%02X%02X', $r2, $g2, $b2);
+            };
+            $bgHex     = $mixWithWhite($hexColor, 0.85);
+            $borderHex = $mixWithWhite($hexColor, 0.70);
 
-            echo '<div class="event" style="background-color:'.$bgRGBA.';border-color:'.$borderRGBA.';color:'.$textRGBA.';">';
+            echo '<div class="event" style="background-color:'.$bgHex.';border-color:'.$borderHex.';color:#000;">';
             echo    '<div class="event-headerline">';
 
             // Linker Block (Name, Projekt)
-            echo        '<span class="event-left">';
+            echo        '<div class="event-left">';
             if ($abbr) {
                 echo '<span class="event-abbr">'.$abbr.'</span>: ';
             }
             echo        e($name);
             if ($projectNm) {
-                echo '<br>'.e($projectNm);
+                $projectText = mb_strlen($projectNm) > 50
+                    ? mb_substr($projectNm, 0, 50) . '…'
+                    : $projectNm;
+                echo '<div class="event-project">'.e($projectText).'</div>';
             }
-            echo        '</span>';
+            echo        '</div>';
 
             // Rechter Block (Zeit). Hier kommt das "!" bei mehrtägig
             echo        '<div class="event-time">';
@@ -350,17 +372,16 @@
                     <thead>
                     <tr>
                                     {{-- Linke Kopfspalte: Raum --}}
-                    <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:9px; font-weight:700;">
+                    <th class="th-room-head" style="text-align:center; vertical-align:middle; font-size:{{ $s(9) }}; font-weight:700;">
                         Raum
                     </th>
-                    {{-- Slot/Zeitraum Kopf (jetzt sehr klein) --}}
-                    <th class="th-room-head time-col-bg" style="padding: 1px; font-size: 9px; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
+                    {{-- Slot/Zeitraum Kopf --}}
+                    <th class="th-room-head time-col-bg" style="padding: 1px; font-size: {{ $s(9) }}; font-weight: 700; line-height: 1.2; background-color:#f4f4f5; text-align:center; vertical-align:middle; white-space:nowrap;">
                         Zeit
                     </th>
 
                     {{-- Dann pro Tag EINE Spalte --}}
                     @php
-                        // Berechne die Breite für jede Tagesspalte, damit alle gleich breit sind
                         $dayCount = count($daysPage);
                     @endphp
                     @foreach($daysPage as $dayInfo)
@@ -370,7 +391,7 @@
                         <th class="th-daygroup {{ $isWeekend ? 'weekend-bg-top' : '' }}"
                             style="
                                 {{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}
-                                font-size:9px;
+                                font-size:{{ $s(9) }};
                                 line-height:1.3;
                                 font-weight:700;
                                 padding:4px 2px;
@@ -417,16 +438,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hMorning }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'morning'); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}">
+                                </td>
+                            @else
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
+                                >
+                                    <div class="slot-inner" style="min-height: {{ $hMorning }}px;">
+                                        @php $renderEventsForSlot($eventsForDay, $fullDay, 'morning'); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
 
@@ -436,7 +463,7 @@
                         {{-- Raumzelle für Nachmittag-Zeile mit Raumnamen (größer und dicker) --}}
                         <td class="td-room"
                             style="
-                                font-size:9px;
+                                font-size:{{ $s(9) }};
                                 font-weight:700;
                                 line-height:1.2;
                                 word-break:break-word;
@@ -457,16 +484,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hNoon }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'noon'); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}">
+                                </td>
+                            @else
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }}"
+                                >
+                                    <div class="slot-inner" style="min-height: {{ $hNoon }}px;">
+                                        @php $renderEventsForSlot($eventsForDay, $fullDay, 'noon'); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
 
@@ -493,16 +526,22 @@
                             @php
                                 $fullDay   = $dayInfo['fullDay'] ?? '';
                                 $isWeekend = !empty($dayInfo['isWeekend']);
-                                $eventsForDay = __getEventsForRoomAndDay($calendar ?? null, $room->id, $fullDay);
+                                $eventsForDay = __getEventsForRoomAndDay($calendarLookup ?? [], $room->id, $fullDay);
                             @endphp
 
-                            <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
-                                style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;"
-                            >
-                                <div class="slot-inner" style="min-height: {{ $hEvening }}px;">
-                                    @php $renderEventsForSlot($eventsForDay, $fullDay, 'evening'); @endphp
-                                </div>
-                            </td>
+                            @if(empty($eventsForDay))
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;">
+                                </td>
+                            @else
+                                <td class="slot-cell {{ $isWeekend ? 'weekend-bg-slot' : '' }}"
+                                    style="{{ $isWeekend ? 'background-color:#f4f4f5;' : '' }} border-bottom:1px solid #404040;"
+                                >
+                                    <div class="slot-inner" style="min-height: {{ $hEvening }}px;">
+                                        @php $renderEventsForSlot($eventsForDay, $fullDay, 'evening'); @endphp
+                                    </div>
+                                </td>
+                            @endif
                         @endforeach
                     </tr>
                 @endforeach

@@ -29,12 +29,16 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\GlobalQualification;
+use Artwork\Modules\Shift\Contracts\Employable;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Models\Traits\HasShiftPlanComments;
+use Artwork\Modules\Shift\Models\Traits\HasShifts;
 use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
@@ -43,6 +47,9 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Artwork\Modules\Workflow\Traits\HasWorkflows;
 use Artwork\Modules\Workflow\Contracts\WorkflowSubject;
 use Carbon\Carbon;
@@ -63,6 +70,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passport\HasApiTokens;
 use Laravel\Scout\Searchable;
@@ -97,6 +105,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $profile_photo_url
  * @property float $zoom_factor
  * @property boolean $is_sidebar_opened
+ * @property boolean $show_modal_backdrop
  * @property boolean $compact_mode
  * @property boolean $ad_managed
  * @property string|null $ad_identifier
@@ -115,6 +124,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserShiftCalendarFilter $shift_calendar_filter
  * @property UserCalendarFilter $calendar_filter
  * @property UserCalendarSettings $calendar_settings
+ * @property UserDailyViewCalendarSettings $daily_view_calendar_settings
+ * @property UserShiftListViewSettings $shift_list_view_settings
+ * @property UserShiftPlanSettings $shift_plan_settings
+ * @property UserShiftPlanDailySettings $shift_plan_daily_settings
  * @property Collection<Shift> $shifts
  * @property Collection<Permission> $permission
  * @property Collection<Role> $allRoles
@@ -134,6 +147,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $bulk_sort_id
  * @property boolean $show_notification_indicator
  * @property int $shift_plan_user_sort_by_id
+ * @property boolean $sort_workers_by_qualification
+ * @property array $closed_qualification_groups
  * @property boolean $is_freelancer
  * @property string $sort_type_shift_tab
  * @property int $drawer_height
@@ -150,8 +165,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $email_private
  * @property boolean $phone_private
  * @property boolean $daily_view
+ * @property boolean $calendar_daily_view
+ * @property boolean $shift_plan_daily_view
  * @property int $last_project_id
  * @property array $bulk_column_size
+ * @property boolean $show_description_in_bulk
  * @property string $chat_public_key
  * @property boolean $use_chat
  * @property string $work_name
@@ -168,7 +186,9 @@ class User extends Model implements
     Vacationer,
     Available,
     DayServiceable,
-    WorkflowSubject
+    WorkflowSubject,
+    Employable,
+    CrmEntity
 {
     use Authenticatable;
     use Authorizable;
@@ -187,9 +207,12 @@ class User extends Model implements
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use HasShifts;
     use LaravelPermissionToVueJS;
     use HasWorkflows;
     use HasProfilePhotoCustom;
+    use HasCrmContact;
+    use HasCrmFields;
 
     protected $fillable = [
         'first_name',
@@ -198,6 +221,7 @@ class User extends Model implements
         'phone_number',
         'password',
         'position',
+        'business',
         'pronouns',
         'description',
         'toggle_hints',
@@ -215,8 +239,10 @@ class User extends Model implements
         'language',
         'zoom_factor',
         'is_sidebar_opened',
+        'show_modal_backdrop',
         'compact_mode',
         'show_crafts',
+        'opened_crafts',
         'goto_mode',
         'checklist_style',
         'at_a_glance',
@@ -224,6 +250,8 @@ class User extends Model implements
         'bulk_sort_id',
         'show_notification_indicator',
         'shift_plan_user_sort_by_id',
+        'sort_workers_by_qualification',
+        'closed_qualification_groups',
         'is_freelancer',
         'sort_type_shift_tab',
         'drawer_height',
@@ -241,9 +269,13 @@ class User extends Model implements
         'email_private',
         'phone_private',
         'daily_view',
+        'calendar_daily_view',
+        'shift_plan_daily_view',
         'entities_per_page',
         'last_project_id',
         'bulk_column_size',
+        'show_description_in_bulk',
+        'show_project_team_names',
         'chat_public_key',
         'use_chat',
         'work_time_balance',
@@ -263,8 +295,10 @@ class User extends Model implements
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
         'is_sidebar_opened' => 'boolean',
+        'show_modal_backdrop' => 'boolean',
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
+        'opened_crafts' => 'array',
         'at_a_glance' => 'boolean',
         'notification_enums_last_sent_dates' => 'array',
         'show_notification_indicator' => 'boolean',
@@ -278,10 +312,16 @@ class User extends Model implements
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
         'show_qualifications' => 'array',
+        'sort_workers_by_qualification' => 'boolean',
+        'closed_qualification_groups' => 'array',
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
+        'calendar_daily_view' => 'boolean',
+        'shift_plan_daily_view' => 'boolean',
         'bulk_column_size' => 'array',
+        'show_description_in_bulk' => 'boolean',
+        'show_project_team_names' => 'boolean',
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',
         'is_time_preset_open' => 'boolean',
@@ -299,30 +339,15 @@ class User extends Model implements
         'full_name',
         'type',
         'formated_work_time_balance',
-        'department_ids',
-        //'assigned_craft_ids',
     ];
-
-    public function globalQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\GlobalQualification::class,
-            'qualifiable',
-            'global_qualifiables',
-            'qualifiable_id',
-            'global_qualification_id'
-        );
-    }
-
-    //protected $with = ['calendarAbo', 'shiftCalendarAbo'];
 
         /**
          * Beziehung zum InventoryUserFilter
          */
-        public function inventoryUserFilter()
-        {
-            return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
-        }
+    public function inventoryUserFilter()
+    {
+        return $this->hasOne(\Artwork\Modules\Inventory\Models\InventoryUserFilter::class, 'user_id');
+    }
 
     public function getTypeAttribute(): string
     {
@@ -344,31 +369,6 @@ class User extends Model implements
         return $this->hasOne(UserCalendarAbo::class);
     }
 
-    public function getProfilePhotoUrlAttribute(): string
-    {
-        return $this->profile_photo_path
-            ? asset('storage/' . $this->profile_photo_path)
-            : route('generate-avatar-image', ['letters' => $this->first_name[0] . $this->last_name[0]]);
-    }
-
-
-    public function shifts(): BelongsToMany
-    {
-        return $this->belongsToMany(Shift::class, 'shift_user')
-            ->using(ShiftUser::class)
-            ->withPivot([
-                'id',
-                'shift_qualification_id',
-                'shift_count',
-                'craft_abbreviation',
-                'short_description',
-                'start_date',
-                'end_date',
-                'start_time',
-                'end_time'
-            ]);
-    }
-
     public function getFullNameAttribute(): string
     {
         return $this->first_name . ' ' . $this->last_name;
@@ -384,6 +384,32 @@ class User extends Model implements
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to dailyViewCalendarSettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function daily_view_calendar_settings(): HasOne
+    {
+        return $this->hasOne(UserDailyViewCalendarSettings::class);
+    }
+
+    public function shift_list_view_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftListViewSettings::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to shiftPlanSettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function shift_plan_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftPlanSettings::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to shiftPlanDailySettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function shift_plan_daily_settings(): HasOne
+    {
+        return $this->hasOne(UserShiftPlanDailySettings::class);
     }
 
     /**
@@ -423,15 +449,15 @@ class User extends Model implements
         return $this->belongsToMany(Department::class);
     }
 
-    public function getDepartmentIdsAttribute(): array
-    {
-        return $this->departments()->pluck('departments.id')->toArray();
-    }
-
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)
             ->withPivot('access_budget', 'is_manager', 'can_write');
+    }
+
+    public function defaultProjectRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(ProjectRole::class, 'default_project_role_user');
     }
 
     public function comments(): HasMany
@@ -532,31 +558,21 @@ class User extends Model implements
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
+    public function budgetAccountDisplaySetting(): HasOne
+    {
+        return $this->hasOne(UserBudgetAccountDisplaySetting::class);
+    }
+
     public function crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
-    public function assignedCrafts(): morphToMany
+    public function assignedCrafts(): MorphToMany
     {
-        return $this->morphToMany(Craft::class, 'craftable')->with(['qualifications']);
+        return $this->morphToMany(Craft::class, 'craftable');
     }
 
-    public function managingCrafts(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    public function shiftQualifications(): \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany(
-            \Artwork\Modules\Shift\Models\ShiftQualification::class,
-            'qualifiable',
-            'shift_qualifiables',
-            'qualifiable_id',
-            'shift_qualification_id'
-        )->withPivot('craft_id');
-    }
 
     public function workerShiftPlanFilter(): HasOne
     {
@@ -568,20 +584,9 @@ class User extends Model implements
         return $this->hasOne(UserInventoryArticlePlanFilter::class);
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getAssignedCraftIdsAttribute(): array
+    public function contractFilter(): HasOne
     {
-        return $this->assignedCrafts()->pluck('crafts.id')->all();
-    }
-
-
-    public function getShiftIdsBetweenStartDateAndEndDate(
-        Carbon $startDate,
-        Carbon $endDate
-    ): \Illuminate\Support\Collection {
-        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
+        return $this->hasOne(UserContractFilter::class);
     }
 
     /**
@@ -607,6 +612,32 @@ class User extends Model implements
         return $this->roles()->pluck('name')->toArray();
     }
 
+    /**
+     * Per-User gecachte Inertia-Share-Daten (HandleInertiaRequests) invalidieren.
+     * Nach Rollen-/Rechteänderungen aufrufen, damit der User nicht bis zum
+     * Cache-TTL (5 Min.) mit veralteter Navigation/Berechtigung arbeitet.
+     */
+    public function forgetCachedShareData(): void
+    {
+        static::forgetCachedShareDataForIds([$this->id]);
+    }
+
+    /**
+     * Wie forgetCachedShareData(), aber für mehrere User-IDs ohne Model-Load —
+     * für Stellen, die Rechte über Pivots ändern (Raum-Admins, Event-Verifier,
+     * Workflow-User, Craft-Planer).
+     *
+     * @param iterable<int|string> $userIds
+     */
+    public static function forgetCachedShareDataForIds(iterable $userIds): void
+    {
+        foreach ($userIds as $userId) {
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:roles_permissions");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:can_see_incoming_requests");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:shift_workflow_flags");
+        }
+    }
+
 
     /**
      * @return array<string, mixed>
@@ -629,16 +660,6 @@ class User extends Model implements
         ];
     }
 
-    /** @deprecated user WorkhourService */
-    public function plannedWorkingHours($startDate, $endDate): float|int
-    {
-        trigger_deprecation(
-            'artwork',
-            '0.x',
-            'User::plannedWorkingHours() is deprecated. Use WorkhourService instead.'
-        );
-        return app(WorkingHourService::class)->plannedWorkingHoursForUser($this, $startDate, $endDate) / 60;
-    }
 
     public function scopeNameOrLastNameLike(Builder $builder, string $name): Builder
     {
@@ -647,10 +668,6 @@ class User extends Model implements
             ->orWhere('last_name', 'like', $name . '%');
     }
 
-    public function scopeCanWorkShifts(Builder $builder): Builder
-    {
-        return $builder->where('can_work_shifts', true);
-    }
 
     public function getHasProjectManagerPermission(): bool
     {
@@ -685,18 +702,6 @@ class User extends Model implements
         );
     }
 
-    public function craftsToManage(): MorphToMany
-    {
-        return $this->morphToMany(Craft::class, 'craft_manager');
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    public function getManagingCraftIds(): array
-    {
-        return $this->craftsToManage()->pluck('id')->toArray();
-    }
 
     public function lastProject(): HasOne
     {
@@ -754,6 +759,11 @@ class User extends Model implements
     public function workTimeBookings(): HasMany
     {
         return $this->hasMany(WorkTimeBooking::class, 'user_id', 'id');
+    }
+
+    public function compensationDayOffs(): HasMany
+    {
+        return $this->hasMany(CompensationDayOff::class, 'user_id', 'id');
     }
 
     public function getFormatedWorkTimeBalanceAttribute(): string
@@ -846,4 +856,25 @@ class User extends Model implements
         );
     }
 
+    public function getCrmFields(): array
+    {
+        return array_merge(
+            $this->getSharedCrmFields(),
+            [
+                'Position' => 'position',
+                'Business' => 'business',
+            ],
+            $this->getWorkProfileCrmFields(),
+        );
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'user';
+    }
 }

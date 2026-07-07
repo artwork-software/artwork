@@ -24,11 +24,15 @@
         </div>
 
     </div>
-    <div class="flex flex-none items-center gap-x-4">
-        <BaseMenu has-no-offset>
-            <BaseMenuItem @click="restoreArticle" :icon="IconRefresh" title="Restore" />
-            <BaseMenuItem @click="showConfirmDeleteModal = true" :icon="IconTrash" title="Delete permanently"/>
-        </BaseMenu>
+    <div class="flex flex-none items-center gap-x-2">
+        <button @click="restoreArticle" class="flex items-center gap-x-1 rounded-md bg-green-50 border border-green-200 px-2.5 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition">
+            <IconRefresh class="h-4 w-4" />
+            {{ $t('Restore') }}
+        </button>
+        <button @click="showConfirmDeleteModal = true" class="flex items-center gap-x-1 rounded-md bg-red-50 border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition">
+            <IconTrash class="h-4 w-4" />
+            {{ $t('Delete permanently') }}
+        </button>
     </div>
 
     <ConfirmDeleteModal
@@ -42,8 +46,6 @@
 
 <script setup>
 
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {router} from "@inertiajs/vue3";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {ref} from "vue";

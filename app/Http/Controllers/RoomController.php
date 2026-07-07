@@ -9,6 +9,7 @@ use Artwork\Modules\Room\Http\Requests\UpdateRoomUserRequest;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomChangeService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Room\Services\RoomFrontendModelService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -104,6 +105,7 @@ class RoomController extends Controller
             'user_id' => $request->user_id,
             'everyone_can_book' => $request->everyone_can_book,
             'relevant_for_disposition' => $request->relevant_for_disposition,
+            'capacity' => $request->capacity,
             'order' => Room::max('order') + 1,
         ]);
 
@@ -136,7 +138,7 @@ class RoomController extends Controller
     public function getMoveRooms(): Response|ResponseFactory
     {
         return inertia('Rooms/RoomReorderManagement', [
-            'rooms' => Room::orderBy('position')->get()
+            'rooms' => Room::orderBy('position')->orderBy('id')->get()
         ]);
     }
 
@@ -151,6 +153,8 @@ class RoomController extends Controller
 
     public function updateRoomUsers(Room $room, UpdateRoomUserRequest $request): RedirectResponse
     {
+        $affectedUserIds = $room->users()->pluck('users.id')->all();
+
         $room->users()->detach();
 
         foreach ($request->all() as $user) {
@@ -161,7 +165,11 @@ class RoomController extends Controller
                     'can_request' => $user['can_request'],
                 ]
             );
+            $affectedUserIds[] = $user['id'];
         }
+
+        // Raum-Admin-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
+        User::forgetCachedShareDataForIds(array_unique($affectedUserIds));
 
         return $this->redirector->back();
     }
@@ -184,7 +192,8 @@ class RoomController extends Controller
                 'start_date',
                 'end_date',
                 'everyone_can_book',
-                'relevant_for_disposition'
+                'relevant_for_disposition',
+                'capacity'
             )
         );
 
@@ -199,9 +208,14 @@ class RoomController extends Controller
                 $requestable_by_ids[$can_request['id']] = ['can_request' => true];
             }
 
+            $previousUserIds = $room->users()->pluck('users.id')->all();
+
             $new_users = collect($room_admins_ids + $requestable_by_ids);
             $room->users()->detach();
             $room->users()->sync($new_users);
+
+            // Raum-Admin-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
+            User::forgetCachedShareDataForIds(array_unique([...$previousUserIds, ...$new_users->keys()->all()]));
         }
 
         $room->adjoining_rooms()->sync($request->adjoining_rooms);
@@ -237,14 +251,36 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
-        return inertia('Trash/Rooms', [
-            'trashed_rooms' => Area::withTrashed()->get()->map(fn($area) => [
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        // Group trashed rooms by area, paginating at area granularity. Only areas that
+        // actually contain (matching) trashed rooms are returned. The search matches
+        // room names; areas without a matching trashed room are excluded.
+        $trashedRooms = Area::withTrashed()
+            ->whereHas(
+                'trashedRooms',
+                fn ($query) => $query->when($search !== '', fn ($q) => $q->where('name', 'like', '%' . $search . '%'))
+            )
+            ->with([
+                'trashedRooms' => fn ($query) => $query->when(
+                    $search !== '',
+                    fn ($q) => $q->where('name', 'like', '%' . $search . '%')
+                ),
+            ])
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => RoomIndexWithoutEventsResource::collection($area->trashedRooms)->resolve(),
-            ])
+            ]);
+
+        return inertia('Trash/Rooms', [
+            'trashed_rooms' => $trashedRooms
         ]);
     }
 
@@ -259,7 +295,14 @@ class RoomController extends Controller
     {
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
+        return Redirect::route('rooms.trashed');
+    }
 
+    public function forceDeleteAll(): RedirectResponse
+    {
+        Room::onlyTrashed()->each(function ($room) {
+            $room->forceDelete();
+        });
         return Redirect::route('rooms.trashed');
     }
 
@@ -277,8 +320,12 @@ class RoomController extends Controller
     public function collisionsCount(Request $request): array
     {
         $params = $request->get('params');
-        $startDate = Carbon::parse($params['start'])->setTimezone(config('app.timezone'));
-        $endDate = Carbon::parse($params['end'])->setTimezone(config('app.timezone'));
+        try {
+            $startDate = Carbon::parse($params['start'] ?? null)->setTimezone(config('app.timezone'));
+            $endDate = Carbon::parse($params['end'] ?? null)->setTimezone(config('app.timezone'));
+        } catch (\Throwable $e) {
+            abort(422, 'Invalid date parameters.');
+        }
         $currentEventId = $params['currentEventId'] ?? null;
 
         $collisions = [];
@@ -303,9 +350,21 @@ class RoomController extends Controller
             ->orWhereHas('area', function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%");
             })
-            ->with(['area'])
+            ->with(['area', 'admins:id', 'requestableBy:id'])
             ->get();
 
-        return response()->json($rooms);
+        $normalized = $rooms->map(fn(Room $room) => [
+            'id' => $room->id,
+            'name' => $room->name,
+            'area' => $room->area,
+            'temporary' => $room->temporary,
+            'start_date' => $room->start_date,
+            'end_date' => $room->end_date,
+            'admins' => $room->admins->pluck('id')->toArray(),
+            'everyone_can_book' => $room->everyone_can_book,
+            'requestable_by' => $room->requestableBy->pluck('id')->toArray(),
+        ]);
+
+        return response()->json($normalized);
     }
 }

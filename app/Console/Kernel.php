@@ -5,7 +5,6 @@ namespace App\Console;
 use Artwork\Core\Console\Commands\CalculateDailyWorkingHoursOfUsers;
 use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
 use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
-use Artwork\Core\Console\Commands\DeleteOldNotificationsCommand;
 use Artwork\Core\Console\Commands\ImportHolidaysCommand;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Core\Console\Commands\NotifyCraftIfShiftDeadlineReached;
@@ -13,8 +12,12 @@ use Artwork\Core\Console\Commands\RemoveDatabaseNotificationsCommand;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
+use Artwork\Core\Console\Commands\TrackShiftKpisCommand;
+use Artwork\Core\Console\Commands\MarkPayableOvertimeCommand;
+use Artwork\Modules\Crm\Console\Commands\CleanupCrmImportFilesCommand;
 use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
+use Artwork\Modules\ExternalAccess\Console\Commands\CleanupExpiredLoginTokensCommand;
 use Artwork\Modules\ExternalUserManagement\Console\Commands\SyncExternalUsersCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Application as Artisan;
@@ -40,23 +43,31 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
-        $schedule->command(DeleteOldNotificationsCommand::class)->dailyAt('07:00');
         $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
         $schedule->command(CalculateDailyWorkingHoursOfUsers::class)->dailyAt('23:59')->runInBackground();
+        // DP-18: spielzeitbezogene Kennzahlen nach der Arbeitszeitberechnung tracken (Tag ist dann abgeschlossen)
+        $schedule->command(TrackShiftKpisCommand::class)->dailyAt('00:30')->runInBackground();
+        // DP-18 Stufe 2: überfällige Überstunden als auszuzahlend markieren
+        $schedule->command(MarkPayableOvertimeCommand::class)->dailyAt('00:45')->runInBackground();
         $schedule->command(ImportHolidaysCommand::class)->yearly()->runInBackground();
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
         $schedule->command(RemoveExpiredInvitationsCommand::class)->dailyAt('01:00')->runInBackground();
+        $schedule->command(CleanupCrmImportFilesCommand::class)->dailyAt('02:00')->runInBackground();
         $schedule->command(RemoveDatabaseNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+        $schedule->command(CleanupExpiredLoginTokensCommand::class)
+            ->dailyAt('03:00')
+            ->runInBackground();
 
-        // ShiftRule validation - täglich um 02:00 für die nächsten 14 Tage
+        // ShiftRule validation - alle 5 Minuten für die nächsten 14 Tage
         $schedule->command('shift-rules:validate --days=14')
-            ->dailyAt('02:00')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
             ->runInBackground();
 
         if (env('BACKUP_ENABLED', false)) {
@@ -85,6 +96,10 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Core/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Shift/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Workflow/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Crm/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Budget/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Change/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalAccess/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
 
         require base_path('routes/console.php');

@@ -20,6 +20,7 @@
         :show="this.showMultipleShiftQualificationSlotsAvailableModal"
         :available-shift-qualification-slots="this.showMultipleShiftQualificationSlotsAvailableModalSlots"
         :dropped-user="this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser"
+        :crafts="this.crafts"
         @close="this.closeMultipleShiftQualificationSlotsAvailableModal"
     />
 </template>
@@ -195,6 +196,29 @@ export default defineComponent({
                 }
 
                 //show select modal by availableSlots
+                const shiftCraft = this.crafts.find(c => c.id === this.craftId);
+                const shiftCraftIsUniversallyApplicable = shiftCraft?.universally_applicable;
+
+                if (this.droppedUser.craft_universally_applicable || shiftCraftIsUniversallyApplicable) {
+                    const shiftCraftId = this.craftId;
+                    availableShiftQualificationSlots = availableShiftQualificationSlots.filter(slot => {
+                        return slot.pivot?.craft_id === shiftCraftId || this.crafts.find(c => c.id === slot.pivot?.craft_id)?.universally_applicable;
+                    });
+                }
+
+                if (availableShiftQualificationSlots.length === 0) {
+                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
+                    return;
+                }
+
+                if (availableShiftQualificationSlots.length === 1) {
+                    this.assignUser(
+                        this.droppedUser,
+                        availableShiftQualificationSlots[0].id
+                    );
+                    return;
+                }
+
                 this.openMultipleShiftQualificationSlotsAvailableModal(
                     this.droppedUser,
                     availableShiftQualificationSlots
@@ -359,7 +383,7 @@ export default defineComponent({
             });
 
             this.saveUser();
-        }
+        },
    }
 });
 </script>

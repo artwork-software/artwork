@@ -13,9 +13,10 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\User\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ExternalIssueController extends Controller
@@ -128,8 +129,29 @@ class ExternalIssueController extends Controller
 
     public function returnExternal(ExternalIssue $externalIssue, Request $request): \Illuminate\Http\RedirectResponse
     {
-        $externalIssue->update([
-            'received_by_id' => $this->auth->user()->id,
+        $updateData = [
+            'return_remarks' => $request->input('return_remarks'),
+        ];
+
+        // Keep the original receiver when the action is triggered again.
+        if ($externalIssue->received_by_id === null) {
+            $updateData['received_by_id'] = $this->auth->user()->id;
+        }
+
+        // Early return frees the reserved quantity: cap the planned return
+        // date to today so availability calculations stop counting it.
+        $today = now()->startOfDay();
+        if ($externalIssue->return_date !== null && $today->lt($externalIssue->return_date)) {
+            $updateData['return_date'] = $today->toDateString();
+        }
+
+        $externalIssue->update($updateData);
+
+        $this->externalIssueService->logActivity($externalIssue, 'returned', 'External issue returned', [
+            'translation_key' => 'External issue returned',
+            'issue_type' => 'external',
+            'issue_name' => $externalIssue->name,
+            'external_name' => $externalIssue->external_name,
             'return_remarks' => $request->input('return_remarks'),
         ]);
 
@@ -147,8 +169,31 @@ class ExternalIssueController extends Controller
     {
         $externalIssue->load(['articles.category', 'articles.subCategory', 'specialItems.category', 'specialItems.subCategory', 'files', 'issuedBy', 'receivedBy']);
 
-        $pdf = Pdf::loadView('pdf.external_issue', ['issue' => $externalIssue]);
-        return $pdf->download('leihschein_' . $externalIssue->id . '.pdf');
+        $createdAt = now()->format('d.m.Y');
+        $createdBy = $this->auth->user()->full_name;
+
+        $pdf = SnappyPdf::loadView('pdf.external_issue', [
+            'issue' => $externalIssue,
+            'createdAt' => $createdAt,
+            'createdBy' => $createdBy,
+        ]);
+
+        $pdfContent = $pdf->output();
+        $fileName = 'ext._Materialausgabe_Nr._' . $externalIssue->id . '_' . now()->format('Y-m-d') . '.pdf';
+        $storagePath = 'external_material_issues/' . $fileName;
+
+        Storage::disk('public')->put($storagePath, $pdfContent);
+
+        ExternalIssueFile::create([
+            'external_issue_id' => $externalIssue->id,
+            'file_path' => $storagePath,
+            'original_name' => $fileName,
+        ]);
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
     }
 
     public function fileDelete(ExternalIssueFile $externalIssueFile): \Illuminate\Http\JsonResponse

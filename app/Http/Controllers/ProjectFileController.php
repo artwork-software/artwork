@@ -29,6 +29,19 @@ class ProjectFileController extends Controller
 {
     use HandlesFileUpload;
 
+    /**
+     * @var list<string>
+     */
+    private const INLINE_PROJECT_FILE_MIME_TYPES = [
+        'application/pdf',
+        'image/avif',
+        'image/bmp',
+        'image/gif',
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+    ];
+
     public function __construct(
         private readonly ChangeService $changeService,
         private readonly NotificationService $notificationService,
@@ -106,7 +119,7 @@ class ProjectFileController extends Controller
         foreach ($projectFileUsers as $projectFileUser) {
             $notificationTitle = __('notification.project.file.permission_add', [], $projectFileUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -142,11 +155,24 @@ class ProjectFileController extends Controller
         broadcast(new UploadNewDocumentInProject($projectFile, $project->id));
     }
 
-    public function download(ProjectFile $projectFile): StreamedResponse
+    public function download(Request $request, ProjectFile $projectFile): StreamedResponse
     {
         $this->authorize('view', $projectFile);
 
-        return Storage::download('project_files/' . $projectFile->basename, $projectFile->name);
+        $path = 'project_files/' . $projectFile->basename;
+
+        if ($request->boolean('inline') && $this->canDisplayInline($path)) {
+            return Storage::response($path, $projectFile->name);
+        }
+
+        return Storage::download($path, $projectFile->name);
+    }
+
+    private function canDisplayInline(string $path): bool
+    {
+        $mimeType = Storage::mimeType($path);
+
+        return is_string($mimeType) && in_array($mimeType, self::INLINE_PROJECT_FILE_MIME_TYPES, true);
     }
 
     public function update(Request $request, ProjectFile $projectFile): RedirectResponse
@@ -193,7 +219,7 @@ class ProjectFileController extends Controller
         foreach ($projectFileUsers as $projectFileUser) {
             $notificationTitle = __('notification.project.file.changed', [], $projectFileUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -256,7 +282,7 @@ class ProjectFileController extends Controller
         foreach ($projectFileUsers as $projectFileUser) {
             $notificationTitle = __('notification.project.file.deleted', [], $projectFileUser->language);
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'error',
                 'message' => $notificationTitle
             ];

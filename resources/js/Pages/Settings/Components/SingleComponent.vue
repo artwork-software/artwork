@@ -9,7 +9,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DropComponentInDisclosureComponentElement from "@/Pages/Settings/Components/DropComponentInDisclosureComponentElement.vue";
 import EditComponentScopeModal from "@/Pages/Settings/Components/EditComponentScopeModal.vue";
 
-import { IconDragDrop, IconTrash, IconDotsVertical, IconChevronDown, IconRadiusBottomLeft } from "@tabler/icons-vue";
+import { IconDragDrop, IconTrash, IconDotsVertical, IconChevronDown, IconFolder, IconFolderOpen } from "@tabler/icons-vue";
 
 const props = defineProps({
     element: { type: Object, required: true },
@@ -18,6 +18,11 @@ const props = defineProps({
 });
 
 const dragging = ref(false);
+
+const isFolder = computed(() => props.element?.component?.type === 'DisclosureComponent');
+// Ordner-Titel, wie er im Projekt angezeigt wird (data.label, nicht der interne Name)
+const folderLabel = computed(() => props.element?.component?.data?.label || null);
+const folderChildCount = computed(() => props.element?.disclosure_components?.length ?? 0);
 
 const showEditScope = ref(false);
 const isDocuments = computed(() => props.element?.component?.type === 'ProjectDocumentsComponent');
@@ -38,6 +43,7 @@ function closeEditScopeModal() { showEditScope.value = false }
 function removeComponentFromTab() {
     router.delete(route("tab.remove.component", { projectTab: props.tab.id }), {
         data: { component_id: props.element.id },
+        preserveScroll: true,
     });
 }
 
@@ -87,8 +93,26 @@ function requestDeleteComponentInDisclosure(componentId) {
                     <div class="min-w-0">
                         <!-- Titel + Badges -->
                         <div class="">
-                            <div class="text-sm font-semibold text-zinc-900 truncate" :title="element.component.name">
-                                {{ element.component.name }}
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                                <div class="text-sm font-semibold text-zinc-900 truncate max-w-full" :title="$t(element.component.name)">
+                                    {{ $t(element.component.name) }}
+                                </div>
+
+                                <!-- Ordner: Titel im Projekt + Anzahl der Komponenten -->
+                                <span
+                                    v-if="isFolder && folderLabel"
+                                    class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50/80 px-2 py-0.5 text-[11px] leading-4 text-zinc-700 shrink-0 max-w-48"
+                                    :title="$t('This title is displayed in the project')"
+                                >
+                                    <IconFolder class="size-3.5 shrink-0 text-zinc-500" />
+                                    <span class="truncate font-medium">{{ folderLabel }}</span>
+                                </span>
+                                <span
+                                    v-if="isFolder"
+                                    class="inline-flex items-center rounded-full border border-zinc-200 bg-white/70 px-2 py-0.5 text-[11px] leading-4 text-zinc-600 shrink-0"
+                                >
+                                    {{ folderChildCount }} {{ $t('components') }}
+                                </span>
                             </div>
 
                             <!-- Höhe -->
@@ -124,14 +148,14 @@ function requestDeleteComponentInDisclosure(componentId) {
                         <!-- Documents Scope Info + Edit -->
                         <div v-if="isDocuments" class="mt-2 text-[12px] text-zinc-600 flex items-center gap-2">
                             <span>
-                                zeigt Dokumente von Tabs: {{ scopeTabNames.join(', ') }}
+                                {{ $t('Shows documents from tabs') }}: {{ scopeTabNames.join(', ') }}
                             </span>
                             <button
                                 type="button"
                                 class="rounded-md px-2 py-0.5 text-xs ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50"
                                 @click="openEditScopeModal"
                             >
-                                Edit
+                                {{ $t('Edit') }}
                             </button>
                         </div>
 
@@ -161,11 +185,12 @@ function requestDeleteComponentInDisclosure(componentId) {
                             </div>
                         </div>
 
-                        <!-- Disclosure-Container -->
-                        <div v-if="element.component.type === 'DisclosureComponent'" class="mt-3">
+                        <!-- Ordner-Inhalt -->
+                        <div v-if="isFolder" class="mt-3">
                             <Disclosure v-slot="{ open }" as="div">
                                 <DisclosureButton class="xsDark flex items-center gap-2 text-sm">
-                                    {{ $t('Components in Disclosure') }}
+                                    <component :is="open ? IconFolderOpen : IconFolder" class="size-4 text-zinc-600" />
+                                    {{ $t('Components in Disclosure') }} ({{ folderChildCount }})
                                     <IconChevronDown class="size-4 text-zinc-600 transition-transform" :class="{ 'rotate-180': open }" />
                                 </DisclosureButton>
 
@@ -173,34 +198,42 @@ function requestDeleteComponentInDisclosure(componentId) {
                                 <DropComponentInDisclosureComponentElement v-if="!open" :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mt-2" />
 
                                 <DisclosurePanel class="mt-2">
-                                    <DropComponentInDisclosureComponentElement :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mb-2" />
-                                    <div v-for="(component, index) in element.disclosure_components" :key="component.id" class="mb-2">
-                                        <div class="flex items-center gap-2 group/component">
-                                            <div class="flex items-center gap-1 text-sm text-zinc-800 min-w-0 flex-1">
-                                                <IconRadiusBottomLeft class="size-3 -mt-1 text-zinc-500 shrink-0" />
-                                                <ComponentIcons :type="component.component.type" class="shrink-0" />
-                                                <span class="truncate" :title="$t(component.component.name)">{{ $t(component.component.name) }}</span>
+                                    <!-- Eingerückter Bereich mit Führungslinie: alles hier liegt IM Ordner -->
+                                    <div class="ml-2 pl-3 border-l-2 border-zinc-200">
+                                        <DropComponentInDisclosureComponentElement :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mb-2" />
+                                        <div v-for="(component, index) in element.disclosure_components" :key="component.id" class="mb-2">
+                                            <div class="rounded-lg border border-zinc-200/80 bg-zinc-50/60 px-2.5 py-2 group/component">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex items-center gap-1.5 text-sm text-zinc-800 min-w-0 flex-1">
+                                                        <ComponentIcons :type="component.component.type" class="shrink-0" />
+                                                        <span class="truncate font-medium" :title="$t(component.component.name)">{{ $t(component.component.name) }}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        class="rounded-md p-1 hover:bg-red-50 shrink-0"
+                                                        @click="requestDeleteComponentInDisclosure(component.id)"
+                                                        :aria-label="$t('Delete')"
+                                                    >
+                                                        <IconTrash class="size-5 text-zinc-500 hover:text-red-500" />
+                                                    </button>
+                                                </div>
+                                                <div class="text-[11px] text-zinc-500 ml-6">
+                                                    {{ $t(component.component.type) }}
+                                                </div>
                                             </div>
-                                            <button
-                                                type="button"
-                                                class="rounded-md p-1 hover:bg-red-50 shrink-0"
-                                                @click="requestDeleteComponentInDisclosure(component.id)"
-                                                :aria-label="$t('Delete')"
-                                            >
-                                                <IconTrash class="size-5 text-zinc-500 hover:text-red-500" />
-                                            </button>
-                                        </div>
-                                        <div class="text-[11px] text-zinc-500 ml-4">
-                                            {{ $t(component.component.type) }}
+
+                                            <DropComponentInDisclosureComponentElement
+                                                :element="element"
+                                                :index="component.order + 1"
+                                                :all-tabs="allTabs"
+                                                :current-tab="tab"
+                                                class="mt-2"
+                                            />
                                         </div>
 
-                                        <DropComponentInDisclosureComponentElement
-                                            :element="element"
-                                            :index="component.order + 1"
-                                            :all-tabs="allTabs"
-                                            :current-tab="tab"
-                                            class="mt-2"
-                                        />
+                                        <div v-if="folderChildCount === 0" class="text-[12px] text-zinc-500 px-2 py-2">
+                                            {{ $t('This folder is empty. Drop components here or use the plus button in the component list.') }}
+                                        </div>
                                     </div>
                                 </DisclosurePanel>
                             </Disclosure>

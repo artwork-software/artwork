@@ -32,14 +32,19 @@ class ShiftAssigned implements ShouldBroadcast
     {
         return new PrivateChannel('shifts');
     }
-    
+
     public function broadcastWith(): array
     {
-        $event = $this->shift->event->toArray();
+        // Payload stabil halten: diese Relationen kamen früher über das globale $with
+        // des Shift-Models (analog PushesShiftModification::broadcastWith)
+        $this->shift->loadMissing(['craft', 'users', 'freelancer', 'serviceProvider', 'committedBy']);
+        $event = $this->shift->event;
         $eventStudlyCase = [];
 
-        foreach ($event as $key => $value) {
-            $eventStudlyCase[lcfirst(Str::studly($key))] = $value;
+        if ($event !== null) {
+            foreach ($event->toArray() as $key => $value) {
+                $eventStudlyCase[lcfirst(Str::studly($key))] = $value;
+            }
         }
 
         return array_merge($this->shift->toArray(), ['user' => $this->user->toArray(), 'event' => $eventStudlyCase]);

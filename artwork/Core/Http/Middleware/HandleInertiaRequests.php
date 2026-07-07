@@ -7,6 +7,7 @@ use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
@@ -17,6 +18,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -44,7 +46,25 @@ class HandleInertiaRequests extends Middleware
         $eventSettings = app(EventSettings::class);
 
         $user = Auth::user();
-        $calendarSettings = $user?->calendar_settings;
+        // Settings-Relationen werden hier (vor den Controllern) gelesen und sowohl als Top-Level-Props
+        // als auch via auth.user serialisiert. Fehlt der Datensatz (frisch angelegter User / Erstaufruf),
+        // einmalig anlegen statt null zu teilen – sonst lesen Kalender-/Schichtplan-Komponenten null und
+        // die Seite crasht zum White-Screen.
+        $ensureSettings = static function ($user, string $relation) {
+            if ($user === null) {
+                return null;
+            }
+            $settings = $user->getAttribute($relation);
+            if ($settings === null) {
+                $settings = $user->{$relation}()->create();
+                $user->setRelation($relation, $settings);
+            }
+            return $settings;
+        };
+        $calendarSettings = $ensureSettings($user, 'calendar_settings');
+        $dailyViewCalendarSettings = $ensureSettings($user, 'daily_view_calendar_settings');
+        $shiftPlanSettings = $ensureSettings($user, 'shift_plan_settings');
+        $shiftPlanDailySettings = $ensureSettings($user, 'shift_plan_daily_settings');
 
         $projectName = null;
         if ($calendarSettings?->use_project_time_period) {
@@ -56,8 +76,24 @@ class HandleInertiaRequests extends Middleware
         $bigLogo = $generalSettings->big_logo_path ? $storage->url($generalSettings->big_logo_path) : null;
         $banner = $generalSettings->banner_path ? $storage->url($generalSettings->banner_path) : null;
 
-        $rolesArray = $user ? $user->allRoles() : [];
-        $permissionsArray = $user ?  $user->hasRole([RoleEnum::ARTWORK_ADMIN->value]) ? Permission::all()->pluck('name') : $user->allPermissions() : [];
+        // Rollen/Permissions pro User kurz cachen: diese Queries liefen sonst bei jedem Request
+        // (inkl. Permission::all() für Admins) und ein zweites Mal für den 'permissions'-Prop
+        // (vormals jsPermissions()). Rollen-Änderungen greifen dadurch mit max. 5 Minuten Verzögerung.
+        [$rolesArray, $userPermissions, $permissionsArray] = $user
+            ? Cache::remember(
+                "user:{$user->id}:roles_permissions",
+                now()->addMinutes(5),
+                static function () use ($user): array {
+                    $roles = $user->allRoles();
+                    $userPermissions = $user->allPermissions();
+                    $permissions = in_array(RoleEnum::ARTWORK_ADMIN->value, $roles, true)
+                        ? Permission::query()->pluck('name')->toArray()
+                        : $userPermissions;
+
+                    return [$roles, $userPermissions, $permissions];
+                }
+            )
+            : [[], [], []];
 
         // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
@@ -129,6 +165,26 @@ class HandleInertiaRequests extends Middleware
                 || ($user && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value))
             );
 
+        // Drei exists()-Queries pro Request vermeiden — Ergebnis ändert sich selten, 5 Minuten cachen
+        $canSeeIncomingRequests = $user
+            ? Cache::remember(
+                "user:{$user->id}:can_see_incoming_requests",
+                now()->addMinutes(5),
+                static fn (): bool => $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+                    || $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+                    || DB::table('room_user')->where('user_id', $user->id)->where('is_admin', true)->exists()
+                    || DB::table('event_type_user')->where('user_id', $user->id)->exists()
+                    || DB::table('event_types')->where('specific_verifier_id', $user->id)->exists()
+            )
+            : false;
+
+        $canSeeEventVerifications = (bool) $user;
+
+        $canViewBiDashboard = $user && (
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::BI_DASHBOARD->value)
+        );
+
         return array_merge(
             parent::share($request),
             [
@@ -140,6 +196,8 @@ class HandleInertiaRequests extends Middleware
                 'projectNameOfCalendarProject' => $projectName,
                 'businessName' => $generalSettings->business_name,
                 'event_time_length_minutes' => $generalSettings->event_time_length_minutes,
+                'event_start_time' => $generalSettings->event_start_time,
+                'event_all_day_default' => $generalSettings->event_all_day_default,
                 'warn_multiple_assignments' => $generalSettings->warn_multiple_assignments,
                 'page_title' => $generalSettings->page_title ?? config('app.name'),
                 'impressumLink' => $generalSettings->impressum_link,
@@ -149,7 +207,15 @@ class HandleInertiaRequests extends Middleware
                 'businessEmail' => $generalSettings->business_email,
                 'playingTimeWindowStart' => $generalSettings->playing_time_window_start,
                 'playingTimeWindowEnd' => $generalSettings->playing_time_window_end,
+                'letterheadName' => $generalSettings->letterhead_name,
+                'letterheadStreet' => $generalSettings->letterhead_street,
+                'letterheadZipCode' => $generalSettings->letterhead_zip_code,
+                'letterheadCity' => $generalSettings->letterhead_city,
+                'letterheadEmail' => $generalSettings->letterhead_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
+                'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
+                'inventoryShowInventoryNumberAsName' => $generalSettings->inventory_show_inventory_number_as_name,
+                'inventoryNumberPrefix' => $generalSettings->inventory_number_prefix,
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
                 'permissionsArray' => $permissionsArray,
@@ -164,25 +230,30 @@ class HandleInertiaRequests extends Middleware
                 'selected_language' => app()->getLocale(),
                 'sageApiEnabled' => $sageApiEnabled,
                 'calendar_settings' => $calendarSettings,
+                'daily_view_calendar_settings' => $dailyViewCalendarSettings,
+                'shift_plan_settings' => $shiftPlanSettings,
+                'shift_plan_daily_settings' => $shiftPlanDailySettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
                 'calendarHours' => $hours,
-                'permissions' => json_decode(
-                    auth()->check() ?
-                        auth()->user()?->jsPermissions() :
-                    '{}',
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                ),
+                // Gleiche Struktur wie vormals jsPermissions() ({roles, permissions}), aber ohne die
+                // doppelten Rollen-/Permission-Queries und den json_encode/json_decode-Roundtrip
+                'permissions' => $user
+                    ? ['roles' => $rolesArray, 'permissions' => $userPermissions]
+                    : [],
                 // chatUsers only on reload and not on page change
                 'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
                 'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,
+                'allow_shift_overbooking'      => (bool) app(\App\Settings\ShiftSettings::class)
+                    ->allow_shift_overbooking,
                 'isUserWorkFlowUser'           => $isUserWorkFlowUser,
                 'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
                 'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,
                 'canSeeShiftPlanRequestedPlans' => $canSeeShiftPlanRequestedPlans,
+                'canSeeEventVerifications'      => $canSeeEventVerifications,
+                'canSeeIncomingRequests'         => $canSeeIncomingRequests,
+                'canViewBiDashboard'             => $canViewBiDashboard,
             ]
         );
     }

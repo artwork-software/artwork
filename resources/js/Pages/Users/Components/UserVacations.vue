@@ -38,7 +38,7 @@
                 {{ $t('Availability & absence') }}
             </h3>
             <p class="text-sm text-zinc-500">
-                {{ $t('No entry has yet been made for this day.') }}
+                {{ $t('No entry has yet been made for this month.') }}
             </p>
         </div>
     </div>

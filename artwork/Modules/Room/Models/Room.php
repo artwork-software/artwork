@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Room\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
@@ -23,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -56,9 +57,18 @@ class Room extends Model
     use HasFactory;
     use SoftDeletes;
     use Prunable;
-    use HasChangesHistory;
+    use LogsActivity;
     use BelongsToArea;
     use BelongsToUser;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('room')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'name',
@@ -72,7 +82,8 @@ class Room extends Model
         'everyone_can_book',
         'position',
         'created_at',
-        'relevant_for_disposition'
+        'relevant_for_disposition',
+        'capacity',
     ];
 
     protected $with = [
@@ -119,6 +130,12 @@ class Room extends Model
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->wherePivot('is_admin', true);
+    }
+
+    public function requestableBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'room_user', 'room_id')
+            ->wherePivot('can_request', true);
     }
 
     //@todo: fix phpcs error - refactor function name to roomFiles
@@ -284,7 +301,7 @@ class Room extends Model
                     }
                 )->orWhereDoesntHave('adjoining_rooms');
             }
-        )->orderBy('position');
+        )->orderBy('position')->orderBy('id');
     }
 
     public function scopeNotIdIn(Builder $builder, array $ids): Builder

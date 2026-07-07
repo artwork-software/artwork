@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $high_contrast
  * @property boolean $expand_days
  * @property boolean $use_event_status_color
+ * @property boolean $use_main_category_color
  * @property boolean $work_shifts
  * @property string $created_at
  * @property string $updated_at
@@ -32,6 +33,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $show_unplanned_events
  * @property boolean $show_planned_events
  * @property boolean $show_timeline
+ * @property boolean $show_only_not_fully_staffed_shifts
+ * @property boolean $show_user_overview
  */
 class UserCalendarSettings extends Model
 {
@@ -58,6 +61,7 @@ class UserCalendarSettings extends Model
         'high_contrast',
         'expand_days',
         'use_event_status_color',
+        'use_main_category_color',
         'show_qualifications',
         'shift_notes',
         'hide_unoccupied_rooms',
@@ -66,7 +70,9 @@ class UserCalendarSettings extends Model
         'show_planned_events',
         'hide_unoccupied_days',
         'show_shift_group_tag',
-        'show_timeline'
+        'show_timeline',
+        'show_only_not_fully_staffed_shifts',
+        'show_user_overview'
     ];
 
     protected $casts = [
@@ -82,6 +88,7 @@ class UserCalendarSettings extends Model
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
         'use_event_status_color' => 'boolean',
+        'use_main_category_color' => 'boolean',
         'show_qualifications' => 'boolean',
         'shift_notes' => 'boolean',
         'hide_unoccupied_rooms' => 'boolean',
@@ -91,6 +98,8 @@ class UserCalendarSettings extends Model
         'hide_unoccupied_days' => 'boolean',
         'show_shift_group_tag' => 'boolean',
         'show_timeline' => 'boolean',
+        'show_only_not_fully_staffed_shifts' => 'boolean',
+        'show_user_overview' => 'boolean',
     ];
 
     public function user(): BelongsTo

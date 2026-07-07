@@ -36,11 +36,12 @@
                     <div class="grid grid-cols-12 mt-12 gap-12" v-if="openTab === 'notifications'">
                         <div class="col-span-8">
                             <!-- Raumbelegungen und Termine Notifications -->
-                            <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
+                            <NotificationSectionComponent group-type="EVENTS"
+                                                          :unread-count="notificationCounts['EVENTS'].unread"
+                                                          :archived-count="notificationCounts['EVENTS'].archived"
                                                           :name="$t('Room bookings & events')" :rooms="rooms"
                                                           :projects="projects"
                                                           :event-types="eventTypes"
-                                                          :notifications="notifications['EVENTS']"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -52,10 +53,11 @@
                                                           :event-statuses="eventStatuses"
                             />
                             <!-- Räume und Raumbelegungsanfragen -->
-                            <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
+                            <NotificationSectionComponent group-type="ROOMS"
+                                                          :unread-count="notificationCounts['ROOMS'].unread"
+                                                          :archived-count="notificationCounts['ROOMS'].archived"
                                                           :name="$t('Rooms & room booking requests')" :rooms="rooms"
                                                           :projects="projects" :event-types="eventTypes"
-                                                          :notifications="notifications['ROOMS']"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -67,9 +69,11 @@
                                                           :event-statuses="eventStatuses"
                             />
                             <!-- Aufgaben -->
-                            <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" :name="$t('Tasks')"
+                            <NotificationSectionComponent group-type="TASKS"
+                                                          :unread-count="notificationCounts['TASKS'].unread"
+                                                          :archived-count="notificationCounts['TASKS'].archived"
+                                                          :name="$t('Tasks')"
                                                           :rooms="rooms" :projects="projects" :event-types="eventTypes"
-                                                          :notifications="notifications['TASKS']"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -81,10 +85,11 @@
                                                           :event-statuses="eventStatuses"
                             />
                             <!-- Projekte & Teams -->
-                            <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
+                            <NotificationSectionComponent group-type="PROJECTS"
+                                                          :unread-count="notificationCounts['PROJECTS'].unread"
+                                                          :archived-count="notificationCounts['PROJECTS'].archived"
                                                           :name="$t('Projects & Teams')" :rooms="rooms" :projects="projects"
                                                           :event-types="eventTypes"
-                                                          :notifications="notifications['PROJECTS']"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -95,10 +100,11 @@
                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                           :event-statuses="eventStatuses"
                             />
-                            <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
+                            <NotificationSectionComponent group-type="BUDGET"
+                                                          :unread-count="notificationCounts['BUDGET'].unread"
+                                                          :archived-count="notificationCounts['BUDGET'].archived"
                                                           :name="$t('Project budgets & sources of funding')" :rooms="rooms" :projects="projects"
                                                           :event-types="eventTypes"
-                                                          :notifications="notifications['BUDGET']"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -109,10 +115,11 @@
                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                           :event-statuses="eventStatuses"
                             />
-                            <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
+                            <NotificationSectionComponent group-type="SHIFTS"
+                                                          :unread-count="notificationCounts['SHIFTS'].unread"
+                                                          :archived-count="notificationCounts['SHIFTS'].archived"
                                                           :name="$t('Shift planning')" :rooms="rooms" :projects="projects"
                                                           :event-types="eventTypes"
-                                                          :notifications="notifications['SHIFTS']"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -124,10 +131,27 @@
                                                           :event-statuses="eventStatuses"
                             />
                             <!-- Inventory and Issues -->
-                            <NotificationSectionComponent :readNotifications="readNotifications['INVENTORY']"
+                            <NotificationSectionComponent group-type="INVENTORY"
+                                                          :unread-count="notificationCounts['INVENTORY'].unread"
+                                                          :archived-count="notificationCounts['INVENTORY'].archived"
                                                           :name="$t('Inventory & Material Issues')" :rooms="rooms" :projects="projects"
                                                           :event-types="eventTypes"
-                                                          :notifications="notifications['INVENTORY']"
+                                                          :history-objects="historyObjects"
+                                                          :event="event"
+                                                          :wanted-split="wantedSplit"
+                                                          :project="project"
+                                                          :room-collisions="roomCollisions"
+                                                          :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                          :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                          :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                          :event-statuses="eventStatuses"
+                                                          />
+                            <!-- Documents -->
+                            <NotificationSectionComponent group-type="DOCUMENTS"
+                                                          :unread-count="notificationCounts['DOCUMENTS'].unread"
+                                                          :archived-count="notificationCounts['DOCUMENTS'].archived"
+                                                          :name="$t('Documents')" :rooms="rooms" :projects="projects"
+                                                          :event-types="eventTypes"
                                                           :history-objects="historyObjects"
                                                           :event="event"
                                                           :wanted-split="wantedSplit"
@@ -276,11 +300,10 @@ export default defineComponent({
     },
     props: [
         'historyObjects',
-        'notifications',
+        'notificationCounts',
         'rooms',
         'eventTypes',
         'projects',
-        'readNotifications',
         'notificationSettings',
         'notificationFrequencies',
         'groupTypes',

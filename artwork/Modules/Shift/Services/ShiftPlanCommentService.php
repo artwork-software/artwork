@@ -13,13 +13,16 @@ class ShiftPlanCommentService
         $commentModel = $modelInstance->shiftPlanComments()->find($id);
 
         if ($commentModel) {
-            $commentModel->update([
-                'comment' => $comment,
-            ]);
+            $updateData = ['comment' => $comment];
+            if ($commentModel->created_by === null) {
+                $updateData['created_by'] = auth()->id();
+            }
+            $commentModel->update($updateData);
         } else {
             $modelInstance->shiftPlanComments()->create([
                 'comment' => $comment,
                 'date' => $date,
+                'created_by' => auth()->id(),
             ]);
         }
     }
@@ -33,13 +36,16 @@ class ShiftPlanCommentService
         $commentModel = $modelInstance->shiftPlanComments()->where('date', $date)->first();
 
         if ($commentModel) {
-            $commentModel->update([
-                'comment' => $comment,
-            ]);
+            $updateData = ['comment' => $comment];
+            if ($commentModel->created_by === null) {
+                $updateData['created_by'] = auth()->id();
+            }
+            $commentModel->update($updateData);
         } else {
             $modelInstance->shiftPlanComments()->create([
                 'comment' => $comment,
                 'date' => $date,
+                'created_by' => auth()->id(),
             ]);
         }
     }

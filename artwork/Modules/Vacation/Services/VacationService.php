@@ -6,7 +6,9 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -24,7 +26,8 @@ readonly class VacationService
         private VacationSeriesService $vacationSeriesService,
         private ChangeService $changeService,
         private SchedulingService $schedulingService,
-        private NotificationService $notificationService
+        private NotificationService $notificationService,
+        private WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -44,9 +47,11 @@ readonly class VacationService
             'end_time' => $request->end_time,
             'date' => $request->date,
             'full_day' =>  $request->full_day,
+            'day_part' => $request->day_part,
             'comment' => $request->comment,
             'is_series' => $request->is_series,
-            'type' => $vacationTypeEnum
+            'type' => $vacationTypeEnum,
+            'created_by' => auth()->id(),
         ]);
 
         $vacationConflictService->checkVacationConflictsOnDay(
@@ -83,6 +88,8 @@ readonly class VacationService
         $this->createHistory($firstVacation, 'Availability added', $changeService);
         $this->announceChanges($firstVacation, $schedulingService);
 
+        $this->invalidateVacationerCache($vacationer);
+
         return $firstVacation;
     }
 
@@ -111,7 +118,8 @@ readonly class VacationService
                     'comment' => $data->comment,
                     'is_series' => true,
                     'series_id' => $seriesId,
-                    'type' => $vacationTypeEnum
+                    'type' => $vacationTypeEnum,
+                    'created_by' => auth()->id(),
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $newVacation->date,
@@ -133,7 +141,8 @@ readonly class VacationService
                     'comment' => $data->comment,
                     'is_series' => true,
                     'series_id' => $seriesId,
-                    'type' => $vacationTypeEnum
+                    'type' => $vacationTypeEnum,
+                    'created_by' => auth()->id(),
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $weekly->date,
@@ -169,6 +178,8 @@ readonly class VacationService
             $notificationService
         );
 
+        $this->invalidateVacationCache($vacation);
+
         return $vacation;
     }
 
@@ -189,12 +200,42 @@ readonly class VacationService
 
     public function deleteVacationInterval(Vacationer $vacationer, string $day): void
     {
+        $this->invalidateVacationerCache($vacationer);
         $this->vacationRepository->delete($this->findVacationWithinInterval($vacationer, $day));
     }
 
     public function delete(Vacation $vacation): void
     {
+        $this->invalidateVacationCache($vacation);
         $this->vacationRepository->delete($vacation);
+    }
+
+    private function invalidateVacationCache(Vacation $vacation): void
+    {
+        $type = match ($vacation->vacationer_type) {
+            User::class => 'user',
+            Freelancer::class => 'freelancer',
+            ServiceProvider::class => 'service_provider',
+            default => null,
+        };
+
+        if ($type) {
+            $this->workingHourCacheService->forgetForEntity($type, $vacation->vacationer_id);
+        }
+    }
+
+    private function invalidateVacationerCache(Vacationer $vacationer): void
+    {
+        $type = match (true) {
+            $vacationer instanceof User => 'user',
+            $vacationer instanceof Freelancer => 'freelancer',
+            $vacationer instanceof ServiceProvider => 'service_provider',
+            default => null,
+        };
+
+        if ($type) {
+            $this->workingHourCacheService->forgetForEntity($type, $vacationer->id);
+        }
     }
 
     protected function createHistory(Vacation $vacation, string $translationKey, ChangeService $changeService): void
@@ -228,6 +269,7 @@ readonly class VacationService
         string $day
     ): void {
         if ($vacationType['type'] && in_array($modelClass, [User::class, Freelancer::class], true)) {
+            $this->invalidateVacationerCache($entityModel);
             $vacations = $entityModel->vacations()->where('date', $day)->get();
 
             if ($vacations->isNotEmpty()) {
@@ -276,6 +318,8 @@ readonly class VacationService
         if (!$vacationType['type'] || !in_array($modelClass, [User::class, Freelancer::class], true)) {
             return;
         }
+
+        $this->invalidateVacationerCache($entityModel);
 
         // Pre-load all vacations for all days at once to avoid N+1 queries
         $existingVacations = $entityModel->vacations()

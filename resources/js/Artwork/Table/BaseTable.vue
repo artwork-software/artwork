@@ -60,7 +60,14 @@
                             <!-- Zell-Slot: cell-<key> -->
                             <slot :name="`cell-${col.key}`" :row="row" :value="getValue(row,col)" :col="col">
                                 <!-- Default-Renderer -->
-                                <span class="text-gray-700">{{ getValue(row, col) }}</span>
+                                <a
+                                    v-if="col.type === 'link' && getValue(row, col) && getValue(row, col) !== '-'"
+                                    :href="ensureProtocol(getValue(row, col))"
+                                    target="_blank"
+                                    class="text-indigo-600 hover:text-indigo-500 hover:underline"
+                                    @click.stop
+                                >{{ getValue(row, col) }}</a>
+                                <span v-else class="text-gray-700">{{ getValue(row, col) }}</span>
                             </slot>
                         </td>
 
@@ -130,6 +137,7 @@ export interface TableColumn {
     align?: Align                     // Ausrichtung
     sortable?: boolean                // sortierbar?
     width?: string                    // optional (z.B. '220px')
+    type?: string                      // optionaler Spaltentyp (z.B. 'link')
     accessor?: (row: any) => any      // eigener Wertleser
     headerClass?: string              // optionale Klassen Head
     cellClass?: string                // optionale Klassen Cell
@@ -265,6 +273,11 @@ function getValue(row: any, col?: TableColumn) {
     if (!col) return null
     if (col.accessor) return col.accessor(row)
     return row[col.key]
+}
+
+function ensureProtocol(url: string): string {
+    if (!url) return url
+    return /^https?:\/\//i.test(url) ? url : `https://${url}`
 }
 
 const { rows, columns, rowKey } = toRefs(props)

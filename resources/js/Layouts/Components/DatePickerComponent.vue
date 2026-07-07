@@ -2,6 +2,7 @@
     <div v-if="!project">
         <div class="flex items-center gap-x-2" id="datePicker">
             <VueDatePicker
+                ref="datePickerRef"
                 v-model="dateValuePicker"
                 model-auto
                 range
@@ -112,7 +113,7 @@
 </template>
 
 <script setup>
-import {ref, computed, watch, onMounted, defineAsyncComponent} from "vue";
+import {ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent, nextTick} from "vue";
 import { usePage, router } from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import '@vuepic/vue-datepicker/dist/main.css'
@@ -131,6 +132,14 @@ const props = defineProps({
         default: false
     },
     is_work_times: {
+        type: Boolean,
+        default: false
+    },
+    is_daily_view: {
+        type: Boolean,
+        default: false
+    },
+    is_list_view: {
         type: Boolean,
         default: false
     }
@@ -152,6 +161,9 @@ const startDateString = ref('');
 const endDateString = ref('');
 const startDate = ref(null);
 const endDate = ref(null);
+
+const datePickerRef = ref(null);
+const syncingFromProps = ref(false);
 
 // Formatter
 const formatter = ref({
@@ -207,8 +219,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 7);
+            end.setDate(end.getDate() + 6);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -219,8 +230,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 14);
+            end.setDate(end.getDate() + 13);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -231,8 +241,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 30);
+            end.setDate(end.getDate() + 29);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -243,8 +252,7 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
-            end.setDate(end.getDate() + 90);
+            end.setDate(end.getDate() + 89);
             start.setHours(12, 0, 0, 0);
             end.setHours(12, 0, 0, 0);
             return [start, end];
@@ -255,7 +263,6 @@ const customShortcuts = [
         value: () => {
             const start = new Date();
             const end = new Date();
-            start.setDate(start.getDate() + 1);
             end.setFullYear(end.getFullYear() + 1);
             end.setDate(end.getDate() - 1);
             start.setHours(12, 0, 0, 0);
@@ -305,6 +312,16 @@ function getDayOfWeek(date) {
     return days[date.getDay()];
 }
 
+function toPickerDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    // ISO-Date ohne Zeit → bewusst auf Mittag setzen, um TZ-Off-by-one zu vermeiden
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return new Date(`${value}T12:00:00`);
+    }
+    return new Date(value);
+}
+
 function removeDateIcons() {
     if (startDate.value) {
         startDate.value.style.webkitAppearance = 'none';
@@ -344,7 +361,6 @@ function format(date) {
 }
 
 function handleManualDateEnter(e) {
-    // Soll sich verhalten wie ein Focus-Out: durch blur wird das bestehende @focusout="updateTimes" ausgelöst.
     e?.target?.blur?.();
 }
 
@@ -380,10 +396,19 @@ function updateTimes() {
                 },
                 preserveState: true,
             });
+        } else if (props.is_list_view) {
+            router.patch(route('update.user.shift-list-view.filter.dates', userId), {
+                start_date: startDateObj,
+                end_date: endDateObj,
+            }, {
+                preserveState: false,
+                preserveScroll: true,
+            });
         } else if (props.is_shift_plan) {
             router.patch(route('update.user.shift.calendar.filter.dates', userId), {
                 start_date: startDateObj,
                 end_date: endDateObj,
+                isDailyView: props.is_daily_view,
             }, {
                 preserveState: false,
                 preserveScroll: true,
@@ -409,6 +434,7 @@ function updateTimes() {
                 start_date: startDateObj,
                 end_date: endDateObj,
                 isPlanning: props.is_planning,
+                isDailyView: props.is_daily_view,
             }, {
                 preserveState: false,
                 preserveScroll: true,
@@ -419,10 +445,44 @@ function updateTimes() {
 
 // Watcher
 watch(dateValuePicker, () => {
+    if (syncingFromProps.value) return;
+    if (!Array.isArray(dateValuePicker.value) || !dateValuePicker.value[0] || !dateValuePicker.value[1]) return;
+
     dateValue.value[0] = format(dateValuePicker.value[0]);
     dateValue.value[1] = format(dateValuePicker.value[1]);
     updateTimes();
-});
+}, { deep: true });
+
+watch(
+    () => props.dateValueArray,
+    async (newVal) => {
+        if (!Array.isArray(newVal) || !newVal[0] || !newVal[1]) return;
+
+        syncingFromProps.value = true;
+        dateValue.value = [...newVal];
+        dateValuePicker.value = [toPickerDate(newVal[0]), toPickerDate(newVal[1])];
+
+        // Labels im Input (Wochentag) aktualisieren
+        startDateString.value = getDayOfWeek(new Date(dateValue.value[0])).replace('.', '');
+        endDateString.value = getDayOfWeek(new Date(dateValue.value[1])).replace('.', '');
+
+        await nextTick();
+        syncingFromProps.value = false;
+    },
+    { deep: true }
+);
+
+// Enter-Taste → "Anwenden"-Button im VueDatePicker-Popup klicken
+// Capture-Phase, damit der Event vor VueDatePickers eigenem Handler abgefangen wird
+function onEnterKey(e) {
+    if (e.key !== 'Enter') return;
+    const selectBtn = document.querySelector('.dp__action_select');
+    if (selectBtn) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        selectBtn.click();
+    }
+}
 
 // Lifecycle
 onMounted(() => {
@@ -434,6 +494,11 @@ onMounted(() => {
             showDateRangePicker.value = false;
         }
     });
+    document.addEventListener('keydown', onEnterKey, true);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', onEnterKey, true);
 });
 </script>
 

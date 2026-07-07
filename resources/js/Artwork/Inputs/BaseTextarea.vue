@@ -1,12 +1,12 @@
 <template>
-    <div class="relative">
+    <div class="relative" v-bind="$attrs">
         <textarea
             :id="id"
             :value="modelValue"
             :placeholder="focused ? placeholder : (hasLabel ? ' ' : placeholder)"
             @input="$emit('update:modelValue', $event.target.value)"
             @focus="focused = true"
-            @blur="focused = !!modelValue"
+            @blur="($event) => { focused = !!modelValue; emit('focusout', $event) }"
             :disabled="disabled"
             :required="required"
             :rows="rows"
@@ -21,6 +21,10 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+
+defineOptions({
+    inheritAttrs: false
+})
 
 const props = defineProps({
     modelValue: String,
@@ -51,7 +55,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'focusout'])
 
 const focused = ref(false)
 

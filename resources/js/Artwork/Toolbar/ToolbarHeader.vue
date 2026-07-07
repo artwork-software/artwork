@@ -35,7 +35,7 @@
                         @keydown.enter.prevent="openSearchbar"
                         @keydown.space.prevent="openSearchbar"
                     >
-                        <ToolTipComponent :icon="IconSearch" icon-size="size-5" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
+                        <ToolTipComponent :icon="IconSearch" icon-size="size-6" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
                     </div>
 
                     <div v-else class="w-72 sm:w-96 flex items-center justify-end gap-2">

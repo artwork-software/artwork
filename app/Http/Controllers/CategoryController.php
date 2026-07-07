@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Category\Models\Category;
-use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
@@ -27,51 +26,43 @@ class CategoryController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Settings/ProjectSettings', [
-            'categories' => Category::all()->map(fn($category) => [
+            'categories' => Category::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'color' => $category->color,
                 'projects' => $category->projects
             ]),
-            'genres' => Genre::all()->map(fn($genre) => [
+            'genres' => Genre::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'color' => $genre->color,
                 'projects' => $genre->projects
             ]),
-            'sectors' => Sector::all()->map(fn($sector) => [
+            'sectors' => Sector::with('projects:id,name')->select(['id', 'name', 'color'])->get()->map(fn($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'color' => $sector->color,
                 'projects' => $sector->projects
             ]),
-            'contractTypes' => ContractType::all()->map(fn($contractType) => [
-                'id' => $contractType->id,
-                'name' => $contractType->name,
-                'color' => $contractType->color,
-            ]),
-            'companyTypes' => CompanyType::all()->map(fn($companyType) => [
-                'id' => $companyType->id,
-                'name' => $companyType->name,
-                'color' => $companyType->color,
-            ]),
-            'collectingSocieties' => CollectingSociety::all()->map(fn($collectingSociety) => [
-                'id' => $collectingSociety->id,
-                'name' => $collectingSociety->name,
-                'color' => $collectingSociety->color,
-            ]),
-            'currencies' => Currency::all()->map(fn($currency) => [
-                'id' => $currency->id,
-                'name' => $currency->name,
-                'color' => $currency->color,
-            ]),
-            'states' => ProjectState::all()->map(fn($state) => [
-                'id' => $state->id,
-                'name' => $state->name,
-                'color' => $state->color,
-                'is_planning' => $state->is_planning
-            ]),
-            'createSettings' => app(ProjectCreateSettings::class)
+            'contractTypes' => ContractType::select(['id', 'name', 'color'])->get(),
+            'companyTypes' => CompanyType::select(['id', 'name', 'color'])->get(),
+            'currencies' => Currency::select(['id', 'name', 'color'])->get(),
+            'states' => ProjectState::select(['id', 'name', 'color', 'is_planning'])->get(),
+            'createSettings' => app(ProjectCreateSettings::class),
+        ]);
+    }
+
+    public function artistResidencySettings(): Response|ResponseFactory
+    {
+        $this->authorize('viewAny', Category::class);
+
+        $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+
+        return inertia('Settings/ArtistResidencySettings', [
+            'breakfastDeductionPerDay' => $generalSettings->breakfast_deduction_per_day,
+            'artistResidencyDoNotSaveDefault' => $generalSettings->artist_residency_do_not_save_default,
+            'artistResidencyDailyAllowanceDefault' => $generalSettings->artist_residency_daily_allowance_default,
+            'artistResidencyNameColumns' => $generalSettings->artist_residency_name_columns,
         ]);
     }
 

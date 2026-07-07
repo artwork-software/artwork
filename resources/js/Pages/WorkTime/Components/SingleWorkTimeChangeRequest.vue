@@ -2,7 +2,7 @@
     <div class=" flex items-stretch gap-x-3">
         <div
             class="p-1 rounded-lg"
-            :style="{ backgroundColor: request.craft.color }"
+            :style="{ backgroundColor: request.craft?.color }"
         />
         <div class="w-full space-y-5">
             <!-- Header mit Benutzerinfo -->
@@ -21,13 +21,13 @@
             <!-- Schichtinformationen -->
             <div class="grid md:grid-cols-2 gap-y-1 text-sm text-gray-700">
                 <div>
-                    <span class="font-medium">{{ $t('Date') }}:</span> {{ request.shift.formatted_dates.start }}
+                    <span class="font-medium">{{ $t('Date') }}:</span> {{ request.shift?.formatted_dates?.start }}
                 </div>
                 <div class="flex items-center justify-end gap-x-0.5">
-                    <span class="font-medium">{{ $t('Time') }}:</span> {{ request.shift.start }} - {{ request.shift.end }}
+                    <span class="font-medium">{{ $t('Time') }}:</span> {{ request.shift?.start }} - {{ request.shift?.end }}
                 </div>
                 <div>
-                    <span class="font-medium">{{ $t('Craft') }}:</span> {{ request.craft.name }}
+                    <span class="font-medium">{{ $t('Craft') }}:</span> {{ request.craft?.name }}
                 </div>
                 <div class="flex items-center justify-end gap-x-0.5">
                     <span class="font-medium">Status: </span>
@@ -47,6 +47,7 @@
                     <div class="font-semibold text-blue-700 mt-2">Angefragte Zeitänderung:</div>
                     <div class="">
                         {{ request.request_start_time }} – {{ request.request_end_time }}
+                        <span v-if="request.request_end_date" class="text-xs text-gray-500">(+{{ $t('1 day') }})</span>
                     </div>
                 </div>
             </div>

@@ -4,20 +4,25 @@
         @dragover="onDragOver"
         @drop="onDrop"
         :class="[
-            'flex items-center h-4 min-h-4 rounded cursor-pointer transition',
+            'flex items-center h-4 min-h-4 rounded transition',
             isDragging ? 'border-2 border-dashed' : '',
-            isDragging && dropOver
-                ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30'
-                : (isDragging ? 'border-zinc-300 bg-zinc-50/40' : '')
+            isDragging && invalidDropReason
+                ? 'border-red-200 bg-red-50/40 opacity-70 cursor-not-allowed'
+                : (isDragging && dropOver
+                    ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30 cursor-pointer'
+                    : (isDragging ? 'border-zinc-300 bg-zinc-50/40 cursor-pointer' : 'cursor-pointer'))
         ]"
         :aria-hidden="!isDragging"
-        :aria-dropeffect="isDragging ? 'copy' : undefined"
+        :aria-dropeffect="isDragging && !invalidDropReason ? 'copy' : undefined"
     >
-        <div v-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-[11px] text-zinc-600 pointer-events-none">
-            <span class="font-medium" :class="dropOver ? 'text-emerald-700' : ''">Hier in Disclosure ablegen</span>
+        <div v-if="isDragging && invalidDropReason" class="h-full w-full flex items-center justify-center gap-2 text-[11px] pointer-events-none">
+            <span class="font-medium text-red-600">{{ $t(invalidDropReason) }}</span>
+        </div>
+        <div v-else-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-[11px] text-zinc-600 pointer-events-none">
+            <span class="font-medium" :class="dropOver ? 'text-emerald-700' : ''">{{ $t('Drop into folder') }}</span>
         </div>
         <span v-else-if="dropOver" class="text-xs text-gray-300 w-full flex items-center justify-center pointer-events-none">
-            Zum hinzufügen hier loslassen
+            {{ $t('Release to add') }}
         </span>
     </div>
     <SelectTabsModalForDisclosure
@@ -33,7 +38,7 @@
 
 <script setup>
 
-import {onMounted, onUnmounted, ref} from "vue";
+import {computed, onMounted, onUnmounted, ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
 import SelectTabsModalForDisclosure from "@/Pages/Settings/Components/SelectTabsModalForDisclosure.vue";
@@ -62,8 +67,32 @@ const props = defineProps({
 const dropOver = ref(false);
 const showSelectTabsModal = ref(false);
 const componentData = ref(null);
-const { isDragging, addEventListenerForDraggingStart, removeEventListenerForDraggingStart } = EventListenerForDragging();
+const { isDragging, draggedComponent, addEventListenerForDraggingStart, removeEventListenerForDraggingStart } = EventListenerForDragging();
 let listeners = null;
+
+// Große Layout-Komponenten blockieren – diese funktionieren nicht in Ordnern
+const blockedInDisclosure = [
+    'CalendarTab',
+    'ShiftTab',
+    'BudgetTab',
+    'BulkBody',
+    'ChecklistAllComponent',
+    'CommentAllTab',
+    'ProjectAllDocumentsComponent',
+];
+
+// Übersetzungskey des Ablage-Verbots für die aktuell gezogene Komponente (null = erlaubt)
+const invalidDropReason = computed(() => {
+    const data = draggedComponent.value;
+    if (!data) return null;
+    if (data.type === 'DisclosureComponent') {
+        return 'Folders cannot be nested inside folders';
+    }
+    if (blockedInDisclosure.includes(data.type)) {
+        return 'This component cannot be placed inside a folder';
+    }
+    return null;
+});
 
 onMounted(() => {
     listeners = addEventListenerForDraggingStart();
@@ -99,7 +128,7 @@ const onDrop = (event) => {
         return false;
     }
 
-    if(data.special){
+    if(blockedInDisclosure.includes(data.type)) {
         dropOver.value = false;
         return false;
     }

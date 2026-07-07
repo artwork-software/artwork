@@ -61,6 +61,7 @@
         :show="showMultipleShiftQualificationSlotsAvailableModal"
         :available-shift-qualification-slots="showMultipleShiftQualificationSlotsAvailableModalSlots"
         :dropped-user="showMultipleShiftQualificationSlotsAvailableModalDroppedUser"
+        :crafts="props.crafts"
         @close="closeMultipleShiftQualificationSlotsAvailableModal"
     />
 </template>
@@ -313,6 +314,31 @@ const saveUser = () => {
         }
 
         //show select modal by availableSlots
+        const shiftCraft = props.crafts.find(c => c.id === props.craftId);
+        const shiftCraftIsUniversallyApplicable = shiftCraft?.universally_applicable;
+
+        if (droppedUser.value.craft_universally_applicable || shiftCraftIsUniversallyApplicable) {
+            const shiftCraftId = props.craftId;
+            availableShiftQualificationSlots = availableShiftQualificationSlots.filter(slot => {
+                return slot.pivot?.craft_id === shiftCraftId || props.crafts.find(c => c.id === slot.pivot?.craft_id)?.universally_applicable;
+            });
+        }
+
+        if (availableShiftQualificationSlots.length === 0) {
+            dropFeedbackNoSlotsForQualification(droppedUser.value.type);
+            isUpdateContainer.value = false;
+            assigningInProgress.value = false;
+            return;
+        }
+
+        if (availableShiftQualificationSlots.length === 1) {
+            assignUser(
+                droppedUser.value,
+                availableShiftQualificationSlots[0].id
+            );
+            return;
+        }
+
         openMultipleShiftQualificationSlotsAvailableModal(
             droppedUser.value,
             availableShiftQualificationSlots

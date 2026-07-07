@@ -31,6 +31,11 @@ Route::get('/timeline-preset/search', [
     'search'
 ])->name('timeline-preset.search');
 
+// get all timeline presets with times count
+Route::get('/timeline-presets', function () {
+    return \Artwork\Modules\Shift\Models\ShiftPresetTimeline::withCount('times')->get();
+})->name('timeline-presets.all');
+
 
 Route::middleware('auth:sanctum')->post('/user/set-public-key', [ChatController::class, 'setPublicKey'])->name('keypair.store');
 Route::middleware('auth:sanctum')->post('/chat/store', [ChatController::class, 'storeChat'])->name('chat.store');
@@ -42,13 +47,16 @@ Route::get('/user-status/{id}', function ($id, UserStatusService $service) {
 });
 
 Route::get('/inventory/categories', [\Artwork\Modules\Inventory\Http\Controllers\InventoryCategoryController::class, 'getAllCategories'])
+    ->middleware('auth:sanctum')
     ->name('inventory.categories.get-all');
 
 Route::post('/room/search', [RoomController::class, 'search'])
     ->name('room.search');
 
 
-Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class, 'search'])->name('inventory.articles.search');
+Route::post('/inventory/article/search', [\Artwork\Modules\Inventory\Http\Controllers\InventoryArticleController::class, 'search'])
+    ->middleware('auth:sanctum')
+    ->name('inventory.articles.search');
 
 
 // Inventory API routes

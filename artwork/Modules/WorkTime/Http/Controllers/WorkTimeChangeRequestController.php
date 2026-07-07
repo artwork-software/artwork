@@ -17,6 +17,7 @@ use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Artwork\Modules\WorkTime\Services\WorkTimeChangeRequestService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Random\RandomException;
 
@@ -89,7 +90,27 @@ class WorkTimeChangeRequestController extends Controller
      */
     public function store(StoreWorkTimeChangeRequestRequest $request): void
     {
-        $workTimeRequest = $this->workTimeChangeRequestService->createChangeRequest($request->validated());
+        $validated = $request->validated();
+
+        // Detect overnight shift: if end_time <= start_time, set end_date to next day
+        $startTime = Carbon::createFromFormat('H:i', $validated['request_start_time']);
+        $endTime = Carbon::createFromFormat('H:i', $validated['request_end_time']);
+
+        if ($endTime->lte($startTime)) {
+            $shift = \Artwork\Modules\Shift\Models\Shift::findOrFail($validated['shift_id']);
+            $pivot = $shift->users()
+                ->where('shift_workers.employable_id', $validated['user_id'])
+                ->first()
+                ?->pivot;
+
+            $startDate = $pivot && $pivot->start_date
+                ? Carbon::parse($pivot->start_date)
+                : Carbon::parse($shift->start);
+
+            $validated['request_end_date'] = $startDate->copy()->addDay()->toDateString();
+        }
+
+        $workTimeRequest = $this->workTimeChangeRequestService->createChangeRequest($validated);
 
         // send notification to craft planner
         $craftId = $request->input('craft_id');
@@ -114,7 +135,7 @@ class WorkTimeChangeRequestController extends Controller
                 $planner->language
             );
             $broadcastMessage = [
-                'id' => random_int(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -178,28 +199,50 @@ class WorkTimeChangeRequestController extends Controller
         $shift = $workTimeChangeRequest->shift;
         $user = $workTimeChangeRequest->user;
 
-        $oldPivot = $shift->users()->where('user_id', $user->id)->first()?->pivot;
+        $oldPivot = $shift->users()->where('shift_workers.employable_id', $user->id)->first()?->pivot;
 
         if (!$oldPivot) {
             abort(404, 'Ursprüngliche Schicht nicht gefunden.');
         }
 
-        $oldStart = \Carbon\Carbon::parse($oldPivot->start_time);
-        $oldEnd = \Carbon\Carbon::parse($oldPivot->end_time);
-        $newStart = Carbon::parse($workTimeChangeRequest->request_start_time);
-        $newEnd = Carbon::parse($workTimeChangeRequest->request_end_time);
+        $startDateParsed = Carbon::parse($oldPivot->start_date);
+        $endDateParsed = Carbon::parse($oldPivot->end_date ?? $oldPivot->start_date);
+        $startTimeParsed = Carbon::parse($oldPivot->start_time);
+        $endTimeParsed = Carbon::parse($oldPivot->end_time);
 
-        $shiftDate = \Carbon\Carbon::parse($oldPivot->start_date);
+        $oldStart = $startDateParsed->copy()->setTimeFrom($startTimeParsed);
+        $oldEnd = $endDateParsed->copy()->setTimeFrom($endTimeParsed);
+        if ($oldEnd->lte($oldStart)) {
+            $oldEnd->addDay();
+        }
+
+        $shiftDate = $startDateParsed->copy()->startOfDay();
+        $requestStartTimeParsed = Carbon::parse($workTimeChangeRequest->request_start_time);
+        $newStart = $shiftDate->copy()->setTimeFrom($requestStartTimeParsed);
+        $requestEndDate = $workTimeChangeRequest->request_end_date
+            ? Carbon::parse($workTimeChangeRequest->request_end_date)->startOfDay()
+            : $shiftDate->copy();
+        $requestEndTimeParsed = Carbon::parse($workTimeChangeRequest->request_end_time);
+        $newEnd = $requestEndDate->copy()->setTimeFrom($requestEndTimeParsed);
+
         $now = now()->startOfDay();
 
         $oldDuration = $oldStart->diffInMinutes($oldEnd);
         $newDuration = $newStart->diffInMinutes($newEnd);
         $balanceDelta = $newDuration - $oldDuration;
+
+        $pivotUpdate = [
+            'start_time' => $newStart->format('H:i:s'),
+            'end_time' => $newEnd->format('H:i:s'),
+        ];
+
+        // Only update end_date when the request crosses midnight
+        if ($workTimeChangeRequest->request_end_date) {
+            $pivotUpdate['end_date'] = $workTimeChangeRequest->request_end_date;
+        }
+
         if ($shiftDate->gte($now)) {
-            $shift->users()->updateExistingPivot($user->id, [
-                'start_time' => $newStart->format('H:i:s'),
-                'end_time' => $newEnd->format('H:i:s'),
-            ]);
+            $shift->users()->updateExistingPivot($user->id, $pivotUpdate);
         } else {
             // For past shifts, create an adjustment booking to reflect the time change
             $repository->storeOrUpdateBooking($user, now(), now()->dayOfWeek, [
@@ -220,10 +263,7 @@ class WorkTimeChangeRequestController extends Controller
                 $repository->updateUserBalance($user, $balanceDelta);
             }
 
-            $shift->users()->updateExistingPivot($user->id, [
-                'start_time' => $newStart->format('H:i:s'),
-                'end_time' => $newEnd->format('H:i:s'),
-            ]);
+            $shift->users()->updateExistingPivot($user->id, $pivotUpdate);
         }
 
         $workTimeChangeRequest->update([

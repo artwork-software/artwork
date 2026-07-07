@@ -16,7 +16,7 @@ class InventoryCategoryApiController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = $request->input('per_page', 15);
+        $perPage = min(max((int) $request->input('per_page', 15), 1), 100);
         $categories = $this->categoryService->paginateForApi($perPage);
 
         // Transform the paginated data to DTOs

@@ -8,7 +8,8 @@ use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryTag;
 use Artwork\Modules\Inventory\Models\InventoryTagGroup;
 use Artwork\Modules\Inventory\Repositories\InventoryUserFilterRepository;
-use Artwork\Modules\Manufacturer\Models\Manufacturer;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
@@ -73,7 +74,11 @@ class InventoryUserFilterShareService
             // NEU:
             'projects' => Project::select('id','name')->orderBy('name')->get(),
             'users' => User::select('id','first_name', 'last_name')->orderBy('first_name')->get(),
-            'manufacturers' => Manufacturer::select('id', 'name')->orderBy('name')->get(),
+            'manufacturers' => CrmContact::query()
+                    ->whereHas('contactType', fn ($q) => $q->where('slug', CrmSystemContactTypeEnum::MANUFACTURER->value))
+                    ->select('id', 'display_name as name')
+                    ->orderBy('display_name')
+                    ->get(),
 
             // Tags für Filter
             'tags' => InventoryTag::select('id', 'name', 'color', 'inventory_tag_group_id')->orderBy('position')->get(),

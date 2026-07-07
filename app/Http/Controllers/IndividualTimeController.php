@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Events\IndividualTimeChanged;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftPlanComment;
 use Artwork\Modules\Shift\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Illuminate\Http\Request;
 
 class IndividualTimeController extends Controller
@@ -19,8 +21,18 @@ class IndividualTimeController extends Controller
 
     public function __construct(
         private IndividualTimeService $individualTimeService,
-        private ShiftPlanCommentService $shiftPlanCommentService
+        private ShiftPlanCommentService $shiftPlanCommentService,
+        private WorkingHourCacheService $workingHourCacheService,
     ) {
+    }
+
+    private function resolveWorkerType(Model $model): int
+    {
+        return match ($model::class) {
+            Freelancer::class => 1,
+            ServiceProvider::class => 2,
+            default => 0,
+        };
     }
 
     /**
@@ -52,6 +64,22 @@ class IndividualTimeController extends Controller
 
         // Find the specific model instance by ID
         $modelInstance = $modelClass::findOrFail($request->integer('modelId'));
+
+        // Eigene Zeiten: immer. Fremde User: "can manage availability".
+        // Freelancer/ServiceProvider (= Worker): zusätzlich "can manage workers" (Frontend-Gate).
+        $isSelf = $modelInstance instanceof User && (int) $modelInstance->id === (int) auth()->id();
+        $isWorker = !($modelInstance instanceof User);
+        abort_unless(
+            $isSelf
+            || (bool) auth()->user()?->can(
+                \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+            )
+            || ($isWorker && (bool) auth()->user()?->can(
+                \Artwork\Modules\Permission\Enums\PermissionEnum::MA_MANAGER->value
+            )),
+            403
+        );
+
         $individualTimes = $request->get('individualTimes');
 
         foreach ($individualTimes as $individualTime) {
@@ -110,6 +138,8 @@ class IndividualTimeController extends Controller
             );
         }
 
+        broadcast(new IndividualTimeChanged($modelInstance->id, $this->resolveWorkerType($modelInstance)));
+
         return response()->json([
             'individual_times' => $modelInstance->individualTimes()->get(),
             'shift_comment' => $modelInstance->shiftPlanComments()
@@ -142,10 +172,68 @@ class IndividualTimeController extends Controller
     }
 
     /**
+     * Update a single individual time for the current user from shift plan.
+     */
+    public function updateSingle(Request $request, IndividualTime $individualTime): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorize('update', $individualTime);
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'break_minutes' => 'nullable|integer|min:0',
+        ]);
+
+        $startTime = $validated['start_time'] ?? $individualTime->start_time;
+        $endTime = $validated['end_time'] ?? $individualTime->end_time;
+        $breakMinutes = $validated['break_minutes'] ?? $individualTime->break_minutes;
+
+        $updateData = [
+            'title' => $validated['title'] ?? $individualTime->title,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'break_minutes' => $breakMinutes,
+        ];
+
+        // Recalculate working_time_minutes when time or break changes
+        if ($startTime && $endTime) {
+            $start = \Carbon\Carbon::parse($individualTime->start_date . ' ' . $startTime);
+            $end = \Carbon\Carbon::parse($individualTime->start_date . ' ' . $endTime);
+            if ($end->lte($start)) {
+                $end->addDay();
+            }
+            $updateData['working_time_minutes'] = max(0, $start->diffInMinutes($end) - ($breakMinutes ?? 0));
+        }
+
+        $individualTime->update($updateData);
+
+        $owner = $individualTime->timeable;
+        if ($owner) {
+            $this->workingHourCacheService->forgetForEntity(
+                WorkingHourCacheService::entityType($owner),
+                $owner->id
+            );
+            broadcast(new IndividualTimeChanged($owner->id, $this->resolveWorkerType($owner)));
+        }
+
+        return redirect()->back()->with('success', 'Individual time updated successfully.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(IndividualTime $individualTime): void
     {
+        $this->authorize('delete', $individualTime);
+        $owner = $individualTime->timeable;
         $individualTime->delete();
+
+        if ($owner) {
+            $this->workingHourCacheService->forgetForEntity(
+                WorkingHourCacheService::entityType($owner),
+                $owner->id
+            );
+            broadcast(new IndividualTimeChanged($owner->id, $this->resolveWorkerType($owner)));
+        }
     }
 }

@@ -1,28 +1,40 @@
 <template>
     <div class="my-2 flex items-start w-full">
-        <div>
-            <label :for="'component-' + data.id" class="font-medium block subpixel-antialiased mb-1">
-                {{ data.data.label }}
+        <div class="w-full">
+            <label
+                :for="'component-' + data.id"
+                class="componentLabel"
+                :class="{'!text-white': inSidebar}"
+            >
+                {{ projectData.data.label }}
             </label>
-
             <!-- Anzeige (HTML) bis geklickt wird -->
-            <div v-if="descriptionClicked === false" @click="handleDescriptionClick()" class="flex items-center gap-x-1">
-                <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400" />
+            <div
+                v-if="descriptionClicked === false"
+                @click="handleDescriptionClick()"
+                @focus="handleDescriptionClick()"
+                @keydown.enter.prevent="handleDescriptionClick()"
+                :tabindex="canEditComponent ? 0 : undefined"
+                class="flex items-center gap-x-1 w-full focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create rounded"
+            >
+                <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 text-gray-400 shrink-0" />
                 <div
-                    class="subpixel-antialiased"
+                    class="subpixel-antialiased flex-1"
                     :class="[projectData.project_value?.data?.text ? inSidebar ? 'text-gray-400 text-sm' : 'text-gray-800 text-sm' : 'text-gray-400 text-sm italic', ]"
                     v-html="projectData.project_value?.data?.text ? projectData.project_value.data.text : (canEditComponent ? t('Click here to add text') : '')">
                 </div>
             </div>
 
             <!-- Editor -->
-            <div v-else class="w-full">
+            <div v-else class="w-full flex" ref="descriptionWrapRef">
                 <BaseTextarea
                     :disabled="!canEditComponent"
                     :label="data.data.placeholder"
-                    :ref="descriptionRef"
+                    ref="descriptionRef"
                     :rows="5"
-                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : '!w-96'"
+                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !w-80' : 'bg-white'"
+                    class="w-full"
+                    :class="inSidebar ? '!w-80' : 'w-full'"
                     :id="'component-' + data.id"
                     :show-label="false"
                     no-margin-top
@@ -82,6 +94,7 @@ const descriptionClicked = ref(false);
 
 // Ref auf das Textarea (falls du Fokus/Selection wieder aktivieren willst)
 const descriptionRef = ref(null);
+const descriptionWrapRef = ref(null)
 
 // Listener initialisieren (wie zuvor im mounted)
 onMounted(() => {
@@ -143,10 +156,16 @@ function handleDescriptionClick() {
         descriptionClicked.value = true;
 
         nextTick(() => {
-            // Beispiel: Fokus wieder aktivieren (wenn gewünscht)
-            // descriptionRef.value?.focus?.();
-            // descriptionRef.value?.select?.();
-        });
+            requestAnimationFrame(() => {
+                const root = descriptionWrapRef.value
+                const ta = root?.querySelector?.("textarea")
+                ta?.focus()
+                // Cursor ans Ende setzen, statt den gesamten Inhalt zu markieren
+                // (markierter Text könnte sonst versehentlich überschrieben/gelöscht werden)
+                const end = ta?.value?.length ?? 0
+                ta?.setSelectionRange?.(end, end)
+            })
+        })
     }
 }
 </script>

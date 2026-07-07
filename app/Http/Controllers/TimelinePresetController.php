@@ -22,8 +22,8 @@ class TimelinePresetController extends Controller
      */
     public function index()
     {
-        return Inertia::render('TimelinePreset/Index', [
-            'timelinePresets' => ShiftPresetTimeline::with('times')->get()
+        return Inertia::render('Settings/TimelinePresetSettings', [
+            'timelinePresets' => ShiftPresetTimeline::with('times')->withCount('times')->get()
         ]);
     }
 

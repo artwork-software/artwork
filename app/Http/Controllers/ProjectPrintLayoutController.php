@@ -9,6 +9,7 @@ use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Http\Requests\StoreProjectPrintLayoutRequest;
@@ -35,7 +36,8 @@ class ProjectPrintLayoutController extends Controller
     public function __construct(
         private readonly ProjectPrintLayoutService $projectService,
         private readonly ProjectTabService $projectTabService,
-        private readonly UserService $userService
+        private readonly UserService $userService,
+        private readonly \Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService $biProjectMetricsService
     )
     {
     }
@@ -44,13 +46,17 @@ class ProjectPrintLayoutController extends Controller
      */
     public function index()
     {
-        $excluded = [6, 7, 9, 13, 15, 17];
+        // Single source of truth: only offer component types that actually have a
+        // print renderer + backend data (see ProjectTabComponentEnum::PRINTABLE).
+        // Replaces the fragile hardcoded ID exclusion list, whose IDs differ per
+        // installation. Cache keys bumped to _v2 to drop any stale cached lists.
+        $printable = ProjectTabComponentEnum::printableValues();
 
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
-        $components = Cache::remember('print_layout_components_not_special', 600, function () use ($excluded) {
+        $components = Cache::remember('print_layout_components_not_special_v2', 600, function () use ($printable) {
             return Component::notSpecial()
                 ->without(['users', 'departments'])
-                ->whereNotIn('id', $excluded)
+                ->whereIn('type', $printable)
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
                 ->orderBy('type')
                 ->orderBy('name')
@@ -58,19 +64,19 @@ class ProjectPrintLayoutController extends Controller
                 ->groupBy('type');
         });
 
-        $componentsSpecial = Cache::remember('print_layout_components_special', 600, function () use ($excluded) {
+        $componentsSpecial = Cache::remember('print_layout_components_special_v2', 600, function () use ($printable) {
             return Component::isSpecial()
                 ->without(['users', 'departments'])
-                ->whereNotIn('id', $excluded)
+                ->whereIn('type', $printable)
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
                 ->orderBy('name')
                 ->get();
         });
 
-        $allComponents = Cache::remember('print_layout_all_components', 600, function () use ($excluded) {
+        $allComponents = Cache::remember('print_layout_all_components_v2', 600, function () use ($printable) {
             return Component::query()
                 ->without(['users', 'departments'])
-                ->whereNotIn('id', $excluded)
+                ->whereIn('type', $printable)
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled'])
                 ->orderBy('type')
                 ->orderBy('name')
@@ -167,14 +173,25 @@ class ProjectPrintLayoutController extends Controller
                     case ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value:
                         $projectData->shift_description = $project->shift_description;
                         break;
+                    case ProjectTabComponentEnum::SHIFT_TAB->value:
+                        $shifts = $project->shifts()
+                            // users/freelancer/serviceProvider/committedBy kamen vorher über das
+                            // (entfernte) globale $with des Shift-Models in den Payload
+                            ->with(['craft', 'room', 'users', 'freelancer', 'serviceProvider', 'committedBy'])
+                            ->orderBy('start_date')
+                            ->orderBy('start')
+                            ->get();
+                        // time_span_label is a computed accessor, not in $appends
+                        $shifts->each->append('time_span_label');
+                        $projectData->shifts = $shifts;
+                        break;
                     case ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value:
                         $projectData->budget_deadline = $project->budget_deadline ?
                             Carbon::parse($project->budget_deadline)->translatedFormat('D, d F Y') : null;
                         break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                        $projectData->collecting_society = $project->collectingSociety;
                         $projectData->cost_center = $project->costCenter;
-                        $projectData->own_copyright = $project->own_copyright;
+                        $projectData->gema = $project->gema;
                         $projectData->cost_center_description = $project->cost_center_description;
                         break;
                     case ProjectTabComponentEnum::BULK_EDIT->value:
@@ -218,14 +235,25 @@ class ProjectPrintLayoutController extends Controller
                         $projectData->event_statuses = EventStatus::all();
                         break;
                     case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
-                        Inertia::share([
-                            'roomTypes' => TypOfRoom::cases(),
-                            'serviceProviders' => ServiceProvider
-                                ::where('type_of_provider', ServiceProviderTypes::HOUSING->value)
-                                ->without(['contacts'])->get(),
-                            'artist_residencies' => $project->artistResidencies()
-                                ->with(['accommodation'])->get(),
-                        ]);
+                        $projectData->artist_residencies = $project->artistResidencies()
+                            ->with(['accommodation'])->get();
+                        break;
+                    case ProjectTabComponentEnum::BUSINESS_INTELLIGENCE->value:
+                        $projectData->bi_data = $project->biData;
+                        break;
+                    case ProjectTabComponentEnum::BI_KEY_FIGURES->value:
+                        $tickets = $this->biProjectMetricsService->soldTickets($project);
+                        $capacity = $this->biProjectMetricsService->seatsCapacity($project);
+                        $projectData->bi_key_figures = [
+                            'visitors' => $this->biProjectMetricsService->visitors($project),
+                            'revenue' => $this->biProjectMetricsService->revenue($project),
+                            'occupancy' => $this->biProjectMetricsService->occupancyRate($tickets, $capacity),
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_PERIOD->value:
+                        // Derived from the project's events (event types flagged
+                        // relevant_for_project_period, falling back to all events).
+                        $projectData->project_period = $project->first_and_last_event_date;
                         break;
                     case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
                         $projectData->project_files_all = $project->project_files;
@@ -268,6 +296,38 @@ class ProjectPrintLayoutController extends Controller
                                     return $isInChecklistUsers || $isInTaskUsers || $isCreator;
                                 })
                         )->resolve();
+                        break;
+                    case ProjectTabComponentEnum::ARTIST_NAME_DISPLAY->value:
+                        $projectData->artists = $project->artists;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_BASIC_DATA_DISPLAY->value:
+                        $projectData->basic_data = [
+                            'name' => $project->name,
+                            'artists' => $project->artists,
+                            'description' => $project->description,
+                            'number_of_participants' => $project->number_of_participants,
+                            'state' => ProjectState::find($project->state),
+                            'categories' => $project->categories,
+                            'genres' => $project->genres,
+                            'sectors' => $project->sectors,
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_COST_CENTER_DISPLAY->value:
+                        $projectData->cost_center = $project->costCenter;
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT->value:
+                        // Internal material issues (Materialausgaben) are InternalIssue
+                        // records linked by project_id — NOT contracts (the old
+                        // contracts.is_material_issue column no longer exists).
+                        $projectData->material_issues = [
+                            'internal' => InternalIssue::query()
+                                ->where('project_id', $project->id)
+                                ->orderBy('start_date')
+                                ->get(),
+                        ];
+                        break;
+                    case ProjectTabComponentEnum::PROJECT_CONTRACTS_DOCUMENTS->value:
+                        $projectData->contracts_documents = $project->contracts;
                         break;
                 }
 

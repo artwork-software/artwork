@@ -54,28 +54,34 @@ class UserShiftCalendarAboController extends Controller
         $user = $calendarAbo->user;
 
         // Create Calendar
-        $calendar = Calendar::create('Schichtplan ' . $user->full_name)->refreshInterval(5);
-        // Get all shifts for the user
+        $calendar = Calendar::create('Schichtplan ' . $user->full_name)
+            ->refreshInterval(5)
+            ->appendProperty(TextProperty::create('METHOD', 'PUBLISH'));
+        // Get all shifts for the user — eager-load relations to avoid N+1 queries
+        $user->load([
+            'shifts.event.creator',
+            'shifts.event.project',
+            'shifts.event.room',
+            'shifts.craft',
+            // Teilnehmer des ICS-Termins — kamen früher über das (entfernte) globale Shift-$with
+            'shifts.users',
+            'shifts.freelancer',
+            'shifts.serviceProvider',
+        ]);
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 
-        // Process each shift and add events to the calendar
+        // Process each shift and add to the calendar
         foreach ($shifts as $shift) {
-            $shiftEvent = $shift->event()->first();
-            // Skip if the related event is missing (e.g., deleted)
-            if (!$shiftEvent) {
-                continue;
-            }
-            if ($this->userShiftCalendarAboService->shouldAddShiftEvent($calendarAbo, $shiftEvent)) {
-                $this->userShiftCalendarAboService->addEventToCalendar($calendar, $calendarAbo, $shift, $shiftEvent);
+            if ($this->userShiftCalendarAboService->shouldAddShift($calendarAbo, $shift)) {
+                $this->userShiftCalendarAboService->addShiftToCalendar($calendar, $calendarAbo, $shift);
             }
         }
 
-        // Generate filename and response
-        $filename = $user->full_name . '-Schichtplan.ics';
-        return response($calendar->get(), 200, [
-            'Content-Type' => 'text/calendar; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return response($calendar->get(), 200)
+            ->header('Content-Type', 'text/calendar; charset=utf-8')
+            ->header('Content-Disposition', 'inline; filename="schichtplan.ics"')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     /**

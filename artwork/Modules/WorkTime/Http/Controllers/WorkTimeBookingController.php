@@ -4,6 +4,7 @@ namespace Artwork\Modules\WorkTime\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\WorkingHourCacheService;
 use Artwork\Modules\WorkTime\Http\Requests\StoreWorkTimeBookingRequest;
 use Artwork\Modules\WorkTime\Http\Requests\UpdateWorkTimeBookingRequest;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
@@ -15,6 +16,7 @@ class WorkTimeBookingController extends Controller
 
     public function __construct(
         protected WorkTimeBookingRepository $repository,
+        protected WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -83,6 +85,8 @@ class WorkTimeBookingController extends Controller
         ]);
 
         $this->repository->updateUserBalance($user, $workedMinutes);
+
+        $this->workingHourCacheService->forgetForEntity('user', $user->id);
     }
 
 

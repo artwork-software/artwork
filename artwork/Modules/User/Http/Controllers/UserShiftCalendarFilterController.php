@@ -21,8 +21,14 @@ class UserShiftCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
+        $isDailyView = $request->get('isDailyView', false);
+
+        $filterType = $isDailyView
+            ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+            : UserFilterTypes::SHIFT_FILTER->value;
+
         $user->userFilters()->updateOrCreate(
-            ['filter_type' => UserFilterTypes::SHIFT_FILTER->value],
+            ['filter_type' => $filterType],
             [
                 'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
                 'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
@@ -44,6 +50,38 @@ class UserShiftCalendarFilterController extends Controller
             'start_date' => Carbon::parse($request->get('start_date'))->format('Y-m-d'),
             'end_date' => Carbon::parse($request->get('end_date'))->format('Y-m-d')
         ]);
+    }
+
+    /**
+     * Ref 1.18: persist the article planning view settings (only-planned toggle
+     * and which categories/subcategories the user has expanded).
+     */
+    public function updateInventoryArticlePlanViewSettings(Request $request, User $user): void
+    {
+        $validated = $request->validate([
+            'only_planned' => ['boolean'],
+            'open_categories' => ['array'],
+            'open_categories.*' => ['string'],
+            'open_subcategories' => ['array'],
+            'open_subcategories.*' => ['string'],
+        ]);
+
+        $user->inventoryArticlePlanFilter()->updateOrCreate([], [
+            'only_planned' => $validated['only_planned'] ?? false,
+            'open_categories' => $validated['open_categories'] ?? [],
+            'open_subcategories' => $validated['open_subcategories'] ?? [],
+        ]);
+    }
+
+    public function updateListViewDates(Request $request, User $user): void
+    {
+        $user->userFilters()->updateOrCreate(
+            ['filter_type' => UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value],
+            [
+                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+            ]
+        );
     }
 
     public function singleValueUpdate(Request $request, User $user): void

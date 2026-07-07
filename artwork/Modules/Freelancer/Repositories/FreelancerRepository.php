@@ -4,6 +4,7 @@ namespace Artwork\Modules\Freelancer\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,14 +29,23 @@ class FreelancerRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return Freelancer::query()->canWorkShifts()->with(
-            'dayServices',
-            'shifts',
-            'shifts.event',
-            'shifts.event.room',
-            'shifts.shiftsQualifications',
-            'shiftQualifications',
-        )->get();
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlan(Freelancer::class);
+    }
+
+    public function getWorkersByIds(
+        array $freelancerIds,
+        Carbon $startDate,
+        Carbon $endDate
+    ): Collection {
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+        return $workerService->getWorkersForShiftPlanByIds(
+            Freelancer::class,
+            $freelancerIds,
+            $startDate,
+            $endDate
+        );
     }
 
     public function findWorker(int $workerId): Freelancer|null
@@ -70,6 +80,21 @@ class FreelancerRepository extends BaseRepository
             ->get();
     }
 
+    public function getVacationsByMonthOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $monthDate
+    ): Collection {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return $freelancer
+            ->vacations()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
+            ->orderedByDate()
+            ->get();
+    }
+
     public function getAvailabilitiesByDateOrderedByDateAscending(
         int|Freelancer $freelancer,
         Carbon $selectedDate
@@ -81,6 +106,21 @@ class FreelancerRepository extends BaseRepository
         return $freelancer
             ->availabilities()
             ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getAvailabilitiesByMonthOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $monthDate
+    ): Collection {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return $freelancer
+            ->availabilities()
+            ->betweenDates($monthDate->copy()->startOfMonth(), $monthDate->copy()->endOfMonth())
             ->orderedByDate()
             ->get();
     }

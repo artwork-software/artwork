@@ -2,30 +2,23 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
-use Artwork\Modules\Calendar\DTO\CalendarRoomDTO;
-use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\EventDTOWithVerifications;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
+use Artwork\Modules\Event\Models\EventVerification;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
-use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
-use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
-
-use function PHPUnit\Framework\isFalse;
 
 class EventPlanningCalendarService
 {
     use MapRoomsToContentForCalendar;
 
     public function __construct(
-        // private AuthManager         $auth,
-        //private CalendarDataService $calendarDataService
     ) {
     }
 
@@ -34,7 +27,7 @@ class EventPlanningCalendarService
         UserFilter $filter,
         $startDate,
         $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): Collection {
         $roomIds = $rooms->pluck('id');
         $events = Event::select([
@@ -63,7 +56,9 @@ class EventPlanningCalendarService
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email',
-                'shifts:id,event_id,start_date,end_date',
+            ])
+            ->withExists([
+                'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
             ])
             ->whereIn('room_id', $roomIds)
             ->where(function ($q) use ($startDate, $endDate): void {
@@ -94,10 +89,11 @@ class EventPlanningCalendarService
             ->orderBy('start_time')
             ->get();
 
-        $eventTypeIds = $events->pluck('event_type_id')->unique();
-        $projectIds = $events->pluck('project_id')->unique();
-        $userIds = $events->pluck('user_id')->unique();
-        $eventStatusIds = $events->pluck('event_status_id')->unique();
+        $eventTypeIds = $events->pluck('event_type_id')->unique()->filter();
+        $projectIds = $events->pluck('project_id')->unique()->filter();
+        $userIds = $events->pluck('user_id')->unique()->filter();
+        $eventStatusIds = $events->pluck('event_status_id')->unique()->filter();
+        $eventIds = $events->pluck('id');
 
         $users = User::whereIn('id', $userIds)
             ->select(['id', 'first_name', 'last_name', 'position', 'email'])
@@ -105,7 +101,7 @@ class EventPlanningCalendarService
 
         $projects = Project::whereIn('id', $projectIds)
             ->select(['id', 'name', 'state', 'artists', 'is_group', 'color', 'icon'])
-            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path', 'managerUsers.departments:id', 'groups'])
+            ->with(['status:id,name,color', 'managerUsers:id,first_name,last_name,position,email,profile_photo_path', 'managerUsers.departments:id', 'groups', 'categories'])
             ->get()->keyBy('id');
 
         $eventTypes = EventType::whereIn('id', $eventTypeIds)
@@ -118,17 +114,34 @@ class EventPlanningCalendarService
             ->get()
             ->keyBy('id');
 
-        $eventDTOs = $events->map(fn($event) => EventDTOWithVerifications::fromModel(
+        // Bulk-load rejected verifications to avoid N+1
+        $verificationsByEvent = EventVerification::whereIn('event_id', $eventIds)
+            ->where('status', 'rejected')
+            ->orderBy('created_at', 'desc')
+            ->with('verifier')
+            ->get()
+            ->groupBy('event_id');
+
+        $eventDTOs = $events->map(fn ($event) => EventDTOWithVerifications::fromModel(
             $event,
             $userCalendarSettings,
             $projects,
             $eventTypes,
             $users,
-            $eventStatuses
+            $eventStatuses,
+            $verificationsByEvent,
         ))->groupBy('roomId');
 
         foreach ($rooms as $room) {
             $room->events = $eventDTOs[$room->id] ?? collect();
+        }
+
+        if ($userCalendarSettings?->work_shifts) {
+            $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
+        } else {
+            foreach ($rooms as $room) {
+                $room->shifts = collect();
+            }
         }
 
         return $rooms;

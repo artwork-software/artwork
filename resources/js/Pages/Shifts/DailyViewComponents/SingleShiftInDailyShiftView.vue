@@ -1,17 +1,17 @@
 <template>
     <!-- Container: unterscheidet Kollision/Nicht-Kollision -->
-    <div :class="['w-full min-w-64 rounded-lg select-none border']"
-         :style="{ backgroundColor: `${shift.craft.color}50`, borderColor: borderColor }">
+    <div v-if="!detailsOnly" :class="['w-full min-w-64 rounded-lg select-none border']"
+         :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}${isFollowUpDay ? '30' : '50'}`, borderColor: isFollowUpDay ? '#d1d5db' : borderColor }">
         <!-- Linke Spalte: Zeilenstruktur -->
-        <div class="flex flex-col w-full gap-y-0.5">
+        <div class="flex flex-col w-full">
             <!-- Zeile 1: Zeit (niemals umbrechen) + optionale Gruppe + Gewerkname + Menü am Zeilenende -->
             <div class="flex items-center min-w-0 justify-between">
                 <div class="flex items-center min-w-0">
-                    <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${shift.craft.color}90` }">
-                        {{ shift.start }} - {{ shift.end }}
+                    <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
+                        <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
-                    <div v-if="shift.shiftGroup && usePage().props.auth.user.calendar_settings.show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
-                        ({{ shift.shiftGroup.name }})
+                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
+                        ({{ shiftGroupResolved.name }})
                     </div>
                     <span
                         :class="['ml-1 block truncate text-gray-800 cursor-pointer', titleTextClass]"
@@ -19,13 +19,13 @@
                         :aria-label="craftTitleFull"
                         @click.stop="toggleShiftDetails"
                     >
-                        {{ shift.craft.name }}
+                        {{ fullCraft.name }}
                     </span>
                 </div>
                 <!-- Menü (wie bei SingleEventInDailyShiftView.vue) -->
-                <div class="flex items-center min-w-0 pr-1">
+                <div v-if="!isFollowUpDay && (can('can plan shifts') || is('artwork admin'))" class="flex items-center shrink-0 pr-1">
                     <div class="flex transition-opacity duration-150">
-                        <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
+                        <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showAddShiftModal = true" :icon="IconEdit" title="edit" />
                             <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="openConfirmDeleteModal" :icon="IconTrash" :title="$t('Delete shift')" />
                         </BaseMenu>
@@ -40,16 +40,13 @@
             </div>
 
             <!-- Zeile 3: Funktionen (Badges/Liste) -->
-            <div class="flex justify-between flex-wrap items-center gap-1 ml-2 mt-0.5">
+            <div class="flex justify-between flex-wrap items-center gap-1 ml-2">
                 <div class="flex gap-x-2">
                 <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
                     <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">
 
-                        <div>
-                            {{
-                                qualification.value -
-                                (getEmptyShiftQualification(qualification.shift_qualification_id)?.requiredDropElementsCount ?? 0)
-                            }}/{{ qualification.value ? qualification.value : '0' }}
+                        <div :class="{ 'text-amber-600 font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
+                            {{ getAssignedCountForQualification(qualification.shift_qualification_id) }}/{{ qualification.value ? qualification.value : '0' }}
                         </div>
                         <ToolTipComponent
                             :icon="findShiftQualification(qualification.shift_qualification_id)?.icon"
@@ -82,40 +79,70 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Shift Description (Anzeigeeinstellung "Notizen einblenden") -->
+            <div v-if="showNotes" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+                <template v-if="shift.description">
+                    <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
+                    <component
+                        v-if="!isFollowUpDay"
+                        :is="IconEdit"
+                        class="size-4 shrink-0 text-gray-500 hover:text-gray-700 cursor-pointer"
+                        @click.stop="openDescriptionModal"
+                    />
+                </template>
+                <template v-else-if="!isFollowUpDay">
+                    <component
+                        :is="IconNote"
+                        class="size-4 shrink-0 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        @click.stop="openDescriptionModal"
+                    />
+                </template>
+            </div>
         </div>
     </div>
 
-        <div v-if="showShiftDetails" class="mt-1 ml-2 space-y-1">
+        <div v-if="showShiftDetails && !isFollowUpDay" class="mt-1 ml-2 space-y-1">
+            <!-- Shift description (im detailsOnly-Modus hier anzeigen, da Header-Card ausgeblendet) -->
+            <div v-if="detailsOnly && shift.description" class="text-xs text-gray-500 italic mb-1 pl-1">
+                {{ shift.description }}
+            </div>
+
             <template v-for="group in shiftGroups" :key="group.label">
-                <div v-for="person in group.items" :key="person.id" class="flex items-center gap-x-2 font-lexend rounded-lg" :style="{ backgroundColor: `${shift.craft.color}20` }">
+                <div v-for="person in group.items" :key="person.id" class="flex items-center w-full min-w-0 gap-x-2 font-lexend rounded-lg" :class="{ 'border border-dashed border-amber-500': person.pivot?.is_overbooked }" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
                     <SingleEntityInShift
                         :person="person"
                         :shift="shift"
+                        :craft-color="fullCraft.color"
                         :shift-qualifications="shiftQualifications"
                         :has-collision="hasCollision"
+                        :force-show-notes="detailsOnly"
+                        :prepend-craft-abbreviation="prependCraftAbbreviation"
                         @userRemoved="onChildUserRemoved"
                     />
                 </div>
             </template>
 
-            <div v-for="drop in computedShiftQualificationDropElements" :key="drop.shift_qualification_id" class="flex items-center w-full gap-x-2 font-lexend rounded-lg bg-red-100">
+            <div v-for="drop in computedShiftQualificationDropElements" :key="`${drop.shift_qualification_id}-${drop.isOverbooked ? 'overbooked' : 'regular'}`" class="flex items-center w-full gap-x-2 font-lexend rounded-lg" :class="drop.isOverbooked ? 'bg-amber-50 border border-dashed border-amber-500' : 'bg-red-100'">
                 <Menu as="div" class="relative w-full">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true)">
                             <!-- Unbesetzt-Balken: gleiche Breite wie Zeit-Pill der zugewiesenen Entity -->
                             <div
-                                class="py-1.5 pl-1 pr-0.75 rounded-l-lg bg-red-200"
+                                class="py-1.5 pl-1 pr-0.75 rounded-l-lg"
+                                :class="drop.isOverbooked ? 'bg-amber-200' : 'bg-red-200'"
                             >
                                 <div
                                     class="text-xs text-left flex items-center gap-x-1 min-w-0 overflow-hidden"
-                                    v-tooltip.bottom="{ value: $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
+                                    v-tooltip.bottom="{ value: drop.isOverbooked ? $t('Overbooking') : $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
                                 >
-                                    <component :is="IconInfoTriangle" class="size-4 text-red-600 shrink-0" />
-                                    <span class="truncate block">{{ $t('Unoccupied') }}</span>
+                                    <span v-if="prependCraftAbbreviation && fullCraft?.abbreviation" class="font-semibold shrink-0" :class="drop.isOverbooked ? 'text-amber-800' : 'text-red-800'">{{ fullCraft.abbreviation }}</span>
+                                    <component :is="IconInfoTriangle" class="size-4 shrink-0" :class="drop.isOverbooked ? 'text-amber-600' : 'text-red-600'" />
+                                    <span class="truncate block">{{ drop.isOverbooked ? $t('Overbooking') : $t('Unoccupied') }}</span>
                                 </div>
                             </div>
                             <div class="w-full gap-x-2">
-                                <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}</p>
+                                <p class="text-xs text-left">{{ drop.requiredDropElementsCount }} {{ findShiftQualification(drop.shift_qualification_id)?.name || 'Unbekannte Qualifikation' }}<span v-if="drop.isOverbooked"> ({{ $t('Overbooking') }})</span></p>
 
                             </div>
                         </MenuButton>
@@ -125,9 +152,21 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-gray-200 ring-opacity-5 focus:outline-none bg-white">
-                                <MenuItem as="div" v-slot="{ active }" v-for="user in getAssignablePeopleWithCollision(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                                    <div class="flex justify-between items-center gap-x-2 w-48" @click="createOnDropElementAndSave(user, user.originCraft, drop.shift_qualification_id) ">
+                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-gray-200 ring-opacity-5 focus:outline-none bg-white max-h-72 flex flex-col">
+                                <div class="px-3 py-2 border-b border-gray-200 shrink-0">
+                                    <input
+                                        type="text"
+                                        :value="dropSearchQueries[drop.shift_qualification_id] || ''"
+                                        @input="dropSearchQueries[drop.shift_qualification_id] = $event.target.value"
+                                        @click.stop
+                                        @keydown.stop
+                                        :placeholder="$t('Search')"
+                                        class="w-full text-xs border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:border-gray-500 focus:ring-0"
+                                    />
+                                </div>
+                                <div class="overflow-y-auto">
+                                <MenuItem as="div" v-slot="{ active }" v-for="user in filteredAssignablePeople(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                    <div class="flex justify-between items-center gap-x-2 w-48" @click="createOnDropElementAndSave(user, user.originCraft, drop.shift_qualification_id, drop.isOverbooked) ">
                                         <span class="text-xs truncate w-36">{{ user.name || user.full_name }}</span>
                                         <div class="text-xs text-gray-500 flex items-center gap-x-1">
                                             <ToolTipComponent
@@ -169,15 +208,47 @@
                                         </div>
                                     </div>
                                 </MenuItem>
+                                </div>
                             </MenuItems>
                         </transition>
                     </Float>
                 </Menu>
+                <component
+                    v-if="drop.isOverbooked && canPlanShifts"
+                    :is="IconX"
+                    class="size-4 mr-2 shrink-0 text-amber-700 hover:text-amber-900 cursor-pointer"
+                    v-tooltip.bottom="{ value: $t('Remove overbooking slot'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
+                    @click.stop="removeOverbookedSlot(drop.shift_qualification_id)"
+                />
+            </div>
+
+            <!-- "+ Überbuchung" / "+ Schichtplatz" Buttons -->
+            <div v-if="canPlanShifts" class="flex items-center w-full gap-x-1">
+                <div
+                    v-if="allowOverbooking"
+                    class="flex items-center w-1/2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-amber-500 bg-amber-50"
+                    @click="showAddOverbookingModal = true"
+                >
+                    <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-amber-700">
+                        <component :is="IconCirclePlus" class="size-4 shrink-0" />
+                        <span class="text-xs font-medium truncate">{{ $t('Overbooking') }}</span>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center gap-x-2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-gray-400"
+                    :class="allowOverbooking ? 'w-1/2' : 'w-full'"
+                    :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }"
+                    @click="showAddFunctionModal = true"
+                >
+                    <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-gray-700">
+                        <component :is="IconCirclePlus" class="size-4 shrink-0" />
+                        <span class="text-xs font-medium truncate">{{ $t('Add Function') }}</span>
+                    </div>
+                </div>
             </div>
         </div>
-
     <AddShiftModal
-        v-if="showAddShiftModal"
+        v-if="showAddShiftModal && !detailsOnly"
         :crafts="crafts"
         :event="null"
         :shift="shift"
@@ -190,21 +261,70 @@
         :shift-time-presets="usePage().props.shiftTimePresets"
         :shift-plan-modal="true"
         :edit="shift !== null"
-        :rooms="usePage().props.rooms"
+        :rooms="injectedRooms"
         :room="shift?.roomId ?? shift?.room_id ?? null"
     />
 
+    <AddFunctionToShiftModal
+        v-if="showAddFunctionModal"
+        :shift="shift"
+        :shift-qualifications="shiftQualificationsArray"
+        :crafts="crafts"
+        @close="showAddFunctionModal = false"
+    />
+
+    <AddFunctionToShiftModal
+        v-if="showAddOverbookingModal"
+        :shift="shift"
+        :shift-qualifications="shiftQualificationsArray"
+        :crafts="crafts"
+        is-overbooking
+        @close="showAddOverbookingModal = false"
+    />
+
+    <!-- Shift Description Modal -->
+    <ArtworkBaseModal
+        v-if="showDescriptionModal && !detailsOnly"
+        :title="$t('Shift description')"
+        :description="$t('Add or edit a description for this shift.')"
+        @close="showDescriptionModal = false"
+    >
+        <div class="flex flex-col gap-y-3 mt-2">
+            <textarea
+                v-model="descriptionDraft"
+                class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-gray-500 focus:ring-0"
+                rows="4"
+                :placeholder="$t('Description')"
+            />
+            <div class="flex justify-end">
+                <BaseUIButton
+                    :label="$t('Save')"
+                    :icon="IconDeviceFloppy"
+                    icon-size="size-4"
+                    @click="saveDescription"
+                />
+            </div>
+        </div>
+    </ArtworkBaseModal>
+
     <!-- Bestätigungsmodal: Schicht löschen -->
     <ConfirmationComponent
-        v-if="showConfirmDeleteModal"
+        v-if="showConfirmDeleteModal && !detailsOnly"
         titel="Schicht löschen"
         description="Möchtest du diese Schicht wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
         @closed="handleConfirmDelete"
     />
+
+    <NotificationToast
+        v-model:show="toastVisible"
+        :title="toastTitle"
+        :description="toastDescription"
+        :type="toastType"
+    />
 </template>
 
 <script setup>
-import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, nextTick} from "vue";
+import {ref, computed, watch, defineAsyncComponent, onMounted, onBeforeUnmount, reactive, inject} from "vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Float} from "@headlessui-float/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -218,15 +338,40 @@ import {
     IconBuildingCommunity,
     IconClock, IconEdit, IconTrash,
     IconId,
-    IconInfoTriangle
+    IconInfoTriangle,
+    IconCirclePlus,
+    IconNote,
+    IconDeviceFloppy,
+    IconX
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+
+const { resolveCraft, resolveShiftGroup } = useShiftPlanLookups();
+
+// Rooms provided by ShiftPlanDailyView for AddShiftModal
+const injectedRooms = inject("shiftPlanRooms", ref([]))
+
 const ConfirmationComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/ConfirmationComponent.vue'),
     delay: 200,
 });
+
+const NotificationToast = defineAsyncComponent({
+    loader: () => import('@/Artwork/Feedback/NotificationToast.vue'),
+    delay: 200,
+});
+
+const AddFunctionToShiftModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/DailyViewComponents/AddFunctionToShiftModal.vue'),
+    delay: 200,
+});
+
+const canPlanShifts = computed(() => can('can plan shifts') || is('artwork admin'));
 
 const props = defineProps({
     shift: Object,
@@ -239,14 +384,74 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    // detailsOnly: nur Zuweisungsbereich ohne Header-Card anzeigen (für Listenansicht)
+    detailsOnly: {
+        type: Boolean,
+        default: false
+    },
+    // Wenn true, wird in jeder User-Zeile das Gewerk-Kürzel vor die Uhrzeit gesetzt
+    // (genutzt im ShiftPlanListView, wenn "Schichtzeile ausblenden" aktiv ist).
+    prependCraftAbbreviation: {
+        type: Boolean,
+        default: false
+    },
+    // Position der Schicht innerhalb eines mehrtägigen Zeitraums
+    dayRole: {
+        type: String,
+        default: 'single', // 'single' | 'start' | 'middle' | 'end'
+    },
 });
+
+// Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
+const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
+const showNotes = computed(() => {
+    const pageProps = usePage().props
+    const settings = pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
+    return !!settings?.shift_notes
+})
+
+// Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
+function normalizeTime(val) {
+    if (!val || typeof val !== 'string') return val
+    // Already HH:MM
+    if (/^\d{2}:\d{2}$/.test(val)) return val
+    // ISO datetime — extract HH:MM from the time portion
+    const m = val.match(/T(\d{2}:\d{2})/)
+    if (m) return m[1]
+    // Fallback: "YYYY-MM-DD HH:MM:SS" style
+    const sp = val.match(/(\d{2}:\d{2})(:\d{2})?$/)
+    if (sp) return sp[1]
+    return val
+}
+
+// Angezeigte Zeiten anpassen wenn Schicht über Tagesgrenze geht
+const displayStartTime = computed(() => {
+    if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
+    return normalizeTime(props.shift.start)
+})
+const displayEndTime = computed(() => {
+    if (props.dayRole === 'middle') return '00:00'
+    return normalizeTime(props.shift.end)
+})
 
 // Initialize i18n
 const { t } = useI18n();
 
 const showShiftDetails = ref(true);
 const showAddShiftModal = ref(false);
+const showAddFunctionModal = ref(false);
+const showAddOverbookingModal = ref(false);
+const allowOverbooking = computed(() => !!usePage().props.allow_shift_overbooking);
+const dropSearchQueries = reactive({});
 const showConfirmDeleteModal = ref(false);
+
+const toastVisible = ref(false);
+const toastTitle = ref('');
+const toastDescription = ref('');
+const toastType = ref('success');
+
 const droppedUser = ref({});
 const seriesShiftData = ref(null);
 // Initialisiere Cache mit leeren Arrays pro Qualifikation
@@ -271,6 +476,26 @@ const lastRequestTime = ref(
         return acc;
     }, {})
 );
+
+const showDescriptionModal = ref(false);
+const descriptionDraft = ref('');
+
+const openDescriptionModal = () => {
+    descriptionDraft.value = props.shift.description || '';
+    showDescriptionModal.value = true;
+};
+
+const saveDescription = async () => {
+    try {
+        await axios.patch(route('event.shift.update.updateDescription', props.shift.id), {
+            description: descriptionDraft.value
+        });
+        props.shift.description = descriptionDraft.value;
+        showDescriptionModal.value = false;
+    } catch (error) {
+        console.error('Error saving shift description:', error);
+    }
+};
 
 const emit = defineEmits(['toggle']);
 const toggleShiftDetails = () => {
@@ -342,11 +567,17 @@ const getPersonGlobalQualificationIds = (person) => {
 // Lokale Deltas, um Zähler für globale Qualifikationen sofort (optimistisch) zu aktualisieren
 const globalQualificationDeltas = ref({})
 
+// Lokale Deltas für Shift-Qualifikationen (Besetzung "0/4" → "1/4" sofort aktualisieren)
+const shiftQualificationDeltas = ref({})
+
+// Separate Deltas für Überbuchungs-Zuweisungen (zählen nicht gegen den regulären Bedarf)
+const overbookedQualificationDeltas = ref({})
+
 const demandedGlobalQualificationIdsSet = computed(() => new Set(demandedGlobalQualifications.value.map(gq => gq.id)))
 
 const countAssignedForGlobalQualificationBase = (globalQualificationId) => {
-    const groups = [props.shift?.users || [], props.shift?.freelancer || [], props.shift?.serviceProviders || []];
-    return groups.reduce((acc, list) => acc + list.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length, 0);
+    const workers = props.shift?.workers || []
+    return workers.filter(p => getPersonGlobalQualificationIds(p).includes(globalQualificationId)).length
 }
 
 const countAssignedForGlobalQualification = (globalQualificationId) => {
@@ -365,23 +596,52 @@ const adjustDeltaForUser = (person, direction = 1) => {
 }
 
 const computedShiftQualificationDropElements = computed(() => {
-    return props.shift.shifts_qualifications.map(sq => {
-        const totalAssigned = ['users', 'freelancer', 'serviceProviders'].reduce((acc, group) => {
-            return acc + props.shift[group].filter(item => item.pivot.shift_qualification_id === sq.shift_qualification_id).length;
-        }, 0);
-        const remaining = sq.value - totalAssigned;
-        return remaining > 0 ? { shift_qualification_id: sq.shift_qualification_id, requiredDropElementsCount: remaining } : null;
-    }).filter(Boolean);
+    const workers = props.shift.workers || []
+    const drops = [];
+    (props.shift.shifts_qualifications || []).forEach(sq => {
+        const id = sq.shift_qualification_id
+        const regularAssigned = workers.filter(w => w.pivot?.shift_qualification_id === id && !w.pivot?.is_overbooked).length
+        const overbookedAssigned = workers.filter(w => w.pivot?.shift_qualification_id === id && w.pivot?.is_overbooked).length
+        const remaining = sq.value - regularAssigned - (shiftQualificationDeltas.value[id] ?? 0)
+        if (remaining > 0) {
+            drops.push({ shift_qualification_id: id, requiredDropElementsCount: remaining, isOverbooked: false })
+        }
+        if (allowOverbooking.value) {
+            const openOverbooked = (sq.overbooked_value ?? 0) - overbookedAssigned - (overbookedQualificationDeltas.value[id] ?? 0)
+            if (openOverbooked > 0) {
+                drops.push({ shift_qualification_id: id, requiredDropElementsCount: openOverbooked, isOverbooked: true })
+            }
+        }
+    })
+    return drops;
 });
 
 const getEmptyShiftQualification = (id) =>
-    computedShiftQualificationDropElements.value.find(drop => drop.shift_qualification_id === id);
+    computedShiftQualificationDropElements.value.find(drop => drop.shift_qualification_id === id && !drop.isOverbooked);
 
-const shiftGroups = computed(() => [
-    { label: 'users', items: props.shift.users },
-    { label: 'freelancers', items: props.shift.freelancer },
-    { label: 'serviceProviders', items: props.shift.serviceProviders }
-]);
+// Tatsächliche Besetzung je Funktion (inkl. Überbuchungen) für die "x/y"-Anzeige
+const getAssignedCountForQualification = (id) => {
+    const workers = props.shift.workers || []
+    const base = workers.filter(w => w.pivot?.shift_qualification_id === id).length
+    return base + (shiftQualificationDeltas.value[id] ?? 0) + (overbookedQualificationDeltas.value[id] ?? 0)
+}
+
+const removeOverbookedSlot = (shiftQualificationId) => {
+    router.patch(route('shifts.qualifications.overbook.decrease', { shift: props.shift.id }), {
+        qualification_id: shiftQualificationId
+    }, {
+        preserveScroll: true
+    });
+}
+
+const shiftGroups = computed(() => {
+    const workers = props.shift.workers || [];
+    return [
+        { label: 'users', items: workers.filter(w => w.type === 'user') },
+        { label: 'freelancers', items: workers.filter(w => w.type === 'freelancer') },
+        { label: 'serviceProviders', items: workers.filter(w => w.type === 'service_provider') },
+    ];
+});
 
 // Debounce time in milliseconds - prevent requests more frequently than this
 const DEBOUNCE_TIME = 2000; // 2 seconds
@@ -467,63 +727,105 @@ const checkShiftCollision = async (shiftQualificationId, forceRefresh = false) =
 
 const getAssignablePeople = (shiftQualificationId) => {
     // Validate that the shift has the required properties
-    if (!props.shift || !props.shift.craft || !props.shift.craft.id) {
+    const shiftCraftId = props.shift?.craft?.id ?? props.shift?.craftId;
+    if (!props.shift || !shiftCraftId) {
         return [];
     }
 
-    const craftIds = [
-        props.shift.craft.id,
-        ...Object.values(props.crafts || {})
+    // IDs aller universell einsetzbaren Crafts sammeln
+    const universalCraftIds = new Set(
+        Object.values(props.crafts || {})
             .filter(c => c.universally_applicable)
             .map(c => c.id)
-    ];
+    );
+
+    // Relevante Craft-IDs: Craft der Schicht + alle universell einsetzbaren
+    const relevantCraftIds = new Set([shiftCraftId, ...universalCraftIds]);
 
     // IDs aller bereits zugewiesenen Personen pro Typ sammeln
-    const assigned = {
-        user: (props.shift.users || []).map(u => u.id),
-        freelancer: (props.shift.freelancer || []).map(f => f.id),
-        service_provider: (props.shift.serviceProviders || []).map(s => s.id),
-    };
+    const assigned = { user: [], freelancer: [], service_provider: [] };
+    const workers = props.shift.workers || [];
+    for (const w of workers) {
+        const t = w.type === 0 || w.type === 'user' ? 'user'
+            : w.type === 1 || w.type === 'freelancer' ? 'freelancer'
+            : 'service_provider';
+        assigned[t].push(w.id);
+    }
 
     const peopleWithCraft = [];
 
     Object.values(props.crafts).forEach(craft => {
-        // Only process crafts that match the shift's craft or are universally applicable
-        const isCraftRelevant = craftIds.includes(craft.id);
-        if (!isCraftRelevant) {
+        // Nur Crafts verarbeiten, die zur Schicht passen (shiftCraftId oder universally_applicable)
+        if (!relevantCraftIds.has(craft.id)) {
             return;
         }
 
         const personTypes = [
             { type: 'user', list: craft.users || [] },
             { type: 'freelancer', list: craft.freelancers || [] },
-            { type: 'service_provider', list: craft.serviceProviders || [] }
+            { type: 'service_provider', list: craft.service_providers || craft.serviceProviders || [] }
         ];
 
         personTypes.forEach(({ type, list }) => {
             list.forEach(person => {
+                // Prüfe ob Person zu Schichten zuweisbar ist (can_work_shifts)
+                if (person.can_work_shifts === false) {
+                    return;
+                }
+
                 const key = `${type}-${person.id}`;
                 const alreadyAdded = peopleWithCraft.some(p => p.key === key);
-                const hasQualification = person.shift_qualifications?.some(q => q.id === shiftQualificationId);
+
+                // Prüfe ob die Person die passende Qualifikation hat.
+                // Bevorzuge immer die direkte Qualifikation über das Craft der Schicht.
+                // Nur wenn keine direkte Qualifikation vorhanden ist, falle auf universelle Crafts zurück.
+                const directQualification = person.shift_qualifications?.find(q =>
+                    q.id === shiftQualificationId &&
+                    q.pivot?.craft_id === shiftCraftId
+                );
+                const universalQualification = !directQualification
+                    ? person.shift_qualifications?.find(q =>
+                        q.id === shiftQualificationId &&
+                        universalCraftIds.has(q.pivot?.craft_id)
+                    )
+                    : null;
+                const matchingQualification = directQualification || universalQualification;
 
                 // Prüfen, ob Person bereits in der Schicht ist
                 const alreadyAssigned = assigned[type]?.includes(person.id);
 
-                // Zeige alle Personen mit der Qualifikation an, unabhängig davon, ob sie bereits in der Schicht sind
-                // Dies ist wichtig, um Kollisionen auch bei bereits zugewiesenen Personen zu erkennen
-                if (!alreadyAdded && hasQualification) {
+                if (!alreadyAdded && matchingQualification) {
+                    // Bestimme, ob die Zuweisung über ein universelles Gewerk erfolgt
+                    const qualCraftId = matchingQualification.pivot?.craft_id;
+                    const isViaUniversalCraft = qualCraftId !== shiftCraftId
+                        && universalCraftIds.has(qualCraftId);
+
+                    // originCraft muss das Craft sein, über das die Qualifikation kommt (pivot.craft_id),
+                    // nicht das Craft aus der äußeren Schleife (craft), da eine Person z.B. dem Schicht-Craft
+                    // zugeordnet sein kann, aber die Qualifikation über ein universelles Craft hat.
+                    let resolvedOriginCraft = craft;
+                    if (isViaUniversalCraft && qualCraftId) {
+                        const universalCraft = Object.values(props.crafts || {}).find(c => c.id === qualCraftId);
+                        if (universalCraft) {
+                            resolvedOriginCraft = universalCraft;
+                        }
+                    }
+
                     peopleWithCraft.push({
                         ...person,
                         type,
                         key,
-                        alreadyAssigned, // Flag, ob die Person bereits in dieser Schicht ist
-                        qualification: person.shift_qualifications.find(q => q.id === shiftQualificationId)?.name || 'Unbekannt',
+                        alreadyAssigned,
+                        qualification: matchingQualification.name || 'Unbekannt',
                         originCraft: {
-                            id: craft.id,
-                            name: craft.name,
-                            abbreviation: craft.abbreviation,
-                            color: craft.color
-                        }
+                            id: resolvedOriginCraft.id,
+                            name: resolvedOriginCraft.name,
+                            abbreviation: resolvedOriginCraft.abbreviation,
+                            color: resolvedOriginCraft.color,
+                            universally_applicable: resolvedOriginCraft.universally_applicable
+                        },
+                        // Pivot-Info für Anzeige der Craft-Abbreviation bei universellen Gewerken
+                        pivot: isViaUniversalCraft ? { craft_id: qualCraftId } : null
                     });
                 }
             });
@@ -531,6 +833,16 @@ const getAssignablePeople = (shiftQualificationId) => {
     });
 
     return peopleWithCraft;
+};
+
+const filteredAssignablePeople = (shiftQualificationId) => {
+    const people = getAssignablePeopleWithCollision(shiftQualificationId);
+    const query = (dropSearchQueries[shiftQualificationId] || '').trim().toLowerCase();
+    if (!query) return people;
+    return people.filter(user => {
+        const name = (user.name || user.full_name || '').toLowerCase();
+        return name.includes(query);
+    });
 };
 
 // Angepasste Methode für das Menü, die bereits zugewiesene Personen anzeigt
@@ -582,7 +894,7 @@ const getCollisionTooltip = (user) => {
     return tooltip + '<br>' + collisionDetails.join('<br>');
 };
 
-const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
+const createOnDropElementAndSave = (user, craft, shiftQualificationId, isOverbooked = false) => {
 
     let userType = 0;
     if (user.type === 'freelancer') {
@@ -602,31 +914,49 @@ const createOnDropElementAndSave = (user, craft, shiftQualificationId) => {
         craft_universally_applicable: craft?.universally_applicable ?? false,
         craft_abbreviation: craft.abbreviation ?? '',
     };
-    assignUser(droppedUser, shiftQualificationId, user);
+
+    if(!canPlanShifts.value) {
+        toastTitle.value = t('You do not have permission to assign users to shifts.');
+        toastDescription.value = '';
+        toastType.value = 'danger';
+        toastVisible.value = true;
+        return;
+    }
+    assignUser(droppedUser, shiftQualificationId, user, isOverbooked);
 }
 
-const assignUser = (droppedUser, shiftQualificationId, sourceUser = null) => {
+const assignUser = (droppedUser, shiftQualificationId, sourceUser = null, isOverbooked = false) => {
 
-    router.post(
+    // Optimistisch Zähler sofort erhöhen (vor dem Request)
+    const deltas = isOverbooked ? overbookedQualificationDeltas : shiftQualificationDeltas
+    deltas.value = {
+        ...deltas.value,
+        [shiftQualificationId]: (deltas.value[shiftQualificationId] ?? 0) + 1
+    }
+    if (sourceUser) {
+        adjustDeltaForUser(sourceUser, +1)
+    }
+
+    axios.post(
         route('shift.assignUserByType', {shift: props.shift.id}),
         {
             userId: droppedUser.value.id,
             userType: droppedUser.value.type,
             shiftQualificationId: shiftQualificationId,
             seriesShiftData: seriesShiftData.value,
-            isShiftTab: true,
-            craft_abbreviation: droppedUser.value.craft_abbreviation
+            craft_abbreviation: droppedUser.value.craft_abbreviation,
+            isOverbooked: isOverbooked
         },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Optimistisch Zähler erhöhen, falls Nutzer geforderte globale Qualifikationen besitzt
-                if (sourceUser) {
-                    adjustDeltaForUser(sourceUser, +1)
-                }
-            }
-        },
-    )
+    ).catch(() => {
+        // Bei Fehler: Delta zurücknehmen
+        deltas.value = {
+            ...deltas.value,
+            [shiftQualificationId]: (deltas.value[shiftQualificationId] ?? 0) - 1
+        }
+        if (sourceUser) {
+            adjustDeltaForUser(sourceUser, -1)
+        }
+    })
 }
 
 const AddShiftModal = defineAsyncComponent({
@@ -666,35 +996,64 @@ const checkAllShiftCollisions = (forceRefresh = false) => {
     });
 };
 
-// Bei Komponenten-Initialisierung Kollisionen prüfen
-onMounted(() => {
-    // Force refresh on initial load to ensure we have the latest data
-    checkAllShiftCollisions(true);
-});
+// Kollisionsprüfung wird lazy beim Öffnen des Zuweisungs-Dropdowns ausgelöst (MenuButton @click).
+// Kein onMounted-Check mehr — bei vielen Schichten verursachte das N parallele API-Requests.
 
+
+// Resolve shiftGroup from lookup
+const shiftGroupResolved = computed(() => props.shift.shiftGroup ?? resolveShiftGroup(props.shift.shiftGroupId));
+
+// Computed property to get full craft data with color from props.crafts
+const fullCraft = computed(() => {
+    const shiftCraftId = props.shift?.craft?.id ?? props.shift?.craftId
+    if (!shiftCraftId) {
+        return props.shift?.craft ?? resolveCraft(props.shift?.craftId) ?? {}
+    }
+
+    // Look up craft in props.crafts (can be Array or Object)
+    if (props.crafts) {
+        const craftsArray = Array.isArray(props.crafts)
+            ? props.crafts
+            : Object.values(props.crafts || {})
+        const foundCraft = craftsArray.find(c => c.id === shiftCraftId)
+        if (foundCraft) {
+            const baseCraft = props.shift?.craft ?? resolveCraft(shiftCraftId) ?? {}
+            return { ...baseCraft, ...foundCraft }
+        }
+    }
+
+    return props.shift?.craft ?? resolveCraft(shiftCraftId) ?? {}
+})
 
 const timePillPadding = computed(() => 'py-1 pr-2 pl-1 text-xs')
 // Konsistente Hierarchie wie bei Terminen
 const titleTextClass = computed(() => props.hasCollision ? 'text-sm font-semibold' : 'text-base font-semibold')
 const subtitleTextClass = computed(() => props.hasCollision ? 'text-xs' : 'text-sm')
 const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] border-gray-300 bg-white' : 'text-xs border-gray-300 bg-white')
-const craftTitleFull = computed(() => `[${props.shift?.craft?.abbreviation}] ${props.shift?.craft?.name}`)
-const borderColor = computed(() => props.hasCollision ? `${props.shift?.craft?.color ?? '#999999'}A0` : 'transparent')
+const craftTitleFull = computed(() => `[${fullCraft.value?.abbreviation}] ${fullCraft.value?.name}`)
+const borderColor = computed(() => props.hasCollision ? `${fullCraft.value?.color ?? '#999999'}A0` : 'transparent')
 
-// Wenn sich die Schichtdaten ändern, Cache zurücksetzen und Kollisionen neu prüfen
+// Wenn sich die Schichtdaten ändern, Cache zurücksetzen.
+// Kollisionen werden lazy beim nächsten Dropdown-Open geprüft.
 watch(() => props.shift, () => {
-    // Cache zurücksetzen wenn sich die Schichtdaten ändern
     assignablePeopleCache.value = {};
-    // Optimistische Deltas zurücksetzen – echte Werte kommen via Props
     globalQualificationDeltas.value = {}
-    // Kollisionen neu prüfen mit Force Refresh, da sich die Schichtdaten geändert haben
-    checkAllShiftCollisions(true);
+    shiftQualificationDeltas.value = {}
+    // Auch das Überbuchungs-Delta zurücksetzen: nach dem Broadcast ist der Worker
+    // bereits in props.shift enthalten — ohne Reset wurde er doppelt gezählt und
+    // offene Überbuchungsplätze verschwanden bis zum Reload.
+    overbookedQualificationDeltas.value = {}
 }, { deep: true });
 
 // Event-Handler: Wenn Kind-Komponente meldet, dass ein User entfernt wurde, Zähler sofort dekrementieren
 const onChildUserRemoved = (payload) => {
     const person = payload?.person
     if (!person) return
+    // Shift-Qualifikation-Delta optimistisch dekrementieren
+    const sqId = person?.pivot?.shift_qualification_id
+    if (sqId != null) {
+        shiftQualificationDeltas.value[sqId] = (shiftQualificationDeltas.value[sqId] ?? 0) - 1
+    }
     adjustDeltaForUser(person, -1)
 }
 </script>

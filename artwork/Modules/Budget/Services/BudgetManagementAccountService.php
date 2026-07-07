@@ -5,7 +5,6 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
-use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Http\Requests\StoreBudgetManagementAccountRequest;
 use Artwork\Modules\Budget\Http\Requests\UpdateBudgetManagementAccountRequest;
 use Artwork\Modules\Budget\Models\BudgetManagementAccount;
@@ -121,5 +120,58 @@ readonly class BudgetManagementAccountService
         }
 
         $this->budgetManagementAccountRepository->forceDelete($budgetManagementAccount);
+    }
+
+    // soft delete function like forceDelete but soft delete
+    public function softDelete(
+        BudgetManagementAccount $budgetManagementAccount,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): void {
+        //set all according column cells to 00000
+        /** @var Project $project */
+        foreach ($projectService->getAll() as $project) {
+            $firstColumnId = $project->table->columns()->orderBy('id')->first()->id;
+
+            $project->table->mainPositions->each(
+                function (MainPosition $mainPosition) use (
+                    $firstColumnId,
+                    $budgetManagementAccount,
+                    $columnCellService
+                ): void {
+                    $mainPosition->subPositions->each(
+                        function (SubPosition $subPosition) use (
+                            $firstColumnId,
+                            $budgetManagementAccount,
+                            $columnCellService
+                        ): void {
+                            $subPosition->subPositionRows->each(
+                                function (SubPositionRow $subPositionRow) use (
+                                    $firstColumnId,
+                                    $budgetManagementAccount,
+                                    $columnCellService
+                                ): void {
+                                    $columnCell = $subPositionRow->cells
+                                        ->where('column_id', $firstColumnId)
+                                        ->first();
+
+                                    if ($columnCell->value === $budgetManagementAccount->account_number) {
+                                        $columnCellService->updateValue($columnCell, '00000');
+                                    }
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+
+        $this->budgetManagementAccountRepository->delete($budgetManagementAccount);
+    }
+
+    // restore function
+    public function restoreBudgetManagementAccount(BudgetManagementAccount $budgetManagementAccount): void
+    {
+        $this->budgetManagementAccountRepository->restore($budgetManagementAccount);
     }
 }

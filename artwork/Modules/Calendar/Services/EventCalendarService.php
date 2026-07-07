@@ -4,9 +4,11 @@ namespace Artwork\Modules\Calendar\Services;
 
 
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\EventDTO;
 use Artwork\Modules\Calendar\DTO\MinimalEventDTO;
+use Artwork\Modules\Calendar\DTO\PdfEventDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventStatus;
@@ -15,6 +17,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
 use Artwork\Modules\User\Models\UserFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -30,7 +33,7 @@ readonly class EventCalendarService
         UserFilter $filter,
                    $startDate,
                    $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection {
         $events = $this->filter(
             $this->getEventQueryWithData(),
@@ -42,13 +45,13 @@ readonly class EventCalendarService
         );
 
         // Key-Sammlungen (einmal pro Response)
-        $eventTypeIds   = $events->pluck('event_type_id')->unique();
+        $eventTypeIds   = $events->pluck('event_type_id')->unique()->filter();
         $projectIds     = $events->pluck('project_id')->unique()->filter();
         $userIds        = $events->pluck('user_id')->unique()->filter();
         $eventStatusIds = $events->pluck('event_status_id')->unique()->filter();
 
         $users        = $userIds->isEmpty() ? collect() : User::whereIn('id', $userIds)->select(['id','first_name','last_name','position','email','profile_photo_path'])->get()->keyBy('id');
-        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups'])->get()->keyBy('id');
+        $projects     = $projectIds->isEmpty() ? collect() : Project::whereIn('id',$projectIds)->select(['id','name','state','artists','is_group','color','icon'])->with(['status:id,name,color','managerUsers:id,first_name,last_name,position,email,profile_photo_path','managerUsers.departments:id','groups','categories'])->get()->keyBy('id');
         $eventTypes   = $eventTypeIds->isEmpty() ? collect() : EventType::whereIn('id',$eventTypeIds)->select(['id','name','abbreviation','hex_code'])->get()->keyBy('id');
         $eventStatuses= $eventStatusIds->isEmpty() ? collect() : EventStatus::whereIn('id',$eventStatusIds)->select(['id','color'])->get()->keyBy('id');
 
@@ -65,7 +68,71 @@ readonly class EventCalendarService
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 
+        if ($userCalendarSettings?->work_shifts) {
+            $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
+        } else {
+            foreach ($rooms as $room) {
+                $room->shifts = collect();
+            }
+        }
+
         return $rooms;
+    }
+
+    public function filterRoomsEventsForPdf(
+        SupportCollection $rooms,
+        UserFilter $filter,
+                   $startDate,
+                   $endDate,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
+    ): SupportCollection {
+        $events = $this->filter(
+            $this->getEventQueryForPdf(),
+            $rooms,
+            $filter,
+            $startDate,
+            $endDate,
+            $userCalendarSettings,
+        );
+
+        // Bulk-Lookup nur für benötigte Daten
+        $eventTypeIds = $events->pluck('event_type_id')->unique()->filter();
+        $projectIds   = $events->pluck('project_id')->unique()->filter();
+
+        $projects   = $projectIds->isEmpty() ? collect() :
+            Project::whereIn('id', $projectIds)->select(['id', 'name', 'artists'])->with('categories')->get()->keyBy('id');
+        $eventTypes = $eventTypeIds->isEmpty() ? collect() :
+            EventType::whereIn('id', $eventTypeIds)->select(['id', 'name', 'abbreviation', 'hex_code'])->get()->keyBy('id');
+
+        $eventDTOs = $events->map(function ($event) use ($eventTypes, $projects) {
+            $project = $projects[$event->project_id] ?? null;
+            return new PdfEventDTO(
+                id: $event->id,
+                startTime: $event->start_time,
+                endTime: $event->end_time,
+                eventName: $event->eventName,
+                allDay: (bool) $event->allDay,
+                roomId: $event->room_id,
+                eventType: $eventTypes[$event->event_type_id] ?? null,
+                project: $project,
+                artistNames: $project?->artists,
+                mainCategoryColor: $project?->categories?->firstWhere('pivot.is_main', true)?->color,
+            );
+        })->groupBy('roomId');
+
+        foreach ($rooms as $room) {
+            $room->events = $eventDTOs[$room->id] ?? collect();
+        }
+
+        return $rooms;
+    }
+
+    private function getEventQueryForPdf(): Builder
+    {
+        return Event::query()
+            ->select(['id', 'start_time', 'end_time', 'eventName', 'allDay', 'room_id',
+                       'event_type_id', 'project_id', 'is_planning'])
+            ->without([]);
     }
 
     public function filterRoomsEventsWithMinimalData(
@@ -73,7 +140,7 @@ readonly class EventCalendarService
         UserFilter $filter,
                    $startDate,
                    $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection
     {
         $events = $this->filter(
@@ -91,7 +158,6 @@ readonly class EventCalendarService
                 start: Carbon::parse($event->start_time)->format('Y-m-d H:i'),
                 end:   Carbon::parse($event->end_time)->format('Y-m-d H:i'),
                 roomId: (int)$event->room_id,
-                daysOfEvent: $event->getAttribute('days_of_event') ?? [],
             );
         })->groupBy('roomId');
 
@@ -119,7 +185,13 @@ readonly class EventCalendarService
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email,profile_photo_path',
-                'shifts:id,event_id,start_date,end_date,craft_id'
+                'eventProperties',
+                'subEvents',
+                'subEvents.eventProperties',
+            ])
+            ->withExists([
+                'timelines',
+                'verifications as has_pending_verification' => fn ($q) => $q->where('status', 'pending'),
             ]);
     }
 
@@ -134,7 +206,7 @@ readonly class EventCalendarService
         UserFilter            $filter,
                               $startDate,
                               $endDate,
-        ?UserCalendarSettings $userCalendarSettings = null,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings $userCalendarSettings = null,
     ): SupportCollection
     {
         $endDateEndOfDay = $endDate instanceof Carbon ? $endDate->copy()->endOfDay() : Carbon::parse($endDate)->endOfDay();
@@ -154,10 +226,15 @@ readonly class EventCalendarService
             ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
                 $q->whereHas('eventProperties', fn($sub) => $sub->whereIn('event_property_id', $filter->event_property_ids));
             })
-            // Planung filtern: Immer echte Events; geplante nur wenn Setting aktiv
+            // Planung filtern: Immer echte Events; geplante nur wenn Setting aktiv UND Berechtigung vorhanden
             ->where(function ($query) use ($userCalendarSettings): void {
                 $query->where('is_planning', false);
-                if ($userCalendarSettings?->show_planned_events) {
+                $user = Auth::user();
+                if (
+                    $userCalendarSettings?->show_planned_events &&
+                    $user &&
+                    ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                ) {
                     $query->orWhere('is_planning', true);
                 }
             })

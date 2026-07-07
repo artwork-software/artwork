@@ -107,6 +107,8 @@
                                 id="first_name"
                                 v-model="freelancerData.first_name"
                                 @focusout="saveFreelancer"
+                                :disabled="checkCanEdit"
+                                :readonly="checkCanEdit"
                                 :label="$t('First name')"
                             />
                         </div>
@@ -115,6 +117,8 @@
                                 id="last_name"
                                 v-model="freelancerData.last_name"
                                 @focusout="saveFreelancer"
+                                :disabled="checkCanEdit"
+                                :readonly="checkCanEdit"
                                 :label="$t('Last name')"
                             />
                         </div>
@@ -130,11 +134,13 @@
                     <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <TextInputComponent
                             class="sm:col-span-1"
-                            readonly
-                            disabled
-                            id="textFreelancer"
-                            v-model="freelancerData.placeholder"
-                            label=""
+                            id="business"
+                            name="business"
+                            v-model="freelancerData.business"
+                            @focusout="saveFreelancer"
+                            :disabled="checkCanEdit"
+                            :readonly="checkCanEdit"
+                            :label="$t('Company')"
                         />
 
                         <TextInputComponent
@@ -315,10 +321,10 @@ const tabs = reactive([
 
 /* Form */
 const freelancerData = useForm({
-    placeholder: 'Freelancer (extern)',
     first_name: props.freelancer.first_name,
     last_name: props.freelancer.last_name,
     position: props.freelancer.position,
+    business: props.freelancer.business,
     email: props.freelancer.email,
     phone_number: props.freelancer.phone_number,
     street: props.freelancer.street,

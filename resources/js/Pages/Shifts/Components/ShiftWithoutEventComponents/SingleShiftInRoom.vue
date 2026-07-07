@@ -1,7 +1,7 @@
 <template>
     <ShiftDropElement
         :multiEditMode="multiEditMode"
-        :craft-id="shift.craft.id"
+        :craft-id="craft.id"
         :userForMultiEdit="userForMultiEdit"
         :highlight-mode="highlightMode"
         :highlighted-id="highlightedId"
@@ -14,14 +14,23 @@
         @desires-reload="dropElementDesiresReload"
         @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
         @click-on-edit="clickOnEdit"
+        :highlightedShiftId="highlightedShiftId"
+        @highlight-shift-users="highlightShiftUsers"
+        @hover-shift-users="hoverShiftUsers"
     />
 </template>
 
+
 <script setup>
 
+import { computed } from "vue";
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
 import {usePage} from "@inertiajs/vue3";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {computeShiftFormattedDates} from "@/Composeables/calendarDateUtils.js";
+
+const { resolveCraft } = useShiftPlanLookups();
 const percentage = usePage().props.high_contrast_percent;
 const {
     backgroundColorWithOpacity,
@@ -29,7 +38,18 @@ const {
 } = useColorHelper();
 
 // Define emits
-const emit = defineEmits(['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit', 'clickOnEdit']);
+const emit = defineEmits([
+    'dropFeedback',
+    'eventDesiresReload',
+    'handleShiftAndEventForMultiEdit',
+    'clickOnEdit',
+    'highlightShiftUsers',
+    'hoverShiftUsers'
+]);
+
+
+const highlightShiftUsers = (shift) => emit('highlightShiftUsers', shift)
+const hoverShiftUsers = (shift) => emit('hoverShiftUsers', shift)
 
 const props = defineProps({
     shift: Object,
@@ -43,16 +63,20 @@ const props = defineProps({
     shiftQualifications: Array,
     dayString: Object,
     eventType: String,
+    highlightedShiftId: [String, Number],
     firstProjectShiftTabId: [String, Number],
 })
+
+const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
+const formattedDates = computed(() => props.shift.formatted_dates ?? computeShiftFormattedDates(props.shift.startDate, props.shift.endDate, props.shift.start, props.shift.end));
 
 // Methods converted to functions
 const getDropFeedback = (event) => {
     emit('dropFeedback', event);
 }
 
-const clickOnEdit = (shift) => {
-    emit('clickOnEdit', shift);
+const clickOnEdit = (shift, mode = 'normal') => {
+    emit('clickOnEdit', shift, mode);
 }
 
 const areAllShiftsCommitted = (event) => {
@@ -61,10 +85,12 @@ const areAllShiftsCommitted = (event) => {
 
 const checkIfShiftInDayString = (shift) => {
     const user = usePage().props.auth.user;
+    const fd = shift.formatted_dates ?? computeShiftFormattedDates(shift.startDate, shift.endDate, shift.start, shift.end);
+    const shiftCraftId = shift.craft?.id ?? shift.craftId;
     if (user?.show_crafts?.length === 0 || user?.show_crafts === null) {
-        return shift.formatted_dates.start === props.dayString['full_day'];
+        return fd.start === props.dayString['full_day'];
     } else {
-        return shift.formatted_dates.start === props.dayString['full_day'] && user?.show_crafts?.includes(shift.craft.id);
+        return fd.start === props.dayString['full_day'] && user?.show_crafts?.includes(shiftCraftId);
     }
 }
 

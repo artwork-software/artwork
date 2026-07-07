@@ -26,7 +26,7 @@ import {defineComponent} from 'vue';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
-import {IconCalendarEvent, IconPlus} from '@tabler/icons-vue';
+import {IconCalendarEvent, IconCirclePlus} from '@tabler/icons-vue';
 
 export default defineComponent({
     props: ['title', 'description'],
@@ -39,7 +39,7 @@ export default defineComponent({
     data() {
         return {
             IconCalendarEvent,
-            IconPlus,
+            IconCirclePlus,
             tabs: [
                 {
                     name: this.$t('Event Types'),
@@ -69,6 +69,12 @@ export default defineComponent({
                     name: this.$t('Event Eigenschaften'),
                     href: route('event_settings.event_properties.index'),
                     current: route().current('event_settings.event_properties.index'),
+                    permission: true
+                },
+                {
+                    name: this.$t('Timeline Presets'),
+                    href: route('shifts.timeline-presets.index'),
+                    current: route().current('shifts.timeline-presets.index'),
                     permission: true
                 }
             ]

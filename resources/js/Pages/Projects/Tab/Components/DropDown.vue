@@ -7,8 +7,8 @@
             :disabled="!canEditComponent"
         >
             <ListboxLabel
-                class="block text-sm font-bold leading-6"
-                :class="inSidebar ? 'text-white' : 'text-gray-900'"
+                class="componentLabel"
+                :class="{'!text-white': inSidebar}"
             >
                 {{ data.data.label }}
             </ListboxLabel>
@@ -16,7 +16,7 @@
             <div class="relative mt-2">
                 <ListboxButton
                     class="menu-button"
-                    :class="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : ''"
+                    :class="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : 'bg-white'"
                 >
                     <div class="block truncate">{{ selected }}</div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">

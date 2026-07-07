@@ -90,6 +90,12 @@ export default defineComponent({
                 href: route('shift-rules.index'),
                 current: route().current('shift-rules.index'),
                 permission: true,
+            },
+            {
+                name: $t('Open violations'),
+                href: route('shift-rules.pending'),
+                current: route().current('shift-rules.pending'),
+                permission: true,
             }
         ];
 

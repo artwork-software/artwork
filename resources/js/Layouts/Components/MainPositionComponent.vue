@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 xsDark" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
+                <input class="my-2 ml-1 xsDark bg-white" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="mainPosition.closed = !mainPosition.closed">
                     <PropertyIcon name="IconChevronUp" v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
                     <PropertyIcon name="IconChevronDown" v-else class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
@@ -30,55 +30,87 @@
                     <p class="xsWhiteBold mr-1">{{ $t('verified') }}</p>
                     <PropertyIcon name="IconLock" class="w-5 h-5" stroke-width="1.5"/>
                 </div>
-                <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.columnVerifiedChanges">
+                <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && mainPosition.columnVerifiedChanges">
                     <PropertyIcon name="IconLockExclamation"  class="w-5 h-5" stroke-width="1.5" />
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')" dots-color="text-artwork-context-light">
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
-                                            <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLock" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Get verified by user') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.auth.user.id || projectManagers.includes(this.$page.props.auth.user.id))">
-                                            <span @click="removeVerification(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLockOpen" stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Cancel verification') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.auth.user.id || projectManagers.includes(this.$page.props.auth.user.id))">
-                                            <span @click="requestRemove(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLockOpen" stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Withdraw verification request') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
-                                            <span @click="fixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLock" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" />
-                                                {{ $t('Commitment') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
-                                            <span @click="unfixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconLockOpen" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5"  />
-                                                {{ $t('Canceling a fixed term') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                            <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PropertyIcon name="IconTrash" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5" aria-hidden="true"/>
-                                                {{ $t('Delete') }}
-                                            </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconCopy" class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" stroke-width="1.5" aria-hidden="true"/>
-                                    {{ $t('Duplicate') }}
-                                </a>
-                            </MenuItem>
+                        <BaseMenu
+                            v-if="hasBudgetAccess || $can('edit budget templates')"
+                            dots-color="text-artwork-context-light"
+                            white-menu-background
+                        >
+                            <!-- Get verified by user -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'"
+                                :title="$t('Get verified by user')"
+                                icon="IconLock"
+                                white-menu-background
+                                @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)"
+                            />
+
+                            <!-- Cancel verification -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
+                                        && (mainPosition.verified?.requested === $page.props.auth.user.id
+                                        || projectManagers.includes($page.props.auth.user.id))"
+                                :title="$t('Cancel verification')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="removeVerification(mainPosition, 'main')"
+                            />
+
+                            <!-- Withdraw verification request -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED'
+                                        && (mainPosition.verified?.requested_by === $page.props.auth.user.id
+                                        || projectManagers.includes($page.props.auth.user.id))"
+                                :title="$t('Withdraw verification request')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="requestRemove(mainPosition, 'main')"
+                            />
+
+                            <!-- Commitment (fix) -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed"
+                                :title="$t('Commitment')"
+                                icon="IconLock"
+                                white-menu-background
+                                @click="fixMainPosition(mainPosition.id)"
+                            />
+
+                            <!-- Canceling a fixed term (unfix) -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed"
+                                :title="$t('Canceling a fixed term')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="unfixMainPosition(mainPosition.id)"
+                            />
+
+                            <!-- Duplicate -->
+                            <BaseMenuItem
+                                :title="$t('Duplicate')"
+                                icon="IconCopy"
+                                white-menu-background
+                                @click="duplicateMainPosition(mainPosition.id)"
+                            />
+
+                            <!-- Delete -->
+                            <BaseMenuItem
+                                :title="$t('Delete')"
+                                icon="IconTrash"
+                                white-menu-background
+                                @click="openDeleteMainPositionModal(mainPosition)"
+                            />
                         </BaseMenu>
+
                     </div>
                 </div>
             </div>
@@ -89,39 +121,60 @@
                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
             </div>
         </div>
-        <table v-if="!mainPosition.closed" class="w-full">
+        <div v-if="!mainPosition.closed" class="w-full">
+            <draggable
+                v-model="localSubPositions"
+                item-key="id"
+                handle=".sub-position-drag-handle"
+                ghost-class="opacity-50"
+                :group="{ name: 'sub-positions-' + type, pull: true, put: true }"
+                :disabled="!canReorderSubPositions"
+                @change="persistSubPositionOrder($event)"
+            >
+                <template #item="{ element: subPosition }">
+                    <div class="mb-1">
+                        <div class="relative">
+                            <div v-if="canReorderSubPositions"
+                                 class="sub-position-drag-handle absolute left-[-16px] top-3 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
+                            </div>
+                            <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                                  @openVerifiedModal="openVerifiedModal"
+                                                  @openCellDetailModal="openCellDetailModal"
+                                                  @open-error-modal="openErrorModal"
+                                                  @openDeleteModal="openDeleteModal"
+                                                  @openSageAssignedDataModal="openSageAssignedDataModal"
+                                                  @budget-updated="handleBudgetUpdated"
+                                                  :main-position="mainPosition"
+                                                  :all-main-positions="table.main_positions"
+                                                  :sub-position="subPosition"
+                                                  :columns="table.columns"
+                                                  :project="project"
+                                                  :table="table"
+                                                  :project-managers="projectManagers"
+                                                  :hasBudgetAccess="this.hasBudgetAccess"
+                                                  :user-show-account-name="userShowAccountName"
+                            />
+                        </div>
+                    </div>
+                </template>
+            </draggable>
+            <table class="w-full">
             <thead class="">
-            <tr class="" v-for="(subPosition) in mainPosition.sub_positions">
-                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
-                                      @openVerifiedModal="openVerifiedModal"
-                                      @openCellDetailModal="openCellDetailModal"
-                                      @open-error-modal="openErrorModal"
-                                      @openDeleteModal="openDeleteModal"
-                                      @openSageAssignedDataModal="openSageAssignedDataModal"
-                                      :main-position="mainPosition"
-                                      :all-main-positions="table.main_positions"
-                                      :sub-position="subPosition"
-                                      :columns="table.columns"
-                                      :project="project"
-                                      :table="table"
-                                      :project-managers="projectManagers"
-                                      :hasBudgetAccess="this.hasBudgetAccess"
-                />
-            </tr>
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
-                <td class="w-36"></td>
-                <td class="w-36"></td>
+                <td class="w-48"></td>
+                <td class="w-48"></td>
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
-                        mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : '',
+                        mainPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : '',
                         column.color !== 'whiteColumn' ? column.color : ''
                     ]">
-                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
-                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums?.[column.id]?.hasComments && mainPosition.columnSums?.[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums?.[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums?.[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                            {{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}
+                            {{ this.toCurrencyString(mainPosition.columnSums?.[column.id]?.sum) }}
                         </span>
                         <span v-if="column.type === 'sage'">
                             {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
@@ -136,18 +189,20 @@
                 </td>
             </tr>
             </thead>
+            </table>
             <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                     {{ $t('Main position') }}
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
                 </div>
             </div>
-        </table>
+        </div>
     </th>
     <sage-assigned-data-modal v-if="this.showSageAssignedDataModal"
                               :show="this.showSageAssignedDataModal"
                               :cell="this.showSageAssignedDataModalCell"
                               @close="this.closeSageAssignedDataModal"
+                              @budget-updated="this.handleBudgetUpdated"
     />
 </template>
 
@@ -164,12 +219,17 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import draggable from 'vuedraggable';
+import {nextTick} from 'vue';
 
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "MainPositionComponent",
     components: {
+        draggable,
+        BaseMenuItem,
         PropertyIcon,
         BaseMenu,
         SageAssignedDataModal,
@@ -195,7 +255,8 @@ export default {
         'project',
         'projectManagers',
         'type',
-        'hasBudgetAccess'
+        'hasBudgetAccess',
+        'userShowAccountName',
     ],
     emits:[
         'openDeleteModal',
@@ -203,7 +264,8 @@ export default {
         'openSubPositionSumDetailModal',
         'openMainPositionSumDetailModal',
         'openCellDetailModal',
-        'openVerifiedModal'
+        'openVerifiedModal',
+        'budget-updated',
     ],
     data(){
         return{
@@ -244,7 +306,18 @@ export default {
               redColumn: 'redColumn',
               lightGreenColumn: 'lightGreenColumn'
             },
+            localSubPositions: [],
         }
+    },
+    watch: {
+        'mainPosition.sub_positions': {
+            handler(positions) {
+                if (!positions) return;
+                this.localSubPositions = [...positions];
+            },
+            immediate: true,
+            deep: true
+        },
     },
     mounted() {
         // check if main Position in localStorage in "closedMainPositions"
@@ -277,10 +350,37 @@ export default {
                     }, 0) ?? 0;
                 }, 0) ?? 0;
             }, 0) ?? 0;
-        }
-
+        },
+        canReorderSubPositions() {
+            return (this.hasBudgetAccess || this.$can('edit budget templates'))
+                && (!this.table?.is_template || this.$can('edit budget templates'));
+        },
     },
     methods: {
+        persistSubPositionOrder(evt = null) {
+            if (!this.canReorderSubPositions) return;
+
+            // For cross-mainposition drag: ignore pure 'removed' events,
+            // only persist on 'added' (target) or 'moved' (same list).
+            if (evt?.removed && !evt?.added && !evt?.moved) return;
+
+            window.clearTimeout(this._subPositionReorderTimeout);
+            this._subPositionReorderTimeout = window.setTimeout(() => {
+                nextTick(() => {
+                    this.$inertia.patch(
+                        route('project.budget.sub-position.reorder'),
+                        {
+                            main_position_id: this.mainPosition.id,
+                            sub_position_ids: this.localSubPositions.map(sp => sp.id),
+                        },
+                        {
+                            preserveScroll: true,
+                            preserveState: true,
+                        }
+                    );
+                });
+            }, 150);
+        },
         calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() {
             const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
             if (!data || !Array.isArray(data[this.mainPosition?.type])) return this.toCurrencyString(0);
@@ -476,6 +576,9 @@ export default {
         closeSageAssignedDataModal() {
             this.showSageAssignedDataModal = false;
             this.showSageAssignedDataModalCell = null;
+        },
+        handleBudgetUpdated() {
+            this.$emit('budget-updated');
         }
     },
 

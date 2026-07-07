@@ -180,6 +180,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
+        Artwork\Modules\ExternalAccess\Providers\ExternalAccessServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class,
         Artwork\Modules\Holidays\HolidayServiceProvider::class,
@@ -187,6 +188,7 @@ return [
         Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
 
         ShiftChangeServiceProvider::class,
+        Clockwork\Support\Laravel\ClockworkServiceProvider::class
     ],
 
     /*
@@ -202,6 +204,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         'Image' => Intervention\Image\Facades\Image::class,
+        'Clockwork' => Clockwork\Support\Laravel\Facade::class,
     ])->toArray(),
 
 ];

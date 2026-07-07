@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Event\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Event\Models\EventComment;
@@ -27,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -72,10 +73,19 @@ use Illuminate\Support\Collection;
  */
 class Event extends Model
 {
-    use HasChangesHistory;
+    use LogsActivity;
     use HasFactory;
     use SoftDeletes;
     use Prunable;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('event')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $with = [
         //'series',
@@ -300,7 +310,7 @@ class Event extends Model
      */
     public function getDaysOfEventAttribute(): array
     {
-        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
+        $days_period = CarbonPeriod::create($this->start_time->copy()->startOfDay(), $this->end_time->copy()->startOfDay());
         $days = [];
 
         foreach ($days_period as $day) {
@@ -311,10 +321,10 @@ class Event extends Model
     }
 
     /**
-     * @param Shift|Collection|null $shifts
+     * @param Collection|Shift|null $shifts
      * @return array<string>
      */
-    public function getDaysOfShifts(Shift|Collection $shifts = null): array
+    public function getDaysOfShifts(Shift|Collection|null $shifts = null): array
     {
         if ($shifts instanceof Shift) {
             $shifts = collect([$shifts]);
@@ -406,8 +416,10 @@ class Event extends Model
         return $builder->where(
             function (Builder $query) use ($start, $end): void {
                 // Events, die innerhalb des gegebenen Zeitraums starten und enden
-                $query->whereBetween('start_time', [$start, $end])
-                    ->whereBetween('end_time', [$start, $end]);
+                $query->where('start_time', '>=', $start)
+                    ->where('start_time', '<', $end)
+                    ->where('end_time', '>', $start)
+                    ->where('end_time', '<=', $end);
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
@@ -417,14 +429,16 @@ class Event extends Model
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden (überlappend)
                 $query->where('start_time', '<', $start)
-                    ->whereBetween('end_time', [$start, $end]);
+                    ->where('end_time', '>', $start)
+                    ->where('end_time', '<=', $end);
             }
         )->orWhere(
             function (Builder $query) use ($start, $end): void {
-                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
-                $query->whereBetween('start_time', [$start, $end])
+                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden (überlappend)
+                $query->where('start_time', '>=', $start)
+                    ->where('start_time', '<', $end)
                     ->where('end_time', '>', $end);
             }
         );
@@ -472,6 +486,11 @@ class Event extends Model
         return $builder
             ->select($columnToOrderBy)
             ->whereRaw('`projects`.`id` = `events`.`project_id`')
+            // The repository builds this subquery via newModelQuery(), which bypasses the
+            // SoftDeletes global scope. Without this guard, soft-deleted events would count
+            // towards a project's earliest/latest event and skew the chronological sort
+            // (e.g. a trashed 2025 event pulling a 2027 project ahead of a real 2026 one).
+            ->whereNull('events.deleted_at')
             ->orderBy($columnToOrderBy, $direction)
             ->take(1);
     }
@@ -487,25 +506,23 @@ class Event extends Model
         $end = Carbon::parse($this->end_time);
 
         if ($start->isSameDay($end)) {
-            // Differenz in Stunden und Minuten berechnen
-            $diffInMinutes = $end->diffInMinutes($start);
-            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+            $diffInMinutes = abs($end->diffInMinutes($start));
+            return round($diffInMinutes / 60, 2);
         } else {
-            // Wenn nicht am selben Tag: Bis zum Tagesende des Starttags berechnen
-            $diffInMinutes = $start->endOfDay()->diffInMinutes($start);
-            return round($diffInMinutes / 60, 2); // In Stunden umrechnen
+            $diffInMinutes = abs($start->copy()->endOfDay()->diffInMinutes($start));
+            return round($diffInMinutes / 60, 2);
         }
     }
 
 
     public function getHoursToNextDayAttribute(): int
     {
-        return Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)->endOfDay());
+        return abs(Carbon::parse($this->end_time)->diffInHours(Carbon::parse($this->start_time)->copy()->endOfDay()));
     }
 
     public function getMinutesFormStartHourToStartAttribute(): int
     {
-        return Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->startOfHour());
+        return abs(Carbon::parse($this->start_time)->diffInMinutes(Carbon::parse($this->start_time)->copy()->startOfHour()));
     }
 
     public function scopeIsPlanning(Builder $builder): Builder

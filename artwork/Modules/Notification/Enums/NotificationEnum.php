@@ -35,6 +35,10 @@ enum NotificationEnum: string
 
     case NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED = 'NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED';
 
+    case NOTIFICATION_DOCUMENT_REQUEST_CREATED = 'NOTIFICATION_DOCUMENT_REQUEST_CREATED';
+
+    case NOTIFICATION_DOCUMENT_REQUEST_COMPLETED = 'NOTIFICATION_DOCUMENT_REQUEST_COMPLETED';
+
     case NOTIFICATION_UPSERT_ROOM_REQUEST = 'NOTIFICATION_UPSERT_ROOM_REQUEST';
 
     case NOTIFICATION_ROOM_CHANGED = 'NOTIFICATION_ROOM_CHANGED';
@@ -81,6 +85,10 @@ enum NotificationEnum: string
 
     case NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST = 'NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST';
 
+    case NOTIFICATION_EXTERNAL_CRM_SUBMITTED = 'NOTIFICATION_EXTERNAL_CRM_SUBMITTED';
+
+    case NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED = 'NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED';
+
     public function groupType(): string
     {
         return match ($this) {
@@ -92,10 +100,13 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_BUDGET_STATE_CHANGED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
-            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
             self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
             self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => "BUDGET",
+
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED,
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "DOCUMENTS",
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
@@ -123,6 +134,9 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
             self::NOTIFICATION_INVENTORY_ARTICLE_CHANGED,
             self::NOTIFICATION_INVENTORY_OVERBOOKED => "INVENTORY",
+
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "EXTERNAL_ACCESS",
         };
     }
 
@@ -161,6 +175,10 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST,
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED =>
+                \Artwork\Modules\ExternalAccess\Notifications\ExternalCrmSubmissionNotification::class,
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED =>
+                \Artwork\Modules\ExternalAccess\Notifications\ExternalTabComponentUpdatedNotification::class,
         };
     }
 
@@ -209,6 +227,11 @@ enum NotificationEnum: string
 
             self::NOTIFICATION_EVENT_VERIFICATION_REQUESTS => "Event verification requests",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "New shift commit workflow request",
+
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "New document request",
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Document request completed",
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED => "External person filled in or updated their data",
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "External person updated shared tab content",
         };
     }
 
@@ -254,6 +277,11 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_WORKTIME_REQUEST_DECLINED => "Find out if your worktime change request has been declined.",
             self::NOTIFICATION_SHIFT_WORKTIME_GET_REQUEST => "Find out if you have a new worktime change request.",
             self::NOTIFICATION_NEW_SHIFT_COMMIT_WORKFLOW_REQUEST => "Find out if there is a new shift commit workflow request.",
+
+            self::NOTIFICATION_DOCUMENT_REQUEST_CREATED => "Find out if someone has created a document request for you.",
+            self::NOTIFICATION_DOCUMENT_REQUEST_COMPLETED => "Find out if a document request you created has been completed.",
+            self::NOTIFICATION_EXTERNAL_CRM_SUBMITTED => "Get notified when an external person fills in or updates their CRM data.",
+            self::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED => "Get notified when an external person updates content in a shared project tab.",
         };
     }
 

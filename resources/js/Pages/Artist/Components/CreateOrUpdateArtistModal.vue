@@ -10,7 +10,11 @@
             </div>
 
             <div>
-                <BaseInput id="civil_name" label="Civil name" use v-model="artistForm.civil_name" :error="artistForm.errors.civil_name" />
+                <BaseInput id="first_name" :label="$t('First name')" v-model="artistForm.first_name" :error="artistForm.errors.first_name" />
+            </div>
+
+            <div>
+                <BaseInput id="last_name" :label="$t('Last name')" v-model="artistForm.last_name" :error="artistForm.errors.last_name" />
             </div>
 
             <div>
@@ -36,11 +40,14 @@ import {useForm} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import {useTranslation} from "@/Composeables/Translation.js";
+const $t = useTranslation()
 
 interface artist {
     id: number;
     name: string;
-    civil_name?: string;
+    first_name?: string;
+    last_name?: string;
     phone_number?: string;
     position?: string;
 }
@@ -56,7 +63,8 @@ const emits = defineEmits<{
 const artistForm = useForm({
     id: props.artist?.id ?? null,
     name: props.artist?.name ?? '',
-    civil_name: props.artist?.civil_name ?? '',
+    first_name: props.artist?.first_name ?? '',
+    last_name: props.artist?.last_name ?? '',
     phone_number: props.artist?.phone_number ?? '',
     position: props.artist?.position ?? '',
 })

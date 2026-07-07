@@ -15,4 +15,15 @@ readonly class RowCommentService
     {
         $this->rowCommentRepository->forceDelete($rowComment);
     }
+
+    public function softDelete(RowComment $rowComment): void
+    {
+        $this->rowCommentRepository->delete($rowComment);
+    }
+
+    // restore method
+    public function restore(RowComment $rowComment): void
+    {
+        $this->rowCommentRepository->restore($rowComment);
+    }
 }

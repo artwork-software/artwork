@@ -128,6 +128,15 @@
                                               :tooltip-text="$t('Export project list')"
                                               direction="bottom"
                                               @click="openExportModal"/>
+                            <div v-if="$role('artwork admin') || $can('delete projects')"
+                                 @click="toggleSelectionMode"
+                                 class="cursor-pointer"
+                                 :class="selectionMode ? 'text-artwork-buttons-create' : ''">
+                                <ToolTipComponent :icon="IconChecklist"
+                                                  icon-size="h-7 w-7"
+                                                  :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
+                                                  direction="bottom"/>
+                            </div>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
@@ -180,10 +189,10 @@
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
-                        <span v-if="getUserProjectFilterSetting('showProjectsWithoutEvents')"
+                        <span v-if="getUserProjectFilterSetting('hideProjectsWithoutEvents')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                {{ $t('Show projects without events') }}
-                            <button type="button" @click="this.disableUserProjectFilterSetting('showProjectsWithoutEvents');">
+                                {{ $t('Hide projects without events') }}
+                            <button type="button" @click="this.disableUserProjectFilterSetting('hideProjectsWithoutEvents');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
@@ -205,9 +214,9 @@
                             <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
                         </div>
                     </div>
-                    <div class="my-3 w-full">
+                    <div class="my-3 w-full" :class="selectionMode ? 'pb-20' : ''">
                         <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project) in this.projects.data" :key="project.id">
-                            <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
+                            <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" :selectable="selectionMode" :selected="selectedProjectIds.includes(project.id)" @toggle-selection="toggleProjectSelection" />
                         </div>
                     </div>
 
@@ -219,6 +228,39 @@
                 </div>
             </div>
         </div>
+
+        <!-- Selection-mode action bar (mirrors the calendar multi-edit bottom bar) -->
+        <div v-if="selectionMode"
+             class="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur px-6 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
+            <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-secondary">
+                    <input
+                        type="checkbox"
+                        :checked="allOnPageSelected"
+                        @change="toggleSelectAllOnPage"
+                        class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                    />
+                    {{ $t('Select all on this page') }}
+                    <span class="ml-2 text-secondary">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
+                </label>
+                <div class="flex items-center gap-x-4">
+                    <button type="button" class="text-sm text-secondary hover:text-primary" @click="toggleSelectionMode">
+                        {{ $t('Cancel') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
+                        :class="selectedProjectIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                        :disabled="selectedProjectIds.length === 0"
+                        @click="openBulkDeleteModal"
+                    >
+                        <IconTrash stroke-width="1.5" class="h-4 w-4"/>
+                        {{ $t('Put in the trash') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <SideNotification v-if="this.dropFeedbackShown"
                           type="project_create_success"/>
         <project-create-modal
@@ -260,6 +302,28 @@
             :description="$t('The project was successfully created.')"
             :button="$t('Close')"
             />
+        <BaseModal @closed="closeBulkDeleteModal" v-if="bulkDeleting" modal-image="/Svgs/Overlays/illu_warning.svg">
+            <div class="mx-4">
+                <div class="font-black font-lexend text-primary text-3xl my-2">
+                    {{ $t('Delete selected projects') }}
+                </div>
+                <div class="text-error subpixel-antialiased">
+                    {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white"
+                            @click="bulkDeleteProjects">
+                        {{ $t('Delete') }}
+                    </button>
+                    <div class="flex my-auto">
+                        <span @click="closeBulkDeleteModal()" class="xsLight cursor-pointer">
+                            {{ $t('No, not really') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </BaseModal>
+
         <project-data-edit-modal
             v-if="editingProject"
             :show="editingProject"
@@ -276,11 +340,7 @@
         />
         <export-modal v-if="showExportModal"
                       @close="showExportModal = false"
-                      :enums="[
-                          exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-                          exportTabEnums.EXCEL_CALENDAR_EXPORT,
-                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
-                      ]"
+                      :enums="exportTabs"
                       :configuration="getExportModalConfiguration()"/>
     </app-layout>
 </template>
@@ -322,7 +382,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import {IconCheck, IconFileExport, IconPin, IconSearch} from "@tabler/icons-vue";
+import {IconCheck, IconChecklist, IconFileExport, IconPin, IconSearch, IconTrash} from "@tabler/icons-vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -360,6 +420,8 @@ export default defineComponent({
         AddBulkEventsModal,
         BasePaginator,
         SingleProject,
+        IconTrash,
+        IconChecklist,
         BaseModal,
         BaseMenu,
         PlusButton,
@@ -455,7 +517,7 @@ export default defineComponent({
             showProjects: this.userProjectManagementSetting?.project_filters.showProjects,
             showExpiredProjects: this.userProjectManagementSetting?.project_filters.showExpiredProjects,
             showFutureProjects: this.userProjectManagementSetting?.project_filters.showFutureProjects,
-            showProjectsWithoutEvents: this.userProjectManagementSetting?.project_filters.showProjectsWithoutEvents,
+            hideProjectsWithoutEvents: this.userProjectManagementSetting?.project_filters.hideProjectsWithoutEvents,
             sortBy: this.userProjectManagementSetting?.sort_by === null ? undefined : this.userProjectManagementSetting?.sort_by,
             showProjectStateFilter: true,
             openedMenu: false,
@@ -468,10 +530,30 @@ export default defineComponent({
             perPage: route().params.entitiesPerPage ?? 10,
             showAddBulkEventModal: false,
             dropFeedbackShown: null,
-            exportTabEnums: exportTabEnums
+            exportTabEnums: exportTabEnums,
+            selectedProjectIds: [],
+            bulkDeleting: false,
+            selectionMode: false,
         }
     },
     computed: {
+        pageProjectIds() {
+            return (this.projects?.data ?? []).map(project => project.id);
+        },
+        allOnPageSelected() {
+            return this.pageProjectIds.length > 0
+                && this.pageProjectIds.every(id => this.selectedProjectIds.includes(id));
+        },
+        exportTabs() {
+            const tabs = [
+                exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                exportTabEnums.EXCEL_CALENDAR_EXPORT,
+            ];
+            if (this.createSettings.budget_deadline) {
+                tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
+            }
+            return tabs;
+        },
         computedStates() {
             if (this.userProjectManagementSetting) {
                 this.states.forEach((state) => {
@@ -510,8 +592,60 @@ export default defineComponent({
     methods: {
         IconFileExport,
         IconSearch,
+        IconChecklist,
         usePage,
         getSortEnumTranslation,
+        toggleSelectionMode() {
+            this.selectionMode = !this.selectionMode;
+            if (!this.selectionMode) {
+                this.selectedProjectIds = [];
+            }
+        },
+        toggleProjectSelection(projectId) {
+            const index = this.selectedProjectIds.indexOf(projectId);
+            if (index === -1) {
+                this.selectedProjectIds.push(projectId);
+            } else {
+                this.selectedProjectIds.splice(index, 1);
+            }
+        },
+        toggleSelectAllOnPage() {
+            if (this.allOnPageSelected) {
+                this.selectedProjectIds = this.selectedProjectIds.filter(
+                    id => !this.pageProjectIds.includes(id)
+                );
+            } else {
+                const merged = new Set([...this.selectedProjectIds, ...this.pageProjectIds]);
+                this.selectedProjectIds = [...merged];
+            }
+        },
+        clearProjectSelection() {
+            this.selectedProjectIds = [];
+        },
+        openBulkDeleteModal() {
+            if (this.selectedProjectIds.length === 0) {
+                return;
+            }
+            this.bulkDeleting = true;
+        },
+        closeBulkDeleteModal() {
+            this.bulkDeleting = false;
+        },
+        bulkDeleteProjects() {
+            router.delete(route('projects.bulk-destroy'), {
+                data: {
+                    project_ids: this.selectedProjectIds,
+                    page: this.page,
+                    entitiesPerPage: this.perPage,
+                },
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.selectedProjectIds = [];
+                    this.bulkDeleting = false;
+                    this.selectionMode = false;
+                },
+            });
+        },
         openCreateProjectModal() {
             this.createProject = true;
         },
@@ -592,7 +726,7 @@ export default defineComponent({
                         showProjects: this.getTruthyOrUndefined(this.showProjects),
                         showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
                         showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
-                        showProjectsWithoutEvents: this.getTruthyOrUndefined(this.showProjectsWithoutEvents)
+                        hideProjectsWithoutEvents: this.getTruthyOrUndefined(this.hideProjectsWithoutEvents)
                     },
                     sort: this.sortBy,
                     saveFilterAndSort: 1

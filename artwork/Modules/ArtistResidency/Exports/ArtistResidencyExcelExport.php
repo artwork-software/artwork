@@ -65,7 +65,10 @@ class ArtistResidencyExcelExport implements FromView, ShouldAutoSize, WithStyles
             'D' => NumberFormat::FORMAT_DATE_DATETIME,
             'F' => NumberFormat::FORMAT_CURRENCY_EUR,
             'H' => NumberFormat::FORMAT_CURRENCY_EUR,
-            'I' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'J' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'K' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'L' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'M' => NumberFormat::FORMAT_CURRENCY_EUR,
         ];
     }
 }

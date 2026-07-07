@@ -241,7 +241,8 @@ const updateQuantityDelta = async (basketArticleId, deltaNum) => {
     seq[basketArticleId] = (seq[basketArticleId] ?? 0) + 1;
     const mySeq = seq[basketArticleId];
 
-    const oldQty = article.quantity;
+    // Number inputs deliver strings — force numeric math ("5" + 1 would be "51").
+    const oldQty = Number(article.quantity) || 0;
     // Optimistisches Update
     article.quantity = Math.max(0, oldQty + deltaNum);
     setSaving(basketArticleId, true);
@@ -285,11 +286,15 @@ const changeQuantity = async (basketArticleId, delta /* 'increase' | 'decrease' 
 
 // Menge aus Input als ABSOLUTE Zielmenge setzen (on blur/enter)
 const onQuantityInputCommit = async (article) => {
-    console.log(article);
+    // Sanitize the raw input value (string, possibly NaN/negative) before sending.
+    const qty = Math.max(0, Math.floor(Number(article.quantity) || 0));
+    article.quantity = qty;
 
     await axios.post(route("inventory.product_basket.update_quantity.single", { basketArticle: article.basketArticleId }), {
         basketArticle: article.basketArticleId,
-        quantity: article.quantity, // << numeric preferred
+        quantity: qty,
+    }).catch((error) => {
+        console.error('Fehler beim Aktualisieren der Warenkorb-Menge:', error);
     }).finally(() => {
         router.reload({
             only: ['productBaskets']

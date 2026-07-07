@@ -40,7 +40,7 @@ class AppController extends Controller
 
     public function getPasswordScore(Request $request): int
     {
-        return (new Zxcvbn())->passwordStrength($request->input('password'))['score'];
+        return (new Zxcvbn())->passwordStrength((string) $request->input('password'))['score'];
     }
 
     //@todo: fix phpcs error - refactor function name to toggleHints
@@ -135,7 +135,11 @@ class AppController extends Controller
         ToggleUseProjectTimePeriodRequest $request
     ): RedirectResponse|bool {
         $user = $this->userService->getAuthUser();
-        $user->calendar_settings()->update([
+        $settings = $request->boolean('is_daily_view')
+            ? $user->daily_view_calendar_settings()
+            : $user->calendar_settings();
+
+        $settings->update([
             'use_project_time_period' => $request->boolean('use_project_time_period'),
             'time_period_project_id' => $request->integer('project_id')
         ]);
@@ -151,7 +155,11 @@ class AppController extends Controller
         ToggleUseProjectTimePeriodRequest $request
     ): RedirectResponse|bool {
         $user = $this->userService->getAuthUser();
-        $user->calendar_settings()->update([
+        $settings = $request->boolean('is_daily_view')
+            ? $user->shift_plan_daily_settings()
+            : $user->shift_plan_settings();
+
+        $settings->update([
             'use_project_time_period' => $request->boolean('use_project_time_period'),
             'time_period_project_id' => $request->integer('project_id')
         ]);
@@ -180,6 +188,11 @@ class AppController extends Controller
         GeneralSettings $settings,
         StatefulGuard $guard
     ): Redirector|Application|RedirectResponse {
+        // Account-Takeover-Schutz: nach abgeschlossenem Setup darf hier kein weiterer
+        // Admin mehr anonym angelegt werden (der GET-Handler leitet bereits um, der POST
+        // war bislang ungeschützt).
+        abort_if($settings->setup_finished, 403);
+
         /** @var User $user */
         $user = User::create($request->userData());
 

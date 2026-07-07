@@ -55,7 +55,7 @@
                     <BaseUIButton
                         type="submit"
                         class="mt-4"
-                        :disabled="taskForm.name === ''"
+                        :disabled="taskForm.name === '' || taskForm.processing"
                         :label="taskToEdit ? $t('Save') : $t('Add')"
                         is-add-button
                     />

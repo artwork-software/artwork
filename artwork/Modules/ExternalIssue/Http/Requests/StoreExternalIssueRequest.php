@@ -33,7 +33,7 @@ class StoreExternalIssueRequest extends FormRequest
             'external_address' => 'nullable|string|max:255',
             'external_email' => 'nullable|email|max:255',
             'external_phone' => 'nullable|string|max:50',
-            'files.*' => 'file|max:10240',
+            'files.*' => 'file|max:20480',
             'special_items' => 'nullable|array',
             'special_items.*.name' => 'required|string|max:255',
             'special_items.*.quantity' => 'required|integer|min:1',
@@ -41,7 +41,7 @@ class StoreExternalIssueRequest extends FormRequest
             'special_items.*.inventory_category_id' => 'nullable|exists:inventory_categories,id',
             'special_items.*.inventory_sub_category_id' => 'nullable|exists:inventory_sub_categories,id',
             'articles' => 'nullable|array',
-            'articles.*.id' => 'required|exists:inventory_articles,id',
+            'articles.*.id' => ['required', \Illuminate\Validation\Rule::exists('inventory_articles', 'id')->whereNull('deleted_at')],
             'articles.*.quantity' => 'required|integer|min:1',
             'special_items_done' => 'boolean',
         ];

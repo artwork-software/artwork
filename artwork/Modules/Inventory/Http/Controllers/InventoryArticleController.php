@@ -8,15 +8,21 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
+use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
+use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Artwork\Modules\Inventory\Services\InventoryPlanningService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterService;
 use Artwork\Modules\Inventory\Services\InventoryUserFilterShareService;
+use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\Inventory\Models\InventorySubCategory;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -29,6 +35,7 @@ class InventoryArticleController extends Controller
         protected InventoryPlanningService $inventoryPlanningService,
         private readonly InventoryUserFilterService $inventoryUserFilterService,
         private readonly InventoryUserFilterShareService $inventoryUserFilterShareService,
+        private readonly ProjectTabService $projectTabService,
     ){
     }
 
@@ -49,6 +56,12 @@ class InventoryArticleController extends Controller
                 request('date')
             );
         }
+
+        $data['projectMaterialIssueTabId'] = $this->projectTabService
+            ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                ProjectTabComponentEnum::PROJECT_MATERIAL_ISSUE_COMPONENT
+            );
+
         return Inertia::render('Inventory/InventoryArticlePlanning', $data);
     }
 
@@ -60,10 +73,26 @@ class InventoryArticleController extends Controller
         //
     }
 
-    public function indexTrash()
+    public function indexTrash(Request $request)
     {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedArticles = InventoryArticle::onlyTrashed()
+            ->with([
+                'properties',
+                'category',
+                'subCategory',
+                'images' => fn ($query) => $query->withTrashed(),
+                'detailedArticleQuantities' => fn ($query) => $query->withTrashed(),
+            ])
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Trash/InventoryArticles', [
-            'trashedArticles' => $this->inventoryArticleService->getAllTrashed()
+            'trashedArticles' => $trashedArticles
         ]);
     }
 
@@ -111,6 +140,13 @@ class InventoryArticleController extends Controller
         /** @var InventoryArticle $article */
         $article = InventoryArticle::withTrashed()->findOrFail($inventoryArticle);
         $this->inventoryArticleService->forceDelete($article);
+    }
+
+    public function forceDeleteAll(): void
+    {
+        InventoryArticle::onlyTrashed()->each(function ($article) {
+            $this->inventoryArticleService->forceDelete($article);
+        });
     }
 
     public function restore(int $inventoryArticle): void
@@ -230,9 +266,23 @@ class InventoryArticleController extends Controller
     public function loadArticlesByFilter(Request $request) {
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $search = $request->get('search');
         /** @var User $user */
         $user = $this->authManager->user();
         $articlesByFilter = $this->inventoryUserFilterService->getFilteredArticlesNew($user);
+
+        // Apply search filter if provided (search by name, category, or subcategory)
+        if (!empty($search)) {
+            $articlesByFilter = $articlesByFilter->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('subCategory', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
+            });
+        }
 
         return response()->json([
             'articles' => $articlesByFilter->with(['category', 'subCategory', 'detailedArticleQuantities.status', 'images', 'statusValues', 'properties', 'tags'])
@@ -240,18 +290,160 @@ class InventoryArticleController extends Controller
         ]);
     }
 
+    public function updateField(Request $request, InventoryArticle $inventoryArticle)
+    {
+        $fieldRules = [
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'quantity' => ['required', 'numeric', 'min:0'],
+            'inventory_category_id' => ['required', 'integer', 'exists:inventory_categories,id'],
+            'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
+        ];
+
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        if (!is_string($field) || !array_key_exists($field, $fieldRules)) {
+            return response()->json(['error' => 'Invalid field.'], 422);
+        }
+
+        $validator = Validator::make(['value' => $value], ['value' => $fieldRules[$field]]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $data = [$field => $value];
+
+        // Keep category and sub category consistent when either side changes.
+        if ($field === 'inventory_sub_category_id' && $value !== null) {
+            $belongsToCategory = InventorySubCategory::query()
+                ->where('id', $value)
+                ->where('inventory_category_id', $inventoryArticle->inventory_category_id)
+                ->exists();
+            if (!$belongsToCategory) {
+                return response()->json(['error' => 'Sub category does not belong to the article category.'], 422);
+            }
+        }
+
+        if ($field === 'inventory_category_id' && $inventoryArticle->inventory_sub_category_id !== null) {
+            $stillMatches = InventorySubCategory::query()
+                ->where('id', $inventoryArticle->inventory_sub_category_id)
+                ->where('inventory_category_id', $value)
+                ->exists();
+            if (!$stillMatches) {
+                $data['inventory_sub_category_id'] = null;
+            }
+        }
+
+        $inventoryArticle->update($data);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateDetailedArticleField(Request $request, InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle)
+    {
+        $fieldRules = [
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'quantity' => ['required', 'numeric', 'min:0'],
+            // No DB foreign key on this column — the exists rule is the only guard
+            // against silently storing a dead status id (breaks availability sums).
+            'inventory_article_status_id' => ['nullable', 'integer', 'exists:inventory_article_statuses,id'],
+        ];
+
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        if (!is_string($field) || !array_key_exists($field, $fieldRules)) {
+            return response()->json(['error' => 'Invalid field.'], 422);
+        }
+
+        $validator = Validator::make(['value' => $value], ['value' => $fieldRules[$field]]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $inventoryDetailedQuantityArticle->update([$field => $value]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateDetailedArticlePropertyValue(
+        Request $request,
+        InventoryDetailedQuantityArticle $inventoryDetailedQuantityArticle
+    ) {
+        $validated = $request->validate([
+            'property_id' => ['required', 'integer', 'exists:inventory_article_properties,id'],
+            'value' => ['nullable', 'max:255'],
+        ]);
+
+        $propertyId = $validated['property_id'];
+        $value = $validated['value'] ?? null;
+
+        InventoryPropertyValue::updateOrCreate(
+            [
+                'inventory_propertyable_type' => InventoryDetailedQuantityArticle::class,
+                'inventory_propertyable_id' => $inventoryDetailedQuantityArticle->id,
+                'inventory_article_property_id' => $propertyId,
+            ],
+            ['value' => $value ?? '']
+        );
+
+        return response()->json(['success' => true]);
+    }
+
     /**
      * Liefert alle Nutzungsdaten für das UsageModal eines Artikels zeitraum
      */
     public function usageData(Request $request)
     {
-        $articleId = $request->get('article_id');
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date', $startDate);
-        if (!$articleId || !$startDate || !$endDate) {
-            return response()->json(['error' => 'article_id und date erforderlich'], 400);
+        $validated = $request->validate([
+            'article_id' => ['required', 'integer', 'exists:inventory_articles,id'],
+            'start_date' => ['required', 'date_format:Y-m-d'],
+            'end_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+        ]);
+
+        $articleId = (int) $validated['article_id'];
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'] ?? $startDate;
+
+        // Cap the range: the planning service iterates day by day — an open
+        // range like 0001-01-01..9999-12-31 would loop for millions of days.
+        if (Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) > 366) {
+            return response()->json(['error' => 'Date range must not exceed one year.'], 422);
         }
-        $details = $this->inventoryPlanningService->getDetailsForModalRange($articleId, $startDate, $endDate);
+        // When editing an existing issue, exclude it from the availability math.
+        $excludeIssueId = $request->integer('issue_id') ?: null;
+        $excludeType = in_array($request->get('type'), ['intern', 'extern'], true) ? $request->get('type') : null;
+        $details = $this->inventoryPlanningService->getDetailsForModalRange(
+            $articleId,
+            $startDate,
+            $endDate,
+            $excludeIssueId,
+            $excludeType
+        );
         return response()->json(['data' => $details]);
+    }
+
+    /**
+     * JSON variant of `getDetailsForModal` (single date).
+     *
+     * B8: Used by the planning side-panel so cell/bar clicks no longer trigger
+     * a full Inertia partial-reload. Returns the same payload shape as the
+     * `detailsForModal` prop served by `index()`.
+     */
+    public function planningCellDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'article_id' => ['required', 'integer', 'exists:inventory_articles,id'],
+            'date'       => ['required', 'date'],
+        ]);
+
+        return response()->json([
+            'data' => $this->inventoryPlanningService->getDetailsForModal(
+                (int) $validated['article_id'],
+                $validated['date']
+            ),
+        ]);
     }
 }

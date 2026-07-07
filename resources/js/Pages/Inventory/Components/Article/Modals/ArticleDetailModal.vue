@@ -5,6 +5,7 @@
             <div class="mb-5">
                 <div class="card flex justify-center">
                     <Galleria
+                        v-if="displayCustom"
                         v-model:activeIndex="activeIndex"
                         v-model:visible="displayCustom"
                         :value="article.images"
@@ -75,6 +76,12 @@
                             <h1 class="text-3xl font-lexend font-bold tracking-tight text-primary line-clamp-3">
                                 {{ article.name }}
                             </h1>
+                            <div
+                                v-if="article.inventory_number"
+                                class="font-mono text-xs text-gray-400 mt-0.5"
+                            >
+                                {{ formatInventoryNumber(article.inventory_number) }}
+                            </div>
                             <div
                                 v-if="article.category"
                                 class="font-lexend text-xs text-secondary mt-0.5 font-semibold"
@@ -203,18 +210,33 @@
                         <div>
                             <dl
                                 class="divide-y divide-gray-100"
-                                v-if="article.properties?.length > 0"
+                                v-if="mergedProperties.length > 0"
                             >
                                 <div
                                     class="pr-2 py-4 flex items-center justify-between"
-                                    v-for="property in article.properties"
+                                    v-for="property in mergedProperties"
                                     :key="property.id"
                                 >
                                     <dt class="text-sm font-bold text-primary font-lexend">
                                         {{ property.name }}
                                     </dt>
                                     <dd class="font-lexend text-sm text-artwork-buttons-create">
-                                        <span>{{ formatProperty(article, property) }}</span>
+                                        <a
+                                            v-if="property.type === 'manufacturer' && canViewCrm && article.manufacturer?.id"
+                                            :href="route('crm.contacts.show', article.manufacturer.id)"
+                                            class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                            @click.prevent="router.visit(route('crm.contacts.show', article.manufacturer.id))"
+                                        >
+                                            {{ formatProperty(article, property) }}
+                                        </a>
+                                        <a
+                                            v-else-if="property.type === 'file' && property.pivot?.value"
+                                            :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                                            class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                        >
+                                            {{ fileName(property.pivot.value) }}
+                                        </a>
+                                        <span v-else>{{ formatProperty(article, property) }}</span>
                                     </dd>
                                 </div>
                             </dl>
@@ -283,9 +305,23 @@
                                         :class="open ? 'rounded-t-lg' : 'rounded-lg'"
                                     >
                                         <span
-                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary']"
+                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary flex flex-col items-start']"
                                         >
-                                            {{ detailedArticle.name }}
+                                            <template v-if="showInventoryNumberAsName && detailedArticle.inventory_number">
+                                                <span>{{ formatInventoryNumber(detailedArticle.inventory_number) }}</span>
+                                                <span class="text-xs font-normal text-gray-400">
+                                                    {{ detailedArticle.name }}
+                                                </span>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ detailedArticle.name }}</span>
+                                                <span
+                                                    v-if="detailedArticle.inventory_number"
+                                                    class="font-mono text-xs font-normal text-gray-400"
+                                                >
+                                                    {{ formatInventoryNumber(detailedArticle.inventory_number) }}
+                                                </span>
+                                            </template>
                                         </span>
                                         <span class="ml-6 flex items-center gap-x-3">
                                             <span
@@ -338,33 +374,48 @@
                                     </dl>
                                     <dl
                                         class="divide-y divide-gray-100"
-                                        v-if="detailedArticle.properties.length > 0"
+                                        v-if="getMergedDetailedProperties(detailedArticle).length > 0"
                                     >
                                         <div
                                             class="py-4 flex items-center justify-between"
-                                            v-for="property in detailedArticle.properties"
+                                            v-for="property in getMergedDetailedProperties(detailedArticle)"
                                             :key="property.id"
                                         >
                                             <dt class="text-sm font-bold text-primary font-lexend">
                                                 {{ property.name }}
                                             </dt>
                                             <dd class="font-lexend text-sm text-artwork-buttons-create">
-                                                <span>{{ formatProperty(detailedArticle, property) }}</span>
+                                                <a
+                                                    v-if="property.type === 'manufacturer' && canViewCrm && detailedArticle.manufacturer?.id"
+                                                    :href="route('crm.contacts.show', detailedArticle.manufacturer.id)"
+                                                    class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                                    @click.prevent="router.visit(route('crm.contacts.show', detailedArticle.manufacturer.id))"
+                                                >
+                                                    {{ formatProperty(detailedArticle, property) }}
+                                                </a>
+                                                <a
+                                                    v-else-if="property.type === 'file' && property.pivot?.value"
+                                                    :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
+                                                    class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                                >
+                                                    {{ fileName(property.pivot.value) }}
+                                                </a>
+                                                <span v-else>{{ formatProperty(detailedArticle, property) }}</span>
                                             </dd>
                                         </div>
                                     </dl>
                                     <div v-else>
-                                        <div class="rounded-md bg-red-50 p-4">
+                                        <div class="rounded-md bg-blue-50 p-4">
                                             <div class="flex">
                                                 <div class="shrink-0">
                                                     <component
                                                         :is="IconAlertSquareRoundedFilled"
-                                                        class="size-5 text-red-400"
+                                                        class="size-5 text-blue-400"
                                                         aria-hidden="true"
                                                     />
                                                 </div>
                                                 <div class="ml-3">
-                                                    <p class="text-sm font-medium text-red-800">
+                                                    <p class="text-sm font-medium text-blue-800">
                                                         {{
                                                             $t(
                                                                 'No properties were specified for this article'
@@ -402,6 +453,7 @@ import { useTranslation } from '@/Composeables/Translation.js'
 import { ref, computed } from 'vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
+import { usePermission } from '@/Composeables/Permission.js'
 import Galleria from 'primevue/galleria'
 import {
     IconAlertSquareRoundedFilled,
@@ -413,6 +465,10 @@ import {
 } from '@tabler/icons-vue'
 
 const $t = useTranslation()
+
+const showInventoryNumberAsName = computed(() => usePage().props.inventoryShowInventoryNumberAsName ?? false)
+const inventoryNumberPrefix = computed(() => usePage().props.inventoryNumberPrefix ?? '')
+const formatInventoryNumber = (num) => num ? inventoryNumberPrefix.value + num : ''
 
 const props = defineProps({
     article: {
@@ -426,6 +482,41 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'openArticleEditModal'])
+
+// Ref 1.41: apply the global property order (`order`) so the display reflects the
+// drag & drop order from the properties settings, with id as a stable fallback.
+const byGlobalOrder = (a, b) => ((a?.order ?? 0) - (b?.order ?? 0)) || ((a?.id ?? 0) - (b?.id ?? 0))
+
+// Merged properties for simple articles (includes new category/subcategory properties)
+const mergedProperties = computed(() => {
+    const articleProps = props.article.properties || []
+    const categoryProps = props.article.category?.properties || []
+    const subCategoryProps = props.article.sub_category?.properties || []
+
+    const allCatProps = [...categoryProps, ...subCategoryProps]
+    const articlePropIds = new Set(articleProps.map(p => p.id))
+
+    // Add new category properties (with empty value)
+    const newProps = allCatProps.filter(cp => !articlePropIds.has(cp.id))
+        .map(p => ({ ...p, pivot: { value: '' } }))
+
+    return [...articleProps, ...newProps].sort(byGlobalOrder)
+})
+
+// Merged properties for detailed articles
+const getMergedDetailedProperties = (detailedArticle) => {
+    const daProps = detailedArticle.properties || []
+    const categoryProps = props.article.category?.properties || []
+    const subCategoryProps = props.article.sub_category?.properties || []
+
+    const allCatProps = [...categoryProps, ...subCategoryProps]
+    const daPropIds = new Set(daProps.map(p => p.id))
+
+    const newProps = allCatProps.filter(cp => !daPropIds.has(cp.id))
+        .map(p => ({ ...p, pivot: { value: '' } }))
+
+    return [...daProps, ...newProps].sort(byGlobalOrder)
+}
 
 const showConfirmDelete = ref(false)
 const activeIndex = ref(0)
@@ -465,6 +556,8 @@ const confirmDelete = () => {
 const openArticleEditModal = () => {
     emit('openArticleEditModal', props.article)
 }
+
+const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
 
 const formatProperty = (article, property) => {
     if (property.type === 'room') {
@@ -513,6 +606,11 @@ const formatProperty = (article, property) => {
         return isNaN(d.getTime()) ? v : d.toLocaleString()
     }
 
+    if (property.type === 'year') {
+        const v = property.pivot.value
+        return v === null || v === '' ? $t('No year set') : String(v)
+    }
+
     if (property.type === 'checkbox') {
         return property.pivot.value ? $t('Yes') : $t('No')
     }
@@ -537,6 +635,9 @@ const onMaskClick = (e) => {
  * 🔹 Tag-Anzeige & -Berechtigungen
  */
 const page = usePage()
+const { hasAdminRole, can: canPermission } = usePermission(page.props)
+
+const canViewCrm = computed(() => canPermission('can view crm') || hasAdminRole())
 
 const currentUser = computed(() => page.props.auth?.user ?? null)
 
@@ -579,6 +680,8 @@ const userHasPermissionForTag = (tag) => {
 
 // Für Artikel: wenn es eingeschränkte Tags gibt, muss der User für alle diese Tags berechtigt sein
 const canAccessByTags = computed(() => {
+    if (hasAdminRole()) return true
+
     const tags = props.article.tags || []
     if (!tags.length) return true
 

@@ -23,6 +23,8 @@
             @close="showCalendarSettingsModal = false"
             :is-planning="isPlanning"
             :in-shift-plan="isInShiftPlan"
+            :is-daily-view="isDailyView"
+            :is-list-view="isListView"
         />
     </teleport>
 </template>
@@ -42,6 +44,14 @@ const props = defineProps({
     isInShiftPlan: {
         type: Boolean,
         default: false
+    },
+    isDailyView: {
+        type: Boolean,
+        default: false
+    },
+    isListView: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -53,20 +63,49 @@ const CalendarSettingsModal = defineAsyncComponent({
     timeout: 3000
 })
 
+const activeSettings = computed(() => {
+    if (props.isListView) {
+        return usePage().props.listViewSettings;
+    }
+    if (props.isInShiftPlan) {
+        if (props.isDailyView) {
+            return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings;
+        }
+        return usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings;
+    }
+    if (props.isDailyView) {
+        return usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings;
+    }
+    return usePage().props.auth.user.calendar_settings;
+});
+
 const checkIfAnySettingIsActive = computed(() => {
+    const settings = activeSettings.value;
+    if (!settings) return false;
+
+    if (props.isListView) {
+        const listViewKeys = [
+            'detailed_shift_overview',
+            'show_fully_staffed_shifts',
+            'show_appointments',
+            'group_by_shift_groups',
+            'hide_shift_row',
+            'shift_notes',
+        ];
+        return listViewKeys.some(setting => settings[setting]);
+    }
+
     const settingsInShiftPlan = [
         'high_contrast', 'work_shifts', 'expand_days', 'display_project_groups', 'show_qualifications', 'shift_notes',
-        'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag'
+        'hide_unoccupied_days', 'hide_unoccupied_rooms', 'show_shift_group_tag', 'show_only_not_fully_staffed_shifts',
+        'project_artists', 'project_status', 'project_management'
     ]
 
     if (props.isInShiftPlan) {
-        return settingsInShiftPlan.some(setting => usePage().props.auth.user.calendar_settings[setting]);
+        return settingsInShiftPlan.some(setting => settings[setting]);
     }
 
-    if (usePage().props.auth.user.calendar_settings) {
-        const userCalendarSettings = usePage().props.auth.user.calendar_settings;
-        return Object.values(userCalendarSettings).some(value => value);
-    }
+    return Object.values(settings).some(value => value);
 });
 </script>
 

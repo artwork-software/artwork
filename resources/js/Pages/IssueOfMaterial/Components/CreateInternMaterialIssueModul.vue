@@ -81,7 +81,10 @@
                     <div v-else class="mt-1">
                         <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
                         <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
-                            <div class="text-sm font-semibold text-blue-800">{{ selectedProject.name }}</div>
+                            <a
+                                :href="route('projects.tab', {project: selectedProject.id, projectTab: props.projectTabId})"
+                                class="text-sm font-semibold text-blue-800 hover:underline"
+                            >{{ selectedProject.name }}</a>
                             <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
                                 {{ $t('Remove assignment') }}
                             </button>
@@ -144,17 +147,17 @@
                 </div>
             </section>
             <!-- Artikel: Suche & Auswahl -->
-            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
                 <!-- Linke Spalte: Suche/Filter/Liste -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1">
+                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1 flex flex-col lg:max-h-[calc(80vh-12rem)] lg:sticky lg:top-0">
                     <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
                         <div class="flex items-center w-full gap-x-3">
                             <BaseInput
                                 id="articleSearchFilter"
                                 v-model="articleSearchFilter"
                                 class="w-full"
-                                :label="$t('Search Articles')"
-                                :placeholder="$t('Filter articles by name...')"
+                                :label="$t('Search article, (sub)category...')"
+                                :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
@@ -171,7 +174,7 @@
                         </div>
                     </div>
 
-                    <div ref="scrollContainer" class="h-full overflow-y-auto px-5 pb-5">
+                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
                         <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
                             <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                 <div class="flex items-start gap-3">
@@ -269,7 +272,7 @@
                                                             <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="openArticleDetailModal(article)" />
                                                         </h4>
                                                         <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
-                                                            {{ $t('Available stock in period') }}:
+                                                            {{ props.planningDate ? $t('Available stock on date') : $t('Available stock in period') }}:
                                                             <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
                               'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
                               'text-red-600': (article.availableStock?.available ?? 0) === 0
@@ -283,7 +286,7 @@
                               <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
                             </span>
                                                         </div>
-                                                        <div v-if="article.quantity > (article.availableStock?.available ?? 0) && internMaterialIssue.start_date && internMaterialIssue.end_date" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                                        <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (internMaterialIssue.start_date && internMaterialIssue.end_date))" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
                                                             <span>{{ $t('You have selected more items than are available.') }}</span>
                                                             <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
                                                         </div>
@@ -325,7 +328,7 @@
                                     <span>{{ $t('Special items done') }}</span>
                                 </label>
                                 <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700" @click="addSpecialItem">
-                                    <component :is="IconPlus" class="h-3.5 w-3.5" />
+                                    <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
                                     {{ $t('Sonderartikel hinzufügen') }}
                                 </button>
                             </div>
@@ -429,11 +432,17 @@
                     </div>
                     <FormButton :text="issueOfMaterial?.id ? $t('Aktualisieren') : $t('Speichern')" :disabled="internMaterialIssue.processing || !internMaterialIssue.start_date || !internMaterialIssue.end_date || !internMaterialIssue.name || isEndDateBeforeStartDate" type="submit" />
                 </div>
+                <div v-if="Object.keys(internMaterialIssue.errors).length > 0" class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                    <p v-for="(error, field) in internMaterialIssue.errors" :key="field" class="text-xs text-red-600">
+                        {{ error }}
+                    </p>
+                </div>
             </div>
         </div>
 
         <!-- Single global Galleria for lightbox -->
         <Galleria
+            v-if="displayCustom"
             v-model:activeIndex="activeIndex"
             v-model:visible="displayCustom"
             :value="lightboxImages"
@@ -462,7 +471,7 @@
 
     <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
 
-    <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null" />
+    <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null; editingArticleQuantity = null" :editing-issue-id="internMaterialIssue.id" :editing-article-quantity="editingArticleQuantity" />
 </template>
 
 <script setup lang="ts">
@@ -485,7 +494,7 @@ import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFil
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
-import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconPlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconCirclePlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import dayjs from "dayjs";
 
@@ -562,6 +571,16 @@ const props = defineProps({
         required: false,
         default: null,
     },
+    planningDate: {
+        type: String,
+        required: false,
+        default: null,
+    },
+    projectTabId: {
+        type: Number,
+        required: false,
+        default: 1,
+    },
 });
 
 // Inject materialSets from parent and provide to children
@@ -631,6 +650,7 @@ const scrollContainer = ref(null);
 const articleSearchFilter = ref("");
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
+const editingArticleQuantity = ref(null);
 const hasMoreArticles = ref(true);
 const paginationPage = ref(1);
 const baskets = ref([]);
@@ -664,16 +684,41 @@ const conflicts = computed(() => {
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
 
-// Filtered articles based on search input
+// Filtered articles based on search input - now returns all articles since filtering is done server-side
 const filteredArticles = computed(() => {
-    if (!articleSearchFilter.value) {
-        return articles.value;
+    return articles.value;
+})
+
+// Server-side search for articles
+const searchArticlesFromServer = debounce(async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 2) {
+        // Bei leerem Suchfeld: normale Pagination laden
+        await reloadArticlesWithNewFilter();
+        return;
     }
 
-    const searchTerm = articleSearchFilter.value.toLowerCase();
-    return articles.value.filter(article =>
-        article.name?.toLowerCase().includes(searchTerm)
-    );
+    loadingMore.value = true;
+    try {
+        const response = await axios.get(route('inventory.articles.api', {
+            search: searchTerm,
+            start_date: internMaterialIssue.start_date,
+            end_date: internMaterialIssue.end_date,
+        }));
+
+        articles.value = response.data.articles.data;
+        hasMoreArticles.value = !!response.data.articles.next_page_url;
+        paginationPage.value = 2;
+
+        await checkFoundArticlesAvailability();
+    } catch (e) {
+        console.error('Fehler bei der Suche:', e);
+    }
+    loadingMore.value = false;
+}, 300);
+
+// Watch for search input changes
+watch(articleSearchFilter, (newValue) => {
+    searchArticlesFromServer(newValue);
 })
 
 // Group selected articles by category and subcategory
@@ -902,7 +947,9 @@ const addSpecialItem = () => {
 };
 
 const getArticleDataForUsage = async (article) => {
-    if (!article?.id || !internMaterialIssue.start_date || !internMaterialIssue.end_date) {
+    const startDate = props.planningDate || internMaterialIssue.start_date;
+    const endDate = props.planningDate || internMaterialIssue.end_date;
+    if (!article?.id || !startDate || !endDate) {
         return;
     }
     article.availableStockRequestIsLoading = true;
@@ -910,12 +957,16 @@ const getArticleDataForUsage = async (article) => {
         const response = await axios.get(route('inventory.articles.usage'), {
             params: {
                 article_id: article.id,
-                start_date: internMaterialIssue.start_date,
-                end_date: internMaterialIssue.end_date,
+                start_date: startDate,
+                end_date: endDate,
+                // exclude the issue currently being edited from the availability math
+                issue_id: internMaterialIssue?.id || null,
+                type: 'intern',
             }
         });
         // Die Nutzungsdaten werden im Modal angezeigt
         articleForUsageModal.value = response.data.data;
+        editingArticleQuantity.value = article.quantity;
     } catch (error) {
         console.error('Fehler beim Abrufen der Artikel-Nutzungsdaten:', error);
     } finally {
@@ -1087,6 +1138,7 @@ const submit = () => {
             route("issue-of-material.update", props.issueOfMaterial.id),
             {
                 onSuccess: () => {
+                    clearConsumedBasket();
                     emits("saved", {
                         issueId: props.issueOfMaterial.id,
                         updatedArticles: internMaterialIssue.articles.map(article => ({
@@ -1101,6 +1153,7 @@ const submit = () => {
     } else {
         internMaterialIssue.post(route("issue-of-material.store"), {
             onSuccess: (response) => {
+                clearConsumedBasket();
                 emits("saved", {
                     issueId: response.props?.issueOfMaterial?.id || null,
                     updatedArticles: internMaterialIssue.articles.map(article => ({
@@ -1115,9 +1168,15 @@ const submit = () => {
 };
 
 const checkAvailableStock = async () => {
+    // Prefer the issue's own window so availability is computed over the booking's
+    // real time span (e.g. 00:00–11:00), not the whole day. planningDate is only a
+    // fallback for brand-new issues that have no dates yet.
+    const startDate = internMaterialIssue.start_date || props.planningDate;
+    const endDate = internMaterialIssue.end_date || props.planningDate;
+
     if (
-        !internMaterialIssue.start_date ||
-        !internMaterialIssue.end_date ||
+        !startDate ||
+        !endDate ||
         internMaterialIssue.articles.length === 0
     ) {
         console.log('Missing dates or no articles to check availability for.');
@@ -1133,20 +1192,23 @@ const checkAvailableStock = async () => {
         article.overbooked = false;
     }
 
-    // Nur Uhrzeiten mitsenden, wenn sie wirklich gesetzt wurden (nicht Default-Ganztag)
+    // Uhrzeiten mitsenden, außer die Buchung umfasst den ganzen Tag (00:00–23:59).
+    // So begrenzt z.B. eine Ausgabe von 00:00–11:00 die Verfügbarkeit nur in diesem
+    // Fenster (Buchungen ab 12:00 zählen dann nicht dagegen).
+    const startTime = internMaterialIssue.start_time;
+    const endTime = internMaterialIssue.end_time;
     const hasExplicitTimes =
-        !!internMaterialIssue.start_time &&
-        !!internMaterialIssue.end_time &&
-        internMaterialIssue.start_time !== "00:00" &&
-        internMaterialIssue.end_time !== "23:59";
+        !!startTime &&
+        !!endTime &&
+        !(startTime === "00:00" && endTime === "23:59");
 
     try {
         const payload = {
             article_ids: ids,
             type: 'intern',
             issue_id: internMaterialIssue?.id || null,
-            start_date: internMaterialIssue.start_date,
-            end_date: internMaterialIssue.end_date,
+            start_date: startDate,
+            end_date: endDate,
         };
 
         if (hasExplicitTimes) {
@@ -1202,16 +1264,29 @@ const checkFoundArticlesAvailability = async () => {
         article.periodAvailability = null;
     }
 
+    // Times count unless the booking spans the whole day (00:00–23:59).
+    const hasExplicitTimes =
+        !!internMaterialIssue.start_time &&
+        !!internMaterialIssue.end_time &&
+        !(internMaterialIssue.start_time === "00:00" && internMaterialIssue.end_time === "23:59");
+
     try {
+        const payload = {
+            article_ids: ids,
+            type: 'intern',
+            issue_id: internMaterialIssue?.id || null,
+            start_date: internMaterialIssue.start_date,
+            end_date: internMaterialIssue.end_date,
+        };
+
+        if (hasExplicitTimes) {
+            payload.start_time = internMaterialIssue.start_time;
+            payload.end_time = internMaterialIssue.end_time;
+        }
+
         const response = await axios.post(
             route("inventory.articles.available-stock.batch"),
-            {
-                article_ids: ids,
-                type: 'intern',
-                issue_id: internMaterialIssue?.id || null,
-                start_date: internMaterialIssue.start_date,
-                end_date: internMaterialIssue.end_date,
-            }
+            payload
         );
 
         const resultMap = response.data.data;
@@ -1393,10 +1468,11 @@ const loadBaskets = async () => {
             currentBasket.value = baskets.value[0].id;
         }
 
-        // >>> NEU: Automatisch Basket 1 übernehmen
-        const basketOne = baskets.value.find(b => b.id === 1);
-        if (basketOne) {
-            addBasketArticlesToIssue(basketOne);
+        // Automatisch den eigenen Warenkorb übernehmen — die API liefert nur
+        // die Baskets des eingeloggten Users (eine feste ID gibt es nicht).
+        const ownBasket = baskets.value.find(b => b.id === currentBasket.value) ?? baskets.value[0];
+        if (ownBasket) {
+            addBasketArticlesToIssue(ownBasket);
         }
     } catch (e) {
         console.error(e);
@@ -1462,10 +1538,19 @@ function addBasketArticlesToIssue(basket) {
     // Verfügbarkeiten nachziehen
     checkAvailableStock();
 
-    // remove articles from basket after adding to issue
-    router.post(route("inventory.product_basket.remove_articles", {productBasket: basket.id}), {
-        basket_id: basket.id
+    // Der Korb wird erst nach ERFOLGREICHEM Speichern der Ausgabe geleert —
+    // beim Abbrechen bleiben die Artikel im Warenkorb erhalten.
+    pendingBasketClearId.value = basket.id;
+}
+
+const pendingBasketClearId = ref(null);
+
+function clearConsumedBasket() {
+    if (!pendingBasketClearId.value) return;
+    router.post(route("inventory.product_basket.remove_articles", {productBasket: pendingBasketClearId.value}), {
+        basket_id: pendingBasketClearId.value
     });
+    pendingBasketClearId.value = null;
 }
 
 </script>

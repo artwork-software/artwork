@@ -18,13 +18,18 @@
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
+                <button v-if="event.occupancy_option && (isRoomAdmin || this.hasAdminRole())"
+                        @click="acceptRoomRequest(event)" type="button"
+                        class="rounded-full bg-green-600 p-1 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
+                </button>
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))" type="button"
                         @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <PropertyIcon name="IconX" stroke-width="1.5"
                            stroke="currentColor" class="w-4 h-4"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))"
                         @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <PropertyIcon name="IconTrash" stroke-width="1.5"
@@ -200,14 +205,6 @@
                 </div>
             </div>
         </div>
-        <div v-if="$page.props.auth.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
-            <div v-for="shift in event.shifts">
-                <span>{{ shift.craft.abbreviation }}</span>
-                <span>
-                    &nbsp;({{ shift.worker_count }}/{{ shift.max_worker_count }})
-                </span>
-            </div>
-        </div>
     </div>
     <div v-show="event.subEvents?.length > 0">
         <div v-for="subEvent in event.subEvents" class="mb-1">
@@ -294,18 +291,6 @@
                                     new Date(subEvent.start).format("DD.MM. HH:mm")
                                 }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
                             </div>
-                        </div>
-                    </div>
-                    <div v-if="$page.props.auth.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
-                        <div v-for="shift in subEvent.shifts">
-                            <span>{{ shift.craft.abbreviation }}</span>
-                            (
-                            <VueMathjax
-                                :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>
-                            /{{ shift.number_employees }}
-                            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{
-                                    shift.number_masters
-                                }}</span>)
                         </div>
                     </div>
                 </div>
@@ -406,7 +391,6 @@ export default {
             if (this.$page.props.auth.user.calendar_settings.options) height += 0;
             if (this.$page.props.auth.user.calendar_settings.project_management) height += 17;
             if (this.$page.props.auth.user.calendar_settings.repeating_events) height += 20;
-            if (this.$page.props.auth.user.calendar_settings.work_shifts) height += 18;
             return height;
         },
         isRoomAdmin() {
@@ -447,9 +431,6 @@ export default {
             }
             if (this.$page.props.auth.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
                 heightSubtraction += 20;
-            }
-            if (this.$page.props.auth.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
-                heightSubtraction += 18;
             }
             return heightSubtraction;
         },
@@ -518,6 +499,12 @@ export default {
             }
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;
+        },
+        acceptRoomRequest(event) {
+            this.$inertia.put(route('events.accept', event.id), {}, {
+                preserveScroll: true,
+                preserveState: true,
+            });
         },
         deleteEvent() {
             if (this.type === 'main') {

@@ -2,7 +2,7 @@
     <ShiftSettingsHeader :title="$t('User Contracts')">
         <template #actions>
             <button class="ui-button-add" @click="showCreateOrUpdateUserContractModal = true">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add User Contracts') }}
             </button>
         </template>
@@ -42,7 +42,7 @@ import CreateOrUpdateUserContractModal
     from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
 import SingleUserContractTemplate
     from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus} from "@tabler/icons-vue";
 
 const props = defineProps({
     contracts: {

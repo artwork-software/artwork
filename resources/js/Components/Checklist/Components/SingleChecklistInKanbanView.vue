@@ -13,9 +13,9 @@
                     </div>
                     <div class="flex items-center gap-x-2 print:hidden shrink-0">
                         <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
-                            {{ checklist.tasks.length }}
+                            {{ orderTasksByDeadline.filter(t => checkIfUserIsInTaskIfInOwnTaskManagement(t)).length }}
                         </span>
-                        <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>
+                        <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>
                         <BaseMenu has-no-offset white-menu-background v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
                             <BaseMenuItem icon="IconUserPlus" title="Assign users" white-menu-background v-if="!checklist.private" @click="openEditChecklistTeamsModal = true"/>
                             <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background v-if="checklist" @click="showChecklistEditModal = true"/>
@@ -37,20 +37,19 @@
                 </div>
             </div>
             <div class="checklist-card-body">
-                <div v-for="element in orderTasksByDeadline">
-                    <SingleTaskInKanbanView
-                        :can-edit-component="canEditComponent"
-                        :project-manager-ids="projectManagerIds"
-                        :project-can-write-ids="projectCanWriteIds"
-                        :is-admin="isAdmin"
-                        :task="element"
-                        :project="project"
-                        :tab_id="tab_id"
-                        :checklist="checklist"
-                        :is-in-own-task-management="isInOwnTaskManagement"
-                        v-if="checkIfUserIsInTaskIfInOwnTaskManagement(element)"
-                    />
-                </div>
+                <SingleTaskInKanbanView
+                    v-for="element in orderTasksByDeadline"
+                    :key="`task-${element.id}`"
+                    :can-edit-component="canEditComponent"
+                    :project-manager-ids="projectManagerIds"
+                    :project-can-write-ids="projectCanWriteIds"
+                    :is-admin="isAdmin"
+                    :task="element"
+                    :project="project"
+                    :tab_id="tab_id"
+                    :checklist="checklist"
+                    :is-in-own-task-management="isInOwnTaskManagement"
+                />
 
                 <!--<draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="orderTasksByDeadline" @change="updateTaskOrder(checklist.tasks)" class="text-sm">
                     <template #item="{element}" :key="element.id">
@@ -202,12 +201,22 @@ const templateForm = useForm({
 });
 
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
-    // if isInOwnTaskManagement is true, check if the current user ist in the task
     if (props.isInOwnTaskManagement && !props.checklist.private) {
-        return task?.users.map(user => user.id).includes(usePage().props.auth.user.id);
-    } else {
-        return true;
+        const userId = usePage().props.auth.user.id;
+
+        const taskUserIds = Array.isArray(task?.users) ? task.users.map(u => u.id) : [];
+        const isInTask = taskUserIds.includes(userId);
+
+        // Fallback: wenn task.user_id existiert (legacy)
+        const isLegacyDirect = task?.user_id === userId;
+
+        const isInChecklist = Array.isArray(props.checklist?.users)
+            ? props.checklist.users.some(u => u.id === userId)
+            : false;
+
+        return isInTask || isLegacyDirect || isInChecklist;
     }
+    return true;
 };
 
 const doneOrUndoneAllTasks = (bool) => {

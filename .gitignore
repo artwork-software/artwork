@@ -14,6 +14,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+/.agents
+/.codex
 /data.ms
 /data.ms/*
 MailHog_windows_amd64.exe
@@ -33,3 +35,4 @@ profiling.*
 cachegrind.*
 /storage/app/public/inventory_articles/*
 .output.txt
+/storage/.dep-hashes

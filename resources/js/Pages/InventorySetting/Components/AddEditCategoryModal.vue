@@ -146,9 +146,11 @@
 
                                                     <div v-if="property.type === 'selection'" class="">
                                                         <div class="mt-2 grid grid-cols-1">
-                                                            <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                                <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
-                                                            </select>
+                                                            <SearchableSelect
+                                                                v-model="property.defaultValue"
+                                                                :options="property.select_values"
+                                                                :placeholder="$t('Please select')"
+                                                            />
                                                         </div>
                                                     </div>
                                                 </td>
@@ -363,9 +365,11 @@
 
                                                                         <div v-if="property.type === 'selection'" class="">
                                                                             <div class="mt-2 grid grid-cols-1">
-                                                                                <select id="location" name="location" v-model="property.defaultValue" class="block w-full rounded-md bg-white border-none text-xs py-1.5 cursor-pointer text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0">
-                                                                                    <option v-for="value in property.select_values" :value="value" :key="value">{{ value }}</option>
-                                                                                </select>
+                                                                                <SearchableSelect
+                                                                                    v-model="property.defaultValue"
+                                                                                    :options="property.select_values"
+                                                                                    :placeholder="$t('Please select')"
+                                                                                />
                                                                             </div>
                                                                         </div>
                                                                     </td>
@@ -385,8 +389,8 @@
                                                                         </div>
                                                                     </template>
                                                                     <template v-slot:menu>
-                                                                        <div v-if="filteredPropertiesByCategoryAndSubCategory.length > 0">
-                                                                            <div v-for="property in filteredPropertiesByCategoryAndSubCategory">
+                                                                        <div v-if="getFilteredPropertiesForSubCategory(subCategory).length > 0">
+                                                                            <div v-for="property in getFilteredPropertiesForSubCategory(subCategory)">
                                                                                 <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-gray-50 rounded-lg duration-200 ease-in-out">
                                                                                     <div class="xsDark">
                                                                                         {{ property.name }}
@@ -428,6 +432,7 @@
 <script setup>
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -504,13 +509,13 @@ const filteredPropertiesByCategory = computed(() => {
     });
 });
 
-const filteredPropertiesByCategoryAndSubCategory = computed(() => {
-    // if property is already in category and subCategory.properties, do not show it
+const getFilteredPropertiesForSubCategory = (currentSubCategory) => {
+    // Nur prüfen ob bereits in der Hauptkategorie ODER in dieser spezifischen Unterkategorie
     return props.properties.filter(property => {
         return !categoryForm.properties.some(p => p.id === property.id) &&
-            !subCategories.value.some(subCategory => subCategory.properties.some(p => p.id === property.id));
+            !currentSubCategory.properties.some(p => p.id === property.id);
     });
-})
+}
 
 const addEmptySubCategory = () => {
     subCategories.value.push({

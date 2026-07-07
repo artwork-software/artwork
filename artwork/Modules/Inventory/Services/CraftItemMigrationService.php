@@ -91,13 +91,18 @@ class CraftItemMigrationService
                     ]);
                 }
 
+                // Skip only the exact cells that were consumed above. Matching by
+                // type again here used to drop EVERY additional NUMBER column
+                // (e.g. price, weight) from the migration.
+                $processedCellIds = array_filter([
+                    $nameCell?->id,
+                    $descriptionCell?->id,
+                    $quantityCell?->id,
+                    $imageCell?->id,
+                ]);
+
                 foreach ($craftItem->cells as $cell) {
-                    // Skip cells that were already processed
-                    if (($cell->column->name === 'Name' || $cell->column->name === 'Name_Artikelbeschreibung' || $cell->column->order === 0) ||
-                        ($cell->column->name === 'Description' || $cell->column->name === 'Beschreibung') ||
-                        ($cell->column->name === 'Quantity' || $cell->column->name === 'Menge' ||
-                         $cell->column->name === 'Anzahl' || $cell->column->type === CraftsInventoryColumnTypeEnum::NUMBER->value) ||
-                        ($cell->column->name === 'Bild')) {
+                    if (in_array($cell->id, $processedCellIds, true)) {
                         continue;
                     }
 

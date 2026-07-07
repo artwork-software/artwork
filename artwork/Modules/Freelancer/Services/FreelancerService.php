@@ -7,7 +7,6 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\DTOs\ShowDto;
-use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShowResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Repositories\FreelancerRepository;
@@ -19,6 +18,7 @@ use Artwork\Modules\Shift\Services\ShiftQualificationService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Services\WorkingHourService;
+use Artwork\Modules\Worker\Services\WorkerShiftPlanService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,62 +31,62 @@ readonly class FreelancerService
     public function __construct(
         private FreelancerRepository $freelancerRepository,
         private ProjectTabService $projectTabService,
-        private WorkingHourService $workingHourService
+        private WorkingHourService $workingHourService,
     ) {
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getFreelancersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        User $currentUser = null
+        ?User $currentUser = null,
+        ?array $craftIds = null
     ): array {
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+
+        $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
+
+        $freelancers = $craftIds !== null
+            ? $this->freelancerRepository->getWorkersByIds(
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['freelancer_ids'],
+                $startDate,
+                $endDate
+            )
+            : $this->freelancerRepository->getWorkers();
+        $freelancers = $workerShiftPlanService->loadWorkerRelations($freelancers, $startDate, $endDate);
+        $freelancers = $workerShiftPlanService->filterByQualifications($freelancers, $currentUser);
+        $qualificationsCache = $workerService->buildQualificationsCache($freelancers);
+
         $freelancersWithPlannedWorkingHours = [];
-
-        // Get all freelancer workers with shift qualifications loaded
-        $freelancers = $this->freelancerRepository->getWorkers()->load('shiftQualifications');
-
-        // Filter freelancers by shift qualifications if currentUser has selected qualifications
-        if ($currentUser && !empty($currentUser->getAttribute('show_qualifications'))) {
-            $selectedQualifications = $currentUser->getAttribute('show_qualifications');
-            $freelancers = $freelancers->filter(function ($freelancer) use ($selectedQualifications) {
-                // Check if freelancer has at least one of the selected qualifications
-                $freelancerQualificationIds = $freelancer->shiftQualifications->pluck('id')->toArray();
-                return !empty(array_intersect($selectedQualifications, $freelancerQualificationIds));
-            });
-        }
 
         /** @var Freelancer $freelancer */
         foreach ($freelancers as $freelancer) {
             $desiredFreelancerResource = $desiredResourceClass::make($freelancer);
 
-            if ($desiredFreelancerResource instanceof FreelancerShiftPlanResource) {
-                $desiredFreelancerResource->setStartDate($startDate)->setEndDate($endDate);
-            }
             $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
                 $freelancer,
                 $startDate,
                 $endDate
             );
 
-            $freelancerData = [
-                'freelancer' => $desiredFreelancerResource->resolve(),
+            $additionalData = [
                 'weeklyWorkingHours' => $weeklyWorkingHours,
-                'dayServices' => $freelancer->dayServices?->groupBy('pivot.date'),
-                'individual_times' => $freelancer->individualTimes()->with(['series'])
-                    ->individualByDateRange($startDate, $endDate)->get(),
-                'shift_comments' => $freelancer->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];
 
+            $freelancerData = $workerShiftPlanService->buildWorkerData(
+                $freelancer,
+                $desiredFreelancerResource,
+                $qualificationsCache,
+                $startDate,
+                $endDate,
+                $addVacationsAndAvailabilities,
+                $additionalData
+            );
+
+            // Freelancer specific stuff
             if ($addVacationsAndAvailabilities) {
-                $freelancerData['vacations'] = $freelancer->getVacationDays();
                 $freelancerData['availabilities'] = $this->freelancerRepository
                     ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
                         $freelancer,
@@ -138,6 +138,12 @@ readonly class FreelancerService
         [$startDate, $endDate] = $userService->getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(
             $userService->getAuthUser()
         );
+
+        // Derive the displayed calendar month from the filter start date (always in sync with the calendar)
+        $calendarMonth = $startDate->copy()->startOfMonth();
+        // Override $month so getAvailabilityData uses the same month
+        $month = $startDate->format('Y-m-d');
+
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($startDate, $endDate)->map(
                 function (Carbon $date) {
@@ -180,8 +186,8 @@ readonly class FreelancerService
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
             ->setCreateShowDate(
                 [
-                    $selectedPeriodDate->isoFormat('MMMM YYYY'),
-                    $selectedPeriodDate->copy()->startOfMonth()->toDate()
+                    $calendarMonth->copy()->locale($selectedPeriodDate->locale)->isoFormat('MMMM YYYY'),
+                    $calendarMonth->copy()->startOfMonth()->toDate()
                 ]
             )
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
@@ -214,9 +220,9 @@ readonly class FreelancerService
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setProjects($projectService->getAll())
-            ->setVacations($this->getVacationsByDateOrderedByDateAscending($freelancer, $selectedDate))
+            ->setVacations($this->getVacationsByMonthOrderedByDateAscending($freelancer, $calendarMonth))
             ->setShifts($this->getShiftsWithEventsOrderedByStart($freelancer))
-            ->setAvailabilities($this->getAvailabilitiesByDateOrderedByDateAscending($freelancer, $selectedDate))
+            ->setAvailabilities($this->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $calendarMonth))
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
             ->setFirstProjectShiftTabId(
                 $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
@@ -230,9 +236,19 @@ readonly class FreelancerService
         return $this->freelancerRepository->getVacationsByDateOrderedByDateAscending($freelancer, $date);
     }
 
+    public function getVacationsByMonthOrderedByDateAscending(int|Freelancer $freelancer, Carbon $monthDate): Collection
+    {
+        return $this->freelancerRepository->getVacationsByMonthOrderedByDateAscending($freelancer, $monthDate);
+    }
+
     public function getAvailabilitiesByDateOrderedByDateAscending(int|Freelancer $freelancer, Carbon $date): Collection
     {
         return $this->freelancerRepository->getAvailabilitiesByDateOrderedByDateAscending($freelancer, $date);
+    }
+
+    public function getAvailabilitiesByMonthOrderedByDateAscending(int|Freelancer $freelancer, Carbon $monthDate): Collection
+    {
+        return $this->freelancerRepository->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $monthDate);
     }
 
     public function getShiftsWithEventsOrderedByStart(int|Freelancer $freelancer): Collection

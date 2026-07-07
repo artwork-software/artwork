@@ -5,11 +5,11 @@
     >
         <template #actions>
             <button class="ui-button-add" @click="openCreateTagGroup">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add tag group') }}
             </button>
             <button class="ui-button-add" @click="openCreateTag">
-                <component :is="IconPlus" stroke-width="1" class="size-5" />
+                <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add tag') }}
             </button>
         </template>
@@ -202,7 +202,7 @@
                                     class="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-100"
                                     @click="openCreateTagWithGroup(group)"
                                 >
-                                    <component :is="IconPlus" class="h-3.5 w-3.5" />
+                                    <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
                                     {{ $t('Add tag') }}
                                 </button>
                             </div>
@@ -356,7 +356,7 @@
 import { computed, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import {
-    IconPlus,
+    IconCirclePlus,
     IconLock,
     IconUsers,
     IconBuildingCommunity,

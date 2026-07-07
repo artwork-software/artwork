@@ -42,6 +42,12 @@ export default defineComponent({
             IconPackage,
             tabs: [
                 {
+                    name: this.$t('General'),
+                    href: route('inventory-management.settings.general'),
+                    current: route().current('inventory-management.settings.general'),
+                    permission: true
+                },
+                {
                     name: this.$t('Categories & Sub-Categories'),
                     href: route('inventory-management.settings.category'),
                     current: route().current('inventory-management.settings.category'),

@@ -31,6 +31,6 @@ class SumMoneySource extends Model
 
     public function moneySource(): BelongsTo
     {
-        return $this->belongsTo(MoneySource::class);
+        return $this->belongsTo(MoneySource::class, 'money_source_id', 'id', 'moneySource');
     }
 }

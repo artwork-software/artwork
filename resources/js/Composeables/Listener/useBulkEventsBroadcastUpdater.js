@@ -4,10 +4,12 @@ import { onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 // eventsRef: Vue ref auf die Events-Liste (eventsRef.value = array)
+// projectId: ref oder getter für die Projekt-ID – nur Events dieses Projekts werden verarbeitet.
+//            Wenn null/undefined, werden alle Broadcasts ignoriert (z.B. bei Neuerstellung).
 // options: optionales Objekt { onEvent, onError }
 // Hört auf den Public Channel bulk.events und verarbeitet die Aktionen
 // payload: { event, action: 'created'|'updated'|'deleted' }
-export function useBulkEventsBroadcastUpdater(eventsRef, options = {}) {
+export function useBulkEventsBroadcastUpdater(eventsRef, projectId, options = {}) {
     let channel = null;
     const echo = window.Echo;
 
@@ -63,9 +65,15 @@ export function useBulkEventsBroadcastUpdater(eventsRef, options = {}) {
     function handleBroadcast(payload) {
         const { event, action } = payload || {};
         if (!event || !event.id || !action) return;
-        const idx = eventsRef.value.findIndex(e => e.id === event.id);
 
-        console.log(event);
+        // Resolve projectId (may be a ref, computed, or getter function)
+        const currentProjectId = typeof projectId === 'function' ? projectId() : (projectId?.value ?? projectId);
+
+        // Ignore broadcasts when no project ID is set (e.g. new project creation modal)
+        // or when the event belongs to a different project
+        if (!currentProjectId || event.project_id !== currentProjectId) return;
+
+        const idx = eventsRef.value.findIndex(e => e.id === event.id);
 
         if (action === 'created' || action === 'updated') {
             if (idx !== -1) {

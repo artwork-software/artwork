@@ -185,3 +185,156 @@ ddev artisan make:test TestName         # for feature tests
 ```
 
 This project requires DDEV for proper development environment setup and testing. All tests depend on database connectivity through DDEV's containerized environment.
+
+---
+
+## Internationalization (i18n)
+
+### Translation Files
+- **Location**: `lang/de.json` and `lang/en.json`
+- **Key Format**: Always use the **English text** as the key (flat structure)
+- **Rule**: Always update **both files** simultaneously
+
+```json
+// lang/en.json
+{
+  "Save changes": "Save changes"
+}
+
+// lang/de.json
+{
+  "Save changes": "Änderungen speichern"
+}
+```
+
+### Frontend Usage
+```vue
+<template>
+  <span>{{ $t('Save changes') }}</span>
+</template>
+```
+
+---
+
+## Permissions
+
+### Seeder
+All new permissions must be added to `RolesAndPermissionsSeeder.php`
+
+### Naming Convention
+Format: `"can <action> <resource>"`
+
+Examples:
+- `"can view contracts"`
+- `"can edit contracts"`
+- `"can create contracts"`
+- `"can delete contracts"`
+
+### Frontend Permission Check
+```javascript
+import { usePermission } from "@/Composeables/Permission.js";
+import { usePage } from "@inertiajs/vue3";
+
+const { can, hasAdminRole } = usePermission(usePage().props);
+
+// ALWAYS include hasAdminRole() - admins can do everything!
+if (can('can edit document requests') || hasAdminRole()) {
+  // Action allowed
+}
+```
+
+---
+
+## Creating New Project Components
+
+### Checklist
+1. **Add Enum Value**: `artwork/Modules/Project/Enum/ProjectTabComponentEnum.php`
+2. **Create Vue Component**: `resources/js/Pages/Projects/Components/YourComponent.vue`
+3. **Register in TabContent.vue**: Import and add to component mapping
+4. **Add to Command**: Update `artwork:add-new-components` command
+5. **Add Translations**: Human-readable display text in `de.json` and `en.json` (NOT the enum name!)
+6. **Add Icon**: Use `PropertyIcon.vue` with tabler.io icon
+7. **Print Layout Support**: Damit die Komponente auch im Drucklayout (PDF) angezeigt wird, müssen drei Stellen angepasst werden. **Wichtig:** Die Builder-Komponenten für die Projektübersicht (`BuilderYourComponent.vue`) und die PrintLayout-Komponenten für das Drucklayout (`PrintLayoutBuilderYourComponent.vue`) sind vollständig getrennt, damit Änderungen an der Projektübersicht das Drucklayout nicht beeinflussen.
+   - **Backend**: Neuen `case` im `switch`-Block in `ProjectPrintLayoutController::show()` (`app/Http/Controllers/ProjectPrintLayoutController.php`) hinzufügen, der die benötigten Daten aus dem Projekt lädt.
+   - **PrintLayout-Komponente erstellen**: Eine Vue-Komponente `PrintLayoutBuilderYourComponent.vue` in `resources/js/Pages/Projects/BuilderComponents/` anlegen, die die Daten im Druckformat rendert. Diese Datei ist unabhängig von der gleichnamigen `BuilderYourComponent.vue` (Projektübersicht) und kann ein eigenes Layout/Styling haben.
+   - **componentMapping registrieren**: Die **PrintLayout**-Komponente in `ProjectPrintLayoutWindow.vue` importieren und im `componentMapping`-Objekt registrieren. Der Key muss `"Builder" + EnumValue` sein (z.B. `BuilderArtistNameDisplayComponent` für den Enum-Wert `ArtistNameDisplayComponent`), aber der Import zeigt auf die `PrintLayoutBuilder...`-Datei.
+
+### ⚠️ Wichtig: component.id vs component.component_id in Builder-Komponenten
+
+In nicht-speziellen (custom) Builder-Komponenten wie `BuilderTextArea`, `BuilderTextField`, `BuilderCheckbox`, `BuilderDropDown`, `BuilderLinkComponent`, `BuilderLinkListComponent` muss im Frontend **immer `component.component_id`** verwendet werden, um auf Projektdaten zuzugreifen – **NICHT `component.id`**.
+
+**Hintergrund:** Die `components`-Prop enthält `ProjectManagementBuilder`-Einträge. `component.id` ist die Builder-ID, aber das Backend (`ProjectController::mapProjectsToComponents`) speichert die Werte unter `Component.id` (= `component_id` des Builders). Daher:
+
+```js
+// ✅ Richtig:
+project['TextArea']?.[component.component_id]?.data?.text
+
+// ❌ Falsch:
+project['TextArea']?.[component.id]?.data?.text
+```
+
+Dies gilt für alle Builder- **und** PrintLayoutBuilder-Dateien gleichermaßen.
+
+---
+
+## UI Component Snippets
+
+### Icons (tabler.io)
+```vue
+<PropertyIcon icon="IconName" />
+```
+Reference: https://tabler.io/icons
+
+### Modal (ArtworkBaseModal)
+**Import:**
+```javascript
+import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+```
+**Usage:** Use `:title` and `:description` props (NOT slots). Emits `close` event (NOT `closed`).
+```vue
+<ArtworkBaseModal
+    :title="$t('Modal Title')"
+    :description="$t('Modal description text.')"
+    @close="closeModal"
+>
+  <!-- Modal content in default slot -->
+</ArtworkBaseModal>
+```
+
+### Input (BaseInput)
+**Import:**
+```javascript
+import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+```
+**Basic usage:**
+```vue
+<BaseInput v-model="value" :label="$t('Label')" id="field_id" />
+```
+**Time input:**
+```vue
+<BaseInput type="time" id="start_time" v-model="startTime" :label="$t('Start time')" />
+```
+**Number input (e.g. for minutes):**
+```vue
+<BaseInput type="number" id="break_minutes" v-model.number="breakMinutes" :label="$t('Break (minutes)')" :min="0" :step="1" />
+```
+
+### Tooltip
+```vue
+<ToolTipComponent>
+  <template #content>
+    {{ $t('Tooltip text') }}
+  </template>
+</ToolTipComponent>
+```
+
+### User Tooltip
+```vue
+<NewUserToolTip :user="user" :id="uniqueId" height="10" width="10" />
+```
+
+---
+
+## Testing Policy
+
+**IMPORTANT**: Do NOT run tests automatically. The test suite is currently outdated and not maintained. Only run tests when explicitly requested by the user.

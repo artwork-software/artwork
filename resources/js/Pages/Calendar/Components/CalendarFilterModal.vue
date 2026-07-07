@@ -22,7 +22,7 @@
                 </div>
 
                 <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
-                    <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex items-center gap-4 mt-3">
+                    <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex flex-wrap items-center gap-2 mt-3">
                         <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
                             <div class="flex items-center">
                                 <div class="mx-2" @click="activateFilter(filter)">
@@ -81,13 +81,15 @@
             </div>
 
             <div class="space-y-1">
-                <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1">
+                <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey"
+                     v-show="Object.values(filterMainCategory).some(sub => sub.length > 0)" class="py-1">
                     <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t(mainKey) }}
                     </div>
 
                     <div class="space-y-2 mt-2">
-                        <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey">
+                        <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey"
+                             v-show="filterSubCategory.length > 0">
                             <div class="card white px-4 ">
                                 <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                     <div class="text-sm text-gray-900">
@@ -255,7 +257,7 @@ const filteredOptionsByCategories = computed(() => {
     })
 
     // Crafts are only included for shift filter / shift plan
-    if(props.filterType === 'shift_filter' || props.inShiftPlan) {
+    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter' || props.inShiftPlan) {
         filteredOptions.craftFilters = {};
         craftFilter.forEach(filter => {
             filteredOptions.craftFilters[filter] = props.filterOptions[filter];
@@ -313,7 +315,7 @@ const applyFilter = () => {
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
-    if(props.filterType === 'shift_filter' || props.inShiftPlan) {
+    if(props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter' || props.inShiftPlan) {
         Object.assign(data, extractCheckedIds('craftFilters'));
     }
     router.patch(route('update.user.calendar.filter', usePage().props.auth.user.id), data, {
@@ -336,7 +338,7 @@ const saveFilter = () => {
     Object.assign(data, extractCheckedIds('roomFilters'));
     Object.assign(data, extractCheckedIds('areaFilters'));
     Object.assign(data, extractCheckedIds('eventFilters'));
-    if(props.inShiftPlan) {
+    if(props.inShiftPlan || props.filterType === 'shift_filter' || props.filterType === 'shift_daily_filter' || props.filterType === 'shift_list_view_filter' || props.filterType === 'project_shift_filter') {
         Object.assign(data, extractCheckedIds('craftFilters'));
     }
     router.post(route('filter.store', usePage().props.auth.user.id), data, {
@@ -379,7 +381,7 @@ const restoreFilterState = () => {
     Object.keys(filteredOptionsByCategories.value).forEach(category => {
         Object.keys(filteredOptionsByCategories.value[category]).forEach(subCategory => {
             filteredOptionsByCategories.value[category][subCategory].forEach(filter => {
-                filter.checked = !!props.user_filters[subCategory]?.includes(filter.id);
+                filter.checked = !!props.user_filters?.[subCategory]?.includes(filter.id);
                 filter.value = subCategory;
             })
         })

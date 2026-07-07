@@ -7,22 +7,16 @@
                 :totalPlannedWorkingHours="totalPlannedWorkingHours"
                 :weeklyWorkingHours="weeklyWorkingHours"
                 :dateValue="dateValue"
-                :eventTypes="eventTypes"
+                :crafts="crafts"
                 @previousTimeRange="goToPrevAssignedDay"
-                @next-time-range="goToNextAssignedDay"
+                @nextTimeRange="goToNextAssignedDay"
+                @openHistoryModal="showHistoryModal = true"
                 :user_to_edit_id="userToEditId"
             />
         </div>
 
-        <!-- Keine Schichten im Zeitraum -->
-        <div v-if="workItemsInRange.length === 0" class="rounded-xl border border-zinc-200 bg-white p-8 text-center">
-            <p class="text-sm text-zinc-600">
-                {{ $t('No shifts in the selected period.') }}
-            </p>
-        </div>
-
         <!-- Zeitraum-Ansicht -->
-        <div v-else class="space-y-4">
+        <div class="space-y-4">
             <!-- Kopfzeile (Zeitraum + Summen) -->
             <div class="flex items-center justify-between">
                 <div class="text-sm font-semibold text-zinc-900">
@@ -35,6 +29,13 @@
                     <span> | {{ totalBreakTimeInRange }}</span>
                     <span>)</span>
                 </div>
+            </div>
+
+            <!-- Keine Schichten im Zeitraum -->
+            <div v-if="workItemsInRange.length === 0" class="rounded-xl border border-zinc-200 bg-white p-4 text-center">
+                <p class="text-sm text-zinc-600">
+                    {{ $t('No shifts in the selected period.') }}
+                </p>
             </div>
 
             <!-- Projektgruppen-Pills (unique im Zeitraum) -->
@@ -52,66 +53,143 @@
                 </Link>
             </div>
 
-            <!-- Räume & Schichten (über gesamten Zeitraum) -->
-            <div class="grid grid-cols-1 gap-4">
+            <!-- Wochen-Zeilen: pro Kalenderwoche eine Zeile mit 7 Tagesspalten -->
+            <div class="space-y-4">
                 <div
-                    v-for="bucket in roomBuckets"
-                    :key="bucket.key"
+                    v-for="week in weeks"
+                    :key="week.key"
                     class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden"
                 >
-                    <!-- Raumkopf -->
-                    <div class="flex items-center justify-between border-b border-zinc-200 px-3 py-2">
+                    <!-- Wochen-Kopf -->
+                    <div class="flex items-center justify-between gap-3 px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                         <div class="text-sm font-semibold text-zinc-900">
-                            {{ bucket.title }}
+                            {{ $t('KW') }} {{ week.weekNumber }}
+                            <span class="ml-2 text-xs font-normal text-zinc-500">{{ week.rangeLabel }}</span>
                         </div>
-                        <div class="text-xs text-zinc-500">
-                            {{ $t('Shifts') }}: {{ bucket.items.length }}
+                        <div class="text-xs text-zinc-600">
+                            ({{ week.totalWork }} | {{ week.totalBreak }})
                         </div>
                     </div>
 
-                    <!-- Schichtenliste -->
-                    <div class="p-3 space-y-3">
-                        <div v-for="i in bucket.items" :key="i._key" class="space-y-1">
-                            <!-- kleine Kopfzeile je Eintrag mit Datum + +1-Tag Hinweis -->
-                            <div class="text-xs text-zinc-600">
-                                {{ formatDateDMY(i._startAt) }}
-                                · {{ i.start }}–{{ i.end }}
-                                <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1.5 py-0.5">
-                                    → +1&nbsp;Tag
-                                </span>
-                            </div>
-
-                            <SingleUserEventShift
-                                v-if="i._type === 'shift'"
-                                :user-to-edit-id="userToEditId"
-                                :first-project-shift-tab-id="firstProjectShiftTabId"
-                                :event-type="eventTypes.find(et => et.id === (i?.event?.event_type_id ?? i.event?.event_type_id)) ?? null"
-                                :shift="i"
-                                :event="i?.event ?? null"
-                                :type="type"
-                                :project="i?.project ?? i.event?.project ?? null"
-                            />
-
+                    <!-- Tagesspalten -->
+                    <div class="overflow-x-auto">
+                        <div class="grid grid-cols-7 divide-x divide-zinc-200 min-w-[1190px]">
                             <div
-                                v-else
-                                class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+                                v-for="day in week.days"
+                                :key="day.date"
+                                class="flex flex-col min-h-[10rem]"
+                                :class="{ 'bg-zinc-50/80 opacity-60': !isInRequestedRange(day.date) }"
                             >
-                                <div class="flex items-center justify-between gap-2 px-3 py-2 bg-zinc-100 text-zinc-900">
-                                    <span class="truncate text-sm font-semibold">
-                                        {{ $t('Individual time') }}: {{ i.title ?? '' }}
+                                <!-- Tages-Kopf -->
+                                <div
+                                    class="px-2 py-1.5 border-b border-zinc-100 flex items-center justify-between gap-1"
+                                    :class="isToday(day.date) ? 'bg-blue-50' : 'bg-white'"
+                                >
+                                    <span class="text-xs font-semibold" :class="isToday(day.date) ? 'text-blue-700' : 'text-zinc-800'">
+                                        {{ weekdayShort(day.date) }} {{ formatDayShort(day.date) }}
+                                    </span>
+                                    <span v-if="hasWorkTime(day)" class="text-[10px] text-zinc-500">
+                                        {{ day.totalWorkTime }}
                                     </span>
                                 </div>
 
-                                <div class="px-3 py-3">
-                                    <div class="flex items-center justify-between gap-3 border-b border-zinc-200 pb-2">
-                                        <span class="text-sm font-medium text-zinc-900">
-                                            <template v-if="i.full_day">
-                                                {{ $t('All day') }}
-                                            </template>
-                                            <template v-else>
-                                                {{ i.start_time }} – {{ i.end_time }}
-                                            </template>
-                                        </span>
+                                <!-- Feiertage -->
+                                <div v-if="day.holidays?.length" class="px-2 pt-1.5 space-y-1">
+                                    <div
+                                        v-for="holiday in day.holidays"
+                                        :key="`${day.date}-holiday-${holiday.id}`"
+                                        class="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[11px] font-medium"
+                                        :style="{
+                                            backgroundColor: (holiday.color ?? '#fde68a') + '33',
+                                            color: '#3f3f46'
+                                        }"
+                                        :title="holiday.subdivisions?.length ? holiday.subdivisions.join(', ') : holiday.name"
+                                    >
+                                        <span
+                                            class="inline-block size-2 shrink-0 rounded-full"
+                                            :style="{ backgroundColor: holiday.color ?? '#f59e0b' }"
+                                        />
+                                        <span class="break-words min-w-0">{{ holiday.name }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Tagesdienste -->
+                                <div v-if="day.dayServices?.length" class="px-2 pt-1.5 flex flex-wrap gap-1">
+                                    <span
+                                        v-for="dayService in day.dayServices"
+                                        :key="`${day.date}-day-service-${dayService.id}`"
+                                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-800"
+                                        :title="dayService.name"
+                                    >
+                                        <PropertyIcon
+                                            v-if="dayService.icon"
+                                            :name="dayService.icon"
+                                            class="size-3.5 shrink-0"
+                                            :style="{ color: dayService.hex_color ?? '#3f3f46' }"
+                                        />
+                                        <span class="break-words min-w-0">{{ dayService.name }}</span>
+                                    </span>
+                                </div>
+
+                                <!-- Schichten / Individualzeiten des Tages -->
+                                <div class="p-2 space-y-2 flex-1">
+                                    <template v-if="itemsForDay(day).length">
+                                        <div v-for="i in itemsForDay(day)" :key="i._key" class="space-y-1">
+                                            <div class="text-[11px] text-zinc-600">
+                                                {{ i.start }}–{{ i.end }}
+                                                <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1 py-0.5">
+                                                    → +1&nbsp;Tag
+                                                </span>
+                                            </div>
+
+                                            <SingleUserShift
+                                                v-if="i._type === 'shift'"
+                                                :user-to-edit-id="userToEditId"
+                                                :first-project-shift-tab-id="firstProjectShiftTabId"
+                                                :shift="i"
+                                                :type="type"
+                                                :project="i?.project ?? i.event?.project ?? null"
+                                            />
+
+                                            <div
+                                                v-else
+                                                class="rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+                                            >
+                                                <div class="flex items-start justify-between gap-2 px-2 py-1.5 bg-zinc-100 text-zinc-900">
+                                                    <span class="break-words min-w-0 text-xs font-semibold">
+                                                        {{ $t('Individual time') }}: {{ i.title ?? '' }}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        @click="openEditIndividualTimeModal(i)"
+                                                        class="p-1 rounded hover:bg-zinc-200 transition"
+                                                        :title="$t('Edit')"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+
+                                                <div class="px-2 py-2">
+                                                    <span class="text-xs font-medium text-zinc-900">
+                                                        <template v-if="i.full_day">
+                                                            {{ $t('All day') }}
+                                                        </template>
+                                                        <template v-else>
+                                                            {{ i.start_time }} – {{ i.end_time }}
+                                                        </template>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <div
+                                        v-else-if="!day.holidays?.length && !day.dayServices?.length"
+                                        class="h-full flex items-center justify-center text-xs text-zinc-300 select-none"
+                                    >
+                                        –
                                     </div>
                                 </div>
                             </div>
@@ -128,6 +206,23 @@
         {{ shiftsInRange }}
     </pre>
     -->
+
+    <!-- Edit Individual Time Modal -->
+    <EditIndividualTimeModal
+        v-if="showEditIndividualTimeModal && selectedIndividualTime"
+        :individual-time="selectedIndividualTime"
+        @closed="closeEditIndividualTimeModal"
+    />
+
+    <!-- Schichtverlauf – im Einsatzplan eines Users mit dessen Namen vorbelegt -->
+    <ShiftHistoryModal
+        v-if="showHistoryModal"
+        :crafts="crafts"
+        :initial-start-date="dateValue[0]"
+        :initial-end-date="dateValue[1]"
+        :prefill-search="prefillSearchName"
+        @close="showHistoryModal = false"
+    />
 </template>
 
 <script setup>
@@ -138,16 +233,36 @@
  * - Gruppierung nach Raum (inkl. "Ohne Raum")
  */
 
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, defineAsyncComponent, ref, watch, onMounted } from 'vue'
 import { router, Link, usePage } from '@inertiajs/vue3'
 import UserShiftPlanFunctionBar from '@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue'
-import SingleUserEventShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
+import SingleUserShift from '@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'
+import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/EditIndividualTimeModal.vue'
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
+
+const ShiftHistoryModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
+})
+
+const showEditIndividualTimeModal = ref(false)
+const selectedIndividualTime = ref(null)
+const showHistoryModal = ref(false)
+
+function openEditIndividualTimeModal(individualTime) {
+    selectedIndividualTime.value = individualTime
+    showEditIndividualTimeModal.value = true
+}
+
+function closeEditIndividualTimeModal() {
+    showEditIndividualTimeModal.value = false
+    selectedIndividualTime.value = null
+}
 
 const props = defineProps({
     daysWithData: { type: Object, required: false, default: null }, // optional – sonst aus $page.props
-    eventTypes: { type: Array, required: true },
+    crafts: { type: Array, required: true },
     type: { type: String, required: true },
     weeklyWorkingHours: { type: [Number, String], required: false, default: null },
     totalPlannedWorkingHours: { type: String, required: false, default: null },
@@ -158,6 +273,44 @@ const props = defineProps({
 
 const page = usePage()
 const daysWithData = computed(() => props.daysWithData ?? (page.props?.daysWithData || {}))
+
+// Name, mit dem die Schichtverlauf-Suche im Einsatzplan vorbelegt wird: der Name des
+// betrachteten Users (user_to_edit). Fallbacks: zusammengesetzter Name, generischer
+// Name (Dienstleister/Freelancer) oder – zur Sicherheit – der eingeloggte User.
+const prefillSearchName = computed(() => {
+    const nameOf = (u) => {
+        if (!u) return ''
+        return (
+            u.full_name ||
+            [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
+            u.name ||
+            ''
+        )
+    }
+    return (
+        nameOf(page.props?.user_to_edit) ||
+        nameOf(page.props?.serviceProvider) ||
+        nameOf(page.props?.freelancer) ||
+        nameOf(page.props?.auth?.user)
+    )
+})
+
+// Provide shiftPlanLookups so child components (e.g. SingleUserEventShift) can inject them
+const { setLookups } = provideShiftPlanLookups()
+
+function buildCraftsLookup(crafts) {
+    if (!Array.isArray(crafts)) return {}
+    const craftsById = {}
+    for (const craft of crafts) {
+        if (craft?.id != null) craftsById[craft.id] = craft
+    }
+    return { craftsById }
+}
+
+setLookups(buildCraftsLookup(props.crafts))
+watch(() => props.crafts, (newCrafts) => {
+    setLookups(buildCraftsLookup(newCrafts))
+})
 
 /** ---------- Zeitraum / Helpers ---------- **/
 const range = computed(() => {
@@ -186,6 +339,13 @@ function addDays(d, days) {
     x.setDate(x.getDate() + days)
     return x
 }
+
+function toISODate(d) {
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd}`
+}
 function intersects(aStart, aEnd, bStart, bEnd) {
     return aEnd >= bStart && aStart <= bEnd
 }
@@ -206,6 +366,128 @@ function fmtMinutes(total) {
     const h = Math.floor(abs / 60)
     const m = abs % 60
     return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+function formatDayShort(dateISO) {
+    const [, m, d] = String(dateISO).split('-')
+    return `${d}.${m}.`
+}
+function weekdayShort(dateISO) {
+    const d = new Date(`${dateISO}T00:00:00`)
+    const locale = document.documentElement.lang || 'de-DE'
+    return d.toLocaleDateString(locale, { weekday: 'short' })
+}
+function isToday(dateISO) {
+    return dateISO === toISODate(new Date())
+}
+function isInRequestedRange(dateISO) {
+    const r = range.value
+    if (!r.start || !r.end) return true
+    return dateISO >= r.start && dateISO <= r.end
+}
+function hasWorkTime(day) {
+    return parseHHMM(day?.totalWorkTime) > 0
+}
+function isoWeekNumber(date) {
+    // ISO 8601: Woche des Donnerstags derselben Woche
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+    const dayNum = (d.getUTCDay() + 6) % 7
+    d.setUTCDate(d.getUTCDate() - dayNum + 3)
+    const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4))
+    const firstDayNum = (firstThursday.getUTCDay() + 6) % 7
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3)
+    return 1 + Math.round((d - firstThursday) / (7 * 24 * 60 * 60 * 1000))
+}
+
+/** ---------- Wochen-Zeilen (eine Zeile pro Kalenderwoche, Mo–So) ---------- **/
+function emptyDay(dateISO) {
+    return {
+        date: dateISO,
+        shifts: [],
+        individualTimes: [],
+        dayServices: [],
+        holidays: [],
+        totalWorkTime: '00:00',
+        totalBreakTime: '00:00',
+    }
+}
+
+const weeks = computed(() => {
+    const days = Object.values(daysWithData.value || {})
+        .filter(d => d?.date)
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+
+    const weekMap = new Map()
+    for (const day of days) {
+        const d = new Date(`${day.date}T00:00:00`)
+        const dow = (d.getDay() + 6) % 7 // 0 = Montag
+        const monday = addDays(d, -dow)
+        const key = toISODate(monday)
+        if (!weekMap.has(key)) {
+            weekMap.set(key, { key, monday, days: new Array(7).fill(null) })
+        }
+        weekMap.get(key).days[dow] = day
+    }
+
+    const result = Array.from(weekMap.values()).sort((a, b) => a.key.localeCompare(b.key))
+    for (const week of result) {
+        for (let i = 0; i < 7; i++) {
+            if (!week.days[i]) {
+                week.days[i] = emptyDay(toISODate(addDays(week.monday, i)))
+            }
+        }
+        week.weekNumber = isoWeekNumber(week.monday)
+        week.rangeLabel = `${formatDateDMY(week.monday)} – ${formatDateDMY(addDays(week.monday, 6))}`
+        week.totalWork = fmtMinutes(week.days.reduce((sum, d) => sum + parseHHMM(d.totalWorkTime), 0))
+        week.totalBreak = fmtMinutes(week.days.reduce((sum, d) => sum + parseHHMM(d.totalBreakTime), 0))
+    }
+    return result
+})
+
+/** ---------- Items (Schichten + Individualzeiten) eines einzelnen Tages ---------- **/
+function itemsForDay(day) {
+    const out = []
+
+    for (const s of (Array.isArray(day?.shifts) ? day.shifts : [])) {
+        if (!s?.start || !s?.end) continue
+
+        const startAt = toDateTime(day.date, s.start)
+        let endAt = toDateTime(day.date, s.end)
+        if (endAt < startAt) endAt = addDays(endAt, 1)
+
+        out.push({
+            ...s,
+            _type: 'shift',
+            _day: day.date,
+            _startAt: startAt,
+            _endAt: endAt,
+            _project: s.project,
+            _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
+            _key: `${s.id}-${day.date}-${s.start}-${s.end}`
+        })
+    }
+
+    for (const it of (Array.isArray(day?.individualTimes) ? day.individualTimes : [])) {
+        const startTime = it?.full_day ? '00:00' : (it?.start_time ?? '00:00')
+        const endTime = it?.full_day ? '23:59' : (it?.end_time ?? '23:59')
+        const startAt = toDateTime(day.date, String(startTime).slice(0, 5))
+        let endAt = toDateTime(day.date, String(endTime).slice(0, 5))
+        if (endAt < startAt) endAt = addDays(endAt, 1)
+
+        out.push({
+            ...it,
+            start: String(startTime).slice(0, 5),
+            end: String(endTime).slice(0, 5),
+            _type: 'individual_time',
+            _day: day.date,
+            _startAt: startAt,
+            _endAt: endAt,
+            _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
+            _key: `it-${it.id}-${day.date}-${startTime}-${endTime}`
+        })
+    }
+
+    out.sort((a, b) => a._startAt.getTime() - b._startAt.getTime())
+    return out
 }
 
 /** ---------- Shifts über Zeitraum einsammeln ---------- **/
@@ -236,6 +518,7 @@ const workItemsInRange = computed(() => {
                     _day: day.date,
                     _startAt: startAt,
                     _endAt: endAt,
+                    _project: s.project,
                     _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
                     _key: `${s.id}-${day.date}-${s.start}-${s.end}`
                 })
@@ -311,67 +594,45 @@ const uniqueGroupsForRange = computed(() => {
     return Array.from(map.values())
 })
 
-/** ---------- Raum-Buckets (über gesamten Zeitraum) ---------- **/
-const roomBuckets = computed(() => {
-    const buckets = new Map()
 
-    workItemsInRange.value.forEach(i => {
-        const room = i?._type === 'shift' ? (i?.room ?? i?.event?.room ?? null) : null
-        const key = room?.id ? String(room.id) : 'no-room'
-
-        if (!buckets.has(key)) {
-            buckets.set(key, {
-                key,
-                room,
-                title: room?.name ?? page.props?.translations?.no_room ?? 'Ohne Raum',
-                items: []
-            })
-        }
-        buckets.get(key).items.push(i)
-    })
-
-    // sort innerhalb der Buckets nach Startzeit
-    buckets.forEach(b => {
-        b.items.sort((a, b) => a._startAt.getTime() - b._startAt.getTime())
-    })
-
-    // "Ohne Raum" nach unten
-    const arr = Array.from(buckets.values())
-    arr.sort((a, b) => (a.key === 'no-room') - (b.key === 'no-room'))
-    return arr
-})
-
-/** ---------- Prev / Next belegter Tag (an Server melden) ---------- **/
-const assignedDatesSorted = computed(() => {
-    const entries = Object.values(daysWithData.value || {})
-    const withShifts = entries.filter(d => Array.isArray(d.shifts) && d.shifts.length > 0)
-    return withShifts.map(d => d.date).sort((a, b) => a.localeCompare(b))
-})
-
+/** ---------- Prev / Next Zeitspanne (an Server melden) ---------- **/
 const goToPrevAssignedDay = () => {
-    const start = range.value.start
-    if (!start) return
-    const dates = assignedDatesSorted.value
-    const idx = dates.findIndex(d => d >= start)
-    const prev = idx > 0 ? dates[idx - 1] : null
-    if (prev) patchServerDate(prev)
+    const r = range.value
+    if (!r.start || !r.end) return
+
+    const startAt = new Date(`${r.start}T00:00:00`)
+    const endAt = new Date(`${r.end}T00:00:00`)
+    const spanDays = Math.round((endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    if (!Number.isFinite(spanDays) || spanDays <= 0) return
+
+    const newStart = addDays(startAt, -spanDays)
+    const newEnd = addDays(endAt, -spanDays)
+    patchServerDateRange(toISODate(newStart), toISODate(newEnd))
 }
 
 const goToNextAssignedDay = () => {
-    const end = range.value.end
-    if (!end) return
-    const dates = assignedDatesSorted.value
-    const idx = dates.findIndex(d => d > end)
-    const next = idx !== -1 ? dates[idx] : null
-    if (next) patchServerDate(next)
+    const r = range.value
+    if (!r.start || !r.end) return
+
+    const startAt = new Date(`${r.start}T00:00:00`)
+    const endAt = new Date(`${r.end}T00:00:00`)
+    const spanDays = Math.round((endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    if (!Number.isFinite(spanDays) || spanDays <= 0) return
+
+    const newStart = addDays(startAt, spanDays)
+    const newEnd = addDays(endAt, spanDays)
+    patchServerDateRange(toISODate(newStart), toISODate(newEnd))
 }
 
-function patchServerDate(dateStr) {
+function patchServerDateRange(startDateStr, endDateStr) {
     const userId = page.props?.auth?.user?.id
     if (!userId) return
     router.patch(
         route('update.user.worker.shift-plan.filters.update', userId),
-        { start_date: dateStr, end_date: dateStr },
+        {
+            start_date: startDateStr,
+            end_date: endDateStr
+        },
         { preserveState: true, preserveScroll: true }
     )
 }

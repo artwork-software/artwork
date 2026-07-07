@@ -15,4 +15,14 @@ readonly class MainPositionVerifiedService
     {
         $this->mainPositionVerifiedRepository->forceDelete($mainPositionVerified);
     }
+
+    public function softDelete(MainPositionVerified $mainPositionVerified): void
+    {
+        $this->mainPositionVerifiedRepository->delete($mainPositionVerified);
+    }
+
+    public function restore(MainPositionVerified $mainPositionVerified): void
+    {
+        $this->mainPositionVerifiedRepository->restore($mainPositionVerified);
+    }
 }

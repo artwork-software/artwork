@@ -11,7 +11,7 @@ class RemoveDatabaseNotificationsCommand extends Command
 {
     protected $signature = 'artwork:remove-archived-database-notifications';
 
-    protected $description = 'This command forceDeletes all DatabaseNotifications which are older than 7 days';
+    protected $description = 'This command forceDeletes archived notifications older than 30 days and unread notifications older than 1 year';
 
     public function __construct(
         private readonly DatabaseNotificationService $databaseNotificationService,
@@ -23,7 +23,8 @@ class RemoveDatabaseNotificationsCommand extends Command
     public function handle(): int
     {
         try {
-            $this->databaseNotificationService->removeNotificationsOlderThanSevenDays();
+            $this->databaseNotificationService->removeArchivedNotificationsOlderThanThirtyDays();
+            $this->databaseNotificationService->removeUnreadNotificationsOlderThanOneYear();
         } catch (Throwable $t) {
             $this->logger->error($t->getMessage());
             $this->error($t->getMessage());

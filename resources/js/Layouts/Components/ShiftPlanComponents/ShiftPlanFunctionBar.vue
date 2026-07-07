@@ -5,7 +5,7 @@
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
                     <!-- Date Shortcuts - 3 vertical icons -->
                     <DatePickerComponent v-if="dateValue" :dateValueArray="dateValue"
-                                           :is_shift_plan="true"></DatePickerComponent>
+                                           :is_shift_plan="true" :is_daily_view="isDailyView"></DatePickerComponent>
                     <div class="flex gap-x-1 mx-2">
                         <ToolTipComponent
                             direction="right"
@@ -33,19 +33,29 @@
                         />
                     </div>
                     <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <PropertyIcon name="IconChevronLeftPipe" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                             @click="previousTimeRange"/>
-                        <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                         @click="scrollToPreviousDay"/>
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Previous time range')"
+                            icon="IconChevronLeftPipe"
+                            icon-size="h-7 w-7"
+                            @click="previousTimeRange"
+                        />
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="scrollBackTooltip"
+                            icon="IconChevronLeft"
+                            icon-size="h-7 w-7"
+                            @click="scrollToPreviousDay"
+                        />
                         <Menu as="div" class="relative inline-block text-left">
                             <div class="flex items-center">
                                 <MenuButton class="">
-                                    <PropertyIcon name="IconCalendarMonth" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
-                                                       v-if="userGotoMode === 'month'"/>
-                                    <PropertyIcon name="IconCalendarWeek" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
-                                                      v-if="userGotoMode === 'week'"/>
-                                    <PropertyIcon name="IconCalendar" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"
-                                                  v-if="userGotoMode === 'day'"/>
+                                    <ToolTipComponent
+                                        direction="bottom"
+                                        :tooltip-text="$t('Change scroll mode')"
+                                        :icon="userGotoMode === 'month' ? 'IconCalendarMonth' : (userGotoMode === 'week' ? 'IconCalendarWeek' : 'IconCalendar')"
+                                        icon-size="h-5 w-5"
+                                    />
                                 </MenuButton>
                             </div>
 
@@ -92,11 +102,21 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                          @click="scrollToNextDay"/>
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="scrollForwardTooltip"
+                            icon="IconChevronRight"
+                            icon-size="h-7 w-7"
+                            @click="scrollToNextDay"
+                        />
 
-                        <PropertyIcon name="IconChevronRightPipe" stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                              @click="nextTimeRange"/>
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Next time range')"
+                            icon="IconChevronRightPipe"
+                            icon-size="h-7 w-7"
+                            @click="nextTimeRange"
+                        />
                     </div>
                     <div class="items-center hidden">
                         <div class="flex items-center">
@@ -118,15 +138,21 @@
                         :is-small="true"
                         ref="projectSearchInput"
                         is-small
-                        label="Search project"
+                        label="Search project or artist"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
                         <div v-for="(project, index) in projectSearchResults"
                              :key="index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                            {{ project.name }}
+                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer flex flex-col">
+                            <div>{{ project.name }}</div>
+                            <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
+                                {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
+                            </div>
+                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                                {{ $t('Artist') }}: {{ project.artists }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -146,7 +172,7 @@
 
                 <div class=" mr-2">
                     <SwitchIconTooltip
-                        v-model="usePage().props.auth.user.calendar_settings.use_project_time_period"
+                        v-model="activeSettings.use_project_time_period"
                         :tooltip-text="$t('Project search')"
                         size="md"
                         @change="handleUseTimePeriodChange"
@@ -165,7 +191,7 @@
                     <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
                                       @click="showCalendarSettingsModal = true"/>-->
 
-                    <FunctionBarSetting :is-planning="false" is-in-shift-plan />
+                    <FunctionBarSetting :is-planning="false" is-in-shift-plan :is-daily-view="isDailyView" />
 
                     <!--<ToolTipComponent  direction="bottom"
                                        :tooltip-text="$t('Filter')"
@@ -178,7 +204,7 @@
                         :personal-filters="personalFilters"
                         :filter-options="filterOptions"
                         :crafts="crafts"
-                        filter-type="shift_filter"
+                        :filter-type="isDailyView ? 'shift_daily_filter' : 'shift_filter'"
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
@@ -187,10 +213,13 @@
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal"
-                                      icon-size="h-5 w-5" classes-button="ui-button" v-if="!isFullscreen" @click="enterFullscreenMode"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Export as PDF')" icon="IconFileExport"
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="showShiftPlanExportModal = true"/>
+                    <ToolTipComponent direction="bottom" :tooltip-text="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
+                                      :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
+                                      icon-size="h-5 w-5" classes-button="ui-button" @click="enterFullscreenMode"/>
 
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
+                    <ToolTipComponent v-if="can('can subscribe shift calendar') || hasAdminRole()" direction="bottom" :tooltip-text="$t('Subscribe to shift calendar')" icon="IconCalendarStar"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="showCalendarAboSettingModal = true"/>
                     <!--<ShiftPlanFilter
                         :filter-options="filterOptions"
@@ -216,6 +245,7 @@
 
     <ShiftCommitDateSelectModal
         :date-array="dateValue"
+        :crafts="crafts"
         v-if="showShiftCommitDateSelectModal"
         @close="showShiftCommitDateSelectModal = false"
 
@@ -228,9 +258,15 @@
         in-shift-plan
     />
 
-    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :eventTypes="eventTypes"/>
+    <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :crafts="crafts"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 
+    <ExportModal
+        v-if="showShiftPlanExportModal"
+        @close="showShiftPlanExportModal = false"
+        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT]"
+        :configuration="shiftPlanExportConfiguration"
+    />
 </template>
 
 <script setup>
@@ -249,6 +285,8 @@ import {router, useForm, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
+import {useI18n} from "vue-i18n";
+const {t: $t} = useI18n();
 import axios from 'axios';
 import {usePermission} from "@/Composeables/Permission.js";
 import ShiftCommitDateSelectModal from "@/Pages/Shifts/Components/ShiftCommitDateSelectModal.vue";
@@ -258,7 +296,16 @@ import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettin
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 const {hasAdminRole, can} = usePermission(usePage().props);
+
+const exportTabEnums = useExportTabEnums();
+
+const ExportModal = defineAsyncComponent({
+    loader: () => import('@/Layouts/Components/Export/Modals/ExportModal.vue'),
+    delay: 200,
+    timeout: 3000,
+});
 
 const DatePickerComponent = defineAsyncComponent({
     loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
@@ -277,7 +324,11 @@ const props = defineProps({
     crafts: Array,
     projectNameUsedForProjectTimePeriod: String,
     firstProjectShiftTabId: [Number, String],
-    eventTypes: Array
+    eventTypes: Array,
+    isDailyView: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
@@ -288,14 +339,43 @@ const showShiftCommitDateSelectModal = ref(false);
 const showCalendarSettingsModal = ref(false);
 const showCalendarAboInfoModal = ref(false);
 const showCalendarAboSettingModal = ref(false);
+const showShiftPlanExportModal = ref(false);
 const projectSearch = ref('');
 const projectSearchResults = ref([]);
+const activeSettings = computed(() => {
+    if (props.isDailyView) {
+        return usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings;
+    }
+    return usePage().props.shift_plan_settings;
+});
+
+// Configuration handed to the PDF export modal so the export mirrors the currently displayed view
+// (time period, active filters and project mode are all taken over via these parameters).
+const shiftPlanExportConfiguration = computed(() => {
+    const projectId = usePage().props.projectId ?? null;
+    const settings = activeSettings.value;
+    const useProjectMode = !!settings?.use_project_time_period && !!settings?.time_period_project_id;
+    return {
+        [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]: {
+            startDate: props.dateValue?.[0] ?? null,
+            endDate: props.dateValue?.[1] ?? null,
+            projectId: projectId,
+            isInProjectView: !!projectId,
+            isDailyView: props.isDailyView,
+            projectName: (projectId || useProjectMode) ? props.projectNameUsedForProjectTimePeriod : null,
+            // In project mode, shifts/events belonging to this project are highlighted in the PDF.
+            highlightProjectId: useProjectMode ? settings.time_period_project_id : null,
+        },
+    };
+});
+
 const userCalendarSettings = useForm({
-    show_qualifications: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.show_qualifications : false,
-    shift_notes: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.shift_notes : false,
-    high_contrast: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.high_contrast : false,
-    expand_days: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.expand_days : false,
-    display_project_groups: usePage().props.auth.user.calendar_settings ? usePage().props.auth.user.calendar_settings.display_project_groups : false,
+    is_daily_view: props.isDailyView,
+    show_qualifications: activeSettings.value ? activeSettings.value.show_qualifications : false,
+    shift_notes: activeSettings.value ? activeSettings.value.shift_notes : false,
+    high_contrast: activeSettings.value ? activeSettings.value.high_contrast : false,
+    expand_days: activeSettings.value ? activeSettings.value.expand_days : false,
+    display_project_groups: activeSettings.value ? activeSettings.value.display_project_groups : false,
 });
 
 const CalendarSettingsModal = defineAsyncComponent({
@@ -322,11 +402,27 @@ const activeFilters = computed(() => {
 });
 
 const isCalendarUsingProjectTimePeriod = computed(() => {
-    return usePage().props.auth.user.calendar_settings.use_project_time_period;
+    return activeSettings.value?.use_project_time_period;
 });
 
 const userGotoMode = computed(() => {
     return usePage().props.auth.user.goto_mode;
+});
+
+const scrollBackTooltip = computed(() => {
+    const mode = userGotoMode.value;
+    if (mode === 'day') return $t('Scroll back by day');
+    if (mode === 'week') return $t('Scroll back by week');
+    if (mode === 'month') return $t('Scroll back by month');
+    return $t('Scroll back by day');
+});
+
+const scrollForwardTooltip = computed(() => {
+    const mode = userGotoMode.value;
+    if (mode === 'day') return $t('Scroll forward by day');
+    if (mode === 'week') return $t('Scroll forward by week');
+    if (mode === 'month') return $t('Scroll forward by month');
+    return $t('Scroll forward by day');
 });
 
 // Methods
@@ -338,7 +434,7 @@ const saveUserCalendarSettings = () => {
 };
 
 const getTimePeriodProjectId = () => {
-    return usePage().props.auth.user.calendar_settings.time_period_project_id;
+    return activeSettings.value?.time_period_project_id;
 };
 
 const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
@@ -346,7 +442,8 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
         route('user.calendar_settings.toggle_calendar_settings_use_project_period_shift_plan'),
         {
             use_project_time_period: enabled,
-            project_id: projectId
+            project_id: projectId,
+            is_daily_view: props.isDailyView
         },
         {
             preserveState: false
@@ -423,12 +520,13 @@ const openHistoryModal = () => {
 };
 
 // Daily view mode management
-const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const dailyViewMode = ref(usePage().props.auth.user.shift_plan_daily_view ?? false);
 
 const changeDailyViewMode = (newValue) => {
     dailyViewMode.value = newValue;
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
+        daily_view: dailyViewMode.value,
+        context: 'shift_plan'
     }, {
         preserveScroll: false,
         preserveState: false
@@ -447,6 +545,7 @@ const jumpToToday = () => {
             router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
                 start_date: today,
                 end_date: today,
+                isDailyView: true,
             }, {
                 preserveScroll: true,
                 preserveState: false
@@ -457,6 +556,7 @@ const jumpToToday = () => {
         router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
             start_date: today,
             end_date: today,
+            isDailyView: props.isDailyView,
         }, {
             preserveScroll: true,
             preserveState: false
@@ -481,6 +581,7 @@ const jumpToCurrentWeek = () => {
     router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: currentWeekStart.toISOString().slice(0, 10),
         end_date: currentWeekEnd.toISOString().slice(0, 10),
+        isDailyView: props.isDailyView,
     }, {
         preserveScroll: true,
         preserveState: false
@@ -500,6 +601,7 @@ const jumpToCurrentMonth = () => {
             router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
                 start_date: monthStart.toISOString().slice(0, 10),
                 end_date: monthEnd.toISOString().slice(0, 10),
+                isDailyView: false,
             }, {
                 preserveScroll: true,
                 preserveState: false
@@ -510,6 +612,7 @@ const jumpToCurrentMonth = () => {
         router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
             start_date: monthStart.toISOString().slice(0, 10),
             end_date: monthEnd.toISOString().slice(0, 10),
+            isDailyView: props.isDailyView,
         }, {
             preserveScroll: true,
             preserveState: false
@@ -563,7 +666,7 @@ watch(projectSearch, (searchValue) => {
     );
 });
 
-watch(() => usePage().props.auth.user.calendar_settings.use_project_time_period, (newValue) => {
+watch(() => activeSettings.value?.use_project_time_period, (newValue) => {
     if (newValue) {
         nextTick(() => {
             document.getElementById('shiftPlanProjectSearch')?.focus();

@@ -11,17 +11,18 @@
                 @update-multi-edit="changeMultiEdit"/>
         </div>
         <div class="flex relative events-at-a-glance-container" :class="project ? '-ml-6' : '-ml-1 -mt-6'">
-            <template v-if="eventsAtAGlanceRef">
-                <div v-for="room in computedRooms">
+            <template v-if="eventsAtAGlanceRef && eventsAtAGlanceRef.length > 0">
+                <div v-for="roomData in eventsAtAGlanceRef" :key="roomData.roomId">
                     <div :class="isSearchingForProject ? '' : 'sticky' + (isCalendarViewRoute ? ' top-[4.5rem] mt-7' : '')"
                          class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg z-40">
                         <div class="flex calendarRoomHeader font-semibold items-center ml-4">
-                            {{ room.name }}
+                            {{ roomData.roomName }}
                         </div>
                     </div>
-                    <div v-for="day in eventsAtAGlanceRef">
-                        <template v-for="event in day.events">
-                            <div v-if="event.roomId === room.id" class="min-h-[46px]">
+
+                    <div v-for="(dayData, dateKey) in getDaysFromRoomData(roomData)" :key="dateKey">
+                        <template v-for="event in dayData.events" :key="event.id">
+                            <div class="min-h-[46px]">
                                 <div class="at-a-glance-event-container py-0.5 pr-1"
                                      :data-event-id="event.id">
                                     <SingleCalendarEvent v-if="currentEventsInView.has(String(event.id))"
@@ -94,7 +95,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import {onMounted, ref} from "vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
@@ -138,23 +139,16 @@ const {hasAdminRole} = usePermission(usePage().props),
     openDeleteSelectedEventsModal = ref(false),
     currentEventsInView = ref(new Set()),
     eventsAtAGlanceRef = ref(JSON.parse(JSON.stringify(props.eventsAtAGlance))),
-    computedRooms = computed(() => {
-        let computedRooms = [];
-
-        props.rooms.forEach((room) => {
-            let hasEvents = Object.values(eventsAtAGlanceRef.value).some((day) => {
-                return day.events.some((event) => {
-                    return event.roomId === room.id;
-                });
-            });
-
-            if (hasEvents) {
-                computedRooms.push(room);
+    // Extract day data from room object (all keys except roomId and roomName)
+    getDaysFromRoomData = (roomData) => {
+        const days = {};
+        for (const key in roomData) {
+            if (key !== 'roomId' && key !== 'roomName') {
+                days[key] = roomData[key];
             }
-        });
-
-        return computedRooms;
-    }),
+        }
+        return days;
+    },
     changeMultiEdit = (multiEditEnabled) => {
         multiEdit.value = multiEditEnabled;
     },

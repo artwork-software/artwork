@@ -35,8 +35,8 @@
                         <h1 class="mt-1 text-2xl font-semibold leading-tight">
                             {{ user_to_edit.first_name }} {{ user_to_edit.last_name }}
                         </h1>
-                        <p class="mt-1 text-sm text-white/80">
-                            {{ $page.props.businessName }}
+                        <p v-if="user_to_edit.business" class="mt-1 text-sm text-white/80">
+                            {{ user_to_edit.business }}
                         </p>
                     </div>
                 </div>
@@ -95,6 +95,16 @@
                         :label="$t('Pronouns')"
                         @focusout="editUser"
                         id="pronouns"
+                    />
+
+                    <BaseInput
+                        :disabled="!(isSignedInUser() || can('can manage workers'))"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        type="text"
+                        v-model="userForm.business"
+                        :label="$t('Company')"
+                        @focusout="editUser"
+                        id="business"
                     />
 
                     <BaseInput
@@ -214,7 +224,11 @@
                                 @change="editUser"
                                 name="high_contrast"
                                 type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                :disabled="!canEditPreferences"
+                                :class="[
+                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
+                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                ]"
                             />
                             <span>
                 <span class="block text-sm font-medium text-zinc-900">{{ $t('High contrast') }}</span>
@@ -231,7 +245,11 @@
                                 @change="editUser"
                                 name="email_private"
                                 type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                :disabled="!canEditPreferences"
+                                :class="[
+                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
+                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                ]"
                             />
                             <span>
                 <span class="block text-sm font-medium text-zinc-900">{{ $t('Email private') }}</span>
@@ -248,7 +266,11 @@
                                 @change="editUser"
                                 name="phone_private"
                                 type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                :disabled="!canEditPreferences"
+                                :class="[
+                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
+                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                ]"
                             />
                             <span>
                             <span class="block text-sm font-medium text-zinc-900">{{ $t('Phone private') }}</span>
@@ -265,7 +287,11 @@
                                 @change="editUser"
                                 name="use_chat"
                                 type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                :disabled="!canEditPreferences"
+                                :class="[
+                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
+                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                ]"
                             />
                             <span>
                             <span class="block text-sm font-medium text-zinc-900">{{ $t('Use Artwork Chat') }}</span>
@@ -484,6 +510,7 @@ const { proxy } = getCurrentInstance()
 const page = usePage()
 const hasAdminRole = () => (is('artwork admin'))
 const isSignedInUser = () => props.user_to_edit?.id === page.props?.auth?.user?.id
+const canEditPreferences = computed(() => isSignedInUser() || can('can manage workers') || hasAdminRole())
 
 /* ----- UI State ----- */
 const successSaved = ref(false)
@@ -503,6 +530,7 @@ const userForm = useForm({
     email: props.user_to_edit.email,
     photo: props.user_to_edit.profile_photo_path,
     position: props.user_to_edit.position,
+    business: props.user_to_edit.business,
     pronouns: props.user_to_edit.pronouns,
     departments: props.user_to_edit.departments || [],
     phone_number: props.user_to_edit.phone_number,

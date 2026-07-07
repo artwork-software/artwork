@@ -42,11 +42,46 @@ class DatabaseNotificationRepository extends BaseRepository
         return $this->deleteOrFail($databaseNotification);
     }
 
-    public function findOlderThan(Carbon $carbon): Collection
+    public function findArchivedOlderThan(Carbon $carbon): Collection
     {
         return $this->getNewModelQuery()
             ->whereNotNull('read_at')
             ->where('read_at', '<', $carbon)
             ->get();
+    }
+
+    public function findUnreadOlderThan(Carbon $carbon): Collection
+    {
+        return $this->getNewModelQuery()
+            ->whereNull('read_at')
+            ->where('created_at', '<', $carbon)
+            ->get();
+    }
+
+    /**
+     * Bulk-deletes up to $chunkSize archived notifications older than the given date in a single
+     * DELETE statement (no model hydration). Returns the number of deleted rows so the caller can
+     * loop until the table is drained while keeping each transaction small.
+     */
+    public function deleteArchivedOlderThan(Carbon $carbon, int $chunkSize = 2000): int
+    {
+        return $this->getNewModelQuery()
+            ->whereNotNull('read_at')
+            ->where('read_at', '<', $carbon)
+            ->limit($chunkSize)
+            ->delete();
+    }
+
+    /**
+     * Bulk-deletes up to $chunkSize unread notifications older than the given date in a single
+     * DELETE statement. Returns the number of deleted rows.
+     */
+    public function deleteUnreadOlderThan(Carbon $carbon, int $chunkSize = 2000): int
+    {
+        return $this->getNewModelQuery()
+            ->whereNull('read_at')
+            ->where('created_at', '<', $carbon)
+            ->limit($chunkSize)
+            ->delete();
     }
 }

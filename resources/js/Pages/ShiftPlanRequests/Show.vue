@@ -22,7 +22,6 @@
 
             <!-- Day Header -->
             <WeekOverview :days="daysComputed" :grid-style="gridStyle"/>
-
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
@@ -95,10 +94,22 @@ const props = defineProps({
     request: {type: Object, required: true},
     shifts: {type: Array, required: true},
     days: {type: Array, required: true},
+    individualTimes: {type: Array, default: () => []},
+    craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
+    overviewChanges: {type: Object, default: () => ({removed: []})},
     isMyRequest: {type: Boolean, required: false, default: false},
 });
 
-const daysComputed = computed(() => props.days);
+const daysComputed = computed(() => {
+    return props.days.map(day => {
+        const rejection = props.request.rejected_days?.find(rd => rd.date === day.date);
+        return {
+            ...day,
+            is_rejected: !!rejection,
+            rejection_reason: rejection?.reason || null,
+        };
+    });
+});
 const gridStyle = computed(() => {
     const cols = daysComputed.value.length || 7;
     return {gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`};
@@ -112,21 +123,26 @@ const rejectState = reactive({
     globalComment: '',
     selectedDays: {}, // date => true
     dayReasons: {},   // date => reason string
-    shiftSelections: {}, // shiftId => true
-    shiftReasons: {}, // shiftId => reason string
+    shiftSelections: {}, // uniqueKey => true
+    shiftReasons: {}, // uniqueKey => reason string
 });
 
 const hasAnySelection = computed(() => Object.keys(rejectState.selectedDays).length > 0 || Object.keys(rejectState.shiftSelections).length > 0);
 const canConfirmReject = computed(() => {
     if (!rejectState.active) return false;
+
     // Wenn keine Auswahl, dann globaler Kommentar muss vorhanden sein
-    if (!hasAnySelection.value) return rejectState.globalComment.trim().length > 0;
-    // Wenn Auswahl: Pro ausgewähltem Tag oder Schicht entweder ein individueller Grund oder globaler Grund muss existieren
-    // Mindestens irgendein Grund insgesamt
-    const dayReasonsOk = Object.keys(rejectState.selectedDays).every(d => (rejectState.dayReasons[d] && rejectState.dayReasons[d].trim().length > 0) || rejectState.globalComment.trim().length > 0);
-    const shiftReasonsOk = Object.keys(rejectState.shiftSelections).every(id => (rejectState.shiftReasons[id] && rejectState.shiftReasons[id].trim().length > 0) || rejectState.globalComment.trim().length > 0);
-    const anyReason = rejectState.globalComment.trim().length > 0 || Object.values(rejectState.dayReasons).some(r => r?.trim().length) || Object.values(rejectState.shiftReasons).some(r => r?.trim().length);
-    return dayReasonsOk && shiftReasonsOk && anyReason;
+    if (!hasAnySelection.value) {
+        return rejectState.globalComment.trim().length > 0;
+    }
+
+    // Wenn Auswahl: Alle ausgewählten Elemente müssen validiert werden
+    // Mindestens irgendein Grund insgesamt muss existieren
+    const anyReason = rejectState.globalComment.trim().length > 0 ||
+                      Object.values(rejectState.dayReasons).some(r => r?.trim().length) ||
+                      Object.values(rejectState.shiftReasons).some(r => r?.trim().length);
+
+    return anyReason;
 });
 
 // Auswahl Handler
@@ -138,16 +154,16 @@ const toggleDaySelection = (dayDate) => {
         rejectState.selectedDays[dayDate] = true;
     }
 };
-const toggleShiftSelection = (shiftId) => {
-    if (rejectState.shiftSelections[shiftId]) {
-        delete rejectState.shiftSelections[shiftId];
-        delete rejectState.shiftReasons[shiftId];
+const toggleShiftSelection = (uniqueKey) => {
+    if (rejectState.shiftSelections[uniqueKey]) {
+        delete rejectState.shiftSelections[uniqueKey];
+        delete rejectState.shiftReasons[uniqueKey];
     } else {
-        rejectState.shiftSelections[shiftId] = true;
+        rejectState.shiftSelections[uniqueKey] = true;
     }
 };
-const updateShiftReason = ({shiftId, reason}) => {
-    rejectState.shiftReasons[shiftId] = reason;
+const updateShiftReason = ({uniqueKey, reason}) => {
+    rejectState.shiftReasons[uniqueKey] = reason;
 };
 const updateDayReason = ({day, reason}) => {
     rejectState.dayReasons[day] = reason;
@@ -172,17 +188,30 @@ const cancelReject = () => {
 
 const confirmReject = () => {
     if (!canConfirmReject.value) return;
+
+    const parseUniqueKey = (key) => {
+        const parts = key.split('-');
+        return {
+            shift_id: Number(parts[0]),
+            row_type: parts[1],               // user / freelancer / service_provider / unassigned
+            row_id: parts[2] === 'null' ? null : Number(parts[2]),
+            unique_key: key,
+        };
+    };
+
     const payload = {
         global_reason: rejectState.globalComment || null,
         days: Object.keys(rejectState.selectedDays).map(date => ({
             date,
-            reason: rejectState.dayReasons[date] || rejectState.globalComment || null,
+            reason: rejectState.dayReasons[date] || null,
         })),
-        shifts: Object.keys(rejectState.shiftSelections).map(id => ({
-            shift_id: Number(id),
-            reason: rejectState.shiftReasons[id] || rejectState.globalComment || null,
+        shifts: Object.keys(rejectState.shiftSelections).map(key => ({
+            ...parseUniqueKey(key),
+            reason: rejectState.shiftReasons[key] || null,
         })),
     };
+
+
     router.post(
         route('shift-plan-requests.reject', props.request.id),
         payload,
@@ -212,6 +241,23 @@ const acceptRequest = () => {
 };
 
 // Rows aus Shifts bauen
+const rejectedMap = computed(() => {
+    const list = props.request.rejected_shifts ?? [];
+    const map = {};
+    for (const item of list) {
+        if (item?.unique_key) map[item.unique_key] = { reason: item.reason ?? null, rejected: true };
+    }
+    return map;
+});
+
+const typeLabelForType = (type) => {
+    switch (type) {
+        case 'freelancer': return 'Freelancer';
+        case 'service_provider': return 'Service provider';
+        default: return 'User';
+    }
+};
+
 const rows = computed(() => {
     const map = new Map();
     const ensureRow = (key, base) => {
@@ -231,20 +277,57 @@ const rows = computed(() => {
     };
     const addEntry = (row, date, shift, meta = {}) => {
         if (!row.days[date]) row.days[date] = [];
+        const uniqueKey = `${shift.id}-${row.type}-${row.id}`;
+
+        const existing = row.days[date].find(e => e.unique_key === uniqueKey);
+        if (existing) return;
+
         row.days[date].push({
+            unique_key: uniqueKey,
             shift_id: shift.id,
             start_time: shift.start,
             end_time: shift.end,
             qualification: meta.qualification || null,
             short_description: meta.short_description || shift.description || null,
             is_committed: !!shift.is_committed,
+            is_rejected: !!rejectedMap.value[uniqueKey]?.rejected || !!meta.workflow_rejection_reason,
+            workflow_rejection_reason: rejectedMap.value[uniqueKey]?.reason ?? meta.workflow_rejection_reason ?? null,
             has_changes_after_commit: meta.has_changes_after_commit ?? false,
-            has_changes_after_workflow: meta.has_changes_after_workflow ?? false
+            has_changes_after_workflow: meta.has_changes_after_workflow ?? false,
+            is_subsequently_added: !!shift.is_subsequently_added
         });
         row.totals.total_shifts += 1;
         row.totals.total_hours += computeDurationHours(shift);
     };
     const dayDates = daysComputed.value.map(d => d.date);
+
+    // Rows für alle Craft-Worker vorab anlegen
+    for (const user of (props.craftWorkers?.users || [])) {
+        ensureRow(`user-${user.id}`, {
+            type: 'user', id: user.id,
+            name: user.full_name,
+            avatar: user.profile_photo_url,
+            typeLabel: 'User'
+        });
+    }
+    for (const fl of (props.craftWorkers?.freelancers || [])) {
+        ensureRow(`freelancer-${fl.id}`, {
+            type: 'freelancer', id: fl.id,
+            name: fl.full_name,
+            avatar: fl.profile_photo_url,
+            typeLabel: 'Freelancer'
+        });
+    }
+    for (const sp of (props.craftWorkers?.service_providers || [])) {
+        ensureRow(`service_provider-${sp.id}`, {
+            type: 'service_provider', id: sp.id,
+            name: sp.name,
+            avatar: sp.profile_photo_url,
+            typeLabel: 'Service provider'
+        });
+    }
+
+    // Schichten in die Rows einfügen
     for (const shift of props.shifts) {
         const date = shift.formatted_dates?.frontend_start || shift.event_start_day;
         if (!date || !dayDates.includes(date)) continue;
@@ -266,7 +349,8 @@ const rows = computed(() => {
                     qualification: user.pivot?.short_description ?? null,
                     short_description: user.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
-                    has_changes_after_workflow: hasChangesInRequest
+                    has_changes_after_workflow: hasChangesInRequest,
+                    workflow_rejection_reason: user.pivot?.workflow_rejection_reason ?? null
                 });
             }
         }
@@ -287,7 +371,8 @@ const rows = computed(() => {
                     qualification: fl.pivot?.short_description ?? null,
                     short_description: fl.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
-                    has_changes_after_workflow: hasChangesInRequest
+                    has_changes_after_workflow: hasChangesInRequest,
+                    workflow_rejection_reason: fl.pivot?.workflow_rejection_reason ?? null
                 });
             }
         }
@@ -308,7 +393,8 @@ const rows = computed(() => {
                     qualification: sp.pivot?.short_description ?? null,
                     short_description: sp.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
-                    has_changes_after_workflow: hasChangesInRequest
+                    has_changes_after_workflow: hasChangesInRequest,
+                    workflow_rejection_reason: sp.pivot?.workflow_rejection_reason ?? null
                 });
             }
         }
@@ -331,6 +417,59 @@ const rows = computed(() => {
             });
         }
     }
+
+    // Individual Times zu den Rows hinzufügen
+    for (const it of props.individualTimes) {
+        const type = it.timeable_type_short;
+        const id = it.timeable_id;
+        const key = `${type}-${id}`;
+
+        if (!map.has(key)) continue;
+
+        const row = map.get(key);
+        for (const date of (it.days_of_individual_time || [])) {
+            if (!dayDates.includes(date)) continue;
+            if (!row.days[date]) row.days[date] = [];
+            row.days[date].push({
+                unique_key: `it-${it.id}`,
+                is_individual_time: true,
+                title: it.title,
+                start_time: it.start_time,
+                end_time: it.end_time,
+                full_day: it.full_day,
+                working_time_minutes: it.working_time_minutes,
+            });
+        }
+    }
+
+    // Geister-Einträge für komplett gestrichene / entfernte Schichten einfügen.
+    for (const marker of (props.overviewChanges?.removed || [])) {
+        if (!marker.date || !dayDates.includes(marker.date)) continue;
+        const key = `${marker.type}-${marker.id}`;
+        const row = ensureRow(key, {
+            type: marker.type,
+            id: marker.id,
+            name: marker.name || t('Unknown user'),
+            avatar: null,
+            typeLabel: typeLabelForType(marker.type)
+        });
+        if (!row.days[marker.date]) row.days[marker.date] = [];
+
+        const ghostKey = `ghost-${marker.shift_id ?? 'x'}-${marker.type}-${marker.id}-${marker.date}-${marker.source}`;
+        if (row.days[marker.date].some(e => e.unique_key === ghostKey)) continue;
+
+        row.days[marker.date].push({
+            unique_key: ghostKey,
+            is_removed_ghost: true,
+            shift_id: marker.shift_id ?? null,
+            start_time: marker.start,
+            end_time: marker.end,
+            qualification: marker.qualification || null,
+            source: marker.source, // 'post_commit' | 'shift_deleted'
+            reason: marker.reason
+        });
+    }
+
     return Array.from(map.values());
 });
 
@@ -356,9 +495,9 @@ const rejectRequestChange = (change) => {
         {},
         {
             preserveScroll: true,
-            onSuccess: () => {
-                // z.B. Liste der Changes aktualisieren
-            },
+            // Lokalen State (geöffnetes Sidepanel) behalten, aber frische Props laden, damit der
+            // zurückgesetzte Change sofort aus dem Änderungsverlauf verschwindet.
+            preserveState: true,
             onError: (errors) => {
                 console.error('Fehler beim Zurücksetzen der Änderung:', errors);
             },

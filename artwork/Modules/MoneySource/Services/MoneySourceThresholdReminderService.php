@@ -8,6 +8,7 @@ use Artwork\Modules\MoneySource\Models\MoneySourceReminder;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 readonly class MoneySourceThresholdReminderService
 {
@@ -43,7 +44,11 @@ readonly class MoneySourceThresholdReminderService
             //$positionSumPerMoneySource is a negative value, so we need to add it to the amount in order to subtract
             //otherwise the sign changes to plus (minus and minus is plus) and the value is just added to the amount
             $amountLeft = $moneySource->amount + $positionSumPerMoneySource;
-            $percentageLeft = $amountLeft / ($moneySource->amount / 100);
+            // Geldquelle ohne Budget (amount = 0) würde sonst eine Division durch Null auslösen;
+            // ohne Budget gilt jede Belegung als 0 % verbleibend.
+            $percentageLeft = ((float) $moneySource->amount === 0.0)
+                ? 0
+                : $amountLeft / ($moneySource->amount / 100);
 
             //if $percentageLeft undercuts given threshold-reminder value create notification for responsible users
             if ($percentageLeft < $moneySourceThresholdReminder->value) {
@@ -90,7 +95,7 @@ readonly class MoneySourceThresholdReminderService
     ): void {
         $notificationTitle = 'Finanzquelle läuft aus';
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => Str::uuid()->toString(),
             'type' => 'error',
             'message' => $notificationTitle
         ];

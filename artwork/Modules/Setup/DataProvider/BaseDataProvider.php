@@ -103,6 +103,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::DOCUMENT_REQUEST_CREATE->value,
+                'name_de' => "Dokumentenanfragen erstellen",
+                'translation_key' => "Create document requests",
+                'group' => 'Documents & Budget',
+                'tooltipText' => 'Nutzer*in darf Dokumentenanfragen erstellen und an andere Nutzer*innen zuweisen.',
+                'tooltipKey' => "User is allowed to create document requests and assign them to other users.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::DOCUMENT_REQUEST_EDIT->value,
+                'name_de' => "Dokumentenanfragen bearbeiten",
+                'translation_key' => "Edit document requests",
+                'group' => 'Documents & Budget',
+                'tooltipText' => 'Nutzer*in darf Dokumentenanfragen bearbeiten und den Status ändern.',
+                'tooltipKey' => "User is allowed to edit document requests and change their status.",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,
                 'name_de' => "Finanzierungsquellen anlegen und verwalten",
                 'translation_key' => "Create and manage funding sources",
@@ -228,8 +246,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "MA-Verwaltung",
                 'translation_key' => "Employee management",
                 'group' => 'Employee settings',
-                'tooltipText' => 'Darf MA Seiten anlegen und bearbeiten, aber die User nicht einladen.',
-                'tooltipKey' => "User can create and edit employee pages but cannot invite users.",
+                'tooltipText' => 'Darf MA Seiten bearbeiten, aber die User nicht einladen.',
+                'tooltipKey' => "User can edit employee pages but cannot invite users.",
                 'checked' => false
             ],
             [
@@ -291,6 +309,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::CAN_VIEW_OWN_ROSTER->value,
+                'name_de' => "Mein Einsatzplan sehen",
+                'translation_key' => "View own roster",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf den eigenen Einsatzplan („Mein Einsatzplan") einsehen.',
+                'tooltipKey' => "User can view their own roster (\"My roster\").",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_SUBSCRIBE_SHIFT_CALENDAR->value,
+                'name_de' => "Dienstplan-Kalender abonnieren",
+                'translation_key' => "Subscribe to shift calendar",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf den eigenen Einsatzplan als Kalender-Abo (ICS) abonnieren.',
+                'tooltipKey' => "User can subscribe to their roster as a calendar feed (ICS).",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::CAN_COMMIT_SHIFTS->value,
                 'name_de' => "Dienstpläne festschreiben",
                 'translation_key' => "Lock shift plans",
@@ -309,12 +345,21 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
-                'name' => PermissionEnum::VIEW_AND_DELETE_SAGE100_API_DATA->value,
-                'name_de' => "Sage-Datensätze einsehen",
-                'translation_key' => "View and delete Sage data records",
+                'name' => PermissionEnum::VIEW_PROJECT_SAGE_DATA->value,
+                'name_de' => "Projektbezogene Sage-Daten einsehen",
+                'translation_key' => "View project-related Sage data",
                 'group' => 'Interfaces',
-                'tooltipText' => 'Nutzer*innen mit diesem Recht können nicht zugewiesene Datensätze von Sage sehen.',
-                'tooltipKey' => "Users with this permission can view unassigned Sage data records.",
+                'tooltipText' => 'Nutzer*innen mit diesem Recht können projektbezogene, nicht zugewiesene Datensätze von Sage sehen.',
+                'tooltipKey' => "Users with this permission can view project-related unassigned Sage data records.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::VIEW_GLOBAL_SAGE_DATA->value,
+                'name_de' => "Globale Sage-Daten einsehen",
+                'translation_key' => "View global Sage data",
+                'group' => 'Interfaces',
+                'tooltipText' => 'Nutzer*innen mit diesem Recht können globale, nicht zugewiesene Datensätze von Sage sehen.',
+                'tooltipKey' => "Users with this permission can view global unassigned Sage data records.",
                 'checked' => false
             ],
             [
@@ -374,6 +419,19 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::INVENTORY_SETTINGS->value,
+                'name_de' => "Inventareinstellungen verwalten",
+                'translation_key' => "Manage inventory settings",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt den Zugriff auf und die Verwaltung aller Inventareinstellungen ' .
+                    '(Kategorien, Eigenschaften, Status, Tags, Allgemein) sowie die Sichtbarkeit ' .
+                    'von „Inventar" im Systemmenü',
+                'tooltipKey' => 'Allows access to and management of all inventory settings ' .
+                    '(categories, properties, status, tags, general) as well as the visibility ' .
+                    'of "Inventory" in the system menu',
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value,
                 'name_de' => "Private Kontaktdaten einsehen",
                 'translation_key' => "View private contact details",
@@ -398,6 +456,17 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Event management',
                 'tooltipText' => "Ein User mit diesem Recht kann geplante Termine bearbeiten, löschen und bestätigen",
                 'tooltipKey' => "A user with this permission can edit, delete and confirm scheduled events",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value,
+                'name_de' => "Im Planungskalender fest planen",
+                'translation_key' => "Plan fixed events in the planning calendar",
+                'group' => 'Event management',
+                'tooltipText' => 'Ein User mit diesem Recht darf im Planungskalender Termine direkt fest planen, ' .
+                    'ohne eine Belegungsanfrage stellen zu müssen. Im normalen Kalender hat dieses Recht keine Auswirkung.',
+                'tooltipKey' => 'A user with this permission can directly schedule fixed events in the planning calendar ' .
+                    'without having to submit a booking request. This permission has no effect in the normal calendar.',
                 'checked' => false
             ],
             [
@@ -446,12 +515,89 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'checked' => false
             ],
             [
+                'name' => PermissionEnum::MATERIAL_ISSUE_LOG_VIEW->value,
+                'name_de' => "Logbuch Materialausgaben einsehen",
+                'translation_key' => "View material issue log",
+                'group' => 'Inventory',
+                'tooltipText' => "Erlaubt das Einsehen des Logbuchs aller Materialausgabe-Änderungen",
+                'tooltipKey' => "Allows viewing the log of all material issue changes",
+                'checked' => false
+            ],
+            [
                 'name' => PermissionEnum::SHIFT_SETTINGS_VIEW_EDIT->value,
                 'name_de' => "Schichteinstellungen einsehen und bearbeiten",
                 'translation_key' => "View and edit shift settings",
                 'group' => 'Shifts',
                 'tooltipText' => "Erlaubt das Einsehen und Bearbeiten der Schichteinstellungen",
                 'tooltipKey' => "Allows viewing and editing shift settings",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CRM_VIEW->value,
+                'name_de' => "CRM einsehen",
+                'translation_key' => "View CRM",
+                'group' => 'CRM',
+                'tooltipText' => "Erlaubt den Zugriff auf das CRM-Modul und die Kontaktübersicht.",
+                'tooltipKey' => "Allows access to the CRM module and the contact overview.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CRM_MANAGER->value,
+                'name_de' => "CRM verwalten",
+                'translation_key' => "Manage CRM",
+                'group' => 'CRM',
+                'tooltipText' => "Erlaubt das Verwalten von Kontakttypen, Eigenschaftsgruppen und Eigenschaften im CRM.",
+                'tooltipKey' => "Allows managing contact types, property groups, and properties in the CRM.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::BI_EXPORT->value,
+                'name_de' => "BI-Daten exportieren",
+                'translation_key' => "Export BI data",
+                'group' => 'Business Intelligence',
+                'tooltipText' => "Erlaubt den Export von Business-Intelligence-Daten aus Projekten als Excel-Datei.",
+                'tooltipKey' => "Allows exporting business intelligence data from projects as an Excel file.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::BI_DASHBOARD->value,
+                'name_de' => "BI-Dashboard ansehen",
+                'translation_key' => "View BI dashboard",
+                'group' => 'Business Intelligence',
+                'tooltipText' => "Erlaubt den Zugriff auf mandantenweite Business-Intelligence-Übersichten.",
+                'tooltipKey' => "Allows access to tenant-wide business intelligence overviews.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::INVITE_EXTERNAL->value,
+                'name_de' => "Externen Zugriff geben",
+                'translation_key' => "Grant external access",
+                'group' => 'CRM',
+                'tooltipText' => 'Nutzer*in darf externe Personen (Künstler*innen, Dozent*innen, ' .
+                    'Dienstleister*innen) einladen, damit diese ihre eigenen CRM-Daten pflegen und/oder ' .
+                    'Zugriff auf freigegebene Projekttabs bekommen. Diese Einladung bedeutet potenzielle ' .
+                    'Datenweitergabe nach außen.',
+                'tooltipKey' => 'User can invite external persons (artists, lecturers, service providers) ' .
+                    'to maintain their own CRM data and/or access shared project tabs. This invitation ' .
+                    'means potential data disclosure to external parties.',
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_VIEW_SHIFT_USER_KPIS->value,
+                'name_de' => "Personal-Infodaten im Dienstplan sehen",
+                'translation_key' => "View staff info data in shift plan",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf das Info-Fenster mit spielzeitbezogenen Kennzahlen je Person im Dienstplan öffnen.',
+                'tooltipKey' => "User can open the per-person info window with season-related KPIs in the shift plan.",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CAN_PAY_OUT_OVERTIME->value,
+                'name_de' => "Überstunden auszahlen",
+                'translation_key' => "Pay out overtime",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf Überstunden manuell ausbuchen (Auszahlung) und damit das Zeitkonto reduzieren.',
+                'tooltipKey' => "User can manually book out overtime (payout) and thereby reduce the time account.",
                 'checked' => false
             ],
         ];

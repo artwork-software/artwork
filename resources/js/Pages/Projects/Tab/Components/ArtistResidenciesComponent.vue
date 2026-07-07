@@ -1,14 +1,14 @@
 <template>
     <div class="print:break-before-auto">
         <div v-if="loadResidenciesError" class="mb-2 text-xs text-rose-600">
-            {{ loadResidenciesError }}
+            {{ $t(loadResidenciesError) }}
         </div>
         <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-secondary">
             {{ $t('Loading data...') }}
         </div>
         <div class="sm:flex sm:items-center ">
             <div class="sm:flex-auto">
-                <BasePageTitle title="artist management" description="Manage the artist management for this project."/>
+                <span class="componentLabel">{{ $t('artist management') }}</span>
             </div>
             <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden">
                 <ToolTipComponent
@@ -32,7 +32,12 @@
                     <table class="min-w-full divide-y divide-gray-300">
                         <thead>
                         <tr>
-                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">{{ $t('Name artist')}}</th>
+                            <th v-for="(column, columnIndex) in enabledNameColumns" :key="column.key" scope="col"
+                                :class="columnIndex === 0
+                                    ? 'py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0'
+                                    : 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900'">
+                                {{ $t(nameColumnLabels[column.key] ?? column.key) }}
+                            </th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Position') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('phone number') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Arrival date') }}</th>
@@ -40,11 +45,12 @@
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Accommodation') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Room type') }}</th>
                             <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Total cost') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Description') }}</th>
                             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" @edit-residency="editResidency" @deleted="fetchArtistResidencies" @duplicated="fetchArtistResidencies" :key="artist_residency.id"/>
+                            <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" :name-columns="enabledNameColumns" @edit-residency="editResidency" @deleted="fetchArtistResidencies" @duplicated="fetchArtistResidencies" :key="artist_residency.id"/>
                         </tbody>
                     </table>
                 </div>
@@ -59,6 +65,9 @@
                 <component :is="IconMoneybag" class="h-4 w-4"/>
                 <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
             </div>
+            <div class="flex items-center gap-x-1 font-semibold">
+                <span class="text-xs">{{ $t('Total cost') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostAll }} €</span></span>
+            </div>
         </div>
     </div>
 
@@ -69,6 +78,12 @@
         :artist_residency="artistResidencyToEdit"
         :accommodations="localAccommodations"
         :artists="localArtists"
+        :crm-artists="localCrmArtists"
+        :crm-accommodations="localCrmAccommodations"
+        :artist-contact-type-properties="localArtistContactTypeProperties"
+        :default-breakfast-deduction="defaultBreakfastDeduction"
+        :default-do-not-save-artist="defaultDoNotSaveArtist"
+        :default-daily-allowance="defaultDailyAllowance"
     />
 
     <ExportArtistResidenciesModal
@@ -127,6 +142,27 @@ const loadResidenciesError = ref('');
 const localArtistResidencies = ref([]);
 const localArtists = ref([]);
 const localAccommodations = ref([]);
+const localCrmArtists = ref([]);
+const localCrmAccommodations = ref([]);
+const localArtistContactTypeProperties = ref([]);
+const defaultBreakfastDeduction = ref(5.60);
+const defaultDoNotSaveArtist = ref(false);
+const defaultDailyAllowance = ref(0.00);
+const nameColumns = ref([
+    { key: 'name', enabled: true },
+    { key: 'first_name', enabled: false },
+    { key: 'last_name', enabled: false },
+]);
+
+const nameColumnLabels = {
+    name: 'Artist name',
+    first_name: 'First name',
+    last_name: 'Last name',
+};
+
+const enabledNameColumns = computed(() =>
+    (nameColumns.value ?? []).filter(column => column.enabled)
+);
 
 watch(
     () => props.project?.id,
@@ -153,6 +189,15 @@ async function fetchArtistResidencies() {
         localArtistResidencies.value = data?.artist_residencies ?? [];
         localArtists.value = data?.artists ?? [];
         localAccommodations.value = data?.accommodations ?? [];
+        localCrmArtists.value = data?.crm_artists ?? [];
+        localCrmAccommodations.value = data?.crm_accommodations ?? [];
+        localArtistContactTypeProperties.value = data?.artist_contact_type_properties ?? [];
+        defaultBreakfastDeduction.value = data?.default_breakfast_deduction ?? 5.60;
+        defaultDoNotSaveArtist.value = data?.default_do_not_save_artist ?? false;
+        defaultDailyAllowance.value = data?.default_daily_allowance ?? 0.00;
+        if (Array.isArray(data?.name_columns) && data.name_columns.length > 0) {
+            nameColumns.value = data.name_columns;
+        }
     } catch (error) {
         console.error(error);
         loadResidenciesError.value = 'Unable to load artist residencies.';
@@ -166,7 +211,6 @@ const closeAddEditArtistResidenciesModal = (boolean) => {
 
     artistResidencyToEdit.value = null;
     if (boolean) {
-        console.log('Saved');
         showSaveSuccess.value = true;
         setTimeout(() => {
             showSaveSuccess.value = false;
@@ -190,12 +234,17 @@ const totalCostOfArtistResidencies = computed(() => {
 })
 
 const totalAllowanceOfArtistResidencies = computed(() => {
-    // foreach artist_residency in artist_residencies calculate allowance_per_night * days
     let totalAllowance = 0;
     localArtistResidencies.value.forEach((artist_residency) => {
-        totalAllowance += (artist_residency.daily_allowance * artist_residency.days) + artist_residency.additional_daily_allowance;
+        const dailyAllowanceTotal = artist_residency.daily_allowance * (artist_residency.days + Math.floor(artist_residency.additional_daily_allowance));
+        const breakfastDeduction = (artist_residency.breakfast_count || 0) * (artist_residency.breakfast_deduction_per_day || 0);
+        totalAllowance += dailyAllowanceTotal - breakfastDeduction;
     });
     return totalAllowance.toFixed(2);
+})
+
+const totalCostAll = computed(() => {
+    return (parseFloat(totalCostOfArtistResidencies.value) + parseFloat(totalAllowanceOfArtistResidencies.value)).toFixed(2);
 })
 </script>
 

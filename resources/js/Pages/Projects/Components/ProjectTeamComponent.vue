@@ -1,10 +1,38 @@
 <template>
     <div>
         <div class="flex items-center gap-x-5">
-            <BasePageTitle title="Project team" :white-text="inSidebar" />
-            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
-                      @click="showTeamModal = true"
-                      v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole())"
+            <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Project team') }}</span>
+            <!-- Bearbeiten erst nach erfolgreich geladenen Teamdaten: sonst würde ein Speichern
+                 mit leerer Teamliste alle bestehenden Mitglieder aus dem Projekt entfernen -->
+            <IconEdit class="w-5 h-5 rounded-full"
+                      :class="[
+                          inSidebar ? 'text-white' : 'text-artwork-buttons-context',
+                          teamDataLoaded ? 'cursor-pointer' : 'opacity-50 cursor-wait'
+                      ]"
+                      @click="teamDataLoaded ? showTeamModal = true : ensureTeamData(true)"
+                      v-if="projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator()"
+            />
+            <div v-if="teamMembersToMail.length > 0" class="relative" :title="teamMailTooltip">
+                <IconMail class="w-5 h-5"
+                          :class="[
+                              unmailableTeamMembers.length > 0
+                                  ? 'text-yellow-500'
+                                  : (inSidebar ? 'text-white' : 'text-artwork-buttons-context'),
+                              mailableTeamMembers.length > 0 ? 'cursor-pointer' : 'cursor-not-allowed'
+                          ]"
+                          @click="openTeamMail"
+                />
+                <span v-if="unmailableTeamMembers.length > 0"
+                      class="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-500 px-1 text-[10px] font-bold text-white pointer-events-none">
+                    {{ unmailableTeamMembers.length }}
+                </span>
+            </div>
+            <SwitchIconTooltip
+                :model-value="showNames"
+                @update:model-value="toggleShowNames"
+                :tooltip-text="$t('Show names')"
+                icon="IconUser"
+                size="sm"
             />
         </div>
         <div v-if="loadError" class="text-xs text-rose-600 mt-2">
@@ -13,47 +41,78 @@
         <div v-else-if="loadingTeam" class="text-xs text-secondary mt-2">
             {{ $t('Loading data...') }}
         </div>
-        <div class="flex w-full mt-2 flex-wrap mb-3" v-if="(teamProject.project_managers || []).length > 0">
-            <span
-                class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
-                {{ $t('Project management') }}
-            </span>
-            <div class="flex flex-wrap mt-2 -mr-3" v-for="user in (teamProject.project_managers || [])" :key="user.id">
-                <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+        <div class="flex flex-wrap gap-4 mt-2 mb-3">
+            <!-- Projektleitung -->
+            <div v-if="(teamProject.project_managers || []).length > 0">
+                <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+                    {{ $t('Project management') }}
+                </span>
+                <div class="flex flex-wrap mt-2 gap-2">
+                    <template v-for="user in (teamProject.project_managers || [])" :key="user.id">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                            <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                            <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
+                        </div>
+                        <div v-else class="-mr-3">
+                            <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                        </div>
+                    </template>
+                </div>
             </div>
-        </div>
-        <div class="mb-3">
-            <div v-for="role in (teamProject.projectRoles || [])" :key="role.id" class="mb-3">
-                 <div v-if="checkRoleHasUser(role)">
-                     <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+            <!-- Rollen -->
+            <template v-for="role in (teamProject.projectRoles || [])" :key="role.id">
+                <div v-if="checkRoleHasUser(role)">
+                    <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
                         {{ role.name }}
-                     </span>
-                     <div class="flex">
-                         <div class="flex mt-2" v-for="(user, index) in (teamProject.usersArray || [])" :key="`${role.id}-${user.id}`">
-                             <div v-if="user?.pivot_roles?.includes(role.id)" :class="index !== 0 ? '' : '-mr-3'">
-                                 <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-            </div>
-        </div>
-        <div class="flex w-full mt-2 flex-wrap mb-4" v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
-            <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
-                {{ $t('Project team') }}
-            </span>
-            <div class="flex w-full">
-                <div class="flex" v-if="teamProject.departments?.length > 0">
-                    <div class="flex mt-2 -mr-3" v-for="department in teamProject.departments" :key="department.id">
-                        <TeamIconCollection :data-tooltip-target="department.name"
-                                            :iconName="department.svg_name"
-                                            :alt="department.name"
-                                            class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                        <TeamTooltip :team="department"/>
+                    </span>
+                    <div class="flex flex-wrap mt-2 gap-2">
+                        <template v-for="user in (teamProject.usersArray || [])" :key="`${role.id}-${user.id}`">
+                            <template v-if="user?.pivot_roles?.includes(role.id)">
+                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                    <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                                    <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
+                                </div>
+                                <div v-else class="-mr-3">
+                                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                                </div>
+                            </template>
+                        </template>
                     </div>
                 </div>
-                <div class="flex -mr-3 mt-2" v-for="user in (teamProject.usersArray || [])" :key="user.id">
-                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+            </template>
+            <!-- Projektteam (Departments + Users) -->
+            <div v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
+                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
+                    {{ $t('Project team') }}
+                </span>
+                <div class="flex flex-wrap mt-2 gap-2">
+                    <template v-if="teamProject.departments?.length > 0">
+                        <template v-for="department in teamProject.departments" :key="department.id">
+                            <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                <TeamIconCollection :data-tooltip-target="department.name"
+                                                    :iconName="department.svg_name"
+                                                    :alt="department.name"
+                                                    class="ring-white ring-2 rounded-full h-8 w-8 object-cover"/>
+                                <span class="text-xs font-medium whitespace-nowrap">{{ department.name }}</span>
+                            </div>
+                            <div v-else class="-mr-3">
+                                <TeamIconCollection :data-tooltip-target="department.name"
+                                                    :iconName="department.svg_name"
+                                                    :alt="department.name"
+                                                    class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                <TeamTooltip :team="department"/>
+                            </div>
+                        </template>
+                    </template>
+                    <template v-for="user in (teamProject.usersArray || [])" :key="user.id">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                            <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
+                            <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
+                        </div>
+                        <div v-else class="-mr-3">
+                            <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -63,6 +122,7 @@
                               :assigned-departments="teamProject.departments ? teamProject.departments : []"
                               :project-id="currentProjectId()"
                               :userIsProjectManager="this.userIsProjectManager()"
+                              :userIsProjectCreator="this.userIsProjectCreator()"
                               @closed="this.showTeamModal = false"
                               :projectRoles="teamProject.projectRoles || []"
         />
@@ -82,7 +142,8 @@ import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamMod
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
-import {IconEdit} from "@tabler/icons-vue";
+import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import {IconEdit, IconMail} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [
@@ -97,7 +158,9 @@ export default defineComponent({
         TeamTooltip,
         UserTooltip,
         TeamIconCollection,
-        IconEdit
+        IconEdit,
+        IconMail,
+        SwitchIconTooltip
     },
     props: {
         project: {
@@ -126,12 +189,46 @@ export default defineComponent({
             showTeamModal: false,
             loadingTeam: false,
             loadError: null,
-            localProject: hasInitialTeam ? this.project : null
+            teamDataLoaded: hasInitialTeam,
+            localProject: hasInitialTeam ? this.project : null,
+            showNames: this.$page.props.auth.user.show_project_team_names ?? false
         };
     },
     computed: {
         teamProject() {
             return this.localProject ?? this.project ?? {};
+        },
+        teamMembersToMail() {
+            const seenIds = new Set();
+            return [
+                ...(this.teamProject.usersArray ?? []),
+                ...(this.teamProject.project_managers ?? [])
+            ].filter(user => {
+                if (user.id === this.$page.props.auth.user.id || seenIds.has(user.id)) {
+                    return false;
+                }
+                seenIds.add(user.id);
+                return true;
+            });
+        },
+        mailableTeamMembers() {
+            return this.teamMembersToMail.filter(user => user.email && !user.email_private);
+        },
+        unmailableTeamMembers() {
+            return this.teamMembersToMail.filter(user => !user.email || user.email_private);
+        },
+        teamMailTooltip() {
+            if (this.unmailableTeamMembers.length === 0) {
+                return this.$t('Email the entire project team');
+            }
+            const names = this.unmailableTeamMembers.map(user => {
+                const reason = user.email ? this.$t('email is private') : this.$t('no email address');
+                return `${user.first_name} ${user.last_name} (${reason})`;
+            }).join(', ');
+            const warning = this.$t('Email cannot be sent to: {0}', [names]);
+            return this.mailableTeamMembers.length > 0
+                ? this.$t('Email the entire project team') + '\n' + warning
+                : warning;
         },
         onlyTeamMember() {
             if (!this.teamProject?.usersArray) {
@@ -148,6 +245,7 @@ export default defineComponent({
             handler(newProject) {
                 if (this.projectHasTeamData(newProject)) {
                     this.localProject = newProject;
+                    this.teamDataLoaded = true;
                 }
             }
         }
@@ -162,6 +260,7 @@ export default defineComponent({
     methods: {
         async ensureTeamData(force = false) {
             if (!force && this.projectHasTeamData(this.teamProject)) {
+                this.teamDataLoaded = true;
                 return;
             }
 
@@ -176,6 +275,7 @@ export default defineComponent({
             try {
                 const response = await axios.get(route('projects.tabs.team', {project: id}));
                 this.localProject = response.data.project ?? null;
+                this.teamDataLoaded = true;
             } catch (e) {
                 this.loadError = this.$t
                     ? this.$t('Teamdaten konnten nicht geladen werden.')
@@ -213,6 +313,23 @@ export default defineComponent({
                 }
             )
             return managerIdArray.includes(this.$page.props.auth.user.id);
+        },
+        userIsProjectCreator() {
+            return this.teamProject?.user_id === this.$page.props.auth.user.id;
+        },
+        openTeamMail() {
+            const emails = [...new Set(this.mailableTeamMembers.map(user => user.email))];
+            if (emails.length === 0) {
+                return;
+            }
+            window.location.href = 'mailto:' + emails.join(',');
+        },
+        toggleShowNames(value) {
+            this.showNames = value;
+            axios.post(
+                route('user.show.project.team.names.toggle', {user: this.$page.props.auth.user.id}),
+                {show_project_team_names: value}
+            );
         },
         checkRoleHasUser(role) {
             return (this.teamProject?.usersArray ?? []).some(user => user.pivot_roles.includes(role.id));

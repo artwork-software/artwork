@@ -1,7 +1,7 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-auto h-screen' : ''">
         <!-- Topbar -->
-        <div class="w-full left-8 top-0 px-5 fixed z-40">
+        <div ref="topbarRef" class="fixed z-[45] top-14 lg:top-0 left-0 lg:left-16 right-0">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -13,10 +13,11 @@
                 @update-multi-edit="toggleMultiEdit"
                 @jump-to-day-of-month="jumpToDayOfMonth"
                 :is-planning="isPlanning"
+                :daily-view="isDaily"
             />
             <div
                 v-if="eventsWithoutRoomLen > 0"
-                class="w-full h-8 px-4 py-2 bg-error cursor-pointer rounded-lg ml-4 -mt-1"
+                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
                 @click="showEventsWithoutRoomComponent = true"
             >
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
@@ -26,15 +27,27 @@
                     </div>
                 </div>
             </div>
+            <div
+                v-if="hasFailedMonths"
+                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
+                @click="retryFailedMonths"
+            >
+                <div class="flex items-center justify-center w-full h-full gap-x-1">
+                    <IconAlertTriangle class="size-4 text-white" aria-hidden="true" />
+                    <div class="text-white text-sm font-bold">
+                        {{ $t('Some calendar data could not be loaded. Click here to retry.') }}
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- Grid -->
-        <div class="pt-20">
+        <div :style="{ paddingTop: topbarHeight + 'px' }">
             <!-- Monatsansicht -->
             <div v-if="!isDaily && !atAGlance">
                 <div class="w-max -ml-3">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
                         <!-- Kopfzeile soll exakt dieselbe Raumreihenfolge/-filterung nutzen wie das Grid -->
-                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" />
+                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" :sticky-top="topbarHeight" />
                         <div
                             class="w-fit events-by-days-container"
                             :class="[isFullscreen ? 'mt-4' : '']"
@@ -65,64 +78,73 @@
                                             :class="[
                     'group/container relative',                 // Basis
                     'border-dashed',                            // Linienoptik wie zuvor
-                    // Dünne Standard-Linie:
-                    'border-t border-gray-300',
+                    'border-t border-gray-500',
 
-                    // -> Hervorhebung bei >2 Terminen (nur wenn nicht expand_days):
-                    (!settings.expand_days && eventsCount(day, room) > 1)
-                      ? 'ring-2 ring-blue-300 rounded-lg'                  // klarer, ohne Schatten
-                      : ''
+                    ''
                   ]"
                                         >
                                             <!-- INNERER WRAPPER: hält Scrollbereich + Floating-Buttons -->
-                                            <div class="relative h-full w-full">
+                                            <div :class="['relative w-full', settings.expand_days ? '' : 'h-full']">
                                                 <!-- SCROLLBAR NUR WENN SINNVOLL -->
                                                 <div
-                                                    class="events-scroll h-full"
                                                     :class="[
-                                                        (!settings.expand_days && eventsCount(day, room) > 1) ? 'overflow-auto cell' : zoom_factor === 0.8 ? 'overflow-x-hidden overflow-y-auto' : 'overflow-hidden',
-                                                        settings.expand_days ? 'flex flex-col' : ''
+                                                        'events-scroll',
+                                                        settings.expand_days ? '' : 'h-full',
+                                                        settings.expand_days ? 'overflow-visible flex flex-col' : 'overflow-auto cell'
                                                       ]"
                                                     :style="cellStyle"
                                                 >
                                                     <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
                                                     <template v-if="isCellVisible(cellKey(day, room))">
-                                                        <div
-                                                            v-for="(evt, idx) in eventsInCell(day, room)"
-                                                            :key="evt.id"
-                                                            :class="[
-                                                                'py-0.5',
-                                                                (settings.expand_days && !!evt.allDay) ? 'flex-1 min-h-0' : ''
-                                                            ]"
-                                                            :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
-                                                            @click="onEventClick(evt, $event)"
-                                                        >
-                                                            <AsyncSingleEventInCalendar
-                                                                v-memo="[evt.id, evt.updated_at, multiEdit, textStyle.fontSize, textStyle.lineHeight, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
-                                                                :event="evt"
-                                                                :multi-edit="multiEdit"
-                                                                :font-size="textStyle.fontSize"
-                                                                :line-height="textStyle.lineHeight"
-                                                                :rooms="rooms"
-                                                                :has-admin-role="hasAdminRole()"
-                                                                :width="cardWidthNum"
-                                                                :first_project_tab_id="first_project_tab_id"
-                                                                :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                                :verifierForEventTypIds="verifierForEventTypIds"
-                                                                :is-planning="isPlanning"
-                                                                :is-height-full="settings.expand_days && !!evt.allDay"
-                                                                @edit-event="showEditEventModel"
-                                                                @edit-sub-event="openAddSubEventModal"
-                                                                @open-add-sub-event-modal="openAddSubEventModal"
-                                                                @open-confirm-modal="openDeleteEventModal"
-                                                                @show-decline-event-modal="openDeclineEventModal"
-                                                                @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                                            />
-                                                        </div>
+                                                        <template v-for="(cellItems) in [itemsInCell(day, room)]" :key="0">
+                                                            <template v-for="(item, idx) in cellItems" :key="`${item.type}-${item.data.id}`">
+                                                                <div
+                                                                    v-if="item.type === 'shift'"
+                                                                    class="py-0.5"
+                                                                >
+                                                                    <ShiftInCalendarCell
+                                                                        :shift="item.data"
+                                                                        :day="dayKey(day)"
+                                                                        @shift-edited="refetchMonthForDay(day)"
+                                                                    />
+                                                                </div>
+                                                                <div
+                                                                    v-else
+                                                                    :class="[
+                                                                        'py-0.5',
+                                                                        (settings.expand_days && !!item.data.allDay) ? 'flex-1 min-h-0' : ''
+                                                                    ]"
+                                                                    :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
+                                                                    @click="onEventClick(item.data, $event)"
+                                                                >
+                                                                    <AsyncSingleEventInCalendar
+                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                        :event="item.data"
+                                                                        :multi-edit="multiEdit"
+                                                                        :font-size="fontSizeCalc"
+                                                                        :line-height="lineHeightCalc"
+                                                                        :rooms="rooms"
+                                                                        :has-admin-role="isAdmin"
+                                                                        :width="cardWidthNum"
+                                                                        :first_project_tab_id="first_project_tab_id"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                                        :verifierForEventTypIds="verifierForEventTypIds"
+                                                                        :is-planning="isPlanning"
+                                                                        :is-height-full="settings.expand_days && !!item.data.allDay"
+                                                                        @edit-event="showEditEventModel"
+                                                                        @edit-sub-event="openAddSubEventModal"
+                                                                        @open-add-sub-event-modal="openAddSubEventModal"
+                                                                        @open-confirm-modal="openDeleteEventModal"
+                                                                        @show-decline-event-modal="openDeclineEventModal"
+                                                                        @accept-room-request="acceptSingleRoomRequest"
+                                                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                                    />
+                                                                </div>
+                                                            </template>
+                                                            <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
+                                                            <div v-if="cellItems.length <= 1 && !settings.expand_days" class="h-2"></div>
+                                                        </template>
                                                     </template>
-
-                                                    <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
-                                                    <div v-if="eventsCount(day, room) <= 1 && !settings.expand_days" class="h-2"></div>
                                                 </div>
 
                                                 <!-- "+"-Button: jetzt OBEN RECHTS, außerhalb des Scrollbereichs -->
@@ -135,26 +157,9 @@
                                                     :aria-label="$t('Add event')"
                                                     @click="openNewEventModalWithBaseData(day.withoutFormat, (room.roomId ?? room.id))"
                                                 >
-                                                    <component :is="IconPlus" class="size-4" />
+                                                    <component :is="IconCirclePlus" class="size-4" />
                                                 </button>
 
-                                                <!-- Scroll-to-next: unten rechts, ebenfalls außerhalb des Scrollbereichs -->
-                                                <div
-                                                    v-if="(eventsCount(day, room) > 1) && !settings.expand_days"
-                                                    class="pointer-events-none absolute bottom-1 right-9 z-20"
-                                                >
-                                                    <button
-                                                        type="button"
-                                                        class="pointer-events-auto inline-flex items-center justify-center cursor-pointer gap-1
-                               rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-gray-50/90
-                               focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
-                                                        :aria-label="$t('Scroll to next event')"
-                                                        @click="scrollToNextEvent(day, room)"
-                                                        @keydown.enter.prevent="scrollToNextEvent(day, room)"
-                                                    >
-                                                        <component :is="IconChevronDown" class="size-4" />
-                                                    </button>
-                                                </div>
                                             </div>
                                         </section>
                                     </template>
@@ -164,7 +169,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
+            <div v-else-if="usePage().props.auth.user.calendar_daily_view && !usePage().props.auth.user.at_a_glance">
                 <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -182,31 +187,40 @@
                     @open-add-sub-event-modal="openAddSubEventModal"
                     @open-confirm-modal="openDeleteEventModal"
                     @show-decline-event-modal="openDeclineEventModal"
+                    @accept-room-request="acceptSingleRoomRequest"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                    @shift-edited="refetchMonthForDay"
                     :verifierForEventTypIds="verifierForEventTypIds"
                     :is-planning="isPlanning"
                 />
             </div>
-            <div class="mt-[4.5rem] w-max" v-else>
+            <div class="w-max" v-else>
                 <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
-                    <div v-for="room in newCalendarData" :key="room.roomId">
+                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id">
                         <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
-                            <SingleRoomInHeader :room="room" is-light   />
+                            <SingleRoomInHeader :room="room" is-light />
                         </div>
                     </div>
                 </div>
                 <div class="flex gap-0.5">
-                    <div v-for="room in newCalendarData">
-                        <div v-for="events in room.content" :key="events" class="flex flex-col">
-                            <div v-for="(event, index) in events.events" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="mb-0.5" :id="'scroll_container-' + events.date">
-                                <div class="py-0.5" :key="event.id" @click="onEventClick(event, $event)">
+                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }">
+                        <template v-for="day in days" :key="day.fullDay">
+                            <div v-for="item in itemsInCell(day, room)" :key="`${item.type}-${item.data.id}`" class="mb-0.5" :id="'scroll_container-' + day.withoutFormat">
+                                <div v-if="item.type === 'shift'" class="py-0.5">
+                                    <ShiftInCalendarCell
+                                        :shift="item.data"
+                                        :day="dayKey(day)"
+                                        @shift-edited="refetchMonthForDay(day)"
+                                    />
+                                </div>
+                                <div v-else class="py-0.5" @click="onEventClick(item.data, $event)">
                                     <AsyncSingleEventInCalendar
-                                        :event="event"
+                                        :event="item.data"
                                         :multi-edit="multiEdit"
-                                        :font-size="textStyle.fontSize"
-                                        :line-height="textStyle.lineHeight"
+                                        :font-size="fontSizeCalc"
+                                        :line-height="lineHeightCalc"
                                         :rooms="rooms"
-                                        :has-admin-role="hasAdminRole()"
+                                        :has-admin-role="isAdmin"
                                         :width="zoom_factor * 196"
                                         :first_project_tab_id="first_project_tab_id"
                                         :firstProjectShiftTabId="firstProjectShiftTabId"
@@ -215,79 +229,97 @@
                                         @open-add-sub-event-modal="openAddSubEventModal"
                                         @open-confirm-modal="openDeleteEventModal"
                                         @show-decline-event-modal="openDeclineEventModal"
+                                        @accept-room-request="acceptSingleRoomRequest"
                                         @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
                                         :verifierForEventTypIds="verifierForEventTypIds"
                                         :is-planning="isPlanning"
                                     />
                                 </div>
                             </div>
-                        </div>
+                        </template>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Multi-Edit Bottom Bar -->
-        <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
-            <div class="flex items-center justify-center h-full gap-4" v-if="!isPlanning">
-                <div>
-                    <FormButton
-                        :disabled="checkedCount === 0"
-                        @click="showMultiEditModal = true"
-                        :text="checkedCount + ' Termin(e) verschieben'"
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    />
-                </div>
-                <div>
-                    <FormButton
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="showMultiDuplicateModal = true"
-                        :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Duplicate events')"
-                    />
-                </div>
-                <div>
-                    <FormButton
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="openDeleteSelectedEventsModal = true"
-                        :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Delete events')"
-                    />
-                </div>
-                <div>
-                    <FormButton
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="cancelMultiEditDuplicateSelection"
-                        :disabled="checkedCount === 0"
-                        :text="$t('Cancel selection')"
-                    />
-                </div>
+        <div class="fixed bottom-0 w-full bg-artwork-navigation-background/30 z-[45] pointer-events-none py-3" v-if="multiEdit">
+            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="!isPlanning">
+                <FormButton
+                    :disabled="checkedCount === 0"
+                    @click="showMultiEditModal = true"
+                    :text="checkedCount + ' Termin(e) verschieben'"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
+                <FormButton
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showMultiDuplicateModal = true"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Duplicate events')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkAcceptRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Accept requests')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkDeclineRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Decline requests')"
+                />
+                <FormButton
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="openDeleteSelectedEventsModal = true"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Delete events')"
+                />
+                <FormButton
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="cancelMultiEditDuplicateSelection"
+                    :disabled="checkedCount === 0"
+                    :text="$t('Cancel selection')"
+                />
             </div>
-            <div class="flex items-center justify-center h-full gap-4" v-else>
-                <div v-if="can('can see planning calendar') || hasAdminRole()">
-                    <FormButton
-                        :disabled="checkedCount === 0"
-                        @click="requestVerification"
-                        :text="checkedCount + ' ' + $t('request verification')"
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    />
-                </div>
-                <div v-if="can('can edit planning calendar') || hasAdminRole()">
-                    <FormButton
-                        :disabled="checkedCount === 0"
-                        @click="approveRequests"
-                        :text="checkedCount + ' ' + $t('Approve events')"
-                        class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    />
-                </div>
-                <div v-if="can('can edit planning calendar') || hasAdminRole()">
-                    <FormButton
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                        @click="showRejectEventVerificationModal = true"
-                        :disabled="checkedCount === 0"
-                        :text="checkedCount + ' ' + $t('Reject events')"
-                    />
-                </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-else>
+                <FormButton
+                    v-if="can('can see planning calendar') || isAdmin"
+                    :disabled="checkedCount === 0"
+                    @click="requestVerification"
+                    :text="checkedCount + ' ' + $t('request verification')"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
+                <FormButton
+                    v-if="can('can edit planning calendar') || isAdmin"
+                    :disabled="checkedCount === 0"
+                    @click="approveRequests"
+                    :text="checkedCount + ' ' + $t('Approve events')"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
+                <FormButton
+                    v-if="can('can edit planning calendar') || isAdmin"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showRejectEventVerificationModal = true"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Reject events')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkAcceptRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Accept requests')"
+                />
+                <FormButton
+                    v-if="hasSelectedRoomRequests"
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="bulkDeclineRoomRequests"
+                    :disabled="checkedCount === 0"
+                    :text="checkedCount + ' ' + $t('Decline requests')"
+                />
             </div>
         </div>
 
@@ -302,7 +334,7 @@
             :project="project"
             :event="eventToEdit"
             :wantedRoomId="wantedRoom"
-            :isAdmin="hasAdminRole()"
+            :isAdmin="isAdmin"
             :roomCollisions="roomCollisions"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
             :requires-axios-requests="true"
@@ -353,7 +385,7 @@
             :eventTypes="eventTypes"
             :rooms="rooms"
             :eventsWithoutRoom="usePage().props.eventsWithoutRoom"
-            :isAdmin="hasAdminRole()"
+            :isAdmin="isAdmin"
             :event-statuses="eventStatuses"
             :first_project_calendar_tab_id="first_project_calendar_tab_id"
         />
@@ -367,10 +399,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
-import {IconAlertTriangle, IconChevronDown, IconPlus} from "@tabler/icons-vue";
+import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
@@ -395,6 +427,7 @@ const props = defineProps({
 const $t = useTranslation();
 const page = usePage();
 const { hasAdminRole } = usePermission(page.props);
+const isAdmin = computed(() => hasAdminRole());
 
 const AsyncEventComponent = defineAsyncComponent({ loader: () => import("@/Layouts/Components/EventComponent.vue") });
 const FunctionBarCalendar = defineAsyncComponent({ loader: () => import("@/Components/FunctionBars/FunctionBarCalendar.vue") });
@@ -417,12 +450,15 @@ const AsyncSingleEventInCalendar = defineAsyncComponent({
     loader: () =>  import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
     loadingComponent: CalendarPlaceholder,
 });
+const ShiftInCalendarCell = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/Elements/ShiftInCalendarCell.vue'),
+});
 
 // User & Settings
 const user = computed(() => page.props.auth.user);
 const settings = computed(() => user.value.calendar_settings);
 const zoom_factor = ref(user.value.zoom_factor ?? 1);
-const isDaily = computed(() => !!user.value.daily_view);
+const isDaily = computed(() => !!user.value.calendar_daily_view);
 const atAGlance = computed(() => !!user.value.at_a_glance);
 
 // Maße/Styles
@@ -439,12 +475,16 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
-const containerClass = computed(() => ['group/container border-t border-gray-300 border-dashed relative overflow-scroll', (zoom_factor.value > 0.4 ? "cell" : "overflow-hidden")]);
-
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>
     Array.isArray(props.eventsWithoutRoom) ? props.eventsWithoutRoom.length : (props.eventsWithoutRoom?.length ?? 0)
 );
+
+// Dynamic topbar height measurement
+const topbarRef = ref(null);
+const calendarRef = ref(null);
+const topbarHeight = ref(80); // default fallback
+let topbarObserver = null;
 
 // State
 const multiEdit = ref(false);
@@ -475,11 +515,8 @@ const first_project_calendar_tab_id = inject("first_project_calendar_tab_id");
 const first_project_tab_id = inject("first_project_tab_id");
 const eventTypes = inject("eventTypes");
 
-const textStyle = computed(() => {
-    const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
-    const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
-    return { fontSize, lineHeight };
-});
+const fontSizeCalc = computed(() => `max(calc(${zoom_factor.value} * 0.875rem), 10px)`);
+const lineHeightCalc = computed(() => `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`);
 
 const toGermanDate = (iso) => {
     if (!iso || iso.length < 10) return iso;
@@ -491,33 +528,6 @@ type DayLike = { withoutFormat: string };
 type RoomLike = { id?: number|string; roomId?: number|string };
 
 const cellRefs = ref<Map<string, HTMLElement>>(new Map());
-
-/*function scrollToNextEvent(day: DayLike, room: RoomLike) {
-    const key = cellKey(day, room);
-    let container = cellRefs.value.get(key) as HTMLElement | undefined;
-
-    const roomId = String(room.roomId ?? room.id);
-
-    // Fallback: über DOM ermitteln, falls Map (noch) leer ist
-    if (!container) {
-        const sel = `section[data-room-id="${roomId}"]#scroll_container-${day.withoutFormat}-${roomId}`;
-        container = document.querySelector<HTMLElement>(sel) ?? undefined;
-        if (container) cellRefs.value.set(key, container);
-        else return; // keine Zelle gefunden
-    }
-
-    const selector = `[id^="event_scroll-"][id$="-day-${day.withoutFormat}-room-${roomId}"]`;
-    const nodes = Array.from(container.querySelectorAll<HTMLElement>(selector));
-    if (!nodes.length) return;
-
-    const pad = 6;
-    const currentTop = container.scrollTop;
-
-    const next = nodes.find(n => n.offsetTop > currentTop + pad);
-    const targetTop = next ? Math.max(next.offsetTop - pad, 0) : 0;
-
-    container.scrollTo({ top: targetTop, behavior: 'smooth' });
-}*/
 
 const dayKey = (day) => day.fullDay ?? toGermanDate(day.withoutFormat);
 const monthKeyFromDay = (day) => (day.withoutFormat || "").slice(0, 7);
@@ -542,7 +552,7 @@ function ensureCalendarShape() {
 
 function useCellVisibility(options = {}) {
     const { root = null, rootMargin = '1200px', threshold = 0.01 } = options;
-    const visibleKeys = ref(new Set());
+    const visibleKeys = shallowRef(new Set<string>());
     let io: IntersectionObserver | null = null;
     const map = new Map<Element, string>();
 
@@ -557,22 +567,12 @@ function useCellVisibility(options = {}) {
                     const k = map.get(entry.target);
                     if (!k) continue;
                     if (entry.isIntersecting) {
-                        if (!visibleKeys.value.has(k)) {
-                            const next = new Set(visibleKeys.value);
-                            next.add(k);
-                            visibleKeys.value = next;
-                            changed = true;
-                        }
+                        if (!visibleKeys.value.has(k)) { visibleKeys.value.add(k); changed = true; }
                     } else {
-                        if (visibleKeys.value.has(k)) {
-                            const next = new Set(visibleKeys.value);
-                            next.delete(k);
-                            visibleKeys.value = next;
-                            changed = true;
-                        }
+                        if (visibleKeys.value.has(k)) { visibleKeys.value.delete(k); changed = true; }
                     }
                 }
-                if (changed) {}
+                if (changed) triggerRef(visibleKeys);
             }, { root, rootMargin, threshold });
         }
         map.set(el, key);
@@ -629,6 +629,17 @@ const monthIndexByKey = computed(() => {
 
 const loadedMonths = ref<Set<string>>(new Set());
 const loadingMonths = ref<Set<string>>(new Set());
+// Fehlgeschlagene Monats-Loads: key -> Fehlversuche. Ohne Tracking würde jeder
+// Scroll-Trigger endlos neu laden und der User sähe nur leere Zellen (Prod-Bug).
+const failedMonths = ref<Map<string, number>>(new Map());
+const MAX_MONTH_LOAD_RETRIES = 3;
+const hasFailedMonths = computed(() =>
+    Array.from(failedMonths.value.values()).some((count) => count >= MAX_MONTH_LOAD_RETRIES)
+);
+async function retryFailedMonths() {
+    failedMonths.value.clear();
+    await ensureAroundInternal(focusedMonthKey.value);
+}
 const monthControllers = new Map<string, AbortController>();
 let currentEpoch = 0;
 const monthEpoch = new Map<string, number>();
@@ -669,7 +680,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
     const incRooms: any[] = Array.isArray(incomingCalendar) ? incomingCalendar : [];
     if (incRooms.length === 0) return;
     if (!Array.isArray(newCalendarData.value) || newCalendarData.value.length === 0) {
-        newCalendarData.value = incRooms.map((inc) => {
+        const mapped = incRooms.map((inc) => {
             const incContent = inc?.content && typeof inc.content === 'object' ? inc.content : {};
             const pruned: Record<string, any> = {};
 
@@ -686,6 +697,19 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
                 content: pruned,
             };
         });
+
+        // Sort rooms to match the order from the rooms prop (position-based from DB)
+        const roomOrder = new Map<number, number>();
+        (props.rooms as any[]).forEach((r: any, idx: number) => {
+            roomOrder.set(r.id, idx);
+        });
+        mapped.sort((a: any, b: any) => {
+            const posA = roomOrder.get(a.roomId) ?? Number.MAX_SAFE_INTEGER;
+            const posB = roomOrder.get(b.roomId) ?? Number.MAX_SAFE_INTEGER;
+            return posA - posB;
+        });
+
+        newCalendarData.value = mapped;
         loadedMonths?.value?.add?.(monthKey);
         return;
     }
@@ -732,12 +756,24 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
             target.roomName = inc.roomName;
         }
     }
+    // Sort rooms to match the order from the rooms prop (position-based from DB)
+    const roomOrder = new Map<number, number>();
+    (props.rooms as any[]).forEach((r: any, idx: number) => {
+        roomOrder.set(r.id, idx);
+    });
+    targetRooms.sort((a: any, b: any) => {
+        const posA = roomOrder.get(a.roomId) ?? Number.MAX_SAFE_INTEGER;
+        const posB = roomOrder.get(b.roomId) ?? Number.MAX_SAFE_INTEGER;
+        return posA - posB;
+    });
+
     newCalendarData.value = [...targetRooms];
 }
 
 async function loadMonth(key: string, epoch: number) {
     if (!key) return;
     if (loadedMonths.value.has(key) || loadingMonths.value.has(key)) return;
+    if ((failedMonths.value.get(key) ?? 0) >= MAX_MONTH_LOAD_RETRIES) return;
 
     const rec = monthList.value.find(m => m.key === key);
     if (!rec) return;
@@ -763,11 +799,13 @@ async function loadMonth(key: string, epoch: number) {
         setCalendarMonthData(key, data?.calendar ?? []);
 
         loadedMonths.value.add(key);
+        failedMonths.value.delete(key);
         pruneLoadedIfNeeded();
     } catch (err) {
         const name = (err as any)?.name;
         if (name === 'CanceledError' || name === 'AbortError') return;
         if (typeof axios.isCancel === 'function' && axios.isCancel(err)) return;
+        failedMonths.value.set(key, (failedMonths.value.get(key) ?? 0) + 1);
         console.error('Fehler beim Laden Monat', key, err);
     } finally {
         loadingMonths.value.delete(key);
@@ -914,6 +952,16 @@ onMounted(async () => {
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    // Observe topbar height for responsive layout
+    if (topbarRef.value) {
+        topbarObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                topbarHeight.value = entry.contentRect.height;
+            }
+        });
+        topbarObserver.observe(topbarRef.value);
+    }
 });
 
 onBeforeUnmount(() => {
@@ -927,10 +975,29 @@ onBeforeUnmount(() => {
     document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+
+    // Clean up topbar observer
+    if (topbarObserver) {
+        topbarObserver.disconnect();
+        topbarObserver = null;
+    }
+
 });
 
 // ---------- Multi-Edit etc. ----------
 const checkedCount = computed(() => editEvents.value.length);
+const hasSelectedRoomRequests = computed(() => {
+    if (!editEvents.value.length) return false;
+    const selectedIds = new Set(editEvents.value);
+    for (const room of newCalendarData.value) {
+        for (const slot of Object.values(room.content || {})) {
+            for (const evt of (slot.events ?? [])) {
+                if (selectedIds.has(evt.id) && evt.occupancy_option) return true;
+            }
+        }
+    }
+    return false;
+});
 
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
@@ -994,6 +1061,15 @@ const cancelMultiEditDuplicateSelection = () => {
 };
 
 const openDeclineEventModal = (event) => { declineEvent.value = event; showDeclineEventModal.value = true; };
+const acceptSingleRoomRequest = (event) => {
+    router.put(route('events.accept', { event: event.id }), { accepted: true }, { preserveScroll: true });
+};
+const bulkAcceptRoomRequests = () => {
+    router.put(route('events.bulk-accept'), { eventIds: editEvents.value }, { preserveScroll: true });
+};
+const bulkDeclineRoomRequests = () => {
+    router.put(route('events.bulk-decline'), { eventIds: editEvents.value }, { preserveScroll: true });
+};
 const openDeleteEventModal = (event, type) => {
     deleteType.value = type;
     if (type === "main") {
@@ -1134,9 +1210,77 @@ const deleteSelectedEvents = () => {
             newCalendarData.value = next;
         });
 };
-const jumpToDayOfMonth = (day) => {
-    const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
-    if (dayElement) window.scrollTo({ top: dayElement.offsetTop - 130, behavior: "smooth" });
+const jumpToDayOfMonth = async (day) => {
+    // Globales `html { scroll-behavior: smooth }` (siehe app.blade.php) zwingt
+    // sonst alle programmatischen Scrolls in eine Animation. Während des
+    // Sprungs temporär abschalten, damit Korrektur-Scrolls instant wirken und
+    // sich nicht gegenseitig abbrechen.
+    const htmlEl = document.documentElement;
+    const previousScrollBehavior = htmlEl.style.scrollBehavior;
+    htmlEl.style.scrollBehavior = 'auto';
+
+    try {
+        // Zielmonat (und Nachbarn) vorab laden, damit Tagehöhen final stehen,
+        // bevor wir die Scroll-Position berechnen (wichtig bei expand_days).
+        const targetMonthKey = (day || '').slice(0, 7);
+        if (targetMonthKey && monthIndexByKey.value.has(targetMonthKey)) {
+            focusedMonthKey.value = targetMonthKey;
+            await ensureAroundInternal(targetMonthKey);
+            await nextTick();
+            await new Promise(r => requestAnimationFrame(r));
+        }
+
+        const computeOffset = () => {
+            const calendarHeader = document.querySelector('header.sticky');
+            const headerHeight = calendarHeader ? (calendarHeader as HTMLElement).offsetHeight : 64;
+            return topbarHeight.value + headerHeight;
+        };
+
+        const scrollOnce = () => {
+            const dayElement = document.querySelector<HTMLElement>(`.day-container[data-day-to-jump="${day}"]`);
+            if (!dayElement) return false;
+            const totalOffset = computeOffset();
+            const calendarEl = calendarRef.value as HTMLElement | null;
+
+            if (isFullscreen.value && calendarEl) {
+                const elementTop = dayElement.getBoundingClientRect().top
+                    - calendarEl.getBoundingClientRect().top
+                    + calendarEl.scrollTop;
+                calendarEl.scrollTo({ top: Math.max(elementTop - totalOffset, 0), behavior: 'auto' });
+            } else {
+                const elementTop = dayElement.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: Math.max(elementTop - totalOffset, 0), behavior: 'auto' });
+            }
+            return true;
+        };
+
+        if (!scrollOnce()) return;
+
+        // Nachkorrektur: IntersectionObserver kann während/nach dem Sprung weitere
+        // Monate triggern, deren Events bei expand_days die Zeilenhöhe ändern und
+        // damit die finale Y-Position des Zieltages verschieben. Mehrfach
+        // korrigieren, bis die Position stabil ist (max. ~600ms).
+        for (let i = 0; i < 4; i++) {
+            await new Promise(r => setTimeout(r, 150));
+            const dayElement = document.querySelector<HTMLElement>(`.day-container[data-day-to-jump="${day}"]`);
+            if (!dayElement) continue;
+            const totalOffset = computeOffset();
+            const calendarEl = calendarRef.value as HTMLElement | null;
+            const rect = dayElement.getBoundingClientRect();
+            const currentTop = (isFullscreen.value && calendarEl)
+                ? rect.top - calendarEl.getBoundingClientRect().top
+                : rect.top;
+            const diff = currentTop - totalOffset;
+            if (Math.abs(diff) <= 1) break;
+            if (isFullscreen.value && calendarEl) {
+                calendarEl.scrollBy({ top: diff, behavior: 'auto' });
+            } else {
+                window.scrollBy({ top: diff, behavior: 'auto' });
+            }
+        }
+    } finally {
+        htmlEl.style.scrollBehavior = previousScrollBehavior;
+    }
 };
 const approveRequests = () => {
     router.post(route("event-verifications.approved-by-events"), { events: editEvents.value }, {
@@ -1199,37 +1343,50 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
 const eventsInCell = (day: any, room: any) =>
     (room.content?.[dayKey(day)]?.events ?? []);
 
-const eventsCount = (day: any, room: any) =>
-    eventsInCell(day, room).length;
+const shiftsInCell = (day: any, room: any) =>
+    (room.content?.[dayKey(day)]?.shifts ?? []);
 
-// 🔧 scrollToNextEvent: sucht jetzt explizit den INNEREN Scroll-Container (.events-scroll)
-function scrollToNextEvent(day: DayLike, room: RoomLike) {
-    const key = cellKey(day, room);
-    let section = cellRefs.value.get(key) as HTMLElement | undefined;
+// "dd.mm.yyyy" → "yyyy-mm-dd"
+const deKeyToIso = (deKey: string) => {
+    const parts = String(deKey ?? '').split('.');
+    return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : '';
+};
 
-    const roomId = String(room.roomId ?? room.id);
-    if (!section) {
-        const sel = `section[data-room-id="${roomId}"]#scroll_container-${day.withoutFormat}`;
-        section = document.querySelector<HTMLElement>(sel) ?? undefined;
-        if (section) cellRefs.value.set(key, section);
-        else return;
+// Effektive Startzeit ("HH:MM") eines Items an diesem Tag: beginnt es an einem
+// Vortag, zählt es ab 00:00 — so mischen sich Termine und Schichten korrekt.
+const itemStartTimeOnDay = (item: any, dayIso: string): string => {
+    if (item.type === 'shift') {
+        const shift = item.data;
+        if (shift.startDate && shift.startDate < dayIso) return '00:00';
+        const time = String(shift.start ?? '');
+        const match = time.match(/(\d{2}:\d{2})/);
+        return match ? match[1] : '00:00';
     }
+    const start = String(item.data.start ?? ''); // "Y-m-d H:i"
+    const datePart = start.slice(0, 10);
+    if (datePart && datePart < dayIso) return '00:00';
+    const match = start.match(/(\d{2}:\d{2})$/) ?? start.match(/\s(\d{2}:\d{2})/);
+    return match ? match[1] : '00:00';
+};
 
-    // 👉 Inneren Scroll-Container greifen:
-    const container = section.querySelector<HTMLElement>('.events-scroll');
-    if (!container) return;
+// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert
+const itemsInCell = (day: any, room: any) => {
+    const events = eventsInCell(day, room).map((evt: any) => ({ type: 'event', data: evt }));
+    const shifts = shiftsInCell(day, room).map((shift: any) => ({ type: 'shift', data: shift }));
+    if (shifts.length === 0) return events;
+    const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
+    return [...events, ...shifts].sort((a, b) =>
+        itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
+    );
+};
 
-    const selector = `[id^="event_scroll-"][id$="-day-${day.withoutFormat}-room-${roomId}"]`;
-    const nodes = Array.from(container.querySelectorAll<HTMLElement>(selector));
-    if (!nodes.length) return;
-
-    const pad = 6;
-    const currentTop = container.scrollTop;
-
-    const next = nodes.find(n => n.offsetTop > currentTop + pad);
-    const targetTop = next ? Math.max(next.offsetTop - pad, 0) : 0;
-
-    container.scrollTo({ top: targetTop, behavior: 'smooth' });
+// Nach Schicht-Bearbeitung den betroffenen Monat neu laden
+async function refetchMonthForDay(day: any) {
+    const key = monthKeyFromDay(day);
+    if (!key) return;
+    loadedMonths.value.delete(key);
+    failedMonths.value.delete(key);
+    await loadMonth(key, ++currentEpoch);
 }
 
 // When multi-edit is enabled, clicking an event toggles its selection
@@ -1242,14 +1399,14 @@ const onEventClick = (evt: any, e?: MouseEvent) => {
 </script>
 
 <style scoped>
-/* bleibt wie gehabt; wirkt jetzt auf den inneren .events-scroll Container, wenn >1 Event */
 .cell {
     overflow: auto;
-    scrollbar-color: #d4d4d4 #f3f3f3; /* Firefox */
+    scrollbar-color: rgba(156,163,175,0.5) transparent; /* Firefox */
     scrollbar-width: thin;
 }
 /* WebKit */
-.cell::-webkit-scrollbar { width: 2px !important; height: 2px !important; }
-.cell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
-.cell::-webkit-scrollbar-track { background-color: #f3f3f3; }
+.cell::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
+.cell::-webkit-scrollbar-thumb { background-color: rgba(156,163,175,0.5); border-radius: 3px; }
+.cell::-webkit-scrollbar-thumb:hover { background-color: rgba(107,114,128,0.7); }
+.cell::-webkit-scrollbar-track { background-color: transparent; }
 </style>

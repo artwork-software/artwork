@@ -12,7 +12,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
-import {IconPlus} from "@tabler/icons-vue";
+import {IconCirclePlus, IconChevronDown} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 // Props
@@ -20,6 +20,7 @@ const props = defineProps({
     tabs: { type: Array, required: true },
     components: { type: Object, required: true },
     componentsSpecial: { type: Array, required: true },
+    componentUsages: { type: Object, required: false, default: () => ({}) },
 });
 
 // i18n
@@ -48,6 +49,17 @@ watch(searchComponent, (newVal) => {
         debouncedSearch.value = newVal;
     }, 300);
 });
+
+// Eingeklappte Kategorien in der Palette (bei aktiver Suche werden alle Gruppen angezeigt)
+const closedGroups = ref(new Set());
+function toggleGroup(key) {
+    const next = new Set(closedGroups.value);
+    next.has(key) ? next.delete(key) : next.add(key);
+    closedGroups.value = next;
+}
+function isGroupClosed(key) {
+    return !debouncedSearch.value.trim() && closedGroups.value.has(key);
+}
 
 // Gefilterte normale Komponenten (in Gruppen nach Key) - optimiert mit debouncedSearch
 const filteredComponents = computed(() => {
@@ -142,7 +154,7 @@ function updateComponentOrder(components) {
     <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
         <template #actions>
             <button class="ui-button-add" @click="showAddEditModal = true">
-                <PropertyIcon name="IconPlus" stroke-width="1" class="size-5" />
+                <PropertyIcon name="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ t('Create tab') }}
             </button>
         </template>
@@ -172,42 +184,73 @@ function updateComponentOrder(components) {
             </div>
 
             <!-- Components List -->
-            <div class="col-span-1 card glassy p-5">
+            <div class="col-span-1 card glassy p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <div class="card white p-5 space-y-3">
-                    <div class="flex items-center justify-end w-full mb-3">
-                        <div class="w-44 md:w-56 lg:w-72">
-                            <BaseInput
-                                id="search"
-                                type="text"
-                                name="search"
-                                v-model="searchComponent"
-                                :label="t('Search')"
-                            />
+                    <!-- Suche bleibt beim Scrollen der Palette sichtbar -->
+                    <div class="sticky top-0 z-10 -mx-5 px-5 -mt-5 pt-5 pb-3 bg-white border-b border-zinc-100">
+                        <div class="flex items-center justify-end w-full">
+                            <div class="w-44 md:w-56 lg:w-72">
+                                <BaseInput
+                                    id="search"
+                                    type="text"
+                                    name="search"
+                                    v-model="searchComponent"
+                                    :label="t('Search')"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
                         <div>
-                            <div class="flex items-center gap-x-4 cursor-pointer">
-                                <h2 class="text-md font-bold mb-2">{{ t(componentsArray.name) }}</h2>
-                            </div>
-                            <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                class="flex items-center gap-x-2 cursor-pointer w-full text-left"
+                                @click="toggleGroup(componentsArray.name)"
+                            >
+                                <h2 class="text-md font-bold mb-2">
+                                    {{ t(componentsArray.name) }}
+                                    <span class="text-zinc-400 font-normal">({{ componentsArray.components.length }})</span>
+                                </h2>
+                                <IconChevronDown
+                                    class="size-4 text-zinc-500 mb-2 transition-transform"
+                                    :class="{ '-rotate-90': isGroupClosed(componentsArray.name) }"
+                                />
+                            </button>
+                            <div v-if="!isGroupClosed(componentsArray.name)" class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                                 <DragComponentElement
                                     v-for="component in componentsArray.components"
                                     :key="component.id"
                                     :component="component"
+                                    :all-tabs="tabsLocal"
+                                    :usages="componentUsages[component.id] ?? []"
                                 />
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h2 class="text-md font-bold mb-2">{{ t('Special components') }}</h2>
-                        <div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            class="flex items-center gap-x-2 cursor-pointer w-full text-left"
+                            @click="toggleGroup('__special')"
+                        >
+                            <h2 class="text-md font-bold mb-2">
+                                {{ t('Special components') }}
+                                <span class="text-zinc-400 font-normal">({{ filteredSpecialComponents.length }})</span>
+                            </h2>
+                            <IconChevronDown
+                                class="size-4 text-zinc-500 mb-2 transition-transform"
+                                :class="{ '-rotate-90': isGroupClosed('__special') }"
+                            />
+                        </button>
+                        <div v-if="!isGroupClosed('__special')" class="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                             <DragComponentElement
                                 v-for="component in filteredSpecialComponents"
                                 :key="component.id || component.name"
                                 :component="component"
+                                :all-tabs="tabsLocal"
+                                :usages="componentUsages[component.id] ?? []"
                             />
                         </div>
                     </div>

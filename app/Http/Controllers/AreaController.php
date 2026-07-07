@@ -34,7 +34,7 @@ class AreaController extends Controller
                 'name' => $area->name,
                 // showContent declares if the area should be showing all details when loading the page
                 'showContent' => true,
-                'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('position')->get())->resolve(),
+                'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('position')->orderBy('id')->get())->resolve(),
             ]),
             'opened_areas' => User::where('id', Auth::id())->first()->opened_areas,
             'room_categories' => RoomCategory::all(),
@@ -62,7 +62,7 @@ class AreaController extends Controller
 
     public function destroy(Area $area): RedirectResponse
     {
-        foreach ($area->rooms() as $room) {
+        foreach ($area->rooms as $room) {
             $this->roomService->delete($room);
         }
         $this->areaService->delete($area);
@@ -76,25 +76,43 @@ class AreaController extends Controller
         return Redirect::route('areas.trashed');
     }
 
+    public function forceDeleteAll(): RedirectResponse
+    {
+        Area::onlyTrashed()->each(function ($area) {
+            $area->forceDelete();
+        });
+        return Redirect::route('areas.trashed');
+    }
+
     public function restore(int $id): RedirectResponse
     {
         /** @var Area $area */
         $area = Area::onlyTrashed()->findOrFail($id);
         $area->restore();
-        foreach ($area->trashedRooms() as $room) {
+        foreach ($area->trashedRooms as $room) {
             $room->restore();
         }
         return Redirect::route('areas.trashed');
     }
 
-    public function getTrashed(): Response|ResponseFactory
+    public function getTrashed(Request $request): Response|ResponseFactory
     {
-        return inertia('Trash/Areas', [
-            'trashed_areas' => Area::onlyTrashed()->get()->map(fn ($area) => [
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedAreas = Area::onlyTrashed()
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => RoomIndexWithoutEventsResource::collection($area->rooms)->resolve(),
-            ])
+            ]);
+
+        return inertia('Trash/Areas', [
+            'trashed_areas' => $trashedAreas
         ]);
     }
 }

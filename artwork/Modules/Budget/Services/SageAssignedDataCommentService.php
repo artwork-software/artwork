@@ -41,4 +41,10 @@ readonly class SageAssignedDataCommentService
     {
         $this->sageAssignedDataCommentRepository->forceDeleteAll();
     }
+
+    // restore method
+    public function restore(SageAssignedDataComment $sageAssignedDataComment): void
+    {
+        $this->sageAssignedDataCommentRepository->restore($sageAssignedDataComment);
+    }
 }

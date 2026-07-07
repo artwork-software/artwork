@@ -1,26 +1,10 @@
 <template>
-    <div class="flex w-full justify-between">
-        <div>
-
-        </div>
-        <div class="flex justify-end items-center ml-8 -mt-14">
-            <div v-if="!showSearchbar" @click="openSearchbar"
-                 class="cursor-pointer inset-y-0 mr-3">
-                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-            </div>
-            <div v-else class="flex items-center w-64 mr-2">
-                <div>
-                    <input type="text"
-                           :placeholder="$t('Search')"
-                           v-model="searchText"
-                           ref="searchBarInput"
-                           class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                </div>
-                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-            </div>
-        </div>
-    </div>
-    <div v-for="event in filteredTrashedEvents"
+    <TrashSearchAndActions
+        property-name="trashed_events"
+        :total="trashed_events.total"
+        @delete-all="showConfirmDeleteAll = true"
+    />
+    <div v-for="event in trashed_events.data" :key="event.id"
          class="flex w-full bg-white my-2 border border-gray-200">
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
@@ -83,6 +67,21 @@
             </div>
         </div>
     </div>
+
+    <BasePaginator
+        v-if="trashed_events.total > 0"
+        :entities="trashed_events"
+        property-name="trashed_events"
+        class="mt-6"
+    />
+
+    <ConfirmDeleteModal
+        v-if="showConfirmDeleteAll"
+        :title="$t('Delete all')"
+        :description="$t('Are you sure you want to permanently delete all items in the recycle bin for this category?')"
+        @closed="showConfirmDeleteAll = false"
+        @delete="forceDeleteAll"
+    />
 </template>
 
 <script>
@@ -94,6 +93,9 @@ import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import TrashSearchAndActions from "@/Pages/Trash/Components/TrashSearchAndActions.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 
 export default {
     name: "Events",
@@ -101,6 +103,9 @@ export default {
     props: ['trashed_events', 'first_project_calendar_tab_id'],
     components: {
         BaseMenu,
+        BasePaginator,
+        TrashSearchAndActions,
+        ConfirmDeleteModal,
         Input,
         XIcon,
         SearchIcon,
@@ -118,18 +123,7 @@ export default {
     data() {
         return {
             showTemporaryEvents: [],
-            showSearchbar: false,
-            searchText: '',
-        }
-    },
-    computed: {
-        filteredTrashedEvents() {
-            if(!this.searchText){
-                return this.trashed_events;
-            }
-            return this.trashed_events.filter(event => {
-                return event.name.toLowerCase().includes(this.searchText.toLowerCase())
-            })
+            showConfirmDeleteAll: false,
         }
     },
     methods: {
@@ -139,17 +133,11 @@ export default {
             } else {
                 this.showTemporaryEvents.push(eventId);
             }
-        }
-        ,
-        closeSearchbar() {
-            this.showSearchbar = false
-            this.searchText = ''
         },
-        openSearchbar(){
-            this.showSearchbar = !this.showSearchbar;
-            this.$nextTick(() => {
-                if (this.showSearchbar) {
-                    this.$refs.searchBarInput.focus();
+        forceDeleteAll() {
+            this.$inertia.delete(route('events.force.all'), {
+                onSuccess: () => {
+                    this.showConfirmDeleteAll = false;
                 }
             });
         },

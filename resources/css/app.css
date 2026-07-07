@@ -135,17 +135,21 @@
 
 @font-face {
     font-family: 'Inter';
-    src: local('Inter-Regular'), url('../fonts/Inter-Regular.ttf') format('truetype');
+    src: local('Inter-Regular'), url('../fonts/Inter-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 
 @font-face {
+    /* Deko-Handschrift-Font (ex-NanumPenScript), auf Latein subsettet: 3,4 MB TTF -> ~50 KB woff2 */
     font-family: 'artwork Pen';
-    src: local('artworkPen'), url('../fonts/artworkPen.ttf') format('truetype');
+    src: local('artworkPen'), url('../fonts/artworkPen.woff2') format('woff2');
+    font-display: swap;
 }
 
 @font-face {
     font-family: 'Lexend';
-    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.ttf') format('truetype');
+    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 
     body {
@@ -159,6 +163,7 @@
 
     ::-webkit-scrollbar {
         width: 9px;
+        height: 9px;
     }
 
     ::-webkit-scrollbar-track {
@@ -299,6 +304,14 @@
         letter-spacing: -0.07px;
         color: #27233C;
         opacity: 1;
+    }
+
+    .componentLabel{
+        display: block;
+        font-size: 0.875rem;
+        line-height: 1.5rem;
+        font-weight: 700;
+        color: #111827;
     }
 
     .sDark{
@@ -686,7 +699,13 @@
 
 
     .event-disabled {
-        background: repeating-linear-gradient( -45deg, transparent, transparent 13px, rgba(189, 189, 189, 0.3) 10px, rgba(189, 189, 189, 0.3) 30px);
+        background-image: repeating-linear-gradient(
+            -45deg,
+            transparent 0,
+            transparent 10px,
+            color-mix(in srgb, var(--event-contrast-color, currentColor) 18%, transparent) 10px,
+            color-mix(in srgb, var(--event-contrast-color, currentColor) 18%, transparent) 20px
+        );
     }
 
 .tooltip {
@@ -1104,6 +1123,40 @@
     background: transparent;
 }
 
+/*
+ * Horizontale Scrollbarkeit immer sichtbar machen (Pflichtenheft 3.4).
+ * Wenn ein Container horizontal scrollbar ist, soll der Scrollbalken dauerhaft
+ * sichtbar sein – nicht nur als Overlay beim Scrollen (macOS/WebKit-Verhalten).
+ * Greift global über die in der App genutzten Tailwind-Overflow-Utilities.
+ */
+.overflow-x-auto,
+.overflow-x-scroll,
+.overflow-auto,
+.overflow-scroll {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(24, 24, 27, 0.25) transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-x-scroll::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar,
+.overflow-scroll::-webkit-scrollbar {
+    -webkit-appearance: none; /* erzwingt klassische, dauerhaft sichtbare Scrollbalken statt Overlay */
+    height: 10px;
+}
+
+/*
+ * Bewusstes Opt-out: .no-scrollbar (z.B. Filter-Chip-Reihen) bleibt ohne Balken.
+ * !important, damit das Opt-out unabhängig von der Quellreihenfolge gewinnt.
+ */
+.no-scrollbar {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge alt */
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+}
+
 
 
 .modal {
@@ -1224,6 +1277,7 @@
     /* Tunable via CSS var if needed per scope */
     --aw-tooltip-min-width: 12ch;   /* ensures ~10–14 chars fit per line */
     --aw-tooltip-max-width: 24rem;  /* ≈ Tailwind max-w-sm */
+    z-index: 9999 !important;       /* ensure tooltip renders above HeadlessUI Float portals */
 }
 .aw-tooltip .p-tooltip-text {
     display: inline-block;

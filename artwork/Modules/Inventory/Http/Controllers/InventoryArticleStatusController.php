@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticleStatusRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticleStatusRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InventoryArticleStatusController extends Controller
@@ -67,5 +68,22 @@ class InventoryArticleStatusController extends Controller
     public function destroy(InventoryArticleStatus $inventoryArticleStatus)
     {
         //
+    }
+
+    /**
+     * Persist a new status order (Ref 1.29). Expects an ordered array of status ids.
+     */
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:inventory_article_statuses,id'],
+        ]);
+
+        foreach ($validated['ids'] as $index => $id) {
+            InventoryArticleStatus::where('id', $id)->update(['order' => $index]);
+        }
+
+        return redirect()->back()->with('success', 'Status order updated successfully.');
     }
 }

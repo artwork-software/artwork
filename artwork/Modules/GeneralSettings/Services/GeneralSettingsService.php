@@ -90,9 +90,38 @@ class GeneralSettingsService
         $this->generalSettings->save();
     }
 
+    /* Update $event_start_time in GeneralSettings from Request */
+    public function updateEventStartTimeFromRequest(Request $request): void
+    {
+        $this->generalSettings->event_start_time = $request->get('event_start_time') ?? '09:00';
+        $this->generalSettings->save();
+    }
+
+    public function updateEventAllDayDefaultFromRequest(Request $request): void
+    {
+        $this->generalSettings->event_all_day_default = (bool) $request->get('event_all_day_default');
+        $this->generalSettings->save();
+    }
+
     function updateWarningMultipleAssignmentsFromRequest(Request $request): void
     {
         $this->generalSettings->warn_multiple_assignments = $request->get('warn_multiple_assignments');
+        $this->generalSettings->save();
+    }
+
+    public function updateInventoryDetailedArticlesAlwaysQuantityOne(Request $request): void
+    {
+        $this->generalSettings->inventory_detailed_articles_always_quantity_one =
+            (bool) $request->get('enabled');
+        $this->generalSettings->save();
+    }
+
+    public function updateInventoryDisplaySettings(Request $request): void
+    {
+        $this->generalSettings->inventory_show_inventory_number_as_name =
+            (bool) $request->get('inventory_show_inventory_number_as_name');
+        $this->generalSettings->inventory_number_prefix =
+            (string) $request->get('inventory_number_prefix', '');
         $this->generalSettings->save();
     }
 }

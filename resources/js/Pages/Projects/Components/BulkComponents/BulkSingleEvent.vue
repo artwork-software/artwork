@@ -1,12 +1,12 @@
 <template>
-    <div class="print:w-full group w-full">
+    <div ref="rowRootEl" class="print:w-full group w-full">
         <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
         <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
             :class="[
                 event?.isNew ? 'outline-2 outline-pink-400/60 outline-dashed' : '',
                 lastEditEventIds.includes(event.id)
                   ? 'outline-2 outline-blue-400/60 outline-dashed' : '',
-                (event.isSelectedForMultiEdit && multiEdit) ? 'ring-2 ring-emerald-400/40' : ''
+                (event.isSelectedForMultiEdit && effectiveMultiEdit) ? 'ring-2 ring-emerald-400/40' : ''
               ]"
         >
             <div
@@ -15,13 +15,13 @@
                 aria-hidden="true"
             />
             <div
-                v-if="event.isSelectedForMultiEdit && multiEdit"
+                v-if="event.isSelectedForMultiEdit && effectiveMultiEdit"
                 class="absolute inset-0 bg-emerald-400/10 pointer-events-none"
                 aria-hidden="true"
             />
 
             <!-- Checkbox bei Multi-Edit -->
-            <div class="flex items-center justify-center pr-2 pl-1" v-if="multiEdit">
+            <div class="flex items-center justify-center pr-2 pl-1" v-if="effectiveMultiEdit">
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1" :class="event.isSelectedForMultiEdit ? '' : ''" >
@@ -74,7 +74,7 @@
                     :items="sortedEventTypes"
                     :search-keys="['name','id']"
                     :disabled="canEditComponent === false || !hasPermission"
-                    @update:model-value="updateEventInDatabase"
+                    @update:model-value="onTypeChange"
                     :show-color-indicator="true"
                     color-property="hex_code"
                 />
@@ -90,7 +90,7 @@
                     label="Name"
                     @mousedown="storeFocus('name-' + index)"
                     @focusout="updateEventInDatabase"
-                    :disabled="canEditComponent === false"
+                    :disabled="canEditComponent === false || !hasPermission"
                 />
                 <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-error">
                     {{ $t('Event name is mandatory') }}
@@ -105,7 +105,7 @@
                     :search-keys="['name','id']"
                     :placeholder="$t('Please select a Room')"
                     :disabled="canEditComponent === false || !hasPermission"
-                    @update:model-value="updateEventInDatabase"
+                    @update:model-value="onRoomChange"
                 />
                 <!--<BaseCombobox
                     v-model="event.room"
@@ -124,7 +124,7 @@
 
             <!-- Start Day -->
             <div class="print:col-span-2" :style="getColumnSize(5)">
-                <div class="relative">
+                <div class="relative flex items-center gap-1">
                     <BaseInput
                         v-model="draftStartDate"
                         type="date"
@@ -133,22 +133,33 @@
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('day-' + index)"
                         @focusout="onStartDateFocusOut"
+                        class="min-w-0 flex-1"
                     />
+
                 </div>
             </div>
 
             <!-- Start time -->
             <div class="col-span-1" :style="getColumnSize(6)">
-                <div class="flex items-center" v-if="timeArray">
+                <div class="flex items-center gap-1" >
+                    <ToolTipComponent
+                        v-if="event.is_series || event.series_id"
+                        :icon="IconRepeat"
+                        icon-size="size-4"
+                        :tooltip-text="$t('Recurring event')"
+                        direction="bottom"
+                        class="shrink-0"
+                    />
                     <BaseInput
-                        v-model="event.start_time"
+                        v-model="draftStartTime"
+                        v-if="timeArray"
                         type="time"
                         :id="'start-time-' + index"
                         :label="$t('Start time')"
-                        class="print:border-0"
+                        class="print:border-0 min-w-0 flex-1"
                         :disabled="canEditComponent === false"
                         @mousedown="storeFocus('start-time-' + index)"
-                        @focusout="updateEventInDatabase"
+                        @focusout="onStartTimeFocusOut"
                     />
                 </div>
             </div>
@@ -172,13 +183,13 @@
             <div class="col-span-1" :style="getColumnSize(6)">
                 <div class="flex items-center" v-if="timeArray">
                     <BaseInput
-                        v-model="event.end_time"
+                        v-model="draftEndTime"
                         type="time"
                         :id="'end_time-' + index"
                         :label="$t('End time')"
                         class="print:border-0"
                         :disabled="canEditComponent === false"
-                        @focusout="updateEventInDatabase"
+                        @focusout="onEndTimeFocusOut"
                         @mousedown="storeFocus('end_time-' + index)"
                     />
                 </div>
@@ -213,7 +224,7 @@
                     <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
                               :icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
-                            <IconPlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
+                            <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
                             <BaseInput
                                 type="number"
                                 label="Anzahl"
@@ -263,8 +274,63 @@
                             title="Put in the trash"
                             @click="openDeleteEventConfirmModal"
                         />
+                        <BaseMenuItem
+                            v-if="(event.is_series || event.series_id) && hasAdminRole()"
+                            white-menu-background
+                            :icon="IconTrash"
+                            title="Delete all series events"
+                            @click="showDeleteSeriesModal = true"
+                        />
+                        <BaseMenuItem
+                            v-if="(event.is_series || event.series_id) && hasAdminRole()"
+                            white-menu-background
+                            :icon="IconEdit"
+                            title="Edit all series events"
+                            @click="showEditSeriesModal = true"
+                        />
+                        <BaseMenuItem
+                            v-if="event.id && (can('create events without request') || hasAdminRole())"
+                            white-menu-background
+                            :icon="IconDeviceFloppy"
+                            title="Save timeline as preset"
+                            @click="openSaveTimelinePresetModal"
+                        />
+                        <BaseMenuItem
+                            v-if="event.id"
+                            white-menu-background
+                            :icon="IconFileImport"
+                            title="Import timeline preset"
+                            @click="showSearchTimelinePresetModal = true"
+                        />
                     </BaseMenu>
                 </div>
+            </div>
+        </div>
+
+        <!-- Inline description row -->
+        <div
+            v-if="showDescriptionInBulk"
+            class="border-t border-b border-dashed border-zinc-300 border-l-2 border-l-zinc-300 ml-6 bg-zinc-50/50 rounded-b-lg px-3 py-1.5"
+        >
+            <div v-if="!editingDescription" @click="startEditDescription" class="cursor-pointer min-h-[24px] flex items-center">
+                <template v-if="event.description && event.description.toString().trim().length > 0">
+                    <span class="text-sm text-zinc-700 whitespace-pre-line break-words">{{ event.description }}</span>
+                </template>
+                <template v-else>
+                    <IconNote class="size-4 text-zinc-400 mr-1.5" stroke-width="1.5" />
+                    <span class="text-sm text-zinc-400 italic">{{ $t('Add description') }}</span>
+                </template>
+            </div>
+            <div v-else>
+                <textarea
+                    ref="descriptionTextarea"
+                    v-model="draftDescription"
+                    @focusout="saveDescription"
+                    @keydown.enter.ctrl="saveDescription"
+                    maxlength="250"
+                    rows="2"
+                    class="w-full border border-artwork-buttons-context/30 rounded-lg text-sm px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-artwork-buttons-context/50"
+                />
             </div>
         </div>
 
@@ -279,6 +345,35 @@
 
         <!-- Notes Modal -->
         <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false" />
+
+        <!-- Delete Series Events Modal -->
+        <ConfirmDeleteModal
+            v-if="showDeleteSeriesModal"
+            :title="$t('Delete all series events')"
+            :description="$t('Do you really want to delete all events of this series?')"
+            @closed="showDeleteSeriesModal = false"
+            @delete="confirmDeleteSeriesEvents"
+        />
+
+        <!-- Edit Series Events Modal -->
+        <EditSeriesEventsModal
+            v-if="showEditSeriesModal"
+            :event="event"
+            :rooms="rooms"
+            @close="showEditSeriesModal = false"
+        />
+
+        <CreateTimelinePresetFormEvent
+            v-if="showCreateTimelinePresetModal"
+            :event="event"
+            @close="showCreateTimelinePresetModal = false"
+        />
+
+        <SearchTimelinePresetModal
+            v-if="showSearchTimelinePresetModal"
+            :event="event"
+            @close="showSearchTimelinePresetModal = false"
+        />
     </div>
 </template>
 
@@ -287,8 +382,8 @@
 import {
     IconCheck,
     IconChevronDown,
-    IconCircleCheckFilled, IconCopy, IconEdit, IconNote,
-    IconPlus, IconTrash,
+    IconCircleCheckFilled, IconCopy, IconDeviceFloppy, IconEdit, IconFileImport, IconNote,
+    IconCirclePlus, IconRepeat, IconTrash,
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -296,13 +391,12 @@ import {
     ListboxOption,
     ListboxOptions,
 } from "@headlessui/vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {computed, nextTick, onMounted, ref} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onMounted, ref, watch} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
-import {inject} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Float} from "@headlessui-float/vue";
@@ -310,9 +404,28 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseCombobox from "@/Artwork/Inputs/BaseCombobox.vue";
 import axios from "axios";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
+import {usePermission} from "@/Composeables/Permission.js";
+
+const CreateTimelinePresetFormEvent = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
+    delay: 200,
+    timeout: 5000
+})
+
+const SearchTimelinePresetModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'),
+    delay: 200,
+    timeout: 5000
+})
 
 const focusRegistry  = inject('focusRegistry');      // { id, type }
 const storeFocus     = inject('storeFocusGlobal');
+// B: Multi-Edit-Status zentral injizieren (siehe BulkBody provide('bulkMultiEdit', ...)).
+// Fallback auf die Prop, falls die Komponente ohne Provider verwendet wird.
+const injectedMultiEdit = inject('bulkMultiEdit', null);
+const {hasAdminRole, can} = usePermission(usePage().props);
 
 const props = defineProps({
     event: { type: Object, required: true },
@@ -333,14 +446,107 @@ const props = defineProps({
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent', 'editEvent']);
 const openEventComponent = (payload) => emit('openEventComponent', payload);
 
+// B: Bevorzugt den zentral bereitgestellten Multi-Edit-Status, sonst die Prop.
+const effectiveMultiEdit = computed(() => injectedMultiEdit ? injectedMultiEdit.value : props.multiEdit);
+
 const showMenu = ref(false);
 const dayString = ref(null);
 const openNoteModal = ref(false);
 const event_properties = inject('event_properties');
 const showDeleteEventConfirmModal = ref(false);
+const showDeleteSeriesModal = ref(false);
+const showEditSeriesModal = ref(false);
+const showCreateTimelinePresetModal = ref(false);
+const showSearchTimelinePresetModal = ref(false);
+
+// Inline description
+const showDescriptionInBulk = inject('showDescriptionInBulk', ref(false));
+const editingDescription = ref(false);
+const draftDescription = ref(props.event.description || '');
+const descriptionTextarea = ref(null);
+
+const startEditDescription = () => {
+    draftDescription.value = props.event.description || '';
+    editingDescription.value = true;
+    nextTick(() => {
+        descriptionTextarea.value?.focus();
+    });
+};
+
+const saveDescription = async () => {
+    if (draftDescription.value !== (props.event.description || '')) {
+        if (props.event.id) {
+            await axios.patch(route('event.update.description', props.event.id), {
+                description: draftDescription.value
+            });
+        }
+        props.event.description = draftDescription.value;
+    }
+    editingDescription.value = false;
+};
+
+const openSaveTimelinePresetModal = async () => {
+    try {
+        const response = await axios.get(route('events.timelines', {event: props.event.id}));
+        const timelines = response.data.timelines || [];
+        if (timelines.length > 0) {
+            showCreateTimelinePresetModal.value = true;
+        }
+    } catch (error) {
+        console.error('Error checking timelines:', error);
+    }
+};
 
 // Local draft state for start date to prevent immediate re-sorting while typing
 const draftStartDate = ref(props.event.day);
+
+// Local draft state for times to prevent immediate re-sorting while typing
+const draftStartTime = ref(props.event.start_time || '');
+const draftEndTime = ref(props.event.end_time || '');
+
+// Wurzel-Element der Zeile, um beim focusout zu erkennen, ob der Fokus in ein
+// anderes Feld derselben Event-Zeile wandert.
+const rowRootEl = ref(null);
+
+// True, wenn der Fokus beim focusout in ein anderes Eingabefeld derselben Zeile
+// wandert (Feld-zu-Feld-Wechsel). Dann wird die Speicherung/das Autofill aufgeschoben,
+// damit kein Patch/Re-Sort/Autofill den Cursor aus dem gerade angeklickten Feld reißt.
+// Klicks auf Buttons/Menüs zählen NICHT – die sollen ganz normal speichern.
+const focusStaysInRow = (e) => {
+    const rt = e?.relatedTarget;
+    if (!rt || !rowRootEl.value || !rowRootEl.value.contains(rt)) return false;
+    return rt.tagName === 'INPUT' || rt.tagName === 'SELECT' || rt.tagName === 'TEXTAREA';
+};
+
+const parseISODateToUTCMidnight = (iso) => {
+    if (!iso) return null;
+    const s = String(iso).slice(0, 10);
+    const [y, m, d] = s.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+};
+
+const formatUTCDateToISO = (date) => {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(date.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
+const addDaysISO = (iso, days) => {
+    const base = parseISODateToUTCMidnight(iso);
+    if (!base) return iso;
+    base.setUTCDate(base.getUTCDate() + Number(days || 0));
+    return formatUTCDateToISO(base);
+};
+
+const diffDaysISO = (fromISO, toISO) => {
+    const from = parseISODateToUTCMidnight(fromISO);
+    const to = parseISODateToUTCMidnight(toISO);
+    if (!from || !to) return 0;
+    const ms = to.getTime() - from.getTime();
+    return Math.round(ms / (1000 * 60 * 60 * 24));
+};
 
 const getColumnSize = (column) => ({
     minWidth: usePage().props.auth.user.bulk_column_size[column] + 'px',
@@ -356,6 +562,17 @@ const getColumnTextSize = (column) => ({
 const createCopyByEventWithData = (event) => emit('createCopyByEventWithData', event);
 const openDeleteEventConfirmModal = () => showDeleteEventConfirmModal.value = true;
 const onCloseDeleteEventConfirmModal = (closedOnPurpose) => { if (closedOnPurpose) emit('deleteCurrentEvent', props.event); showDeleteEventConfirmModal.value = false; };
+
+const confirmDeleteSeriesEvents = () => {
+    router.delete(route('events.series.delete', props.event.id), {
+        preserveScroll: true,
+        preserveState: false,
+        onFinish: () => {
+            showDeleteSeriesModal.value = false;
+            window.location.reload();
+        }
+    });
+};
 
 // helpers for snapshot comparison
 const getComparableEvent = (ev) => ({
@@ -440,28 +657,143 @@ const updateEventInDatabase = async () => {
 const removeTime = () => {
     props.event.start_time = null;
     props.event.end_time = null;
+    draftStartTime.value = '';
+    draftEndTime.value = '';
     updateEventInDatabase();
 };
 
-const onStartDateFocusOut = () => {
+const onStartDateFocusOut = async () => {
     // Commit draft to actual event object only on focusout
-    props.event.day = draftStartDate.value;
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    const oldStart = props.event.day;
+    const newStart = draftStartDate.value;
+    const deltaDays = diffDaysISO(oldStart, newStart);
+
+    // Keep the existing duration by shifting end_day by the same delta.
+    // If end_day is missing, treat it as equal to the old start day.
+    const oldEnd = props.event.end_day || oldStart;
+    const newEndDay = addDaysISO(oldEnd, deltaDays);
+
+    // Prepare payload BEFORE reactive changes to avoid component unmount issues during sorting
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.day = newStart;
+        payload.end_day = newEndDay;
+        if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
+        if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        // Send API request before reactive update
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                // Update snapshot after successful patch
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, day: newStart, end_day: newEndDay });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+
+    // Now apply reactive changes (may trigger re-sort and component re-render)
+    props.event.day = newStart;
+    props.event.end_day = newEndDay;
+    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
+};
+
+const onStartTimeFocusOut = (e) => {
+    // Draft immer lokal übernehmen, damit der Wert nicht verloren geht ...
+    props.event.start_time = draftStartTime.value;
+    // ... aber Speicherung/Autofill aufschieben, wenn der Fokus in ein anderes Feld
+    // derselben Zeile geht (z.B. Endzeit). Sonst füllt das Autofill die Endzeit vor
+    // und der Cursor springt aus dem gerade angeklickten Feld.
+    if (focusStaysInRow(e)) return;
     updateEventInDatabase();
 };
+
+const onEndTimeFocusOut = (e) => {
+    // Commit draft end time to actual event object only on focusout
+    props.event.end_time = draftEndTime.value;
+    if (focusStaysInRow(e)) return;
+    updateEventInDatabase();
+};
+
+const onRoomChange = (newRoom) => {
+    // Send API request BEFORE reactive change to avoid component unmount during sort by room
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.room = newRoom ? { id: newRoom.id } : null;
+        if (payload.type && typeof payload.type === 'object' && payload.type.id) payload.type = { id: payload.type.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, room: newRoom });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+    // Reactive change already applied by v-model
+};
+
+const onTypeChange = (newType) => {
+    // Send API request BEFORE reactive change to avoid component unmount during sort by type
+    if (props.event.id) {
+        const payload = JSON.parse(JSON.stringify(props.event));
+        payload.type = newType ? { id: newType.id } : null;
+        if (payload.room && typeof payload.room === 'object' && payload.room.id) payload.room = { id: payload.room.id };
+        if (payload.status && typeof payload.status === 'object' && payload.status.id) payload.status = { id: payload.status.id };
+
+        axios.patch(route('event.update.single.bulk', { event: props.event.id }), { data: payload })
+            .then(() => {
+                if (!window.__bulkEventSnapshots) window.__bulkEventSnapshots = {};
+                const snapshotKey = `event-snapshot-${props.event.id}`;
+                window.__bulkEventSnapshots[snapshotKey] = getComparableEvent({ ...props.event, type: newType });
+            })
+            .catch(err => console.error('bulk:patch-failed', props.event.id, err));
+    }
+    // Reactive change already applied by v-model
+};
+
+// Keep draft in sync when event is updated externally (e.g. broadcast refresh)
+watch(() => props.event.day, (v) => {
+    if (v && v !== draftStartDate.value) {
+        draftStartDate.value = v;
+    }
+    // Wochentags-Label mitziehen, wenn sich das Datum extern ändert.
+    dayString.value = getDayOfWeek(v).replace('.', '');
+});
+
+watch(() => props.event.start_time, (v) => {
+    const newVal = v || '';
+    if (newVal !== draftStartTime.value) {
+        draftStartTime.value = newVal;
+    }
+});
+
+watch(() => props.event.end_time, (v) => {
+    const newVal = v || '';
+    if (newVal !== draftEndTime.value) {
+        draftEndTime.value = newVal;
+    }
+});
 
 const sortedRooms = computed(() => props.rooms.sort((a,b) => a.name.localeCompare(b.name)));
 const sortedEventTypes = computed(() => props.event_types.sort((a,b) => a.name.localeCompare(b.name)));
 
 
 const getDayOfWeek = (date) => {
-    const d = new Date(date);
     const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
-    return days[d.getDay()];
+    // Datum in UTC parsen und mit getUTCDay auslesen, damit der Wochentag zum
+    // angezeigten Kalenderdatum passt – unabhängig von der Zeitzone des Nutzers.
+    // (new Date('2026-04-09') wird als UTC-Mitternacht geparst, .getDay() liest
+    //  aber lokal → je nach Offset Off-by-one, z.B. "Fr" statt "Do".)
+    const d = parseISODateToUTCMidnight(date);
+    if (!d) return '';
+    return days[d.getUTCDay()];
 };
 
 onMounted(() => {
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
     // ensure end_day initialized
     if (!props.event.end_day) props.event.end_day = props.event.day;
     // initialize snapshot so first change is detected

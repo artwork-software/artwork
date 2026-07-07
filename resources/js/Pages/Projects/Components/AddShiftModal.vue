@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, toRef, nextTick } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import { useI18n } from 'vue-i18n'
 import { useLegalBreak} from "@/Composeables/useLegalBreak";
 // Artwork / UI
@@ -16,8 +17,11 @@ import LastedProjects from "@/Artwork/LastedProjects.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js"
 
 const { t: $t } = useI18n()
+const { resolveProject: resolveProjectLookup } = useShiftPlanLookups()
 
 
 
@@ -58,6 +62,8 @@ const props = defineProps({
     // Optional direkt übergebene Datenquellen (Fallback zu usePage().props)
     shiftGroups: { type: [Array, Object], required: false, default: () => [] },
     globalQualifications: { type: [Array, Object], required: false, default: () => [] },
+    // Vorausgewählte Schichtgruppe beim Erstellen (z.B. aus Schichtgruppen-Balken im ListView)
+    defaultShiftGroupId: { type: [String, Number], required: false, default: null },
 })
 
 // Emits
@@ -112,8 +118,42 @@ watch(() => props.globalQualifications, () => {
 const selectedProject = ref(
     props.shift?.project
         ? props.shift.project
-        : (props.project ?? (props.event?.project ?? null))
+        : (props.shift?.projectId
+            ? (resolveProjectLookup(props.shift.projectId) ?? { id: props.shift.projectId, name: '...' })
+            : (props.project ?? (props.event?.project ?? null)))
 );
+
+// Freie Datumswahl: beim Erstellen aus dem Projekt-Schichttab wird kein Tag übergeben,
+// der Nutzer muss das Datum selbst festlegen (auch außerhalb des Projektzeitraums möglich)
+const needsDaySelection = computed(() =>
+    props.shiftPlanModal && !props.edit && !props.day && !props.multiAddMode
+)
+
+// Warnung: Schicht liegt außerhalb des Projektzeitraumes
+const shiftOutsideProjectPeriod = computed(() => {
+    if (!selectedProject.value || (!shiftForm.start_date && !shiftForm.day)) return false
+    const dates = selectedProject.value.first_and_last_event_date
+    if (!dates?.first_event_date || !dates?.last_event_date) return false
+
+    // Daten im Format "dd.mm.YYYY HH:ii" parsen
+    function parseDMY(str: string): Date | null {
+        const m = str.match(/(\d{2})\.(\d{2})\.(\d{4})/)
+        if (!m) return null
+        return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]))
+    }
+
+    const projectStart = parseDMY(dates.first_event_date)
+    const projectEnd = parseDMY(dates.last_event_date)
+    if (!projectStart || !projectEnd) return false
+
+    const shiftDate = new Date(shiftForm.start_date ?? shiftForm.day)
+    // Nur Datum vergleichen (ohne Uhrzeit)
+    shiftDate.setHours(0, 0, 0, 0)
+    projectStart.setHours(0, 0, 0, 0)
+    projectEnd.setHours(0, 0, 0, 0)
+
+    return shiftDate < projectStart || shiftDate > projectEnd
+})
 
 function normalizeToArray(val: any): any[] {
     if (Array.isArray(val)) return val
@@ -129,11 +169,21 @@ const resolveInitialShiftGroups = (): any[] => {
 }
 const shiftGroups = ref<any[]>(resolveInitialShiftGroups())
 
+// Resolve shift_group_id across serialization forms: DTO uses shiftGroupId,
+// raw Eloquent JSON uses shift_group_id (column) or shift_group (snake_cased relation).
+const resolveShiftGroupId = (shift: any): number | string | null => {
+    if (!shift) return null
+    return shift.shiftGroupId
+        ?? shift.shift_group_id
+        ?? shift.shiftGroup?.id
+        ?? shift.shift_group?.id
+        ?? null
+}
+
+const initialShiftGroupId = resolveShiftGroupId(props.shift) ?? (props.edit ? null : props.defaultShiftGroupId)
 const selectedShiftGroup = ref<any | null>(
-    props.shift?.shiftGroupId
-        ? (shiftGroups as any).value?.find
-            ? (shiftGroups as any).value.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
-            : shiftGroups.find((sg: any) => sg.id === props.shift?.shiftGroupId) ?? null
+    initialShiftGroupId
+        ? (shiftGroups.value.find((sg: any) => sg.id === initialShiftGroupId) ?? null)
         : null
 )
 
@@ -141,9 +191,10 @@ const selectedShiftGroup = ref<any | null>(
 watch(() => props.shiftGroups, (v) => {
     // @ts-ignore
     shiftGroups.value = normalizeToArray(v)
-    if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+    const sgId = resolveShiftGroupId(props.shift)
+    if (sgId && !selectedShiftGroup.value) {
         // @ts-ignore
-        selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+        selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === sgId) || null
     }
 }, { deep: true })
 
@@ -152,28 +203,83 @@ watch(() => usePage().props.shiftGroups, (v: any) => {
     if (!props.shiftGroups || normalizeToArray(props.shiftGroups).length === 0) {
         // @ts-ignore
         shiftGroups.value = normalizeToArray(v)
-        if (props.shift?.shiftGroupId && !selectedShiftGroup.value) {
+        const sgId = resolveShiftGroupId(props.shift)
+        if (sgId && !selectedShiftGroup.value) {
             // @ts-ignore
-            selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === props.shift?.shiftGroupId) || null
+            selectedShiftGroup.value = shiftGroups.value.find((sg: any) => sg.id === sgId) || null
         }
     }
 }, { deep: true })
 
-const selectedCraft = ref(props.shift ? props.shift.craft : null)
+// Support both old format (shift.craft object) and new ShiftDTO (shift.craftId integer).
+// WICHTIG: Das an der Schicht hängende craft wird häufig "schlank" geladen
+// (nur id/name/abbreviation/color) – also OHNE qualifications. Würden wir dieses
+// schlanke Objekt verwenden, bliebe die Qualifikationsliste leer und das Edit-Formular
+// würde ein leeres `shiftsQualifications` senden, was im Backend als "alle Plätze entfernen"
+// interpretiert wird und die Schichtplätze + Zuweisungen löscht.
+// Daher bevorzugen wir ein vollständiges craft aus den übergebenen Listen (mit qualifications).
+function resolveCraftWithQualifications(shift: any): any | null {
+    if (!shift) return null
+    const craftId = shift.craft?.id ?? shift.craftId ?? shift.craft_id ?? null
+    const findInLists = (id: any) =>
+        (props.currentUserCrafts as any[] | undefined)?.find((c: any) => c.id === id)
+        ?? (props.crafts as any[] | undefined)?.find((c: any) => c.id === id)
+        ?? null
+
+    if (craftId != null) {
+        const fromLists = findInLists(craftId)
+        // Nur bevorzugen, wenn die qualifications tatsächlich geladen sind
+        if (fromLists && Array.isArray(fromLists.qualifications)) {
+            return fromLists
+        }
+        return shift.craft ?? fromLists
+    }
+
+    return shift.craft ?? null
+}
+
+const selectedCraft = ref(resolveCraftWithQualifications(props.shift))
+
+// Track original craft to detect changes during editing
+const originalCraftId = props.edit
+    ? (props.shift?.craft?.id ?? props.shift?.craftId ?? null)
+    : null
+
+const craftHasChanged = computed(() => {
+    if (!props.edit || originalCraftId === null) return false
+    return selectedCraft.value?.id !== originalCraftId
+})
 
 const validationMessages = reactive({
     warnings: { shift_start: [], shift_end: [], break_length: [], craft: [] },
     errors: { shift_start: [], shift_end: [], break_length: [], craft: [] },
 })
 
+// Resolve start/end dates: support old format (formatted_dates.frontend_start),
+// ShiftDTO (startDate, camelCase) and ListView serializer (start_date, snake_case)
+function resolveShiftStartDate(shift: any): string | null {
+    if (!shift) return null
+    if (shift.formatted_dates?.frontend_start) return shift.formatted_dates.frontend_start
+    if (shift.startDate) return shift.startDate.slice(0, 10)
+    if (shift.start_date) return shift.start_date.slice(0, 10)
+    return null
+}
+function resolveShiftEndDate(shift: any): string | null {
+    if (!shift) return null
+    if (shift.formatted_dates?.frontend_end) return shift.formatted_dates.frontend_end
+    if (shift.endDate) return shift.endDate.slice(0, 10)
+    if (shift.end_date) return shift.end_date.slice(0, 10)
+    return null
+}
+
 const shiftForm = useForm({
     id: props.shift ? props.shift.id : null,
-    start_date: props.shift ? props.shift.formatted_dates.frontend_start : null,
-    end_date: props.shift ? props.shift.formatted_dates.frontend_end : null,
+    start_date: resolveShiftStartDate(props.shift),
+    end_date: resolveShiftEndDate(props.shift),
     start: props.shift ? toHHMM(props.shift.start) : null,
     end: props.shift ? toHHMM(props.shift.end) : null,
     break_minutes: props.shift ? props.shift.break_minutes : null,
-    craft_id: props.shift ? props.shift.craft?.id : null,
+    craft_id: props.shift ? (props.shift.craft?.id ?? props.shift.craftId ?? null) : null,
     description: props.shift ? props.shift.description : '',
     event_id: props.event ? props.event.id : null,
     changeAll: false,
@@ -187,12 +293,29 @@ const shiftForm = useForm({
     globalQualifications: [],
     roomsAndDatesForMultiEdit: props.roomsAndDatesForMultiEdit ? props.roomsAndDatesForMultiEdit : null,
     updateOrCreateInShiftPlan: props.shiftPlanModal,
-    project_id: props.shift && props.shift.project
-        ? props.shift.project.id
+    project_id: props.shift
+        ? (props.shift.project?.id ?? props.shift.projectId ?? null)
         : (props.event && props.event.project
             ? props.event.project.id
             : (props.project ? props.project.id : null)),
-    shift_group_id: props.shift && props.shift.shiftGroupId ? props.shift.shiftGroupId : null,
+    shift_group_id: resolveShiftGroupId(props.shift)
+        ?? (!props.edit && props.defaultShiftGroupId ? props.defaultShiftGroupId : null),
+})
+
+// Wenn ein Projekt ohne Zeitraumdaten ausgewählt wird (z.B. aus LastedProjects), Daten nachladen
+watch(selectedProject, async (p) => {
+    if (p && p.id && !p.first_and_last_event_date) {
+        try {
+            const { data } = await axios.post(route('project.scoutSearch'), {
+                project_search: p.name,
+                wantsJson: true,
+            })
+            const match = (Array.isArray(data) ? data : []).find((r: any) => r.id === p.id)
+            if (match?.first_and_last_event_date) {
+                selectedProject.value = { ...p, first_and_last_event_date: match.first_and_last_event_date }
+            }
+        } catch { /* ignore */ }
+    }
 })
 
 // Falls das Projekt-Prop später gesetzt wird (asynchron), synchronisiere Auswahl und Formular
@@ -235,6 +358,17 @@ const initComputedShiftQualifications = computed(() => {
 const selectedRoom = ref<any | null>(null)
 const roomsList = computed<any[]>(() => Array.isArray(props.rooms) ? (props.rooms as any[]) : Object.values(props.rooms || {}))
 
+const checkIfMultiEditEnabled = computed(() => {
+    // if props.multiAddMode is true and props.roomsAndDatesForMultiEdit is an array with more than one item return true
+    // if props.multiAddMode is false check if selectedRoom is not null
+    if (props.multiAddMode) {
+        return Array.isArray(props.roomsAndDatesForMultiEdit) && props.roomsAndDatesForMultiEdit.length > 0
+    } else {
+        return selectedRoom.value !== null
+    }
+})
+
+
 function findRoomById(rawId: any) {
     if (rawId === null || typeof rawId === 'undefined') return null
     const rid = Number(rawId)
@@ -246,14 +380,44 @@ function findRoomById(rawId: any) {
 
 function initSelectedRoom() {
     if (selectedRoom.value) return
-    if (props.room && typeof props.room === 'object') {
-        selectedRoom.value = props.room as any
-    } else if (props.room !== null && typeof props.room !== 'undefined') {
-        // Zahl/String → über rooms finden
-        const found = findRoomById(props.room)
-        if (found) selectedRoom.value = found
-    } else if (props.shift?.roomId) {
-        const found = findRoomById(props.shift.roomId)
+
+    // Edit-Flow: Shift-Raum hat Priorität (damit room-Prop nicht „dazwischenfunkt“)
+    if (props.edit && props.shift) {
+        const shiftRoomObj = (props.shift as any)?.room
+        if (shiftRoomObj && typeof shiftRoomObj === 'object') {
+            // Wenn der Shift bereits ein Room-Objekt liefert, direkt nutzen (auch wenn rooms-Liste noch leer ist)
+            selectedRoom.value = shiftRoomObj
+        } else {
+            const roomIdFromShift =
+                (props.shift as any)?.roomId ??
+                (props.shift as any)?.room_id ??
+                (props.shift as any)?.room?.id ??
+                (props.shift as any)?.room?.roomId
+
+            const found = findRoomById(roomIdFromShift)
+            if (found) selectedRoom.value = found
+        }
+    }
+
+    // Add-Flow / Fallback: room-Prop (z. B. aus Klick auf „Schicht hinzufügen“)
+    if (!selectedRoom.value) {
+        if (props.room && typeof props.room === 'object') {
+            selectedRoom.value = props.room as any
+        } else if (props.room !== null && typeof props.room !== 'undefined') {
+            // Zahl/String → über rooms finden
+            const found = findRoomById(props.room)
+            if (found) selectedRoom.value = found
+        }
+    }
+
+    // Letzter Fallback: wenn wir im Edit sind und nur IDs haben, nochmal versuchen
+    if (!selectedRoom.value && props.shift) {
+        const roomIdFromShift =
+            (props.shift as any)?.roomId ??
+            (props.shift as any)?.room_id ??
+            (props.shift as any)?.room?.id ??
+            (props.shift as any)?.room?.roomId
+        const found = findRoomById(roomIdFromShift)
         if (found) selectedRoom.value = found
     }
 
@@ -274,12 +438,37 @@ watch(selectedRoom, (r) => {
 
 // Reagiere auf Änderungen an rooms/room-Prop (spätes Laden möglich)
 watch(() => props.rooms, () => initSelectedRoom(), { deep: true })
-watch(() => props.room, () => {
-    selectedRoom.value = null
-    initSelectedRoom()
+watch(() => props.room, (newVal, oldVal) => {
+    // Beim Editieren niemals den bereits ermittelten Shift-Raum „wegwerfen“,
+    // nur weil das room-Prop (z. B. null/stale) wechselt.
+    if (props.edit) {
+        initSelectedRoom()
+        return
+    }
+
+    // Add-Flow: room-Prop soll Auswahl steuern
+    if (newVal !== oldVal) {
+        selectedRoom.value = null
+        initSelectedRoom()
+    }
 })
 
+watch(() => props.shift, () => {
+    // Wenn der Shift im Modal wechselt (Edit), neu initialisieren
+    selectedRoom.value = null
+    initSelectedRoom()
+}, { deep: true })
+
 onMounted(() => initSelectedRoom())
+
+// Qualifikationsname auflösen: zuerst aus den Craft-Qualifikationen, dann aus der
+// Master-Liste (props.shiftQualifications). Wird für den Edit-Fallback gebraucht.
+function resolveQualificationName(id) {
+    const fromCraft = (selectedCraft.value?.qualifications || []).find((q: any) => q.id === id)
+    if (fromCraft?.name) return fromCraft.name
+    const fromMaster = (props.shiftQualifications as any[] | undefined)?.find((q: any) => q.id === id)
+    return fromMaster?.name ?? ''
+}
 
 function getInitialQualificationValue() {
     const list = (selectedCraft.value?.qualifications || []).map((shiftQualification) => {
@@ -299,6 +488,28 @@ function getInitialQualificationValue() {
             error: null,
         }
     })
+
+    // Edit-Fallback: Die vorhandenen Schichtplätze IMMER anzeigen – auch wenn das Gewerk
+    // der Schicht ohne `qualifications` geladen wurde (z. B. weil es kein Craft der/des
+    // aktuellen Users ist) oder eine Qualifikation später aus dem Gewerk entfernt wurde.
+    // So lassen sich die offenen Plätze pro Qualifikation auch im Bearbeiten-Modal anpassen.
+    if (props.edit) {
+        const knownIds = new Set(list.map(q => q.id))
+        ;(props.shift?.shifts_qualifications || []).forEach((sq) => {
+            const id = sq.shift_qualification_id
+            if (id != null && !knownIds.has(id)) {
+                list.push({
+                    id,
+                    name: resolveQualificationName(id),
+                    available: true,
+                    value: sq.value,
+                    warning: null,
+                    error: null,
+                })
+                knownIds.add(id)
+            }
+        })
+    }
 
     return list
 }
@@ -344,6 +555,22 @@ watch(breakMinutes, (v) => {
 
 }, { immediate: true, deep: true })
 
+// Automatische Anpassung des Enddatums basierend auf Start-/Endzeit
+watch([() => shiftForm.start, () => shiftForm.end], ([startTime, endTime]) => {
+    if (!startTime || !endTime || !shiftForm.start_date) return
+
+    // Wenn Endzeit >= Startzeit, dann soll das Enddatum dem Startdatum entsprechen
+    // Wenn Endzeit < Startzeit, dann geht die Schicht über Mitternacht und Enddatum = Startdatum + 1 Tag
+    if (endTime >= startTime) {
+        shiftForm.end_date = shiftForm.start_date
+    } else {
+        // Endzeit < Startzeit bedeutet Schicht geht über Mitternacht
+        const startDate = new Date(shiftForm.start_date)
+        startDate.setDate(startDate.getDate() + 1)
+        shiftForm.end_date = startDate.toISOString().slice(0, 10)
+    }
+})
+
 onMounted(() => {
     if (props.edit)
     {
@@ -362,7 +589,7 @@ const selectableCrafts = computed(() => {
         })
         if (!selectedCraftIncluded) crafts.push(selectedCraft.value)
     }
-    return crafts.concat(props.currentUserCrafts || [])
+    return crafts.concat(props.currentUserCrafts || []).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
 })
 
 const filteredShiftTimePresets = computed(() => {
@@ -547,6 +774,11 @@ function validateShiftDates() {
         }
     }
 
+    if (needsDaySelection.value && !shiftForm.day) {
+        validationMessages.errors.shift_start.push($t('Please select a date.'))
+        hasErrors = true
+    }
+
     if (!shiftForm.automaticMode) {
         if (!shiftForm.start || !shiftForm.start_date) {
             validationMessages.errors.shift_start.push($t('Please enter a start time and date.'))
@@ -682,7 +914,7 @@ function saveShift() {
         return
     }
 
-    if (props.shiftPlanModal && !shiftForm.id) {
+    if (!shiftForm.id) {
         shiftForm.post(route('event.shift.store.without.event'), {
             preserveScroll: true,
             preserveState: true,
@@ -693,23 +925,22 @@ function saveShift() {
         return
     }
 
-    if (shiftForm.id) {
-        shiftForm.patch(route('event.shift.update', props.shift.id), {
-            preserveScroll: true,
-            preserveState: false,
-            onSuccess: () => {
-                shiftForm.reset()
-                // Im Shift-Plan (Daily View) per WebSockets aktualisieren – kein Reload nötig
-                if (!props.shiftPlanModal) {
-                    router.reload({ only: ['loadedProjectInformation'], preserveScroll: true })
-                }
-                closeModal(true)
-            },
-            onError: (e) => console.log(e),
-            onFinish: () => { shiftForm.reset(); closeModal(true) },
+    if (props.shiftPlanModal) {
+        // In the shift plan list/daily view, use axios instead of Inertia to avoid
+        // the redirect response overwriting localGroupedShifts with filtered data
+        // (e.g. craft filter excludes the shift after a craft change).
+        // The WebSocket broadcast handles the real-time UI update.
+        axios.patch(route('event.shift.update', props.shift.id), {
+            ...shiftForm.data(),
+            updateOrCreateInShiftPlan: true,
         })
+            .catch((e) => console.log(e))
+            .finally(() => {
+                shiftForm.reset()
+                closeModal(true)
+            })
     } else {
-        shiftForm.post(route('event.shift.store', props.event.id), {
+        shiftForm.patch(route('event.shift.update', props.shift.id), {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
@@ -1093,7 +1324,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </div>
                     <!-- Room -->
 
-                        <div class="grid grid-cols-1 my-4 gap-2">
+                        <div class="grid grid-cols-1 my-4 gap-2" v-if="!multiAddMode">
                             <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
                             <div v-else
                                  class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4">
@@ -1103,6 +1334,18 @@ const lockOrUnlockShift = (commit = false) => {
                                 </button>
                             </div>
                         </div>
+
+                    <!-- Datum (freie Wahl, wenn kein Tag vorgegeben — z.B. Button im Projekt-Schichttab) -->
+                    <div class="grid grid-cols-1 my-4 gap-2" v-if="needsDaySelection">
+                        <BaseInput
+                            type="date"
+                            v-model="shiftForm.day"
+                            :label="$t('Date')"
+                            id="shift_day"
+                            required
+                            @change="validateShiftDates()"
+                        />
+                    </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Start -->
@@ -1211,6 +1454,13 @@ const lockOrUnlockShift = (commit = false) => {
                                 selected-property-to-display="name"
                                 :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
                             />
+                            <AlertComponent
+                                v-if="craftHasChanged"
+                                type="warning"
+                                show-icon
+                                :text="$t('Changing the craft will remove all assigned employees from this shift.')"
+                                class="mt-2"
+                            />
                         </div>
                         <!-- Craft -->
                         <div class="sm:col-span-2">
@@ -1248,11 +1498,25 @@ const lockOrUnlockShift = (commit = false) => {
                                             <div class="text-sm font-medium text-gray-900 truncate">
                                                 {{ selectedProject.name }}
                                             </div>
+                                            <div v-if="selectedProject.first_and_last_event_date" class="text-[11px] text-gray-500 mt-0.5">
+                                                {{ $t('Project period') }}: {{ selectedProject.first_and_last_event_date.first_event_date?.split(' ')[0] }} - {{ selectedProject.first_and_last_event_date.last_event_date?.split(' ')[0] }}
+                                            </div>
                                         </div>
                                     </div>
                                     <button type="button" class="ui-button !text-xs" @click="selectedProject = null">
                                         {{ $t('Change') }}
                                     </button>
+                                </div>
+                                <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
+                                    <p class="text-xs text-amber-800 inline-flex items-center gap-0.5 flex-wrap">
+                                        <span>{{ $t('Shift is outside the project period') }}</span>
+                                        <ToolTipComponent
+                                            icon="IconInfoCircle"
+                                            icon-size="w-3.5 h-3.5"
+                                            :tooltip-text="$t('The project period is determined by the first and last event of the project.')"
+                                            classes-button="mt-0"
+                                        />
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -1374,7 +1638,7 @@ const lockOrUnlockShift = (commit = false) => {
                         :label="$t('Save')"
                         type="submit"
                         is-add-button
-                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft"
+                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !checkIfMultiEditEnabled || (needsDaySelection && !shiftForm.day)"
                     />
 
                     <BaseUIButton

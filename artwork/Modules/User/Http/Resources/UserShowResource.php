@@ -24,6 +24,7 @@ class UserShowResource extends JsonResource
             'description' => $this->description,
             'departments' => $this->departments,
             'position' => $this->position,
+            'business' => $this->business,
             'pronouns' => $this->pronouns,
             'phone_number' => $this->phone_number,
             'roles' => $this->getRoleNames(),

@@ -70,7 +70,6 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import TimeLineShiftsComponent from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
 import {
     ChevronDownIcon,
     ChevronUpIcon,
@@ -83,7 +82,6 @@ import {
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal.vue";
 import PresetTimeLine from "@/Pages/Shifts/Components/PresetTimeLine.vue";
-import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
 import SinglePresetShift from "@/Pages/Shifts/Components/SinglePresetShift.vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -101,7 +99,6 @@ export default defineComponent({
         AddEditShiftPresetModal,
         SinglePresetShift,
         PlusCircleIcon,
-        SingleShift,
         PresetTimeLine,
         ChevronDownIcon,
         AddShiftPresetModal,
@@ -109,7 +106,6 @@ export default defineComponent({
         ChevronUpIcon,
         XIcon,
         DotsVerticalIcon,
-        TimeLineShiftsComponent,
         Menu,
         MenuItems,
         MenuItem,

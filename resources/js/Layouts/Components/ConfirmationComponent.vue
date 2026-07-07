@@ -1,5 +1,5 @@
 <template>
-    <ArtworkBaseModal @close="closeModal(false)" v-if="true" :title="titel" description="">
+    <ArtworkBaseModal @close="closeModal(false)" v-if="true" :title="titel" description="" :z-index="zIndex">
         <div class="mt-5">
             <BaseAlertComponent :message="description" type="error"/>
         </div>
@@ -38,7 +38,16 @@ export default {
         XIcon,
         CheckIcon
     },
-    props: ['titel', 'description', 'confirm', 'cancel'],
+    props: {
+        titel: String,
+        description: String,
+        confirm: String,
+        cancel: String,
+        zIndex: {
+            type: String,
+            default: '100'
+        }
+    },
     emits: ['closed'],
     methods: {
         closeModal(bool) {

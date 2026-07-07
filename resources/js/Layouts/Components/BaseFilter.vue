@@ -18,7 +18,8 @@
             </MenuButton>
 
             <!-- Button: Nur Icon mit Tooltip -->
-            <MenuButton v-else>
+            <MenuButton v-else class="relative">
+                <span v-if="hasActiveFilters" class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-blue-600 ring-2 ring-white z-10"></span>
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Filter')"
@@ -26,7 +27,7 @@
                     :whiteIcon="whiteIcon"
                     :grayIcon="grayIcon"
                     icon-size="size-6"
-                    classes-button="ui-button-small hover:!bg-white text-artwork-buttons-context"
+                    :classes-button="useFullButton ? 'ui-button' : 'ui-button-small hover:!bg-white text-artwork-buttons-context'"
                 />
             </MenuButton>
         </div>
@@ -74,5 +75,7 @@ const props = defineProps({
     grayIcon: { type: Boolean, default: false },
     classes: { type: [String, Array, Object], default: 'relative flex items-center text-left' },
     whiteBackground: { type: Boolean, default: false },
+    useFullButton: { type: Boolean, default: false },
+    hasActiveFilters: { type: Boolean, default: false },
 })
 </script>

@@ -15,4 +15,16 @@ readonly class SumMoneySourceService
     {
         $this->sumMoneySourceRepository->forceDelete($sumMoneySource);
     }
+
+    // softDelete
+    public function softDelete(SumMoneySource $sumMoneySource): void
+    {
+        $this->sumMoneySourceRepository->delete($sumMoneySource);
+    }
+
+    //restore
+    public function restore(SumMoneySource $sumMoneySource): void
+    {
+        $this->sumMoneySourceRepository->restore($sumMoneySource);
+    }
 }

@@ -2,8 +2,10 @@
 
 namespace Artwork\Modules\User\Services;
 
+use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
@@ -18,6 +20,7 @@ class WorkingHourService
 {
     public function __construct(
         private UserRepository $userRepository,
+        private WorkingHourCacheService $workingHourCacheService,
     ) {
     }
 
@@ -74,19 +77,18 @@ class WorkingHourService
 
             // Precompute shift minutes for all days
             $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
-
             // Calculate total minutes for each day
             foreach ($dateArray as $dateStr) {
-                // Add individual time if available
-                if ($individualMinutesPerDay->has($dateStr)) {
-                    $plannedMinutes[$userId] += $individualMinutesPerDay[$dateStr];
-                }
-
-                // Add either booking or shift time
                 if ($bookingsPerDay->has($dateStr)) {
-                    $plannedMinutes[$userId] += $bookingsPerDay[$dateStr];
+                    // Tag mit Buchung: NUR Buchung
+                    $plannedMinutes[$userId] += (int) $bookingsPerDay[$dateStr];
                 } else {
-                    $plannedMinutes[$userId] += $shiftMinutesPerDay[$dateStr] ?? 0;
+                    // Ohne Buchung: Schicht + Individual
+                    $plannedMinutes[$userId] += (int) ($shiftMinutesPerDay[$dateStr] ?? 0);
+
+                    if ($individualMinutesPerDay->has($dateStr)) {
+                        $plannedMinutes[$userId] += (int) $individualMinutesPerDay[$dateStr];
+                    }
                 }
             }
 
@@ -107,34 +109,96 @@ class WorkingHourService
     private function precomputeShiftMinutesForDays(User|Freelancer|ServiceProvider $user, Carbon $startDate, Carbon $endDate): array
     {
         $shiftMinutesPerDay = [];
-        $dateRange = CarbonPeriod::create($startDate, $endDate);
+        $rangeStartTimestamp = strtotime($startDate->toDateString() . ' 00:00:00');
+        $rangeEndTimestamp = strtotime($endDate->toDateString() . ' 23:59:59');
 
-        foreach ($dateRange as $day) {
-            $dateStr = $day->toDateString();
+        // Precompute day timestamps for the entire range
+        $dayTimestamps = [];
+        $ts = $rangeStartTimestamp;
+        while ($ts <= $rangeEndTimestamp) {
+            $dateStr = date('Y-m-d', $ts);
             $shiftMinutesPerDay[$dateStr] = 0;
+            $dayTimestamps[$dateStr] = [
+                'start' => $ts,
+                'end' => strtotime($dateStr . ' 23:59:59'),
+            ];
+            $ts += 86400;
+        }
 
-            $dayStart = $day->copy()->startOfDay();
-            $dayEnd = $day->copy()->endOfDay();
+        foreach ($user->shifts as $shift) {
+            $pivot = $shift->pivot;
+            $sDateStr = $pivot->start_date ?? $shift->start_date ?? null;
+            $eDateStr = $pivot->end_date   ?? $shift->end_date   ?? null;
+            $sTimeStr = $pivot->start_time ?? $shift->start ?? null;
+            $eTimeStr = $pivot->end_time   ?? $shift->end   ?? null;
 
-            foreach ($user->shifts as $shift) {
-                $pivot = $shift->pivot;
+            if (!$sDateStr || !$sTimeStr || !$eDateStr || !$eTimeStr) {
+                continue;
+            }
 
-                $shiftStart = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
-                $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
+            // FIX: Carbon objects from pivot casts must be converted to pure date/time strings
+            $sDateOnly = ($sDateStr instanceof Carbon) ? $sDateStr->toDateString() : (string) $sDateStr;
+            $eDateOnly = ($eDateStr instanceof Carbon) ? $eDateStr->toDateString() : (string) $eDateStr;
 
-                if ($shiftStart->gt($dayEnd) || $shiftEnd->lt($dayStart)) {
-                    continue;
+            // If date strings contain time portions (e.g. "2024-01-15 00:00:00"), extract date only
+            if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $sDateOnly, $m)) {
+                $sDateOnly = $m[1];
+            }
+            if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $eDateOnly, $m)) {
+                $eDateOnly = $m[1];
+            }
+
+            // Extract time portion — handle Carbon objects, "H:i:s" and "H:i" strings
+            $sTime = ($sTimeStr instanceof Carbon)
+                ? $sTimeStr->format('H:i:s')
+                : ((is_string($sTimeStr) && preg_match('/\d{2}:\d{2}/', $sTimeStr))
+                    ? substr($sTimeStr, 0, 8)
+                    : date('H:i:s', strtotime((string) $sTimeStr)));
+            $eTime = ($eTimeStr instanceof Carbon)
+                ? $eTimeStr->format('H:i:s')
+                : ((is_string($eTimeStr) && preg_match('/\d{2}:\d{2}/', $eTimeStr))
+                    ? substr($eTimeStr, 0, 8)
+                    : date('H:i:s', strtotime((string) $eTimeStr)));
+
+            $shiftStartTs = strtotime("{$sDateOnly} {$sTime}");
+            $shiftEndTs   = strtotime("{$eDateOnly} {$eTime}");
+
+            if ($shiftStartTs === false || $shiftEndTs === false) {
+                continue;
+            }
+
+            if ($shiftEndTs < $rangeStartTimestamp || $shiftStartTs > $rangeEndTimestamp) {
+                continue;
+            }
+
+            $breakMinutes = (int) ($shift->break_minutes ?? 0);
+
+            // Determine affected day range
+            $firstDayStr = date('Y-m-d', max($shiftStartTs, $rangeStartTimestamp));
+            $lastDayStr  = date('Y-m-d', min($shiftEndTs, $rangeEndTimestamp));
+
+            $dayTs = strtotime($firstDayStr);
+            $lastDayTs = strtotime($lastDayStr);
+            $breakAlreadyDeducted = false;
+
+            while ($dayTs <= $lastDayTs) {
+                $dateStr = date('Y-m-d', $dayTs);
+                $dayStartTimestamp = $dayTimestamps[$dateStr]['start'] ?? $dayTs;
+                $dayEndTimestamp   = $dayTimestamps[$dateStr]['end'] ?? ($dayTs + 86399);
+
+                $workStartTimestamp = max($shiftStartTs, $dayStartTimestamp);
+                $workEndTimestamp   = min($shiftEndTs, $dayEndTimestamp);
+
+                if ($workStartTimestamp < $workEndTimestamp) {
+                    $duration = (int) (($workEndTimestamp - $workStartTimestamp) / 60);
+                    if (!$breakAlreadyDeducted) {
+                        $duration -= $breakMinutes;
+                        $breakAlreadyDeducted = true;
+                    }
+                    $shiftMinutesPerDay[$dateStr] = ($shiftMinutesPerDay[$dateStr] ?? 0) + max(0, $duration);
                 }
 
-                $breakMinutes = (int)($shift->break_minutes ?? 0);
-
-                $workStart = max($shiftStart, $dayStart);
-                $workEnd = min($shiftEnd, $dayEnd);
-
-                if ($workStart->lt($workEnd)) {
-                    $duration = $workStart->diffInMinutes($workEnd) - $breakMinutes;
-                    $shiftMinutesPerDay[$dateStr] += max(0, $duration);
-                }
+                $dayTs += 86400;
             }
         }
 
@@ -146,8 +210,6 @@ class WorkingHourService
         Carbon $startDate,
         Carbon $endDate
     ): int {
-        $totalMinutes = 0;
-
         // Individuelle Zeiten sammeln
         $individualTimes = $entity->individualTimes()
             ->individualByDateRange($startDate->toDateString(), $endDate->toDateString())
@@ -164,28 +226,42 @@ class WorkingHourService
             }
         }
 
+        // Precompute shift minutes für alle Tage einmal
+        $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($entity, $startDate, $endDate);
+
+        $bookingsPerDay = collect();
+        if ($entity instanceof User) {
+            $bookings = $entity->workTimeBookings()
+                ->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()])
+                ->get();
+
+            foreach ($bookings as $booking) {
+                $bookingDay = $booking->booking_day;
+                if ($bookingDay === null || !is_scalar($bookingDay)) {
+                    continue;
+                }
+                if (!$bookingsPerDay->has($bookingDay)) {
+                    $bookingsPerDay[$bookingDay] = 0;
+                }
+                $bookingsPerDay[$bookingDay] += $booking->worked_hours;
+            }
+        }
+
+        $totalMinutes = 0;
         $current = $startDate->copy();
         while ($current->lte($endDate)) {
             $dateStr = $current->toDateString();
 
-            // Immer individuelle Zeit draufrechnen (wenn vorhanden)
-            if ($individualMinutesPerDay->has($dateStr)) {
-                $totalMinutes += $individualMinutesPerDay[$dateStr];
-            }
-
-            // Dann entweder Booking oder Schichtzeit draufrechnen
-            if ($entity instanceof User) {
-                $bookings = $entity->workTimeBookings()
-                    ->where('booking_day', $dateStr)
-                    ->get();
-
-                if ($bookings->isNotEmpty()) {
-                    $totalMinutes += $bookings->sum('worked_hours');
-                } else {
-                    $totalMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
-                }
+            if ($entity instanceof User && $bookingsPerDay->has($dateStr)) {
+                // Vergangenheit/Tag mit Buchung: NUR Buchung
+                $totalMinutes += (int) $bookingsPerDay[$dateStr];
             } else {
-                $totalMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
+                // Zukunft/ohne Buchung: Schicht + Individual
+                $totalMinutes += (int) ($shiftMinutesPerDay[$dateStr] ?? 0);
+
+                if ($individualMinutesPerDay->has($dateStr)) {
+                    $totalMinutes += (int) $individualMinutesPerDay[$dateStr];
+                }
             }
 
             $current->addDay();
@@ -224,79 +300,93 @@ class WorkingHourService
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        User $currentUser = null
+        ?User $currentUser = null,
+        ?array $craftIds = null
     ): array {
-        $usersWithPlannedWorkingHours = [];
+        // Im Konstruktor kann das zu circluar dependency führen, deswegen über den Container
+        $workerShiftPlanService = app(\Artwork\Modules\Worker\Services\WorkerShiftPlanService::class);
+        $workerService = app(\Artwork\Modules\Worker\Services\WorkerService::class);
 
-        // Eager load all necessary relationships for all workers at once
-        $workers = $this->userRepository->getWorkers()->load([
-            'individualTimes' => function ($query) use ($startDate, $endDate): void {
-                $query->with(['series'])->individualByDateRange($startDate->toDateString(), $endDate->toDateString());
-            },
-            'workTimeBookings' => function ($query) use ($startDate, $endDate): void {
-                $query->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()]);
-            },
-            'workTimes' => function ($query) use ($startDate, $endDate): void {
-                $query->where(function ($q) use ($endDate): void {
-                    $q->whereNull('valid_from')->orWhere('valid_from', '<=', $endDate);
-                })->where(function ($q) use ($startDate): void {
-                    $q->whereNull('valid_until')->orWhere('valid_until', '>=', $startDate);
-                });
-            },
-            'dayServices',
-            'shiftQualifications',
-        ]);
+        $workers = $craftIds !== null
+            ? $this->userRepository->getWorkersByIds(
+                app(\Artwork\Modules\Craft\Repositories\CraftRepository::class)->getWorkerIdsByCraftIds($craftIds)['user_ids'],
+                $startDate,
+                $endDate
+            )
+            : $this->userRepository->getWorkers($startDate, $endDate);
+        $workers = $workerShiftPlanService->loadWorkerRelations($workers, $startDate, $endDate);
+        $workers = $workerShiftPlanService->filterByQualifications($workers, $currentUser);
+        $qualificationsCache = $workerService->buildQualificationsCache($workers);
 
-        // Filter workers by shift qualifications if currentUser has selected qualifications
-        if ($currentUser && !empty($currentUser->getAttribute('show_qualifications'))) {
-            $selectedQualifications = $currentUser->getAttribute('show_qualifications');
-            $workers = $workers->filter(function ($worker) use ($selectedQualifications) {
-                // Check if worker has at least one of the selected qualifications
-                $workerQualificationIds = $worker->shiftQualifications->pluck('id')->toArray();
-                return !empty(array_intersect($selectedQualifications, $workerQualificationIds));
-            });
+        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
+
+        $workerIds = $workers->pluck('id')->all();
+
+        // Batch-load all availabilities in one query instead of N+1
+        $availabilitiesByUser = collect();
+        if ($addVacationsAndAvailabilities) {
+            $availabilitiesByUser = Availability::query()
+                ->where('available_type', User::class)
+                ->whereIn('available_id', $workerIds)
+                ->betweenDates($startDate, $endDate)
+                ->get()
+                ->groupBy('available_id')
+                ->map(fn ($availabilities) => $availabilities->groupBy('formatted_date'));
         }
 
-        $expectedMinutesCache = [];
-        $plannedMinutesCache = [];
-        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
+        // Batch-load shift rule violations for all users in date range
+        $violationsByUser = \Artwork\Modules\Shift\Models\ShiftRuleViolation::query()
+            ->with(['shiftRule:id,name,description,warning_color,default_compensation_days,default_compensation_deadline_days'])
+            ->whereIn('user_id', $workerIds)
+            ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->whereIn('status', ['active', 'resolved'])
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn ($violations) => $violations->groupBy(fn ($v) => $v->violation_date->format('Y-m-d')));
+
+        // Batch-load granted compensation day offs for all users in date range
+        $compensationDaysByUser = CompensationDayOff::whereIn('user_id', $workerIds)
+            ->whereNotNull('granted_date')
+            ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->with([
+                'violation:id,shift_rule_id',
+                'violation.shiftRule:id,name',
+                'grantedByUser:id,first_name,last_name',
+            ])
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn ($days) => $days->groupBy(fn ($d) => $d->granted_date->format('Y-m-d')));
+
+        $usersWithPlannedWorkingHours = [];
 
         /** @var User $user */
         foreach ($workers as $user) {
             /** @var JsonResource $desiredResourceClass */
             $desiredUserResource = $desiredResourceClass::make($user);
-            if ($desiredUserResource instanceof UserShiftPlanResource) {
-                $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
-            }
 
-            $userId = $user->id;
-            $plannedWorkingHours = $this->convertMinutesInHours(
-                $plannedMinutesCache[$userId] ?? 0
-            );
-
-            $userData = [
-                'user' => $desiredUserResource->resolve(),
-                'plannedWorkingHours' => $plannedWorkingHours,
-                'expectedWorkingHours' => $this->convertMinutesInHours(
-                    $expectedMinutesCache[$userId] ?? 0
-                ),
-                'dayServices' => $user->dayServices?->groupBy('pivot.date'),
-                'is_freelancer' => $user->getAttribute('is_freelancer'),
-                'individual_times' => $user->individualTimes,
-                'shift_comments' => $user->getShiftPlanCommentsForPeriod($startDate, $endDate),
+            $additionalData = [
                 'workTimeBalance' => $this->convertMinutesInHours($user->work_time_balance ?? 0),
+                'weeklyWorkingHours' => $weeklyWorkingHoursCache[$user->id] ?? [],
             ];
 
-            $userData['weeklyWorkingHours'] = $weeklyWorkingHoursCache[$userId] ?? [];
+            $userData = $workerShiftPlanService->buildWorkerData(
+                $user,
+                $desiredUserResource,
+                $qualificationsCache,
+                $startDate,
+                $endDate,
+                $addVacationsAndAvailabilities,
+                $additionalData
+            );
+
             if ($addVacationsAndAvailabilities) {
-                $userData['vacations'] = $user->getVacationDays();
-                $userData['availabilities'] = $this->userRepository
-                    ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $user,
-                        $startDate,
-                        $endDate
-                    );
+                $userData['availabilities'] = $availabilitiesByUser->get($user->id, collect());
             }
+
+            $userData['violations'] = $violationsByUser->get($user->id, collect());
+            $userData['compensation_day_offs'] = $compensationDaysByUser->get($user->id, collect());
+            $userData['compensation_period'] = $user->activeWorkContract()?->compensation_period ?? 0;
+
             $usersWithPlannedWorkingHours[] = $userData;
         }
         if ($currentUser && $currentUser->getAttribute('shift_plan_user_sort_by_id')) {
@@ -315,6 +405,63 @@ class WorkingHourService
             });
         }
         return $usersWithPlannedWorkingHours;
+    }
+
+    /**
+     * Precompute workTime patterns für einen User
+     *
+     * @param User $user
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return array<string, array{pattern: \Artwork\Modules\User\Models\UserWorkTime|null, weekday: string}>
+     */
+    private function precomputeWorkTimePatterns(User $user, Carbon $startDate, Carbon $endDate): array
+    {
+        $patternMap = [];
+
+        // Sortiere workTimes nach valid_from (neueste zuerst)
+        $workTimes = $user->workTimes->sortByDesc(function ($workTime) {
+            return $workTime->valid_from ? Carbon::parse($workTime->valid_from)->timestamp : 0;
+        });
+
+        // Parse valid_from/valid_until einmal für alle workTimes
+        $parsedWorkTimes = [];
+        foreach ($workTimes as $workTime) {
+            $parsedWorkTimes[] = [
+                'valid_from' => $workTime->valid_from ? Carbon::parse($workTime->valid_from)->startOfDay()->timestamp : null,
+                'valid_until' => $workTime->valid_until ? Carbon::parse($workTime->valid_until)->endOfDay()->timestamp : null,
+                'workTime' => $workTime,
+            ];
+        }
+
+        // Iteriere über alle Tage und finde aktives Pattern
+        $current = $startDate->copy()->startOfDay();
+        while ($current->lte($endDate)) {
+            $dateStr = $current->toDateString();
+            $dateTimestamp = $current->timestamp;
+            $weekday = strtolower($current->format('l'));
+
+            // Finde aktives Pattern (neuestes zuerst)
+            $activePattern = null;
+            foreach ($parsedWorkTimes as $parsed) {
+                if (
+                    (!$parsed['valid_from'] || $parsed['valid_from'] <= $dateTimestamp) &&
+                    (!$parsed['valid_until'] || $parsed['valid_until'] >= $dateTimestamp)
+                ) {
+                    $activePattern = $parsed['workTime'];
+                    break; // Neuestes Pattern gefunden
+                }
+            }
+
+            $patternMap[$dateStr] = [
+                'pattern' => $activePattern,
+                'weekday' => $weekday,
+            ];
+
+            $current->addDay();
+        }
+
+        return $patternMap;
     }
 
     /**
@@ -341,20 +488,52 @@ class WorkingHourService
                 'weekStart' => $weekStart,
                 'actualStart' => $actualStart,
                 'actualEnd' => $actualEnd,
-                'weekNumber' => ltrim($weekStart->format('W'), '0')
+                'weekNumber' => ltrim($weekStart->format('W'), '0'),
+                'year' => (int) $weekStart->format('o'),
+                'isoWeek' => (int) $weekStart->format('W'),
             ];
         }
 
-        // Precompute shift minutes for all days for all users
-        $allShiftMinutes = [];
-        foreach ($users as $user) {
-            $allShiftMinutes[$user->id] = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
-        }
-
-        // Process each user
+        // Process each user — precompute shift minutes, workTime patterns, and weekly hours in one loop
         foreach ($users as $user) {
             $userId = $user->id;
+            $entityType = WorkingHourCacheService::entityType($user);
             $weeklyWorkingHoursCache[$userId] = [];
+
+            // Check cache for each week first
+            $uncachedWeeks = [];
+            foreach ($weekPeriods as $index => $weekPeriod) {
+                $cached = $this->workingHourCacheService->getWeeklyData(
+                    $entityType,
+                    $userId,
+                    $weekPeriod['year'],
+                    $weekPeriod['isoWeek']
+                );
+
+                if ($cached !== null) {
+                    $weeklyWorkingHoursCache[$userId][$weekPeriod['weekNumber']] = $cached;
+                } else {
+                    $uncachedWeeks[] = $index;
+                }
+            }
+
+            // Skip expensive computation if all weeks are cached
+            if (empty($uncachedWeeks)) {
+                continue;
+            }
+
+            $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($user, $startDate, $endDate);
+            $workTimePatterns = ($user instanceof User)
+                ? $this->precomputeWorkTimePatterns($user, $startDate, $endDate)
+                : null;
+
+            // Create a map of vacations per day to identify OFF_WORK days
+            $offWorkDays = collect();
+            foreach ($user->vacations as $vacation) {
+                if ($vacation->type === 'OFF_WORK' || $vacation->comment === 'OFF_WORK') {
+                    $offWorkDays[$vacation->date instanceof Carbon ? $vacation->date->toDateString() : Carbon::parse($vacation->date)->toDateString()] = true;
+                }
+            }
 
             // Create a map of individual minutes per day
             $individualMinutesPerDay = collect();
@@ -383,11 +562,24 @@ class WorkingHourService
                 $bookingsPerDay[$bookingDay] += $booking->worked_hours;
             }
 
-            // Get shift minutes for this user
-            $shiftMinutesPerDay = $allShiftMinutes[$userId];
+            // Create a map of granted compensation days per day
+            $compensationDays = collect();
+            $grantedCompDays = CompensationDayOff::where('user_id', $userId)
+                ->whereNotNull('granted_date')
+                ->where('for_holiday', true)
+                ->whereBetween('granted_date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->get();
+            foreach ($grantedCompDays as $compDay) {
+                $compDateStr = $compDay->granted_date->toDateString();
+                if (!$compensationDays->has($compDateStr)) {
+                    $compensationDays[$compDateStr] = 0;
+                }
+                $compensationDays[$compDateStr] += (float) $compDay->value;
+            }
 
-            // Process each week
-            foreach ($weekPeriods as $weekPeriod) {
+            // Process only uncached weeks
+            foreach ($uncachedWeeks as $index) {
+                $weekPeriod = $weekPeriods[$index];
                 $weekStart = $weekPeriod['weekStart'];
                 $actualStart = $weekPeriod['actualStart'];
                 $actualEnd = $weekPeriod['actualEnd'];
@@ -395,35 +587,20 @@ class WorkingHourService
 
                 $totalPlannedMinutes = 0;
                 $totalExpectedMinutes = 0;
+                $offWorkNegativeAdjustment = 0;
 
                 $current = $actualStart->copy();
 
                 // Process each day in the week
                 while ($current->lte($actualEnd)) {
                     $dateStr = $current->toDateString();
-                    $weekday = strtolower($current->format('l'));
+                    $isOffWork = $offWorkDays->has($dateStr);
 
-                    // Calculate expected minutes (TAGESSOLL)
-                    if ($user instanceof User) {
-                        // Find the active pattern for this date
-                        $activePattern = null;
-                        foreach ($user->workTimes as $workTime) {
-                            $validFrom = $workTime->valid_from ? Carbon::parse($workTime->valid_from) : null;
-                            $validUntil = $workTime->valid_until ? Carbon::parse($workTime->valid_until) : null;
-
-                            if (
-                                (!$validFrom || $validFrom->lte($current)) &&
-                                (!$validUntil || $validUntil->gte($current))
-                            ) {
-                                if (
-                                    !$activePattern ||
-                                    (!$activePattern->valid_from && $validFrom) ||
-                                    ($activePattern->valid_from && $validFrom && $validFrom->gt($activePattern->valid_from))
-                                ) {
-                                    $activePattern = $workTime;
-                                }
-                            }
-                        }
+                    // Calculate expected minutes (TAGESSOLL) - normal calculation even for OFF_WORK days
+                    if ($user instanceof User && $workTimePatterns) {
+                        $patternData = $workTimePatterns[$dateStr] ?? null;
+                        $activePattern = $patternData['pattern'] ?? null;
+                        $weekday = $patternData['weekday'] ?? strtolower($current->format('l'));
 
                         $patternTime = $activePattern?->{$weekday};
                         if ($patternTime instanceof Carbon) {
@@ -437,28 +614,61 @@ class WorkingHourService
 
                     $totalExpectedMinutes += $dailyTargetMinutes;
 
-                    // Calculate planned minutes (GEPLANT)
+                    // Calculate planned minutes (GEPLANT) - track daily for OFF_WORK check
+                    $dailyPlanned = 0;
                     if ($individualMinutesPerDay->has($dateStr)) {
-                        $totalPlannedMinutes += $individualMinutesPerDay[$dateStr];
+                        $dailyPlanned += $individualMinutesPerDay[$dateStr];
                     }
 
+                    // Immer Schichtminuten dazurechnen (falls vorhanden)
+                    $dailyPlanned += $shiftMinutesPerDay[$dateStr] ?? 0;
+
                     if ($bookingsPerDay->has($dateStr)) {
-                        $totalPlannedMinutes += $bookingsPerDay[$dateStr];
-                    } else {
-                        $totalPlannedMinutes += $shiftMinutesPerDay[$dateStr] ?? 0;
+                        $dailyPlanned += $bookingsPerDay[$dateStr];
+                    }
+
+                    $totalPlannedMinutes += $dailyPlanned;
+
+                    // OFF_WORK: Suppress negative difference (no minus hours on off-work days)
+                    if ($isOffWork && $dailyPlanned < $dailyTargetMinutes) {
+                        $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
+                    }
+
+                    // Compensation day off: reduce daily target
+                    $compValue = $compensationDays->get($dateStr, 0);
+                    if ($compValue >= 1.0) {
+                        // Full compensation day off: suppress entire daily target
+                        $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
+                    } elseif ($compValue > 0) {
+                        // Half compensation day off: suppress proportional target
+                        $compReduction = (int) round($dailyTargetMinutes * $compValue);
+                        if ($dailyPlanned < $compReduction) {
+                            $offWorkNegativeAdjustment += ($compReduction - $dailyPlanned);
+                        }
                     }
 
                     $current->addDay();
                 }
 
-                $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
+                $differenceInMinutes = ($totalPlannedMinutes - $totalExpectedMinutes) + $offWorkNegativeAdjustment;
 
-                $weeklyWorkingHoursCache[$userId][$weekNumber] = [
+                $weekData = [
                     'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
                     'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
                     'difference' => $this->convertMinutesInHours($differenceInMinutes),
                     'isMinus' => $differenceInMinutes < 0,
                 ];
+
+                $weeklyWorkingHoursCache[$userId][$weekNumber] = $weekData;
+
+                // Write back to cache
+                $this->workingHourCacheService->setWeeklyData(
+                    $entityType,
+                    $userId,
+                    $weekPeriod['year'],
+                    $weekPeriod['isoWeek'],
+                    $weekData
+                );
             }
         }
 
@@ -477,7 +687,45 @@ class WorkingHourService
         Carbon $startDate,
         Carbon $endDate
     ): array {
+        $entityType = WorkingHourCacheService::entityType($entity);
+        $entityId = $entity->id;
+
         $period = CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate->copy()->endOfWeek());
+
+        // Build week periods with cache check
+        $weekPeriods = [];
+        $uncachedIndexes = [];
+        $weeklyWorkingHours = [];
+
+        foreach ($period as $index => $weekStart) {
+            $year = (int) $weekStart->format('o');
+            $isoWeek = (int) $weekStart->format('W');
+            $weekNumber = ltrim($weekStart->format('W'), '0');
+
+            $cached = $this->workingHourCacheService->getWeeklyData($entityType, $entityId, $year, $isoWeek);
+
+            if ($cached !== null) {
+                $weeklyWorkingHours[$weekNumber] = $cached;
+            } else {
+                $weekEnd = $weekStart->copy()->endOfWeek();
+                $weekPeriods[$index] = [
+                    'weekStart' => $weekStart,
+                    'actualStart' => $weekStart->greaterThanOrEqualTo($startDate) ? $weekStart : $startDate,
+                    'actualEnd' => $weekEnd->lessThanOrEqualTo($endDate) ? $weekEnd : $endDate,
+                    'weekNumber' => $weekNumber,
+                    'year' => $year,
+                    'isoWeek' => $isoWeek,
+                ];
+                $uncachedIndexes[] = $index;
+            }
+        }
+
+        // If all weeks are cached, return early
+        if (empty($uncachedIndexes)) {
+            return $weeklyWorkingHours;
+        }
+
+        // Lade individualTimes einmal
         $individualTimes = $entity->individualTimes()->individualByDateRange($startDate->toDateString(), $endDate->toDateString())->get();
 
         $individualMinutesPerDay = collect();
@@ -491,35 +739,65 @@ class WorkingHourService
             }
         }
 
-        $weeklyWorkingHours = [];
+        // Precompute shift minutes für alle Tage einmal
+        $shiftMinutesPerDay = $this->precomputeShiftMinutesForDays($entity, $startDate, $endDate);
 
-        foreach ($period as $weekStart) {
-            $weekEnd = $weekStart->copy()->endOfWeek();
-            $actualStart = $weekStart->greaterThanOrEqualTo($startDate) ? $weekStart : $startDate;
-            $actualEnd = $weekEnd->lessThanOrEqualTo($endDate) ? $weekEnd : $endDate;
+        // Precompute workTime patterns für User
+        $workTimePatterns = null;
+        if ($entity instanceof User) {
+            $workTimePatterns = $this->precomputeWorkTimePatterns($entity, $startDate, $endDate);
+        }
+
+        // Create a map of vacations per day to identify OFF_WORK days
+        $offWorkDays = collect();
+        foreach ($entity->vacations as $vacation) {
+            if ($vacation->type === 'OFF_WORK' || $vacation->comment === 'OFF_WORK') {
+                $offWorkDays[$vacation->date instanceof Carbon ? $vacation->date->toDateString() : Carbon::parse($vacation->date)->toDateString()] = true;
+            }
+        }
+
+        // Lade bookings für User einmal
+        $bookingsPerDay = collect();
+        if ($entity instanceof User) {
+            $bookings = $entity->workTimeBookings()
+                ->whereBetween('booking_day', [$startDate->toDateString(), $endDate->toDateString()])
+                ->get();
+
+            foreach ($bookings as $booking) {
+                $bookingDay = $booking->booking_day;
+                if ($bookingDay === null || !is_scalar($bookingDay)) {
+                    continue;
+                }
+                if (!$bookingsPerDay->has($bookingDay)) {
+                    $bookingsPerDay[$bookingDay] = 0;
+                }
+                $bookingsPerDay[$bookingDay] += $booking->worked_hours;
+            }
+        }
+
+        // Process only uncached weeks
+        foreach ($uncachedIndexes as $index) {
+            $wp = $weekPeriods[$index];
+            $actualStart = $wp['actualStart'];
+            $actualEnd = $wp['actualEnd'];
 
             $totalPlannedMinutes = 0;
             $totalExpectedMinutes = 0;
+            $offWorkNegativeAdjustment = 0;
 
             $current = $actualStart->copy();
 
             while ($current->lte($actualEnd)) {
                 $dateStr = $current->toDateString();
-                $weekday = strtolower($current->format('l'));
+                $isOffWork = $offWorkDays->has($dateStr);
 
-                // TAGESSOLL (Expected)
-                if ($entity instanceof User) {
-                    $userWorkTime = $entity->workTimes()
-                        ->where(function ($q) use ($current): void {
-                            $q->whereNull('valid_from')->orWhere('valid_from', '<=', $current);
-                        })
-                        ->where(function ($q) use ($current): void {
-                            $q->whereNull('valid_until')->orWhere('valid_until', '>=', $current);
-                        })
-                        ->orderByDesc('valid_from')
-                        ->first();
+                // TAGESSOLL (Expected) - normal calculation even for OFF_WORK days
+                if ($entity instanceof User && $workTimePatterns) {
+                    $patternData = $workTimePatterns[$dateStr] ?? null;
+                    $activePattern = $patternData['pattern'] ?? null;
+                    $weekday = $patternData['weekday'] ?? strtolower($current->format('l'));
 
-                    $patternTime = $userWorkTime?->{$weekday};
+                    $patternTime = $activePattern?->{$weekday};
                     if ($patternTime instanceof Carbon) {
                         $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
                     } else {
@@ -531,37 +809,48 @@ class WorkingHourService
 
                 $totalExpectedMinutes += $dailyTargetMinutes;
 
-                // GEPLANT (Planned)
+                // GEPLANT (Planned) - track daily for OFF_WORK check
+                $dailyPlanned = 0;
                 if ($individualMinutesPerDay->has($dateStr)) {
-                    $totalPlannedMinutes += $individualMinutesPerDay[$dateStr];
-                } else {
-                    if ($entity instanceof User) {
-                        $bookings = $entity->workTimeBookings()
-                            ->where('booking_day', $dateStr)
-                            ->get();
+                    $dailyPlanned += $individualMinutesPerDay[$dateStr];
+                }
 
-                        if ($bookings->isNotEmpty()) {
-                            $totalPlannedMinutes += $bookings->sum('worked_hours');
-                        } else {
-                            $totalPlannedMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
-                        }
-                    } else {
-                        $totalPlannedMinutes += $this->getPlannedShiftMinutesForDay($entity, $current);
-                    }
+                // Immer Schichtzeit dazu
+                $dailyPlanned += $shiftMinutesPerDay[$dateStr] ?? 0;
+
+                if ($entity instanceof User && $bookingsPerDay->has($dateStr)) {
+                    $dailyPlanned += $bookingsPerDay[$dateStr];
+                }
+
+                $totalPlannedMinutes += $dailyPlanned;
+
+                // OFF_WORK: Suppress negative difference (no minus hours on off-work days)
+                if ($isOffWork && $dailyPlanned < $dailyTargetMinutes) {
+                    $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
                 }
 
                 $current->addDay();
             }
 
+            $differenceInMinutes = ($totalPlannedMinutes - $totalExpectedMinutes) + $offWorkNegativeAdjustment;
 
-            $differenceInMinutes = ($totalPlannedMinutes) - ($totalExpectedMinutes);
-
-            $weeklyWorkingHours[ltrim($weekStart->format('W'), '0')] = [
+            $weekData = [
                 'daily_target' => $this->convertMinutesInHours($totalExpectedMinutes, true),
                 'planned' => $this->convertMinutesInHours($totalPlannedMinutes, true),
                 'difference' => $this->convertMinutesInHours($differenceInMinutes),
                 'isMinus' => $differenceInMinutes < 0,
             ];
+
+            $weeklyWorkingHours[$wp['weekNumber']] = $weekData;
+
+            // Write back to cache
+            $this->workingHourCacheService->setWeeklyData(
+                $entityType,
+                $entityId,
+                $wp['year'],
+                $wp['isoWeek'],
+                $weekData
+            );
         }
 
         return $weeklyWorkingHours;
@@ -574,26 +863,40 @@ class WorkingHourService
     {
         $total = 0;
 
-        $dayStart = $day->copy()->startOfDay();
-        $dayEnd = $day->copy()->endOfDay();
+        $dayStartTimestamp = $day->copy()->startOfDay()->timestamp;
+        $dayEndTimestamp = $day->copy()->endOfDay()->timestamp;
 
         foreach ($user->shifts as $shift) {
             $pivot = $shift->pivot;
 
-            $shiftStart = Carbon::parse($pivot->start_date)->setTimeFrom(Carbon::parse($pivot->start_time));
-            $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFrom(Carbon::parse($pivot->end_time));
+            // Skip wenn Pivot-Daten fehlen
+            if (!$pivot || !$pivot->start_date || !$pivot->start_time || !$pivot->end_date || !$pivot->end_time) {
+                continue;
+            }
 
-            if ($shiftStart->gt($dayEnd) || $shiftEnd->lt($dayStart)) {
+            // Parse Shift-Zeiten einmal
+            $shiftStart = Carbon::parse($pivot->start_date)->setTimeFromTimeString(Carbon::parse($pivot->start_time)->toTimeString());
+            $shiftEnd = Carbon::parse($pivot->end_date)->setTimeFromTimeString(Carbon::parse($pivot->end_time)->toTimeString());
+
+            // Prüfe ob Shift diesen Tag überlappt
+            if ($shiftEnd->timestamp < $dayStartTimestamp || $shiftStart->timestamp > $dayEndTimestamp) {
                 continue;
             }
 
             $breakMinutes = (int)($shift->break_minutes ?? 0);
 
-            $workStart = max($shiftStart, $dayStart);
-            $workEnd = min($shiftEnd, $dayEnd);
+            // Berechne Überlappung mit Timestamps
+            $workStartTimestamp = max($shiftStart->timestamp, $dayStartTimestamp);
+            $workEndTimestamp = min($shiftEnd->timestamp, $dayEndTimestamp);
 
-            if ($workStart->lt($workEnd)) {
-                $duration = $workStart->diffInMinutes($workEnd) - $breakMinutes;
+            if ($workStartTimestamp < $workEndTimestamp) {
+                $duration = (int)(($workEndTimestamp - $workStartTimestamp) / 60);
+                // Bei mehrtägigen Schichten: Pause nur am ersten Tag der Schicht abziehen
+                $shiftStartDay = $shiftStart->copy()->startOfDay();
+                $isFirstDayOfShift = $day->copy()->startOfDay()->equalTo($shiftStartDay);
+                if ($isFirstDayOfShift) {
+                    $duration -= $breakMinutes;
+                }
                 $total += max(0, $duration);
             }
         }
@@ -630,10 +933,22 @@ class WorkingHourService
             $expectedMinutes[$userId] = 0;
             $fallbackMinutesPerDay = (int) round(($user->weekly_working_hours / 7) * 60);
 
+            // Create a map of vacations per day to identify OFF_WORK days
+            $offWorkDays = collect();
+            foreach ($user->vacations as $vacation) {
+                if ($vacation->type === 'OFF_WORK' || $vacation->comment === 'OFF_WORK') {
+                    $offWorkDays[$vacation->date instanceof Carbon ? $vacation->date->toDateString() : Carbon::parse($vacation->date)->toDateString()] = true;
+                }
+            }
+
             // Get all work times for this user (already eager loaded)
             $workTimes = $user->workTimes;
 
             foreach ($dateArray as $dateStr) {
+                if ($offWorkDays->has($dateStr)) {
+                    continue; // Expected minutes for OFF_WORK day is 0
+                }
+
                 $date = Carbon::parse($dateStr);
                 $weekday = $weekdayMap[$dateStr];
 
@@ -675,7 +990,20 @@ class WorkingHourService
         $current = $startDate->copy();
         $fallbackMinutesPerDay = (int) round(($user->weekly_working_hours / 7) * 60);
 
+        // Create a map of vacations per day to identify OFF_WORK days
+        $offWorkDays = collect();
+        foreach ($user->vacations as $vacation) {
+            if ($vacation->type === 'OFF_WORK' || $vacation->comment === 'OFF_WORK') {
+                $offWorkDays[$vacation->date instanceof Carbon ? $vacation->date->toDateString() : Carbon::parse($vacation->date)->toDateString()] = true;
+            }
+        }
+
         while ($current->lte($endDate)) {
+            $dateStr = $current->toDateString();
+            if ($offWorkDays->has($dateStr)) {
+                $current->addDay();
+                continue;
+            }
             $weekday = strtolower($current->format('l'));
 
             $activePattern = $user->workTimes()

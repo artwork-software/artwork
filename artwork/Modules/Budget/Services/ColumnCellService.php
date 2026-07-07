@@ -4,6 +4,7 @@ namespace Artwork\Modules\Budget\Services;
 
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\CellComment;
+use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Repositories\ColumnCellRepository;
@@ -79,5 +80,160 @@ readonly class ColumnCellService
     public function updateValue(ColumnCell $columnCell, mixed $value): void
     {
         $this->columnCellRepository->update($columnCell, ['value' => $value]);
+    }
+
+    public function recalculateAutomaticColumns(int $subPositionRowId): void
+    {
+        $cells = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
+
+        foreach ($cells as $cell) {
+            $column = Column::find($cell->column_id);
+
+            if ($column->type === 'empty' || $column->type === 'sage') {
+                continue;
+            }
+
+            $firstLinkedColumn = Column::find($column->linked_first_column);
+            $secondLinkedColumn = Column::find($column->linked_second_column);
+
+            $firstCell = ColumnCell::where('column_id', $column->linked_first_column)
+                ->where('sub_position_row_id', $subPositionRowId)
+                ->first();
+            $secondCell = ColumnCell::where('column_id', $column->linked_second_column)
+                ->where('sub_position_row_id', $subPositionRowId)
+                ->first();
+
+            $firstRowValue = $firstLinkedColumn?->type === 'sage'
+                ? $firstCell?->sage_value
+                : $firstCell?->value;
+            $secondRowValue = $secondLinkedColumn?->type === 'sage'
+                ? $secondCell?->sage_value
+                : $secondCell?->value;
+
+            $firstDecimal = str_replace(',', '.', $firstRowValue ?: '0');
+            $secondDecimal = str_replace(',', '.', $secondRowValue ?: '0');
+
+            if ($column->type === 'sum') {
+                $result = bcadd($firstDecimal, $secondDecimal, 2);
+            } else {
+                $result = bcsub($firstDecimal, $secondDecimal, 2);
+            }
+
+            $cell->update(['value' => $result]);
+        }
+    }
+
+    public function softDelete(
+        ColumnCell $columnCell,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService,
+    ): void {
+        $columnCell->comments->each(function (CellComment $cellComment) use ($cellCommentService): void {
+            $cellCommentService->delete($cellComment);
+        });
+
+        $columnCell->calculations->each(
+            function (CellCalculation $cellCalculation) use ($cellCalculationService): void {
+                $cellCalculationService->delete($cellCalculation);
+            }
+        );
+
+        if (!$columnCell->subPositionRow->subPosition->mainPosition->table->is_template) {
+            /** @var SageAssignedData $sageAssignedData */
+            foreach ($columnCell->sageAssignedData as $sageAssignedData) {
+                /*
+                 * check if other SageAssignedData entities exist by sage_id, except the given one
+                 * if multiple are found we iterate through and forceDelete them, right after a global SageAssignedData
+                 * entity was created - it means "sage_id" was also assigned to one or more project group(s)
+                 * if not given SageAssignedData is moved to SageNotAssignedData as project related
+                 */
+
+                $assignedSageDataBySageIdExcluded = $sageAssignedDataService->findAllBySageIdExcluded(
+                    $sageAssignedData->getAttribute('sage_id'),
+                    [$sageAssignedData->getAttribute('id')]
+                );
+
+                if ($assignedSageDataBySageIdExcluded->count() > 0) {
+                    $sageNotAssignedDataService->createFromSageAssignedData($sageAssignedData);
+                    $sageAssignedDataService->delete($sageAssignedData);
+
+                    foreach ($assignedSageDataBySageIdExcluded as $assignedSageData) {
+                        $sageAssignedDataService->delete($assignedSageData);
+                    }
+                    continue;
+                }
+
+                $sageNotAssignedDataService->createFromSageAssignedData(
+                    $sageAssignedData,
+                    $columnCell->subPositionRow->subPosition->mainPosition->table->project_id
+                );
+                $sageAssignedDataService->delete($sageAssignedData);
+            }
+        }
+
+        $this->columnCellRepository->delete($columnCell);
+    }
+
+    public function restore(
+        ColumnCell $columnCell,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService,
+    ): void {
+        $columnCell->comments()->withTrashed()->get()->each(
+            fn (CellComment $cellComment) => $cellCommentService->restore($cellComment)
+        );
+
+        $columnCell->calculations()->withTrashed()->get()->each(
+            fn (CellCalculation $cellCalculation) => $cellCalculationService->restore($cellCalculation)
+        );
+
+        // Table sauber (inkl. softdeleted) holen, statt über Property-Kette
+        $table = $columnCell->subPositionRow()
+            ->withTrashed()
+            ->with([
+                'subPosition' => fn ($q) => $q->withTrashed()->with([
+                    'mainPosition' => fn ($q) => $q->withTrashed()->with([
+                        'table' => fn ($q) => $q->withTrashed(),
+                    ]),
+                ]),
+            ])
+            ->first()
+            ?->subPosition
+            ?->mainPosition
+            ?->table;
+
+        // SageAssignedData kann ebenfalls softdeleted sein -> withTrashed()
+        if ($table && !$table->is_template) {
+            foreach ($columnCell->sageAssignedData()->withTrashed()->get() as $sageAssignedData) {
+                $excluded = [$sageAssignedData->getAttribute('id')];
+
+                $assignedSageDataBySageIdExcluded = $sageAssignedDataService->findAllBySageIdExcluded(
+                    $sageAssignedData->getAttribute('sage_id'),
+                    $excluded
+                );
+
+                if ($assignedSageDataBySageIdExcluded->count() > 0) {
+                    $sageNotAssignedDataService->createFromSageAssignedData($sageAssignedData);
+                    $sageAssignedDataService->restore($sageAssignedData);
+
+                    foreach ($assignedSageDataBySageIdExcluded as $assignedSageData) {
+                        $sageAssignedDataService->restore($assignedSageData);
+                    }
+                    continue;
+                }
+
+                $sageNotAssignedDataService->createFromSageAssignedData(
+                    $sageAssignedData,
+                    $table->project_id
+                );
+                $sageAssignedDataService->restore($sageAssignedData);
+            }
+        }
+
+        $this->columnCellRepository->restore($columnCell);
     }
 }

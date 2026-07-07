@@ -10,6 +10,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class AvailabilityConflictService
 {
@@ -38,6 +39,7 @@ class AvailabilityConflictService
             $shifts = $user->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $availabilities = $user
                 ->availabilities()
+                ->where('date', $day)
                 ->get();
         }
 
@@ -45,19 +47,20 @@ class AvailabilityConflictService
             $shifts = $freelancer->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $availabilities = $freelancer
                 ->availabilities()
+                ->where('date', $day)
                 ->get();
         }
 
         foreach ($shifts as $shift) {
             $shiftCommittedBy = $shift->committedBy()->first();
-            if (!$user) {
+            if ($user) {
                 $notificationTitle = __(
                     'notification.shift.conflict',
                     [],
                     $user?->language ?? app()->getFallbackLocale()
                 );
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => Str::uuid()->toString(),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
@@ -112,7 +115,7 @@ class AvailabilityConflictService
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,
                             ]);
-                            if (!$user) {
+                            if ($user) {
                                 $notificationService->setNotificationTo($user);
                                 $notificationService->createNotification();
                             }
@@ -130,28 +133,39 @@ class AvailabilityConflictService
         ?Freelancer $freelancer = null,
     ): void {
 
+        $shiftStartDate = $shift->event_start_day ?? Carbon::parse($shift->start_date)->toDateString();
+        $shiftEndDate = $shift->end_date
+            ? Carbon::parse($shift->end_date)->toDateString()
+            : $shiftStartDate;
+
         $availabilities = collect();
         if ($user) {
             $availabilities = $user
                 ->availabilities()
+                ->where('date', '>=', $shiftStartDate)
+                ->where('date', '<=', $shiftEndDate)
                 ->get();
         }
 
         if ($freelancer) {
             $availabilities = $freelancer
                 ->availabilities()
+                ->where('date', '>=', $shiftStartDate)
+                ->where('date', '<=', $shiftEndDate)
                 ->get();
         }
 
+        $shiftDate = $shiftStartDate;
+
         $shiftCommittedBy = $shift->committedBy()->first();
-        if (!$user) {
+        if ($user) {
             $notificationTitle = __(
                 'notification.shift.conflict',
                 [],
-                $user?->language ?? app()->getFallbackLocale()
+                $user->language ?? app()->getFallbackLocale()
             );
             $broadcastMessage = [
-                'id' => rand(1, 1000000),
+                'id' => Str::uuid()->toString(),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
@@ -162,11 +176,11 @@ class AvailabilityConflictService
                         'notification.shift.conflict_text',
                         [
                             'username' => $shiftCommittedBy->full_name,
-                            'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                            'date' => Carbon::parse($shiftDate)->format('d.m.Y'),
                             'from' => $shift->start,
                             'to' => $shift->end
                         ],
-                        $user?->language ?? app()->getFallbackLocale()
+                        $user->language ?? app()->getFallbackLocale()
                     ),
                     'href' => null
                 ],
@@ -198,14 +212,14 @@ class AvailabilityConflictService
                         $shiftStart->greaterThanOrEqualTo($availabilityEnd)
                     ) {
                         $this->create([
-                            'vacation_id' => $availability->id,
+                            'availability_id' => $availability->id,
                             'shift_id' => $shift->id,
                             'user_name' => $shiftCommittedBy->full_name,
-                            'date' => $shift->event_start_day,
+                            'date' => $shiftDate,
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,
                         ]);
-                        if (!$user) {
+                        if ($user) {
                             $notificationService->setNotificationTo($user);
                             $notificationService->createNotification();
                         }

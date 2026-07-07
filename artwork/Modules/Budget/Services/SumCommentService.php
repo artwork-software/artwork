@@ -15,4 +15,16 @@ readonly class SumCommentService
     {
         $this->sumCommentRepository->forceDelete($sumComment);
     }
+
+    // softDelete
+    public function softDelete(SumComment $sumComment): void
+    {
+        $this->sumCommentRepository->delete($sumComment);
+    }
+
+    //restore
+    public function restore(SumComment $sumComment): void
+    {
+        $this->sumCommentRepository->restore($sumComment);
+    }
 }

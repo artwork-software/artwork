@@ -38,6 +38,7 @@ class ProjectTabTeamService
         return [
             'project' => [
                 'id'                      => $project->id,
+                'user_id'                 => $project->user_id,
                 'usersArray'              => $users,
                 'project_managers'        => $project->managerUsers,
                 'write_auth'              => $project->writeUsers,

@@ -33,7 +33,7 @@ use Throwable;
 
 class Sage100Service
 {
-    private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
+    private const string FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 
     private SageClient $sage100Client;
 
@@ -53,12 +53,13 @@ class Sage100Service
 
     public function importDataToBudget(
         ?int $count,
-        ?string $specificDay,
+        ?string $specificDayFrom,
+        ?string $specificDayTo = null,
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        $data = $this->getData($count, $specificDay);
+        $data = $this->getDataForDateRange($count, $specificDayFrom, $specificDayTo);
         [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
             ->splitDataIntoRegularAndCollectiveBookings($data);
 
@@ -68,13 +69,40 @@ class Sage100Service
         return 0;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
+    private function getDataForDateRange(
+        ?int $count,
+        ?string $specificDayFrom,
+        ?string $specificDayTo,
+    ): array {
+        if ($specificDayFrom === null) {
+            return $this->getData($count, null);
+        }
+
+        $start = Carbon::parse($specificDayFrom);
+        $end = Carbon::parse($specificDayTo ?? $specificDayFrom);
+        $period = $start->isBefore($end)
+            ? $start->daysUntil($end)
+            : $end->daysUntil($start);
+
+        $allData = [];
+        foreach ($period as $date) {
+            $dayData = $this->getData($count, $date->format('Y-m-d'));
+            $allData = array_merge($allData, $dayData);
+        }
+
+        return $allData;
+    }
+
     private function importCollectiveBookings(
         array $collectiveBookings,
     ): void {
         foreach ($collectiveBookings as $key => $items) {
             DB::beginTransaction();
             try {
-                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('-', $key);
+                [$sageId, $ktoSoll, $ktoHaben, $kstTraeger] = explode('|~|', $key);
 
                 $serviceToUse = $this->sageNotAssignedDataService;
 
@@ -109,11 +137,27 @@ class Sage100Service
                 $parentBooking->buchungsbetrag = 0;
                 $serviceToUse->deleteChildData($parentBooking);
 
+                if ($parentBooking instanceof SageNotAssignedData) {
+                    SageAssignedData::where('parent_booking_id', $parentBooking->id)->delete();
+                } elseif ($parentBooking instanceof SageAssignedData) {
+                    SageNotAssignedData::where('parent_booking_id', $parentBooking->id)->forceDelete();
+                }
+
+                $resolvedProjectId = null;
                 foreach ($items as $item) {
-                    if (!$booking = $this->importBooking($item, $parentBooking)) {
+                    $childProjectId = null;
+                    if (!$booking = $this->importBooking($item, $parentBooking, $childProjectId)) {
                         continue;
                     }
                     $parentBooking->buchungsbetrag += $booking->buchungsbetrag;
+
+                    if ($resolvedProjectId === null && $childProjectId !== null) {
+                        $resolvedProjectId = $childProjectId;
+                    }
+                }
+
+                if ($parentBooking instanceof SageNotAssignedData && $resolvedProjectId !== null) {
+                    $parentBooking->project_id = $resolvedProjectId;
                 }
 
                 $parentBooking->save();
@@ -131,7 +175,17 @@ class Sage100Service
     ): void {
         /** @var array $item */
         foreach ($regularBookings as $item) {
-            $this->importBooking($item);
+            // Same per-booking transaction handling as the collective bookings:
+            // one broken booking must neither abort the whole import nor leave
+            // a half-written booking behind.
+            DB::beginTransaction();
+            try {
+                $this->importBooking($item);
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                report($e);
+            }
         }
 
         //if data was imported update import date from latest given booking-date (Buchungsdatum)
@@ -142,7 +196,8 @@ class Sage100Service
 
     private function importBooking(
         array $item,
-        CollectiveBooking $parentBooking = null
+        CollectiveBooking|null $parentBooking = null,
+        ?int &$resolvedProjectId = null,
     ): SageAssignedData|SageNotAssignedData|null {
 
         $sageNotAssignedData = null;
@@ -162,6 +217,7 @@ class Sage100Service
             return null;
         }
         $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
+        $resolvedProjectId = $project?->id;
 
         if (is_null($project)) {
             //create project unrelated SageNotAssignedData if no Project is found
@@ -186,11 +242,18 @@ class Sage100Service
             $sageColumn = $this->createSageColumnForTable($project->table);
         }
 
-        $subPositionRowsSageColumnCellId = $sageColumn
+        $subPositionRowsSageColumnCell = $sageColumn
             ->cells
             ->where('sub_position_row_id', $subPositionRows->first()->id)
-            ->first()
-            ->id;
+            ->first();
+        if (!$subPositionRowsSageColumnCell) {
+            $this->createSageCellsForSageColumn($project->table, $sageColumn);
+            $subPositionRowsSageColumnCell = $sageColumn
+                ->cells
+                ->where('sub_position_row_id', $subPositionRows->first()->id)
+                ->first();
+        }
+        $subPositionRowsSageColumnCellId = $subPositionRowsSageColumnCell->id;
 
         if ($sageNotAssignedData) {
             $sageData = $this->sageAssignedDataService->createFromSageNotAssignedData(
@@ -255,8 +318,12 @@ class Sage100Service
         /** @var SubPosition $subPosition */
         $subPosition = SubPosition::find($request->sub_position_id);
         $project = $table->project;
-        /** @var SageNotAssignedData $sageNotAssignedData */
+        /** @var SageNotAssignedData|null $sageNotAssignedData */
         $sageNotAssignedData = SageNotAssignedData::find($request->sage_data_id);
+
+        if (!$sageNotAssignedData) {
+            return;
+        }
 
         /** @var Column|null $sageColumn */
         $sageColumn = $table->columns->where('type', 'sage')->first();
@@ -335,9 +402,13 @@ class Sage100Service
 
     public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): RedirectResponse
     {
-        $columnCells = $columnCell->subPositionRow->cells()->get();
-        $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
+        // Deterministic order + count guard: rows with missing cells used to
+        // crash on the hard-coded [0]/[1] access.
+        $columnCells = $columnCell->subPositionRow->cells()->orderBy('column_id')->get();
+        $movedColumnCells = $movedColumn->subPositionRow->cells()->orderBy('column_id')->get();
         if (
+            $columnCells->count() >= 2 &&
+            $movedColumnCells->count() >= 2 &&
             $columnCells[0]->value === $movedColumnCells[0]->value &&
             $columnCells[1]->value === $movedColumnCells[1]->value
         ) {
@@ -646,7 +717,7 @@ class Sage100Service
     private function createSageNotAssignedData(
         array $item,
         ?int $projectId = null,
-        CollectiveBooking $collectiveBooking = null
+        CollectiveBooking|null $collectiveBooking = null
     ): SageNotAssignedData {
 
         //if we have a parent the children have been purged before, so it's okay to always create a new one
@@ -704,10 +775,13 @@ class Sage100Service
         }
 
         if ($specificDay) {
+            $parsedDay = Carbon::parse($specificDay);
             $query['where'] = sprintf(
-                '%s eq "%s"',
+                '%s ge "%s" and %s lt "%s"',
                 self::FILTER_FIELD_BOOKINGDATE,
-                Carbon::parse($specificDay)->format('d.m.Y')
+                $parsedDay->format('d.m.Y'),
+                self::FILTER_FIELD_BOOKINGDATE,
+                $parsedDay->copy()->addDay()->format('d.m.Y')
             );
         } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
             $query['where'] = sprintf(
@@ -724,19 +798,8 @@ class Sage100Service
         return $query;
     }
 
-    private function createSageColumnForTable(Table $table): Column
+    private function createSageCellsForSageColumn(Table $table, Column $sageColumn): void
     {
-        $sageColumn = $this->columnService->createColumnInTable(
-            $table,
-            'Sage Abgleich',
-            '-',
-            'sage',
-            //position starts counting at 0 so current column count is desired position for new column
-            $table->columns()->count()
-        );
-
-        $this->columnService->setColumnSubName($table->id);
-
         $table->mainPositions->each(function (MainPosition $mainPosition) use ($sageColumn): void {
             $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($sageColumn): void {
                 $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($sageColumn): void {
@@ -754,6 +817,22 @@ class Sage100Service
 
             $sageColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
         });
+    }
+
+    private function createSageColumnForTable(Table $table): Column
+    {
+        $sageColumn = $this->columnService->createColumnInTable(
+            $table,
+            'Sage Abgleich',
+            '-',
+            'sage',
+            //position starts counting at 0 so current column count is desired position for new column
+            $table->columns()->count()
+        );
+
+        $this->columnService->setColumnSubName($table->id);
+
+        $this->createSageCellsForSageColumn($table, $sageColumn);
 
         $sageColumn->budgetSumDetails()->create([
             'type' => 'COST',

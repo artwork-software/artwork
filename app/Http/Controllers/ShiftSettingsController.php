@@ -59,11 +59,57 @@ class ShiftSettingsController extends Controller
             $shiftSettings->use_first_name_for_sort = $request->boolean('use_first_name_for_sort');
             $shiftSettings->save();
         } catch (Throwable $t) {
+            $logger->error('Failed to save shift setting use_first_name_for_sort: ' . $t->getMessage());
+
+            return $this->redirector->back()->with(
+                'error',
+                ['shift_settings' => __('flash-messages.shift-settings.error.update')]
+            );
         }
 
         return $this->redirector->back();
     }
 
+
+    public function updateCalendarAboShowAllShifts(
+        Request $request,
+        ShiftSettings $shiftSettings,
+        LoggerInterface $logger
+    ): RedirectResponse {
+        try {
+            $shiftSettings->calendar_abo_show_all_shifts = $request->boolean('calendar_abo_show_all_shifts');
+            $shiftSettings->save();
+        } catch (Throwable $t) {
+            $logger->error('Failed to save shift setting calendar_abo_show_all_shifts: ' . $t->getMessage());
+
+            return $this->redirector->back()->with(
+                'error',
+                ['shift_settings' => __('flash-messages.shift-settings.error.update')]
+            );
+        }
+
+        return $this->redirector->back();
+    }
+
+    public function updateAllowShiftOverbooking(
+        Request $request,
+        ShiftSettings $shiftSettings,
+        LoggerInterface $logger
+    ): RedirectResponse {
+        try {
+            $shiftSettings->allow_shift_overbooking = $request->boolean('allow_shift_overbooking');
+            $shiftSettings->save();
+        } catch (Throwable $t) {
+            $logger->error('Failed to save shift setting allow_shift_overbooking: ' . $t->getMessage());
+
+            return $this->redirector->back()->with(
+                'error',
+                ['shift_settings' => __('flash-messages.shift-settings.error.update')]
+            );
+        }
+
+        return $this->redirector->back();
+    }
 
     public function saveWarningMultipleAssignments(Request $request): void
     {

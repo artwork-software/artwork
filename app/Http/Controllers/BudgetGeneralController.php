@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Events\BudgetUpdated;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Http\Requests\UpdateBudgetColumnSettingRequest;
@@ -47,7 +49,6 @@ class BudgetGeneralController extends Controller
                 $updateBudgetColumnSettingRequest
             );
         } catch (Throwable $t) {
-
             return Redirect::back()->with('error', __('flash-messages.budget-general-setting.error.update'));
         }
 
@@ -92,9 +93,71 @@ class BudgetGeneralController extends Controller
     {
         $column->update(['relevant_for_project_groups' => !$column->relevant_for_project_groups]);
 
-        // set relevant_for_project_groups in other columns to false
         if ($column->relevant_for_project_groups) {
             $column->table->columns()->where('id', '!=', $column->id)->update(['relevant_for_project_groups' => false]);
+
+            $projectId = $column->table->project_id;
+            if ($projectId) {
+                BudgetUpdated::dispatch($projectId);
+            }
         }
     }
+
+    public function getTrashed(): Response|ResponseFactory
+    {
+        $selectedCell = request('selectedCell')
+            ? ColumnCell::withTrashed()->find(request('selectedCell'))
+            : null;
+
+        $selectedRow = request('selectedRow')
+            ? SubPositionRow::withTrashed()->find(request('selectedRow'))
+            : null;
+
+        $templates = null;
+        if (request('useTemplates')) {
+            $templates = Table::where('is_template', true)->get();
+        }
+
+        $withTrashed = fn ($q) => $q->withTrashed();
+        $withTrashedPos = fn ($q) => $q->withTrashed()->orderBy('position');
+        $withTrashedCreatedDesc = fn ($q) => $q->withTrashed()->orderBy('created_at', 'desc');
+
+        $tables = Table::query()
+            ->where('is_template', true)
+            ->onlyTrashed()
+            ->with([
+                // WICHTIG: überall wo die Models SoftDeletes haben -> withTrashed()
+                'columns' => $withTrashed,
+
+                'mainPositions' => $withTrashed,
+                'mainPositions.verified' => $withTrashed,
+
+                'mainPositions.subPositions' => $withTrashedPos,
+                'mainPositions.subPositions.verified' => $withTrashed,
+
+                'mainPositions.subPositions.subPositionRows' => $withTrashedPos,
+
+                // je nachdem ob Cells/Columns auch softdeleted sind:
+                'mainPositions.subPositions.subPositionRows.cells' => $withTrashed,
+                'mainPositions.subPositions.subPositionRows.cells.column' => $withTrashed,
+            ])
+            ->get();
+
+        return Inertia::render('BudgetSettingsTemplates/TrashIndex', [
+            'budget' => [
+                'table' => $tables,
+                'selectedCell' => $selectedCell?->load([
+                    'calculations', // falls calculations softdeleted sind: 'calculations' => $withTrashed
+                    'comments.user',
+                    'comments' => $withTrashedCreatedDesc, // falls comments SoftDeletes haben
+                ]),
+                'selectedRow' => $selectedRow?->load([
+                    'comments.user',
+                    'comments' => $withTrashedCreatedDesc, // falls comments SoftDeletes haben
+                ]),
+                'templates' => $templates,
+            ],
+        ]);
+    }
+
 }

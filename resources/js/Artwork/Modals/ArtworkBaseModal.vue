@@ -25,7 +25,7 @@
                                                 </p>
                                             </div>
                                             <div class="flex items-center gap-x-3">
-                                                <div class="" @click="showBackdrop = !showBackdrop">
+                                                <div class="" @click="toggleBackdrop">
                                                     <div>
                                                         <ToolTipComponent icon="IconTexture" :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')" classes-button="ui-button"/>
                                                     </div>
@@ -58,10 +58,16 @@
 
 <script setup>
 
+import axios from "axios";
 import {nextTick, ref} from "vue";
+import {usePage} from "@inertiajs/vue3";
 import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
+//define options for the modal
+defineOptions({
+    name: 'ArtworkBaseModal'
+})
 
 const props = defineProps({
     modalSize: {
@@ -98,7 +104,29 @@ const props = defineProps({
     }
 })
 const open = ref(true)
-const showBackdrop = ref(props.showBackdrop)
+// An explicitly disabled prop wins, otherwise the per-user preference decides.
+const showBackdrop = ref(
+    props.showBackdrop === false
+        ? false
+        : (usePage().props.auth.user?.show_modal_backdrop ?? true)
+)
+
+function toggleBackdrop() {
+    showBackdrop.value = !showBackdrop.value
+
+    const user = usePage().props.auth.user
+    if (!user) {
+        return
+    }
+
+    // Keep the shared page props in sync so modals opened later in the
+    // same page visit start with the new preference without a reload.
+    user.show_modal_backdrop = showBackdrop.value
+
+    axios.patch(route('user.modal.backdrop.update', {user: user.id}), {
+        show_modal_backdrop: showBackdrop.value
+    })
+}
 
 const emits = defineEmits(['close'])
 const containerRef = ref(null)

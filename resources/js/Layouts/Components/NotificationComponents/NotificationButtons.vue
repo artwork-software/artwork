@@ -1,5 +1,15 @@
 <template>
     <div class="w-full flex items-center justify-start gap-3 mt-3">
+        <div v-if="buttons?.includes('show_in_calendar')">
+            <button @click="$emit('showInCalendar', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                {{ $t('Show in calendar') }}
+            </button>
+        </div>
+        <div v-if="buttons?.includes('accept')">
+            <button @click="$emit('acceptRoomRequest', true)" type="button" class="rounded-full bg-green-600 p-2 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+                <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
+            </button>
+        </div>
         <div v-if="buttons?.includes('accept')">
             <button @click="$emit('openEventEditAccept', true)" type="button" class="rounded-full bg-indigo-600 p-2 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                 <PropertyIcon name="IconEdit" stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
@@ -92,6 +102,7 @@ export default {
     emits: [
         'openDeclineModal',
         'openEventEditAccept',
+        'acceptRoomRequest',
         'deleteEvent',
         'openProjectCalculation',
         'deleteVerificationRequest',
@@ -100,7 +111,8 @@ export default {
         'deleteNotification',
         'openProject',
         'showInTask',
-        'showProject'
+        'showProject',
+        'showInCalendar'
     ],
     components: {
         PropertyIcon,

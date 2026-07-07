@@ -23,6 +23,44 @@
                 </div>
             </div>
 
+            <!-- Optional project -->
+            <div class="rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm">
+                <div class="px-4 py-3 border-b border-zinc-200/60 flex items-center justify-between gap-3">
+                    <div class="text-xs font-semibold text-zinc-600">{{ $t('Project') }}</div>
+                </div>
+                <div class="p-4">
+                    <!-- wie in EventComponent: ProjectSearch + Chip -->
+                    <div v-if="selectedProject" class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <span class="inline-flex items-center rounded-full bg-zinc-900 text-white px-3 py-1 text-xs font-semibold shadow-sm truncate">
+                                {{ selectedProject.name }}
+                            </span>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="text-xs cursor-pointer font-semibold text-zinc-500 hover:text-zinc-700 transition"
+                            @click="clearProject"
+                            :aria-label="$t('Remove project')"
+                        >
+                            {{ $t('Remove') }}
+                        </button>
+                    </div>
+
+                    <ProjectSearch
+                        v-else
+                        :label="$t('Search for projects')"
+                        @project-selected="onProjectSelected"
+                    />
+
+                    <LastedProjects
+                        v-if="!selectedProject"
+                        :limit="10"
+                        @select="onProjectSelected"
+                    />
+                </div>
+            </div>
+
             <!-- Tabs + actions -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
                 <div class="inline-flex rounded-2xl bg-zinc-100/70 p-1 ring-1 ring-zinc-200/60">
@@ -332,10 +370,12 @@
 
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import LastedProjects from "@/Artwork/LastedProjects.vue";
 
 const emit = defineEmits(["close", "added"]);
 
@@ -345,11 +385,67 @@ const props = defineProps({
     day: Object,
     presetGroups: { type: [Array, Object], required: true },
     singleShiftPresets: { type: [Array, Object], required: true },
+    projects: { type: [Array, Object], default: () => [] },
+    initialProjectId: { type: [Number, String, null], default: null },
+    initialProject: { type: Object, default: null },
 });
 
 const tab = ref("groups");
 const search = ref("");
 const processing = ref(false);
+
+const selectedProjectId = ref(props.initialProjectId != null && props.initialProjectId !== ''
+    ? Number(props.initialProjectId)
+    : null);
+
+const projectsList = computed(() => {
+    const v = props.projects;
+    if (Array.isArray(v)) return v;
+    return v ? Object.values(v) : [];
+});
+
+const selectedProject = ref(null);
+
+function syncSelectedProjectFromInitial() {
+    if (selectedProjectId.value == null) {
+        selectedProject.value = null;
+        return;
+    }
+
+    const existing = projectsList.value.find((p) => Number(p?.id) === Number(selectedProjectId.value));
+    if (existing?.name) {
+        selectedProject.value = { id: existing.id, name: existing.name };
+        return;
+    }
+
+    const initial = props.initialProject;
+    if (initial && Number(initial?.id) === Number(selectedProjectId.value) && initial?.name) {
+        selectedProject.value = { id: initial.id, name: initial.name };
+        return;
+    }
+
+    // Kein Platzhalter-Name ("Project #id") anzeigen. Wenn Name nicht auflösbar ist,
+    // bleibt die Auswahl leer, bis Projekte nachgeladen wurden / User eins auswählt.
+    selectedProject.value = null;
+}
+
+syncSelectedProjectFromInitial();
+
+watch(
+    () => props.initialProjectId,
+    (v) => {
+        selectedProjectId.value = v != null && v !== '' ? Number(v) : null;
+        syncSelectedProjectFromInitial();
+    }
+);
+
+watch(
+    projectsList,
+    () => {
+        // Falls die Projekte nachladen, Name für bereits gesetztes initialProjectId nachziehen
+        syncSelectedProjectFromInitial();
+    }
+);
 
 const groups = computed(() => {
     const v = props.presetGroups;
@@ -507,6 +603,17 @@ function clearSelection() {
     selectedPresetIds.value = new Set();
 }
 
+function clearProject() {
+    selectedProjectId.value = null;
+    selectedProject.value = null;
+}
+
+function onProjectSelected(project) {
+    selectedProject.value = project;
+    const n = Number(project?.id);
+    selectedProjectId.value = Number.isFinite(n) ? n : null;
+}
+
 function collectPresetIdsFromSelection() {
     const ids = new Set([...selectedPresetIds.value]);
 
@@ -540,6 +647,7 @@ function apply() {
             room_id: roomId.value,
             day: props.day.withoutFormat,
             preset_ids,
+            project_id: selectedProjectId.value,
         },
         {
             preserveScroll: true,

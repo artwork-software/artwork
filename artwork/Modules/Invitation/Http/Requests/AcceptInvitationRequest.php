@@ -33,7 +33,7 @@ class AcceptInvitationRequest extends UserCreateRequest
             'password_confirmation' => ['required', 'string', 'same:password'],
             'phone_number' => ['nullable', 'string', 'max:30'],
             'position' => ['nullable', 'string', 'max:255'],
-            'business' => ['required', 'string', 'max:255'],
+            'business' => ['nullable', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],
             'token' => ['required', 'string', 'min:20', 'max:20'],
         ];

@@ -2,7 +2,11 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmContactType;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Holidays\Seeder\SwissCantoneSeeder;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Inventory\Models\InventoryArticleStatus;
 use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Inventory\Services\CraftItemMigrationService;
@@ -12,7 +16,9 @@ use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Services\ProjectManagementBuilderService;
+use Artwork\Modules\Sage100\Helpers\PermissionUpdater;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Seeders\ConsolidateShiftsSeeder;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +33,8 @@ class UpdateArtwork extends Command
         private readonly ProjectManagementBuilderService $projectManagementBuilderService,
         private readonly CraftItemMigrationService $craftItemMigrationService,
         private readonly SwissCantoneSeeder $swissCantoneSeeder,
+        private readonly ConsolidateShiftsSeeder $consolidateShiftsSeeder,
+        private readonly PermissionUpdater $sagePermissionUpdater,
     ) {
         parent::__construct();
     }
@@ -43,25 +51,48 @@ class UpdateArtwork extends Command
         $this->addProjectGroupColumn();
         $this->updateServiceProviderContacts();
         $this->addInventoryArticleStatus();
+        $this->addInventoryArticleProperties();
         $this->addInventoryArticlePlanFilter();
         $this->setupPassport();
         $this->removeOldCalendarComponent();
         $this->migrateFilterToNewFilterStructure();
         $this->addOrderInInventoryStatus();
+        $this->cleanupDuplicateRoomTypes();
         $this->addRoomTypes();
         $this->addSwissCantons();
         $this->createBasicProductBaskets();
         $this->remapShiftEventProjectRelations();
         $this->updateSpecialComponentsSidebarEnabled();
+        $this->migrateShiftsWorkers();
+        $this->updateSagePermissions();
+        $this->migrateToCrm();
+        $this->syncCrmContacts();
+        $this->cleanupFalseConflicts();
+        $this->migrateChangesHistoryToActivityLog();
+        $this->backfillShiftPlanRequestShifts();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function backfillShiftPlanRequestShifts(): void
+    {
+        $this->section('Shift Plan Request Backfill');
+        // Einmaliger Reparatur-Lauf für Anfragen, die unter dem alten Auswahl-Bug erstellt wurden.
+        // --once stellt sicher, dass der Lauf nur einmal pro Umgebung erfolgt (nicht bei jedem Deploy).
+        $this->call('shift-plan-requests:backfill', ['--once' => true]);
+    }
+
+    private function migrateChangesHistoryToActivityLog(): void
+    {
+        $this->section('Changes History → Activity Log');
+        $this->call('changes:migrate-to-activity-log');
     }
 
     private function updateProjectManagementBuilder(): void
     {
         $this->section('Project Management Builder');
         if ($this->projectManagementBuilderService->getProjectManagementBuilder()->isEmpty()) {
-            $this->call('db:seed', ['--class' => 'ProjectManagementBuilderSeed']);
+            $this->call('db:seed', ['--class' => 'ProjectManagementBuilderSeed' , '--force' => true]);
             $this->info('Seed executed');
         } else {
             $this->info('Already seeded');
@@ -78,6 +109,8 @@ class UpdateArtwork extends Command
     {
         $this->section('New Components');
         $this->call('artwork:add-new-components');
+        $this->call('artwork:add-bi-event-type-tags');
+        $this->call('artwork:add-bi-export-presets');
     }
 
     private function updateShiftQualificationIcons(): void
@@ -126,6 +159,26 @@ class UpdateArtwork extends Command
                 ]
             );
         }
+
+        // External access notifications should reach the inviter immediately.
+        $externalNotificationTypes = [
+            NotificationEnum::NOTIFICATION_EXTERNAL_CRM_SUBMITTED,
+            NotificationEnum::NOTIFICATION_EXTERNAL_TAB_COMPONENT_UPDATED,
+        ];
+
+        foreach ($externalNotificationTypes as $enum) {
+            $user->notificationSettings()->updateOrCreate(
+                ['type' => $enum->value],
+                [
+                    'frequency' => NotificationFrequencyEnum::IMMEDIATELY->value,
+                    'group_type' => $enum->groupType(),
+                    'title' => $enum->title(),
+                    'description' => $enum->description(),
+                    'enabled_email' => true,
+                    'enabled_push' => true,
+                ]
+            );
+        }
     }
 
     private function addProjectGroupColumn(): void
@@ -144,6 +197,12 @@ class UpdateArtwork extends Command
     {
         $this->section('Inventory Article Status');
         $this->call('db:seed', ['--class' => 'InventoryArticleStatusSeeder', '--force' => true]);
+    }
+
+    private function addInventoryArticleProperties(): void
+    {
+        $this->section('Inventory Article Properties');
+        $this->call('db:seed', ['--class' => 'InventoryArticlePropertiesSeeder', '--force' => true]);
     }
 
     private function addInventoryArticlePlanFilter(): void
@@ -313,6 +372,11 @@ class UpdateArtwork extends Command
             return;
         }
 
+        // Nur erstellen, wenn noch nicht vorhanden
+        if ($user->userFilters()->where('filter_type', $filterType)->exists()) {
+            return;
+        }
+
         $data = collect($fields)->mapWithKeys(fn($field) => [
             $this->convertFieldName($field) =>
                 $filter->$field ?? (
@@ -322,7 +386,7 @@ class UpdateArtwork extends Command
                 ),
         ])->merge($extra)->toArray();
 
-        $user->userFilters()->updateOrCreate(['filter_type' => $filterType], $data);
+        $user->userFilters()->create(array_merge(['filter_type' => $filterType], $data));
     }
 
     /**
@@ -331,7 +395,7 @@ class UpdateArtwork extends Command
     private function setFallbackFilter(User $user, array $types): void
     {
         foreach ($types as $type) {
-            $user->userFilters()->updateOrCreate(
+            $user->userFilters()->firstOrCreate(
                 ['filter_type' => $type],
                 [
                     'start_date' => now(),
@@ -371,9 +435,21 @@ class UpdateArtwork extends Command
     /**
      * Wandelt interne Felder zu DB-Feldern um.
      */
+    private function cleanupDuplicateRoomTypes(): void
+    {
+        $this->section('Cleanup Duplicate Room Types');
+        $this->call('artwork:cleanup-duplicate-room-types');
+    }
+
     private function addRoomTypes(): void
     {
         $this->section('Adding Room Types');
+
+        if (\Artwork\Modules\Accommodation\Models\AccommodationRoomType::exists()) {
+            $this->info('Room types already exist, skipping.');
+            return;
+        }
+
         $roomTypes = TypOfRoom::cases();
 
         foreach ($roomTypes as $roomType) {
@@ -386,8 +462,15 @@ class UpdateArtwork extends Command
     private function addSwissCantons(): void
     {
         $this->section('Seeding swiss cantons');
-        ;
+
         $this->swissCantoneSeeder->seed();
+    }
+
+    private function migrateShiftsWorkers(): void
+    {
+        $this->section('Consolidating shifts workers');
+        $this->consolidateShiftsSeeder->seed();
+
     }
 
     private function createBasicProductBaskets(): void
@@ -464,5 +547,96 @@ class UpdateArtwork extends Command
         }
 
         $this->info('Special components sidebar settings updated');
+    }
+
+    private function updateSagePermissions(): void
+    {
+        $this->section('Sage Permissions Split');
+
+        $this->sagePermissionUpdater->seed();
+    }
+
+    private function migrateToCrm(): void
+    {
+        $this->section('CRM Migration');
+
+        if (CrmContactType::where('is_system', true)->exists()) {
+            $this->info('CRM migration already performed, skipping.');
+            return;
+        }
+
+        $this->call('artwork:migrate-to-crm');
+    }
+
+    private function cleanupFalseConflicts(): void
+    {
+        $this->section('Cleanup False Conflicts');
+        $this->call('artwork:cleanup-false-conflicts');
+    }
+
+    /**
+     * Backfill crm_contact_id on entities and create missing CRM contacts.
+     */
+    private function syncCrmContacts(): void
+    {
+        $this->section('CRM Contact Sync');
+
+        $entityClasses = [
+            Freelancer::class,
+            ServiceProvider::class,
+            User::class,
+        ];
+
+        foreach ($entityClasses as $class) {
+            $table = (new $class)->getTable();
+
+            $morphClass = (new $class)->getMorphClass();
+
+            // Bulk-update: backfill crm_contact_id where non-deleted CRM contact exists via entity_type/entity_id
+            $updated = DB::table($table)
+                ->whereNull('crm_contact_id')
+                ->whereExists(function ($query) use ($table, $morphClass) {
+                    $query->select(DB::raw(1))
+                        ->from('crm_contacts')
+                        ->where('crm_contacts.entity_type', $morphClass)
+                        ->whereNull('crm_contacts.deleted_at')
+                        ->whereColumn('crm_contacts.entity_id', "$table.id");
+                })
+                ->update([
+                    'crm_contact_id' => DB::raw(
+                        '(SELECT crm_contacts.id FROM crm_contacts ' .
+                        'WHERE crm_contacts.entity_type = ' . DB::getPdo()->quote($morphClass) .
+                        " AND crm_contacts.entity_id = $table.id" .
+                        ' AND crm_contacts.deleted_at IS NULL LIMIT 1)'
+                    ),
+                ]);
+
+            if ($updated > 0) {
+                $this->info("Backfilled $updated $table crm_contact_id(s).");
+            }
+
+            // Create CRM contacts for entities that have none at all
+            $missing = $class::whereNull('crm_contact_id')
+                ->whereNotExists(function ($query) use ($table, $morphClass) {
+                    $query->select(DB::raw(1))
+                        ->from('crm_contacts')
+                        ->where('crm_contacts.entity_type', $morphClass)
+                        ->whereNull('crm_contacts.deleted_at')
+                        ->whereColumn('crm_contacts.entity_id', "$table.id");
+                })
+                ->get();
+
+            foreach ($missing as $entity) {
+                $entity->createCrmContact();
+            }
+
+            if ($missing->count() > 0) {
+                $this->info("Created {$missing->count()} CRM contact(s) for $table.");
+            }
+
+            if ($updated === 0 && $missing->isEmpty()) {
+                $this->info("$table: all synced.");
+            }
+        }
     }
 }

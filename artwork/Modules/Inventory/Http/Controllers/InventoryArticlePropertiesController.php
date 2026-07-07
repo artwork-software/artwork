@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Artwork\Modules\Inventory\Http\Requests\StoreInventoryArticlePropertiesRequest;
 use Artwork\Modules\Inventory\Http\Requests\UpdateInventoryArticlePropertiesRequest;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InventoryArticlePropertiesController extends Controller
@@ -16,7 +17,7 @@ class InventoryArticlePropertiesController extends Controller
     public function index()
     {
         return Inertia::render('InventorySetting/Properties', [
-            'properties' => InventoryArticleProperties::paginate(50),
+            'properties' => InventoryArticleProperties::ordered()->paginate(50),
         ]);
     }
 
@@ -65,6 +66,31 @@ class InventoryArticlePropertiesController extends Controller
      */
     public function destroy(InventoryArticleProperties $inventoryArticleProperty)
     {
+        // Pflicht-Properties (z. B. "Raum"/"Hersteller", is_deletable=false) dürfen nicht
+        // gelöscht werden — sonst entfernt die FK-Kaskade alle zugehörigen Property-Werte.
+        abort_unless($inventoryArticleProperty->is_deletable, 403);
+
         $inventoryArticleProperty->delete();
+    }
+
+    /**
+     * Persist a new global property order (Ref 1.41). Expects an ordered array of
+     * property ids and the absolute start offset of the current page so the order
+     * stays globally consistent across paginated pages.
+     */
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:inventory_article_properties,id'],
+            'start' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $start = (int) ($validated['start'] ?? 0);
+        foreach ($validated['ids'] as $index => $id) {
+            InventoryArticleProperties::where('id', $id)->update(['order' => $start + $index]);
+        }
+
+        return redirect()->back()->with('success', 'Property order updated successfully.');
     }
 }

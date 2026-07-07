@@ -127,4 +127,56 @@ readonly class BudgetManagementCostUnitService
         }
         $this->budgetManagementCostUnitRepository->forceDelete($budgetManagementCostUnit);
     }
+
+    public function softDelete(
+        BudgetManagementCostUnit $budgetManagementCostUnit,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): void {
+        //set all according column cells to 00000
+        /** @var Project $project */
+        foreach ($projectService->getAll() as $project) {
+            $secondColumnId = $project->table
+                ->columns()
+                ->orderBy('id')
+                ->get()
+                ->splice(1, 1)
+                ->first()
+                ->id;
+
+            $project->table->mainPositions->each(
+                function (MainPosition $mainPosition) use (
+                    $secondColumnId,
+                    $budgetManagementCostUnit,
+                    $columnCellService
+                ): void {
+                    $mainPosition->subPositions->each(
+                        function (SubPosition $subPosition) use (
+                            $secondColumnId,
+                            $budgetManagementCostUnit,
+                            $columnCellService
+                        ): void {
+                            $subPosition->subPositionRows->each(
+                                function (SubPositionRow $subPositionRow) use (
+                                    $secondColumnId,
+                                    $budgetManagementCostUnit,
+                                    $columnCellService
+                                ): void {
+                                    $columnCell = $subPositionRow->cells
+                                        ->where('column_id', $secondColumnId)
+                                        ->first();
+
+                                    if ($columnCell->value === $budgetManagementCostUnit->cost_unit_number) {
+                                        $columnCellService->updateValue($columnCell, '00000');
+                                    }
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+        $this->budgetManagementCostUnitRepository->delete($budgetManagementCostUnit);
+    }
+
 }

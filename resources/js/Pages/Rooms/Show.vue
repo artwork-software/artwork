@@ -34,7 +34,7 @@
                         </MenuItem>
                     </BaseMenu>
                 </div>
-                <div v-if="room.room_history[0]"
+                <div v-if="room.room_history[0]?.changes?.[0]"
                      class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         {{$t('last modified')}}:
@@ -138,6 +138,17 @@
                                    class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
                                 <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
                             </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <BaseInput
+                                type="number"
+                                id="room_capacity"
+                                v-model.number="editRoomForm.capacity"
+                                :label="$t('Capacity')"
+                                :min="0"
+                                :step="1"
+                            />
                         </div>
 
                         <div class="flex justify-center pt-8">
@@ -559,7 +570,8 @@ export default {
                 area_id: null,
                 user_id: null,
                 everyone_can_book: this.room.everyone_can_book,
-                relevant_for_disposition: this.room.relevant_for_disposition
+                relevant_for_disposition: this.room.relevant_for_disposition,
+                capacity: this.room.capacity,
             }),
             documentForm: useForm({
                 file: null

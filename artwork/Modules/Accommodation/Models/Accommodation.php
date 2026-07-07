@@ -3,6 +3,9 @@
 namespace Artwork\Modules\Accommodation\Models;
 
 use Artwork\Modules\Contacts\Models\Traits\HasContacts;
+use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,10 +24,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
-class Accommodation extends Model
+class Accommodation extends Model implements CrmEntity
 {
     use HasFactory;
     use HasContacts;
+    use HasCrmContact;
+    use HasCrmFields;
 
     protected $fillable = [
         'name',
@@ -56,5 +61,27 @@ class Accommodation extends Model
             'accommodation_id',
             'accommodation_room_type_id'
         )->withPivot('cost_per_night');
+    }
+
+    public function getCrmFields(): array
+    {
+        return array_merge(
+            [
+                'Email' => 'email',
+                'Telefon' => 'phone_number',
+            ],
+            $this->getAddressCrmFields(),
+            ['Notiz' => 'note'],
+        );
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return $this->name;
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'accommodation';
     }
 }

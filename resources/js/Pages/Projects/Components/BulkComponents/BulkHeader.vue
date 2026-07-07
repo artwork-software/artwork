@@ -1,8 +1,13 @@
 <template>
     <!-- Sticky / Glass Header -->
-    <div class="sticky top-0 z-30 print:static w-max">
+    <!-- bg-white als solider Fallback: ohne Hintergrund scheinen beim Scrollen die
+         darunterliegenden Event-Zeilen durch die (transparente) Headerzeile durch.
+         backdrop-blur wird nicht in allen Browsern unterstützt → deshalb voll deckend. -->
+    <div
+        class="sticky top-0 z-20 print:static w-max bg-white border-b border-zinc-200/70"
+    >
         <div
-            class="px-6 sm:px-4 mt-5 mb-3"
+            class="px-6 sm:px-4 mt-2 mb-3"
         >
             <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-zinc-600 print:xsDark">
                 <!-- left spacer when multiEdit -->

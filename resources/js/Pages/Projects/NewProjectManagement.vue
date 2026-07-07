@@ -6,7 +6,7 @@
                 :icon="IconGeometry"
                 :title="$t('Projects')"
                 icon-bg-class="bg-blue-600/10 text-blue-700"
-                :description="projects.data.length + ' ' + $t('projects in total')"
+                :description="projects.total + ' ' + $t('projects in total')"
                 v-model="project_search"
                 :search-enabled="true"
                 :search-label="$t('Search for projects or their artists')"
@@ -14,60 +14,69 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <button
-                        type="button"
-                        @click="toggleMyProjects()"
-                        :aria-pressed="!!showOnlyMyProjects"
-                        class="ui-button flex items-center gap-2"
-                        :class="showOnlyMyProjects ? 'bg-blue-600/10 text-blue-700 border-blue-200/60': 'text-zinc-700 dark:text-zinc-200'">
-                        <span class="size-2 rounded-full" :class="showOnlyMyProjects ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'"></span>
-                        {{ $t('Only mine') }}
-                    </button>
-
                     <!-- Filter -->
-                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-5">
+                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
-                                <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Filters') }}</div>
-                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetFilter">
+                                <div class="text-sm font-medium text-zinc-700 ">{{ $t('Filters') }}</div>
+                                <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700   transition" @click="resetFilter">
                                     {{ $t('Deselect all') }}
                                 </button>
                             </div>
 
                             <div class="space-y-3">
-                                <!-- Toggles -->
+                                <!-- Filter nach Art -->
+                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide">{{ $t('Filter by type') }}</div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showProjectGroups" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Project groups') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Project groups') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Projects') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show expired projects') }}</span>
-                                    </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                </div>
+
+                                <!-- Filter nach Zeit -->
+                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Filter by time') }}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showFutureProjects" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show future projects') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show future projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
-                                        <input v-model="showProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show projects without events') }}</span>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
+                                        <input v-model="showExpiredProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show expired projects') }}</span>
                                     </label>
-                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                </div>
+
+                                <!-- Sonstige Filter -->
+                                <div class="text-xs font-semibold text-zinc-500 uppercase tracking-wide pt-1">{{ $t('Other filters') }}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
+                                        <input v-model="hideProjectsWithoutEvents" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Hide projects without events') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2">
                                         <input v-model="showOnlyProjectsWithoutGroup" type="checkbox" class="size-4 accent-emerald-600" />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $t('Show only projects without group') }}</span>
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Show only projects without group') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2 sm:col-span-2">
+                                        <input v-model="showOnlyMyProjects" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Only projects where you are in the project team') }}</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 rounded-xl border border-zinc-200 px-3 py-2 sm:col-span-2">
+                                        <input v-model="showOnlyWithBiData" type="checkbox" class="size-4 accent-emerald-600" />
+                                        <span class="text-sm text-zinc-700 ">{{ $t('Only productions with BI data') }}</span>
                                     </label>
                                 </div>
 
                                 <!-- States -->
-                                <div class="border-t border-zinc-200 dark:border-zinc-800 pt-2">
+                                <div class="border-t border-zinc-200  pt-2">
                                     <button
                                         type="button"
-                                        class="w-full flex items-center justify-between text-sm text-zinc-700 dark:text-zinc-200"
+                                        class="w-full flex items-center justify-between text-sm text-zinc-700 "
                                         @click="showProjectStateFilter = !showProjectStateFilter"
                                     >
                                         <span>{{ $t('Project status') }}</span>
@@ -75,9 +84,9 @@
                                         <IconChevronUp v-else class="h-5 w-5 text-zinc-500" />
                                     </button>
                                     <div v-if="showProjectStateFilter" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 px-3 py-2">
+                                        <label v-for="state in computedStates" :key="state.id" class="flex items-center gap-3 rounded-xl border border-zinc-200  px-3 py-2">
                                             <input v-model="state.clicked" type="checkbox" class="size-4 accent-emerald-600" />
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-200 truncate">{{ state.name }}</span>
+                                            <span class="text-sm text-zinc-700  truncate">{{ state.name }}</span>
                                         </label>
                                     </div>
                                 </div>
@@ -95,11 +104,11 @@
                         </div>
                     </BaseFilter>
 
-                    <!-- Sort -->
-                    <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
-                        <div class="flex items-center justify-between py-1 px-1">
-                            <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ $t('Sort by') }}</div>
-                            <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition" @click="resetSort()">
+                    <!-- Sort --><div class="flex items-center mr-6">
+                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes-button="ui-button">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm font-medium text-zinc-700 ">{{ $t('Sort by') }}</div>
+                            <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700  transition" @click="resetSort()">
                                 {{ $t('Reset') }}
                             </button>
                         </div>
@@ -116,10 +125,21 @@
                             </div>
                         </MenuItem>
                     </BaseMenu>
-
+                </div>
                     <!-- Export -->
                     <button type="button" @click="openExportModal">
-                        <ToolTipComponent :icon="IconFileExport" icon-size="size-5" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                        <ToolTipComponent :icon="IconFileExport" icon-size="size-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                    </button>
+
+                    <!-- Bulk selection mode toggle -->
+                    <button type="button" @click="toggleSelectionMode" v-if="role('artwork admin') || can('delete projects')">
+                        <ToolTipComponent
+                            :icon="IconChecklist"
+                            icon-size="size-6"
+                            :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
+                            direction="bottom"
+                            :classes-button="selectionMode ? 'ui-button text-artwork-buttons-create' : 'ui-button'"
+                        />
                     </button>
 
                     <BaseUIButton label="New project" use-translation is-add-button @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
@@ -129,7 +149,7 @@
             <!-- Last visited -->
             <div class="my-5 flex items-center justify-between">
                 <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id">
-                    <div class="text-sm text-zinc-600 dark:text-zinc-300">{{ $t('Last visited project') }}:</div>
+                    <div class="text-sm text-zinc-600 ">{{ $t('Last visited project') }}:</div>
                     <a
                         class="text-artwork-buttons-create text-sm font-semibold inline-flex items-center gap-1"
                         :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })"
@@ -190,7 +210,10 @@
                             :create-settings="createSettings"
                             :full-project="pinnedProjectsAll.find((p) => p.id === project.id)"
                             :grid-template-columns="gridTemplateColumns"
-                            v-memo="[project.id, project.updated_at]"
+                            :selection-mode="selectionMode"
+                            :selected="selectedProjectIds.includes(project.id)"
+                            @toggle-selection="toggleProjectSelection"
+                            v-memo="[project.id, project.updated_at, project.title, selectionMode, selectedProjectIds.includes(project.id)]"
                         />
                     </div>
 
@@ -209,7 +232,10 @@
                             :create-settings="createSettings"
                             :full-project="projects.data.find((p) => p.id === project.id)"
                             :grid-template-columns="gridTemplateColumns"
-                            v-memo="[project.id, project.updated_at]"
+                            :selection-mode="selectionMode"
+                            :selected="selectedProjectIds.includes(project.id)"
+                            @toggle-selection="toggleProjectSelection"
+                            v-memo="[project.id, project.updated_at, project.title, selectionMode, selectedProjectIds.includes(project.id)]"
                         />
                     </div>
                 </div>
@@ -280,13 +306,68 @@
         <export-modal
             v-if="showExportModal"
             @close="showExportModal = false"
-            :enums="[
-                exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-                exportTabEnums.EXCEL_CALENDAR_EXPORT,
-                exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
-              ]"
+            :enums="exportTabs"
             :configuration="getExportModalConfiguration()"
         />
+
+        <!-- Selection-mode action bar (move selected projects to trash) -->
+        <div v-if="selectionMode"
+             class="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur py-3 pr-6 pl-20 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
+            <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-zinc-600">
+                    <input
+                        type="checkbox"
+                        :checked="allOnPageSelected"
+                        @change="toggleSelectAllOnPage"
+                        class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                    />
+                    {{ $t('Select all on this page') }}
+                    <span class="ml-2 text-zinc-500">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
+                </label>
+                <div class="flex items-center gap-x-4">
+                    <button type="button" class="text-sm text-zinc-600 hover:text-zinc-900" @click="toggleSelectionMode">
+                        {{ $t('Cancel') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
+                        :class="selectedProjectIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                        :disabled="selectedProjectIds.length === 0"
+                        @click="openBulkDeleteModal"
+                    >
+                        <component :is="IconTrash" class="h-4 w-4" />
+                        {{ $t('Put in the trash') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk delete confirmation -->
+        <BaseModal @closed="closeBulkDeleteModal" v-if="bulkDeleting">
+            <div class="mx-4">
+                <div class="text-2xl sm:text-3xl font-black text-zinc-900 my-2">
+                    {{ $t('Delete selected projects') }}
+                </div>
+                <div class="text-sm text-rose-600">
+                    {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
+                    <button
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
+                        @click="bulkDeleteProjects"
+                    >
+                        {{ $t('Delete') }}
+                    </button>
+                    <button
+                        type="button"
+                        @click="closeBulkDeleteModal()"
+                        class="text-sm text-zinc-600 hover:underline underline-offset-4"
+                    >
+                        {{ $t('No, not really') }}
+                    </button>
+                </div>
+            </div>
+        </BaseModal>
     </AppLayout>
 </template>
 
@@ -296,14 +377,16 @@ import { router, usePage } from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {
     IconCheck,
+    IconChecklist,
     IconChevronDown,
     IconChevronUp, IconCirclePlus,
     IconFileExport,
     IconGeometry,
-    IconPlus,
     IconSearch,
+    IconTrash,
     IconX
 } from "@tabler/icons-vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import { MenuItem, Switch, SwitchGroup } from "@headlessui/vue";
@@ -368,6 +451,51 @@ const perPage = ref(props.entitiesPerPage ?? 10);
 const showAddBulkEventModal = ref(false);
 const dropFeedbackShown = ref(null);
 
+// Bulk selection (move multiple projects to trash)
+const selectionMode = ref(false);
+const selectedProjectIds = ref([]);
+const bulkDeleting = ref(false);
+const pageProjectIds = computed(() => (props.projects?.data ?? []).map((p) => p.id));
+const allOnPageSelected = computed(
+    () => pageProjectIds.value.length > 0 && pageProjectIds.value.every((id) => selectedProjectIds.value.includes(id))
+);
+const toggleSelectionMode = () => {
+    selectionMode.value = !selectionMode.value;
+    if (!selectionMode.value) selectedProjectIds.value = [];
+};
+const toggleProjectSelection = (projectId) => {
+    const i = selectedProjectIds.value.indexOf(projectId);
+    if (i === -1) selectedProjectIds.value.push(projectId);
+    else selectedProjectIds.value.splice(i, 1);
+};
+const toggleSelectAllOnPage = () => {
+    if (allOnPageSelected.value) {
+        selectedProjectIds.value = selectedProjectIds.value.filter((id) => !pageProjectIds.value.includes(id));
+    } else {
+        selectedProjectIds.value = [...new Set([...selectedProjectIds.value, ...pageProjectIds.value])];
+    }
+};
+const openBulkDeleteModal = () => {
+    if (selectedProjectIds.value.length) bulkDeleting.value = true;
+};
+const closeBulkDeleteModal = () => (bulkDeleting.value = false);
+const bulkDeleteProjects = () => {
+    router.delete(route("projects.bulk-destroy"), {
+        data: {
+            project_ids: selectedProjectIds.value,
+            page: page.value,
+            entitiesPerPage: perPage.value,
+            query: project_search.value,
+        },
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedProjectIds.value = [];
+            bulkDeleting.value = false;
+            selectionMode.value = false;
+        },
+    });
+};
+
 // Loading-State für Skeletons
 const isLoading = ref(false);
 const skeletonCols = computed(() => props.components?.length ?? 6);
@@ -380,18 +508,31 @@ const showProjectGroups = ref(userProjectManagementSetting?.project_filters.show
 const showProjects = ref(userProjectManagementSetting?.project_filters.showProjects);
 const showExpiredProjects = ref(userProjectManagementSetting?.project_filters.showExpiredProjects);
 const showFutureProjects = ref(userProjectManagementSetting?.project_filters.showFutureProjects ?? false);
-const showProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.showProjectsWithoutEvents);
+const hideProjectsWithoutEvents = ref(userProjectManagementSetting?.project_filters.hideProjectsWithoutEvents);
 const showOnlyProjectsWithoutGroup = ref(userProjectManagementSetting?.project_filters.showOnlyProjectsWithoutGroup);
+const showOnlyWithBiData = ref(userProjectManagementSetting?.project_filters.showOnlyWithBiData);
 const sortBy = ref(userProjectManagementSetting?.sort_by === null ? undefined : userProjectManagementSetting?.sort_by);
 
 const showProjectStateFilter = ref(true);
+
+const hasActiveFilters = computed(() => {
+    return !!showOnlyMyProjects.value
+        || !!showProjectGroups.value
+        || !!showProjects.value
+        || !!showExpiredProjects.value
+        || !!showFutureProjects.value
+        || !!hideProjectsWithoutEvents.value
+        || !!showOnlyProjectsWithoutGroup.value
+        || !!showOnlyWithBiData.value
+        || props.states.some((s) => s.clicked);
+});
 
 // Grid wird 1x berechnet und an Zeilen weitergegeben → weniger Recalcs
 const gridTemplateColumns = computed(() =>
     props.components
         .map((component) => {
             if (component.type === "ProjectTitleComponent") return "20rem";
-            if (component.type === "ActionsComponent") return "5rem";
+            if (component.type === "ActionsComponent") return "8rem";
             return "14rem";
         })
         .join(" ")
@@ -407,10 +548,6 @@ const openCreateProjectModal = () => (createProject.value = true);
 const closeCreateProjectModal = (showSuccessModalFlag) => {
     createProject.value = false;
     if (showSuccessModalFlag) showAddBulkEventModal.value = true;
-};
-const toggleMyProjects = () => {
-    showOnlyMyProjects.value = !showOnlyMyProjects.value;
-    applyFiltersAndSort();
 };
 const closeEditProjectModal = () => {
     editingProject.value = false;
@@ -449,8 +586,9 @@ const applyFiltersAndSort = (resetPage = true) => {
                 showProjects: getTruthyOrUndefined(showProjects.value),
                 showExpiredProjects: getTruthyOrUndefined(showExpiredProjects.value),
                 showFutureProjects: getTruthyOrUndefined(showFutureProjects.value),
-                showProjectsWithoutEvents: getTruthyOrUndefined(showProjectsWithoutEvents.value),
+                hideProjectsWithoutEvents: getTruthyOrUndefined(hideProjectsWithoutEvents.value),
                 showOnlyProjectsWithoutGroup: getTruthyOrUndefined(showOnlyProjectsWithoutGroup.value),
+                showOnlyWithBiData: getTruthyOrUndefined(showOnlyWithBiData.value),
             },
             sort: sortBy.value,
         },
@@ -469,8 +607,9 @@ const resetFilter = () => {
     showProjects.value = false;
     showExpiredProjects.value = false;
     showFutureProjects.value = false;
-    showProjectsWithoutEvents.value = false;
+    hideProjectsWithoutEvents.value = false;
     showOnlyProjectsWithoutGroup.value = false;
+    showOnlyWithBiData.value = false;
 
     props.states.forEach((s) => (s.clicked = false));
 
@@ -525,6 +664,17 @@ const reloadProjectsDebounced = debounce(reloadProjects, 800);
 watch(project_search, () => reloadProjectsDebounced());
 
 // Export-Konfig
+const exportTabs = computed(() => {
+    const tabs = [
+        exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+        exportTabEnums.EXCEL_CALENDAR_EXPORT,
+    ];
+    if (props.createSettings.budget_deadline) {
+        tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
+    }
+    return tabs;
+});
+
 const getExportModalConfiguration = () => ({
     [exportTabEnums.EXCEL_EVENT_LIST_EXPORT]: { show_artists: props.createSettings.show_artists },
 });

@@ -21,48 +21,46 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
-                        <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                      v-slot="{ active }"
-                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
-                                <span @click="fixSubPosition(subPosition.id)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconLock" stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                              aria-hidden="true"/>
-                                    {{ $t('Commitment') }}
-                                </span>
-                            </MenuItem>
-                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                      v-slot="{ active }"
-                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
-                                <span @click="unfixSubPosition(subPosition.id)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconLockOpen" stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                  aria-hidden="true"/>
-                                    {{ $t('Canceling a fixed term') }}
-                                </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <span @click="openDeleteSubPositionModal(subPosition)"
-                                      :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconTrash" stroke-width="1.5"
-                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                               aria-hidden="true"/>
-                                    {{ $t('Delete') }}
-                                </span>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="duplicateSubpostion(subPosition.id)"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                              aria-hidden="true"/>
-                                    {{ $t('Duplicate') }}
-                                </a>
-                            </MenuItem>
+                        <BaseMenu
+                            v-if="hasBudgetAccess || $can('edit budget templates')"
+                            white-menu-background
+                        >
+                            <!-- Commitment / Unfix -->
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed"
+                                :title="$t('Commitment')"
+                                icon="IconLock"
+                                white-menu-background
+                                @click="fixSubPosition(subPosition.id)"
+                            />
+
+                            <BaseMenuItem
+                                v-show="$can('can add and remove verified states') || hasAdminRole()"
+                                v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed"
+                                :title="$t('Canceling a fixed term')"
+                                icon="IconLockOpen"
+                                white-menu-background
+                                @click="unfixSubPosition(subPosition.id)"
+                            />
+
+                            <!-- Duplicate -->
+                            <BaseMenuItem
+                                :title="$t('Duplicate')"
+                                icon="IconCopy"
+                                white-menu-background
+                                @click="duplicateSubpostion(subPosition.id)"
+                            />
+
+                            <!-- Delete -->
+                            <BaseMenuItem
+                                :title="$t('Delete')"
+                                icon="IconTrash"
+                                white-menu-background
+                                @click="openDeleteSubPositionModal(subPosition)"
+                            />
                         </BaseMenu>
+
                     </div>
                 </div>
             </div>
@@ -70,7 +68,7 @@
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondary-hover w-full">
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
-                                 :sub-position-id="subPosition.id"/>
+                                 :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <draggable
                 v-if="subPosition.sub_position_rows?.length > 0"
                 v-model="subPosition.sub_position_rows"
@@ -90,61 +88,83 @@
                             <div class="flex items-center">
                                 <td v-for="(cell,index) in row.cells"
                                     v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                                    :class="[index <= 1 ? 'w-36' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+                                    :class="[index <= 1 ? 'w-48' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                                     <div
                                         v-if="index === 0 && canReorderSubPositionRows"
-                                        class="sub-position-row-drag-handle absolute left-1 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
+                                        class="sub-position-row-drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
                                         @mousedown.stop
                                     >
                                         <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
                                     </div>
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 justify-start pl-8' : index === 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
-                                    <div class=" flex items-center cell-button">
-                                        <div
-                                             :class="(cell.display_value ?? cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate'"
-                                             :title="cell.display_value ?? cell.value"
-                                             @mousedown="storeFocus(cell.id)"
-                                             @click="this.handleCellClick(cell, '', index, row)">
-                                            {{ cell.display_value ?? cell.value }}
-                                        </div>
+                                    <div class="flex items-center cell-button">
+                                        <span
+                                            class="relative group/tt block min-w-0"
+                                            @mouseenter="maybeUpdateTruncation(cell.id, index)"
+                                        >
+                                            <span
+                                                :ref="el => setTruncEl(cell.id, el)"
+                                                :class="(userShowAccountName ? (cell.display_value ?? cell.value) : cell.value) === '' ? 'w-6 cursor-pointer h-6' : 'truncate w-42 cursor-pointer block'"
+                                                @mousedown="storeFocus(cell.id)"
+                                                @click="this.handleCellClick(cell, '', index, row)"
+                                            >
+                                                {{ userShowAccountName ? (cell.display_value ?? cell.value) : cell.value }}
+                                            </span>
+                                            <span
+                                                v-if="isTruncated[cell.id]"
+                                                class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
+                                                       rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                       opacity-0 translate-y-1 transition-all duration-150
+                                                       group-hover/tt:opacity-100 group-hover/tt:translate-y-0
+                                                       whitespace-normal wrap-break-word"
+                                            >
+                                                <span
+                                                    class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
+                                                           border-l border-t border-gray-200"
+                                                />
+                                                {{ String(userShowAccountName ? (cell.display_value ?? cell.value) : (cell.value ?? '')) }}
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-32 justify-start pl-8' : index === 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
-                                               :placeholder="cell.display_value ?? cell.value"
+                                               :placeholder="userShowAccountName ? (cell.display_value ?? cell.value) : cell.value"
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
                                                @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                                @focusout="this.handleBudgetManagementSearchBlur(cell)"
                                         />
-                                        <PropertyIcon name="XIcon" class="w-10 h-10 cursor-pointer"
+                                        <PropertyIcon name="IconX" class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
                                         />
-                                        <div v-if="cell.accountSearchResults" class="absolute w-64 z-20 top-10">
+                                        <div v-if="cell.accountSearchResults" class="absolute w-96 z-20 top-10">
                                             <div v-if="cell.accountSearchResults.length > 0"
                                                  v-for="account in cell.accountSearchResults"
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
+                                                    class="group/account relative p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, account.title, mainPosition.is_verified, subPosition.is_verified)">
-                                                    <div class="flex">
-                                                        <div class="w-1/2 text-left truncate">
+                                                    <div class="flex gap-2">
+                                                        <div class="shrink-0 text-left">
                                                             {{ account.account_number }}
                                                         </div>
-                                                        <div class="w-1/2 text-right truncate">
+                                                        <div class="text-right truncate">
                                                             {{ account.title }}
                                                         </div>
                                                     </div>
-
+                                                    <div class="hidden group-hover/account:block absolute left-0 bottom-full mb-1 w-max max-w-sm px-2 py-1 text-xs bg-black text-white rounded shadow-lg z-30 whitespace-normal">
+                                                        {{ account.account_number }} - {{ account.title }}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div v-else
@@ -152,21 +172,24 @@
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
-                                        <div v-if="cell.costUnitSearchResults" class="absolute w-64 z-20 top-10">
+                                        <div v-if="cell.costUnitSearchResults" class="absolute w-96 z-20 top-10">
                                             <div v-if="cell.costUnitSearchResults.length > 0"
                                                  v-for="cost_unit in cell.costUnitSearchResults"
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
+                                                    class="group/costunit relative p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, cost_unit.title, mainPosition.is_verified, subPosition.is_verified)">
-                                                    <div class="flex">
-                                                        <div class="w-1/2 text-left truncate">
+                                                    <div class="flex gap-2">
+                                                        <div class="shrink-0 text-left">
                                                             {{ cost_unit.cost_unit_number }}
                                                         </div>
-                                                        <div class="w-1/2 text-right truncate">
+                                                        <div class="text-right truncate">
                                                             {{ cost_unit.title }}
                                                         </div>
+                                                    </div>
+                                                    <div class="hidden group-hover/costunit:block absolute left-0 bottom-full mb-1 w-max max-w-sm px-2 py-1 text-xs bg-black text-white rounded shadow-lg z-30 whitespace-normal">
+                                                        {{ cost_unit.cost_unit_number }} - {{ cost_unit.title }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -180,43 +203,98 @@
                             </div>
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
-                                    index <= 1 ? 'w-32 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
+                                    index <= 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
-                                    <div class=" flex items-center"
-                                         v-if="cell.column.type !== 'subprojects_column_for_group'">
-                                        <div class="cursor-pointer"
-                                             @click="handleCellClick(cell, 'comment', index, row)"
-                                             v-if="cell.comments_count > 0">
-                                            <PropertyIcon name="IconMessageDots"
-                                                class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        </div>
-                                        <PropertyIcon name="IconCalculator" @click="handleCellClick(cell, 'calculation', index, row)"
-                                                        v-if="cell.calculations_count > 0"
-                                                        class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <PropertyIcon name="IconLink" @click="handleCellClick(cell, 'moneysource', index, row)"
-                                                  v-if="cell.linked_money_source_id !== null"
-                                                  class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <PropertyIcon name="IconAbacus"
-                                            v-if="cell.sage_assigned_data.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"/>
-                                        <PropertyIcon name="IconAdjustmentsAlt" v-if="cell.sage_assigned_data.length >= 1"
-                                                            @click="handleCellClick(cell, 'sageAssignedData', index, row)"
-                                                            class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md"
-                                                            :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
-                                                            stroke-width="1.5"/>
-                                        <div>
-                                            <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell="cell"
-                                                                     :value="this.toCurrencyString(cell.sage_value)"/>
-                                                <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1"
-                                                                     :cell="cell" class="hidden group-hover:block"/>
+                                    <div
+                                        v-if="cell.column.type !== 'subprojects_column_for_group'"
+                                        class="flex items-start gap-1 min-w-0"
+                                    >
+                                        <!-- Icons -->
+                                        <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                                            <div
+                                                v-if="cell.comments_count > 0"
+                                                class="cursor-pointer"
+                                                @click="handleCellClick(cell, 'comment', index, row)"
+                                            >
+                                                <PropertyIcon
+                                                    name="IconMessageDots"
+                                                    class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                                />
                                             </div>
-                                            <span @mousedown="storeFocus(cell.id)"
-                                                  @click="handleCellClick(cell, '', index, row)" v-else>{{
-                                                    index < 3 ? cell.value : this.toCurrencyString(cell.value)
-                                                }}</span>
+
+                                            <PropertyIcon
+                                                v-if="cell.calculations_count > 0"
+                                                name="IconCalculator"
+                                                @click="handleCellClick(cell, 'calculation', index, row)"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                            />
+
+                                            <PropertyIcon
+                                                v-if="cell.linked_money_source_id !== null"
+                                                name="IconLink"
+                                                @click="handleCellClick(cell, 'moneysource', index, row)"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                            />
+
+                                            <PropertyIcon
+                                                v-if="cell.sage_assigned_data?.length >= 1 && cell.sage_assigned_data[0].is_collective_booking"
+                                                name="IconAbacus"
+                                            />
+
+                                            <PropertyIcon
+                                                v-if="cell.sage_assigned_data?.length >= 1"
+                                                name="IconAdjustmentsAlt"
+                                                @click="handleCellClick(cell, 'sageAssignedData', index, row)"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md"
+                                                :class="cell.sage_assigned_data?.length === 1
+        ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color'
+        : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
+                                                stroke-width="1.5"
+                                            />
+                                        </div>
+
+                                        <!-- Text / Content (clamped) -->
+                                        <div class="min-w-0 flex-1">
+                                            <div v-if="cell.column.type === 'sage'" class="flex items-center min-w-0">
+                                                <SageDropCellElement :cell="cell" :value="toCurrencyString(cell.sage_value)" @budget-updated="$emit('budget-updated')" />
+                                                <SageDragCellElement
+                                                    v-if="cell.sage_assigned_data?.length >= 1"
+                                                    :cell="cell"
+                                                    class="hidden group-hover:block shrink-0"
+                                                />
+                                            </div>
+                                            <span
+                                                v-else
+                                                class="relative group/tt block min-w-0"
+                                                @mouseenter="maybeUpdateTruncation(cell.id, index)"
+                                            >
+                                                <span
+                                                    :ref="el => setTruncEl(cell.id, el)"
+                                                    @mousedown="storeFocus(cell.id)"
+                                                    @click="handleCellClick(cell, '', index, row)"
+                                                    class="block min-w-0 overflow-hidden text-ellipsis truncate"
+                                                >
+                                                    {{ index < 3 ? (cell.display_value ?? cell.value) : toCurrencyString(cell.value) }}
+                                                </span>
+                                                <span
+                                                    v-if="index < 3 && isTruncated[cell.id]"
+                                                    class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
+                                                           rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                           opacity-0 translate-y-1 transition-all duration-150
+                                                           group-hover/tt:opacity-100 group-hover/tt:translate-y-0
+                                                           whitespace-normal wrap-break-word"
+                                                >
+                                                    <span
+                                                        class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
+                                                               border-l border-t border-gray-200"
+                                                    />
+                                                    {{ String(cell.display_value ?? cell.value ?? '') }}
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
+
                                     <div v-else class="flex items-center gap-x-1" :class="cell.column.color !== 'whiteColumn' ? cell.column.color : ''">
                                         <PropertyIcon name="IconList" @click="openRelevantBudgetDataSumModalForCell(cell)"
                                                    v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"
@@ -258,55 +336,49 @@
                                             class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                         </td>
                     </div>
-                    <BaseMenu dots-color="text-artwork-buttons-context" class="invisible group-hover:visible"
-                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
-                        <MenuItem v-slot="{ active }"
-                                  v-if="row.commented === false"
-                                  @click="updateRowCommented(row.id, true)">
-                                        <span
-                                            @click=""
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconLock" stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Exclude') }}
-                                        </span>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }"
-                                  v-else
-                                  @click="updateRowCommented(row.id, false)">
-                                        <span
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconLockOpen" stroke-width="1.5"
-                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                          aria-hidden="true"/>
-                                            {{ $t('Include positions') }}
-                                        </span>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                                        <span
-                                            @click="duplicateRow(row.id)"
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Duplicate') }}
-                                        </span>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                                        <span
-                                            @click="openDeleteRowModal(row)"
-                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
-                                            <PropertyIcon name="IconTrash" stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
-                                                       aria-hidden="true"/>
-                                            {{ $t('Delete') }}
-                                        </span>
-                        </MenuItem>
-                    </BaseMenu>
+                            <BaseMenu
+                                dots-color="text-artwork-buttons-context"
+                                class="invisible group-hover:visible"
+                                v-if="hasBudgetAccess || $can('edit budget templates')"
+                                white-menu-background
+                            >
+                                <!-- Exclude / Include -->
+                                <BaseMenuItem
+                                    v-if="row.commented === false"
+                                    :title="$t('Exclude')"
+                                    icon="IconLock"
+                                    white-menu-background
+                                    @click="updateRowCommented(row.id, true)"
+                                />
+
+                                <BaseMenuItem
+                                    v-else
+                                    :title="$t('Include positions')"
+                                    icon="IconLockOpen"
+                                    white-menu-background
+                                    @click="updateRowCommented(row.id, false)"
+                                />
+
+                                <!-- Duplicate -->
+                                <BaseMenuItem
+                                    :title="$t('Duplicate')"
+                                    icon="IconCopy"
+                                    white-menu-background
+                                    @click="duplicateRow(row.id)"
+                                />
+
+                                <!-- Delete -->
+                                <BaseMenuItem
+                                    :title="$t('Delete')"
+                                    icon="IconTrash"
+                                    white-menu-background
+                                    @click="openDeleteRowModal(row)"
+                                />
+                            </BaseMenu>
+
                         </tr>
                         <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
-                                             :sub-position-id="subPosition.id"/>
+                                             :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
                         <div @click="addRowToSubPosition(subPosition, row)"
                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
                              class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
@@ -330,29 +402,29 @@
                 </div>
             </div>
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
-                                 :sub-position-id="subPosition.id"/>
+                                 :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
-                <td class="w-28"></td>
-                <td class="w-28"></td>
+                <td class="w-48"></td>
+                <td class="w-48"></td>
                 <td class="w-72 my-2">SUM</td>
-                <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48"
+                <td v-if="subPosition.sub_position_rows?.length > 0" class="flex items-center w-48"
                     v-for="column in columns.slice(3)"
                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1"
-                         :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
+                         :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
-                                 v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource"
+                                 v-if="subPosition.columnSums?.[column.id]?.hasComments && subPosition.columnSums?.[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                  class="h-6 w-6 mr-1 cursor-pointer"/>
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
-                                 v-else-if="subPosition.columnSums[column.id]?.hasComments"
+                                 v-else-if="subPosition.columnSums?.[column.id]?.hasComments"
                                  src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
-                                 v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
+                                 v-else-if="subPosition.columnSums?.[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                             <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
+                                {{ this.toCurrencyString(subPosition.columnSums?.[column.id]?.sum) }}
                             </span>
                             <span v-if="column.type === 'sage'">
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
@@ -415,11 +487,13 @@ import RelevantBudgetDataSumModal from "@/Pages/Projects/Components/Budget/Relev
 import {IconList} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import draggable from 'vuedraggable';
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
+        BaseMenuItem,
         PropertyIcon,
         draggable,
         RelevantBudgetDataSumModal,
@@ -443,14 +517,15 @@ export default {
         ConfirmationComponent,
         Link
     },
-    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess'],
+    props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess', 'userShowAccountName'],
     emits: [
         'openDeleteModal',
         'openVerifiedModal',
         'openErrorModal',
         'openCellDetailModal',
         'openSubPositionSumDetailModal',
-        'openSageAssignedDataModal'
+        'openSageAssignedDataModal',
+        'budget-updated'
     ],
     data() {
         return {
@@ -505,6 +580,8 @@ export default {
             dataToDisplayInRelevantDataModal: null,
             showRelevantBudgetDataSumModal: false,
             nextCellId: localStorage.getItem('nextCellId') ?? null,
+            truncEls: {},
+            isTruncated: {},
         }
     },
     computed: {
@@ -537,18 +614,41 @@ export default {
 
     },
     mounted() {
-        // check if main Position in localStorage in "closedSubPositions"
         this.checkIfSubPositionClosed();
+
+        this._onResize = () => {
+            Object.keys(this.truncEls || {}).forEach((id) => this.updateTruncation(id));
+        };
+        window.addEventListener("resize", this._onResize);
+    },
+    beforeUnmount() {
+        localStorage.removeItem('nextCellId');
+        localStorage.removeItem('closedSubPositions');
+
+        window.removeEventListener("resize", this._onResize);
     },
     updated() {
         this.checkIfSubPositionClosed();
     },
-    beforeUnmount() {
-        // remove localeStorage key "closedSubPositions"
-        localStorage.removeItem('nextCellId');
-        localStorage.removeItem('closedSubPositions')
-    },
     methods: {
+        setTruncEl(id, el) {
+            if (!el) return;
+            this.truncEls[id] = el;
+            this.updateTruncation(id);
+        },
+
+        updateTruncation(id) {
+            const el = this.truncEls?.[id];
+            if (!el) return;
+            this.$set
+                ? this.$set(this.isTruncated, id, el.scrollWidth > el.clientWidth)
+                : (this.isTruncated[id] = el.scrollWidth > el.clientWidth);
+        },
+
+        maybeUpdateTruncation(id, index) {
+            if (index >= 3) return;
+            requestAnimationFrame(() => this.updateTruncation(id));
+        },
         IconList,
         usePage,
         persistSubPositionRowOrder(evt = null) {
@@ -901,10 +1001,11 @@ export default {
             }
         },
         checkIfRowHasSageData(row) {
-            return row.cells.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data.length > 0);
+            return row.cells?.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data?.length > 0) ?? false;
         },
         async handleCellClick(cell, type = '', index = null, row = null) {
-            if (!this.hasBudgetAccess) {
+            const isSageInteraction = type === 'sageAssignedData' || cell.column.type === 'sage';
+            if (!this.hasBudgetAccess && !(isSageInteraction && this.$canAny(['can view project sage data', 'can view global sage data']))) {
                 return;
             }
             if ((index === 0 || index === 1) && this.checkIfRowHasSageData(row)) {
@@ -1115,6 +1216,46 @@ export default {
 
 .pinkColumn {
     background-color: #E1D1DC;
+}
+
+.softSkyColumn {
+    background-color: #93C5FD; /* sky */
+}
+
+.softAquaColumn {
+    background-color: #67E8F9; /* aqua */
+}
+
+.softTealColumn {
+    background-color: #5EEAD4; /* teal */
+}
+
+.softMintColumn {
+    background-color: #86EFAC; /* mint */
+}
+
+.softLimeColumn {
+    background-color: #BEF264; /* lime */
+}
+
+.softAmberColumn {
+    background-color: #FCD34D; /* amber */
+}
+
+.softPeachColumn {
+    background-color: #FDBA74; /* peach */
+}
+
+.softRoseColumn {
+    background-color: #FDA4AF; /* rose */
+}
+
+.softLavenderColumn {
+    background-color: #C4B5FD; /* lavender */
+}
+
+.softSlateColumn {
+    background-color: #CBD5E1; /* slate/gray */
 }
 
 

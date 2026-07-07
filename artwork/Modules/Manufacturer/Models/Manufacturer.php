@@ -2,6 +2,9 @@
 
 namespace Artwork\Modules\Manufacturer\Models;
 
+use Artwork\Modules\Crm\Contracts\CrmEntity;
+use Artwork\Modules\Crm\Traits\HasCrmContact;
+use Artwork\Modules\Crm\Traits\HasCrmFields;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
@@ -15,10 +18,12 @@ use Laravel\Scout\Searchable;
  * @property string phone
  * @property string email
  */
-class Manufacturer extends Model
+class Manufacturer extends Model implements CrmEntity
 {
     use HasFactory;
     use Searchable;
+    use HasCrmContact;
+    use HasCrmFields;
 
     protected $fillable = [
         'name',
@@ -58,5 +63,27 @@ class Manufacturer extends Model
             'phone' => $this->phone,
             'email' => $this->email,
         ];
+    }
+
+    public function getCrmFields(): array
+    {
+        return [
+            'Email' => 'email',
+            'Telefon' => 'phone',
+            'Straße, Hausnummer' => 'address',
+            'Website' => 'website',
+            'Kundennummer' => 'customer_number',
+            'Kontaktperson' => 'contact_person',
+        ];
+    }
+
+    public function getCrmDisplayName(): string
+    {
+        return $this->name;
+    }
+
+    public function getCrmContactTypeSlug(): string
+    {
+        return 'manufacturer';
     }
 }

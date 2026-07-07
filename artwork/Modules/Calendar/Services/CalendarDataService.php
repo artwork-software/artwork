@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
+use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
@@ -19,6 +20,9 @@ use Artwork\Modules\User\Models\UserFilter;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\User\Models\UserCalendarFilter;
 use Artwork\Modules\User\Models\UserCalendarSettings;
+use Artwork\Modules\User\Models\UserDailyViewCalendarSettings;
+use Artwork\Modules\User\Models\UserShiftPlanDailySettings;
+use Artwork\Modules\User\Models\UserShiftPlanSettings;
 use Artwork\Modules\User\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -43,10 +47,10 @@ readonly class CalendarDataService
         $startDate,
         $endDate,
         $calendarFilter,
+        User $user,
         $project = null,
         $room = null,
-        $desiresInventorySchedulingResource = null,
-        User $user
+        $desiresInventorySchedulingResource = null
     ): array {
 
         // Create the calendar period
@@ -107,7 +111,13 @@ readonly class CalendarDataService
         ];
     }
 
-    public function createCalendarPeriodDto($startDate, $endDate, User $user, bool $extraRow = true): array
+    public function createCalendarPeriodDto(
+        $startDate,
+        $endDate,
+        User $user,
+        bool $extraRow = true,
+        ?bool $isDailyView = null
+    ): array
     {
         if (!$startDate || !$endDate) {
             return [];
@@ -115,37 +125,39 @@ readonly class CalendarDataService
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
 
-        // Einmal alle Feiertage holen (per-day Filter lokal)
-        $holidaysByDate = $this->getHolidaysForRange($startDate, $endDate)
-            ->groupBy(fn(CalendarHolidayDTO $h) => $h->date);
+        // Einmal alle Feiertage holen und über alle Tage ihrer Dauer expandieren
+        $holidays = $this->getHolidaysForRange($startDate, $endDate);
+        $holidaysByDate = collect();
+        foreach ($holidays as $holiday) {
+            $holidayStart = Carbon::parse($holiday->date);
+            $holidayEnd = $holiday->end_date ? Carbon::parse($holiday->end_date) : $holidayStart;
+            foreach (CarbonPeriod::create($holidayStart, $holidayEnd) as $day) {
+                $key = $day->toDateString();
+                if (!$holidaysByDate->has($key)) {
+                    $holidaysByDate[$key] = collect();
+                }
+                $holidaysByDate[$key]->push($holiday);
+            }
+        }
 
-        $hoursOfDay = $user->getAttribute('daily_view')
+        $isDailyView = $isDailyView ?? (bool) $user->getAttribute('daily_view');
+        $hoursOfDay = $isDailyView
             ? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23))
             : [];
 
         $periodArray = [];
         foreach ($calendarPeriod as $period) {
             if ($extraRow && $period->isMonday()) {
-                $periodArray[] = [
-                    'isExtraRow'  => true,
-                    'weekNumber'  => $period->weekOfYear,
-                ];
+                $periodArray[] = new CalendarPeriodDTO(
+                    date: $period->toDateString(),
+                    holidays: null,
+                    hoursOfDay: null,
+                    isExtraRow: true,
+                );
             }
 
             $periodArray[] = new CalendarPeriodDTO(
-                day: $period->format('d.m.'),
-                dayString: $period->shortDayName,
-                isWeekend: $period->isWeekend(),
-                fullDay: $period->format('d.m.Y'),
-                shortDay: $period->format('d.m'),
-                withoutFormat: $period->toDateString(),
-                fullDayDisplay: $period->format('d.m.y'),
-                weekNumber: $period->weekOfYear,
-                isMonday: $period->isMonday(),
-                monthNumber: $period->month,
-                isSunday: $period->isSunday(),
-                isFirstDayOfMonth: $period->isSameDay($period->copy()->firstOfMonth()),
-                addWeekSeparator: $period->isSunday(),
+                date: $period->toDateString(),
                 holidays: $holidaysByDate->get($period->toDateString(), collect())->values(),
                 hoursOfDay: $hoursOfDay,
                 isExtraRow: false,
@@ -163,78 +175,80 @@ readonly class CalendarDataService
      */
     public function getFilteredRooms(
         ?UserFilter $filter,
-        ?UserCalendarSettings $userCalendarSettings,
+        null|UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
         CarbonInterface $startDate,
         CarbonInterface $endDate,
-        bool $considerShiftsForOccupancy = false
+        bool $considerShiftsForOccupancy = false,
+        ?Project $project = null
     ): SupportCollection {
-        $eventOccupancySubquery = function ($eventQuery) use ($filter, $startDate, $endDate): void {
-            $eventQuery->selectRaw(1)
-                ->from('events')
-                ->whereColumn('events.room_id', 'rooms.id')
-                ->unless(empty($filter?->event_type_ids), function ($q) use ($filter): void {
-                    $q->whereIn('events.event_type_id', $filter->event_type_ids);
-                })
-                ->where(function ($q) use ($startDate, $endDate): void {
-                    $q->where(function ($q) use ($startDate, $endDate): void {
-                        $q->whereBetween('start_time', [$startDate, $endDate])
-                            ->orWhereBetween('end_time', [$startDate, $endDate]);
-                    })->orWhere(function ($q) use ($startDate, $endDate): void {
-                        $q->where('start_time', '<=', $startDate)
-                            ->where('end_time', '>=', $endDate);
-                    });
-                });
+        $overlap = static function ($q, string $startCol, string $endCol) use ($startDate, $endDate): void {
+            // Overlap: start <= endDate AND end >= startDate (SQL-Server indexfreundlich)
+            $q->where($startCol, '<=', $endDate)
+                ->where($endCol, '>=', $startDate);
         };
 
-        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $startDate, $endDate): void {
-            $shiftQuery->selectRaw(1)
+        $eventOccupancySubquery = function ($eventQuery) use ($filter, $project, $overlap, $userCalendarSettings): void {
+            $eventQuery->selectRaw('1')
+                ->from('events')
+                ->whereColumn('events.room_id', 'rooms.id')
+                ->whereNull('events.deleted_at')
+                ->when($project !== null, fn ($q) => $q->where('events.project_id', $project->id))
+                ->when(!empty($filter?->event_type_ids), fn ($q) => $q->whereIn('events.event_type_id', $filter->event_type_ids))
+                ->where(fn ($q) => $overlap($q, 'events.start_time', 'events.end_time'))
+                ->where(function ($q) use ($userCalendarSettings): void {
+                    $q->where('events.is_planning', false);
+                    $user = Auth::user();
+                    if (
+                        $userCalendarSettings?->show_planned_events &&
+                        $user &&
+                        ($user->hasRole('artwork admin') || $user->can('can see planning calendar') || $user->can('can edit planning calendar'))
+                    ) {
+                        $q->orWhere('events.is_planning', true);
+                    }
+                });
+
+            if (!empty($filter?->event_property_ids)) {
+                $ids = $filter->event_property_ids;
+
+                $eventQuery->whereExists(function ($sq) use ($ids) {
+                    $sq->selectRaw('1')
+                        ->from('event_event_property as eep')
+                        ->whereColumn('eep.event_id', 'events.id')
+                        ->whereIn('eep.event_property_id', $ids);
+                });
+            }
+        };
+
+        $shiftOccupancySubquery = function ($shiftQuery) use ($filter, $project, $overlap): void {
+            $shiftQuery->selectRaw('1')
                 ->from('shifts')
                 ->whereNull('shifts.event_id')
                 ->whereColumn('shifts.room_id', 'rooms.id')
-                ->unless(empty($filter?->craft_ids), function ($q) use ($filter): void {
-                    $q->whereIn('shifts.craft_id', $filter->craft_ids);
-                })
-                ->where(function ($q) use ($startDate, $endDate): void {
-                    $q->whereBetween('shifts.start_date', [$startDate, $endDate])
-                        ->orWhereBetween('shifts.end_date', [$startDate, $endDate])
-                        ->orWhere(function ($q) use ($startDate, $endDate): void {
-                            $q->where('shifts.start_date', '<=', $startDate)
-                                ->where('shifts.end_date', '>=', $endDate);
-                        });
-                });
+                ->when($project !== null, fn ($q) => $q->where('shifts.project_id', $project->id))
+                ->when(!empty($filter?->craft_ids), fn ($q) => $q->whereIn('shifts.craft_id', $filter->craft_ids))
+                ->where(fn ($q) => $overlap($q, 'shifts.start_date', 'shifts.end_date'));
         };
 
-        $rooms = Room::select(['id', 'name', 'temporary', 'start_date', 'end_date'])
-            ->with(['admins'])
-            ->withCount('events')
+        $rooms = Room::query()
+            ->select(['id', 'name', 'temporary', 'start_date', 'end_date', 'everyone_can_book'])
+            ->with(['admins:id,first_name,last_name,profile_photo_path', 'requestableBy:id'])
             ->where('relevant_for_disposition', true)
             ->unlessRoomIds($filter?->room_ids)
             ->unlessRoomAttributeIds($filter?->room_attribute_ids)
             ->unlessAreaIds($filter?->area_ids)
             ->unlessRoomCategoryIds($filter?->room_category_ids)
-            // temporäre Räume nur, wenn Zeitraum sich überschneidet
             ->where(function ($q) use ($startDate, $endDate): void {
                 $q->where('temporary', false)
                     ->orWhereNull('temporary')
                     ->orWhere(function ($q) use ($startDate, $endDate): void {
                         $q->where('temporary', true)
-                            ->where(function ($q) use ($startDate, $endDate): void {
-                                $q->whereBetween('start_date', [$startDate, $endDate])
-                                    ->orWhereBetween('end_date', [$startDate, $endDate])
-                                    ->orWhere(function ($q) use ($startDate, $endDate): void {
-                                        $q->where('start_date', '<=', $startDate)
-                                            ->where('end_date', '>=', $endDate);
-                                    });
-                            });
+                            ->where('start_date', '<=', $endDate)
+                            ->where('end_date', '>=', $startDate);
                     });
             })
             ->when(
                 $userCalendarSettings?->hide_unoccupied_rooms,
-                function ($query) use (
-                    $eventOccupancySubquery,
-                    $shiftOccupancySubquery,
-                    $considerShiftsForOccupancy
-                ): void {
+                function ($query) use ($eventOccupancySubquery, $shiftOccupancySubquery, $considerShiftsForOccupancy): void {
                     if (!$considerShiftsForOccupancy) {
                         $query->whereExists($eventOccupancySubquery);
                     } else {
@@ -246,6 +260,7 @@ readonly class CalendarDataService
                 }
             )
             ->orderBy('position')
+            ->orderBy('id')
             ->get();
 
         return $rooms;
@@ -253,13 +268,16 @@ readonly class CalendarDataService
 
 
     public function getCalendarDateRange(
-        UserCalendarSettings $userCalendarSettings,
-        UserFilter $userCalendarFilter,
+        UserCalendarSettings|UserDailyViewCalendarSettings|UserShiftPlanSettings|UserShiftPlanDailySettings $userCalendarSettings,
+        ?UserFilter $userCalendarFilter,
         ?Project $project = null
     ): array {
         $today = Carbon::now();
 
         if (!$userCalendarSettings->getAttribute('use_project_time_period')) {
+            if ($userCalendarFilter === null) {
+                return [$today->copy()->startOfDay(), $today->copy()->addWeeks(1)->endOfDay()];
+            }
             return $this->userService->getUserCalendarFilterDatesOrDefault($userCalendarFilter);
         }
 
@@ -352,8 +370,8 @@ readonly class CalendarDataService
             }
 
             foreach ($room['content'] as $dateKey => $bucket) {
-                $hasEvents = isset($bucket['events']) && !empty($bucket['events']);
-                $hasShifts = isset($bucket['shifts']) && !empty($bucket['shifts']);
+                $hasEvents = isset($bucket['eventIds']) && !empty($bucket['eventIds']);
+                $hasShifts = isset($bucket['shiftIds']) && !empty($bucket['shiftIds']);
 
                 if ($hasEvents || $hasShifts) {
                     $occupiedDays[$dateKey] = true;
@@ -375,19 +393,23 @@ readonly class CalendarDataService
             ];
         }
 
-        // 2) Perioden filtern: nur echte DTOs, deren ->fullDay im belegten Set liegt
+        // 2) Perioden filtern: nur echte DTOs, deren Datum im belegten Set liegt
         $filteredPeriod = array_values(array_filter(
             $period,
             static function ($d) use ($occupiedDays) {
-                if (!($d instanceof CalendarPeriodDTO)) {
-                    return false; // Arrays (Week-Separators/ExtraRows) raus
+                if (!($d instanceof CalendarPeriodDTO) || $d->isExtraRow) {
+                    return false;
                 }
-                return isset($occupiedDays[$d->fullDay]);
+                $fullDay = Carbon::parse($d->date)->format('d.m.Y');
+                return isset($occupiedDays[$fullDay]);
             }
         ));
 
         // 3) Räume-Content auf belegte Tage reduzieren & in Perioden-Reihenfolge sortieren
-        $orderedKeys = array_map(static fn (CalendarPeriodDTO $p) => $p->fullDay, $filteredPeriod);
+        $orderedKeys = array_map(
+            static fn (CalendarPeriodDTO $p) => Carbon::parse($p->date)->format('d.m.Y'),
+            $filteredPeriod
+        );
 
         foreach ($calendarData->rooms as &$room) {
             if (!isset($room['content']) || !is_array($room['content'])) {

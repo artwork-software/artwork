@@ -38,11 +38,6 @@ class EventRepository extends BaseRepository
         return $this->event->newModelQuery();
     }
 
-    public function getEventsByProjectIdAndEventTypeId(int $projectId, int $eventTypeId): Collection
-    {
-        return Event::byProjectId($projectId)->byEventTypeId($eventTypeId)->get();
-    }
-
     public function getEventsWhereUserHasShiftsInPeriod(int $userId, CarbonPeriod $carbonPeriod): Collection
     {
         return Event::query()
@@ -56,6 +51,7 @@ class EventRepository extends BaseRepository
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',
@@ -96,6 +92,7 @@ class EventRepository extends BaseRepository
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',
@@ -135,6 +132,7 @@ class EventRepository extends BaseRepository
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',
@@ -200,7 +198,7 @@ class EventRepository extends BaseRepository
         return Event::find($id);
     }
 
-    public function getEventsWithoutRoom(int|Project $project = null, ?array $with = null): Collection
+    public function getEventsWithoutRoom(int|Project|null $project = null, ?array $with = null): Collection
     {
         /** @var Builder $builder */
         $builder = Event::query()->hasNoRoom();

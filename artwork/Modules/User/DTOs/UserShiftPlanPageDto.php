@@ -3,7 +3,6 @@
 namespace Artwork\Modules\User\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
-use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -40,7 +39,7 @@ class UserShiftPlanPageDto extends BaseDto
 
     public ?EloquentCollection $rooms = null;
 
-    public ?array $eventTypes = null;
+    public ?EloquentCollection $crafts = null;
 
     public ?EloquentCollection $projects = null;
 
@@ -155,9 +154,9 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setEventTypes(?array $eventTypes): self
+    public function setCrafts(?EloquentCollection $crafts): self
     {
-        $this->eventTypes = $eventTypes;
+        $this->crafts = $crafts;
 
         return $this;
     }
@@ -286,12 +285,9 @@ class UserShiftPlanPageDto extends BaseDto
         return $this->rooms;
     }
 
-    /**
-     * @return array<int, EventTypeResource>|null
-     */
-    public function getEventTypes(): ?array
+    public function getCrafts(): ?EloquentCollection
     {
-        return $this->eventTypes;
+        return $this->crafts;
     }
 
     public function getProjects(): ?EloquentCollection
@@ -335,7 +331,7 @@ class UserShiftPlanPageDto extends BaseDto
             'eventsWithTotalPlannedWorkingHours' => $this->getEventsWithTotalPlannedWorkingHours(),
             'totalPlannedWorkingHours' => $this->getTotalPlannedWorkingHours(),
             'rooms' => $this->getRooms(),
-            'eventTypes' => $this->getEventTypes(),
+            'crafts' => $this->getCrafts(),
             'projects' => $this->getProjects(),
             'shiftQualifications' => $this->getShiftQualifications(),
             'shifts' => $this->getShifts(),

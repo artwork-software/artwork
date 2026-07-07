@@ -28,6 +28,8 @@ class DepartmentShowResource extends JsonResource
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'position' => $user->position,
                 'profile_photo_url' => $user->profile_photo_url
             ]),
         ];

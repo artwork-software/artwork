@@ -5,17 +5,26 @@
     </div>
     <!-- Hauptkarte: Einheitliches Styling (ehemals "bei Kollision") -->
     <div :class="['w-full min-w-64 select-none rounded-lg border']"
-         :style="{ backgroundColor: hexColor + '40', borderColor: borderColor }">
+         :style="{ backgroundColor: hexColor + (isFollowUpDay ? '20' : '40'), borderColor: isFollowUpDay ? '#d1d5db' : borderColor }">
         <!-- Inhalt: zweizeilig (Zeit/Typ, darunter Titel + Menü) -->
         <div class="flex justify-between font-lexend min-w-0">
             <!-- Zeile 1: Zeit + Typ -->
             <div class="flex items-center gap-x-2 min-w-0 pr-3">
                 <div :class="['rounded-md', timePillPadding, 'whitespace-nowrap']" :style="{ backgroundColor: hexColor + '90' }">
                     <span v-if="event.allDay">{{ $t('All day') }}</span>
-                    <span v-else>{{ event.formattedDates.startTime }} - {{ event.formattedDates.endTime }}</span>
+                    <span v-else>
+                        <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
+                    </span>
                 </div>
+                <!-- Projekt-Status Punkt (Anzeigeeinstellung "Projektstatus") -->
+                <div
+                    v-if="displaySettings?.project_status && project?.status"
+                    class="shrink-0 flex-none size-3.5 min-w-3.5 min-h-3.5 rounded-full border"
+                    :style="{ backgroundColor: project.status.color + '33', borderColor: project.status.color }"
+                    v-tooltip.bottom="{ value: project.status.name, class: 'aw-tooltip' }"
+                ></div>
                 <div class="whitespace-nowrap font-medium" :class="subtitleTextClass">
-                    {{ event.eventType?.abbreviation }}:
+                    {{ eventType?.abbreviation }}:
                 </div>
                 <span
                     :class="['truncate flex-1 min-w-0 cursor-pointer', titleTextClass]"
@@ -26,19 +35,64 @@
                 >
                     {{ eventTitle }}
                 </span>
+                <!-- Künstler*innen (Anzeigeeinstellung "Künstler*innen") -->
+                <span
+                    v-if="displaySettings?.project_artists && project?.artistNames"
+                    class="truncate max-w-40 text-xs font-bold shrink-0"
+                    v-tooltip.bottom="{ value: project.artistNames, class: 'aw-tooltip' }"
+                >
+                    {{ project.artistNames }}
+                </span>
+                <!-- Projektleitung (Anzeigeeinstellung "Projektleitung") -->
+                <div
+                    v-if="displaySettings?.project_management && project?.leaders?.length"
+                    class="flex items-center gap-1 shrink-0"
+                >
+                    <UserPopoverTooltip
+                        v-for="user in project.leaders.slice(0, 3)"
+                        :key="'leader-' + user.id"
+                        :user="user"
+                        lazy-load
+                        width="5"
+                        height="5"
+                    />
+                    <div
+                        v-if="project.leaders.length > 3"
+                        class="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white"
+                    >
+                        +{{ project.leaders.length - 3 }}
+                    </div>
+                </div>
+                <!-- Termineigenschaften als Icons (wie im FullEventInCalendar) -->
+                <div v-if="event.eventProperties?.length" class="flex items-center gap-x-1 shrink-0">
+                    <div
+                        v-for="property in event.eventProperties"
+                        :key="'prop-' + property.id"
+                        v-tooltip.bottom="{ value: property.name, class: 'aw-tooltip' }"
+                    >
+                        <PropertyIcon :name="property.icon" class="size-3.5 opacity-90" />
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center min-w-0 pr-1">
+            <div v-if="!isFollowUpDay" class="flex items-center min-w-0 pr-1">
                 <div class="flex transition-opacity duration-150">
-                    <BaseMenu has-no-offset :dots-color="$page.props.auth.user.calendar_settings.high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
+                    <BaseMenu has-no-offset :dots-color="($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).high_contrast ? 'text-white' : ''" white-menu-background class="cursor-pointer">
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="showEventComponent = true" :icon="IconEdit" title="edit" />
                         <BaseMenuItem white-menu-background v-if="can('can plan shifts') || is('artwork admin')" @click="openConfirmDeleteModal" :icon="IconTrash" :title="$t('Delete event')" />
+                        <BaseMenuItem white-menu-background v-if="event.timelines?.length > 0 && (can('create events without request') || hasAdminRole())" @click="showCreateTimelinePresetModal = true" :icon="IconDeviceFloppy" :title="$t('Save timeline as preset')" />
+                        <BaseMenuItem white-menu-background @click="showSearchTimelinePresetModal = true" :icon="IconFileImport" :title="$t('Import timeline preset')" />
                     </BaseMenu>
                 </div>
             </div>
         </div>
+
+        <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
+        <div v-if="showNotes && event.description" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+            <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: event.description, class: 'aw-tooltip' }">{{ event.description }}</span>
+        </div>
     </div>
 
-    <div v-if="showEventDetails" class="mt-1 ml-2">
+    <div v-if="showEventDetails && !isFollowUpDay" class="mt-1 ml-2">
         <div v-if="event.timelines?.length !== 0" class="space-y-1">
             <div v-for="(timeline, index) in event.timelines"
                 :key="timeline.id"
@@ -51,10 +105,10 @@
                             {{ timeline.formatted_dates.end_date }} {{ timeline.end }}
                         </template>
                         <template v-else-if="timeline.start_or_end && timeline.start === timeline.end">
-                            {{ $t('From') }} {{ timeline.start }}
+                            {{ $t('from (time)') }} {{ timeline.start }}
                         </template>
                         <template v-else-if="!timeline.start_or_end && timeline.start === timeline.end">
-                            {{ $t('Until') }} {{ timeline.end }}
+                            {{ $t('until (time)') }} {{ timeline.end }}
                         </template>
                         <template v-else>
                             {{ timeline.start }} - {{ timeline.end }}
@@ -73,16 +127,15 @@
             </div>
         </div>
     </div>
-
     <EventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :calendarProjectPeriod="usePage().props.auth.user.calendar_settings.use_project_time_period"
+        :calendarProjectPeriod="(usePage().props.shift_plan_daily_settings ?? usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings)?.use_project_time_period"
         :project="null"
         :event="event"
-        :wantedRoomId="wantedRoom"
+        :wantedRoomId="wantedRoomId"
         :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
@@ -100,6 +153,18 @@
         :timelineToEdit="event.timelines"
         @close="showAddTimeLineModal = false"/>
 
+    <CreateTimelinePresetFormEvent
+        v-if="showCreateTimelinePresetModal"
+        :event="event"
+        @close="showCreateTimelinePresetModal = false"
+    />
+
+    <SearchTimelinePresetModal
+        v-if="showSearchTimelinePresetModal"
+        :event="event"
+        @close="showSearchTimelinePresetModal = false"
+    />
+
     <!-- Bestätigungsmodal: Termin löschen -->
     <ConfirmationComponent
         v-if="showConfirmDeleteModal"
@@ -116,10 +181,15 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {usePage} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {IconEdit, IconTrash, IconWand} from "@tabler/icons-vue";
+import {IconDeviceFloppy, IconEdit, IconFileImport, IconTrash, IconWand} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import { router } from '@inertiajs/vue3'
+import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
+import {computeEventFormattedDates} from "@/Composeables/calendarDateUtils.js";
+
+const { resolveEventType, resolveProject } = useShiftPlanLookups();
 
 const props = defineProps({
     event: {
@@ -128,15 +198,15 @@ const props = defineProps({
         default: () => ({})
     },
     rooms: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     eventStatuses: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     eventTypes: {
-        type: Object,
+        type: [Object, Array],
         required: true
     },
     first_project_calendar_tab_id: {
@@ -148,19 +218,52 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    // Position des Events innerhalb eines mehrtägigen Zeitraums
+    dayRole: {
+        type: String,
+        default: 'single', // 'single' | 'start' | 'middle' | 'end'
+    },
 })
 
-// Default-Anforderung: Termine mit mindestens einer Timeline sind aufgeklappt,
-// ohne Timeline bleiben sie eingeklappt. Der bisherige Check `!== 0` führte bei
-// `undefined` fälschlich zu "true". Daher sicher mit Null-Koaleszenz prüfen.
-const showEventDetails = ref(((props.event.timelines?.length ?? 0) > 0));
+// Resolve normalized data via lookups
+const eventType = computed(() => props.event.eventType ?? resolveEventType(props.event.eventTypeId) ?? {});
+const project = computed(() => props.event.project ?? resolveProject(props.event.projectId));
+const formattedDates = computed(() => props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end));
+
+// Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
+const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Anzeigeeinstellungen (Tagesansicht-Settings mit Fallback-Kette)
+const displaySettings = computed(() => {
+    const page = usePage()
+    return page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth.user.calendar_settings
+})
+
+// Anzeigeeinstellung "Notizen einblenden"
+const showNotes = computed(() => !!displaySettings.value?.shift_notes)
+
+// Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
+const displayStartTime = computed(() => {
+    if (props.dayRole === 'end' || props.dayRole === 'middle') return '00:00'
+    return formattedDates.value.startTime
+})
+const displayEndTime = computed(() => {
+    if (props.dayRole === 'middle') return '00:00'
+    return formattedDates.value.endTime
+})
+
+// Anforderung: Termine in der Daily-Ansicht standardmäßig aufgeklappt anzeigen,
+// damit der Button „Create new timeline“ direkt sichtbar ist.
+const showEventDetails = ref(true);
 const showAddTimeLineModal = ref(false);
+const showCreateTimelinePresetModal = ref(false);
+const showSearchTimelinePresetModal = ref(false);
 const showEventComponent = ref(false);
 const showConfirmDeleteModal = ref(false);
-const hexColor = computed(() => props.event.eventType.hex_code || '#cccccc');
+const hexColor = computed(() => eventType.value.hex_code || '#cccccc');
 const borderColor = computed(() => hexColor.value + 'A0')
 
-const wantedRoom = ref(null);
+const wantedRoomId = ref(props.event.roomId);
 const wantedDate = ref(null);
 const isPlanning = ref(false);
 const roomCollisions = ref([]);
@@ -170,7 +273,19 @@ const hasAdminRole = () => is('artwork admin')
 const AddEditTimelineModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue'),
     delay: 200,
-    timeout: 5000
+    timeout: 30000
+})
+
+const CreateTimelinePresetFormEvent = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/CreateTimelinePresetFormEvent.vue'),
+    delay: 200,
+    timeout: 30000
+})
+
+const SearchTimelinePresetModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Projects/Components/TimelineComponents/SearchTimelinePresetModal.vue'),
+    delay: 200,
+    timeout: 30000
 })
 
 const ConfirmationComponent = defineAsyncComponent({
@@ -214,7 +329,7 @@ const subtitleTextClass = computed(() => 'text-xs')
 
 // Titel: Eventname oder Projektname (gleiche Logik wie Anforderung)
 const eventTitle = computed(() => {
-    return props.event?.project?.name || props.event?.eventName || props.event?.eventType?.name || ''
+    return project.value?.name || props.event?.eventName || eventType.value?.name || ''
 })
 const eventTitleFull = computed(() => eventTitle.value)
 

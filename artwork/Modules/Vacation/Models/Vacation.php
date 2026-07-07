@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Vacation\Models;
 
-use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -28,21 +29,32 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Vacation extends Model
 {
     use HasFactory;
-    use HasChangesHistory;
+    use LogsActivity;
 
     protected $table = 'vacations';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('vacation')
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'start_time',
         'end_time',
         'date',
         'full_day',
+        'day_part',
         'comment',
         'is_series',
         'series_id',
         'vacationer_type',
         'vacationer_id',
-        'type'
+        'type',
+        'created_by'
     ];
 
     protected $casts = [
@@ -84,6 +96,11 @@ class Vacation extends Model
     public function getHasConflictsAttribute(): bool
     {
         return $this->conflicts()->exists();
+    }
+
+    public function scopeBetweenDates(Builder $builder, Carbon $startDate, Carbon $endDate): Builder
+    {
+        return $builder->whereBetween('date', [$startDate, $endDate]);
     }
 
     public function scopeByDate(Builder $builder, Carbon $date): Builder

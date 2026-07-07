@@ -8,7 +8,11 @@ import Icons from 'unplugin-icons/vite'
 import IconsResolver from 'unplugin-icons/resolver'
 
 const port = 5173;
-const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
+// DDEV_PRIMARY_URL includes the router port when it is non-standard (e.g. :8443).
+// Use the portless DDEV URL for Vite, and let Vite infer the origin outside DDEV.
+const ddevPrimaryUrl = process.env.DDEV_PRIMARY_URL_WITHOUT_PORT
+    ?? process.env.DDEV_PRIMARY_URL?.replace(/:\d+$/, '');
+const origin = ddevPrimaryUrl ? `${ddevPrimaryUrl}:${port}` : undefined;
 
 export default defineConfig({
     build: {

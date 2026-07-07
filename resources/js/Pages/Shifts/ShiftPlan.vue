@@ -1142,7 +1142,7 @@ async function loadShiftPlanWorkers() {
 // mehrfach hintereinander. Ohne Entprellung wäre das je ein voller Netzwerk-Reload +
 // komplettes Re-Render der Worker-Übersicht → sichtbares Ruckeln beim Scrollen.
 // Trailing-Debounce (350ms) fasst den Burst zu EINEM Reload zusammen; einzelne Worker
-// werden ohnehin gezielt über reloadSingleWorker (bereits gedrosselt) aktualisiert.
+// werden gezielt über reloadSingleWorker aktualisiert.
 const debouncedLoadShiftPlanWorkers = debounce(() => { loadShiftPlanWorkers() }, 350)
 
 function numericTypeToWorkerType(type: number|string): string {
@@ -1150,10 +1150,32 @@ function numericTypeToWorkerType(type: number|string): string {
     return map[type as number] ?? type
 }
 
-const recentReloads = new Map<string, number>()
-const pendingWorkerReloads = new Set<string>()
+type WorkerReloadState = {
+    promise: Promise<void>
+    shouldReloadAgain: boolean
+}
 
-async function reloadSingleWorker(workerId: number|string, workerType: string) {
+// Coalesce overlapping reloads per worker, then fetch once more if another
+// change arrived while the first request was still in flight.
+const workerReloads = new Map<string, WorkerReloadState>()
+
+async function runWorkerReloadQueue(
+    state: WorkerReloadState,
+    key: string,
+    workerId: number|string,
+    workerType: string,
+): Promise<void> {
+    try {
+        do {
+            state.shouldReloadAgain = false
+            await loadSingleWorker(workerId, workerType)
+        } while (state.shouldReloadAgain)
+    } finally {
+        workerReloads.delete(key)
+    }
+}
+
+async function reloadSingleWorker(workerId: number|string, workerType: string): Promise<void> {
     const start = props.dateValue?.[0]
     const end = props.dateValue?.[1]
     if (!start || !end || !workerId || !workerType) {
@@ -1161,22 +1183,30 @@ async function reloadSingleWorker(workerId: number|string, workerType: string) {
     }
 
     const key = `${workerType}:${workerId}`
-    const now = Date.now()
-    const lastReload = recentReloads.get(key)
-    if (lastReload && (now - lastReload) < 2000) {
-        // Trailing-Reload statt stillem Verwerfen: Zwei Mutationen am selben Worker
-        // innerhalb von 2s ließen die Zeile sonst stale, bis irgendein späteres
-        // Ereignis denselben Worker erneut lud.
-        if (!pendingWorkerReloads.has(key)) {
-            pendingWorkerReloads.add(key)
-            setTimeout(() => {
-                pendingWorkerReloads.delete(key)
-                reloadSingleWorker(workerId, workerType)
-            }, 2000 - (now - lastReload) + 50)
-        }
-        return
+    const activeReload = workerReloads.get(key)
+
+    if (activeReload) {
+        activeReload.shouldReloadAgain = true
+        return activeReload.promise
     }
-    recentReloads.set(key, now)
+
+    const state: WorkerReloadState = {
+        promise: Promise.resolve(),
+        shouldReloadAgain: false,
+    }
+
+    state.promise = runWorkerReloadQueue(state, key, workerId, workerType)
+    workerReloads.set(key, state)
+
+    return state.promise
+}
+
+async function loadSingleWorker(workerId: number|string, workerType: string): Promise<void> {
+    const start = props.dateValue?.[0]
+    const end = props.dateValue?.[1]
+    if (!start || !end || !workerId || !workerType) {
+        return loadShiftPlanWorkers()
+    }
 
     try {
         const { data } = await axios.get(route('shifts.worker.single'), {
@@ -3929,4 +3959,3 @@ function clearHighlightSelection() {
     z-index: 12;
 }
 </style>
-

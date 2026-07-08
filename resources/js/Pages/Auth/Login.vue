@@ -92,6 +92,28 @@
                         </form>
                     </div>
 
+                    <!-- SSO / OIDC Login -->
+                    <div v-if="identityProviderSources && identityProviderSources.length" class="mt-6">
+                        <div class="relative flex items-center">
+                            <div class="flex-grow border-t border-zinc-200"></div>
+                            <span class="mx-3 text-xs uppercase tracking-wide text-zinc-400">
+                                {{ $t('or') }}
+                            </span>
+                            <div class="flex-grow border-t border-zinc-200"></div>
+                        </div>
+
+                        <div class="mt-4 space-y-3">
+                            <a
+                                v-for="source in identityProviderSources"
+                                :key="source.id"
+                                :href="route('auth.oidc.redirect', { externalUserSource: source.id })"
+                                class="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 hover:text-blue-700"
+                            >
+                                {{ $t('Sign in with :name', { name: source.name }) }}
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Footer Links -->
                     <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-zinc-600">
                         <template v-if="$page.props.impressumLink">
@@ -139,6 +161,7 @@ import { reloadRolesAndPermissions } from 'laravel-permission-to-vuejs'
 defineProps<{
     canResetPassword: boolean
     status?: string
+    identityProviderSources?: { id: number; name: string }[]
 }>()
 
 const page = usePage()

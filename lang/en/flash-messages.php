@@ -135,5 +135,26 @@ return [
         'error' => [
             'update' => 'Shift setting could not be saved. Please try again.'
         ]
+    ],
+    'external_user_source' => [
+        'success' => [
+            'create' => 'External user source successfully created',
+            'update' => 'External user source successfully updated',
+            'delete' => 'External user source successfully deleted'
+        ]
+    ],
+    'external_user_group_mapping' => [
+        'success' => [
+            'create' => 'Group mapping successfully created',
+            'update' => 'Group mapping successfully updated',
+            'delete' => 'Group mapping successfully deleted'
+        ]
+    ],
+    'oidc' => [
+        'error' => [
+            'authentication_failed' => 'Authentication via the identity provider failed. Please try again.',
+            'missing_email' => 'The identity provider did not return an email address. Login is not possible.',
+            'domain_not_allowed' => 'Your email domain is not allowed for this login.'
+        ]
     ]
 ];

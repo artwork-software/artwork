@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserSourceRepository;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -14,7 +15,9 @@ use Illuminate\Config\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LoginResponse;
 
@@ -32,6 +35,19 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+
+        // Login-View mit aktiven Identity-Provider-Quellen für die OIDC/SSO-Buttons anreichern.
+        Fortify::loginView(function () {
+            return Inertia::render('Auth/Login', [
+                'canResetPassword' => Route::has('password.request'),
+                'status' => session('status'),
+                'identityProviderSources' => rescue(
+                    fn () => app(ExternalUserSourceRepository::class)->getActiveIdentityProviderSourcesForLogin(),
+                    collect(),
+                    false
+                ),
+            ]);
+        });
 
         RateLimiter::for('login', function (Request $request) {
             $email = (string) $request->email;

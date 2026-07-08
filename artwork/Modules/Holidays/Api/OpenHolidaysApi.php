@@ -5,7 +5,7 @@ namespace Artwork\Modules\Holidays\Api;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Carbon\Carbon;
 use Exception;
-use NoahNxT\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
+use CalderoSystems\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 
 readonly class OpenHolidaysApi implements HolidayApi
 {

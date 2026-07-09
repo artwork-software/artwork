@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c1b829c3f84f054cdf226c128ee5ee7d",
+    "content-hash": "f49a3a9947b50b12338c4432813b84fe",
     "packages": [
         {
             "name": "ahmedsaoud31/laravel-permission-to-vuejs",
@@ -571,6 +571,76 @@
                 }
             ],
             "time": "2026-02-10T14:33:43+00:00"
+        },
+        {
+            "name": "caldero-systems/laravel-open-holidays-api",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CalderoSystems/HolidayAPI.git",
+                "reference": "03146aa8f0eeac1643a1fe446614c40ae49bd158"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CalderoSystems/HolidayAPI/zipball/03146aa8f0eeac1643a1fe446614c40ae49bd158",
+                "reference": "03146aa8f0eeac1643a1fe446614c40ae49bd158",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^12.0|^13.0",
+                "php": "^8.4",
+                "saloonphp/saloon": "^3.0",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.22",
+                "nunomaduro/collision": "^8.0",
+                "orchestra/testbench": "^10.0|^11.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LaravelOpenHolidaysApi": "CalderoSystems\\LaravelOpenHolidaysApi\\Facades\\LaravelOpenHolidaysApi"
+                    },
+                    "providers": [
+                        "CalderoSystems\\LaravelOpenHolidaysApi\\LaravelOpenHolidaysApiServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CalderoSystems\\LaravelOpenHolidaysApi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Caldero Systems",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel wrapper for the Open Holidays API",
+            "homepage": "https://github.com/CalderoSystems/HolidayAPI",
+            "keywords": [
+                "CalderoSystems",
+                "laravel",
+                "laravel-open-holidays-api"
+            ],
+            "support": {
+                "issues": "https://github.com/CalderoSystems/HolidayAPI/issues",
+                "source": "https://github.com/CalderoSystems/HolidayAPI/tree/v1.0"
+            },
+            "time": "2026-07-07T22:42:36+00:00"
         },
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -7473,103 +7543,6 @@
                 "source": "https://github.com/nikic/PHP-Parser/tree/v5.7.0"
             },
             "time": "2025-12-06T11:56:16+00:00"
-        },
-        {
-            "name": "noahnxt/laravel-open-holidays-api",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/updatedData/laravel-open-holidays-api.git",
-                "reference": "71ad257c7e802ab11f0ac469fe79f3e6b804ab5d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/updatedData/laravel-open-holidays-api/zipball/71ad257c7e802ab11f0ac469fe79f3e6b804ab5d",
-                "reference": "71ad257c7e802ab11f0ac469fe79f3e6b804ab5d",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/contracts": "^12.0|^13.0",
-                "php": "^8.2",
-                "saloonphp/saloon": "^3.0",
-                "spatie/laravel-package-tools": "^1.16"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "NoahNxT\\LaravelOpenHolidaysApi\\LaravelOpenHolidaysApiServiceProvider"
-                    ],
-                    "aliases": {
-                        "LaravelOpenHolidaysApi": "NoahNxT\\LaravelOpenHolidaysApi\\Facades\\LaravelOpenHolidaysApi"
-                    }
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "NoahNxT\\LaravelOpenHolidaysApi\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "NoahNxT\\LaravelOpenHolidaysApi\\Tests\\": "tests/",
-                    "Workbench\\App\\": "workbench/app/"
-                }
-            },
-            "scripts": {
-                "post-autoload-dump": [
-                    "@composer run prepare"
-                ],
-                "clear": [
-                    "@php vendor/bin/testbench package:purge-skeleton --ansi"
-                ],
-                "prepare": [
-                    "@php vendor/bin/testbench package:discover --ansi"
-                ],
-                "build": [
-                    "@composer run prepare",
-                    "@php vendor/bin/testbench workbench:build --ansi"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "@composer run build",
-                    "@php vendor/bin/testbench serve"
-                ],
-                "analyse": [
-                    "vendor/bin/phpstan analyse"
-                ],
-                "test": [
-                    "vendor/bin/pest"
-                ],
-                "test-coverage": [
-                    "vendor/bin/pest --coverage"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Noah Gillard",
-                    "email": "noah.gillard@nxt-solutions.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A Laravel wrapper for the Open Holidays API",
-            "homepage": "https://github.com/noahnxt/laravel-open-holidays-api",
-            "keywords": [
-                "NoahNxT",
-                "laravel",
-                "laravel-open-holidays-api"
-            ],
-            "support": {
-                "source": "https://github.com/updatedData/laravel-open-holidays-api/tree/main"
-            },
-            "time": "2026-04-21T04:26:06+00:00"
         },
         {
             "name": "nunomaduro/termwind",
@@ -19086,7 +19059,7 @@
     "stability-flags": {
         "ahmedsaoud31/laravel-permission-to-vuejs": 20,
         "antonrom00/laravel-model-changes-history": 20,
-        "noahnxt/laravel-open-holidays-api": 20
+        "caldero-systems/laravel-open-holidays-api": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

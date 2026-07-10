@@ -5047,5 +5047,6 @@
     "Shifts committed: {0} – {1} ({2} shifts)": "Shifts committed: {0} – {1} ({2} shifts)",
     "Shift commitment revoked: {0} – {1} ({2} shifts)": "Shift commitment revoked: {0} – {1} ({2} shifts)",
     "Shift was committed": "Shift was committed",
-    "Shift commitment was revoked": "Shift commitment was revoked"
+    "Shift commitment was revoked": "Shift commitment was revoked",
+    "Filled fields: {0}": "Filled fields: {0}"
 }

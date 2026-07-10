@@ -5,7 +5,15 @@
                 {{ component.component.data.label }}
                 <InfoButtonComponent :component="component" />
             </div>
-            <div>
+            <div class="flex items-center gap-2">
+                <span
+                    v-if="nonDefaultValueCount > 0"
+                    class="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-white/70 px-1 text-[10px] font-semibold tabular-nums text-artwork-buttons-hover ring-1 ring-inset ring-artwork-navigation-color/30"
+                    :aria-label="$t('Filled fields: {0}', [nonDefaultValueCount])"
+                    :title="$t('Filled fields: {0}', [nonDefaultValueCount])"
+                >
+                    {{ nonDefaultValueCount }}
+                </span>
                 <component :is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
             </div>
         </DisclosureButton>
@@ -53,11 +61,11 @@
 <script setup>
 
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
-import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import InfoButtonComponent from "@/Pages/Projects/Tab/Components/InfoButtonComponent.vue";
 import {usePage} from "@inertiajs/vue3";
-import {inject, provide} from "vue";
+import {computed, inject, provide} from "vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import {countFolderNonDefaultValues} from "@/Helper/ProjectComponentValueState.js";
 import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
 import Checkbox from "@/Pages/Projects/Tab/Components/Checkbox.vue";
 import Title from "@/Pages/Projects/Tab/Components/Title.vue";
@@ -160,6 +168,16 @@ const componentMapping = {
     GroupProjectDisplayComponent,
     ProjectGroupDisplayComponent
 };
+
+const nonDefaultValueCount = computed(() =>
+    countFolderNonDefaultValues(
+        props.component.disclosure_components?.filter(
+            (disclosureComponent) =>
+                canSeeComponent(disclosureComponent.component)
+                && Boolean(componentMapping[disclosureComponent.component?.type])
+        )
+    )
+);
 
 
 </script>

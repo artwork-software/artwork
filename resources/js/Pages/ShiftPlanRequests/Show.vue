@@ -10,28 +10,6 @@
                     <IconArrowLeft class="h-4 w-4"/>
                     <span>{{ $t('Back to shift plan requests') }}</span>
                 </Link>
-
-                <!-- Blättern zwischen den Anfragen desselben Gewerks -->
-                <div v-if="navigation?.previous || navigation?.next" class="ml-auto flex items-center gap-2">
-                    <Link
-                        v-if="navigation?.previous"
-                        :href="requestShowUrl(navigation.previous.id)"
-                        class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                        :title="$t('Previous request')"
-                    >
-                        <IconChevronLeft class="h-4 w-4"/>
-                        <span>KW {{ navigation.previous.week_number }} / {{ navigation.previous.year }}</span>
-                    </Link>
-                    <Link
-                        v-if="navigation?.next"
-                        :href="requestShowUrl(navigation.next.id)"
-                        class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                        :title="$t('Next request')"
-                    >
-                        <span>KW {{ navigation.next.week_number }} / {{ navigation.next.year }}</span>
-                        <IconChevronRight class="h-4 w-4"/>
-                    </Link>
-                </div>
             </div>
 
             <!-- Header Card -->
@@ -42,8 +20,15 @@
                 @start-reject="startReject"
             />
 
-            <!-- Day Header -->
-            <WeekOverview :days="daysComputed" :grid-style="gridStyle"/>
+            <ShiftPlanRequestWeekNavigator
+                ref="weekNavigator"
+                :request="request"
+                :navigation="navigation"
+                :days="daysComputed"
+                :grid-style="gridStyle"
+                :request-show-url="requestShowUrl"
+                @navigate="rememberReviewPosition"
+            />
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
@@ -55,6 +40,7 @@
                     :reject-active="rejectState.active"
                     :selected-days="rejectState.selectedDays"
                     :shift-selections="rejectState.shiftSelections"
+                    :is-comparison-focus="highlightedRowKey === row.key"
                     @open-history="openHistoryDrawer"
                 />
 
@@ -107,15 +93,16 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref} from 'vue';
-import {IconArrowLeft, IconChevronLeft, IconChevronRight} from '@tabler/icons-vue';
+import {IconArrowLeft} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
-import WeekOverview from './components/WeekOverview.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
+import ShiftPlanRequestWeekNavigator from './components/ShiftPlanRequestWeekNavigator.vue';
 import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
 import AcceptShiftPlanRequestModal from './components/AcceptShiftPlanRequestModal.vue';
 import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useI18n} from 'vue-i18n';
+import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
 
 const {t} = useI18n();
 
@@ -135,6 +122,12 @@ const requestShowUrl = (id) => route(
     props.isMyRequest ? 'shift-plan-requests.my.show' : 'shift-plan-requests.show',
     id
 );
+
+const {
+    highlightedRowKey,
+    rememberReviewPosition,
+    weekNavigator,
+} = useShiftPlanRequestWeekNavigation(() => props.request.id);
 
 // id → Name der Qualifikation (für die Anzeige in den Schichtzellen)
 const qualificationNames = computed(() => {

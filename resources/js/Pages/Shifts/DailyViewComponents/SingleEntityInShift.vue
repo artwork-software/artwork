@@ -278,7 +278,14 @@ const props = defineProps({
 })
 
 
-const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
+// Lookup-Craft bevorzugen: shift.craft aus den Payloads ist schlank (ohne craft_shift_planer),
+// nur der craftsById-Lookup enthält die Planer für isCurrentUserPlannerOfShiftCraft
+const craft = computed(() => {
+    const own = props.shift.craft;
+    const resolved = resolveCraft(props.shift.craftId ?? own?.id);
+    if (resolved && own) return { ...own, ...resolved };
+    return resolved ?? own ?? {};
+});
 
 // Normalisierte Liste der Qualifikationen (Array)
 const shiftQualificationsArray = computed(() =>

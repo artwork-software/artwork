@@ -123,7 +123,14 @@ const props = defineProps({
 const emit = defineEmits(['shiftDeleted'])
 const page = usePage()
 
-const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
+// Lookup-Craft bevorzugen: shift.craft aus WorkerShiftPlanResource ist schlank (ohne craft_shift_planer),
+// nur der craftsById-Lookup enthält die Planer für isCurrentUserPlannerOfShiftCraft
+const craft = computed(() => {
+    const own = props.shift.craft;
+    const resolved = resolveCraft(props.shift.craftId ?? own?.id);
+    if (resolved && own) return { ...own, ...resolved };
+    return resolved ?? own ?? {};
+});
 const showConfirmDeleteModal = ref(false);
 const showRequestWorkTimeChangeModal = ref(false);
 const isDeletingUser = ref(false);

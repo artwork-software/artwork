@@ -96,42 +96,53 @@
                                                 >
                                                     <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
                                                     <template v-if="isCellVisible(cellKey(day, room))">
-                                                        <template v-for="(cellEvents) in [eventsInCell(day, room)]" :key="0">
-                                                            <div
-                                                                v-for="(evt, idx) in cellEvents"
-                                                                :key="evt.id"
-                                                                :class="[
-                                                                    'py-0.5',
-                                                                    (settings.expand_days && !!evt.allDay) ? 'flex-1 min-h-0' : ''
-                                                                ]"
-                                                                :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
-                                                                @click="onEventClick(evt, $event)"
-                                                            >
-                                                                <AsyncSingleEventInCalendar
-                                                                    v-memo="[evt.id, evt.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
-                                                                    :event="evt"
-                                                                    :multi-edit="multiEdit"
-                                                                    :font-size="fontSizeCalc"
-                                                                    :line-height="lineHeightCalc"
-                                                                    :rooms="rooms"
-                                                                    :has-admin-role="isAdmin"
-                                                                    :width="cardWidthNum"
-                                                                    :first_project_tab_id="first_project_tab_id"
-                                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
-                                                                    :verifierForEventTypIds="verifierForEventTypIds"
-                                                                    :is-planning="isPlanning"
-                                                                    :is-height-full="settings.expand_days && !!evt.allDay"
-                                                                    @edit-event="showEditEventModel"
-                                                                    @edit-sub-event="openAddSubEventModal"
-                                                                    @open-add-sub-event-modal="openAddSubEventModal"
-                                                                    @open-confirm-modal="openDeleteEventModal"
-                                                                    @show-decline-event-modal="openDeclineEventModal"
-                                                                    @accept-room-request="acceptSingleRoomRequest"
-                                                                    @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                                                />
-                                                            </div>
+                                                        <template v-for="(cellItems) in [itemsInCell(day, room)]" :key="0">
+                                                            <template v-for="(item, idx) in cellItems" :key="`${item.type}-${item.data.id}`">
+                                                                <div
+                                                                    v-if="item.type === 'shift'"
+                                                                    class="py-0.5"
+                                                                >
+                                                                    <ShiftInCalendarCell
+                                                                        :shift="item.data"
+                                                                        :day="dayKey(day)"
+                                                                        @shift-edited="refetchMonthForDay(day)"
+                                                                    />
+                                                                </div>
+                                                                <div
+                                                                    v-else
+                                                                    :class="[
+                                                                        'py-0.5',
+                                                                        (settings.expand_days && !!item.data.allDay) ? 'flex-1 min-h-0' : ''
+                                                                    ]"
+                                                                    :id="`event_scroll-${idx}-day-${day.withoutFormat}-room-${(room.roomId ?? room.id)}`"
+                                                                    @click="onEventClick(item.data, $event)"
+                                                                >
+                                                                    <AsyncSingleEventInCalendar
+                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                        :event="item.data"
+                                                                        :multi-edit="multiEdit"
+                                                                        :font-size="fontSizeCalc"
+                                                                        :line-height="lineHeightCalc"
+                                                                        :rooms="rooms"
+                                                                        :has-admin-role="isAdmin"
+                                                                        :width="cardWidthNum"
+                                                                        :first_project_tab_id="first_project_tab_id"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                                        :verifierForEventTypIds="verifierForEventTypIds"
+                                                                        :is-planning="isPlanning"
+                                                                        :is-height-full="settings.expand_days && !!item.data.allDay"
+                                                                        @edit-event="showEditEventModel"
+                                                                        @edit-sub-event="openAddSubEventModal"
+                                                                        @open-add-sub-event-modal="openAddSubEventModal"
+                                                                        @open-confirm-modal="openDeleteEventModal"
+                                                                        @show-decline-event-modal="openDeclineEventModal"
+                                                                        @accept-room-request="acceptSingleRoomRequest"
+                                                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                                                    />
+                                                                </div>
+                                                            </template>
                                                             <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
-                                                            <div v-if="cellEvents.length <= 1 && !settings.expand_days" class="h-2"></div>
+                                                            <div v-if="cellItems.length <= 1 && !settings.expand_days" class="h-2"></div>
                                                         </template>
                                                     </template>
                                                 </div>
@@ -158,7 +169,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="usePage().props.auth.user.daily_view && !usePage().props.auth.user.at_a_glance">
+            <div v-else-if="usePage().props.auth.user.calendar_daily_view && !usePage().props.auth.user.at_a_glance">
                 <AsyncDailyViewCalendar
                     :multi-edit="multiEdit"
                     :rooms="rooms"
@@ -178,6 +189,7 @@
                     @show-decline-event-modal="openDeclineEventModal"
                     @accept-room-request="acceptSingleRoomRequest"
                     @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                    @shift-edited="refetchMonthForDay"
                     :verifierForEventTypIds="verifierForEventTypIds"
                     :is-planning="isPlanning"
                 />
@@ -193,10 +205,17 @@
                 <div class="flex gap-0.5">
                     <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }">
                         <template v-for="day in days" :key="day.fullDay">
-                            <div v-for="event in eventsInCell(day, room)" :key="event.id" class="mb-0.5" :id="'scroll_container-' + day.withoutFormat">
-                                <div class="py-0.5" @click="onEventClick(event, $event)">
+                            <div v-for="item in itemsInCell(day, room)" :key="`${item.type}-${item.data.id}`" class="mb-0.5" :id="'scroll_container-' + day.withoutFormat">
+                                <div v-if="item.type === 'shift'" class="py-0.5">
+                                    <ShiftInCalendarCell
+                                        :shift="item.data"
+                                        :day="dayKey(day)"
+                                        @shift-edited="refetchMonthForDay(day)"
+                                    />
+                                </div>
+                                <div v-else class="py-0.5" @click="onEventClick(item.data, $event)">
                                     <AsyncSingleEventInCalendar
-                                        :event="event"
+                                        :event="item.data"
                                         :multi-edit="multiEdit"
                                         :font-size="fontSizeCalc"
                                         :line-height="lineHeightCalc"
@@ -431,12 +450,15 @@ const AsyncSingleEventInCalendar = defineAsyncComponent({
     loader: () =>  import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
     loadingComponent: CalendarPlaceholder,
 });
+const ShiftInCalendarCell = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/Elements/ShiftInCalendarCell.vue'),
+});
 
 // User & Settings
 const user = computed(() => page.props.auth.user);
 const settings = computed(() => user.value.calendar_settings);
 const zoom_factor = ref(user.value.zoom_factor ?? 1);
-const isDaily = computed(() => !!user.value.daily_view);
+const isDaily = computed(() => !!user.value.calendar_daily_view);
 const atAGlance = computed(() => !!user.value.at_a_glance);
 
 // Maße/Styles
@@ -1320,6 +1342,52 @@ const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
 
 const eventsInCell = (day: any, room: any) =>
     (room.content?.[dayKey(day)]?.events ?? []);
+
+const shiftsInCell = (day: any, room: any) =>
+    (room.content?.[dayKey(day)]?.shifts ?? []);
+
+// "dd.mm.yyyy" → "yyyy-mm-dd"
+const deKeyToIso = (deKey: string) => {
+    const parts = String(deKey ?? '').split('.');
+    return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : '';
+};
+
+// Effektive Startzeit ("HH:MM") eines Items an diesem Tag: beginnt es an einem
+// Vortag, zählt es ab 00:00 — so mischen sich Termine und Schichten korrekt.
+const itemStartTimeOnDay = (item: any, dayIso: string): string => {
+    if (item.type === 'shift') {
+        const shift = item.data;
+        if (shift.startDate && shift.startDate < dayIso) return '00:00';
+        const time = String(shift.start ?? '');
+        const match = time.match(/(\d{2}:\d{2})/);
+        return match ? match[1] : '00:00';
+    }
+    const start = String(item.data.start ?? ''); // "Y-m-d H:i"
+    const datePart = start.slice(0, 10);
+    if (datePart && datePart < dayIso) return '00:00';
+    const match = start.match(/(\d{2}:\d{2})$/) ?? start.match(/\s(\d{2}:\d{2})/);
+    return match ? match[1] : '00:00';
+};
+
+// Termine + eigenständige Schichten einer Zelle, gemischt nach Startzeit sortiert
+const itemsInCell = (day: any, room: any) => {
+    const events = eventsInCell(day, room).map((evt: any) => ({ type: 'event', data: evt }));
+    const shifts = shiftsInCell(day, room).map((shift: any) => ({ type: 'shift', data: shift }));
+    if (shifts.length === 0) return events;
+    const dayIso = day.withoutFormat ?? deKeyToIso(dayKey(day));
+    return [...events, ...shifts].sort((a, b) =>
+        itemStartTimeOnDay(a, dayIso).localeCompare(itemStartTimeOnDay(b, dayIso))
+    );
+};
+
+// Nach Schicht-Bearbeitung den betroffenen Monat neu laden
+async function refetchMonthForDay(day: any) {
+    const key = monthKeyFromDay(day);
+    if (!key) return;
+    loadedMonths.value.delete(key);
+    failedMonths.value.delete(key);
+    await loadMonth(key, ++currentEpoch);
+}
 
 // When multi-edit is enabled, clicking an event toggles its selection
 const onEventClick = (evt: any, e?: MouseEvent) => {

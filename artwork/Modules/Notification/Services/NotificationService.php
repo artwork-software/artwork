@@ -389,7 +389,7 @@ class NotificationService
                 }
                 break;
             case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
-                if ($this->getNotificationTo() !== Auth::id()) {
+                if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new EventNotification($body, $this->getBroadcastMessage())
@@ -702,14 +702,10 @@ class NotificationService
 
     public function deleteUpsertRoomRequestNotificationByEventId(int $eventId): void
     {
-        $notificationCollection = DB::table('notifications')
-            ->where('type', EventNotification::class)
-            ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST)
+        DB::table('notifications')
+            ->where('type', RoomRequestNotification::class)
+            ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST->value)
             ->where('data->eventId', $eventId)
-            ->get('id');
-
-        if ($notificationCollection->isNotEmpty()) {
-            DB::table('notifications')->delete($notificationCollection->first()->id);
-        }
+            ->delete();
     }
 }

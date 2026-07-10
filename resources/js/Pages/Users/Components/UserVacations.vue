@@ -1,118 +1,166 @@
 <template>
     <div class="my-5">
-        <!-- Absences -->
-        <div v-if="vacations?.length > 0" class="mb-6">
-            <h3 class="mb-3 text-base font-semibold text-zinc-800">
-                {{ $t('Absences') }}
+        <!-- Kopf mit Neuer-Eintrag-Button -->
+        <div v-if="canManage" class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200">
+                {{ $t('Availability & absence') }}
             </h3>
-            <div v-for="vacation in vacationsWithType" :key="vacationKey(vacation)">
-                <SingleUserVacation
-                    :type="type"
-                    :createShowDate="createShowDate"
-                    :vacation="vacation"
-                    :user="user"
-                    :vacationSelectCalendar="vacationSelectCalendar"
-                />
-            </div>
+            <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-artwork-buttons-create px-3 py-1.5 text-sm font-medium text-white hover:bg-artwork-buttons-hover transition"
+                @click="$emit('create')"
+            >
+                <PlusIcon class="h-4 w-4" />
+                {{ $t('New entry') }}
+            </button>
         </div>
 
-        <!-- Registered availability -->
-        <div v-if="availabilities?.length > 0" class="mb-6">
-            <h3 class="mb-3 text-base font-semibold text-zinc-800">
+        <!-- Abwesenheiten -->
+        <div v-if="vacationEntries.length > 0" class="mb-6">
+            <h4 class="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
+                {{ $t('Absences') }}
+            </h4>
+            <SingleUserVacation
+                v-for="entry in vacationEntries"
+                :key="entryKey(entry)"
+                :entry="entry"
+                :user="user"
+                :type="type"
+            />
+        </div>
+
+        <!-- Verfügbarkeiten -->
+        <div v-if="availabilityEntries.length > 0" class="mb-6">
+            <h4 class="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
                 {{ $t('Registered availability') }}
-            </h3>
-            <div v-for="availability in availabilitiesWithType" :key="availabilityKey(availability)">
-                <SingleUserVacation
-                    :type="type"
-                    :createShowDate="createShowDate"
-                    :vacation="availability"
-                    :user="user"
-                    :vacationSelectCalendar="vacationSelectCalendar"
-                />
-            </div>
+            </h4>
+            <SingleUserVacation
+                v-for="entry in availabilityEntries"
+                :key="entryKey(entry)"
+                :entry="entry"
+                :user="user"
+                :type="type"
+            />
         </div>
 
         <!-- Empty state -->
-        <div v-if="hasNoEntries" class="mb-6">
-            <h3 class="mb-2 text-base font-semibold text-zinc-800">
-                {{ $t('Availability & absence') }}
-            </h3>
-            <p class="text-sm text-zinc-500">
+        <div v-if="hasNoEntries" class="mb-6 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 p-4">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">
                 {{ $t('No entry has yet been made for this month.') }}
             </p>
         </div>
     </div>
-
-    <!-- Add / Edit trigger -->
-    <div
-        v-if="canManage"
-        class="inline-flex items-center gap-2 cursor-pointer select-none"
-        @click="showAddEditVacationsModal = true"
-    >
-        <PlusCircleIcon class="h-5 w-5 text-blue-600" />
-        <span class="text-sm text-blue-700 underline underline-offset-2">
-      {{ $t('Edit availability & absence') }}
-    </span>
-    </div>
-
-    <!-- Modal -->
-    <AddEditVacationsModal
-        v-if="showAddEditVacationsModal"
-        :createShowDate="createShowDate"
-        :type="type"
-        :user="user"
-        :vacationSelectCalendar="vacationSelectCalendar"
-        :selectedDate="showVacationsAndAvailabilitiesDate"
-        @closed="showAddEditVacationsModal = false"
-    />
 </template>
 
 <script setup>
-import { computed, ref, getCurrentInstance } from 'vue'
+import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import { PlusCircleIcon } from '@heroicons/vue/outline'
-import AddEditVacationsModal from '@/Pages/Users/Components/AddEditVacationsModal.vue'
+import { PlusIcon } from '@heroicons/vue/outline'
+import dayjs from 'dayjs'
 import SingleUserVacation from '@/Pages/Users/Components/SingleUserVacation.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
-// Props unverändert
+
 const props = defineProps({
     user: { type: Object, required: true },
     vacations: { type: Array, default: () => [] },
     type: { type: String, default: '' },
-    vacationSelectCalendar: { type: [Boolean, Array], default: false },
-    dateToShow: { type: Array, default: () => [] },
-    createShowDate: { type: Array, default: [] },
     availabilities: { type: Array, default: () => [] },
     showVacationsAndAvailabilitiesDate: { type: String, default: '' },
 })
 
-const showAddEditVacationsModal = ref(false)
+defineEmits(['create'])
 
-// Schlüssel (stabil) für v-for
-const vacationKey = (v) => v?.id ?? `${v?.date_casted}-${v?.start_time}-${v?.end_time}-v`
-const availabilityKey = (a) => a?.id ?? `${a?.date_casted}-${a?.start_time}-${a?.end_time}-a`
-
-// Ursprüngliche Computeds: Typen anreichern (ohne Original zu mutieren)
-const vacationsWithType = computed(() =>
-    (props.vacations || []).map(v => ({ ...v, type: 'vacation' }))
-)
-const availabilitiesWithType = computed(() =>
-    (props.availabilities || []).map(a => ({ ...a, type: 'available' }))
-)
-
-const hasNoEntries = computed(
-    () => (!props.availabilities || props.availabilities.length <= 0)
-        && (!props.vacations || props.vacations.length <= 0)
-)
-
-// Berechtigungen: $can & hasAdminRole aus globalem Kontext (wie vorher)
-const { proxy } = getCurrentInstance()
 const page = usePage()
 
 const canManage = computed(() =>
     can('can manage workers') ||
     is('artwork admin') ||
-    props.user?.id === page.props?.auth?.user?.id ||
+    (props.type !== 'freelancer' && props.user?.id === page.props?.auth?.user?.id) ||
     can('can manage availability')
 )
+
+const toDateString = (value) => {
+    const date = dayjs(value)
+    return date.isValid() ? date.format('YYYY-MM-DD') : ''
+}
+
+/**
+ * Gruppiert die tagbasierten Zeilen zu Anzeige-Einträgen:
+ * - ohne Serie -> einzelner Tag (kind: single)
+ * - tägliche Serie -> ein Zeitraum-Eintrag (kind: range)
+ * - wöchentliche Serie -> ein Wiederholungs-Eintrag (kind: weekly)
+ * series_start_date/series_end_date kommen aus dem Backend über alle Serientage
+ * (auch außerhalb des angezeigten Monats).
+ */
+const buildEntries = (rows, dataType) => {
+    const singles = []
+    const seriesGroups = new Map()
+
+    for (const row of rows || []) {
+        if (row.series_id && row.series) {
+            if (!seriesGroups.has(row.series_id)) {
+                seriesGroups.set(row.series_id, [])
+            }
+            seriesGroups.get(row.series_id).push(row)
+        } else {
+            singles.push(row)
+        }
+    }
+
+    const entries = singles.map((row) => ({
+        kind: 'single',
+        type: dataType,
+        id: row.id,
+        seriesId: null,
+        startDate: toDateString(row.date),
+        endDate: toDateString(row.date),
+        dateCasted: row.date_casted,
+        fullDay: !!row.full_day,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        comment: row.comment,
+        hasConflicts: !!row.has_conflicts,
+        conflicts: row.conflicts || [],
+    }))
+
+    for (const rowsOfSeries of seriesGroups.values()) {
+        rowsOfSeries.sort((a, b) => toDateString(a.date).localeCompare(toDateString(b.date)))
+        const first = rowsOfSeries[0]
+        const frequency = first.series?.frequency
+        const kind = frequency === 'weekly' ? 'weekly' : 'range'
+
+        const rowDates = rowsOfSeries.map((r) => toDateString(r.date))
+        const startDate = toDateString(first.series_start_date) || rowDates[0]
+        const endDate = toDateString(first.series_end_date) || rowDates[rowDates.length - 1]
+
+        entries.push({
+            kind,
+            type: dataType,
+            id: first.id,
+            seriesId: first.series_id,
+            startDate,
+            endDate,
+            seriesEndDate: toDateString(first.series?.end_date) || endDate,
+            dateCasted: first.date_casted,
+            fullDay: !!first.full_day,
+            startTime: first.start_time,
+            endTime: first.end_time,
+            comment: first.comment,
+            hasConflicts: rowsOfSeries.some((r) => r.has_conflicts),
+            conflicts: rowsOfSeries.flatMap((r) => r.conflicts || []),
+        })
+    }
+
+    entries.sort((a, b) => a.startDate.localeCompare(b.startDate))
+    return entries
+}
+
+const vacationEntries = computed(() => buildEntries(props.vacations, 'vacation'))
+const availabilityEntries = computed(() => buildEntries(props.availabilities, 'available'))
+
+const hasNoEntries = computed(
+    () => vacationEntries.value.length === 0 && availabilityEntries.value.length === 0
+)
+
+const entryKey = (entry) => `${entry.type}-${entry.seriesId ?? `single-${entry.id}`}`
 </script>

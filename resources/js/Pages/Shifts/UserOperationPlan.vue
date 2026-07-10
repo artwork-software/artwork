@@ -32,7 +32,7 @@ export default {
 </script>
 
 <template>
-    <ShiftHeader>
+    <ShiftHeader :title="$t('My Operational plan')">
         <div class="mx-5">
             <UserShiftPlan type="user"
                            :totalPlannedWorkingHours="this.totalPlannedWorkingHours"

@@ -15,8 +15,11 @@ class UpdateBiProjectDataRequest extends FormRequest
     {
         return [
             'visitors_total' => ['nullable', 'integer', 'min:0'],
+            'visitors_not_applicable' => ['boolean'],
             'sold_tickets_total' => ['nullable', 'integer', 'min:0'],
+            'sold_tickets_not_applicable' => ['boolean'],
             'revenue_total' => ['nullable', 'numeric', 'min:0'],
+            'revenue_not_applicable' => ['boolean'],
             'is_new_production' => ['boolean'],
             'is_co_production' => ['boolean'],
             'is_own_production' => ['boolean'],

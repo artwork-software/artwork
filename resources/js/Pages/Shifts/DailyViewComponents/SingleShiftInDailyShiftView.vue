@@ -10,6 +10,27 @@
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
+                    <!-- Dienstplanfreigabe: festgeschrieben (Schloss) / angefragt (Pull-Request) -->
+                    <ToolTipComponent
+                        v-if="shift.isCommitted ?? shift.is_committed"
+                        icon="IconLock"
+                        icon-size="size-3.5 text-black"
+                        :stroke="2"
+                        :tooltip-text="$t('Committed')"
+                        direction="top"
+                        black-icon
+                        classes-button="ml-1"
+                    />
+                    <ToolTipComponent
+                        v-else-if="shift.inWorkflow ?? shift.in_workflow"
+                        icon="IconGitPullRequest"
+                        icon-size="size-3.5 text-black"
+                        :stroke="2"
+                        :tooltip-text="$t('Requested')"
+                        direction="top"
+                        black-icon
+                        classes-button="ml-1"
+                    />
                     <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
                         ({{ shiftGroupResolved.name }})
                     </div>
@@ -80,8 +101,8 @@
                 </div>
             </div>
 
-            <!-- Shift Description -->
-            <div class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
+            <!-- Shift Description (Anzeigeeinstellung "Notizen einblenden") -->
+            <div v-if="showNotes" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
                 <template v-if="shift.description">
                     <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
                     <component
@@ -404,6 +425,13 @@ const props = defineProps({
 
 // Folgetag (End-/Mitteltag): visuell abgehoben, nur Kerninfos
 const isFollowUpDay = computed(() => props.dayRole === 'end' || props.dayRole === 'middle')
+
+// Anzeigeeinstellung "Notizen einblenden" (Tagesansicht-Settings mit Fallback-Kette)
+const showNotes = computed(() => {
+    const pageProps = usePage().props
+    const settings = pageProps.shift_plan_daily_settings ?? pageProps.shift_plan_settings ?? pageProps.auth.user.calendar_settings
+    return !!settings?.shift_notes
+})
 
 // Normalize time values that may arrive as "HH:MM" or ISO datetime "2026-05-18T10:00:00.000000Z"
 function normalizeTime(val) {

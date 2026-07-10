@@ -20,8 +20,15 @@
                 @start-reject="startReject"
             />
 
-            <!-- Day Header -->
-            <WeekOverview :days="daysComputed" :grid-style="gridStyle"/>
+            <ShiftPlanRequestWeekNavigator
+                ref="weekNavigator"
+                :request="request"
+                :navigation="navigation"
+                :days="daysComputed"
+                :grid-style="gridStyle"
+                :request-show-url="requestShowUrl"
+                @navigate="rememberReviewPosition"
+            />
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
@@ -33,6 +40,7 @@
                     :reject-active="rejectState.active"
                     :selected-days="rejectState.selectedDays"
                     :shift-selections="rejectState.shiftSelections"
+                    :is-comparison-focus="highlightedRowKey === row.key"
                     @open-history="openHistoryDrawer"
                 />
 
@@ -50,6 +58,12 @@
             :is-my-request="isMyRequest"
             @close="closeHistoryDrawer"
             @reject-change="rejectRequestChange"
+        />
+
+        <AcceptShiftPlanRequestModal
+            v-if="acceptModalOpen"
+            @close="acceptModalOpen = false"
+            @confirm="confirmAccept"
         />
 
         <RejectShiftPlanRequestModal
@@ -78,15 +92,17 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
-import {computed, reactive} from 'vue';
+import {computed, reactive, ref} from 'vue';
 import {IconArrowLeft} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
-import WeekOverview from './components/WeekOverview.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
+import ShiftPlanRequestWeekNavigator from './components/ShiftPlanRequestWeekNavigator.vue';
 import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
+import AcceptShiftPlanRequestModal from './components/AcceptShiftPlanRequestModal.vue';
 import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useI18n} from 'vue-i18n';
+import {useShiftPlanRequestWeekNavigation} from './components/useShiftPlanRequestWeekNavigation.js';
 
 const {t} = useI18n();
 
@@ -98,6 +114,26 @@ const props = defineProps({
     craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
     overviewChanges: {type: Object, default: () => ({removed: []})},
     isMyRequest: {type: Boolean, required: false, default: false},
+    navigation: {type: Object, default: () => ({previous: null, next: null})},
+    shiftQualifications: {type: Array, default: () => []},
+});
+
+const requestShowUrl = (id) => route(
+    props.isMyRequest ? 'shift-plan-requests.my.show' : 'shift-plan-requests.show',
+    id
+);
+
+const {
+    highlightedRowKey,
+    rememberReviewPosition,
+    weekNavigator,
+} = useShiftPlanRequestWeekNavigation(() => props.request.id);
+
+// id → Name der Qualifikation (für die Anzeige in den Schichtzellen)
+const qualificationNames = computed(() => {
+    const map = {};
+    for (const q of (props.shiftQualifications || [])) map[q.id] = q.name;
+    return map;
 });
 
 const daysComputed = computed(() => {
@@ -228,13 +264,20 @@ const confirmReject = () => {
     );
 };
 
+// Akzeptieren: Modal mit optionalem Hinweis an die anfragende Person
+const acceptModalOpen = ref(false);
 const acceptRequest = () => {
+    acceptModalOpen.value = true;
+};
+const confirmAccept = (comment) => {
     router.post(
         route('shift-plan-requests.accept', props.request.id),
-        {},
+        {comment: comment?.trim() || null},
         {
             preserveScroll: true,
-            onSuccess: () => console.log('Request accepted'),
+            onSuccess: () => {
+                acceptModalOpen.value = false;
+            },
             onError: (errors) => console.error('Error:', errors),
         }
     );
@@ -287,6 +330,7 @@ const rows = computed(() => {
             shift_id: shift.id,
             start_time: shift.start,
             end_time: shift.end,
+            room_name: shift.room_name || null,
             qualification: meta.qualification || null,
             short_description: meta.short_description || shift.description || null,
             is_committed: !!shift.is_committed,
@@ -346,7 +390,7 @@ const rows = computed(() => {
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, user.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, user.id);
                 addEntry(row, date, shift, {
-                    qualification: user.pivot?.short_description ?? null,
+                    qualification: qualificationNames.value[user.pivot?.shift_qualification_id] ?? null,
                     short_description: user.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
                     has_changes_after_workflow: hasChangesInRequest,
@@ -368,7 +412,7 @@ const rows = computed(() => {
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, fl.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, fl.id);
                 addEntry(row, date, shift, {
-                    qualification: fl.pivot?.short_description ?? null,
+                    qualification: qualificationNames.value[fl.pivot?.shift_qualification_id] ?? null,
                     short_description: fl.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
                     has_changes_after_workflow: hasChangesInRequest,
@@ -390,7 +434,7 @@ const rows = computed(() => {
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, sp.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, sp.id);
                 addEntry(row, date, shift, {
-                    qualification: sp.pivot?.short_description ?? null,
+                    qualification: qualificationNames.value[sp.pivot?.shift_qualification_id] ?? null,
                     short_description: sp.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
                     has_changes_after_workflow: hasChangesInRequest,

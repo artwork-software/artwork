@@ -144,5 +144,31 @@ return [
         'success' => [
             'update' => 'Modul-Sichtbarkeit wurde erfolgreich aktualisiert.'
         ]
+    ],
+    'shift-settings' => [
+        'error' => [
+            'update' => 'Schicht-Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut.'
+        ]
+    ],
+    'external_user_source' => [
+        'success' => [
+            'create' => 'Externe Nutzerquelle erfolgreich erstellt',
+            'update' => 'Externe Nutzerquelle erfolgreich aktualisiert',
+            'delete' => 'Externe Nutzerquelle erfolgreich gelöscht'
+        ]
+    ],
+    'external_user_group_mapping' => [
+        'success' => [
+            'create' => 'Gruppen-Mapping erfolgreich erstellt',
+            'update' => 'Gruppen-Mapping erfolgreich aktualisiert',
+            'delete' => 'Gruppen-Mapping erfolgreich gelöscht'
+        ]
+    ],
+    'oidc' => [
+        'error' => [
+            'authentication_failed' => 'Anmeldung über den Identity Provider fehlgeschlagen. Bitte versuche es erneut.',
+            'missing_email' => 'Der Identity Provider hat keine E-Mail-Adresse übermittelt. Anmeldung nicht möglich.',
+            'domain_not_allowed' => 'Deine E-Mail-Domain ist für diese Anmeldung nicht zugelassen.'
+        ]
     ]
 ];

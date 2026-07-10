@@ -77,6 +77,8 @@ class ShiftCommitWorkflowUserController extends Controller
         if (!empty($newUserIds)) {
             $newEntries = array_map(fn ($id) => ['user_id' => $id], $newUserIds);
             ShiftCommitWorkflowUser::insert($newEntries);
+            // Workflow-Zugehörigkeit steckt im gecachten shift_workflow_flags-Prop
+            User::forgetCachedShareDataForIds($newUserIds);
         }
 
         return redirect()->back()->with('success', 'Benutzer wurden erfolgreich zum Shift-Commit-Workflow hinzugefügt.');
@@ -114,7 +116,10 @@ class ShiftCommitWorkflowUserController extends Controller
      */
     public function destroy(ShiftCommitWorkflowUser $shiftCommitWorkflowUser)
     {
+        $removedUserId = $shiftCommitWorkflowUser->user_id;
         $shiftCommitWorkflowUser->delete();
+        // Workflow-Zugehörigkeit steckt im gecachten shift_workflow_flags-Prop
+        User::forgetCachedShareDataForIds([$removedUserId]);
 
         return redirect()->back()->with('success', 'User removed from shift commit workflow successfully.');
     }

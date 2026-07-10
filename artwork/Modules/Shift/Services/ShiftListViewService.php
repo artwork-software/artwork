@@ -24,6 +24,11 @@ readonly class ShiftListViewService
         UserShiftListViewSettings $settings,
         ?UserFilter $userFilter = null
     ): array {
+        // Abwesenheiten im Zeitraum für das is_unavailable-Flag (ohne N+1)
+        $vacationsScope = fn ($q) => $q
+            ->without(['series', 'conflicts'])
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+
         $query = Shift::query()
             ->with([
                 'craft:id,name,abbreviation,color,position',
@@ -33,8 +38,11 @@ readonly class ShiftListViewService
                 'event:id,event_type_id,project_id',
                 'event.project:id,name',
                 'users:id,first_name,last_name',
+                'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name',
+                'freelancer.vacations' => $vacationsScope,
                 'serviceProvider:id,provider_name',
+                'serviceProvider.vacations' => $vacationsScope,
                 'shiftsQualifications:id,shift_id,shift_qualification_id,value',
                 'shiftGroup:id,name',
                 'globalQualifications',
@@ -51,31 +59,31 @@ readonly class ShiftListViewService
             }
 
             if (!empty($userFilter->event_type_ids)) {
-                $query->whereHas('event', function ($q) use ($userFilter) {
+                $query->whereHas('event', function ($q) use ($userFilter): void {
                     $q->whereIn('event_type_id', $userFilter->event_type_ids);
                 });
             }
 
             if (!empty($userFilter->area_ids)) {
-                $query->whereHas('room', function ($q) use ($userFilter) {
+                $query->whereHas('room', function ($q) use ($userFilter): void {
                     $q->whereIn('area_id', $userFilter->area_ids);
                 });
             }
 
             if (!empty($userFilter->room_category_ids)) {
-                $query->whereHas('room.categories', function ($q) use ($userFilter) {
+                $query->whereHas('room.categories', function ($q) use ($userFilter): void {
                     $q->whereIn('room_categories.id', $userFilter->room_category_ids);
                 });
             }
 
             if (!empty($userFilter->room_attribute_ids)) {
-                $query->whereHas('room.attributes', function ($q) use ($userFilter) {
+                $query->whereHas('room.attributes', function ($q) use ($userFilter): void {
                     $q->whereIn('room_attributes.id', $userFilter->room_attribute_ids);
                 });
             }
 
             if (!empty($userFilter->event_property_ids)) {
-                $query->whereHas('event.eventProperties', function ($q) use ($userFilter) {
+                $query->whereHas('event.eventProperties', function ($q) use ($userFilter): void {
                     $q->whereIn('event_properties.id', $userFilter->event_property_ids);
                 });
             }
@@ -96,7 +104,21 @@ readonly class ShiftListViewService
                     return true;
                 }
 
-                return $assignedCount < $requiredCount;
+                if ($assignedCount < $requiredCount) {
+                    return true;
+                }
+
+                // Eine Schicht mit eingeplanter, aber nicht (mehr) verfügbarer Person
+                // zählt nicht als voll besetzt — es besteht weiter Belegungsbedarf.
+                foreach ([$shift->users, $shift->freelancer, $shift->serviceProvider] as $workers) {
+                    foreach ($workers as $worker) {
+                        if (ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker)) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
             });
         }
 
@@ -239,25 +261,25 @@ readonly class ShiftListViewService
             }
 
             if (!empty($userFilter->area_ids)) {
-                $query->whereHas('room', function ($q) use ($userFilter) {
+                $query->whereHas('room', function ($q) use ($userFilter): void {
                     $q->whereIn('area_id', $userFilter->area_ids);
                 });
             }
 
             if (!empty($userFilter->room_category_ids)) {
-                $query->whereHas('room.categories', function ($q) use ($userFilter) {
+                $query->whereHas('room.categories', function ($q) use ($userFilter): void {
                     $q->whereIn('room_categories.id', $userFilter->room_category_ids);
                 });
             }
 
             if (!empty($userFilter->room_attribute_ids)) {
-                $query->whereHas('room.attributes', function ($q) use ($userFilter) {
+                $query->whereHas('room.attributes', function ($q) use ($userFilter): void {
                     $q->whereIn('room_attributes.id', $userFilter->room_attribute_ids);
                 });
             }
 
             if (!empty($userFilter->event_property_ids)) {
-                $query->whereHas('eventProperties', function ($q) use ($userFilter) {
+                $query->whereHas('eventProperties', function ($q) use ($userFilter): void {
                     $q->whereIn('event_properties.id', $userFilter->event_property_ids);
                 });
             }

@@ -21,10 +21,15 @@ class TypeNumberGenerator
 
     /**
      * Generates the next sequential inventory number (e.g. "00001", "00042").
-     * Must be called inside a DB transaction for race-condition safety.
+     * lockForUpdate only has an effect inside a transaction — when the caller
+     * has none (e.g. the model saving hook during imports), open one ourselves.
      */
     public static function generateInventoryNumber(): string
     {
+        if (DB::transactionLevel() === 0) {
+            return DB::transaction(static fn (): string => self::generateInventoryNumber());
+        }
+
         $maxNumber = (int) DB::table('inventory_articles')
             ->lockForUpdate()
             ->max(DB::raw('CAST(inventory_number AS UNSIGNED)'));

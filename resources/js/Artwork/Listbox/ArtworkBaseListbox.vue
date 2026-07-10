@@ -25,9 +25,9 @@
                 floating-as="div"
                 class="relative w-fit"
             >
-            <ListboxButton :class="finalButtonClass">
+            <ListboxButton :class="finalButtonClass" :title="displayText">
                 <slot name="button" :selected="internalValue" :placeholder="placeholder">
-                    <div class="col-start-1 row-start-1 truncate pr-6 flex items-center gap-2">
+                    <div class="col-start-1 row-start-1 truncate flex items-center gap-2" :class="isSmall ? 'min-w-0 pr-1' : 'pr-6'">
                         <span
                             v-if="showColorIndicator && getColor(internalValue as Option)"
                             :class="['inline-block size-3 rounded-full flex-shrink-0', disabled ? 'opacity-60' : '']"
@@ -36,8 +36,8 @@
                         <span class="truncate">{{ displayText }}</span>
                     </div>
                     <PropertyIcon name="IconChevronUp"
-                        class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4 transition-transform"
-                        :class="open ? 'rotate-180' : ''"
+                        class="col-start-1 row-start-1 self-center justify-self-end text-gray-500 transition-transform"
+                        :class="[open ? 'rotate-180' : '', isSmall ? 'size-3.5 shrink-0' : 'size-5 sm:size-4']"
                         aria-hidden="true"
                     />
                 </slot>
@@ -116,7 +116,7 @@
                                 as="template"
                                 v-slot="{ active, selected }"
                             >
-                                <li :class="[active ? activeClass : inactiveClass, optionBaseClass]">
+                                <li :class="[active ? activeClass : inactiveClass, finalOptionBaseClass]">
                                     <slot name="option" :item="item" :active="active" :selected="selected">
                                         <div class="flex items-center gap-2">
                                             <span
@@ -216,6 +216,9 @@ const props = defineProps({
     /** Zustände */
     disabled: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
+
+    /** Kompakte Variante (analog BaseInput isSmall): kleinerer Button + Optionen */
+    isSmall: { type: Boolean, default: false },
 
     /** Color indicator options */
     showColorIndicator: { type: Boolean, default: false },
@@ -454,11 +457,21 @@ const prettyKey = (key: string) => {
     const spaced = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_\-]+/g, ' ')
     return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
-const finalOptionsClass = computed(() => `${props.optionsClass} z-[99999]`);
+/** Kompakte Klassen der isSmall-Variante (Button, Options-Panel, einzelne Option).
+ *  Bewusst ohne .menu-button: dessen (ungelayerte) px-4/py-4/text-sm-Regeln würden
+ *  die kompakten Utilities überschreiben. */
+const smallButtonClass =
+    'w-full bg-white flex items-center justify-between gap-1 text-left rounded-md border border-gray-200 shadow-sm px-2.5 py-1.5 text-xs font-normal text-gray-700 focus:outline-hidden focus:ring-1 focus:ring-blue-600';
+const smallOptionsClass =
+    'mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden';
+const smallOptionBaseClass = 'relative cursor-default py-1.5 pr-8 pl-2.5 select-none';
+
+const finalOptionsClass = computed(() => `${props.isSmall ? smallOptionsClass : props.optionsClass} z-[99999]`);
+const finalOptionBaseClass = computed(() => (props.isSmall ? smallOptionBaseClass : props.optionBaseClass));
 
 // Disabled visual style similar to BaseInput: gray background and no pointer cursor
 const finalButtonClass = computed(() => {
-    const base = props.buttonClass;
+    const base = props.isSmall ? smallButtonClass : props.buttonClass;
     if (props.disabled) {
         // Append Tailwind classes so they take precedence over earlier bg utilities
         return [base, 'bg-gray-300 cursor-not-allowed'].join(' ');

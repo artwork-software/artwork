@@ -124,16 +124,29 @@
             class="group rounded-2xl border border-white/50 ring-1 ring-zinc-200/60 bg-white/60 backdrop-blur shadow-sm transition-all hover:shadow-md"
         >
             <!-- Header -->
-            <header class="flex flex-col gap-3 p-5 md:flex-row md:items-start md:justify-between" :aria-expanded="isOpen(issue.id)">
+            <header
+                class="flex cursor-pointer flex-col gap-3 rounded-t-2xl p-5 transition-colors hover:bg-zinc-50/70 md:flex-row md:items-start md:justify-between"
+                :class="{ 'bg-zinc-50/40': !isOpen(issue.id) }"
+                :aria-expanded="isOpen(issue.id)"
+                role="button"
+                @click="toggle(issue.id)"
+            >
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
                         <button
                             type="button"
-                            class="new-button"
-                            :aria-label="isOpen(issue.id) ? 'Zuklappen' : 'Aufklappen'"
-                            @click="toggle(issue.id)"
+                            class="grid size-8 shrink-0 place-items-center rounded-full ring-1 transition-colors"
+                            :class="isOpen(issue.id)
+                                ? 'bg-indigo-600 text-white ring-indigo-600'
+                                : 'bg-white text-indigo-600 ring-indigo-200 hover:bg-indigo-50'"
+                            :aria-label="isOpen(issue.id) ? $t('Collapse') : $t('Expand')"
+                            :title="isOpen(issue.id) ? $t('Collapse') : $t('Expand')"
+                            @click.stop="toggle(issue.id)"
                         >
-                            <component :is="isOpen(issue.id) ? IconChevronUp : IconChevronDown" class="size-4 text-zinc-600" />
+                            <IconChevronDown
+                                class="size-4 transition-transform duration-200"
+                                :class="{ 'rotate-180': isOpen(issue.id) }"
+                            />
                         </button>
 
                         <h3 class="truncate text-lg font-semibold text-zinc-900">
@@ -152,20 +165,18 @@
 
                     <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-600">
                             <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
-                              <IconCalendar class="size-4" />
                                   {{ issue.start_date_time }}
                                 </span>
                         <IconChevronRight class="hidden size-4 text-zinc-400 md:inline" />
                                         <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
-                              <IconCalendar class="size-4" />
                               {{ issue.end_date_time }}
                             </span>
                                         <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
-                              <IconClock class="size-4" />
+                              <span class="text-zinc-400">{{ $t('Duration')}}:</span>
                               ~ {{ diffDays(issue) }} {{ $t('Days')}}
                             </span>
                         <span v-if="issue.room" class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
-                              <IconHome class="size-4" />
+                              <span class="text-zinc-400">{{ $t('Room')}}:</span>
                               {{ issue.room.name }}
                             </span>
                         <span v-if="issue.special_items?.length > 0"
@@ -176,8 +187,26 @@
                           {{ issue.special_items_done ? $t('Special items Completed') : $t('Special items not completed') }}
                         </span>
                     </div>
-                    <div v-if="issue.notes" class="mt-1 text-sm text-zinc-600 whitespace-pre-line">
-                        {{ issue.notes }}
+
+                    <!-- Inhalts-Zähler: immer sichtbar, signalisiert einklappbaren Inhalt -->
+                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-zinc-700 ring-1 ring-zinc-200">
+                            <strong class="text-zinc-900">{{ issue.articles?.length || 0 }}</strong> {{ $t('Article') }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-zinc-700 ring-1 ring-zinc-200">
+                            <strong class="text-zinc-900">{{ issue.special_items?.length || 0 }}</strong> {{ $t('Special items') }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-zinc-700 ring-1 ring-zinc-200">
+                            <strong class="text-zinc-900">{{ issue.files?.length || 0 }}</strong> {{ $t('Files') }}
+                        </span>
+                    </div>
+                    <div v-if="issue.notes" class="mt-3 rounded-xl border-l-4 border-indigo-300 bg-indigo-50/50 px-4 py-2.5">
+                        <div class="text-[11px] font-semibold uppercase tracking-wide text-indigo-600/80">
+                            {{ $t('Description') }}
+                        </div>
+                        <p class="mt-0.5 text-base leading-relaxed text-zinc-800 whitespace-pre-line">
+                            {{ issue.notes }}
+                        </p>
                     </div>
                 </div>
 
@@ -185,14 +214,14 @@
                     <button
                         type="button"
                         class="new-button"
-                        @click="openEditIssue(issue)">
+                        @click.stop="openEditIssue(issue)">
                         <IconEdit class="size-4" />
                         {{ $t('Edit')}}
                     </button>
                     <button
                         type="button"
                         class="new-button text-red-500 hover:text-red-700"
-                        @click="openDeleteModal(issue)">
+                        @click.stop="openDeleteModal(issue)">
                         <IconTrash class="size-4" />
                         {{ $t('Delete')}}
                     </button>
@@ -422,6 +451,17 @@
                     </section>
                 </div>
             </transition>
+
+            <!-- Aufklappen-Hinweis (nur eingeklappt) -->
+            <button
+                v-if="!isOpen(issue.id)"
+                type="button"
+                class="flex w-full items-center justify-center gap-1.5 rounded-b-2xl border-t border-zinc-100 py-2 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50/60"
+                @click="toggle(issue.id)"
+            >
+                <IconChevronDown class="size-4" />
+                {{ $t('Show details') }}
+            </button>
         </article>
     </section>
     <!-- Lightbox Preview -->
@@ -527,7 +567,7 @@
 import { ref, computed, onBeforeUnmount, watch, onMounted, provide } from 'vue'
 import axios from 'axios'
 import {
-    IconCirclePlus, IconEdit, IconPackage, IconCalendar, IconClock, IconChevronDown, IconChevronUp,
+    IconCirclePlus, IconEdit, IconPackage, IconChevronDown,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
     IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash,
 } from '@tabler/icons-vue'

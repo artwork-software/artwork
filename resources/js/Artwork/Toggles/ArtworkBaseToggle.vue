@@ -12,6 +12,8 @@ const props = defineProps({
     description: { type: String, default: '' },
     disabled: { type: Boolean, default: false },
     useTranslation: { type: Boolean, default: false },
+    /** Kompakte Variante: kleinerer Schalter + kleinere Beschriftung */
+    isSmall: { type: Boolean, default: false },
 })
 
 /**
@@ -39,7 +41,7 @@ const wrapperClasses = computed(() => [
     'group',
     'relative',
     'inline-flex',
-    'w-11',
+    props.isSmall ? 'w-9' : 'w-11',
     'shrink-0',
     'rounded-full',
     props.modelValue ? 'bg-blue-600' : 'bg-gray-200',
@@ -58,11 +60,12 @@ const wrapperClasses = computed(() => [
 </script>
 
 <template>
-    <div class="flex items-start gap-4">
+    <div class="flex items-start" :class="isSmall ? 'gap-2.5' : 'gap-4'">
         <div :class="wrapperClasses">
             <!-- Thumb -->
             <span
-                class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-checked:translate-x-5"
+                class="rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out"
+                :class="isSmall ? 'size-4 group-has-checked:translate-x-4' : 'size-5 group-has-checked:translate-x-5'"
                 aria-hidden="true"
             />
             <!-- Native Checkbox (steuert die has-checked Variants) -->
@@ -81,10 +84,10 @@ const wrapperClasses = computed(() => [
             />
         </div>
         <span class="flex grow flex-col min-w-0">
-            <label :id="labelId" class="text-sm/6 font-medium text-gray-900" :for="baseId">
+            <label :id="labelId" class="font-medium text-gray-900" :class="isSmall ? 'text-xs/5' : 'text-sm/6'" :for="baseId">
                 {{ useTranslation ? $t(label) : label }}
             </label>
-            <span v-if="description" :id="descId" class="text-sm text-gray-500">
+            <span v-if="description" :id="descId" class="text-gray-500" :class="isSmall ? 'text-xs' : 'text-sm'">
                 {{ useTranslation ? $t(description) : description }}
             </span>
         </span>

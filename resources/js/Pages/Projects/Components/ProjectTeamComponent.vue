@@ -2,10 +2,31 @@
     <div>
         <div class="flex items-center gap-x-5">
             <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Project team') }}</span>
-            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
-                      @click="showTeamModal = true"
+            <!-- Bearbeiten erst nach erfolgreich geladenen Teamdaten: sonst würde ein Speichern
+                 mit leerer Teamliste alle bestehenden Mitglieder aus dem Projekt entfernen -->
+            <IconEdit class="w-5 h-5 rounded-full"
+                      :class="[
+                          inSidebar ? 'text-white' : 'text-artwork-buttons-context',
+                          teamDataLoaded ? 'cursor-pointer' : 'opacity-50 cursor-wait'
+                      ]"
+                      @click="teamDataLoaded ? showTeamModal = true : ensureTeamData(true)"
                       v-if="projectMembersWriteAccess() || hasAdminRole() || userIsProjectCreator()"
             />
+            <div v-if="teamMembersToMail.length > 0" class="relative" :title="teamMailTooltip">
+                <IconMail class="w-5 h-5"
+                          :class="[
+                              unmailableTeamMembers.length > 0
+                                  ? 'text-yellow-500'
+                                  : (inSidebar ? 'text-white' : 'text-artwork-buttons-context'),
+                              mailableTeamMembers.length > 0 ? 'cursor-pointer' : 'cursor-not-allowed'
+                          ]"
+                          @click="openTeamMail"
+                />
+                <span v-if="unmailableTeamMembers.length > 0"
+                      class="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-500 px-1 text-[10px] font-bold text-white pointer-events-none">
+                    {{ unmailableTeamMembers.length }}
+                </span>
+            </div>
             <SwitchIconTooltip
                 :model-value="showNames"
                 @update:model-value="toggleShowNames"
@@ -60,7 +81,7 @@
                 </div>
             </template>
             <!-- Projektteam (Departments + Users) -->
-            <div v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
+            <div v-if="(teamProject.departments || []).length > 0 || projectTeamMembers.length > 0">
                 <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
                     {{ $t('Project team') }}
                 </span>
@@ -83,7 +104,7 @@
                             </div>
                         </template>
                     </template>
-                    <template v-for="user in (teamProject.usersArray || [])" :key="user.id">
+                    <template v-for="user in projectTeamMembers" :key="user.id">
                         <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
                             <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                             <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
@@ -122,7 +143,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
-import {IconEdit} from "@tabler/icons-vue";
+import {IconEdit, IconMail} from "@tabler/icons-vue";
 
 export default defineComponent({
     mixins: [
@@ -138,6 +159,7 @@ export default defineComponent({
         UserTooltip,
         TeamIconCollection,
         IconEdit,
+        IconMail,
         SwitchIconTooltip
     },
     props: {
@@ -167,6 +189,7 @@ export default defineComponent({
             showTeamModal: false,
             loadingTeam: false,
             loadError: null,
+            teamDataLoaded: hasInitialTeam,
             localProject: hasInitialTeam ? this.project : null,
             showNames: this.$page.props.auth.user.show_project_team_names ?? false
         };
@@ -175,12 +198,48 @@ export default defineComponent({
         teamProject() {
             return this.localProject ?? this.project ?? {};
         },
-        onlyTeamMember() {
-            if (!this.teamProject?.usersArray) {
-                return [];
+        teamMembersToMail() {
+            const seenIds = new Set();
+            return [
+                ...(this.teamProject.usersArray ?? []),
+                ...(this.teamProject.project_managers ?? [])
+            ].filter(user => {
+                if (user.id === this.$page.props.auth.user.id || seenIds.has(user.id)) {
+                    return false;
+                }
+                seenIds.add(user.id);
+                return true;
+            });
+        },
+        mailableTeamMembers() {
+            return this.teamMembersToMail.filter(user => user.email && !user.email_private);
+        },
+        unmailableTeamMembers() {
+            return this.teamMembersToMail.filter(user => !user.email || user.email_private);
+        },
+        teamMailTooltip() {
+            if (this.unmailableTeamMembers.length === 0) {
+                return this.$t('Email the entire project team');
             }
-            const managerIds = (this.teamProject?.project_managers ?? []).map(manager => manager.id);
-            return this.teamProject.usersArray.filter(user => !managerIds.includes(user.id));
+            const names = this.unmailableTeamMembers.map(user => {
+                const reason = user.email ? this.$t('email is private') : this.$t('no email address');
+                return `${user.first_name} ${user.last_name} (${reason})`;
+            }).join(', ');
+            const warning = this.$t('Email cannot be sent to: {0}', [names]);
+            return this.mailableTeamMembers.length > 0
+                ? this.$t('Email the entire project team') + '\n' + warning
+                : warning;
+        },
+        projectTeamMembers() {
+            if (Array.isArray(this.teamProject?.projectTeamMembers)) {
+                return this.teamProject.projectTeamMembers;
+            }
+
+            return (this.teamProject?.usersArray ?? []).filter(user =>
+                user.id !== this.teamProject?.user_id
+                && !user.pivot_is_manager
+                && (user.pivot_roles ?? []).length === 0
+            );
         }
     },
     watch: {
@@ -190,6 +249,7 @@ export default defineComponent({
             handler(newProject) {
                 if (this.projectHasTeamData(newProject)) {
                     this.localProject = newProject;
+                    this.teamDataLoaded = true;
                 }
             }
         }
@@ -204,6 +264,7 @@ export default defineComponent({
     methods: {
         async ensureTeamData(force = false) {
             if (!force && this.projectHasTeamData(this.teamProject)) {
+                this.teamDataLoaded = true;
                 return;
             }
 
@@ -218,6 +279,7 @@ export default defineComponent({
             try {
                 const response = await axios.get(route('projects.tabs.team', {project: id}));
                 this.localProject = response.data.project ?? null;
+                this.teamDataLoaded = true;
             } catch (e) {
                 this.loadError = this.$t
                     ? this.$t('Teamdaten konnten nicht geladen werden.')
@@ -258,6 +320,13 @@ export default defineComponent({
         },
         userIsProjectCreator() {
             return this.teamProject?.user_id === this.$page.props.auth.user.id;
+        },
+        openTeamMail() {
+            const emails = [...new Set(this.mailableTeamMembers.map(user => user.email))];
+            if (emails.length === 0) {
+                return;
+            }
+            window.location.href = 'mailto:' + emails.join(',');
         },
         toggleShowNames(value) {
             this.showNames = value;

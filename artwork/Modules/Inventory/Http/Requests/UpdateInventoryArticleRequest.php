@@ -20,11 +20,14 @@ class UpdateInventoryArticleRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'inventory_category_id' => ['required', 'integer', 'exists:inventory_categories,id'],
+            'inventory_sub_category_id' => ['nullable', 'integer', 'exists:inventory_sub_categories,id'],
             'quantity' => ['required', 'integer', 'min:0'],
             'is_detailed_quantity' => ['required', 'boolean'],
 
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'max:10240'], // max 10MB
+            'newImages' => ['nullable', 'array'],
+            'newImages.*' => ['image', 'max:10240'],
 
             'main_image_index' => ['nullable', 'integer'],
 

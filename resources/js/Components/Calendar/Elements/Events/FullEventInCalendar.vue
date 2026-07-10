@@ -1,17 +1,18 @@
 <template>
     <div
         :style="{
-      minHeight: isHeightFull ? '100%' : (totalHeight - heightSubtraction(event)) * zoom_factor + 'px',
+      minHeight: isHeightFull ? '100%' : (totalHeight - heightSubtraction(event)) * heightZoom + 'px',
       backgroundColor: eventBgColor,
-      fontsize: fontSize,
-      lineHeight: lineHeight
+      '--event-contrast-color': eventTextColor,
+      zoom: contentZoom,
+      lineHeight: innerLineHeight
     }"
         class="group/singleEvent rounded-lg border border-black/5 transition-[border,background-color] duration-150"
         :class="[
       event.occupancy_option ? 'event-disabled' : '',
       calSettings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
-      pageProps.auth.user.daily_view ? 'overflow-y-auto' : '',
+      pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
       multiEdit ? 'relative' : ''
     ]"
     >
@@ -176,7 +177,7 @@
                             </div>
 
                             <!-- Artists -->
-                            <div v-if="calSettings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 opacity-90']">
+                            <div v-if="calSettings.project_artists && event.project?.artistNames" :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 font-bold']">
                                 {{ event.project?.artistNames }}
                             </div>
 
@@ -249,7 +250,7 @@
                             />
                             <div
                                 class="subpixel-antialiased"
-                                :class="[zoom_factor === 1 ? 'eventTime' : '', isSameDay && !project && !atAGlance ? 'whitespace-nowrap' : '']"
+                                :class="[zoom_factor >= 1 ? 'eventTime' : '', isSameDay && !project && !atAGlance ? 'whitespace-nowrap' : '']"
                                 :style="{ color: eventTypeTextColor }"
                             >
                                 <!-- gleicher Tag -->
@@ -290,7 +291,7 @@
                                 <span
                                     v-if="!atAGlance && isSameDay"
                                     class="eventTime font-medium subpixel-antialiased"
-                                    :style="{ lineHeight: lineHeight, fontSize: fontSize }"
+                                    :style="{ lineHeight: innerLineHeight, fontSize: innerFontSize }"
                                 >
                                   , {{ event.option_string }}
                                 </span>
@@ -311,6 +312,7 @@
                                     v-for="user in event?.project?.leaders?.slice(0,3)"
                                     :key="'leader-'+user.id"
                                     :user="user"
+                                    lazy-load
                                     width="5"
                                     height="5"
                                 />
@@ -356,22 +358,6 @@
                         </div>
                     </div>
 
-                    <!-- Schichten kompakt rechts daneben -->
-                    <div
-                        v-if="calSettings.work_shifts"
-                        class="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-0.5 text-xs pt-0.5"
-                    >
-                        <a
-                            v-if="firstProjectShiftTabId"
-                            v-for="shift in event.shifts"
-                            :key="shift.id"
-                            :href="route('projects.tab', { project: event?.project?.id, projectTab: firstProjectShiftTabId })"
-                            class="hover:underline underline-offset-2"
-                        >
-                            <span class="font-medium">{{ shift?.craft?.abbreviation }}</span>
-                            <span class="opacity-80"> ({{ shift?.worker_count }}/{{ shift?.max_worker_count }})</span>
-                        </a>
-                    </div>
                 </div>
             </div>
 
@@ -551,7 +537,7 @@
                                         >
                                             <div class="relative space-y-0.5">
                                                 <!-- Artists -->
-                                                <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 opacity-90">
+                                                <div v-if="calSettings.project_artists && event.project?.artistNames" class="truncate text-xs/5 font-bold">
                                                     {{ event.project?.artistNames }}
                                                 </div>
                                                 <!-- Eventname -->
@@ -616,6 +602,7 @@
                                                         v-for="user in event?.project?.leaders?.slice(0,3)"
                                                         :key="'tooltip-leader-'+user.id"
                                                         :user="user"
+                                                        lazy-load
                                                         width="5"
                                                         height="5"
                                                     />
@@ -631,19 +618,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Schichten -->
-                                        <div v-if="calSettings.work_shifts" class="grid grid-cols-1 gap-y-0.5 text-xs pt-0.5">
-                                            <a
-                                                v-if="firstProjectShiftTabId"
-                                                v-for="shift in event.shifts"
-                                                :key="'tooltip-shift-'+shift.id"
-                                                :href="route('projects.tab', { project: event?.project?.id, projectTab: firstProjectShiftTabId })"
-                                                class="hover:underline underline-offset-2"
-                                            >
-                                                <span class="font-medium">{{ shift?.craft?.abbreviation }}</span>
-                                                <span class="opacity-80"> ({{ shift?.worker_count }}/{{ shift?.max_worker_count }})</span>
-                                            </a>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -721,14 +695,14 @@
                     <div
                         :class="[subEvent.class]"
                         :style="{
-              height: (totalHeight - heightSubtraction(subEvent)) * zoom_factor + 10 + 'px',
+              height: (totalHeight - heightSubtraction(subEvent)) * heightZoom + 10 + 'px',
               backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, highContrastPercent)
             }"
                         class="rounded-r-lg px-2 py-1.5"
                     >
                         <!-- Kopf -->
                         <div class="flex items-start justify-between gap-2">
-                            <div :style="{ lineHeight: lineHeight, fontSize: fontSize }" class="w-40 min-w-0 md:w-56 font-semibold">
+                            <div :style="{ lineHeight: innerLineHeight, fontSize: innerFontSize }" class="w-40 min-w-0 md:w-56 font-semibold">
                                 <div v-if="subEvent.eventName?.length > 0" class="flex min-w-0">
                                     <div v-if="subEvent.type.abbreviation" class="mr-1 truncate opacity-80">{{ subEvent.type.abbreviation }}:</div>
                                     <div class="truncate">{{ subEvent.eventName }}</div>
@@ -741,15 +715,20 @@
                                 <div
                                     v-for="property in subEvent.event_properties"
                                     :key="'subp-'+property.id"
-                                    class="rounded-full border-2 border-white bg-white/90 p-0.5"
+                                    class="rounded-full border-2 border-white bg-white/90 p-0.5 group/property relative"
                                 >
-                                    <component :is="property.icon" class="size-3" stroke-width="1.5" />
+                                    <PropertyIcon :name="property.icon" class="size-3" stroke-width="1.5" />
+                                    <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
+                                        <div class="rounded-lg bg-artwork-navigation-background px-3 py-1 text-xs text-white">
+                                            {{ property.name }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Zeit -->
-                        <div :style="{ lineHeight: lineHeight, fontSize: fontSize }" class="mt-1 text-[0.95em] font-medium subpixel-antialiased">
+                        <div :style="{ lineHeight: innerLineHeight, fontSize: innerFontSize }" class="mt-1 text-[0.95em] font-medium subpixel-antialiased">
                             <template v-if="subEvent.formattedDates.is_same_day && !project && !atAGlance">
                                 <span v-if="subEvent.allDay">{{ $t('Full day') }}</span>
                                 <span v-else>{{ subEvent.formattedDates.start_time }} - {{ subEvent.formattedDates.end_time }}</span>
@@ -771,20 +750,6 @@
                             </template>
                         </div>
 
-                        <!-- Schichten -->
-                        <div
-                            v-if="calSettings.work_shifts"
-                            class="mt-1 text-xs"
-                            :style="{ color: eventTypeTextColor }"
-                        >
-                            <div v-for="shift in subEvent.shifts" :key="'subs-'+shift.id">
-                                <span class="font-medium">{{ shift.craft.abbreviation }}</span>
-                                (
-                                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))" />/{{ shift.number_employees }}
-                                <span v-if="shift.number_masters > 0"> | {{ shift.master_count }}/{{ shift.number_masters }}</span>
-                                )
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -890,6 +855,11 @@ const calSettings = computed(() => pageProps.auth.user.calendar_settings);
 const highContrastPercent = computed(() => pageProps.high_contrast_percent);
 const currentUserId = computed(() => pageProps.auth.user.id);
 const zoom_factor = ref(pageProps.auth.user.zoom_factor ?? 1);
+// Über 100 % wächst die Karte per CSS zoom: Inhalt layoutet wie bei 100 % und wird
+// inkl. Schrift/Icons hochskaliert. Interne px-Berechnungen und die zoom-abhängigen
+// Font-Props dürfen dann nicht zusätzlich skalieren (sonst doppelt), daher heightZoom/inner*.
+const contentZoom = computed(() => (zoom_factor.value > 1 ? zoom_factor.value : 1));
+const heightZoom = computed(() => zoom_factor.value / contentZoom.value);
 const expandDays = computed(() => calSettings.value?.expand_days ?? false);
 const atAGlance = ref(pageProps.auth.user.at_a_glance ?? false);
 const showRejectEventVerificationModal = ref(false);
@@ -951,6 +921,11 @@ const props = defineProps({
     verifierForEventTypIds: { type: Array, default: [] },
     isPlanning: { type: Boolean, default: false },
 });
+
+// Bei aktivem contentZoom (>100 %) die Basisgrößen verwenden — die per Prop
+// hereingereichten Werte skalieren bereits mit dem Zoom-Faktor.
+const innerFontSize = computed(() => (contentZoom.value > 1 ? "0.875rem" : props.fontSize));
+const innerLineHeight = computed(() => (contentZoom.value > 1 ? "1.25rem" : props.lineHeight));
 
 const resolvedFormattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
@@ -1197,7 +1172,6 @@ const totalHeight = computed(() => {
     if (calSettings.value.options) height += 0;
     if (calSettings.value.project_management) height += 17;
     if (calSettings.value.repeating_events) height += 20;
-    if (calSettings.value.work_shifts) height += 18;
     return height;
 });
 
@@ -1208,9 +1182,6 @@ const heightSubtraction = (event) => {
     }
     if (calSettings.value.repeating_events && (!event.is_series || event.is_series === false)) {
         heightSubtraction += 20;
-    }
-    if (calSettings.value.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
-        heightSubtraction += 18;
     }
     return heightSubtraction;
 };

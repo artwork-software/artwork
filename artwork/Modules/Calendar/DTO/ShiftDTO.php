@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\DTO;
 
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftWorkerAvailability;
 use Carbon\Carbon;
 use Spatie\LaravelData\Data;
 
@@ -28,6 +29,7 @@ class ShiftDTO extends Data
         public ?array $globalQualifications = null,
         public ?int $shiftGroupId = null,
         public ?array $craft = null,
+        public ?string $projectName = null,
     ) {
     }
 
@@ -55,6 +57,7 @@ class ShiftDTO extends Data
             globalQualifications: self::serializeGlobalQualifications($shift),
             shiftGroupId: $shift->shift_group_id,
             craft: self::serializeCraft($shift),
+            projectName: $resolvedProject?->name,
         );
     }
 
@@ -109,6 +112,9 @@ class ShiftDTO extends Data
                     'globalQualifications' => ($worker->relationLoaded('globalQualifications'))
                         ? $worker->globalQualifications->map(fn ($q) => ['id' => $q->id])->values()->all()
                         : [],
+                    // Person ist eingeplant, hat aber am Schichttag einen anderen
+                    // Verfügbarkeitsstatus als "Verfügbar" (z.B. nachträglich krank gemeldet)
+                    'is_unavailable' => ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker),
                 ];
             }
         }

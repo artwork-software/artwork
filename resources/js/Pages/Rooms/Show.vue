@@ -34,7 +34,7 @@
                         </MenuItem>
                     </BaseMenu>
                 </div>
-                <div v-if="room.room_history[0]"
+                <div v-if="room.room_history[0]?.changes?.[0]"
                      class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         {{$t('last modified')}}:

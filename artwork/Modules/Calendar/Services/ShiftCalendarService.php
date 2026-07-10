@@ -27,6 +27,9 @@ use Illuminate\Support\Collection;
 class ShiftCalendarService
 {
     /**
+     * @param object|null $displaySettings user display settings (shift plan / daily view) used to decide
+     *                                     which optional project data (artists, status, leaders) gets loaded.
+     *                                     null = legacy behavior (status + artists loaded, no leaders).
      * @return array{rooms: Collection, lookups: array}
      */
     public function filterRoomsEventsAndShifts(
@@ -36,7 +39,8 @@ class ShiftCalendarService
         CarbonInterface $endDate,
         bool $addTimeline = false,
         ?Project $project = null,
-        bool $minimalWorkerData = false
+        bool $minimalWorkerData = false,
+        ?object $displaySettings = null
     ): array {
         $roomIds = $rooms->modelKeys();
 
@@ -82,7 +86,7 @@ class ShiftCalendarService
             ->whereIn('room_id', $roomIds)
             ->when($project !== null, fn ($q) => $q->where('project_id', $project->id))
             ->when(!empty($filter->event_type_ids), fn ($q) => $q->whereIn('event_type_id', $filter->event_type_ids))
-            ->when(!empty($filter->event_property_ids), function ($q) use ($filter) {
+            ->when(!empty($filter->event_property_ids), function ($q) use ($filter): void {
                 $ids = $filter->event_property_ids;
 
                 // Variante A (sauber & nutzt die Relation)
@@ -96,6 +100,12 @@ class ShiftCalendarService
         // -------------------------
         // 2) Standalone Shifts (eager alles was DTO braucht)
         // -------------------------
+        // Abwesenheiten der zugewiesenen Personen im Zeitraum, damit das
+        // is_unavailable-Flag im ShiftDTO ohne N+1-Queries berechnet werden kann
+        $vacationsScope = fn ($query) => $query
+            ->without(['series', 'conflicts'])
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()]);
+
         $shiftWorkerWith = $minimalWorkerData
             ? [
                 'room:id,name',
@@ -104,8 +114,11 @@ class ShiftCalendarService
                 'shiftsQualifications',
                 'globalQualifications',
                 'users:id,first_name,last_name',
+                'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name,profile_image',
+                'freelancer.vacations' => $vacationsScope,
                 'serviceProvider:id,provider_name,profile_image',
+                'serviceProvider.vacations' => $vacationsScope,
                 'shiftGroup:id,name',
             ]
             : [
@@ -116,10 +129,13 @@ class ShiftCalendarService
                 'globalQualifications',
                 'users:id,first_name,last_name,pronouns,position,profile_photo_path',
                 'users.globalQualifications:id',
+                'users.vacations' => $vacationsScope,
                 'freelancer:id,first_name,last_name,position,profile_image',
                 'freelancer.globalQualifications:id',
+                'freelancer.vacations' => $vacationsScope,
                 'serviceProvider:id,provider_name,profile_image',
                 'serviceProvider.globalQualifications:id',
+                'serviceProvider.vacations' => $vacationsScope,
                 'shiftGroup:id,name',
             ];
 
@@ -158,15 +174,40 @@ class ShiftCalendarService
             ->unique()
             ->values();
 
+        // Optionale Projektdaten nur laden, wenn die jeweilige Anzeigeeinstellung aktiv ist
+        // (Performance: der Schichtplan soll keine ungenutzten Daten mitschleppen).
+        $withArtists = $displaySettings === null || (bool) ($displaySettings->project_artists ?? false);
+        $withStatus = $displaySettings === null || (bool) ($displaySettings->project_status ?? false);
+        $withLeaders = $displaySettings !== null && (bool) ($displaySettings->project_management ?? false);
+
+        $projectSelect = ['id','name','state','is_group','icon','color'];
+        if ($withArtists) {
+            $projectSelect[] = 'artists';
+        }
+
+        $projectWith = [
+            'users:id',
+            'groups:id,name,state,is_group,icon,color',
+            'groups.users:id',
+        ];
+        if ($withStatus) {
+            $projectWith[] = 'status:id,name,color';
+            $projectWith[] = 'groups.status:id,name,color';
+        }
+        if ($withLeaders) {
+            $projectWith['managerUsers'] = fn ($q) => $q->select([
+                'users.id',
+                'users.first_name',
+                'users.last_name',
+                'users.position',
+                'users.email',
+                'users.profile_photo_path',
+            ]);
+        }
+
         $projects = Project::query()
-            ->select(['id','name','state','artists','is_group','icon','color'])
-            ->with([
-                'status:id,name,color',
-                'users:id',
-                'groups:id,name,state,artists,is_group,icon,color',
-                'groups.status:id,name,color',
-                'groups.users:id',
-            ])
+            ->select($projectSelect)
+            ->with($projectWith)
             ->whereIn('id', $projectIds)
             ->get()
             ->keyBy('id');
@@ -328,6 +369,20 @@ class ShiftCalendarService
                 'name' => $statusModel->name,
                 'color' => $statusModel->color,
             ] : null,
+            'artistNames' => $project->artists ?? null,
+            // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
+            // UserPopoverTooltip lazy über user.tooltip.info nach.
+            'leaders' => $project->relationLoaded('managerUsers')
+                ? $project->managerUsers->map(fn ($user) => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'position' => $user->position ?? null,
+                    'profile_photo_url' => $user->profile_photo_path
+                        ? '/storage/' . $user->profile_photo_path
+                        : null,
+                ])->values()->all()
+                : null,
         ];
     }
 

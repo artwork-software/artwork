@@ -43,7 +43,12 @@ class BiDashboardService
     {
         [$rangeFrom, $rangeTo] = $this->resolveDateRange($from, $to);
 
-        $cacheKey = 'bi_dashboard_' . ($rangeFrom?->toDateString() ?? 'null') . '_' . ($rangeTo?->toDateString() ?? 'null');
+        // Versions-Suffix: Schreibzugriffe bumpen bi_dashboard_version, damit
+        // frisch erfasste Zahlen nicht 10 Minuten hinter dem Cache hängen.
+        $cacheKey = 'bi_dashboard_'
+            . ($rangeFrom?->toDateString() ?? 'null') . '_'
+            . ($rangeTo?->toDateString() ?? 'null')
+            . '_v' . Cache::get('bi_dashboard_version', 0);
 
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($rangeFrom, $rangeTo): array {
             $projects = $this->loadProjects();
@@ -64,6 +69,8 @@ class BiDashboardService
                 'previous_kpis' => $previous['kpis'],
                 'by_category' => $current['by_category'],
                 'projects' => $current['projects'],
+                'monthly' => $this->buildMonthlySeries($projects, $rangeFrom, $rangeTo),
+                'data_gaps' => $this->findDataGaps($projects, $rangeFrom, $rangeTo),
                 'tags_linked' => BiEventTypeTag::has('eventTypes')->exists(),
             ];
         });
@@ -103,15 +110,20 @@ class BiDashboardService
         $totalEventDays = 0;
         $totalPerformances = 0;
 
+        $anyVisitorsEstimated = false;
+
         foreach ($projects as $project) {
-            $visitors = $this->metricsService->visitors($project, $from, $to) ?? 0;
+            ['value' => $visitorsValue, 'estimated' => $visitorsEstimated] =
+                $this->metricsService->visitorsWithEstimate($project, $from, $to);
+            $visitors = $visitorsValue ?? 0;
+            $anyVisitorsEstimated = $anyVisitorsEstimated || $visitorsEstimated;
             $tickets = $this->metricsService->soldTickets($project, $from, $to) ?? 0;
             $revenue = $this->metricsService->revenue($project, $from, $to) ?? 0.0;
             $capacity = $this->metricsService->seatsCapacity($project);
             $occupancy = $this->metricsService->occupancyRate($tickets, $capacity);
 
-            $performances = $this->countPerformances($project, $from, $to);
-            $eventDays = $this->countEventDays($project, $from, $to);
+            $performances = $this->metricsService->performances($project, $from, $to);
+            $eventDays = $this->metricsService->eventDays($project, $from, $to);
 
             $contracts = $project->contracts->count();
             $bookings = $this->derivedValuesService->getBookingCount($project);
@@ -135,6 +147,7 @@ class BiDashboardService
                 'project_name' => $project->name,
                 'category' => $this->mainCategory($project),
                 'visitors' => $visitors,
+                'visitors_estimated' => $visitorsEstimated,
                 'revenue' => round($revenue, 2),
                 'occupancy' => $occupancy,
                 'performances' => $performances,
@@ -156,6 +169,7 @@ class BiDashboardService
         return [
             'kpis' => [
                 'visitors' => $totalVisitors,
+                'visitors_estimated' => $anyVisitorsEstimated,
                 'revenue' => round($totalRevenue, 2),
                 'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
                 'event_days' => $totalEventDays,
@@ -193,28 +207,131 @@ class BiDashboardService
         ));
     }
 
-    private function countPerformances(Project $project, ?Carbon $from, ?Carbon $to): int
+    /**
+     * Monthly visitors/revenue from per-event entries (totals have no date and are
+     * excluded by design), incl. the same month one year earlier for comparison.
+     *
+     * @param Collection<int, Project> $projects
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildMonthlySeries(Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
-        $events = $this->eventsInRange($project, $from, $to);
-        $tagged = $events->filter(fn($event) => $this->eventHasTag($event, 'Vorstellung'));
+        $currentBuckets = $this->bucketEventDataByMonth($projects, $from, $to);
+        $previousBuckets = $this->bucketEventDataByMonth(
+            $projects,
+            $from?->copy()->subYear(),
+            $to?->copy()->subYear()
+        );
 
-        return $tagged->isNotEmpty() ? $tagged->count() : $events->count();
+        $months = array_keys($currentBuckets);
+
+        if ($from && $to) {
+            $months = [];
+            $cursor = $from->copy()->startOfMonth();
+            $end = $to->copy()->startOfMonth();
+            // Sicherheitsgrenze: höchstens 36 Monatsspalten, sonst wird das Chart unlesbar
+            $guard = 0;
+            while ($cursor->lte($end) && $guard < 36) {
+                $months[] = $cursor->format('Y-m');
+                $cursor->addMonth();
+                $guard++;
+            }
+        } else {
+            sort($months);
+        }
+
+        return array_map(function (string $month) use ($currentBuckets, $previousBuckets): array {
+            $prevMonth = Carbon::createFromFormat('Y-m', $month)->subYear()->format('Y-m');
+
+            return [
+                'month' => $month,
+                'visitors' => $currentBuckets[$month]['visitors'] ?? 0,
+                'revenue' => round($currentBuckets[$month]['revenue'] ?? 0.0, 2),
+                'prev_visitors' => $previousBuckets[$prevMonth]['visitors'] ?? 0,
+                'prev_revenue' => round($previousBuckets[$prevMonth]['revenue'] ?? 0.0, 2),
+            ];
+        }, $months);
     }
 
-    private function countEventDays(Project $project, ?Carbon $from, ?Carbon $to): int
+    /**
+     * @param Collection<int, Project> $projects
+     * @return array<string, array{visitors: int, revenue: float}>
+     */
+    private function bucketEventDataByMonth(Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
-        $events = $this->eventsInRange($project, $from, $to);
-        $tagged = $events->filter(fn($event) => $this->eventHasTag($event, 'Veranstaltungstag'));
-        $relevant = $tagged->isNotEmpty() ? $tagged : $events;
+        $buckets = [];
 
-        return $relevant
-            ->map(fn($event) => $event->start_time?->format('Y-m-d'))
-            ->filter()
-            ->unique()
-            ->count();
+        foreach ($projects as $project) {
+            foreach ($project->biEventData as $eventData) {
+                $start = $eventData->event?->start_time;
+
+                if (!$start) {
+                    continue;
+                }
+
+                if ($from && $start->lt($from->copy()->startOfDay())) {
+                    continue;
+                }
+
+                if ($to && $start->gt($to->copy()->endOfDay())) {
+                    continue;
+                }
+
+                $month = $start->format('Y-m');
+                $buckets[$month] ??= ['visitors' => 0, 'revenue' => 0.0];
+                $buckets[$month]['visitors'] += (int) ($eventData->visitors ?? 0);
+                $buckets[$month]['revenue'] += (float) ($eventData->revenue ?? 0);
+            }
+        }
+
+        return $buckets;
     }
 
-    private function eventsInRange(Project $project, ?Carbon $from, ?Carbon $to)
+    /**
+     * Projects with events in the range but no single BI figure recorded —
+     * these silently drag every dashboard aggregate towards zero.
+     *
+     * @param Collection<int, Project> $projects
+     * @return array<int, array<string, mixed>>
+     */
+    private function findDataGaps(Collection $projects, ?Carbon $from, ?Carbon $to): array
+    {
+        $gaps = [];
+
+        foreach ($projects as $project) {
+            if ($this->eventsInRangeCount($project, $from, $to) === 0) {
+                continue;
+            }
+
+            $biData = $project->biData;
+            $hasTotals = $biData && (
+                $biData->visitors_total !== null
+                || $biData->sold_tickets_total !== null
+                || $biData->revenue_total !== null
+            );
+            $hasEventData = $project->biEventData->contains(
+                fn($entry) => $entry->visitors !== null
+                    || $entry->sold_tickets !== null
+                    || $entry->revenue !== null
+            );
+            // Alle drei Kennzahlen bewusst als "nicht relevant" markiert → keine Lücke
+            $allNotApplicable = $biData
+                && $biData->visitors_not_applicable
+                && $biData->sold_tickets_not_applicable
+                && $biData->revenue_not_applicable;
+
+            if (!$hasTotals && !$hasEventData && !$allNotApplicable) {
+                $gaps[] = [
+                    'project_id' => $project->id,
+                    'project_name' => $project->name,
+                ];
+            }
+        }
+
+        return $gaps;
+    }
+
+    private function eventsInRangeCount(Project $project, ?Carbon $from, ?Carbon $to): int
     {
         return $project->events->filter(function ($event) use ($from, $to): bool {
             if (!$event->start_time) {
@@ -230,21 +347,7 @@ class BiDashboardService
             }
 
             return true;
-        });
-    }
-
-    private function eventHasTag($event, string $name): bool
-    {
-        $tags = $event->event_type?->biTags;
-
-        if (!$tags) {
-            return false;
-        }
-
-        return $tags->contains(
-            fn($tag) => strcasecmp($tag->name_de ?? '', $name) === 0
-                || strcasecmp($tag->name ?? '', $name) === 0
-        );
+        })->count();
     }
 
     /**

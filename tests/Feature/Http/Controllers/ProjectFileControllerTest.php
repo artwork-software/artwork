@@ -4,7 +4,8 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
-use Illuminate\Http\UploadedFile;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -34,6 +35,60 @@ final class ProjectFileControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function user_downloads_file_as_attachment_by_default(): void
+    {
+        $user = $this->adminUser();
+        $file = $this->createAccessibleProjectFile($user);
+
+        $response = $this->actingAs($user)->get(route('download_file', $file));
+
+        $response->assertOk();
+
+        $contentDisposition = $response->headers->get('content-disposition', '');
+
+        $this->assertStringContainsString('attachment', $contentDisposition);
+        $this->assertStringContainsString('doc.pdf', $contentDisposition);
+    }
+
+    #[Test]
+    public function user_can_view_file_inline_for_printing(): void
+    {
+        $user = $this->adminUser();
+        $file = $this->createAccessibleProjectFile($user);
+
+        $response = $this->actingAs($user)->get(route('download_file', [
+            'project_file' => $file,
+            'inline' => true,
+        ]));
+
+        $response->assertOk();
+
+        $contentDisposition = $response->headers->get('content-disposition', '');
+
+        $this->assertStringContainsString('inline', $contentDisposition);
+        $this->assertStringContainsString('doc.pdf', $contentDisposition);
+    }
+
+    #[Test]
+    public function inline_request_downloads_unsupported_file_types_as_attachment(): void
+    {
+        $user = $this->adminUser();
+        $file = $this->createAccessibleProjectFile($user, 'page.html', 'abc.html', '<html></html>');
+
+        $response = $this->actingAs($user)->get(route('download_file', [
+            'project_file' => $file,
+            'inline' => true,
+        ]));
+
+        $response->assertOk();
+
+        $contentDisposition = $response->headers->get('content-disposition', '');
+
+        $this->assertStringContainsString('attachment', $contentDisposition);
+        $this->assertStringContainsString('page.html', $contentDisposition);
+    }
+
+    #[Test]
     public function guest_cannot_destroy(): void
     {
         $project = Project::factory()->create();
@@ -60,5 +115,24 @@ final class ProjectFileControllerTest extends FeatureTestCase
 
         $this->delete('/project_files/' . $file->id . '/force_delete')
             ->assertRedirect(route('login'));
+    }
+
+    private function createAccessibleProjectFile(
+        User $user,
+        string $name = 'doc.pdf',
+        string $basename = 'abc.pdf',
+        string $contents = '%PDF-1.4 test'
+    ): ProjectFile {
+        $project = Project::factory()->create();
+        $file = ProjectFile::query()->forceCreate([
+            'project_id' => $project->id,
+            'name' => $name,
+            'basename' => $basename,
+        ]);
+
+        $file->accessingUsers()->attach($user->id);
+        Storage::put('project_files/' . $basename, $contents);
+
+        return $file;
     }
 }

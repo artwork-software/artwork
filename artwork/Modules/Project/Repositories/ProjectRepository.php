@@ -145,6 +145,26 @@ class ProjectRepository extends BaseRepository
         return Project::search($query);
     }
 
+    public function searchByNameOrArtists(string $search, int $limit = 20): Collection
+    {
+        $like = '%' . $search . '%';
+
+        return Project::query()
+            ->with('crmContacts')
+            ->where(function (EloquentBuilder $query) use ($like): void {
+                $query
+                    ->where('name', 'like', $like)
+                    ->orWhere('artists', 'like', $like)
+                    ->orWhereHas(
+                        'crmContacts',
+                        fn(EloquentBuilder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
+                    );
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
     public function pinnedProjects(int $userId): Collection
     {
         return Project::query()

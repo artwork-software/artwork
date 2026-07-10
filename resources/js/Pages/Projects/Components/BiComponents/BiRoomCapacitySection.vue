@@ -1,6 +1,5 @@
 <template>
-    <div class="mb-8 border-b border-dashed border-gray-400 pb-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $t('Room capacities & utilisation') }}</h3>
+    <div>
         <div class="overflow-x-auto" v-if="projectRooms.length > 0">
             <table class="min-w-full divide-y divide-gray-300 text-sm">
                 <thead>

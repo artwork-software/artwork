@@ -56,9 +56,8 @@ readonly class VacationService
 
         $vacationConflictService->checkVacationConflictsOnDay(
             $firstVacation->date,
-            $firstVacation->vacationer_type === User::class ? User::find($firstVacation->vacationer_id) : null,
-            $firstVacation->vacationer_type === Freelancer::class ?
-                Freelancer::find($firstVacation->vacationer_id) : null,
+            $vacationer instanceof User ? $vacationer : null,
+            $vacationer instanceof Freelancer ? $vacationer : null,
             $notificationService
         );
 
@@ -107,6 +106,8 @@ readonly class VacationService
         $series_until = Carbon::parse($series_repeat_until);
         $series_until->addDay();
         $whileEndDate = Carbon::parse($date)->setTimezone(config('app.timezone'));
+        $userVacationer = $vacationer instanceof User ? $vacationer : null;
+        $freelancerVacationer = $vacationer instanceof Freelancer ? $vacationer : null;
         if ($frequency === 'daily') {
             while ($whileEndDate->addDay() < $series_until) {
                 $date = $whileEndDate->format('Y-m-d');
@@ -123,9 +124,8 @@ readonly class VacationService
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $newVacation->date,
-                    $newVacation->vacationer_type === User::class ? User::find($newVacation->vacationer_id) : null,
-                    $newVacation->vacationer_type === Freelancer::class ?
-                        Freelancer::find($newVacation->vacationer_id) : null,
+                    $userVacationer,
+                    $freelancerVacationer,
                     $notificationService
                 );
             }
@@ -146,9 +146,8 @@ readonly class VacationService
                 ]);
                 $vacationConflictService->checkVacationConflictsOnDay(
                     $weekly->date,
-                    $weekly->vacationer_type === User::class ? User::find($weekly->vacationer_id) : null,
-                    $weekly->vacationer_type === Freelancer::class ?
-                        Freelancer::find($weekly->vacationer_id) : null,
+                    $userVacationer,
+                    $freelancerVacationer,
                     $notificationService
                 );
             }

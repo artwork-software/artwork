@@ -40,6 +40,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
+import { GlobalWorkerOptions } from 'pdfjs-dist'
+
+// Den pdf.js-Worker erst konfigurieren, wenn tatsächlich eine Datei-Vorschau
+// (und damit pdf.js) geladen wird — statt eager im app.js-Entry jeder Seite.
+// Nur setzen, wenn nicht schon konfiguriert (vue-pdf hätte sonst einen eigenen Fallback).
+if (!GlobalWorkerOptions.workerSrc) {
+    GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.min.mjs',
+        import.meta.url
+    ).toString()
+}
 
 const props = withDefaults(defineProps<{
     src: string

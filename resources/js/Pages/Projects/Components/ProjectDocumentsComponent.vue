@@ -2,21 +2,21 @@
 import { ref, reactive, computed, onMounted, getCurrentInstance, onBeforeUnmount, watch, inject } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
-import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import MultiAlertComponent from '@/Components/Alerts/MultiAlertComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import InfoButtonComponent from '@/Pages/Projects/Tab/Components/InfoButtonComponent.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import { useProjectDocumentListener } from '@/Composeables/Listener/useProjectDocumentListener.js'
+import { isInlinePrintableFile, useInlineFilePrinter } from '@/Composeables/useInlineFilePrinter'
 import { VuePDF, usePDF } from '@tato30/vue-pdf'
-import FilePreview from "@/Artwork/Files/FilePreview.vue";
-import { IconFileUpload, IconFileText } from '@tabler/icons-vue'
-import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import FilePreview from '@/Artwork/Files/FilePreview.vue'
+import { IconFileUpload, IconFileText, IconPrinter } from '@tabler/icons-vue'
 
 interface ProjectFile {
     id?: number | string
     name: string
-    file_size?: string
+    file_size?: string | null
+    storage_available?: boolean
     created_at?: string
     mime_type?: string | null
     url?: string | null
@@ -42,6 +42,7 @@ const uploadedCount = ref(0)
 const totalToUpload = ref(0)
 const isDragging = ref(false)
 const fileInputEl = ref<HTMLInputElement | null>(null)
+const { destroyPrintFrame, printInlineFile } = useInlineFilePrinter()
 
 const page = usePage()
 const userId = computed(() => (page.props as any)?.auth?.user?.id ?? null)
@@ -177,6 +178,7 @@ async function uploadDocumentToProject(file: File) {
 }
 
 function downloadFile(file: ProjectFile) {
+    if (!isFileAvailable(file)) return
     const a = document.createElement('a')
     a.href = fileUrl(file)
     a.target = '_blank'
@@ -217,12 +219,16 @@ function isPdf(file: ProjectFile) {
     const ext = fileExt(file.name)
     return m === 'application/pdf' || ext === 'pdf'
 }
-function isPreviewable(file: ProjectFile) { return isImage(file) || isPdf(file) }
+function isFileAvailable(file: ProjectFile) { return file.storage_available !== false }
+function isPreviewable(file: ProjectFile) { return isFileAvailable(file) && (isImage(file) || isPdf(file)) }
 
 function fileUrl(file: ProjectFile) {
-    // Falls dein Download-Endpoint 'attachment' erzwingt, erlaube serverseitig ?inline=1 o. ä.
-    // Hier nehmen wir denselben Route-Helper wie beim Download.
-    return file.url || route('download_file', { project_file: file as any })
+    return file.url || route('download_file', { project_file: file.id ?? file })
+}
+
+function printFile(file: ProjectFile) {
+    if (!isFileAvailable(file) || !isInlinePrintableFile(file)) return
+    printInlineFile(fileUrl(file))
 }
 
 /* Lightbox State */
@@ -259,10 +265,13 @@ function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape')     closePreview()
 }
 
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKey)
+    destroyPrintFrame()
+})
 
 function openPreview(file: ProjectFile) {
-    if (!isPreviewable(file)) return
+    if (!isFileAvailable(file) || !isPreviewable(file)) return
     lightboxType.value = isPdf(file) ? 'pdf' : 'image'
     lightboxName.value = file.name
     lightboxSrc.value = fileUrl(file)
@@ -355,7 +364,10 @@ function closePreview() {
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-medium text-zinc-900">{{ file.name }}</div>
                             <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                <span>{{ file.file_size }}</span>
+                                <span v-if="isFileAvailable(file)">{{ file.file_size }}</span>
+                                <span v-else class="font-medium text-rose-600">
+                                    {{ $t('File is unavailable in storage') }}
+                                </span>
                                 <span v-if="file.created_at" class="inline-flex items-center gap-1">
                                   • <span>{{ $t('Uploaded') }}:</span>
                                   <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
@@ -364,8 +376,18 @@ function closePreview() {
                         </div>
                     </div>
 
-                    <div class="shrink-0 flex items-center gap-3">
-                        <button type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" @click="downloadFile(file)">
+                    <div class="shrink-0 flex items-center gap-3 print:hidden">
+                        <button
+                            v-if="isFileAvailable(file) && isInlinePrintableFile(file)"
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            :aria-label="`${$t('Print')}: ${file.name}`"
+                            @click="printFile(file)"
+                        >
+                            <IconPrinter class="size-4" aria-hidden="true" />
+                            {{ $t('Print') }}
+                        </button>
+                        <button v-if="isFileAvailable(file)" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" @click="downloadFile(file)">
                             {{ $t('Download') }}
                         </button>
                         <button v-if="canEditFull" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500" @click="openConfirmDeleteModal(file)">

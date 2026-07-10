@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Services;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\Shift\Models\Shift;
@@ -293,8 +294,7 @@ class WorkingHourService
      * @return string<mixed>
      */
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded,Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
@@ -318,7 +318,16 @@ class WorkingHourService
         $workers = $workerShiftPlanService->filterByQualifications($workers, $currentUser);
         $qualificationsCache = $workerService->buildQualificationsCache($workers);
 
-        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours($workers, $startDate, $endDate);
+        // Stundenkonto/KW-Stunden anderer Personen nur mit Berechtigung; eigene Werte immer.
+        // Ohne Berechtigung wird für die anderen erst gar nichts berechnet.
+        $canSeeWorkerHours = $currentUser?->can(PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value) ?? false;
+        $weeklyWorkingHoursCache = $this->precomputeWeeklyWorkingHours(
+            $canSeeWorkerHours
+                ? $workers
+                : $workers->filter(static fn (User $worker) => $worker->id === $currentUser?->id),
+            $startDate,
+            $endDate
+        );
 
         $workerIds = $workers->pluck('id')->all();
 
@@ -364,9 +373,10 @@ class WorkingHourService
             /** @var JsonResource $desiredResourceClass */
             $desiredUserResource = $desiredResourceClass::make($user);
 
+            $showHours = $canSeeWorkerHours || $user->id === $currentUser?->id;
             $additionalData = [
-                'workTimeBalance' => $this->convertMinutesInHours($user->work_time_balance ?? 0),
-                'weeklyWorkingHours' => $weeklyWorkingHoursCache[$user->id] ?? [],
+                'workTimeBalance' => $showHours ? $this->convertMinutesInHours($user->work_time_balance ?? 0) : null,
+                'weeklyWorkingHours' => $showHours ? ($weeklyWorkingHoursCache[$user->id] ?? []) : [],
             ];
 
             $userData = $workerShiftPlanService->buildWorkerData(

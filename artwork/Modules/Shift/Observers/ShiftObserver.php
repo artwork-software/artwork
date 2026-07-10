@@ -25,8 +25,12 @@ class ShiftObserver
     {
         // Vor dem Löschen die zugewiesenen Mitarbeiter erfassen – danach sind die
         // shift_workers-Pivots per DB-Cascade weg. tapActivity() schreibt die Namen
-        // beim 'deleted'-Event in den Log-Eintrag.
-        $shift->captureDeletionAffectedWorkers();
+        // beim 'deleted'-Event in den Log-Eintrag. In Kaskaden (ShiftService::delete)
+        // sind die Pivots hier bereits soft-deleted — dort wurde vorab erfasst,
+        // die Namen dürfen nicht mit einer leeren Liste überschrieben werden.
+        if ($shift->deletionAffectedWorkers === null) {
+            $shift->captureDeletionAffectedWorkers();
+        }
     }
 
     public function deleted(Shift $shift): void

@@ -26,6 +26,7 @@
         :search-threshold="searchThreshold"
         :show-color-indicator="showColorIndicator"
         color-property="_color"
+        :button-class="buttonClass || undefined"
     />
 </template>
 
@@ -55,6 +56,8 @@ const props = defineProps({
     emptyOption: { type: Object, default: null },
     /** Option-Labels zusätzlich übersetzen (Default: aus, da meist Daten). */
     translateOptionLabels: { type: Boolean, default: false },
+    /** Optional: Button-Klasse an ArtworkBaseListbox durchreichen (leer = Default). */
+    buttonClass: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -117,6 +120,10 @@ const isSameValue = (a, b) => {
 const selectedItem = computed(() =>
     normalizedItems.value.find(it => isSameValue(it._v, props.modelValue)) ?? null
 )
+
+// Wird im Template referenziert; ohne dieses Computed warnte Vue bei jedem
+// Render und der Placeholder wurde nie angezeigt.
+const resolvedPlaceholder = computed(() => t(String(props.placeholder ?? '')))
 
 const onChange = (item) => {
     const value = item ? item._v : (props.emptyOption ? (props.emptyOption.value ?? null) : null)

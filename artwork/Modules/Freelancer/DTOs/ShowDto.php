@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Freelancer\DTOs;
 
+use Closure;
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,7 +20,7 @@ class ShowDto extends BaseDto
 
     public ?Collection $vacations = null;
 
-    public ?SupportCollection $vacationSelectCalendar = null;
+    public SupportCollection|Closure|null $vacationSelectCalendar = null;
 
     public ?array $createShowDate = null;
 
@@ -33,19 +34,19 @@ class ShowDto extends BaseDto
 
     public ?float $totalPlannedWorkingHours = null;
 
-    public ?Collection $rooms = null;
+    public Collection|Closure|null $rooms = null;
 
-    public ?array $eventTypes = null;
+    public array|Closure|null $eventTypes = null;
 
-    public ?Collection $projects = null;
+    public Collection|Closure|null $projects = null;
 
-    public ?Collection $shifts = null;
+    public Collection|Closure|null $shifts = null;
 
     public ?Collection $availabilities = null;
 
-    public ?Collection $shiftQualifications = null;
+    public Collection|Closure|null $shiftQualifications = null;
 
-    public ?int $firstProjectShiftTabId = null;
+    public int|Closure|null $firstProjectShiftTabId = null;
 
     public function setFreelancer(?array $freelancer): self
     {
@@ -82,7 +83,7 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setVacationSelectCalendar(?SupportCollection $vacationSelectCalendar): self
+    public function setVacationSelectCalendar(SupportCollection|Closure|null $vacationSelectCalendar): self
     {
         $this->vacationSelectCalendar = $vacationSelectCalendar;
 
@@ -134,28 +135,28 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setRooms(?Collection $rooms): self
+    public function setRooms(Collection|Closure|null $rooms): self
     {
         $this->rooms = $rooms;
 
         return $this;
     }
 
-    public function setEventTypes(?array $eventTypes): self
+    public function setEventTypes(array|Closure|null $eventTypes): self
     {
         $this->eventTypes = $eventTypes;
 
         return $this;
     }
 
-    public function setProjects(?Collection $projects): self
+    public function setProjects(Collection|Closure|null $projects): self
     {
         $this->projects = $projects;
 
         return $this;
     }
 
-    public function setShifts(?Collection $shifts): self
+    public function setShifts(Collection|Closure|null $shifts): self
     {
         $this->shifts = $shifts;
 
@@ -169,14 +170,14 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setShiftQualifications(?Collection $shiftQualifications): self
+    public function setShiftQualifications(Collection|Closure|null $shiftQualifications): self
     {
         $this->shiftQualifications = $shiftQualifications;
 
         return $this;
     }
 
-    public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
+    public function setFirstProjectShiftTabId(int|Closure|null $firstProjectShiftTabId): self
     {
         $this->firstProjectShiftTabId = $firstProjectShiftTabId;
 
@@ -217,7 +218,7 @@ class ShowDto extends BaseDto
         return $this->vacations;
     }
 
-    public function getVacationSelectCalendar(): ?SupportCollection
+    public function getVacationSelectCalendar(): SupportCollection|Closure|null
     {
         return $this->vacationSelectCalendar;
     }
@@ -264,7 +265,7 @@ class ShowDto extends BaseDto
         return $this->totalPlannedWorkingHours;
     }
 
-    public function getRooms(): ?Collection
+    public function getRooms(): Collection|Closure|null
     {
         return $this->rooms;
     }
@@ -272,17 +273,17 @@ class ShowDto extends BaseDto
     /**
      * @return array<int, EventTypeResource>|null
      */
-    public function getEventTypes(): ?array
+    public function getEventTypes(): array|Closure|null
     {
         return $this->eventTypes;
     }
 
-    public function getProjects(): ?Collection
+    public function getProjects(): Collection|Closure|null
     {
         return $this->projects;
     }
 
-    public function getShifts(): ?Collection
+    public function getShifts(): Collection|Closure|null
     {
         return $this->shifts;
     }
@@ -292,12 +293,12 @@ class ShowDto extends BaseDto
         return $this->availabilities;
     }
 
-    public function getShiftQualifications(): ?Collection
+    public function getShiftQualifications(): Collection|Closure|null
     {
         return $this->shiftQualifications;
     }
 
-    public function getFirstProjectShiftTabId(): ?int
+    public function getFirstProjectShiftTabId(): int|Closure|null
     {
         return $this->firstProjectShiftTabId;
     }

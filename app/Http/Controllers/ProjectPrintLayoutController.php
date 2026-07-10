@@ -175,7 +175,9 @@ class ProjectPrintLayoutController extends Controller
                         break;
                     case ProjectTabComponentEnum::SHIFT_TAB->value:
                         $shifts = $project->shifts()
-                            ->with(['craft', 'room'])
+                            // users/freelancer/serviceProvider/committedBy kamen vorher über das
+                            // (entfernte) globale $with des Shift-Models in den Payload
+                            ->with(['craft', 'room', 'users', 'freelancer', 'serviceProvider', 'committedBy'])
                             ->orderBy('start_date')
                             ->orderBy('start')
                             ->get();

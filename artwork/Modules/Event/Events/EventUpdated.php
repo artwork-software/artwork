@@ -43,6 +43,11 @@ class EventUpdated implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        // Frisch laden statt loadMissing: am übergebenen Model kann die Relation
+        // noch mit dem Stand von vor dem sync() hängen (stale) oder ganz fehlen —
+        // die Serializer liefern bei nicht geladener Relation sonst still [].
+        $this->event->load(['eventProperties', 'subEvents.eventProperties']);
+
         return [
             'event' => $this->event->is_planning
                 ? BroadcastEventDTOWithVerifications::formModel($this->event)

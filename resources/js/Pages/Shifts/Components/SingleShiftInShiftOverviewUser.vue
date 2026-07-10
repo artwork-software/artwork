@@ -2,7 +2,10 @@
     <div>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
             <div class="col-span-2 flex items-center gap-x-2">
-                <PropertyIcon name="IconLock" v-if="shift.isCommitted" class="w-4 h-4" />
+                <PropertyIcon name="IconLock" v-if="shift.isCommitted" class="w-4 h-4"
+                              v-tooltip.bottom="{ value: $t('Committed'), class: 'aw-tooltip' }" />
+                <PropertyIcon name="IconGitPullRequest" v-else-if="shift.inWorkflow" class="w-4 h-4"
+                              v-tooltip.bottom="{ value: $t('Requested'), class: 'aw-tooltip' }" />
                 <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: (craft.color ?? '#ccc') + '22', borderColor: blackColorIfColorIsWhite(craft.color ?? '#ccc') + '55', color: blackColorIfColorIsWhite(craft.color ?? '#ccc') }">
                     {{ shift.craftAbbreviation }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
@@ -11,7 +14,7 @@
                 </div>
             </div>
             <div class="col-span-3 flex items-center">
-                <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
+                <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !(shift.isCommitted ?? shift.is_committed)">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <PopoverButton class="font-lexend rounded-lg ring-0 focus:ring-0 focus:outline-none">
                             <p class="text-xs text-left font-lexend">{{ shift.startPivot }} - {{ shift.endPivot }}</p>
@@ -123,7 +126,14 @@ const props = defineProps({
 const emit = defineEmits(['shiftDeleted'])
 const page = usePage()
 
-const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
+// Lookup-Craft bevorzugen: shift.craft aus WorkerShiftPlanResource ist schlank (ohne craft_shift_planer),
+// nur der craftsById-Lookup enthält die Planer für isCurrentUserPlannerOfShiftCraft
+const craft = computed(() => {
+    const own = props.shift.craft;
+    const resolved = resolveCraft(props.shift.craftId ?? own?.id);
+    if (resolved && own) return { ...own, ...resolved };
+    return resolved ?? own ?? {};
+});
 const showConfirmDeleteModal = ref(false);
 const showRequestWorkTimeChangeModal = ref(false);
 const isDeletingUser = ref(false);

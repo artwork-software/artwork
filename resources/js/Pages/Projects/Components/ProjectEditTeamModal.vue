@@ -76,171 +76,37 @@
                     <div
                         v-for="user in users"
                         :key="`assigned-user-${user.id}`"
-                        class="flex flex-col gap-4 p-4 sm:p-5"
+                        class="flex items-center gap-3 px-4 py-3"
                     >
-                        <!-- Kopfzeile User -->
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center gap-4 min-w-0">
-                                <img
-                                    class="h-11 w-11 rounded-full object-cover flex-shrink-0"
-                                    :src="user.profile_photo_url"
-                                    alt=""
-                                />
-                                <div class="min-w-0">
-                                    <div class="font-semibold text-zinc-900 truncate">
-                                        {{ user.first_name }} {{ user.last_name }}
-                                    </div>
-                                </div>
-                            </div>
+                        <img
+                            class="h-9 w-9 rounded-full object-cover flex-shrink-0"
+                            :src="user.profile_photo_url"
+                            alt=""
+                        />
 
-                            <button
-                                type="button"
-                                @click="deleteUserFromProjectTeam(user)"
-                                class="flex items-center text-zinc-400 hover:text-error transition"
-                            >
-                                <span class="sr-only">{{ $t('Remove user from team') }}</span>
-                                <XCircleIcon class="h-5 w-5" />
-                            </button>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-semibold text-zinc-900 truncate">
+                                {{ user.first_name }} {{ user.last_name }}
+                            </div>
                         </div>
 
-                        <!-- Rechte -->
-                        <div
+                        <ProjectTeamPermissionsDropdown
                             v-if="checkUserAuth(user)"
-                            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+                            :user="user"
+                            :project-roles="projectRoles"
+                            :can-manage-project-roles="hasAdminRole()"
+                            @update-permission="updateUserPermission(user, $event)"
+                            @toggle-role="addRoleToUser(user, $event)"
+                        />
+
+                        <button
+                            type="button"
+                            @click="deleteUserFromProjectTeam(user)"
+                            class="flex-shrink-0 rounded-full p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-error"
                         >
-                            <!-- Basisrechte -->
-                            <div class="flex items-start gap-3">
-                                <input
-                                    v-model="user.pivot_can_write"
-                                    type="checkbox"
-                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded"
-                                />
-                                <p
-                                    class="text-sm leading-6"
-                                    :class="user.pivot_can_write ? 'text-primary font-semibold' : 'text-secondary'"
-                                >
-                                    {{ $t('Write permission') }}
-                                </p>
-                            </div>
-
-                            <!-- Weiterführende Rechte -->
-                            <div class="flex flex-col sm:flex-row gap-4">
-                                <Dropdown
-                                    :open="user.openedMenu"
-                                    align="right"
-                                    width="60"
-                                    class="text-right"
-                                >
-                                    <template #trigger>
-                                        <button
-                                            @click="user.openedMenu = !user.openedMenu"
-                                            type="button"
-                                            class="text-sm font-medium text-primary hover:text-primary/80 transition inline-flex items-center"
-                                        >
-                                            {{ $t('Further rights') }}
-                                        </button>
-                                    </template>
-
-                                    <template #content>
-                                        <div class="w-48 p-4 space-y-4">
-                                            <div class="flex items-start gap-3">
-                                                <input
-                                                    v-model="user.pivot_access_budget"
-                                                    type="checkbox"
-                                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded"
-                                                />
-                                                <p class="text-sm text-secondary leading-6">
-                                                    {{ $t('Budget access') }}
-                                                </p>
-                                            </div>
-
-                                            <div class="flex items-start gap-3">
-                                                <input
-                                                    v-model="user.pivot_delete_permission"
-                                                    type="checkbox"
-                                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded"
-                                                />
-                                                <p class="text-sm text-secondary leading-6">
-                                                    {{ $t('Permission to delete') }}
-                                                </p>
-                                            </div>
-
-                                            <div
-                                                class="flex items-start gap-3"
-                                                v-if="user.project_management"
-                                            >
-                                                <input
-                                                    v-model="user.pivot_is_manager"
-                                                    type="checkbox"
-                                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded"
-                                                />
-                                                <p class="text-sm text-secondary leading-6">
-                                                    {{ $t('Project management') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </Dropdown>
-
-                                <!-- Projektrollen -->
-                                <Dropdown
-                                    :open="user.openedMenuRoles"
-                                    align="right"
-                                    width="56"
-                                    class="text-right"
-                                >
-                                    <template #trigger>
-                                        <button
-                                            @click="user.openedMenuRoles = !user.openedMenuRoles"
-                                            type="button"
-                                            class="text-sm font-medium text-primary hover:text-primary/80 transition inline-flex items-center"
-                                        >
-                                            {{ $t('Project Roles') }}
-                                        </button>
-                                    </template>
-
-                                    <template #content>
-                                        <div class="flex flex-col p-4">
-                                            <template v-if="projectRoles.length > 0">
-                                                <div
-                                                    v-for="role in projectRoles"
-                                                    :key="`role-${role.id}`"
-                                                    class="flex items-start gap-3 mb-3 last:mb-0"
-                                                >
-                                                    <input
-                                                        :id="`role-${role.id}`"
-                                                        :name="role.name"
-                                                        type="checkbox"
-                                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded"
-                                                        :checked="user?.pivot_roles?.includes(role.id)"
-                                                        @change="addRoleToUser(user, role)"
-                                                    />
-                                                    <p class="text-sm text-secondary leading-6">
-                                                        {{ role.name }}
-                                                    </p>
-                                                </div>
-                                            </template>
-
-                                            <template v-else>
-                                                <Link
-                                                    v-if="hasAdminRole()"
-                                                    class="linkText text-sm font-medium text-primary"
-                                                    :href="route('project-roles.index')"
-                                                >
-                                                    {{ $t('No project roles created yet') }}
-                                                </Link>
-                                                <span
-                                                    v-else
-                                                    class="text-xs text-secondary"
-                                                >
-                                                    {{ $t('No project roles created yet') }}
-                                                </span>
-                                            </template>
-                                        </div>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
+                            <span class="sr-only">{{ $t('Remove user from team') }}</span>
+                            <XCircleIcon class="h-5 w-5" />
+                        </button>
                     </div>
                 </section>
 
@@ -252,13 +118,13 @@
                     <div
                         v-for="department in departments"
                         :key="`assigned-dep-${department.id}`"
-                        class="flex items-center justify-between p-4 sm:p-5"
+                        class="flex items-center justify-between px-4 py-3"
                     >
                         <div class="flex items-center gap-4 min-w-0">
                             <TeamIconCollection
                                 :iconName="department.svg_name"
                                 :alt="department.name"
-                                class="h-11 w-11 rounded-full object-cover flex-shrink-0"
+                                class="h-9 w-9 rounded-full object-cover flex-shrink-0"
                             />
                             <div class="min-w-0 font-semibold text-zinc-900 truncate">
                                 {{ department.name }}
@@ -292,7 +158,7 @@
 
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
-import { Link, useForm, usePage } from '@inertiajs/vue3'
+import { useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
 // Alte Mixins weiterhin nutzen (Vue 3 erlaubt defineOptions für Options-API features)
@@ -302,9 +168,9 @@ import IconLib from '@/Mixins/IconLib.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import Dropdown from '@/Jetstream/Dropdown.vue'
+import ProjectTeamPermissionsDropdown from '@/Pages/Projects/Components/ProjectTeamPermissionsDropdown.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
-import { XCircleIcon, XIcon } from '@heroicons/vue/solid'
+import { XCircleIcon } from '@heroicons/vue/solid'
 import {is} from "laravel-permission-to-vuejs";
 
 defineOptions({
@@ -339,22 +205,21 @@ const form = useForm({
     assigned_departments: [],
 })
 
+const cloneAssignedUsers = (assignedUsers) => {
+    return (assignedUsers || []).map(user => ({
+        ...user,
+        pivot_roles: [...(user.pivot_roles ?? [])],
+    }))
+}
+
 // Lokale Kopien (damit wir nicht direkt Props mutieren)
-const users = ref(props.assignedUsers.map(u => ({
-    ...u,
-    openedMenu: u.openedMenu ?? false,
-    openedMenuRoles: u.openedMenuRoles ?? false,
-})))
+const users = ref(cloneAssignedUsers(props.assignedUsers))
 
 const departments = ref(props.assignedDepartments.map(d => ({ ...d })))
 
 // Halte lokale Kopien mit Props synchron, z. B. wenn Daten asynchron geladen werden oder beim Öffnen des Modals
 watch(() => props.assignedUsers, (newUsers) => {
-    users.value = (newUsers || []).map(u => ({
-        ...u,
-        openedMenu: u.openedMenu ?? false,
-        openedMenuRoles: u.openedMenuRoles ?? false,
-    }))
+    users.value = cloneAssignedUsers(newUsers)
 }, { deep: true })
 
 watch(() => props.assignedDepartments, (newDeps) => {
@@ -364,11 +229,7 @@ watch(() => props.assignedDepartments, (newDeps) => {
 // Beim Öffnen des Modals auf den neuesten Stand bringen
 watch(() => props.show, (isOpen) => {
     if (isOpen) {
-        users.value = (props.assignedUsers || []).map(u => ({
-            ...u,
-            openedMenu: u.openedMenu ?? false,
-            openedMenuRoles: u.openedMenuRoles ?? false,
-        }))
+        users.value = cloneAssignedUsers(props.assignedUsers)
         departments.value = (props.assignedDepartments || []).map(d => ({ ...d }))
     }
 })
@@ -416,8 +277,8 @@ const addUserToProjectTeamArray = (userToAdd) => {
 
     users.value.push({
         ...userToAdd,
-        openedMenu: false,
-        openedMenuRoles: false,
+        // Neue Teammitglieder starten mit ihren im Arbeitsprofil hinterlegten Standard-Projektrollen
+        pivot_roles: [...(userToAdd.default_project_role_ids ?? userToAdd.pivot_roles ?? [])],
     })
 
     department_and_user_query.value = ''
@@ -425,6 +286,10 @@ const addUserToProjectTeamArray = (userToAdd) => {
 
 const deleteUserFromProjectTeam = (user) => {
     users.value = users.value.filter(u => u.id !== user.id)
+}
+
+const updateUserPermission = (user, {permission, value}) => {
+    user[permission] = value
 }
 
 const editProjectTeam = () => {

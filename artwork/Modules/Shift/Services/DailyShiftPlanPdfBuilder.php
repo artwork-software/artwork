@@ -19,11 +19,24 @@ class DailyShiftPlanPdfBuilder
     /** Zielhöhe Grid (px) – Dompdf-friendly */
     private int $gridTargetHeightPx = 180;
 
-    private int $gapRowHeightPx = 14;
+    /** Reale Renderhöhe einer Gap-Zeile (Message + Padding) */
+    private int $gapRowHeightPx = 22;
     private int $activeRowMinHeightPx = 18;
 
-    /** Pro Seite IMMER ein Tag */
-    private int $maxChunksPerPage = 1;
+    /** Nutzbare Tabellenbreite (px), A4 quer abzüglich Ränder – gemessen */
+    private int $tableWidthPx = 1270;
+
+    /** Pro Tag berechnete Zeichen-pro-Zeile-Näherung für die Umbruch-Schätzung */
+    private int $timelineCharsPerLine = 14;
+    private int $craftLaneCharsPerLine = 22;
+
+    /**
+     * Empirisch gemessen (wkhtmltopdf, A4 quer, dpi 300, Ränder 10/10/10/10):
+     * ~900px Inhalt passen auf eine Seite. Ein Tag(-Teil) muss inkl. Rahmen,
+     * Tagesbalken und Events darunter bleiben, damit page-break-inside: avoid
+     * ihn immer komplett auf eine Seite schieben kann.
+     */
+    private int $dayChunkMaxHeightPx = 820;
 
     /** @var array<int,string> */
     private array $qualificationNameById = [];
@@ -222,7 +235,8 @@ class DailyShiftPlanPdfBuilder
         }
 
 
-        $timelineLanes = 1;
+        // Keine Timeline-Einträge -> Spalte komplett ausblenden statt leer mitzuschleppen
+        $timelineLanes = 0;
         foreach ($timelineBlocks as $b) {
             $timelineLanes = max($timelineLanes, ((int)($b['lane'] ?? 0)) + 1);
         }
@@ -239,6 +253,64 @@ class DailyShiftPlanPdfBuilder
             count($laneColumns)
         );
 
+        // Tag in Zeitfenster teilen, die jeweils sicher auf eine Seite passen.
+        // Geschnitten wird nur an Minuten, über die kein Block hinwegläuft.
+        $windows = $this->buildWindowsRecursive(
+            $timelineBlocks,
+            $shiftBlocksByCraft,
+            $craftGroups,
+            $timelineLanes,
+            $eventCards,
+            true
+        );
+
+        $chunks = collect();
+        $dateLabel = $day->format('d.m.Y') . ' (' . $day->translatedFormat('l') . ')';
+        $total = count($windows);
+
+        foreach ($windows as $idx => $win) {
+            $isContinuation = $idx > 0;
+
+            $chunks->push([
+                'day'              => $day,
+                'dateLabel'        => $dateLabel,
+                'isContinuation'   => $isContinuation,
+                'contLabel'        => $win['contLabel']
+                    ?? ($isContinuation ? 'Fortsetzung ab ' . $this->minutesToTime((int)$win['fromMin']) : null),
+                'continues'        => $idx < $total - 1,
+                'eventCards'       => $isContinuation ? [] : $eventCards,
+
+                'rows'             => $win['rows'],
+
+                'layout'           => $layout,
+                'timelineLanes'    => $timelineLanes,
+                'timelineLaneMaps' => $win['timelineLaneMaps'],
+                'craftGroups'      => $craftGroups,
+                'laneColumns'      => $laneColumns,
+                'craftLaneMaps'    => $win['craftLaneMaps'],
+                'craftMeta'        => $craftMeta,
+            ]);
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * Baut das Grid für die übergebenen Blöcke; passt es (geschätzt) nicht auf
+     * eine Seite, wird an einem "sauberen" Schnittpunkt möglichst mittig geteilt
+     * und rekursiv weiterverarbeitet.
+     *
+     * @return array<int,array{fromMin:int,rows:array,timelineLaneMaps:array,craftLaneMaps:array}>
+     */
+    private function buildWindowsRecursive(
+        array $timelineBlocks,
+        array $shiftBlocksByCraft,
+        array $craftGroups,
+        int $timelineLanes,
+        array $eventCards,
+        bool $isFirstPart,
+        int $depth = 0
+    ): array {
         [$rows, $timelineLaneMaps, $craftLaneMaps] = $this->buildSegmentGrid(
             $timelineBlocks,
             $shiftBlocksByCraft,
@@ -246,21 +318,192 @@ class DailyShiftPlanPdfBuilder
             $timelineLanes
         );
 
-        return collect([[
-            'day'              => $day,
-            'dateLabel'        => $day->format('d.m.Y') . ' (' . $day->translatedFormat('l') . ')',
-            'eventCards'       => $eventCards,
-
+        $window = [
+            'fromMin'          => (int)($rows[0]['from'] ?? 0),
             'rows'             => $rows,
-
-            'layout'           => $layout,
-            'timelineLanes'    => $timelineLanes,
             'timelineLaneMaps' => $timelineLaneMaps,
-            'craftGroups'      => $craftGroups,
-            'laneColumns'      => $laneColumns,
             'craftLaneMaps'    => $craftLaneMaps,
-            'craftMeta'        => $craftMeta,
-        ]]);
+        ];
+
+        $estimate = $this->estimateChunkHeightPx($rows, $isFirstPart ? $eventCards : null);
+        if ($estimate <= $this->dayChunkMaxHeightPx || $depth >= 6) {
+            return [$window];
+        }
+
+        // Ziel: so wenige, möglichst gleich große Teile wie nötig
+        $parts = max(2, (int)ceil($estimate / $this->dayChunkMaxHeightPx));
+
+        $cutMinute = $this->findBalancedCleanCut($rows, $timelineBlocks, $shiftBlocksByCraft, $parts);
+        if ($cutMinute === null) {
+            // Kein sauberer Schnitt möglich (alle Blöcke überlappen durchgehend).
+            // Wenn Events + Grid nur zusammen zu hoch sind: beide als eigene
+            // Einheiten ausgeben, damit das Grid geschlossen auf die nächste
+            // Seite rutschen kann statt Kopf/Events zu verwaisen.
+            if ($isFirstPart && !empty($eventCards)) {
+                $headerWindow = [
+                    'fromMin'          => $window['fromMin'],
+                    'rows'             => [],
+                    'timelineLaneMaps' => [],
+                    'craftLaneMaps'    => [],
+                    'noGrid'           => true,
+                ];
+
+                $gridWindow = $window;
+                $gridWindow['contLabel'] = 'Fortsetzung';
+
+                return [$headerWindow, $gridWindow];
+            }
+
+            // Fallback: Zeilenumbruch von wkhtmltopdf.
+            return [$window];
+        }
+
+        [$timelineBefore, $timelineAfter] = $this->splitBlocksAt($timelineBlocks, $cutMinute);
+
+        $craftBefore = [];
+        $craftAfter = [];
+        foreach ($shiftBlocksByCraft as $craftKey => $blocks) {
+            [$before, $after] = $this->splitBlocksAt($blocks, $cutMinute);
+            if (!empty($before)) $craftBefore[$craftKey] = $before;
+            if (!empty($after)) $craftAfter[$craftKey] = $after;
+        }
+
+        $countBefore = count($timelineBefore) + array_sum(array_map('count', $craftBefore));
+        $countAfter  = count($timelineAfter) + array_sum(array_map('count', $craftAfter));
+        if ($countBefore === 0 || $countAfter === 0) {
+            return [$window];
+        }
+
+        return array_merge(
+            $this->buildWindowsRecursive(
+                $timelineBefore,
+                $craftBefore,
+                $craftGroups,
+                $timelineLanes,
+                $eventCards,
+                $isFirstPart,
+                $depth + 1
+            ),
+            $this->buildWindowsRecursive(
+                $timelineAfter,
+                $craftAfter,
+                $craftGroups,
+                $timelineLanes,
+                [],
+                false,
+                $depth + 1
+            )
+        );
+    }
+
+    /** @return array{0:array,1:array} Blöcke vor bzw. nach dem Schnittpunkt */
+    private function splitBlocksAt(array $blocks, int $cutMinute): array
+    {
+        $before = array_values(array_filter($blocks, fn($b) => (int)$b['end'] <= $cutMinute));
+        $after  = array_values(array_filter($blocks, fn($b) => (int)$b['start'] >= $cutMinute));
+
+        return [$before, $after];
+    }
+
+    /**
+     * Sucht die Zeilengrenze, über die kein Block hinwegläuft und nach der
+     * ungefähr 1/$parts der Gesamthöhe liegt (gleich große Teile statt
+     * Rest-Schnipsel).
+     */
+    private function findBalancedCleanCut(array $rows, array $timelineBlocks, array $shiftBlocksByCraft, int $parts = 2): ?int
+    {
+        $allBlocks = $timelineBlocks;
+        foreach ($shiftBlocksByCraft as $blocks) {
+            foreach ($blocks as $b) $allBlocks[] = $b;
+        }
+
+        $totalHeight = 0;
+        foreach ($rows as $r) $totalHeight += (int)($r['heightPx'] ?? 0);
+        $target = $totalHeight / max(2, $parts);
+
+        $best = null;
+        $bestDistance = null;
+        $cumulative = 0;
+
+        foreach ($rows as $i => $r) {
+            if ($i > 0) {
+                $minute = (int)$r['from'];
+
+                $clean = true;
+                foreach ($allBlocks as $b) {
+                    if ((int)$b['start'] < $minute && (int)$b['end'] > $minute) {
+                        $clean = false;
+                        break;
+                    }
+                }
+
+                if ($clean) {
+                    $distance = abs($cumulative - $target);
+                    if ($bestDistance === null || $distance < $bestDistance) {
+                        $best = $minute;
+                        $bestDistance = $distance;
+                    }
+                }
+            }
+
+            $cumulative += (int)($r['heightPx'] ?? 0);
+        }
+
+        return $best;
+    }
+
+    /**
+     * Geschätzte Renderhöhe eines Tag-Teils (px).
+     * $eventCards = null: Events-Sektion wird gar nicht gerendert (Fortsetzungsteil).
+     */
+    private function estimateChunkHeightPx(array $rows, ?array $eventCards): int
+    {
+        // Tagesrahmen + Tagesbalken + Abstand nach unten
+        $height = 2 + 30 + 20;
+
+        if ($eventCards !== null) {
+            $height += $this->estimateEventsSectionHeightPx($eventCards);
+        }
+
+        // Tabellenkopf (2 Zeilen)
+        $height += 38;
+
+        foreach ($rows as $r) {
+            $height += (int)($r['heightPx'] ?? 16) + 1; // + Zeilenrahmen
+        }
+
+        // Abschlusszeile mit Endzeit
+        $height += 13;
+
+        return $height;
+    }
+
+    private function estimateEventsSectionHeightPx(array $eventCards): int
+    {
+        if (empty($eventCards)) {
+            return 30; // "Keine Events"-Zeile inkl. Padding
+        }
+
+        $height = 18; // Padding der Sektion
+
+        foreach (array_chunk($eventCards, 2) as $pair) {
+            $rowHeight = 0;
+
+            foreach ($pair as $card) {
+                $cardHeight = 16 + 11 + 10 + 10; // Padding + Name + Zeit + Raum
+
+                $description = trim((string)($card['description'] ?? ''));
+                if ($description !== '') {
+                    $cardHeight += 4 + (int)ceil(mb_strlen($description) / 80) * 9;
+                }
+
+                $rowHeight = max($rowHeight, $cardHeight);
+            }
+
+            $height += $rowHeight + 8; // + border-spacing
+        }
+
+        return $height;
     }
 
     /**
@@ -295,6 +538,17 @@ class DailyShiftPlanPdfBuilder
         array $craftGroups,
         int $timelineLanes
     ): array {
+        // Spaltenbreiten-Näherung für die Zeilenumbruch-Schätzung der Blöcke
+        $craftColCount = 0;
+        foreach ($craftGroups as $g) {
+            $craftColCount += (int)($g['lanes'] ?? 1);
+        }
+        $tlColWidth = max(60, min(80, (int)floor(200 / max(1, $timelineLanes))));
+        $craftColWidth = ($this->tableWidthPx - 44 - $timelineLanes * $tlColWidth) / max(1, $craftColCount);
+
+        $this->timelineCharsPerLine = max(8, (int)floor($tlColWidth / 4.8));
+        $this->craftLaneCharsPerLine = max(8, (int)floor($craftColWidth / 4.6));
+
         $allShiftBlocksFlat = [];
         foreach ($shiftBlocksByCraft as $blocks) {
             foreach ($blocks as $b) $allShiftBlocksFlat[] = $b;
@@ -460,9 +714,21 @@ class DailyShiftPlanPdfBuilder
                 if (!$row['isGap'] && isset($markerByStart[$row['from']]) && ($row['to'] - $row['from']) === 1) {
                     $row['markerLabel'] = $markerByStart[$row['from']];
                 }
+
+                // Zeile direkt nach einem Marker: krumme "+1min"-Zeit (z.B. 14:01)
+                // auf der Zeitachse unterdrücken
+                if (!$row['isGap'] && isset($markerByStart[$row['from'] - 1])) {
+                    $row['suppressT1'] = true;
+                }
             }
             unset($row);
         }
+
+        // Zeilen so aufweiten, dass jeder Block-Inhalt in seine Zeitspanne passt.
+        // Dadurch bleiben alle Lanes zeitlich ausgerichtet (lange Personenlisten
+        // stauchen die Zeitachse nicht mehr) und die Höhenschätzung fürs
+        // Seiten-Packing stimmt mit dem Rendering überein.
+        $this->expandRowsForBlockContents($rows, $allBlocksFlat);
 
         $timelineLaneMaps = [];
         for ($lane = 0; $lane < $timelineLanes; $lane++) {
@@ -895,16 +1161,9 @@ class DailyShiftPlanPdfBuilder
         usort($blocks, fn($a, $b) => $a['start'] <=> $b['start']);
 
         foreach ($blocks as $b) {
-            $startIndex = $this->rowIndexForMinute($rows, (int)$b['start']);
-            $endIndex   = $this->rowIndexForMinute($rows, max((int)$b['start'], (int)$b['end'] - 1));
-
-            if ($startIndex === null || $endIndex === null) continue;
-            if ($endIndex < $startIndex) continue;
-
-            while ($endIndex >= $startIndex && ($rows[$endIndex]['isGap'] ?? false)) {
-                $endIndex--;
-            }
-            if ($endIndex < $startIndex) continue;
+            $range = $this->spanRowRange($rows, $b);
+            if ($range === null) continue;
+            [$startIndex, $endIndex] = $range;
 
             if (isset($map[$startIndex])) continue;
 
@@ -913,9 +1172,11 @@ class DailyShiftPlanPdfBuilder
                 $spanHeight += (int)($rows[$i]['heightPx'] ?? 16);
             }
 
+            // Zeilen wurden vorab per expandRowsForBlockContents aufgeweitet –
+            // die Spanne deckt den Inhalt bereits ab, kein zusätzliches Strecken.
             $map[$startIndex] = [
                 'rowspan'  => ($endIndex - $startIndex + 1),
-                'heightPx' => max($spanHeight, $this->estimateBlockContentHeight($b)),
+                'heightPx' => $spanHeight,
                 'data'     => $b,
             ];
 
@@ -925,6 +1186,59 @@ class DailyShiftPlanPdfBuilder
         }
 
         return $map;
+    }
+
+    /**
+     * Zeilenbereich (Start-/Endindex), den ein Block im Grid belegt.
+     * Gap-Zeilen am Ende der Spanne werden abgeschnitten.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    private function spanRowRange(array $rows, array $block): ?array
+    {
+        $startIndex = $this->rowIndexForMinute($rows, (int)$block['start']);
+        $endIndex   = $this->rowIndexForMinute($rows, max((int)$block['start'], (int)$block['end'] - 1));
+
+        if ($startIndex === null || $endIndex === null) return null;
+
+        while ($endIndex >= $startIndex && ($rows[$endIndex]['isGap'] ?? false)) {
+            $endIndex--;
+        }
+
+        return $endIndex < $startIndex ? null : [$startIndex, $endIndex];
+    }
+
+    /**
+     * Weitet aktive Zeilen auf, bis jede Block-Spanne mindestens die geschätzte
+     * Inhaltshöhe des Blocks fasst. Höhen wachsen nur – bereits erfüllte
+     * Spannen bleiben gültig, ein Durchlauf genügt.
+     */
+    private function expandRowsForBlockContents(array &$rows, array $blocks): void
+    {
+        foreach ($blocks as $b) {
+            $range = $this->spanRowRange($rows, $b);
+            if ($range === null) continue;
+            [$startIndex, $endIndex] = $range;
+
+            $spanHeight = 0;
+            $activeIndexes = [];
+            for ($i = $startIndex; $i <= $endIndex; $i++) {
+                $spanHeight += (int)($rows[$i]['heightPx'] ?? 0);
+                if (empty($rows[$i]['isGap'])) {
+                    $activeIndexes[] = $i;
+                }
+            }
+
+            if (empty($activeIndexes)) continue;
+
+            $deficit = $this->estimateBlockContentHeight($b) - $spanHeight;
+            if ($deficit <= 0) continue;
+
+            $perRow = (int)ceil($deficit / count($activeIndexes));
+            foreach ($activeIndexes as $i) {
+                $rows[$i]['heightPx'] += $perRow;
+            }
+        }
     }
 
     private function rowIndexForMinute(array $rows, int $minute): ?int
@@ -946,12 +1260,53 @@ class DailyShiftPlanPdfBuilder
         return [$chunks->values()->all()];
     }
 
+    /**
+     * Geschätzte gerenderte Inhaltshöhe eines Blocks (px). Bewusst leicht
+     * überschätzt: Unterschätzen würde Inhalte abschneiden bzw. das
+     * Seiten-Packing sprengen.
+     */
     private function estimateBlockContentHeight(array $block): int
     {
-        $base = 18;
-        $people = count($block['people'] ?? []);
+        // Timeline-Block (hat keine Personen-/Quali-Daten)
+        if (!array_key_exists('people', $block)) {
+            $height = 10; // Padding .tlBody
+
+            $meta = trim((string)($block['meta'] ?? ''));
+            $height += max(1, (int)ceil(mb_strlen($meta) / $this->timelineCharsPerLine)) * 10;
+
+            $title = trim((string)($block['title'] ?? ''));
+            if ($title !== '' && $title !== $meta) {
+                $height += 1 + (int)ceil(mb_strlen($title) / $this->timelineCharsPerLine) * 9;
+            }
+
+            return max($this->activeRowMinHeightPx, $height);
+        }
+
+        // Schicht-Block
+        $height = 14; // Padding .cellBody + Rahmenreserve
+        $height += 10; // Gewerke-Kürzel
+        $height += 10; // Zeit-Titel
+
+        if (!empty($block['room'])) {
+            $height += 12;
+        }
+
+        $meta = trim((string)($block['meta'] ?? ''));
+        if ($meta !== '') {
+            $height += 3 + (int)ceil(mb_strlen($meta) / $this->craftLaneCharsPerLine) * 9;
+        }
+
         $quals = count($block['qualSummary'] ?? []);
-        return max($this->activeRowMinHeightPx, $base + ($people * 14) + ($quals * 10));
+        if ($quals > 0) {
+            $height += 5 + $quals * 9;
+        }
+
+        $people = count($block['people'] ?? []);
+        if ($people > 0) {
+            $height += 8 + $people * 21;
+        }
+
+        return max($this->activeRowMinHeightPx, $height);
     }
 
     /* ----------------------------- HELPERS ----------------------------- */

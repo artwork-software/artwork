@@ -51,6 +51,7 @@ class EventRepository extends BaseRepository
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',
@@ -91,6 +92,7 @@ class EventRepository extends BaseRepository
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',
@@ -130,6 +132,7 @@ class EventRepository extends BaseRepository
                         $query->orderBy('end_date');
                         $query->orderBy('end');
                     },
+                    'shifts.craft',
                     'shifts.users',
                     'shifts.users.dayServices',
                     'shifts.freelancer',

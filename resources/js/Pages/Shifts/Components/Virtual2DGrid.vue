@@ -12,10 +12,13 @@ const props = withDefaults(defineProps<{
     overscanCols?: number
     /** z.B. Höhe deiner Sticky-Toolbar im Grid (optional) */
     topPadding?: number
+    /** > 0 rendert eine Kopfzeile über dem Scrollbereich (Slot #colHeader), horizontal synchronisiert */
+    headerHeight?: number
 }>(), {
     overscanRows: 6,
     overscanCols: 3,
     topPadding: 0,
+    headerHeight: 0,
 })
 
 function getColWidth(c: number): number {
@@ -138,7 +141,34 @@ const visibleCols = computed(() => {
 </script>
 
 <template>
-    <div ref="viewportEl" class="relative h-full w-full overflow-auto pointer-events-auto pt-10">
+    <div class="flex h-full w-full flex-col">
+        <!-- Kopfzeile (z.B. KW-Labels), horizontal mit dem Scrollbereich synchronisiert;
+             pt-14 hält sie unter der fixed Toolbar des User-Overview-Panels -->
+        <div v-if="headerHeight > 0" class="shrink-0 pt-14">
+            <div class="relative overflow-hidden" :style="{ height: headerHeight + 'px' }">
+                <div class="absolute inset-y-0 left-0 right-0" :style="{ transform: `translateX(${-sl}px)` }">
+                    <div
+                        v-for="vc in visibleCols"
+                        :key="`h_${vc.col.fullDay ?? vc.c}`"
+                        class="absolute top-0"
+                        :style="{ left: vc.left + 'px', width: vc.width + 'px', height: headerHeight + 'px' }"
+                    >
+                        <slot name="colHeader" :day="vc.col" :colIndex="vc.c" />
+                    </div>
+                </div>
+                <!-- Abdeckung über der Sticky-Spalte, damit Header-Labels darunter durchscrollen -->
+                <div
+                    class="absolute left-0 top-0 z-10 bg-artwork-navigation-background"
+                    :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
+                ></div>
+            </div>
+        </div>
+
+        <div
+            ref="viewportEl"
+            class="relative w-full overflow-auto pointer-events-auto"
+            :class="headerHeight > 0 ? 'min-h-0 flex-1' : 'h-full pt-10'"
+        >
         <!-- Spacer erzeugt echte Scrollbars -->
         <div class="relative" :style="{ width: totalW + 'px', height: totalH + 'px' }">
             <div
@@ -167,6 +197,7 @@ const visibleCols = computed(() => {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </template>

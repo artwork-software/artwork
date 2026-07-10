@@ -16,7 +16,23 @@ export default {
             componentData: null,
             listeners: null,
             isDragging: dragBus.isDragging,
+            draggedComponent: dragBus.draggedComponent,
         }
+    },
+    computed: {
+        // Grund, warum die aktuell gezogene Komponente hier nicht abgelegt werden darf (null = erlaubt)
+        invalidDropReason() {
+            const data = this.draggedComponent;
+            if (!data || !this.isSidebar) return null;
+
+            if (data.type === 'DisclosureComponent') {
+                return this.$t('Folder components cannot be placed in the sidebar');
+            }
+            if (data.sidebar_enabled === false || data.sidebar_enabled === 0 || data.sidebar_enabled === "0") {
+                return this.$t('This component cannot be placed in the sidebar');
+            }
+            return null;
+        },
     },
     mounted() {
         this.listeners = dragBus.addEventListenerForDraggingStart();
@@ -65,18 +81,10 @@ export default {
             }
 
             // Für Sidebar: Prüfen ob Komponente Sidebar-fähig ist
+            // (der Grund wird bereits während des Draggings in der Zone angezeigt)
             if(this.isSidebar) {
-                // Ordnerkomponenten (DisclosureComponent) können nicht in die Sidebar
-                if(data.type === 'DisclosureComponent') {
-                    alert('Ordnerkomponenten können nicht in die Sidebar gelegt werden');
-                    this.dropOver = false;
-                    return;
-                }
-
-                // Nur Komponenten mit sidebar_enabled = true können hinzugefügt werden
-                // Blockiere nur wenn explizit false oder 0
-                if(data.sidebar_enabled === false || data.sidebar_enabled === 0 || data.sidebar_enabled === "0") {
-                    alert('Diese Komponente kann nicht in die Sidebar gelegt werden');
+                if(data.type === 'DisclosureComponent'
+                    || data.sidebar_enabled === false || data.sidebar_enabled === 0 || data.sidebar_enabled === "0") {
                     this.dropOver = false;
                     return;
                 }
@@ -135,20 +143,25 @@ export default {
         @dragover="onDragOver"
         @drop="onDrop"
         :class="[
-            'flex items-center h-4 min-h-4 rounded cursor-pointer transition',
+            'flex items-center h-4 min-h-4 rounded transition',
             isDragging ? 'border-2 border-dashed' : 'hover:bg-gray-50/40',
-            isDragging && dropOver
-                ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30'
-                : (isDragging ? 'border-zinc-300 bg-zinc-50/40' : '')
+            isDragging && invalidDropReason
+                ? 'border-red-200 bg-red-50/40 opacity-70 cursor-not-allowed'
+                : (isDragging && dropOver
+                    ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-400/30 cursor-pointer'
+                    : (isDragging ? 'border-zinc-300 bg-zinc-50/40 cursor-pointer' : 'cursor-pointer'))
         ]"
         :aria-hidden="!isDragging"
-        :aria-dropeffect="isDragging ? 'copy' : undefined"
+        :aria-dropeffect="isDragging && !invalidDropReason ? 'copy' : undefined"
     >
-        <div v-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-xs text-zinc-600 pointer-events-none">
-            <span class="font-medium" :class="dropOver ? 'text-emerald-700' : ''">Komponente hier ablegen</span>
+        <div v-if="isDragging && invalidDropReason" class="h-full w-full flex items-center justify-center gap-2 text-xs pointer-events-none">
+            <span class="font-medium text-red-600">{{ invalidDropReason }}</span>
+        </div>
+        <div v-else-if="isDragging" class="h-full w-full flex items-center justify-center gap-2 text-xs text-zinc-600 pointer-events-none">
+            <span class="font-medium" :class="dropOver ? 'text-emerald-700' : ''">{{ $t('Drop component here') }}</span>
         </div>
         <span v-else-if="dropOver" class="text-xs text-gray-300 w-full flex items-center justify-center pointer-events-none">
-            Zum hinzufügen hier loslassen
+            {{ $t('Release to add') }}
         </span>
     </div>
     <SelectTabsModal :tabs="allTabs" v-if="showSelectTabsModal" :position="order" :component-data="componentData" :current-tab="tab" @close="showSelectTabsModal = false" @open-tab="openTab" />

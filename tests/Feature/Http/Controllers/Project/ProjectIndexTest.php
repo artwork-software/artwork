@@ -72,6 +72,54 @@ final class ProjectIndexTest extends FeatureTestCase
     }
 
     #[Test]
+    public function projects_can_be_searched_by_name(): void
+    {
+        $this->actingAsAdmin();
+
+        $project = Project::factory()->create(['name' => 'Sommernachtstraum']);
+
+        $response = $this->get(route('projects.search', ['query' => 'Sommernacht']));
+
+        $response->assertOk();
+        $response->assertJsonFragment(['id' => $project->id, 'name' => 'Sommernachtstraum']);
+    }
+
+    #[Test]
+    public function projects_can_be_searched_by_artist_name(): void
+    {
+        $this->actingAsAdmin();
+
+        $project = Project::factory()->create([
+            'name' => 'Gastspiel Herbst',
+            'artists' => 'Maria Callas',
+        ]);
+        Project::factory()->create(['name' => 'Anderes Projekt', 'artists' => '']);
+
+        $response = $this->get(route('projects.search', ['query' => 'Callas']));
+
+        $response->assertOk();
+        $response->assertJsonCount(1);
+        $response->assertJsonFragment([
+            'id' => $project->id,
+            'name' => 'Gastspiel Herbst',
+            'artists' => 'Maria Callas',
+        ]);
+    }
+
+    #[Test]
+    public function project_search_returns_null_artists_when_none_set(): void
+    {
+        $this->actingAsAdmin();
+
+        Project::factory()->create(['name' => 'Projekt ohne Besetzung', 'artists' => '']);
+
+        $response = $this->get(route('projects.search', ['query' => 'ohne Besetzung']));
+
+        $response->assertOk();
+        $response->assertJsonFragment(['name' => 'Projekt ohne Besetzung', 'artists' => null]);
+    }
+
+    #[Test]
     public function admin_can_search_departments_and_users(): void
     {
         $this->actingAsAdmin();

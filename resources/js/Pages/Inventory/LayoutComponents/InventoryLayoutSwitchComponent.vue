@@ -1,7 +1,7 @@
 <template>
     <SwitchIconTooltip
         v-model="newGridLayout"
-        :tooltip-text="gridLayout ? $t('List') : $t('Grid')"
+        :tooltip-text="$t('Switch view')"
         size="md"
         @update:modelValue="$emit('update:gridLayout', newGridLayout)"
         :icon="!gridLayout ? IconLayoutList : IconLayoutGrid"

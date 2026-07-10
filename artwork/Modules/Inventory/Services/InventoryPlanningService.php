@@ -45,6 +45,7 @@ class InventoryPlanningService
             ->with([
                 'detailedArticleQuantities',            // für is_detailed_quantity
                 'detailedArticleQuantities.status',     // Status der Detail-Batches
+                'detailedArticleQuantities.properties', // room/manufacturer-Appends ohne N+1
                 'statusValues'                          // Fallback/klassische Statuswerte
             ])
             ->get();

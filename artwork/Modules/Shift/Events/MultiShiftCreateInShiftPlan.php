@@ -58,6 +58,7 @@ class MultiShiftCreateInShiftPlan implements ShouldBroadcastNow
                 'serviceProvider.globalQualifications',
                 'craft.craftShiftPlaner:id,first_name,last_name,position,business,profile_photo_path',
                 'project.status:id,name,color',
+                'project.managerUsers:users.id,first_name,last_name,position,email,profile_photo_path',
                 'project.users:id',
                 'project.groups:id,name,state,artists,is_group,icon,color',
                 'project.groups.status:id,name,color',

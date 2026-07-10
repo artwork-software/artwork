@@ -99,6 +99,9 @@ class SendDeadlineNotificationsCommand extends Command
                         $task->update(['sent_deadline_notification' => true]);
                     }
                 } elseif ($deadline <= $now->copy()->addDay() && $deadline >= $now) {
+                    if ($task->getAttribute('sent_deadline_tomorrow_notification')) {
+                        continue;
+                    }
                     if ($isPrivateChecklist && $checklistUser) {
                         $this->sendDeadlineNotification(
                             __(
@@ -109,6 +112,7 @@ class SendDeadlineNotificationsCommand extends Command
                             $checklistUser,
                             $task
                         );
+                        $task->update(['sent_deadline_tomorrow_notification' => true]);
                         continue;
                     }
                     if (!$isPrivateChecklist) {
@@ -150,6 +154,7 @@ class SendDeadlineNotificationsCommand extends Command
                                 $task
                             );
                         }
+                        $task->update(['sent_deadline_tomorrow_notification' => true]);
                     }
                 }
             }

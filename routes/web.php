@@ -61,6 +61,7 @@ use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectCrmContactController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectPrintLayoutController;
@@ -110,7 +111,10 @@ use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
+use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
+use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
+use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
@@ -155,6 +159,7 @@ use Artwork\Modules\Crm\Http\Controllers\CrmPropertyGroupController;
 use Artwork\Modules\Crm\Http\Controllers\CrmSettingsController;
 use App\Http\Controllers\ExternalAccessManagementController;
 use App\Http\Controllers\ExternalSubmissionReviewController;
+use App\Http\Controllers\OidcAuthController;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalAccessSettingsController;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ExternalAccess\Http\Controllers\ExternalInvitationController;
@@ -206,6 +211,14 @@ Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
+
+// OIDC / SSO Login (guest) - Authorization-Code-Flow gegen einen Identity Provider
+Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
+    Route::get('/auth/oidc/{externalUserSource}/redirect', [OidcAuthController::class, 'redirect'])
+        ->name('auth.oidc.redirect');
+    Route::get('/auth/oidc/{externalUserSource}/callback', [OidcAuthController::class, 'callback'])
+        ->name('auth.oidc.callback');
+});
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
@@ -266,6 +279,34 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.branding');
         Route::put('/branding', [ToolSettingsBrandingController::class, 'update'])
             ->name('tool.branding.update');
+        Route::get('/external-user-management', [ToolSettingsExternalUserManagementController::class, 'index'])
+            ->name('tool.external-user-management');
+
+        // External User Sources
+        Route::get('/external-user-management/sources', [ExternalUserSourceController::class, 'index'])
+            ->name('tool.external-user-management.sources.index');
+        Route::post('/external-user-management/sources', [ExternalUserSourceController::class, 'store'])
+            ->name('tool.external-user-management.sources.store');
+        Route::put('/external-user-management/sources/{externalUserSource}', [ExternalUserSourceController::class, 'update'])
+            ->name('tool.external-user-management.sources.update');
+        Route::delete('/external-user-management/sources/{externalUserSource}', [ExternalUserSourceController::class, 'destroy'])
+            ->name('tool.external-user-management.sources.destroy');
+        Route::post('/external-user-management/sources/{externalUserSource}/test-connection', [ExternalUserSourceController::class, 'testConnection'])
+            ->name('tool.external-user-management.sources.test-connection');
+
+        Route::post('/external-user-management/sources/test-connection-config', [ExternalUserSourceController::class, 'testConnectionConfig'])
+            ->name('tool.external-user-management.sources.test-connection-config');
+
+        // External User Group Mappings
+        Route::get('/external-user-management/sources/{sourceId}/group-mappings', [ExternalUserGroupMappingController::class, 'index'])
+            ->name('tool.external-user-management.group-mappings.index');
+        Route::post('/external-user-management/group-mappings', [ExternalUserGroupMappingController::class, 'store'])
+            ->name('tool.external-user-management.group-mappings.store');
+        Route::put('/external-user-management/group-mappings/{externalUserGroupMapping}', [ExternalUserGroupMappingController::class, 'update'])
+            ->name('tool.external-user-management.group-mappings.update');
+        Route::delete('/external-user-management/group-mappings/{externalUserGroupMapping}', [ExternalUserGroupMappingController::class, 'destroy'])
+            ->name('tool.external-user-management.group-mappings.destroy');
+
         Route::get('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'index'])
             ->name('tool.communication-and-legal');
         Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])
@@ -379,6 +420,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/money_source_search', [UserController::class, 'moneySourceSearch'])
         ->name('users.money_source_search');
     Route::get('/users/{user}/info', [UserController::class, 'editUserInfo'])->name('user.edit.info');
+    Route::get('/users/{user}/tooltip-info', [UserController::class, 'tooltipInfo'])->name('user.tooltip.info');
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftPlan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
@@ -457,6 +499,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
+    Route::patch('/users/{user}/defaultProjectRoles', [UserController::class, 'updateDefaultProjectRoles'])
+        ->name('user.update.defaultProjectRoles');
     Route::patch('/users/{user}/{qualification}/shift-qualification', [UserController::class, 'updateShiftQualification'])
         ->name('user.update.shift-qualification');
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
@@ -468,6 +512,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //user.sidebar.update
     Route::patch('/users/{user}/sidebar/update', [UserController::class, 'updateSidebar'])
         ->name('user.sidebar.update');
+    //user.modal.backdrop.update
+    Route::patch('/users/{user}/modal-backdrop/update', [UserController::class, 'updateModalBackdrop'])
+        ->name('user.modal.backdrop.update');
     //user.checklist.style
     Route::patch('/users/{user}/checklist/style', [UserController::class, 'updateChecklistStyle'])
         ->name('user.checklist.style');
@@ -490,6 +537,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
+    Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
+        ->name('projects.rooms-with-event-periods');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
@@ -577,6 +626,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/shift', [ProjectShiftController::class, 'show'])
             ->name('projects.tabs.shift');
     });
+
+    // Verknüpfung von CRM-Künstler*innen mit einem Projekt (Autorisierung via ProjectPolicy::update)
+    Route::post('/projects/{project}/crm-contacts', [ProjectCrmContactController::class, 'store'])
+        ->name('projects.crm-contacts.store');
+    Route::delete('/projects/{project}/crm-contacts/{crmContact}', [ProjectCrmContactController::class, 'destroy'])
+        ->name('projects.crm-contacts.destroy');
 
     Route::get('/projects/{project}/history', [ProjectController::class, 'history'])
         ->name('projects.history')
@@ -1779,6 +1834,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/update/availability/{availability}', [AvailabilityController::class, 'update'])
         ->name('update.availability');
 
+    // Eintrag als Ganzes ersetzen (Einzeltag, Zeitraum oder Serie): löscht Zeile bzw. Serie und legt neu an
+    Route::patch('/update/vacation-entry/{vacation}', [VacationController::class, 'updateEntry'])
+        ->name('update.vacation.entry');
+
+    Route::patch('/update/availability-entry/{availability}', [AvailabilityController::class, 'updateEntry'])
+        ->name('update.availability.entry');
+
     Route::delete('/delete/availability/{availability}', [AvailabilityController::class, 'destroy'])
         ->name('delete.availability');
 
@@ -2184,9 +2246,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'user'], function (): void {
         Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
             ->name('user.update.checklist.filter');
+        // Autorisierung im Controller: eigener Plan via "can view own roster",
+        // fremde Pläne via teammanagement/"can manage workers"
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
-            ->name('user.operationPlan')
-            ->can('can view own roster');
+            ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
             ->name('user.compact.mode.toggle');
         Route::post('/{user}/toggle/showProjectTeamNames', [UserController::class, 'toggleShowProjectTeamNames'])
@@ -2207,6 +2270,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 UserController::class, 'updateShiftPlanUserSortBy'
             ]
         )->name('user.update.shiftPlanUserSortBy');
+        Route::patch(
+            '/{user}/update/sort-workers-by-qualification',
+            [
+                UserController::class, 'updateSortWorkersByQualification'
+            ]
+        )->name('user.update.sort_workers_by_qualification');
+        Route::patch(
+            '/{user}/update/closed-qualification-groups',
+            [
+                UserController::class, 'updateClosedQualificationGroups'
+            ]
+        )->name('user.update.closed_qualification_groups');
 
         Route::patch(
             '/{user}/update/shift-tab-user-sort-by',
@@ -2366,6 +2441,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Update user's inventory grid layout preference
         Route::post('/update-grid-layout', [InventoryCategoryController::class, 'updateInventoryGridLayout'])
             ->name('inventory.update-grid-layout');
+
+        // Update user's inventory "hide article images" preference
+        Route::post('/update-hide-images', [InventoryCategoryController::class, 'updateInventoryHideImages'])
+            ->name('inventory.update-hide-images');
     });
 
 
@@ -2431,6 +2510,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/export', [CrmExportController::class, 'export'])->name('crm.export');
 
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
+        Route::get('/contact-mask', [CrmContactController::class, 'createMask'])
+            ->middleware('can:can view crm')->name('crm.contacts.mask');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
         Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
         // Frontend gated die Kontakt-Aktionen auf 'can view crm' (Seitenzugang); Backend daran
@@ -2937,6 +3018,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
+        // Muss vor der {internalIssue}-Wildcard stehen
+        Route::get('/search/for-copy', 'searchForCopy')->name('issue-of-material.search-for-copy');
         Route::get('/{internalIssue}', 'show')->name('issue-of-material.show');
         Route::post('/store', 'store')->name('issue-of-material.store');
         Route::match(['patch', 'post'], '/{internalIssue}/update', 'update')->name('issue-of-material.update');
@@ -2948,6 +3031,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('extern-issue-of-material.index');
+        Route::get('/search/for-copy', 'searchForCopy')->name('extern-issue-of-material.search-for-copy');
         Route::post('/store', 'store')->name('extern-issue-of-material.store');
         Route::match(['patch', 'post'], '/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
         Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');
@@ -3184,6 +3268,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/committed-shift-changes/{change}/acknowledge',
         [ShiftPlanRequestController::class, 'acknowledge']
     )->name('committed-shift-changes.acknowledge')
+        ->can('approve-shift-plan-requests');
+
+    // Bulk: alle offenen Änderungen der aktuellen Filterauswahl (Craft + Suche +
+    // Intern/Extern) genehmigen — ein einzelnes UPDATE, skaliert auch bei tausenden Zeilen.
+    Route::post(
+        '/committed-shift-changes/acknowledge-all',
+        [ShiftPlanRequestController::class, 'acknowledgeAll']
+    )->name('committed-shift-changes.acknowledge-all')
         ->can('approve-shift-plan-requests');
 
     Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])

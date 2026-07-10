@@ -1,5 +1,5 @@
 <template>
-    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed || hasAdminRole()">
+    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !(shift.isCommitted ?? shift.is_committed) || hasAdminRole()">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
                 <div
@@ -278,7 +278,14 @@ const props = defineProps({
 })
 
 
-const craft = computed(() => props.shift.craft ?? resolveCraft(props.shift.craftId) ?? {});
+// Lookup-Craft bevorzugen: shift.craft aus den Payloads ist schlank (ohne craft_shift_planer),
+// nur der craftsById-Lookup enthält die Planer für isCurrentUserPlannerOfShiftCraft
+const craft = computed(() => {
+    const own = props.shift.craft;
+    const resolved = resolveCraft(props.shift.craftId ?? own?.id);
+    if (resolved && own) return { ...own, ...resolved };
+    return resolved ?? own ?? {};
+});
 
 // Normalisierte Liste der Qualifikationen (Array)
 const shiftQualificationsArray = computed(() =>

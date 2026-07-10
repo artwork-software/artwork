@@ -67,11 +67,12 @@ return [
                 'Die angefragte Arbeitszeitänderung von :user: ' .
                 'von :start_time bis :end_time.',
         ],
-        'new_commit_request_title' => 'Neue Schicht-Commit-Anfrage',
-        'new_commit_request' => 'Neue Schicht-Commit-Anfrage :start_time - :end_time von :user',
-        'link_label_new_commit_request' => 'Gehe zu Schicht-Commit-Anfrage',
+        'new_commit_request_title' => 'Neue Dienstplananfrage',
+        'new_commit_request' => 'Neue Dienstplananfrage :craft (KW :week, :start_time – :end_time) von :user',
+        'link_label_new_commit_request' => 'Gehe zur Anfrage',
         'commit_request_approved' => 'Dienstplananfrage :craft (KW :week) wurde genehmigt',
         'commit_request_rejected' => 'Dienstplananfrage :craft (KW :week) wurde abgelehnt',
+        'commit_request_comment' => 'Hinweis von :user: :comment',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

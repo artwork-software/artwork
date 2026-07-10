@@ -31,6 +31,12 @@ export default defineComponent({
                     hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
                 {
+                    name: this.$t('Externe Nutzerverwaltung'),
+                    href: route('tool.external-user-management'),
+                    current: route().current('tool.external-user-management'),
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
+                },
+                {
                     name: this.$t('Communication & Legal'),
                     href: route('tool.communication-and-legal'),
                     current: route().current('tool.communication-and-legal'),

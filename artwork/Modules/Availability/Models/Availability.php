@@ -122,4 +122,34 @@ class Availability extends Model
     {
         return $builder->orderBy('date', $direction);
     }
+
+    /**
+     * Reichert eine (z.B. monatsgefilterte) Collection um die echten Datumsgrenzen ihrer Serien an
+     * (series_start_date/series_end_date über ALLE Serientage, auch außerhalb des Filters), damit
+     * das Frontend Serien als einen Zeitraum-Eintrag anzeigen und korrekt bearbeiten kann.
+     *
+     * @param \Illuminate\Support\Collection<int, self> $availabilities
+     */
+    public static function attachSeriesDateBounds(\Illuminate\Support\Collection $availabilities): void
+    {
+        $seriesIds = $availabilities->pluck('series_id')->filter()->unique()->values();
+        if ($seriesIds->isEmpty()) {
+            return;
+        }
+
+        $bounds = self::query()
+            ->whereIn('series_id', $seriesIds)
+            ->groupBy('series_id')
+            ->selectRaw('series_id, MIN(date) as min_date, MAX(date) as max_date')
+            ->get()
+            ->keyBy('series_id');
+
+        foreach ($availabilities as $availability) {
+            $bound = $availability->series_id !== null ? $bounds->get($availability->series_id) : null;
+            if ($bound !== null) {
+                $availability->setAttribute('series_start_date', $bound->getAttribute('min_date'));
+                $availability->setAttribute('series_end_date', $bound->getAttribute('max_date'));
+            }
+        }
+    }
 }

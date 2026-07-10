@@ -22,6 +22,9 @@
                             <p class="text-gray-500 text-sm">{{ user_to_edit.email }}</p>
                         </div>
 
+                        <div class="ml-auto">
+                            <UserProfileSearch />
+                        </div>
                     </div>
                     <div class="mt-5">
                         <BaseTabs :tabs="tabs" />
@@ -46,10 +49,12 @@ import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import {Link, router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
+import UserProfileSearch from "@/Pages/Users/Components/UserProfileSearch.vue";
 export default {
     mixins: [Permissions],
     name: "UserEditHeader",
     components: {
+        UserProfileSearch,
         BaseTabs,
         Link,
         ProjectShiftSidenav,

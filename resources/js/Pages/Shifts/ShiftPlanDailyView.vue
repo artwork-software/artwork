@@ -82,6 +82,14 @@
                     </div>
 
                     <div class="flex items-center gap-x-5">
+                        <BaseUIButton
+                            v-if="isInProjectView && (can('can plan shifts') || is('artwork admin'))"
+                            :label="$t('Add Shift')"
+                            :icon="IconCalendarUser"
+                            is-small
+                            @click="openAddShiftForRoomAndDay(null, null)"
+                        />
+
                         <SwitchIconTooltip
                             v-if="!props.project"
                             v-model="dailyViewMode"
@@ -125,7 +133,7 @@
             </div>
 
             <div
-                v-for="day in daysLocal"
+                v-for="day in daysToRender"
                 :key="day.withoutFormat"
                 :ref="el => setDayRef(day.withoutFormat, el)"
                 :style="!visibleDays.has(day.withoutFormat)
@@ -418,43 +426,6 @@ const craftsResolved = computed(() => {
     return _lastCraftsSorted
 })
 
-// Workers loaded asynchronously from API (craft-first), für spätere Nutzung vorbereitet
-const workersLoaded = ref<{
-    usersForShifts: any[]
-    freelancersForShifts: any[]
-    serviceProvidersForShifts: any[]
-}>({
-    usersForShifts: [],
-    freelancersForShifts: [],
-    serviceProvidersForShifts: [],
-})
-const usersForShiftsResolved = computed(() => workersLoaded.value.usersForShifts)
-const freelancersForShiftsResolved = computed(() => workersLoaded.value.freelancersForShifts)
-const serviceProvidersForShiftsResolved = computed(() => workersLoaded.value.serviceProvidersForShifts)
-
-async function loadShiftPlanWorkers() {
-    const start = Array.isArray(props.dateValue) ? props.dateValue[0] : null
-    const end = Array.isArray(props.dateValue) ? props.dateValue[1] : null
-    if (!start || !end) return
-    try {
-        const params: Record<string, any> = { start_date: start, end_date: end }
-        const craftIds = (user_filtersResolved.value as any)?.craft_ids
-        if (Array.isArray(craftIds) && craftIds.length) params.craft_ids = craftIds
-        const { data } = await axios.get(route("shifts.workers"), { params })
-        workersLoaded.value = {
-            usersForShifts: data.usersForShifts ?? [],
-            freelancersForShifts: data.freelancersForShifts ?? [],
-            serviceProvidersForShifts: data.serviceProvidersForShifts ?? [],
-        }
-    } catch {
-        workersLoaded.value = {
-            usersForShifts: [],
-            freelancersForShifts: [],
-            serviceProvidersForShifts: [],
-        }
-    }
-}
-
 const roomsResolved = computed(() => {
     const v: any = props.rooms
     if (Array.isArray(v)) return v
@@ -496,7 +467,13 @@ provide("event_properties",
  * Lokaler State
  */
 const showCalendarWarning = ref(props.calendarWarningText)
-const daysLocal = shallowRef<any[]>(props.days ?? [])
+
+// Extra rows (KW-Trennzeilen der Wochenansicht) werden in der Tagesansicht nicht gerendert,
+// haben aber kein withoutFormat/fullDay: ihr Lazy-Loading-Platzhalter (minHeight) würde nie
+// aufgelöst (Observer-Key undefined) und erzeugt dauerhaften Leerraum → herausfiltern
+const withoutExtraRows = (days: any[]) => (days ?? []).filter((d: any) => !d?.isExtraRow)
+
+const daysLocal = shallowRef<any[]>(withoutExtraRows(props.days as any[]))
 
 // G4: Stable empty array to avoid creating new references
 const EMPTY_ARRAY: readonly any[] = Object.freeze([])
@@ -563,7 +540,7 @@ const showEventComponent = ref(false)
 
 const isPlanning = ref(false)
 const roomCollisions = ref<any[]>([])
-const dailyViewMode = ref<boolean>(page.props.auth.user.daily_view ?? false)
+const dailyViewMode = ref<boolean>(page.props.auth.user.shift_plan_daily_view ?? false)
 
 // ── P1: Lazy Day-Section Rendering via IntersectionObserver ──
 const visibleDays = ref(new Set<string>())
@@ -865,7 +842,7 @@ const initializeDailyShiftPlan = async () => {
         })
 
         const metaRooms = metaData.rooms ?? []
-        daysLocal.value = enrichDays(metaData.days ?? [])
+        daysLocal.value = withoutExtraRows(enrichDays(metaData.days ?? []))
 
         // Show skeleton rooms immediately while batch loads
         shiftPlanCopy.value = metaRooms.map((r: any) => ({
@@ -896,12 +873,18 @@ const initializeDailyShiftPlan = async () => {
         return
     }
 
-    daysLocal.value = enrichDays(props.days ?? [])
+    daysLocal.value = withoutExtraRows(enrichDays(props.days ?? []))
     shiftPlanCopy.value = Array.isArray(props.shiftPlan) ? props.shiftPlan : Object.values(props.shiftPlan ?? {})
     triggerRef(shiftPlanCopy)
 }
 
-watch(() => props.days, (v) => { daysLocal.value = v ?? [] })
+watch(() => props.days, (v) => { daysLocal.value = withoutExtraRows(v as any[]) })
+
+// Zeitraum geändert (z.B. Schicht außerhalb des Projektzeitraums angelegt → headerObject/dateRange
+// aktualisiert): Daten für den neuen Zeitraum nachladen
+watch(() => [props.dateValue?.[0], props.dateValue?.[1]], ([newStart, newEnd], [oldStart, oldEnd]) => {
+    if (newStart !== oldStart || newEnd !== oldEnd) initializeDailyShiftPlan()
+})
 watch(() => props.shiftPlan, (v) => {
     shiftPlanCopy.value = Array.isArray(v) ? v : Object.values(v ?? {})
     triggerRef(shiftPlanCopy)
@@ -1089,6 +1072,26 @@ const isDayWithoutRooms = (dayLabel: string): boolean => {
 }
 
 /**
+ * Hide unoccupied days — Tage ohne jeglichen Termin oder Schicht komplett ausblenden
+ */
+const hideUnoccupiedDays = computed<boolean>(() => {
+    return (page.props.shift_plan_daily_settings ?? page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings)?.hide_unoccupied_days === true
+})
+
+const dayHasContent = (dayLabel: string): boolean => {
+    for (const room of shiftPlanCopy.value || []) {
+        if ((getEventsForRoomDay(room, dayLabel)?.length ?? 0) > 0) return true
+        if ((getFilteredShiftsForRoomDay(room, dayLabel)?.length ?? 0) > 0) return true
+    }
+    return false
+}
+
+const daysToRender = computed<any[]>(() => {
+    if (!hideUnoccupiedDays.value) return daysLocal.value
+    return (daysLocal.value || []).filter((d: any) => d.isExtraRow || dayHasContent(d.fullDay))
+})
+
+/**
  * roomsArray for EventComponent
  */
 const roomsArray = computed(() => {
@@ -1114,7 +1117,7 @@ const shiftQualificationsArray = computed(() =>
 /**
  * Modals
  */
-const openAddShiftForRoomAndDay = (day: string, roomId: number | null) => {
+const openAddShiftForRoomAndDay = (day: string | null, roomId: number | null) => {
     shiftToEdit.value = null
     roomForShiftAdd.value = roomId
     dayForShiftAdd.value = day
@@ -1128,6 +1131,14 @@ const openAddShiftByPresetOrGroup = (day: any, room: any) => {
 }
 
 const closeAddShiftModal = (success = false, shift = null) => {
+    // Erstellung über den Topbar-Button (freie Datumswahl, kein Tag/keine Schicht vorgegeben):
+    // Der Store-Request liefert keine neuen Props; der Broadcast erreicht nur bereits
+    // gerenderte Tage. Daher headerObject (Zeitraum-Quelle) nachladen und Daten neu holen.
+    const wasFreeDateCreate = success
+        && showAddShiftModal.value
+        && shiftToEdit.value === null
+        && dayForShiftAdd.value === null
+
     if (success && shift) {
         const room = shiftPlanCopy.value.find((r: any) => (r.roomId ?? r.id) === shift.roomId)
         if (room) {
@@ -1146,6 +1157,22 @@ const closeAddShiftModal = (success = false, shift = null) => {
     shiftToEdit.value = null
     roomForShiftAdd.value = null
     dayForShiftAdd.value = null
+
+    if (wasFreeDateCreate && props.isInProjectView) {
+        const prevStart = props.dateValue?.[0]
+        const prevEnd = props.dateValue?.[1]
+        router.reload({
+            only: ['headerObject'],
+            onFinish: () => nextTick(() => {
+                // Zeitraum unverändert (Schicht innerhalb): der dateValue-Watcher feuert
+                // nicht, daher hier explizit neu laden. Bei geändertem Zeitraum lädt
+                // bereits der Watcher.
+                if (props.dateValue?.[0] === prevStart && props.dateValue?.[1] === prevEnd) {
+                    initializeDailyShiftPlan()
+                }
+            }),
+        })
+    }
 }
 
 const openNewEventModalWithBaseData = (day: string, roomId: number | null) => {
@@ -1168,7 +1195,7 @@ const eventComponentClosed = () => {
 const changeDailyViewMode = () => {
     router.patch(
         route("user.update.daily_view", page.props.auth.user.id),
-        { daily_view: dailyViewMode.value },
+        { daily_view: dailyViewMode.value, context: 'shift_plan' },
         { preserveScroll: false, preserveState: false }
     )
 }
@@ -1177,7 +1204,7 @@ const changeDailyViewModeValue = (newValue: boolean, onSuccessCallback?: () => v
     dailyViewMode.value = newValue
     router.patch(
         route("user.update.daily_view", page.props.auth.user.id),
-        { daily_view: dailyViewMode.value },
+        { daily_view: dailyViewMode.value, context: 'shift_plan' },
         { preserveScroll: false, preserveState: false, onSuccess: onSuccessCallback }
     )
 }
@@ -1357,19 +1384,19 @@ const downloadShiftPersonnelPlanXLSX = () => {
 onMounted(async () => {
     setTimeout(() => { showCalendarWarning.value = "" }, 5000)
 
-    // Load shift plan data, crafts, and workers in parallel
-    const [, , ] = await Promise.all([
+    // Load shift plan data and crafts in parallel. Die Worker-Daten (shifts.workers)
+    // werden hier bewusst NICHT geladen: das Unbesetzt-Dropdown zieht seine Kandidaten
+    // aus shifts.crafts, Kollisionen kommen on-demand über shift.check-collisions.
+    await Promise.all([
         initializeDailyShiftPlan(),
         axios.get(route("shifts.crafts"), { params: { lightweight: 1 } }).then(({ data }) => {
             craftsLoaded.value = data.crafts ?? []
         }).catch(() => { craftsLoaded.value = [] }),
-        loadShiftPlanWorkers(),
     ])
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any, {
         onEventsChanged: () => { eventsVersion.value++ },
         onShiftDataChanged: () => { triggerRef(shiftPlanCopy) },
-        onWorkersNeedReload: loadShiftPlanWorkers,
         onLookupsReceived: mergeLookups,
     })
     ShiftCalendarListener.init()

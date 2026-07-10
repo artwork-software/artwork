@@ -5,7 +5,8 @@ namespace Artwork\Modules\Holidays\Api;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Carbon\Carbon;
 use Exception;
-use NoahNxT\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
+use CalderoSystems\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
+use Saloon\Http\Response;
 
 readonly class OpenHolidaysApi implements HolidayApi
 {
@@ -36,12 +37,7 @@ readonly class OpenHolidaysApi implements HolidayApi
             $subdivision->country_code . '-' . $subdivision->code
         );
 
-        if ($response->status() > 200) {
-            foreach ($response->array()['errors'] as $field => $error) {
-                //Might be multiple but we can only throw one exception at a time
-                throw new \RuntimeException(sprintf('Error in %s -> %s', $field, $error[0]));
-            }
-        }
+        $this->ensureSuccessfulResponse($response);
 
         $return = [];
 
@@ -79,12 +75,7 @@ readonly class OpenHolidaysApi implements HolidayApi
             $subdivision->country_code . '-' . $subdivision->code
         );
 
-        if ($response->status() > 200) {
-            foreach ($response->array()['errors'] as $field => $error) {
-                //Might be multiple but we can only throw one exception at a time
-                throw new \RuntimeException(sprintf('Error in %s -> %s', $field, $error[0]));
-            }
-        }
+        $this->ensureSuccessfulResponse($response);
 
         $return = [];
 
@@ -98,5 +89,24 @@ readonly class OpenHolidaysApi implements HolidayApi
         }
 
         return $return;
+    }
+
+    private function ensureSuccessfulResponse(Response $response): void
+    {
+        if ($response->successful()) {
+            return;
+        }
+
+        $errors = $response->array()['errors'] ?? [];
+        foreach ($errors as $field => $error) {
+            $message = is_array($error) ? ($error[0] ?? 'Unknown error') : $error;
+
+            throw new \RuntimeException(sprintf('Error in %s -> %s', $field, $message));
+        }
+
+        throw new \RuntimeException(sprintf(
+            'Holiday API request failed with status %d',
+            $response->status()
+        ));
     }
 }

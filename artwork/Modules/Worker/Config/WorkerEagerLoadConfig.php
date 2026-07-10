@@ -29,6 +29,7 @@ class WorkerEagerLoadConfig
                     'shifts.break_minutes',
                     'shifts.description',
                     'shifts.is_committed',
+                    'shifts.in_workflow',
                     'shifts.event_start_day',
                     'shifts.event_end_day',
                     'shifts.craft_id',

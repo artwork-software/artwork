@@ -10,6 +10,7 @@ use Artwork\Modules\BusinessIntelligence\Repositories\BiProjectRoomCapacityRepos
 use Artwork\Modules\BusinessIntelligence\Models\BiEventData;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectRoomCapacity;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class BiProjectDataService
 {
@@ -29,8 +30,17 @@ class BiProjectDataService
     {
         $biData = $this->getOrCreateForProject($projectId);
         $this->biProjectDataRepository->update($biData, $data);
+        $this->bumpDashboardCacheVersion();
 
         return $biData->fresh();
+    }
+
+    /**
+     * Invalidiert die BI-Dashboard-Caches (der Versions-Stand ist Teil des Cache-Keys).
+     */
+    private function bumpDashboardCacheVersion(): void
+    {
+        Cache::increment('bi_dashboard_version');
     }
 
     public function switchVisitorMode(int $projectId, BiVisitorModeEnum $mode): BiProjectData
@@ -51,6 +61,7 @@ class BiProjectDataService
         }
 
         $this->biProjectDataRepository->update($biData, ['visitor_mode' => $mode->value]);
+        $this->bumpDashboardCacheVersion();
 
         return $biData->fresh();
     }
@@ -73,6 +84,7 @@ class BiProjectDataService
         }
 
         $this->biProjectDataRepository->update($biData, ['sold_tickets_mode' => $mode->value]);
+        $this->bumpDashboardCacheVersion();
 
         return $biData->fresh();
     }
@@ -95,13 +107,17 @@ class BiProjectDataService
         }
 
         $this->biProjectDataRepository->update($biData, ['revenue_mode' => $mode->value]);
+        $this->bumpDashboardCacheVersion();
 
         return $biData->fresh();
     }
 
     public function upsertEventData(int $projectId, int $eventId, array $data): BiEventData
     {
-        return $this->biEventDataRepository->upsert($projectId, $eventId, $data);
+        $eventData = $this->biEventDataRepository->upsert($projectId, $eventId, $data);
+        $this->bumpDashboardCacheVersion();
+
+        return $eventData;
     }
 
     public function getEventData(int $projectId): Collection
@@ -116,6 +132,9 @@ class BiProjectDataService
 
     public function updateRoomCapacity(int $projectId, int $roomId, ?int $capacityOverride): BiProjectRoomCapacity
     {
-        return $this->biProjectRoomCapacityRepository->upsert($projectId, $roomId, $capacityOverride);
+        $capacity = $this->biProjectRoomCapacityRepository->upsert($projectId, $roomId, $capacityOverride);
+        $this->bumpDashboardCacheVersion();
+
+        return $capacity;
     }
 }

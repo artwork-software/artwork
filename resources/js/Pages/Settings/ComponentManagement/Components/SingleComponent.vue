@@ -25,6 +25,22 @@
         </div>
     </div>
 
+    <!-- Verwendungs-Badge -->
+    <span
+        v-if="usages.length > 0"
+        class="absolute left-1 top-1 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] leading-3 text-emerald-700"
+        :title="usageTitle"
+    >
+        {{ usages.length }}×
+    </span>
+    <span
+        v-else
+        class="absolute left-1 top-1 inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] leading-3 text-gray-400"
+        :title="$t('Not used in any tab')"
+    >
+        0×
+    </span>
+
     <!-- Inhalt -->
     <div class="mb-2 flex items-center justify-center">
         <ComponentIcons :type="component?.type" />
@@ -33,6 +49,15 @@
     <div class="w-24 text-center text-sm font-semibold">
         <div class="w-24 truncate">
             {{ $t(component?.name) }}
+            <!-- Ordner: Titel, wie er im Projekt angezeigt wird -->
+            <div
+                v-if="component?.type === 'DisclosureComponent' && component?.data?.label"
+                class="flex items-center justify-center gap-0.5 text-[10px] font-normal text-gray-600"
+                :title="$t('This title is displayed in the project')"
+            >
+                <IconFolder class="size-3 shrink-0 text-gray-500" />
+                <span class="truncate">{{ component.data.label }}</span>
+            </div>
             <div
                 class="truncate text-[10px] font-normal text-gray-500"
                 v-if="component?.data?.height"
@@ -69,16 +94,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { IconEdit, IconTrash } from '@tabler/icons-vue'
+import { IconEdit, IconTrash, IconFolder } from '@tabler/icons-vue'
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue'
 
 defineOptions({ name: 'SingleComponent' })
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     component: {
         id?: number|string
         name: string
@@ -86,7 +111,21 @@ const props = defineProps<{
         data?: any
         special?: boolean
     }
-}>()
+    usages?: Array<{ tab: string; folder: string|null; sidebar: string|null }>
+}>(), {
+    usages: () => []
+})
+
+// Tooltip: alle Einsatzorte der Komponente, ein Ort pro Zeile
+const usageTitle = computed(() =>
+    props.usages
+        .map((u) => {
+            if (u.folder) return `${u.tab} → 📁 ${u.folder}`
+            if (u.sidebar) return `${u.tab} → ▐ ${u.sidebar}`
+            return u.tab
+        })
+        .join('\n')
+)
 
 const showEditComponentModal = ref(false)
 const showConfirmDeleteModal = ref(false)

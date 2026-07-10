@@ -5,6 +5,8 @@ namespace Artwork\Modules\Project\Services;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
@@ -97,10 +99,11 @@ class ProjectService
                 'delete_permission_users' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
                 },
-                'biData',
-                'biEventData.event',
-                'biRoomCapacities',
-                'events.room',
+                // Keine events-/BI-Relationen hier eager laden: dieser Query paginiert die
+                // Projektübersicht, und alles Geladene landet im Inertia-Payload. Bei Projekten
+                // mit vielen Terminen sprengt das memory_limit und das Firefox-history.state-Limit.
+                // Der BI-Baustein lädt sich seine Relationen selbst (ProjectController::mapProjectsToComponents)
+                // und entfernt sie vor der Serialisierung wieder.
             ])
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt
@@ -113,7 +116,11 @@ class ProjectService
 
                             $query
                                 ->where('name', 'like', $like)
-                                ->orWhere('artists', 'like', $like);
+                                ->orWhere('artists', 'like', $like)
+                                ->orWhereHas(
+                                    'crmContacts',
+                                    fn(Builder $crmQuery) => $crmQuery->where('display_name', 'like', $like)
+                                );
                         });
                     }
                 )
@@ -708,49 +715,54 @@ class ProjectService
         }
 
         $eventsWithRelevant = [];
-        foreach (
-            $project
-                ->events()
-                ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
-                ->with(['timelines', 'shifts', 'event_type'])
-                ->orderBy('start_time', 'asc')
-                ->get() as $event
-        ) {
-            $timeline = $event->timelines()
-                ->orderBy('start_date')
-                ->orderBy('start')
-                ->orderBy('end_date')
-                ->orderBy('end')
-                ->get()
-                ->toArray();
+        // Alle Relationen einmalig eager laden statt pro Event/Schicht/Person nachzuladen
+        // (vorher: timelines-Requery, $shift->load() und room()->first() je Event → hunderte Queries)
+        $events = $project
+            ->events()
+            ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
+            ->with([
+                'event_type',
+                'room' => fn ($query) => $query->without(['creator', 'admins']),
+                'timelines' => fn ($query) => $query
+                    ->orderBy('start_date')
+                    ->orderBy('start')
+                    ->orderBy('end_date')
+                    ->orderBy('end'),
+                'shifts.craft',
+                'shifts.committedBy',
+                'shifts.shiftsQualifications',
+                // Personen inkl. globaler Qualifikationen, damit sie im Payload enthalten sind
+                'shifts.users.globalQualifications',
+                'shifts.users.vacations',
+                'shifts.freelancer.globalQualifications',
+                'shifts.serviceProvider.globalQualifications',
+            ])
+            ->orderBy('start_time', 'asc')
+            ->get();
+
+        // Urlaubs-Tage nur einmal pro User berechnen, auch wenn er in mehreren Schichten steckt
+        $vacationDaysByUserId = [];
+
+        foreach ($events as $event) {
+            $timeline = $event->timelines->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
             }
 
             foreach ($event->shifts as $shift) {
-                // Eager Load: Schicht- und Personen-bezogene Relationen, damit
-                // die zugewiesenen Personen ihre globalen Qualifikationen im Payload enthalten
-                $shift->load([
-                    'shiftsQualifications',
-                    // Personen inkl. globaler Qualifikationen
-                    'users.globalQualifications',
-                    'freelancer.globalQualifications',
-                    'serviceProvider.globalQualifications',
-                ]);
-
                 foreach ($shift->users as $user) {
-                    $user->formatted_vacation_days = $user->getFormattedVacationDays();
+                    $user->formatted_vacation_days = $vacationDaysByUserId[$user->id]
+                        ??= $user->getFormattedVacationDays();
                 }
             }
-
 
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
                 'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
-                'room' => $event->room()->without(['creator', 'admins'])->first()
+                'room' => $event->room,
             ];
         }
         return $this->sortEventsWithRelevant($eventsWithRelevant);
@@ -850,6 +862,42 @@ class ProjectService
         return $this->projectRepository->scoutSearch($query);
     }
 
+    public function searchProjectsByNameOrArtists(string $search): Collection
+    {
+        return $this->projectRepository->searchByNameOrArtists($search);
+    }
+
+    /**
+     * Verknüpft CRM-Kontakte vom Typ Künstler*in mit dem Projekt.
+     * IDs anderer Kontakttypen werden verworfen.
+     *
+     * @param array<int|string> $crmContactIds
+     */
+    public function syncCrmArtistContacts(Project $project, array $crmContactIds): void
+    {
+        $project->crmContacts()->sync($this->filterArtistCrmContactIds($crmContactIds));
+    }
+
+    /**
+     * @param array<int|string> $crmContactIds
+     * @return array<int>
+     */
+    private function filterArtistCrmContactIds(array $crmContactIds): array
+    {
+        if ($crmContactIds === []) {
+            return [];
+        }
+
+        return CrmContact::query()
+            ->whereIn('id', $crmContactIds)
+            ->whereHas(
+                'contactType',
+                fn($query) => $query->where('slug', CrmSystemContactTypeEnum::ARTIST->value)
+            )
+            ->pluck('id')
+            ->all();
+    }
+
     public function pinnedProjects(int $userId): Collection
     {
         return $this->projectRepository->pinnedProjects($userId);
@@ -927,6 +975,38 @@ class ProjectService
             $project->managerUsers()->detach();
         } else {
             $project->managerUsers()->detach($userIds);
+        }
+    }
+
+    /**
+     * Replace the manager list without wiping other pivot flags: continuing
+     * managers keep access_budget/can_write/roles (the previous detach-all +
+     * re-attach reset them on every project update).
+     */
+    public function syncManagementUsers(Project $project, array $userIds): void
+    {
+        $newManagerIds = collect($userIds)->map(fn ($id) => (int) $id)->unique();
+        $currentManagerIds = $project->managerUsers()->pluck('users.id');
+
+        // Managers removed from the list leave the project (previous behaviour).
+        $removedIds = $currentManagerIds->diff($newManagerIds);
+        if ($removedIds->isNotEmpty()) {
+            $project->users()->detach($removedIds->all());
+        }
+
+        $existingUserIds = $project->users()->pluck('users.id');
+
+        foreach ($newManagerIds as $userId) {
+            if ($existingUserIds->contains($userId)) {
+                $project->users()->updateExistingPivot($userId, ['is_manager' => true]);
+            } else {
+                $project->users()->attach($userId, [
+                    'access_budget' => false,
+                    'is_manager' => true,
+                    'can_write' => false,
+                    'delete_permission' => false,
+                ]);
+            }
         }
     }
 

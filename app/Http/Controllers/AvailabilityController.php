@@ -13,10 +13,12 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 
 class AvailabilityController extends Controller
 {
@@ -77,6 +79,62 @@ class AvailabilityController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Ersetzt einen Eintrag als Ganzes: löscht die Zeile bzw. deren komplette Serie und legt den
+     * Eintrag aus dem Request neu an (Einzeltag, Zeitraum als tägliche Serie oder Wiederholung).
+     * Deckt damit auch Typwechsel (Verfügbarkeit -> Abwesenheit) und Zeitraumänderungen ab.
+     */
+    public function updateEntry(
+        CreateVacationRequest $createVacationRequest,
+        Availability $availability,
+        AvailabilityConflictService $availabilityConflictService
+    ): RedirectResponse {
+        $this->authorize('update', $availability);
+
+        $available = $availability->available_type::find($availability->available_id);
+        abort_if($available === null, 404);
+
+        DB::transaction(function () use (
+            $createVacationRequest,
+            $availability,
+            $available,
+            $availabilityConflictService
+        ): void {
+            $series = $availability->series_id !== null
+                ? AvailabilitySeries::find($availability->series_id)
+                : null;
+            if ($series !== null) {
+                $this->availabilitySeriesService->deleteSeries($series);
+            } else {
+                $this->availabilityService->delete($availability);
+            }
+
+            if ($createVacationRequest->type === 'vacation') {
+                $this->vacationService->create(
+                    $available,
+                    $createVacationRequest,
+                    $this->vacationConflictService,
+                    $this->vacationSeriesService,
+                    $this->changeService,
+                    $this->schedulingService,
+                    $this->notificationService
+                );
+            } else {
+                $this->availabilityService->create(
+                    $available,
+                    $createVacationRequest,
+                    $this->notificationService,
+                    $availabilityConflictService,
+                    $this->availabilitySeriesService,
+                    $this->changeService,
+                    $this->schedulingService
+                );
+            }
+        });
+
+        return redirect()->back();
+    }
+
     public function destroy(Availability $availability): RedirectResponse
     {
         $this->authorize('delete', $availability);
@@ -86,6 +144,10 @@ class AvailabilityController extends Controller
 
     public function destroySeries(AvailabilitySeries $availabilitySeries): RedirectResponse
     {
+        $firstAvailability = $availabilitySeries->availabilities()->first();
+        if ($firstAvailability !== null) {
+            $this->authorize('delete', $firstAvailability);
+        }
         $this->availabilitySeriesService->deleteSeries($availabilitySeries);
         return redirect()->back();
     }

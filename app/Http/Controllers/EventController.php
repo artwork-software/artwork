@@ -4428,22 +4428,20 @@ class EventController extends Controller
         $resource = $resourceClass::make($worker);
         $additionalData = [];
 
+        // Parität zum Bulk-Load: Stundenkonto/KW-Stunden anderer nur mit Berechtigung, eigene immer
+        $viewer = $request->user();
+        $showHours = $viewer->can(PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value)
+            || ($workerType === 'user' && $workerId === $viewer->id);
+
         if ($workerType === 'user') {
-            $additionalData['workTimeBalance'] = $this->workingHourService->convertMinutesInHours(
-                $worker->work_time_balance ?? 0
-            );
-            $additionalData['weeklyWorkingHours'] = $this->workingHourService->calculateWeeklyWorkingHours(
-                $worker,
-                $startDate,
-                $endDate
-            );
-        } else {
-            $additionalData['weeklyWorkingHours'] = $this->workingHourService->calculateWeeklyWorkingHours(
-                $worker,
-                $startDate,
-                $endDate
-            );
+            $additionalData['workTimeBalance'] = $showHours
+                ? $this->workingHourService->convertMinutesInHours($worker->work_time_balance ?? 0)
+                : null;
         }
+
+        $additionalData['weeklyWorkingHours'] = $showHours
+            ? $this->workingHourService->calculateWeeklyWorkingHours($worker, $startDate, $endDate)
+            : [];
 
         $workerData = $this->workerShiftPlanService->buildWorkerData(
             $worker,

@@ -13,6 +13,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftPlanRequest;
 use Artwork\Modules\Shift\Models\ShiftPlanRequestChange;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -62,6 +63,10 @@ class ShiftPlanRequestController extends Controller
             'serviceProvider',
             'craft',
             'shiftsQualifications',
+            // Raum der Schicht: direkt gesetzt (room_id) oder vom verknüpften Termin geerbt.
+            'room:id,name',
+            'event:id,room_id',
+            'event.room:id,name',
             // Nur Workflow-Änderungen, die zu DIESER Anfrage gehören (nicht aus früheren Anfragen
             // derselben Schicht), damit der "Änderung angefordert"-Marker nicht fälschlich greift.
             'shiftPlanRequestChanges' => fn ($query) => $query
@@ -104,7 +109,46 @@ class ShiftPlanRequestController extends Controller
             ->get()
             ->each(fn (Shift $shift) => $shift->setAttribute('is_subsequently_added', true));
 
-        return $requestedShifts->concat($addedShifts)->values();
+        return $requestedShifts->concat($addedShifts)
+            ->each(function (Shift $shift): void {
+                // Nur den Raumnamen flach mitgeben und die Relationen wieder lösen,
+                // damit nicht das komplette Event (inkl. Appends) serialisiert wird.
+                $shift->setAttribute('room_name', $shift->room?->name ?? $shift->event?->room?->name);
+                $shift->unsetRelation('room');
+                $shift->unsetRelation('event');
+            })
+            ->values();
+    }
+
+    /**
+     * Ermittelt die vorherige/nächste Anfrage desselben Gewerks (sortiert nach Jahr/KW),
+     * damit im Detail zwischen den Anfragen geblättert werden kann, ohne den Umweg
+     * über die Übersicht zu nehmen.
+     *
+     * @return array{previous: array<string, mixed>|null, next: array<string, mixed>|null}
+     */
+    private function buildRequestNavigation(ShiftPlanRequest $shiftPlanRequest, ?int $restrictToUserId = null): array
+    {
+        $requests = ShiftPlanRequest::query()
+            ->where('craft_id', $shiftPlanRequest->craft_id)
+            ->when(
+                $restrictToUserId !== null,
+                fn ($q) => $q->where('requested_by_user_id', $restrictToUserId)
+            )
+            ->orderBy('year')
+            ->orderBy('week_number')
+            ->orderBy('id')
+            ->get(['id', 'week_number', 'year', 'status']);
+
+        $index = $requests->search(fn (ShiftPlanRequest $r) => $r->id === $shiftPlanRequest->id);
+
+        $previous = $index !== false && $index > 0 ? $requests[$index - 1] : null;
+        $next = $index !== false && $index < $requests->count() - 1 ? $requests[$index + 1] : null;
+
+        return [
+            'previous' => $previous?->only(['id', 'week_number', 'year', 'status']),
+            'next' => $next?->only(['id', 'week_number', 'year', 'status']),
+        ];
     }
 
     /**
@@ -329,6 +373,8 @@ class ShiftPlanRequestController extends Controller
             'days'    => $days,
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
+            'navigation' => $this->buildRequestNavigation($shiftPlanRequest),
+            'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -349,16 +395,26 @@ class ShiftPlanRequestController extends Controller
         ]);
     }
 
-    public function accept(ShiftPlanRequest $shiftPlanRequest): \Illuminate\Http\RedirectResponse
-    {
+    public function accept(
+        ShiftPlanRequest $shiftPlanRequest,
+        Request $request
+    ): \Illuminate\Http\RedirectResponse {
         /** @var \App\Models\User $user */
         $user = $this->auth->user();
+
+        // Optionaler Hinweis an die anfragende Person — wird gespeichert und
+        // in der Benachrichtigung über die Genehmigung mitgeschickt.
+        $payload = $request->validate([
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $comment = trim((string) ($payload['comment'] ?? ''));
+        $comment = $comment !== '' ? $comment : null;
 
         // Status-Flip UND Festschreibungs-Loop in EINER Transaktion: schlägt ein
         // Save mitten im Loop fehl, wird auch der Status zurückgerollt (keine
         // "approved"-Anfrage mit halb committeten Schichten).
         $approved = false;
-        $response = DB::transaction(function () use ($shiftPlanRequest, $user, &$approved) {
+        $response = DB::transaction(function () use ($shiftPlanRequest, $user, $comment, &$approved) {
             // Atomarer Status-Flip nur aus 'pending': verhindert Doppel-Genehmigung und
             // Genehmigen nach Ablehnung (auch bei zwei gleichzeitigen Genehmigern —
             // der zweite wartet auf das Row-Lock und sieht dann flipped = 0).
@@ -369,6 +425,7 @@ class ShiftPlanRequestController extends Controller
                     'status' => 'approved',
                     'reviewed_by_user_id' => $user->id,
                     'reviewed_at' => now(),
+                    'review_comment' => $comment,
                 ]);
 
             if ($flipped === 0) {
@@ -416,7 +473,7 @@ class ShiftPlanRequestController extends Controller
 
         // Nach erfolgreichem Commit den Antragsteller informieren
         if ($approved) {
-            $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), true);
+            $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), true, $comment);
         }
 
         return $response;
@@ -916,7 +973,11 @@ class ShiftPlanRequestController extends Controller
 
         // Nach erfolgreichem Rollback den Antragsteller informieren
         if ($rejected) {
-            $this->notifyRequesterAboutDecision($shiftPlanRequest->fresh(), false);
+            $this->notifyRequesterAboutDecision(
+                $shiftPlanRequest->fresh(),
+                false,
+                $payload['global_reason'] ?? null
+            );
         }
 
         return $response;
@@ -1406,6 +1467,13 @@ class ShiftPlanRequestController extends Controller
             'days'    => $days,
             'individualTimes' => $individualTimes,
             'overviewChanges' => $overviewChanges,
+            // Blättern nur über Anfragen, die der User auch sehen darf: bei Zugriff aufs
+            // Gewerk (oder als Genehmiger/Admin) alle Anfragen des Gewerks, sonst nur eigene.
+            'navigation' => $this->buildRequestNavigation(
+                $shiftPlanRequest,
+                ($craftIsAccessible || $user->can('approve-shift-plan-requests')) ? null : $user->id
+            ),
+            'shiftQualifications' => ShiftQualification::query()->get(['id', 'name']),
             'craftWorkers' => [
                 'users' => $craftUsers->map(fn ($u) => [
                     'id' => $u->id,
@@ -1784,15 +1852,17 @@ class ShiftPlanRequestController extends Controller
                     'type' => 'text',
                     'title' => __('notification.shift.new_commit_request', [
                         'user' => $shiftPlanRequest->requestedBy?->full_name ?? '',
+                        'craft' => $shiftPlanRequest->craft?->name ?? '',
+                        'week' => $shiftPlanRequest->week_number,
                         'start_time' => $weekStart->format('d.m.Y'),
                         'end_time' => $weekEnd->format('d.m.Y'),
                     ], $userToNotify->language),
-                    'href' => route('shifts.approvals.review'),
+                    'href' => route('shift-plan-requests.show', $shiftPlanRequest->id),
                 ],
                 1 => [
                     'type' => 'link',
                     'title' => __('notification.shift.link_label_new_commit_request', [], $userToNotify->language),
-                    'href' => route('shifts.approvals.review'),
+                    'href' => route('shift-plan-requests.show', $shiftPlanRequest->id),
                 ],
             ]);
             $notificationService->createNotification();
@@ -1804,14 +1874,17 @@ class ShiftPlanRequestController extends Controller
      * Benachrichtigt den Antragsteller ueber die Entscheidung (genehmigt/abgelehnt)
      * zu seiner Dienstplananfrage.
      */
-    private function notifyRequesterAboutDecision(ShiftPlanRequest $shiftPlanRequest, bool $approved): void
-    {
+    private function notifyRequesterAboutDecision(
+        ShiftPlanRequest $shiftPlanRequest,
+        bool $approved,
+        ?string $comment = null
+    ): void {
         $requester = User::find($shiftPlanRequest->requested_by_user_id);
         if (!$requester) {
             return;
         }
 
-        $shiftPlanRequest->loadMissing('craft');
+        $shiftPlanRequest->loadMissing(['craft', 'reviewedBy']);
 
         $notificationService = app(NotificationService::class);
 
@@ -1838,13 +1911,29 @@ class ShiftPlanRequestController extends Controller
             'type' => $approved ? 'success' : 'error',
             'message' => $notificationTitle,
         ]);
-        $notificationService->setDescription([
+        $description = [
             0 => [
                 'type' => 'link',
                 'title' => $notificationTitle,
                 'href' => route('shift-plan-requests.my.show', $shiftPlanRequest->id),
             ],
-        ]);
+        ];
+
+        // Hinweis des Genehmigers (beim Akzeptieren) bzw. globaler Ablehnungsgrund
+        // wird der anfragenden Person direkt in der Benachrichtigung mitgeliefert.
+        $comment = $comment !== null ? trim($comment) : null;
+        if ($comment !== null && $comment !== '') {
+            $description[] = [
+                'type' => 'text',
+                'title' => __('notification.shift.commit_request_comment', [
+                    'user' => $shiftPlanRequest->reviewedBy?->full_name ?? '',
+                    'comment' => $comment,
+                ], $requester->language),
+                'href' => null,
+            ];
+        }
+
+        $notificationService->setDescription($description);
         $notificationService->createNotification();
         $notificationService->clearNotificationData();
     }

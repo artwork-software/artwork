@@ -56,6 +56,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFilter;
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -525,6 +526,7 @@ readonly class EventService
                 'dayServices' => [],
                 'holidays' => [],
                 'comments' => [],
+                'violations' => [],
                 'totalWorkTime' => '00:00',
                 'totalBreakTime' => '00:00',
             ];
@@ -612,6 +614,21 @@ readonly class EventService
         // Individualzeiten nur für User im Zeitraum einsammeln.
         // Hinweis: IndividualTime ist morph (`timeable_type`/`timeable_id`) – es gibt keine `user_id` Spalte.
         if ($modelType === 'user') {
+            $violations = ShiftRuleViolation::query()
+                ->select(['id', 'shift_rule_id', 'violation_date', 'status'])
+                ->with(['shiftRule:id,name,description,warning_color'])
+                ->where('user_id', $modelId)
+                ->whereBetween('violation_date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->whereIn('status', ['active', 'resolved'])
+                ->get()
+                ->groupBy(fn (ShiftRuleViolation $violation): string => $violation->violation_date->format('Y-m-d'));
+
+            foreach ($violations as $dayKey => $dayViolations) {
+                if (isset($daysWithData[$dayKey])) {
+                    $daysWithData[$dayKey]['violations'] = $dayViolations->values()->all();
+                }
+            }
+
             $individualTimes = IndividualTime::query()
                 ->where('timeable_type', User::class)
                 ->where('timeable_id', $modelId)

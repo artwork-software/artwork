@@ -4,6 +4,8 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Models\ShiftRule;
+use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
@@ -43,6 +45,64 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->actingAs($user);
 
         $this->get(route('user.operationPlan', $user))->assertOk();
+    }
+
+    #[Test]
+    public function operation_plan_contains_visible_shift_rule_violations_for_each_day(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_ROSTER);
+        $this->actingAs($user);
+
+        $startDate = now()->startOfWeek();
+        $endDate = $startDate->copy()->endOfWeek();
+        $violationDate = $startDate->copy()->addDay();
+
+        $user->workerShiftPlanFilter()->create([
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        $shiftRule = ShiftRule::factory()->create([
+            'name' => 'Maximum working hours',
+            'description' => 'Daily working hours exceeded',
+            'warning_color' => '#f97316',
+        ]);
+
+        $visibleViolation = ShiftRuleViolation::factory()->create([
+            'shift_rule_id' => $shiftRule->id,
+            'user_id' => $user->id,
+            'violation_date' => $violationDate,
+            'status' => 'active',
+        ]);
+
+        ShiftRuleViolation::factory()->ignored($user->id)->create([
+            'shift_rule_id' => $shiftRule->id,
+            'user_id' => $user->id,
+            'violation_date' => $violationDate,
+        ]);
+
+        ShiftRuleViolation::factory()->create([
+            'shift_rule_id' => $shiftRule->id,
+            'user_id' => $otherUser->id,
+            'violation_date' => $violationDate,
+        ]);
+
+        $response = $this->get(route('user.operationPlan', $user));
+
+        $response->assertOk();
+
+        $violations = $response->inertiaProps(
+            'daysWithData.' . $violationDate->format('Y-m-d') . '.violations'
+        );
+
+        $this->assertCount(1, $violations);
+        $this->assertSame($visibleViolation->id, $violations[0]['id']);
+        $this->assertSame('active', $violations[0]['status']);
+        $this->assertSame('Maximum working hours', $violations[0]['shift_rule']['name']);
+        $this->assertSame('Daily working hours exceeded', $violations[0]['shift_rule']['description']);
+        $this->assertSame('#f97316', $violations[0]['shift_rule']['warning_color']);
     }
 
     #[Test]

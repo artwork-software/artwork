@@ -10,6 +10,28 @@
                     <IconArrowLeft class="h-4 w-4"/>
                     <span>{{ $t('Back to shift plan requests') }}</span>
                 </Link>
+
+                <!-- Blättern zwischen den Anfragen desselben Gewerks -->
+                <div v-if="navigation?.previous || navigation?.next" class="ml-auto flex items-center gap-2">
+                    <Link
+                        v-if="navigation?.previous"
+                        :href="requestShowUrl(navigation.previous.id)"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                        :title="$t('Previous request')"
+                    >
+                        <IconChevronLeft class="h-4 w-4"/>
+                        <span>KW {{ navigation.previous.week_number }} / {{ navigation.previous.year }}</span>
+                    </Link>
+                    <Link
+                        v-if="navigation?.next"
+                        :href="requestShowUrl(navigation.next.id)"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                        :title="$t('Next request')"
+                    >
+                        <span>KW {{ navigation.next.week_number }} / {{ navigation.next.year }}</span>
+                        <IconChevronRight class="h-4 w-4"/>
+                    </Link>
+                </div>
             </div>
 
             <!-- Header Card -->
@@ -52,6 +74,12 @@
             @reject-change="rejectRequestChange"
         />
 
+        <AcceptShiftPlanRequestModal
+            v-if="acceptModalOpen"
+            @close="acceptModalOpen = false"
+            @confirm="confirmAccept"
+        />
+
         <RejectShiftPlanRequestModal
             v-if="rejectState.modalOpen"
             :days="daysComputed"
@@ -78,13 +106,14 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
-import {computed, reactive} from 'vue';
-import {IconArrowLeft} from '@tabler/icons-vue';
+import {computed, reactive, ref} from 'vue';
+import {IconArrowLeft, IconChevronLeft, IconChevronRight} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
 import WeekOverview from './components/WeekOverview.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
 import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
+import AcceptShiftPlanRequestModal from './components/AcceptShiftPlanRequestModal.vue';
 import {useShiftPlanRequest} from './components/useShiftPlanRequest.js';
 import {useI18n} from 'vue-i18n';
 
@@ -98,6 +127,20 @@ const props = defineProps({
     craftWorkers: {type: Object, default: () => ({users: [], freelancers: [], service_providers: []})},
     overviewChanges: {type: Object, default: () => ({removed: []})},
     isMyRequest: {type: Boolean, required: false, default: false},
+    navigation: {type: Object, default: () => ({previous: null, next: null})},
+    shiftQualifications: {type: Array, default: () => []},
+});
+
+const requestShowUrl = (id) => route(
+    props.isMyRequest ? 'shift-plan-requests.my.show' : 'shift-plan-requests.show',
+    id
+);
+
+// id → Name der Qualifikation (für die Anzeige in den Schichtzellen)
+const qualificationNames = computed(() => {
+    const map = {};
+    for (const q of (props.shiftQualifications || [])) map[q.id] = q.name;
+    return map;
 });
 
 const daysComputed = computed(() => {
@@ -228,13 +271,20 @@ const confirmReject = () => {
     );
 };
 
+// Akzeptieren: Modal mit optionalem Hinweis an die anfragende Person
+const acceptModalOpen = ref(false);
 const acceptRequest = () => {
+    acceptModalOpen.value = true;
+};
+const confirmAccept = (comment) => {
     router.post(
         route('shift-plan-requests.accept', props.request.id),
-        {},
+        {comment: comment?.trim() || null},
         {
             preserveScroll: true,
-            onSuccess: () => console.log('Request accepted'),
+            onSuccess: () => {
+                acceptModalOpen.value = false;
+            },
             onError: (errors) => console.error('Error:', errors),
         }
     );
@@ -287,6 +337,7 @@ const rows = computed(() => {
             shift_id: shift.id,
             start_time: shift.start,
             end_time: shift.end,
+            room_name: shift.room_name || null,
             qualification: meta.qualification || null,
             short_description: meta.short_description || shift.description || null,
             is_committed: !!shift.is_committed,
@@ -346,7 +397,7 @@ const rows = computed(() => {
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, user.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, user.id);
                 addEntry(row, date, shift, {
-                    qualification: user.pivot?.short_description ?? null,
+                    qualification: qualificationNames.value[user.pivot?.shift_qualification_id] ?? null,
                     short_description: user.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
                     has_changes_after_workflow: hasChangesInRequest,
@@ -368,7 +419,7 @@ const rows = computed(() => {
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, fl.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, fl.id);
                 addEntry(row, date, shift, {
-                    qualification: fl.pivot?.short_description ?? null,
+                    qualification: qualificationNames.value[fl.pivot?.shift_qualification_id] ?? null,
                     short_description: fl.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
                     has_changes_after_workflow: hasChangesInRequest,
@@ -390,7 +441,7 @@ const rows = computed(() => {
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, sp.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, sp.id);
                 addEntry(row, date, shift, {
-                    qualification: sp.pivot?.short_description ?? null,
+                    qualification: qualificationNames.value[sp.pivot?.shift_qualification_id] ?? null,
                     short_description: sp.pivot?.short_description ?? null,
                     has_changes_after_commit: hasChangesAfterCommit,
                     has_changes_after_workflow: hasChangesInRequest,

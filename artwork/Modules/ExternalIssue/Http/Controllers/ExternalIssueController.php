@@ -15,6 +15,7 @@ use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -26,6 +27,30 @@ class ExternalIssueController extends Controller
         protected AuthManager $auth,
         protected InventoryUserFilterShareService $inventoryUserFilterShareService,
     ) {}
+
+    /**
+     * Namenssuche über externe Materialausgaben als Kopierquelle: liefert die
+     * Artikel (inkl. pivot.quantity) mit, damit das Frontend sie übernehmen kann.
+     */
+    public function searchForCopy(): JsonResponse
+    {
+        $q = trim((string) request()->input('q', ''));
+        $excludeId = (int) request()->input('exclude_id', 0);
+
+        $issues = ExternalIssue::query()
+            ->with([
+                'articles.images',
+                'articles.category',
+                'articles.subCategory',
+            ])
+            ->when($excludeId > 0, fn ($builder) => $builder->where('id', '!=', $excludeId))
+            ->when($q !== '', fn ($builder) => $builder->where('name', 'like', "%{$q}%"))
+            ->orderByDesc('created_at')
+            ->limit(15)
+            ->get();
+
+        return response()->json($issues);
+    }
 
     public function index()
     {

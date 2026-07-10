@@ -189,6 +189,7 @@
                                 :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                            <ToolTipComponent @click="showCopyIssueModal = true" :icon="IconCopy" :tooltip-text="$t('Copy material from another material issue')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
                         <div class="flex items-center justify-between gap-3">
@@ -527,6 +528,9 @@
     <SelectMaterialSetModal v-if="showSelectMaterialSetModal" @close="showSelectMaterialSetModal = false"
         @add-material-set="addMaterialSetToIssue" />
 
+    <CopyFromMaterialIssueModal v-if="showCopyIssueModal" :exclude-issue-id="internMaterialIssue.id"
+        @close="showCopyIssueModal = false" @copy-issue="addArticlesFromCopiedIssue" />
+
     <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
 
     <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null; editingArticleQuantity = null" :editing-issue-id="internMaterialIssue.id" :editing-article-quantity="editingArticleQuantity" />
@@ -548,11 +552,12 @@ import debounce from "lodash.debounce";
 import axios from "axios";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
+import CopyFromMaterialIssueModal from "@/Pages/IssueOfMaterial/Components/CopyFromMaterialIssueModal.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
-import { IconCircleCheck, IconFile, IconHome, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconCirclePlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import { IconCircleCheck, IconCopy, IconFile, IconHome, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconCirclePlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import dayjs from "dayjs";
 
@@ -705,6 +710,7 @@ const selectedResponsibleUsers = ref(
 );
 const showArticleFilterModal = ref(false);
 const showSelectMaterialSetModal = ref(false);
+const showCopyIssueModal = ref(false);
 // Artikel Pagination State
 const articles = ref([]);
 const loadingMore = ref(false);
@@ -1141,6 +1147,45 @@ const addMaterialSetToIssue = (materialSet) => {
     }
 
     // after add check the available stock
+    checkAvailableStock();
+};
+
+// Übernimmt alle Artikel einer anderen Materialausgabe mit deren Mengen
+// (pivot.quantity). Bereits ausgewählte Artikel werden aufsummiert.
+const addArticlesFromCopiedIssue = (issue) => {
+    for (const article of issue?.articles ?? []) {
+        if (!article?.id) continue;
+        const copiedQuantity = Number(article.pivot?.quantity ?? 1);
+        const existingArticleIndex = internMaterialIssue.articles.findIndex(
+            (a) => a.id === article.id
+        );
+
+        if (existingArticleIndex === -1) {
+            internMaterialIssue.articles.push({
+                id: article.id,
+                name: article.name,
+                description: article.description,
+                quantity: copiedQuantity,
+                total_quantity: article.quantity,
+                is_detailed_quantity: article.is_detailed_quantity,
+                availableStock: 0,
+                availableStockRequestIsLoading: true,
+                detailed_article_quantities: article.detailed_article_quantities || [],
+                category: article.category || null,
+                subCategory: article.subCategory || article.sub_category || null,
+                sub_category: article.sub_category || article.subCategory || null,
+                images: article.images || [],
+                properties: article.properties || [],
+                room: article.room || null,
+                manufacturer: article.manufacturer || null,
+                status_values: article.status_values || [],
+            });
+        } else {
+            const existingArticle = internMaterialIssue.articles[existingArticleIndex];
+            existingArticle.quantity = Number(existingArticle.quantity ?? 0) + copiedQuantity;
+        }
+    }
+
     checkAvailableStock();
 };
 

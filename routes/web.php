@@ -1834,6 +1834,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/update/availability/{availability}', [AvailabilityController::class, 'update'])
         ->name('update.availability');
 
+    // Eintrag als Ganzes ersetzen (Einzeltag, Zeitraum oder Serie): löscht Zeile bzw. Serie und legt neu an
+    Route::patch('/update/vacation-entry/{vacation}', [VacationController::class, 'updateEntry'])
+        ->name('update.vacation.entry');
+
+    Route::patch('/update/availability-entry/{availability}', [AvailabilityController::class, 'updateEntry'])
+        ->name('update.availability.entry');
+
     Route::delete('/delete/availability/{availability}', [AvailabilityController::class, 'destroy'])
         ->name('delete.availability');
 
@@ -3011,6 +3018,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::controller(InternalIssueController::class)->prefix('issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('issue-of-material.index');
+        // Muss vor der {internalIssue}-Wildcard stehen
+        Route::get('/search/for-copy', 'searchForCopy')->name('issue-of-material.search-for-copy');
         Route::get('/{internalIssue}', 'show')->name('issue-of-material.show');
         Route::post('/store', 'store')->name('issue-of-material.store');
         Route::match(['patch', 'post'], '/{internalIssue}/update', 'update')->name('issue-of-material.update');
@@ -3022,6 +3031,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::controller(ExternalIssueController::class)->prefix('extern-issue-of-material')->group(function (): void {
         Route::get('/', 'index')->name('extern-issue-of-material.index');
+        Route::get('/search/for-copy', 'searchForCopy')->name('extern-issue-of-material.search-for-copy');
         Route::post('/store', 'store')->name('extern-issue-of-material.store');
         Route::match(['patch', 'post'], '/{externalIssue}/update', 'update')->name('extern-issue-of-material.update');
         Route::delete('/{externalIssue}/destroy', 'destroy')->name('extern-issue-of-material.destroy');

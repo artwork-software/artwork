@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Artwork\Modules\Vacation\Enums\Vacation as VacationEnum;
 
 class VacationController extends Controller
@@ -397,6 +398,62 @@ class VacationController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * Ersetzt einen Eintrag als Ganzes: löscht die Zeile bzw. deren komplette Serie und legt den
+     * Eintrag aus dem Request neu an (Einzeltag, Zeitraum als tägliche Serie oder Wiederholung).
+     * Deckt damit auch Typwechsel (Abwesenheit -> Verfügbarkeit) und Zeitraumänderungen ab.
+     */
+    public function updateEntry(
+        CreateVacationRequest $createVacationRequest,
+        Vacation $vacation,
+        AvailabilityConflictService $availabilityConflictService,
+        AvailabilitySeriesService $availabilitySeriesService
+    ): RedirectResponse {
+        $this->authorize('update', $vacation);
+
+        $vacationer = $vacation->vacationer_type::find($vacation->vacationer_id);
+        abort_if($vacationer === null, 404);
+
+        DB::transaction(function () use (
+            $createVacationRequest,
+            $vacation,
+            $vacationer,
+            $availabilityConflictService,
+            $availabilitySeriesService
+        ): void {
+            $series = $vacation->series_id !== null ? VacationSeries::find($vacation->series_id) : null;
+            if ($series !== null) {
+                $this->vacationSeriesService->deleteSeries($series);
+            } else {
+                $this->vacationService->delete($vacation);
+            }
+
+            if ($createVacationRequest->type === 'vacation') {
+                $this->vacationService->create(
+                    $vacationer,
+                    $createVacationRequest,
+                    $this->vacationConflictService,
+                    $this->vacationSeriesService,
+                    $this->changeService,
+                    $this->schedulingService,
+                    $this->notificationService
+                );
+            } else {
+                $this->availabilityService->create(
+                    $vacationer,
+                    $createVacationRequest,
+                    $this->notificationService,
+                    $availabilityConflictService,
+                    $availabilitySeriesService,
+                    $this->changeService,
+                    $this->schedulingService
+                );
+            }
+        });
+
+        return redirect()->back();
+    }
+
     public function destroy(Vacation $vacation): RedirectResponse
     {
         $this->authorize('delete', $vacation);
@@ -404,8 +461,13 @@ class VacationController extends Controller
         return redirect()->back();
     }
 
-    public function destroySeries(VacationSeries $vacationSeries): void
+    public function destroySeries(VacationSeries $vacationSeries): RedirectResponse
     {
+        $firstVacation = $vacationSeries->vacations()->first();
+        if ($firstVacation !== null) {
+            $this->authorize('delete', $firstVacation);
+        }
         $this->vacationSeriesService->deleteSeries($vacationSeries);
+        return redirect()->back();
     }
 }

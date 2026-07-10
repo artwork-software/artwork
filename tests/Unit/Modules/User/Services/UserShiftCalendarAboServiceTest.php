@@ -2,11 +2,17 @@
 
 namespace Tests\Unit\Modules\User\Services;
 
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Artwork\Modules\User\Services\UserShiftCalendarAboService;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\IcalendarGenerator\Components\Calendar;
 use Tests\TestCase;
 
 final class UserShiftCalendarAboServiceTest extends TestCase
@@ -95,5 +101,137 @@ final class UserShiftCalendarAboServiceTest extends TestCase
         $filtered = $this->service->getFilteredShifts($abo, $shifts);
 
         $this->assertSame('2024-05-01', $filtered->first()->start_date);
+    }
+
+    #[Test]
+    public function add_shift_to_calendar_includes_project_and_room_of_event_less_shift(): void
+    {
+        $room = Room::factory()->create(['name' => 'Abo-Testraum']);
+        $project = Project::factory()->create(['name' => 'Abo-Testprojekt']);
+        $shift = Shift::factory()->create([
+            'event_id' => null,
+            'craft_id' => Craft::factory(),
+            'room_id' => $room->id,
+            'project_id' => $project->id,
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start' => '08:00',
+            'end' => '16:00',
+        ]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        $this->service->addShiftToCalendar($calendar, $abo, $shift->fresh());
+
+        // ICS-Zeilenfaltung (RFC 5545) rückgängig machen, sonst kann der
+        // gesuchte Name mitten im Wort umbrochen sein
+        $ics = str_replace("\r\n ", '', $calendar->get());
+        $this->assertStringContainsString('Abo-Testprojekt', $ics);
+        $this->assertStringContainsString('Abo-Testraum', $ics);
+    }
+
+    #[Test]
+    public function add_shift_to_calendar_prefers_individual_pivot_times_over_shift_times(): void
+    {
+        $user = User::factory()->create();
+        $shift = Shift::factory()->create([
+            'event_id' => null,
+            'craft_id' => Craft::factory(),
+            'room_id' => Room::factory(),
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start' => '08:00',
+            'end' => '16:00',
+        ]);
+        $user->shifts()->attach($shift->id, [
+            'shift_qualification_id' => ShiftQualification::factory()->create()->id,
+            'start_date' => '2024-05-10',
+            'end_date' => '2024-05-10',
+            'start_time' => '10:00',
+            'end_time' => '12:15',
+        ]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        // Über die Relation laden, damit das Pivot (shift_workers) dranhängt
+        $this->service->addShiftToCalendar($calendar, $abo, $user->shifts()->first());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+        $this->assertStringContainsString('20240510T100000', $ics);
+        $this->assertStringContainsString('20240510T121500', $ics);
+        $this->assertStringNotContainsString('20240510T080000', $ics);
+        $this->assertStringNotContainsString('20240510T160000', $ics);
+    }
+
+    #[Test]
+    public function add_individual_time_to_calendar_includes_title_and_times(): void
+    {
+        $user = User::factory()->create();
+        $individualTime = $user->individualTimes()->create([
+            'title' => 'Individuelle-Zeit-Notiz',
+            'start_date' => '2024-05-15',
+            'end_date' => '2024-05-15',
+            'start_time' => '09:30',
+            'end_time' => '14:00',
+            'full_day' => false,
+        ]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        $this->service->addIndividualTimeToCalendar($calendar, $abo, $individualTime->fresh());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+        $this->assertStringContainsString('Individuelle-Zeit-Notiz', $ics);
+        $this->assertStringContainsString('20240515T093000', $ics);
+        $this->assertStringContainsString('20240515T140000', $ics);
+    }
+
+    #[Test]
+    public function add_individual_time_to_calendar_renders_full_day_entries_as_all_day_events(): void
+    {
+        $user = User::factory()->create();
+        $individualTime = $user->individualTimes()->create([
+            'title' => 'Ganztags-Eintrag',
+            'start_date' => '2024-05-20',
+            'end_date' => '2024-05-21',
+            'full_day' => true,
+        ]);
+
+        $abo = new UserShiftCalendarAbo();
+        $abo->enable_notification = false;
+
+        $calendar = Calendar::create('Test');
+        $this->service->addIndividualTimeToCalendar($calendar, $abo, $individualTime->fresh());
+
+        $ics = str_replace("\r\n ", '', $calendar->get());
+        $this->assertStringContainsString('Ganztags-Eintrag', $ics);
+        $this->assertStringContainsString('VALUE=DATE:20240520', $ics);
+        // DTEND ist bei Ganztagesterminen exklusiv (letzter Tag + 1)
+        $this->assertStringContainsString('VALUE=DATE:20240522', $ics);
+    }
+
+    #[Test]
+    public function get_filtered_individual_times_respects_date_range(): void
+    {
+        $abo = new UserShiftCalendarAbo();
+        $abo->date_range = true;
+        $abo->start_date = '2024-05-01';
+        $abo->end_date = '2024-05-31';
+
+        $individualTimes = new Collection([
+            (object) ['start_date' => '2024-05-10', 'end_date' => '2024-05-10'],
+            (object) ['start_date' => '2024-06-05', 'end_date' => '2024-06-05'],
+        ]);
+
+        $filtered = $this->service->getFilteredIndividualTimes($abo, $individualTimes);
+
+        $this->assertCount(1, $filtered);
+        $this->assertSame('2024-05-10', $filtered->first()->start_date);
     }
 }

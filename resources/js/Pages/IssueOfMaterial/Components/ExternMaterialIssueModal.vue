@@ -157,6 +157,7 @@
                                 :placeholder="$t('Search article, (sub)category...')"
                             />
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
+                            <ToolTipComponent @click="showCopyIssueModal = true" :icon="IconCopy" :tooltip-text="$t('Copy material from another material issue')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
                         <div class="flex items-center justify-between gap-3">
@@ -453,6 +454,14 @@
         @add-material-set="addMaterialSetToIssue"
     />
 
+    <CopyFromMaterialIssueModal
+        v-if="showCopyIssueModal"
+        issue-type="extern"
+        :exclude-issue-id="externMaterialIssueForm.id"
+        @close="showCopyIssueModal = false"
+        @copy-issue="addArticlesFromCopiedIssue"
+    />
+
     <ArticleDetailModal :article="articleForDetailModal" v-if="articleForDetailModal" @close="articleForDetailModal = null" :show-button-for-edit-and-delete="false" />
 
     <ArticleUsageModal :details-for-modal="articleForUsageModal" v-if="articleForUsageModal" @close="articleForUsageModal = null" />
@@ -474,6 +483,7 @@ import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
+import CopyFromMaterialIssueModal from "@/Pages/IssueOfMaterial/Components/CopyFromMaterialIssueModal.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
 import axios from "axios";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
@@ -481,6 +491,7 @@ import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/Arti
 import Galleria from "primevue/galleria";
 import {
     IconCircleCheck,
+    IconCopy,
     IconFile,
     IconInfoCircle,
     IconListDetails,
@@ -558,6 +569,7 @@ const externMaterialIssueForm = useForm({
 
 const showArticleFilterModal = ref(false)
 const showSelectMaterialSetModal = ref(false)
+const showCopyIssueModal = ref(false)
 const issueBy = ref(props.externMaterialIssue?.issued_by || null)
 
 // Artikel Pagination State (aligned with internal)
@@ -763,6 +775,42 @@ const addMaterialSetToIssue = (materialSet) => {
     externMaterialIssueForm.articles.push(...newArticles)
     checkAvailableStock()
 }
+
+// Übernimmt alle Artikel einer anderen Materialausgabe mit deren Mengen
+// (pivot.quantity). Bereits ausgewählte Artikel werden aufsummiert.
+const addArticlesFromCopiedIssue = (issue) => {
+    for (const article of issue?.articles ?? []) {
+        if (!article?.id) continue;
+        const copiedQuantity = Number(article.pivot?.quantity ?? 1);
+        const existingArticleIndex = externMaterialIssueForm.articles.findIndex(
+            (a) => a.id === article.id
+        );
+
+        if (existingArticleIndex === -1) {
+            externMaterialIssueForm.articles.push({
+                id: article.id,
+                name: article.name,
+                description: article.description,
+                quantity: copiedQuantity,
+                availableStock: 0,
+                availableStockRequestIsLoading: true,
+                detailedArticleQuantities: article.detailed_article_quantities || [],
+                category: article.category || null,
+                subCategory: article.subCategory || article.sub_category || null,
+                images: article.images || [],
+                properties: article.properties || [],
+                room: article.room || null,
+                manufacturer: article.manufacturer || null,
+                status_values: article.status_values || [],
+            });
+        } else {
+            const existingArticle = externMaterialIssueForm.articles[existingArticleIndex];
+            existingArticle.quantity = Number(existingArticle.quantity ?? 0) + copiedQuantity;
+        }
+    }
+
+    checkAvailableStock();
+};
 
 // Single source of truth for the "Found Articles" list. ALWAYS sends the current
 // search term + date window, so paging (reset:false) stays filtered exactly like

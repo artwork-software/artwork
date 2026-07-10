@@ -37,7 +37,7 @@
                     </div>
 
                     <div class="flex items-center justify-center w-26">
-                        <div v-if="!page.props.auth.user.compact_mode && type === 0"
+                        <div v-if="!page.props.auth.user.compact_mode && type === 0 && workTimeBalance"
                             class="text-[9px] w-full"
                             :class="workTimeBalanceClass">
                             {{ workTimeBalance }}

@@ -85,18 +85,25 @@ readonly class UserShiftCalendarAboService
     public function addShiftToCalendar($calendar, $calendarAbo, $shift): void
     {
         try {
-            $shiftStart = Carbon::parse($shift->start_date)->format('Y-m-d');
-            $shiftEnd = Carbon::parse($shift->end_date)->format('Y-m-d');
+            // Individuelle Zuweisungszeiten (shift_workers-Pivot) haben Vorrang
+            // vor den allgemeinen Schichtzeiten — gleiche Semantik wie im
+            // WorkingHourService
+            $pivot = $shift->pivot ?? null;
+            $startTime = $pivot?->start_time ?? $shift->start;
+            $endTime = $pivot?->end_time ?? $shift->end;
+            $shiftStart = Carbon::parse($pivot?->start_date ?? $shift->start_date)->format('Y-m-d');
+            $shiftEnd = Carbon::parse($pivot?->end_date ?? $shift->end_date)->format('Y-m-d');
             $shiftEvent = $shift->event;
             $eventCreator = $shiftEvent?->creator;
             $craftName = $shift->craft?->name ?? 'Unbekannte Tätigkeit';
-            $projectName = $shiftEvent?->project?->name ?? '';
+            // Eventlose Schichten tragen Projekt/Raum direkt auf der Schicht
+            $projectName = $shift->project?->name ?? $shiftEvent?->project?->name ?? '';
             $eventName = $shiftEvent?->eventName ?? '';
-            $roomName = $shiftEvent?->room?->name ?? '';
+            $roomName = $shift->room?->name ?? $shiftEvent?->room?->name ?? '';
 
             $title = 'Schicht: ' . $craftName;
-            if (!empty($shift->start) && !empty($shift->end)) {
-                $title .= ' - ' . $shift->start . ' - ' . $shift->end;
+            if (!empty($startTime) && !empty($endTime)) {
+                $title .= ' - ' . $startTime . ' - ' . $endTime;
             }
             if (trim($title) === '') {
                 $title = 'Schicht (ohne Titel)';
@@ -108,6 +115,8 @@ readonly class UserShiftCalendarAboService
                 $shift,
                 $shiftStart,
                 $shiftEnd,
+                $startTime,
+                $endTime,
                 $eventCreator,
                 $title,
                 $craftName,
@@ -126,8 +135,8 @@ readonly class UserShiftCalendarAboService
                         ($roomName !== '' ? 'Raum: ' . $roomName : '') .
                         ($eventName !== '' ? ' | Event: ' . $eventName : '')
                     )
-                    ->startsAt(Carbon::parse($shiftStart . ' ' . $shift->start))
-                    ->endsAt(Carbon::parse($shiftEnd . ' ' . $shift->end))
+                    ->startsAt(Carbon::parse($shiftStart . ' ' . $startTime))
+                    ->endsAt(Carbon::parse($shiftEnd . ' ' . $endTime))
                     ->uniqueIdentifier('shift-' . $shift->id)
                     ->createdAt(Carbon::parse($shiftEvent->created_at ?? $shift->created_at));
 
@@ -136,11 +145,93 @@ readonly class UserShiftCalendarAboService
                 }
 
                 $this->addAttendeesToEvent($event, $shift, $eventCreator);
-                $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $shift->start, $shift);
+                $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $startTime, $shift, $endTime);
             });
         } catch (\Throwable $e) {
             // Skip invalid shifts silently
         }
+    }
+
+    /**
+     * Get filtered individual times based on the calendar abo date range
+     */
+    public function getFilteredIndividualTimes($calendarAbo, $individualTimes)
+    {
+        if ($calendarAbo->date_range) {
+            $rangeStart = Carbon::parse($calendarAbo->start_date);
+            $rangeEnd = Carbon::parse($calendarAbo->end_date);
+            $individualTimes = $individualTimes->filter(
+                function ($individualTime) use ($rangeStart, $rangeEnd) {
+                    return Carbon::parse($individualTime->start_date)->between($rangeStart, $rangeEnd)
+                        && Carbon::parse($individualTime->end_date)->between($rangeStart, $rangeEnd);
+                }
+            );
+        }
+        return $individualTimes->sortBy('start_date');
+    }
+
+    /**
+     * Add an individual time entry to the calendar
+     */
+    public function addIndividualTimeToCalendar($calendar, $calendarAbo, $individualTime): void
+    {
+        try {
+            $title = trim((string) $individualTime->title);
+            if ($title === '') {
+                $title = 'Individuelle Zeit';
+            }
+
+            $calendar->event(function ($event) use ($calendarAbo, $individualTime, $title): void {
+                $event->name($title)
+                    ->description($title)
+                    ->uniqueIdentifier('individual-time-' . $individualTime->id)
+                    ->createdAt(Carbon::parse($individualTime->created_at ?? Carbon::now()));
+
+                $hasTimes = !empty($individualTime->start_time) && !empty($individualTime->end_time);
+                if ($individualTime->full_day || !$hasTimes) {
+                    // fullDay() muss vor endsAt() stehen: erst dann rechnet die
+                    // Bibliothek das exklusive DTEND (+1 Tag) selbst
+                    $event->fullDay()
+                        ->startsAt(Carbon::parse($individualTime->start_date))
+                        ->endsAt(Carbon::parse($individualTime->end_date));
+                } else {
+                    $event
+                        ->startsAt(Carbon::parse(
+                            $individualTime->start_date . ' ' . $individualTime->start_time
+                        ))
+                        ->endsAt(Carbon::parse(
+                            $individualTime->end_date . ' ' . $individualTime->end_time
+                        ));
+                }
+
+                if ($calendarAbo->enable_notification && $hasTimes && !$individualTime->full_day) {
+                    $this->addAlertToIndividualTimeEvent($event, $calendarAbo, $individualTime, $title);
+                }
+            });
+        } catch (\Throwable $e) {
+            // Skip invalid entries silently
+        }
+    }
+
+    /**
+     * Add alert to an individual time event
+     */
+    private function addAlertToIndividualTimeEvent($event, $calendarAbo, $individualTime, string $title): void
+    {
+        $alertTime = Carbon::parse($individualTime->start_date . ' ' . $individualTime->start_time);
+        switch ($calendarAbo->notification_time_unit) {
+            case 'minutes':
+                $alertTime->subMinutes($calendarAbo->notification_time);
+                break;
+            case 'hours':
+                $alertTime->subHours($calendarAbo->notification_time);
+                break;
+            case 'days':
+                $alertTime->subDays($calendarAbo->notification_time);
+                break;
+        }
+        $event->alertAt($alertTime, $title . ' beginnt in ' .
+            $calendarAbo->notification_time . ' ' . $calendarAbo->notification_time_unit);
     }
 
     /**
@@ -170,7 +261,7 @@ readonly class UserShiftCalendarAboService
     /**
      * Add alert to the event if notifications are enabled
      */
-    public function addAlertToEvent($event, $calendarAbo, $shiftStart, $shiftStartTime, $shift): void
+    public function addAlertToEvent($event, $calendarAbo, $shiftStart, $shiftStartTime, $shift, $shiftEndTime = null): void
     {
         if ($calendarAbo->enable_notification) {
             $alertTime = Carbon::parse($shiftStart . ' ' . $shiftStartTime);
@@ -187,7 +278,7 @@ readonly class UserShiftCalendarAboService
             }
             $craftName = $shift->craft?->name ?? 'Schicht';
             $event->alertAt($alertTime, 'Schicht: ' . $craftName . ' - ' .
-                $shift->start . ' - ' . $shift->end . ' beginnt in ' .
+                $shiftStartTime . ' - ' . ($shiftEndTime ?? $shift->end) . ' beginnt in ' .
                 $calendarAbo->notification_time . ' ' . $calendarAbo->notification_time_unit);
         }
     }

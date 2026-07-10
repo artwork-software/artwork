@@ -83,5 +83,7 @@ enum PermissionEnum : string
 
     case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';
 
+    case CAN_VIEW_SHIFT_WORKER_HOURS = 'can view shift worker hours';
+
     case CAN_PAY_OUT_OVERTIME = 'can pay out overtime';
 }

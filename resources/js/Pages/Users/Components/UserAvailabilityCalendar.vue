@@ -2,9 +2,9 @@
     <div class="w-full">
         <!-- Headbar -->
         <div class="w-full mb-3">
-            <div class="flex items-center justify-between rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur px-3 py-2 sm:px-4 sm:py-3">
+            <div class="flex items-center justify-between rounded-2xl border border-zinc-200/70 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 backdrop-blur px-3 py-2 sm:px-4 sm:py-3">
                 <!-- Monatstitel -->
-                <h2 class="text-lg sm:text-xl font-semibold tracking-tight text-zinc-900 select-none">
+                <h2 class="text-lg sm:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 select-none">
                     {{ dateToShow[0] }}
                 </h2>
 
@@ -13,14 +13,20 @@
                     <button
                         class="ui-button"
                         @click="previousMonth"
-                        aria-label="Previous month"
+                        :aria-label="$t('Previous month')"
                     >
                         <ChevronLeftIcon class="h-5 w-5 text-blue-600" />
                     </button>
                     <button
+                        class="ui-button !px-2 text-sm text-blue-600"
+                        @click="goToToday"
+                    >
+                        {{ $t('Today') }}
+                    </button>
+                    <button
                         class="ui-button"
                         @click="nextMonth"
-                        aria-label="Next month"
+                        :aria-label="$t('Next month')"
                     >
                         <ChevronRightIcon class="h-5 w-5 text-blue-600" />
                     </button>
@@ -28,8 +34,8 @@
             </div>
         </div>
 
-        <!-- Grid (Tabelle beibehalten für gleiche Funktion) -->
-        <table class="w-full border-separate border-spacing-y-1">
+        <!-- Grid -->
+        <table class="w-full border-separate border-spacing-y-1 select-none">
             <thead>
             <tr class="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
                 <th class="p-2 w-16"></th>
@@ -43,7 +49,7 @@
             <tr v-for="week in calendarData" :key="week.weekNumber" class="align-middle">
                 <!-- KW -->
                 <td class="px-2 py-3 text-center">
-                    <span class="inline-flex items-center rounded-xl bg-zinc-100 text-zinc-700 text-xs px-2 py-1">
+                    <span class="inline-flex items-center rounded-xl bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs px-2 py-1">
                       KW {{ week.weekNumber }}
                     </span>
                 </td>
@@ -51,11 +57,20 @@
                 <!-- Tage -->
                 <td v-for="day in week.days" :key="day.day_formatted" class="px-1 py-1">
                     <button
-                        @click="showVacationsAndAvailabilities(day.day_formatted)"
-                        class="w-full rounded-xl px-3 py-3 text-center select-none transition hover:bg-zinc-50"
-                        :class="dayButtonClasses(day)"
+                        type="button"
+                        :data-avail-day="day.notInMonth ? null : day.day_formatted"
+                        class="relative w-full rounded-xl px-2 py-3 text-center text-sm transition"
+                        :class="dayClasses(day)"
+                        :style="dayStyle(day)"
+                        :disabled="day.notInMonth || !interactive"
+                        @pointerdown="onDayPointerDown($event, day)"
+                        @click="onDayClick($event, day)"
                     >
                         {{ day.day }}
+                        <span
+                            v-if="day.hasConflict && !day.notInMonth"
+                            class="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500"
+                        />
                     </button>
                 </td>
             </tr>
@@ -63,111 +78,178 @@
         </table>
 
         <!-- Legende -->
-        <div class="flex items-center gap-4 mt-2 px-2 text-xs text-zinc-500">
+        <div class="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 px-2 text-xs text-zinc-500 dark:text-zinc-400">
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-4 h-4 rounded-full ring-2 ring-zinc-700"></span>
-                <span>{{ $t('Availability') }}</span>
+                <span class="inline-block w-4 h-4 rounded bg-emerald-200 dark:bg-emerald-800"></span>
+                <span>{{ $t('Available') }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-4 h-4 rounded-none ring-2 ring-zinc-700"></span>
-                <span>{{ $t('Absence') }}</span>
+                <span class="inline-block w-4 h-4 rounded bg-rose-200 dark:bg-rose-900"></span>
+                <span>{{ $t('Absent') }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block w-4 h-4 rounded border-b-4 border-zinc-400 bg-transparent"></span>
+                <span>{{ $t('Partial day') }}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>{{ $t('Conflict with your shift!') }}</span>
             </div>
         </div>
+        <p v-if="interactive" class="mt-1.5 px-2 text-xs text-zinc-400 dark:text-zinc-500">
+            {{ $t('Click a day or drag across several days to create an entry.') }}
+        </p>
     </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { computed, ref, onBeforeUnmount } from 'vue'
+import { router } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/solid'
 
-const page = usePage()
-
-// Props 1:1 beibehalten
 const props = defineProps({
     calendarData: { type: Array, required: true },
     dateToShow: { type: Array, required: true }, // [Titel, { date: 'YYYY-MM-DD' }]
-    showVacationsAndAvailabilitiesDate: { type: String, required: true },
+    showVacationsAndAvailabilitiesDate: { type: String, default: '' },
+    interactive: { type: Boolean, default: true },
 })
 
-// Wochentage (wie im Original, aber kompakt erzeugt)
+const emit = defineEmits(['select-range'])
+
 const weekdayNames = computed(() => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
 
-// Patch date range to server (same approach as UserShiftPlan)
-function patchServerDateRange(startDateStr, endDateStr) {
-    const userId = page.props?.auth?.user?.id
-    if (!userId) return
+// Nur die Verfügbarkeits-Props neu laden – der Einsatzplan bleibt unberührt
+const AVAILABILITY_PROPS = ['calendarData', 'dateToShow', 'vacations', 'availabilities', 'createShowDate']
 
-    router.patch(
-        route('update.user.worker.shift-plan.filters.update', userId),
-        { start_date: startDateStr, end_date: endDateStr },
-        { preserveState: true, preserveScroll: true }
-    )
-}
+const currentMonth = computed(() => dayjs(props.dateToShow[1]?.date ?? props.dateToShow[1]))
 
-function setRangeToMonth(month) {
-    // month is a dayjs object
-    const start = month.startOf('month').format('YYYY-MM-DD')
-    const end = month.endOf('month').format('YYYY-MM-DD')
-    patchServerDateRange(start, end)
-}
-
-const previousMonth = () => {
-    const current = dayjs(props.dateToShow[1].date)
-    setRangeToMonth(current.subtract(1, 'month'))
-}
-
-const nextMonth = () => {
-    const current = dayjs(props.dateToShow[1].date)
-    setRangeToMonth(current.add(1, 'month'))
-}
-
-const showVacationsAndAvailabilities = (day) => {
-    const currentMonth = new Date(props.dateToShow[1].date)
-    const rightMonth = dayjs(currentMonth)
+const reloadMonth = (month) => {
     router.reload({
-        data: {
-            showVacationsAndAvailabilities: day,
-            vacationMonth: rightMonth.format('YYYY-MM-DD'),
-        },
+        data: { month: month.startOf('month').format('YYYY-MM-DD') },
+        only: AVAILABILITY_PROPS,
         preserveState: true,
+        preserveScroll: true,
     })
 }
 
+const previousMonth = () => reloadMonth(currentMonth.value.subtract(1, 'month'))
+const nextMonth = () => reloadMonth(currentMonth.value.add(1, 'month'))
+const goToToday = () => reloadMonth(dayjs())
 
-// Klassen für Tagesbutton: modern & mit Farbakzenten, kompatibel zu vorhandenem Datenmodell
-const dayButtonClasses = (day) => {
-    const selected = day.day_formatted === props.showVacationsAndAvailabilitiesDate
-    const classes = ['text-sm']
+// --- Drag-/Klick-Auswahl ---------------------------------------------------
+const dragStart = ref(null)
+const dragEnd = ref(null)
+const isDragging = ref(false)
 
-    // Selected Day (oberste Priorität)
-    if (selected) {
-        classes.push('bg-blue-600 text-white hover:bg-blue-600/90 ring-1 ring-blue-600')
+const selectionRange = computed(() => {
+    if (!dragStart.value || !dragEnd.value) return null
+    const [start, end] = [dragStart.value, dragEnd.value].sort()
+    return { start, end }
+})
+
+const inSelection = (day) => {
+    const range = selectionRange.value
+    return range && day.day_formatted >= range.start && day.day_formatted <= range.end
+}
+
+const onDayPointerDown = (event, day) => {
+    if (day.notInMonth || !props.interactive) return
+    event.preventDefault()
+    dragStart.value = day.day_formatted
+    dragEnd.value = day.day_formatted
+    isDragging.value = true
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+}
+
+const onPointerMove = (event) => {
+    if (!isDragging.value) return
+    const element = document.elementFromPoint(event.clientX, event.clientY)
+    const dayElement = element?.closest?.('[data-avail-day]')
+    const date = dayElement?.getAttribute('data-avail-day')
+    if (date) {
+        dragEnd.value = date
+    }
+}
+
+const onPointerUp = () => {
+    cleanupDragListeners()
+    if (!isDragging.value) return
+    isDragging.value = false
+    const range = selectionRange.value
+    dragStart.value = null
+    dragEnd.value = null
+    if (range) {
+        emit('select-range', range)
+    }
+}
+
+const cleanupDragListeners = () => {
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+}
+
+// Tastatur-Aktivierung (Enter/Space löst click ohne vorheriges pointerdown aus)
+const onDayClick = (event, day) => {
+    if (day.notInMonth || !props.interactive || event.detail !== 0) return
+    emit('select-range', { start: day.day_formatted, end: day.day_formatted })
+}
+
+onBeforeUnmount(cleanupDragListeners)
+
+// --- Darstellung -----------------------------------------------------------
+const dayClasses = (day) => {
+    const classes = []
+
+    if (day.notInMonth) {
+        classes.push('text-zinc-300 dark:text-zinc-600 cursor-default')
         return classes
     }
 
-    // Today (nur wenn nicht ausgewählt)
-    if (day.isToday) {
-        classes.push('ring-1 ring-blue-400 text-blue-700 font-semibold')
+    if (props.interactive) {
+        classes.push('cursor-pointer')
     }
 
-    // Optional bekannte Flags (falls vorhanden)
-    if (day.notInMonth) {
-        classes.push('text-zinc-400')
-    } else if (day.onVacation && day.hasAvailability) {
-        // Both present: square border (vacation takes priority) with thicker ring
-        classes.push('text-zinc-700 ring-[3px] ring-zinc-700 !rounded-none')
+    if (inSelection(day)) {
+        classes.push('ring-2 ring-blue-500 bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100')
+        return classes
+    }
+
+    if (day.isToday) {
+        classes.push('ring-1 ring-blue-500 font-semibold')
+    }
+
+    const bothTypes = day.onVacation && day.hasAvailability
+    if (bothTypes) {
+        // Split-Hintergrund kommt aus dayStyle()
+        classes.push('text-zinc-800 dark:text-zinc-100')
     } else if (day.onVacation) {
-        // Square border for vacation/absence
-        classes.push('text-zinc-700 ring-2 ring-zinc-700 !rounded-none')
+        classes.push(
+            day.vacationFullDay
+                ? 'bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-200'
+                : 'border-b-4 !rounded-b-none border-rose-500 text-rose-800 dark:text-rose-300'
+        )
     } else if (day.hasAvailability) {
-        // Round border for availability
-        classes.push('text-zinc-700 ring-2 ring-zinc-700 !rounded-full')
+        classes.push(
+            day.availabilityFullDay
+                ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200'
+                : 'border-b-4 !rounded-b-none border-emerald-500 text-emerald-800 dark:text-emerald-300'
+        )
     } else {
-        classes.push('text-zinc-700')
+        classes.push('text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/60')
     }
 
     return classes
+}
+
+const dayStyle = (day) => {
+    if (day.notInMonth || inSelection(day) || !(day.onVacation && day.hasAvailability)) {
+        return null
+    }
+    // Tag mit Verfügbarkeit UND Abwesenheit: zweifarbig geteilt
+    return {
+        background: 'linear-gradient(135deg, rgb(209 250 229) 0 50%, rgb(255 228 230) 50% 100%)',
+    }
 }
 </script>

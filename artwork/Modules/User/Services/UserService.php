@@ -3,7 +3,9 @@
 namespace Artwork\Modules\User\Services;
 
 use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -184,9 +186,9 @@ class UserService
             $this->getAuthUser()
         );
 
-        // Synchronize month with workerShiftPlanFilter dates for bidirectional sync
-        // Always derive month from workerShiftPlanFilter to keep both components in sync
-        $month = $requestedStartDate->format('Y-m-d');
+        // Verfügbarkeitskalender ist vom Einsatzplan-Filter entkoppelt: expliziter month-Parameter
+        // gewinnt, sonst startet der Kalender im Monat des Einsatzplan-Filters.
+        $month = $month ?: $requestedStartDate->format('Y-m-d');
 
         // Derive the displayed calendar month from $month (which is always in sync with the calendar)
         $calendarMonth = Carbon::parse($month)->startOfMonth();
@@ -201,13 +203,6 @@ class UserService
 
         $startOfWeek = $requestedStartDate->copy()->startOfWeek();
         $endOfWeek = $requestedEndDate->copy()->endOfWeek();
-
-        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
-            $user->id,
-            'user',
-            $startOfWeek,
-            $endOfWeek
-        );
 
         [
             $calendarData,
@@ -229,7 +224,7 @@ class UserService
                         ]
                     )
             )
-            ->setCrafts(Craft::all())
+            ->setCrafts(static fn() => Craft::all())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)
@@ -262,20 +257,42 @@ class UserService
                                     'day_without_format' => $date->format('Y-m-d'),
                                 ];
                             }
-                        )
+                    )
+                )
+            )
+            ->setDaysWithData(
+                fn() => $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
+                    $user->id,
+                    'user',
+                    $startOfWeek,
+                    $endOfWeek
                 )
             )
             //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
             //->setTotalPlannedWorkingHours((float)$totalPlannedWorkingHours)
-            ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
-            ->setRooms($roomService->getAllWithoutTrashed())
-            ->setProjects($projectService->getAll())
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
-            ->setShifts($this->getUserShiftsOrderedByStartAscending($user))
-            ->setVacations($this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth))
-            ->setAvailabilities($this->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $calendarMonth))
+            // Schwere Props als Closures: Inertia wertet sie bei partiellen Reloads
+            // (z.B. nach Speichern/Löschen von Verfügbarkeiten) gar nicht erst aus
+            ->setVacationSelectCalendar(
+                static fn() => $calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth)
+            )
+            ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
+            ->setProjects(static fn() => $projectService->getAll())
+            ->setShiftQualifications(static fn() => $shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending($user))
+            ->setVacations(
+                tap(
+                    $this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth),
+                    static fn($vacations) => Vacation::attachSeriesDateBounds($vacations)
+                )
+            )
+            ->setAvailabilities(
+                tap(
+                    $this->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $calendarMonth),
+                    static fn($availabilities) => Availability::attachSeriesDateBounds($availabilities)
+                )
+            )
             ->setFirstProjectShiftTabId(
-                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                fn() => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             );

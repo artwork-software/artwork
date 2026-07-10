@@ -62,11 +62,14 @@ class UserShiftCalendarAboController extends Controller
             'shifts.event.creator',
             'shifts.event.project',
             'shifts.event.room',
+            'shifts.room',
+            'shifts.project',
             'shifts.craft',
             // Teilnehmer des ICS-Termins — kamen früher über das (entfernte) globale Shift-$with
             'shifts.users',
             'shifts.freelancer',
             'shifts.serviceProvider',
+            'individualTimes',
         ]);
         $shifts = $this->userShiftCalendarAboService->getFilteredShifts($calendarAbo, $user->shifts);
 
@@ -75,6 +78,14 @@ class UserShiftCalendarAboController extends Controller
             if ($this->userShiftCalendarAboService->shouldAddShift($calendarAbo, $shift)) {
                 $this->userShiftCalendarAboService->addShiftToCalendar($calendar, $calendarAbo, $shift);
             }
+        }
+
+        // Individuelle Zeiten des Einsatzplans ebenfalls in den Feed aufnehmen
+        // (kein Craft-Filter: sie sind personen-, nicht gewerkgebunden)
+        $individualTimes = $this->userShiftCalendarAboService
+            ->getFilteredIndividualTimes($calendarAbo, $user->individualTimes);
+        foreach ($individualTimes as $individualTime) {
+            $this->userShiftCalendarAboService->addIndividualTimeToCalendar($calendar, $calendarAbo, $individualTime);
         }
 
         return response($calendar->get(), 200)

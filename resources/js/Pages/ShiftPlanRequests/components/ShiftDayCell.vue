@@ -53,7 +53,14 @@
                             {{ $t('Change requested') }}
                         </span>
                     </div>
-                    <div v-if="entry.short_description" class="text-[10px] text-gray-400 truncate">{{ entry.short_description }}</div>
+                    <div v-if="entry.room_name" class="flex items-center gap-1 text-[10px] text-gray-500">
+                        <IconMapPin class="h-3 w-3 shrink-0" />
+                        <span class="truncate">{{ entry.room_name }}</span>
+                    </div>
+                    <div v-if="entry.short_description" class="flex items-start gap-1 text-[10px] text-gray-400">
+                        <IconNote class="h-3 w-3 shrink-0 mt-px" />
+                        <span class="line-clamp-2">{{ entry.short_description }}</span>
+                    </div>
                     <div v-if="entry.workflow_rejection_reason" class="text-[10px] text-red-500 font-medium leading-tight mt-0.5">
                         {{ entry.workflow_rejection_reason }}
                     </div>
@@ -79,7 +86,7 @@
     </div>
 </template>
 <script setup>
-import { IconAlertTriangle, IconClock, IconLock, IconTrash } from '@tabler/icons-vue';
+import { IconAlertTriangle, IconClock, IconLock, IconMapPin, IconNote, IconTrash } from '@tabler/icons-vue';
 import {computed} from 'vue';
 const props = defineProps({
     entries: { type: Array, default: () => [] },

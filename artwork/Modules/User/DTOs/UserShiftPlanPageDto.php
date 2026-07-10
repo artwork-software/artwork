@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\DTOs;
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Closure;
 use Illuminate\Support\Collection;
 
 class UserShiftPlanPageDto extends BaseDto
@@ -19,7 +20,7 @@ class UserShiftPlanPageDto extends BaseDto
 
     public ?array $dateToShow = null;
 
-    public ?Collection $vacationSelectCalendar = null;
+    public Collection|Closure|null $vacationSelectCalendar = null;
 
     public ?array $createShowDate = null;
 
@@ -33,21 +34,23 @@ class UserShiftPlanPageDto extends BaseDto
 
     public ?array $wholeWeekDatePeriod = null;
 
+    public array|Closure|null $daysWithData = null;
+
     public ?array $eventsWithTotalPlannedWorkingHours = null;
 
     public ?float $totalPlannedWorkingHours = null;
 
-    public ?EloquentCollection $rooms = null;
+    public EloquentCollection|Closure|null $rooms = null;
 
-    public ?EloquentCollection $crafts = null;
+    public EloquentCollection|Closure|null $crafts = null;
 
-    public ?EloquentCollection $projects = null;
+    public EloquentCollection|Closure|null $projects = null;
 
-    public ?EloquentCollection $shiftQualifications = null;
+    public EloquentCollection|Closure|null $shiftQualifications = null;
 
-    public ?EloquentCollection $shifts = null;
+    public EloquentCollection|Closure|null $shifts = null;
 
-    public ?int $firstProjectShiftTabId = null;
+    public int|Closure|null $firstProjectShiftTabId = null;
 
     public function setUserToEdit(?UserShowResource $userToEdit): self
     {
@@ -84,7 +87,7 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setVacationSelectCalendar(?Collection $vacationSelectCalendar): self
+    public function setVacationSelectCalendar(Collection|Closure|null $vacationSelectCalendar): self
     {
         $this->vacationSelectCalendar = $vacationSelectCalendar;
 
@@ -133,6 +136,13 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
+    public function setDaysWithData(array|Closure|null $daysWithData): self
+    {
+        $this->daysWithData = $daysWithData;
+
+        return $this;
+    }
+
     public function setEventsWithTotalPlannedWorkingHours(?array $eventsWithTotalPlannedWorkingHours): self
     {
         $this->eventsWithTotalPlannedWorkingHours = $eventsWithTotalPlannedWorkingHours;
@@ -147,42 +157,42 @@ class UserShiftPlanPageDto extends BaseDto
         return $this;
     }
 
-    public function setRooms(?EloquentCollection $rooms): self
+    public function setRooms(EloquentCollection|Closure|null $rooms): self
     {
         $this->rooms = $rooms;
 
         return $this;
     }
 
-    public function setCrafts(?EloquentCollection $crafts): self
+    public function setCrafts(EloquentCollection|Closure|null $crafts): self
     {
         $this->crafts = $crafts;
 
         return $this;
     }
 
-    public function setProjects(?EloquentCollection $projects): self
+    public function setProjects(EloquentCollection|Closure|null $projects): self
     {
         $this->projects = $projects;
 
         return $this;
     }
 
-    public function setShiftQualifications(?EloquentCollection $shiftQualifications): self
+    public function setShiftQualifications(EloquentCollection|Closure|null $shiftQualifications): self
     {
         $this->shiftQualifications = $shiftQualifications;
 
         return $this;
     }
 
-    public function setShifts(?EloquentCollection $shifts): self
+    public function setShifts(EloquentCollection|Closure|null $shifts): self
     {
         $this->shifts = $shifts;
 
         return $this;
     }
 
-    public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
+    public function setFirstProjectShiftTabId(int|Closure|null $firstProjectShiftTabId): self
     {
         $this->firstProjectShiftTabId = $firstProjectShiftTabId;
 
@@ -223,7 +233,7 @@ class UserShiftPlanPageDto extends BaseDto
     /**
      * @return Collection|null
      */
-    public function getVacationSelectCalendar(): ?Collection
+    public function getVacationSelectCalendar(): Collection|Closure|null
     {
         return $this->vacationSelectCalendar;
     }
@@ -267,6 +277,11 @@ class UserShiftPlanPageDto extends BaseDto
         return $this->wholeWeekDatePeriod;
     }
 
+    public function getDaysWithData(): array|Closure|null
+    {
+        return $this->daysWithData;
+    }
+
     /**
      * @return array<string, mixed>|null
      */
@@ -280,32 +295,32 @@ class UserShiftPlanPageDto extends BaseDto
         return $this->totalPlannedWorkingHours;
     }
 
-    public function getRooms(): ?EloquentCollection
+    public function getRooms(): EloquentCollection|Closure|null
     {
         return $this->rooms;
     }
 
-    public function getCrafts(): ?EloquentCollection
+    public function getCrafts(): EloquentCollection|Closure|null
     {
         return $this->crafts;
     }
 
-    public function getProjects(): ?EloquentCollection
+    public function getProjects(): EloquentCollection|Closure|null
     {
         return $this->projects;
     }
 
-    public function getShiftQualifications(): ?EloquentCollection
+    public function getShiftQualifications(): EloquentCollection|Closure|null
     {
         return $this->shiftQualifications;
     }
 
-    public function getShifts(): ?EloquentCollection
+    public function getShifts(): EloquentCollection|Closure|null
     {
         return $this->shifts;
     }
 
-    public function getFirstProjectShiftTabId(): ?int
+    public function getFirstProjectShiftTabId(): int|Closure|null
     {
         return $this->firstProjectShiftTabId;
     }
@@ -328,6 +343,7 @@ class UserShiftPlanPageDto extends BaseDto
             'showVacationsAndAvailabilitiesDate' => $this->getShowVacationsAndAvailabilitiesDate(),
             'dateValue' => $this->getDateValue(),
             'wholeWeekDatePeriod' => $this->getWholeWeekDatePeriod(),
+            'daysWithData' => $this->getDaysWithData(),
             'eventsWithTotalPlannedWorkingHours' => $this->getEventsWithTotalPlannedWorkingHours(),
             'totalPlannedWorkingHours' => $this->getTotalPlannedWorkingHours(),
             'rooms' => $this->getRooms(),

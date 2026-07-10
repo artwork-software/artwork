@@ -125,6 +125,32 @@ class InternalIssueController extends Controller
     }
 
 
+    /**
+     * Namenssuche über Materialausgaben als Kopierquelle: liefert die Artikel
+     * (inkl. pivot.quantity) mit, damit das Frontend sie direkt übernehmen kann.
+     */
+    public function searchForCopy(): JsonResponse
+    {
+        $q = trim((string) request()->input('q', ''));
+        $excludeId = (int) request()->input('exclude_id', 0);
+
+        $issues = InternalIssue::query()
+            ->with([
+                'articles.images',
+                'articles.category',
+                'articles.subCategory',
+                'project:id,name',
+                'room:id,name',
+            ])
+            ->when($excludeId > 0, fn ($builder) => $builder->where('id', '!=', $excludeId))
+            ->when($q !== '', fn ($builder) => $builder->where('name', 'like', "%{$q}%"))
+            ->orderByDesc('created_at')
+            ->limit(15)
+            ->get();
+
+        return response()->json($issues);
+    }
+
     public function show(InternalIssue $internalIssue): JsonResponse
     {
         $internalIssue->load([

@@ -35,14 +35,16 @@ class ShiftPlanWorkflowStatusService
     /**
      * @param class-string|null $onlyEmployableType Zusammen mit $onlyEmployableId: nur Schichten
      *                                              dieser einen Person laden (Einzel-Reload)
-     * @return array<string, array<int, array<string, string>>>
-     *         [typeKey][workerId][weekNumber] => status
+     * @param array<int, int> $craftIds
+     * @return array<string, array<int, array<int, array<string, string>>>>
+     *         [typeKey][workerId][craftId][weekNumber] => status
      */
     public function computeForDateRange(
         Carbon $startDate,
         Carbon $endDate,
         ?string $onlyEmployableType = null,
-        ?int $onlyEmployableId = null
+        ?int $onlyEmployableId = null,
+        array $craftIds = []
     ): array {
         $rangeStart = $startDate->toDateString();
         $rangeEnd = $endDate->toDateString();
@@ -52,8 +54,9 @@ class ShiftPlanWorkflowStatusService
             ->whereBetween('date', [$rangeStart, $rangeEnd]);
 
         $shifts = Shift::query()
-            ->select(['id', 'start_date', 'end_date', 'start', 'end', 'is_committed', 'in_workflow'])
+            ->select(['id', 'craft_id', 'start_date', 'end_date', 'start', 'end', 'is_committed', 'in_workflow'])
             ->whereBetween('start_date', [$rangeStart, $rangeEnd])
+            ->when($craftIds !== [], fn ($query) => $query->whereIn('craft_id', $craftIds))
             ->when(
                 $onlyEmployableType !== null && $onlyEmployableId !== null,
                 fn ($query) => $query->whereExists(
@@ -75,7 +78,7 @@ class ShiftPlanWorkflowStatusService
             ])
             ->get();
 
-        // [typeKey][workerId][week] => ['total' => int, 'committed' => int, 'requested' => bool, 'attention' => bool]
+        // [typeKey][workerId][craftId][week] => status counters
         $aggregate = [];
 
         foreach ($shifts as $shift) {
@@ -89,8 +92,9 @@ class ShiftPlanWorkflowStatusService
                     continue;
                 }
 
+                $craftId = (int) $shift->craft_id;
                 $week = $this->weekNumber($worker->pivot?->start_date ?? $shift->start_date);
-                $entry = &$aggregate[$typeKey][$worker->id][$week];
+                $entry = &$aggregate[$typeKey][$worker->id][$craftId][$week];
                 $entry ??= ['total' => 0, 'committed' => 0, 'requested' => false, 'attention' => false];
 
                 $entry['total']++;
@@ -109,21 +113,23 @@ class ShiftPlanWorkflowStatusService
             }
         }
 
-        $this->applyUnacknowledgedChanges($aggregate, $shifts, $rangeStart, $rangeEnd);
+        $this->applyUnacknowledgedChanges($aggregate, $shifts, $rangeStart, $rangeEnd, $craftIds);
 
         $statusMap = [];
         foreach ($aggregate as $typeKey => $workerWeeks) {
-            foreach ($workerWeeks as $workerId => $weeks) {
-                foreach ($weeks as $week => $entry) {
-                    $status = match (true) {
-                        $entry['attention'] => 'attention',
-                        $entry['requested'] => 'requested',
-                        $entry['total'] > 0 && $entry['committed'] === $entry['total'] => 'committed',
-                        default => null,
-                    };
+            foreach ($workerWeeks as $workerId => $craftWeeks) {
+                foreach ($craftWeeks as $craftId => $weeks) {
+                    foreach ($weeks as $week => $entry) {
+                        $status = match (true) {
+                            $entry['attention'] => 'attention',
+                            $entry['requested'] => 'requested',
+                            $entry['total'] > 0 && $entry['committed'] === $entry['total'] => 'committed',
+                            default => null,
+                        };
 
-                    if ($status !== null) {
-                        $statusMap[$typeKey][$workerId][$week] = $status;
+                        if ($status !== null) {
+                            $statusMap[$typeKey][$workerId][$craftId][$week] = $status;
+                        }
                     }
                 }
             }
@@ -143,16 +149,20 @@ class ShiftPlanWorkflowStatusService
         array &$aggregate,
         $shifts,
         string $rangeStart,
-        string $rangeEnd
+        string $rangeEnd,
+        array $craftIds
     ): void {
         $changes = CommittedShiftChange::query()
             ->join('shifts', 'shifts.id', '=', 'committed_shift_changes.shift_id')
             ->whereNull('committed_shift_changes.acknowledged_at')
             ->whereBetween('shifts.start_date', [$rangeStart, $rangeEnd])
+            ->when($craftIds !== [], fn ($query) => $query->whereIn('shifts.craft_id', $craftIds))
             ->get([
                 'committed_shift_changes.shift_id',
+                'committed_shift_changes.craft_id',
                 'committed_shift_changes.affected_user_type',
                 'committed_shift_changes.affected_user_id',
+                'shifts.craft_id as shift_craft_id',
                 'shifts.start_date as shift_start_date',
             ]);
 
@@ -163,12 +173,13 @@ class ShiftPlanWorkflowStatusService
         $shiftsById = $shifts->keyBy('id');
 
         foreach ($changes as $change) {
+            $craftId = (int) ($change->craft_id ?? $change->shift_craft_id);
             $week = $this->weekNumber($change->shift_start_date);
 
             if ($change->affected_user_id !== null) {
                 $typeKey = self::TYPE_KEYS[$change->affected_user_type] ?? null;
                 if ($typeKey !== null) {
-                    $entry = &$aggregate[$typeKey][$change->affected_user_id][$week];
+                    $entry = &$aggregate[$typeKey][$change->affected_user_id][$craftId][$week];
                     $entry ??= ['total' => 0, 'committed' => 0, 'requested' => false, 'attention' => false];
                     $entry['attention'] = true;
                     unset($entry);
@@ -192,7 +203,7 @@ class ShiftPlanWorkflowStatusService
                     continue;
                 }
 
-                $entry = &$aggregate[$typeKey][$worker->id][$week];
+                $entry = &$aggregate[$typeKey][$worker->id][$craftId][$week];
                 $entry ??= ['total' => 0, 'committed' => 0, 'requested' => false, 'attention' => false];
                 $entry['attention'] = true;
                 unset($entry);

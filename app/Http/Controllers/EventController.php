@@ -4341,7 +4341,11 @@ class EventController extends Controller
             $craftIds
         );
 
-        $workflowStatus = $workflowStatusService->computeForDateRange($startDate, $endDate);
+        $workflowStatus = $workflowStatusService->computeForDateRange(
+            $startDate,
+            $endDate,
+            craftIds: $craftIds
+        );
         $attachWorkflowStatus = static function (array $entries, string $workerKey) use ($workflowStatus): array {
             foreach ($entries as &$entry) {
                 $workerId = $entry[$workerKey]['id'] ?? null;

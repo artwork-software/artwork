@@ -94,7 +94,14 @@
                                                 v-for="violation in violationsForDay(day)"
                                                 :key="violation.id"
                                                 class="flex h-4 w-4 items-center justify-center"
-                                                :title="(violation.shift_rule?.name || '') + ': ' + (violation.shift_rule?.description || '')"
+                                                :aria-label="violationTooltip(violation)"
+                                                v-tooltip.bottom="{
+                                                    value: violationTooltip(violation),
+                                                    appendTo: 'body',
+                                                    class: 'aw-tooltip',
+                                                    position: 'bottom',
+                                                    useTranslation: false
+                                                }"
                                             >
                                                 <span v-if="violation.status === 'resolved'" class="relative inline-flex h-3.5 w-3.5">
                                                     <svg class="h-3.5 w-3.5" :style="{ color: violation.shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -436,6 +443,11 @@ function hasWorkTime(day) {
 function violationsForDay(day) {
     if (!day?.violations) return []
     return Array.isArray(day.violations) ? day.violations : Object.values(day.violations)
+}
+function violationTooltip(violation) {
+    return [violation?.shift_rule?.name, violation?.shift_rule?.description]
+        .filter(Boolean)
+        .join(': ')
 }
 function hasIndividualTimes(day) {
     return Array.isArray(day?.individualTimes) && day.individualTimes.length > 0

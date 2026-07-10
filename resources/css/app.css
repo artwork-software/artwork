@@ -1279,11 +1279,28 @@
     --aw-tooltip-max-width: 24rem;  /* ≈ Tailwind max-w-sm */
     z-index: 9999 !important;       /* ensure tooltip renders above HeadlessUI Float portals */
 }
+/* PrimeVue-Theme deckelt .p-tooltip auf 12.5rem — hier gilt stattdessen die CSS-Variable */
+.aw-tooltip.p-tooltip {
+    max-width: var(--aw-tooltip-max-width);
+}
+/* Breitere Variante für erklärende Tooltips (per tooltip-css-class="aw-tooltip-wide") */
+.aw-tooltip-wide {
+    --aw-tooltip-max-width: 32rem;
+}
+/* Aufzählungen in HTML-Tooltips (allow-html): echte Liste mit hängendem Einzug */
+.aw-tooltip .p-tooltip-text ul {
+    margin: 0.375rem 0 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
 .aw-tooltip .p-tooltip-text {
     display: inline-block;
     min-width: var(--aw-tooltip-min-width);
     max-width: var(--aw-tooltip-max-width);
-    white-space: normal;
+    white-space: pre-line; /* wie normal, erhält aber \n → mehrzeilige Tooltips (z.B. Aufzählungen) */
     overflow-wrap: anywhere; /* modern, allows breaking long tokens */
     word-break: break-word;  /* fallback for older browsers */
 

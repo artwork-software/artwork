@@ -267,13 +267,16 @@
         @closed="closeEditIndividualTimeModal"
     />
 
-    <!-- Schichtverlauf – im Einsatzplan eines Users mit dessen Namen vorbelegt -->
+    <!-- Schichtverlauf – im Einsatzplan eines Users mit dessen Namen vorbelegt.
+         Person + Zeitraum stehen hier schon fest → direkt laden (wie bei den
+         anderen Shortcuts), statt erst auf "Verlauf laden" zu warten. -->
     <ShiftHistoryModal
         v-if="showHistoryModal"
         :crafts="crafts"
         :initial-start-date="dateValue[0]"
         :initial-end-date="dateValue[1]"
         :prefill-search="prefillSearchName"
+        auto-load
         @close="showHistoryModal = false"
     />
 </template>

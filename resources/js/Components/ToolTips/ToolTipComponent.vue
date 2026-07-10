@@ -115,7 +115,10 @@ const props = defineProps({
     // Neues Flag: erzwingt schwarze Icon-Farbe (#27233C)
     blackIcon: { type: Boolean, default: false },
     noRelative: { type: Boolean, default: false },
-    tooltipCssClass: { type: String, default: 'w-fit' }, // bleibt erhalten, falls du es extern nutzt
+    /** Zusätzliche CSS-Klasse(n) für das Tooltip-Overlay, z.B. 'aw-tooltip-wide' */
+    tooltipCssClass: { type: String, default: '' },
+    /** Opt-in: tooltipText als HTML rendern (nur für eigene, vertrauenswürdige Inhalte) */
+    allowHtml: { type: Boolean, default: false },
     noTooltip: { type: Boolean, default: false },
     useTranslation: { type: Boolean, default: false },
     iconColor: { type: String, default: '' }
@@ -142,6 +145,7 @@ const tooltipBinding = computed(() => ({
     useTranslation: props.useTranslation,
     position: props.direction, // Fallback, wenn kein Modifier genutzt wird
     appendTo: 'body', // sicherstellen, dass Overlay am Body hängt
-    class: 'aw-tooltip',
+    escape: !props.allowHtml,
+    class: ['aw-tooltip', props.tooltipCssClass].filter(Boolean).join(' '),
 }))
 </script>

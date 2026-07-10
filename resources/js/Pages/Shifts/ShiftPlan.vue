@@ -784,6 +784,7 @@
                 v-if="showUserShifts"
                 @closed="showUserShifts = false"
                 @desires-reload="handleWorkerReload"
+                @open-history="openHistoryForWorkerDay"
                 :user="userToShow"
                 :day="dayToShow"
                 :shift-qualifications="shiftQualifications"
@@ -794,15 +795,6 @@
                 :user-name="userInfoModalUserName"
                 @closed="showUserInfoModal = false"
             />
-            <ShiftHistoryModal
-                v-if="showHistoryModal"
-                :logs="history"
-                :crafts="craftsResolved"
-                :initialStartDate="dateValue[0]"
-                :initialEndDate="dateValue[1]"
-                @close="showHistoryModal = false"
-            />
-
         </ShiftHeader>
     </div>
     <SideNotification
@@ -871,6 +863,20 @@
         v-if="showAddShiftByPresetOrGroupModal"
         @close="showAddShiftByPresetOrGroupModal = false"
         />
+
+    <!-- Als letztes Modal im Template: rendert dadurch über den Modals, aus denen
+         es per Shortcut geöffnet wird (Tagesmodal, Schicht-bearbeiten-Modal). -->
+    <ShiftHistoryModal
+        v-if="showHistoryModal"
+        :crafts="craftsResolved"
+        :initial-craft-id="historyModalConfig.craftId"
+        :initial-start-date="historyModalConfig.startDate ?? dateValue[0]"
+        :initial-end-date="historyModalConfig.endDate ?? dateValue[1]"
+        :prefill-search="historyModalConfig.search"
+        :initial-shift-id="historyModalConfig.shiftId"
+        :auto-load="historyModalConfig.autoLoad"
+        @close="showHistoryModal = false"
+    />
 </template>
 
 <script setup lang="ts">
@@ -1051,6 +1057,17 @@ const days = shallowRef<any[]>(props.days ?? [])
 const rooms = shallowRef([])
 const isFullscreen = ref(false)
 const showHistoryModal = ref(false)
+// Vorbelegung des Schichtverlauf-Modals je nach Einstieg: leer über die Funktionsleiste,
+// Person+Tag über das Tagesmodal, konkrete Schicht über das Verlauf-Icon an der Schicht.
+type HistoryModalConfig = {
+    search?: string
+    startDate?: string
+    endDate?: string
+    shiftId?: number
+    craftId?: number
+    autoLoad?: boolean
+}
+const historyModalConfig = ref<HistoryModalConfig>({})
 const showUserShifts = ref(false)
 const userToShow = ref<any | null>(null)
 const dayToShow = ref<any | null>(null)
@@ -1103,6 +1120,9 @@ const craftsResolved = computed(() =>
 
 // Provide crafts for child components (e.g. ShiftDropElement)
 provide('shiftPlanCrafts', craftsResolved)
+
+// Verlauf-Shortcut an den einzelnen Schichten (ShiftDropElement) verfügbar machen
+provide('openShiftHistory', openHistoryForShift)
 
 // Provide lookup maps for normalized DTO resolution
 const { setLookups, mergeLookups, resolveCraft, resolveEventType, resolveProject, resolveShiftGroup } = provideShiftPlanLookups()
@@ -3266,8 +3286,32 @@ function updateTimes(startDate: string, endDate: string) {
     )
 }
 
-function openHistoryModal() {
+function openHistoryModal(config: HistoryModalConfig = {}) {
+    historyModalConfig.value = config
     showHistoryModal.value = true
+}
+
+// Shortcut aus dem Tagesmodal: Schichtverlauf mit Person + Tag vorausgewählt öffnen.
+function openHistoryForWorkerDay(payload: { search: string; date: string }) {
+    openHistoryModal({
+        search: payload.search,
+        startDate: payload.date,
+        endDate: payload.date,
+        autoLoad: true,
+    })
+}
+
+// Shortcut an einer konkreten Schicht: Verlauf auf genau diese Schicht vorgefiltert.
+function openHistoryForShift(shift: any) {
+    const startDate = shift?.startDate ?? shift?.start_date ?? undefined
+    const endDate = shift?.endDate ?? shift?.end_date ?? startDate
+    openHistoryModal({
+        shiftId: shift?.id,
+        craftId: shift?.craft?.id ?? shift?.craftId ?? undefined,
+        startDate,
+        endDate,
+        autoLoad: true,
+    })
 }
 
 function showCloseUserOverview() {

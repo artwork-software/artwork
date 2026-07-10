@@ -10,19 +10,17 @@ use Tests\Feature\FeatureTestCase;
 
 final class ShiftHistorySearchTest extends FeatureTestCase
 {
-    private function makeShift(): Shift
+    private function makeShift(array $attributes = []): Shift
     {
-        $craft = Craft::factory()->create();
-
-        return Shift::factory()->create([
-            'craft_id' => $craft->id,
+        return Shift::factory()->create(array_merge([
+            'craft_id' => Craft::factory()->create()->id,
             'start_date' => '2026-05-06',
             'end_date' => '2026-05-06',
             'start' => '09:00:00',
             'end' => '17:00:00',
             'in_workflow' => false,
             'current_request_id' => null,
-        ]);
+        ], $attributes));
     }
 
     private function logActivity(Shift $shift, string $description, array $properties = []): Activity
@@ -195,5 +193,127 @@ final class ShiftHistorySearchTest extends FeatureTestCase
         $response->assertOk();
         // At least our 3 entries are returned unfiltered (the shift's own creation may add more).
         $this->assertGreaterThanOrEqual(3, (int) $response->json('logs.meta.total'));
+    }
+
+    #[Test]
+    public function firstPageReturnsTheMinimalShiftContract(): void
+    {
+        $this->actingAsAdmin();
+        $shift = $this->makeShift();
+
+        $response = $this->getJson(route('shift.history.index', [
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+        ]));
+
+        $response->assertOk();
+        $payload = $response->json('shifts.0');
+
+        $this->assertSame([
+            'id',
+            'craft_id',
+            'start_date',
+            'end_date',
+            'start',
+            'end',
+            'description',
+            'is_committed',
+            'in_workflow',
+            'deleted_at',
+            'room',
+            'project',
+            'craft',
+        ], array_keys($payload));
+        $this->assertSame($shift->id, $payload['id']);
+        $this->assertSame('06. May 2026', $payload['start_date']);
+        $this->assertSame('09:00', $payload['start']);
+        $this->assertSame(
+            $shift->craft()->firstOrFail()->only(['id', 'name', 'abbreviation']),
+            $payload['craft']
+        );
+    }
+
+    #[Test]
+    public function exactShiftFilterIsAppliedBeforePagination(): void
+    {
+        $this->actingAsAdmin();
+        $craft = Craft::factory()->create();
+        $targetShift = $this->makeShift(['craft_id' => $craft->id]);
+        for ($i = 0; $i < 3; $i++) {
+            $this->logActivity($targetShift, 'target shift history ' . $i);
+        }
+
+        $otherShift = $this->makeShift(['craft_id' => $craft->id]);
+        for ($i = 0; $i < 5; $i++) {
+            $this->logActivity($otherShift, 'newer noise ' . $i);
+        }
+
+        activity('shift')
+            ->event('committed_bulk')
+            ->withProperties([
+                'shift_ids' => [$otherShift->id],
+                'craft_ids' => [$craft->id],
+                'commit_summary' => ['start_date' => '2026-05-06', 'end_date' => '2026-05-06'],
+            ])
+            ->log('other shift bulk commitment');
+        activity('shift')
+            ->event('committed_bulk')
+            ->withProperties([
+                'shift_ids' => [$targetShift->id],
+                'craft_ids' => [$craft->id],
+                'commit_summary' => ['start_date' => '2026-05-06', 'end_date' => '2026-05-06'],
+            ])
+            ->log('target shift bulk commitment');
+
+        $query = [
+            'craftId' => $craft->id,
+            'shiftId' => $targetShift->id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+            'per_page' => 2,
+        ];
+        $expectedTotal = Activity::query()
+            ->where('log_name', 'shift')
+            ->where(function ($query) use ($targetShift): void {
+                $query->where('subject_id', $targetShift->id)
+                    ->orWhereJsonContains('properties->shift_ids', $targetShift->id);
+            })
+            ->count();
+
+        $firstPage = $this->getJson(route('shift.history.index', $query));
+        $secondPage = $this->getJson(route('shift.history.index', [...$query, 'page' => 2]));
+
+        $firstPage->assertOk()->assertJsonPath('logs.meta.total', $expectedTotal);
+        $secondPage->assertOk()->assertJsonPath('logs.meta.total', $expectedTotal)->assertJsonMissingPath('shifts');
+        $this->assertEqualsCanonicalizing(
+            [$targetShift->id, $otherShift->id],
+            collect($firstPage->json('shifts'))->pluck('id')->all()
+        );
+
+        $logs = collect([...$firstPage->json('logs.data'), ...$secondPage->json('logs.data')]);
+        $this->assertContains('target shift bulk commitment', $logs->pluck('description'));
+        $this->assertNotContains('other shift bulk commitment', $logs->pluck('description'));
+        $this->assertTrue($logs->every(
+            fn (array $log): bool => (int) ($log['subject_id'] ?? 0) === $targetShift->id
+                || in_array($targetShift->id, data_get($log, 'properties.shift_ids', []), true)
+        ));
+    }
+
+    #[Test]
+    public function exactShiftFilterCannotBypassTheCraftFilter(): void
+    {
+        $this->actingAsAdmin();
+        $shift = $this->makeShift();
+
+        $response = $this->getJson(route('shift.history.index', [
+            'craftId' => Craft::factory()->create()->id,
+            'shiftId' => $shift->id,
+            'start_date' => '2026-05-01',
+            'end_date' => '2026-05-31',
+        ]));
+
+        $response->assertOk()
+            ->assertJsonPath('logs.meta.total', 0)
+            ->assertJsonCount(0, 'shifts');
     }
 }

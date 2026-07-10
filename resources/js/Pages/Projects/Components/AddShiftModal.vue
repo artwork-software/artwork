@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, toRef, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef, nextTick, inject } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
@@ -68,6 +68,10 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['closed'])
+
+// Vom Dienstplan bereitgestellter Schichtverlauf-Shortcut; fehlt er (z.B. im
+// Projekt-Kontext), wird der Verlauf-Button im Modal nicht angezeigt.
+const openShiftHistory = inject<((shift: any) => void) | null>('openShiftHistory', null)
 
 // Page
 const page = usePage()
@@ -1033,6 +1037,18 @@ const lockOrUnlockShift = (commit = false) => {
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
             <div class="space-y-6">
+                <!-- Shortcut: Schichtverlauf vorgefiltert auf diese Schicht (nur beim Bearbeiten) -->
+                <div v-if="edit && shift && openShiftHistory" class="flex justify-end">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        :title="$t('Show shift history for this shift')"
+                        @click="openShiftHistory(shift)"
+                    >
+                        <PropertyIcon name="IconHistory" class="h-4 w-4" stroke-width="2" />
+                        <span>{{ $t('Shift history') }}</span>
+                    </button>
+                </div>
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->

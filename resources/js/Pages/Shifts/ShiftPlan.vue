@@ -2500,7 +2500,7 @@ function shiftPlanCellInnerClass(row: any, day: any) {
 // requested = angefragt (blau), committed = festgeschrieben (grün),
 // attention = nach Festschreibung geändert / nicht verfügbar (gelb)
 function kwWorkflowStatus(row: any, day: any): string | null {
-    return row.worker?.weeklyWorkflowStatus?.[day.weekNumber] ?? null
+    return row.worker?.weeklyWorkflowStatus?.[row.craft.id]?.[day.weekNumber] ?? null
 }
 
 function kwWorkflowStatusClass(row: any, day: any): string {

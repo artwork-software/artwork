@@ -882,6 +882,7 @@
     "Open in CRM": "Im CRM öffnen",
     "No information available": "Keine Informationen vorhanden",
     "Failed to load data": "Daten konnten nicht geladen werden",
+    "File is unavailable in storage": "Datei ist im Speicher nicht verfügbar",
     "Retry": "Erneut versuchen",
     "Linked on": "Verknüpft am",
     "Create new CRM artist and link": "Neue Künstler*in im CRM anlegen & verknüpfen",

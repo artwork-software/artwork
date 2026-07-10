@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\FilesystemException;
 
 /**
  * @property int $id
@@ -39,7 +40,12 @@ class ProjectFile extends Model
 
     protected $appends = [
         'file_size',
+        'storage_available',
     ];
+
+    private bool $storedFileSizeResolved = false;
+
+    private ?int $storedFileSizeInBytes = null;
 
     public function accessingUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
@@ -51,10 +57,37 @@ class ProjectFile extends Model
         return $this->hasMany(Comment::class);
     }
 
-    public function getFileSizeAttribute(): string
+    public function getFileSizeAttribute(): ?string
     {
-        $fileSizeInBytes = Storage::fileSize('project_files/' . $this->basename);
+        $fileSizeInBytes = $this->resolveStoredFileSizeInBytes();
+
+        if ($fileSizeInBytes === null) {
+            return null;
+        }
+
         $fileSizeInKB = $fileSizeInBytes / 1024; // Bytes zu MB
         return number_format($fileSizeInKB, 2) . ' Kb'; // Formatieren auf 2 Nachkommastellen
+    }
+
+    public function getStorageAvailableAttribute(): bool
+    {
+        return $this->resolveStoredFileSizeInBytes() !== null;
+    }
+
+    private function resolveStoredFileSizeInBytes(): ?int
+    {
+        if ($this->storedFileSizeResolved) {
+            return $this->storedFileSizeInBytes;
+        }
+
+        $this->storedFileSizeResolved = true;
+
+        try {
+            $this->storedFileSizeInBytes = Storage::fileSize('project_files/' . $this->basename);
+        } catch (FilesystemException) {
+            return null;
+        }
+
+        return $this->storedFileSizeInBytes;
     }
 }

@@ -107,6 +107,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $is_sidebar_opened
  * @property boolean $show_modal_backdrop
  * @property boolean $compact_mode
+ * @property boolean $ad_managed
+ * @property string|null $ad_identifier
  * @property array $show_crafts
  * @property bool $at_a_glance
  * @property Collection<Department> $departments
@@ -282,6 +284,8 @@ class User extends Model implements
         'work_time_balance',
         'chat_popup_position',
         'chat_push_notification',
+        'ad_managed',
+        'ad_identifier',
         'is_time_preset_open'
     ];
 

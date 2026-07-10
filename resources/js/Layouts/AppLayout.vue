@@ -27,13 +27,13 @@
 
         <SubMenu />
 
-        <main class="lg:pl-20 xl:pl-20 pb-20">
+        <main class="lg:pl-20 xl:pl-20 pb-20 relative isolate z-0">
             <div class="artwork relative" id="main-content-wrapper">
-
-                <PopupChat v-if="$page.props.auth.user.use_chat"/>
                 <slot></slot>
             </div>
         </main>
+
+        <PopupChat v-if="$page.props.auth.user.use_chat"/>
     </div>
 </template>
 

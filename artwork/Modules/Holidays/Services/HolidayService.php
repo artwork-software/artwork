@@ -8,7 +8,7 @@ use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Holidays\Repository\HolidayRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use NoahNxT\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
+use CalderoSystems\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 
 class HolidayService
 {

@@ -75,9 +75,9 @@
     <!-- Static sidebar for desktop -->
     <div
         class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
-        :class="isFullSideBar ? 'lg:w-72' : 'lg:w-16'"
+        :class="isFullSideBar ? 'lg:w-88' : 'lg:w-16'"
     >
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-artwork-navigation-background">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-hidden bg-artwork-navigation-background">
             <!-- Brand -->
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
@@ -117,7 +117,7 @@
                                     :prefetch="item.prefetch"
                                     :aria-current="item.current ? 'page' : undefined"
                                     :class="[
-                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                       item.current
                                         ? 'bg-white/10 text-white'
@@ -140,7 +140,7 @@
                                         class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
                                         aria-hidden="true"
                                     />
-                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                    <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
 
                                 <!-- Menü-Eintrag -->
@@ -151,7 +151,7 @@
                                         :prefetch="item.prefetch"
                                         :aria-current="getSingleVisibleSubMenu(item).current ? 'page' : undefined"
                                         :class="[
-                                          'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                          'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
                                           isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                           getSingleVisibleSubMenu(item).current
                                             ? 'bg-white/10 text-white'
@@ -174,14 +174,48 @@
                                             class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"
                                         />
-                                        <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                        <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                     </Link>
+
+                                    <template v-else-if="isFullSideBar">
+                                        <div class="w-full flex items-center justify-start gap-3 px-2 rounded-lg min-h-10 py-1.5 select-none text-white">
+                                            <PropertyIcon
+                                                :name="item.icon"
+                                                :stroke-width="1.5"
+                                                class="size-6 min-w-6 min-h-6 text-white"
+                                                aria-hidden="true"
+                                            />
+                                            <span class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
+                                        </div>
+                                        <ul class="ml-5 pl-2 border-l border-white/10 space-y-1">
+                                            <li v-for="subMenu in getVisibleSubMenus(item)" :key="subMenu.name">
+                                                <Link
+                                                    :href="subMenu.href"
+                                                    :aria-current="subMenu.current ? 'page' : undefined"
+                                                    :class="[
+                                                      'group flex items-center gap-3 rounded-lg min-h-9 py-1 px-2 text-sm select-none transition-colors',
+                                                      subMenu.current
+                                                        ? 'bg-white/10 text-white'
+                                                        : 'text-white/80 hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                                    ]"
+                                                >
+                                                    <PropertyIcon
+                                                        :name="subMenu.icon"
+                                                        :stroke-width="1.5"
+                                                        class="size-5 min-w-5 min-h-5"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(subMenu.name) }}</span>
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    </template>
 
                                     <div
                                         v-else
                                         :class="[
                                         'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
-                                        isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
+                                        'justify-center px-0',
                                         item.current ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/10 hover:text-white'
                                       ]"
                                     >
@@ -227,7 +261,7 @@
                                     v-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
                                     :class="[
-                                      'w-full group flex items-center rounded-lg h-10 select-none transition-colors',
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                       item.current
                                         ? 'bg-gray-50/10 text-white'
@@ -239,7 +273,7 @@
                                         :stroke-width="1"
                                         class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
                                     />
-                                    <span v-if="isFullSideBar" class="truncate">{{ $t(item.name) }}</span>
+                                    <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
 
                                 <!-- Falls subNavigation Einträge mit Menüs bekommt -->

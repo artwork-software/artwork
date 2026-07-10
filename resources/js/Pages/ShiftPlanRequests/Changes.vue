@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="t('Change list')">
+    <AppLayout :title="t('Shift plan Change list')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 space-y-6">
             <!-- Wenn kein Gewerk ausgewählt ist: Hinweis -->
             <div

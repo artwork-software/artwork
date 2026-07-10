@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="$t('Inventory Article Planning')">
+    <AppLayout :title="$t('Article Planning')">
         <div class="-ml-4">
             <!-- Topbar -->
             <div class="sticky top-0 z-40 border-b bg-white">

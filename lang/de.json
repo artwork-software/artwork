@@ -5093,5 +5093,6 @@
     "Shifts committed: {0} – {1} ({2} shifts)": "Schichten festgeschrieben: {0} – {1} ({2} Schichten)",
     "Shift commitment revoked: {0} – {1} ({2} shifts)": "Festschreibung aufgehoben: {0} – {1} ({2} Schichten)",
     "Shift was committed": "Schicht wurde festgeschrieben",
-    "Shift commitment was revoked": "Festschreibung der Schicht wurde aufgehoben"
+    "Shift commitment was revoked": "Festschreibung der Schicht wurde aufgehoben",
+    "Changed fields: {0}": "Geänderte Felder: {0}"
 }

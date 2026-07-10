@@ -1,5 +1,12 @@
 <template>
-    <div class="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm" :class="rejectActive ? 'border-rose-300' : ''">
+    <div
+        :data-shift-plan-row-key="row.key"
+        class="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-[border-color,box-shadow] duration-300"
+        :class="[
+            rejectActive ? 'border-rose-300' : '',
+            isComparisonFocus ? 'border-indigo-300 ring-2 ring-indigo-200 ring-offset-2' : '',
+        ]"
+    >
         <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
             <div class="flex items-center gap-3 flex-1">
                 <div v-if="row.type !== 'unassigned'" class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-[11px] font-semibold text-gray-700 overflow-hidden">
@@ -40,6 +47,14 @@
 <script setup>
 import ShiftDayCell from './ShiftDayCell.vue';
 import { IconCalendarTime } from '@tabler/icons-vue';
-const props = defineProps({ row: { type: Object, required: true }, days: { type: Array, required: true }, gridStyle: { type: Object, required: true }, rejectActive: { type: Boolean, default: false }, selectedDays: { type: Object, required: true }, shiftSelections: { type: Object, required: true } });
-const emits = defineEmits(['open-history']);
+defineProps({
+    row: {type: Object, required: true},
+    days: {type: Array, required: true},
+    gridStyle: {type: Object, required: true},
+    rejectActive: {type: Boolean, default: false},
+    selectedDays: {type: Object, required: true},
+    shiftSelections: {type: Object, required: true},
+    isComparisonFocus: {type: Boolean, default: false},
+});
+defineEmits(['open-history']);
 </script>

@@ -76,4 +76,23 @@ final class OidcApiDiscoveryTest extends TestCase
             fn ($request) => $request->url() === 'https://issuer.example.com/.well-known/openid-configuration'
         );
     }
+
+    #[Test]
+    public function it_retries_a_temporarily_failing_discovery_request(): void
+    {
+        Http::fakeSequence()
+            ->pushStatus(503)
+            ->push([
+                'authorization_endpoint' => 'https://idp.example.com/authorize',
+                'token_endpoint' => 'https://idp.example.com/token',
+                'userinfo_endpoint' => 'https://idp.example.com/userinfo',
+            ]);
+
+        $source = $this->source([
+            'discovery_url' => 'https://idp.example.com/.well-known/openid-configuration',
+        ]);
+
+        $this->assertTrue(app(OidcApi::class)->testConnection($source));
+        Http::assertSentCount(2);
+    }
 }

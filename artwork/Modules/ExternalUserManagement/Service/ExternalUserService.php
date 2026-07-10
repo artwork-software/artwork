@@ -5,7 +5,6 @@ namespace Artwork\Modules\ExternalUserManagement\Service;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUser;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserRepository;
-use Artwork\Modules\ExternalUserManagement\Service\ExternalUserGroupMappingService;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
@@ -20,24 +19,34 @@ class ExternalUserService
     ) {
     }
 
-    public function findOrCreateUser(array $ldapUser, string $identifier): User
+    public function findOrCreateUser(
+        ExternalUserSource $source,
+        array $externalUserData,
+        string $identifier
+    ): User
     {
-        $email = $ldapUser['email'] ?? null;
-        $firstName = $ldapUser['first_name'] ?? '';
-        $lastName = $ldapUser['last_name'] ?? '';
+        $email = $externalUserData['email'] ?? null;
+        $firstName = $externalUserData['first_name'] ?? '';
+        $lastName = $externalUserData['last_name'] ?? '';
 
-        $user = $this->userRepository->getNewModelQuery()
-            ->where('ad_identifier', $identifier)
-            ->orWhere(function ($query) use ($email) {
-                if ($email) {
-                    $query->where('email', $email);
-                }
-            })
-            ->first();
+        $user = $this->externalUserRepository
+            ->findBySourceAndIdentification($source->id, $identifier)
+            ?->user;
+
+        if (!$user && $email) {
+            $user = $this->userRepository->getNewModelQuery()
+                ->where('email', $email)
+                ->where('ad_managed', true)
+                ->first();
+        }
 
         if (!$user) {
             if (!$email) {
-                throw new \InvalidArgumentException("Cannot create user without email address");
+                throw new \InvalidArgumentException('Cannot create user without email address');
+            }
+
+            if ($this->userRepository->getNewModelQuery()->where('email', $email)->exists()) {
+                throw new \InvalidArgumentException('Cannot link an externally managed identity to a local user');
             }
 
             /** @var User $user */
@@ -46,7 +55,9 @@ class ExternalUserService
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $email,
-                'password' => Hash::make(uniqid('', true)), // Temporäres Passwort
+                'password' => Hash::make(uniqid('', true)),
+                'opened_checklists' => [],
+                'opened_areas' => [],
                 'ad_managed' => true,
                 'ad_identifier' => $identifier,
             ]);
@@ -72,25 +83,43 @@ class ExternalUserService
     ): void {
         $groupMappings = $groupMappingService->getAllBySourceId($source->id);
 
-        foreach ($groupMappings as $mapping) {
-            $groupDn = $mapping->ad_group_dn;
-            $isMember = in_array($groupDn, $userGroups);
+        $activeMappings = $groupMappings->filter(
+            fn ($mapping): bool => in_array($mapping->ad_group_dn, $userGroups, true)
+        );
+        $mappedPermissionIds = $groupMappings->flatMap(
+            fn ($mapping): array => $mapping->permission_ids ?? []
+        )->unique()->values();
+        $activePermissionIds = $activeMappings->flatMap(
+            fn ($mapping): array => $mapping->permission_ids ?? []
+        )->unique()->values();
+        $mappedRoleIds = $groupMappings->flatMap(
+            fn ($mapping): array => $mapping->role_ids ?? []
+        )->unique()->values();
+        $activeRoleIds = $activeMappings->flatMap(
+            fn ($mapping): array => $mapping->role_ids ?? []
+        )->unique()->values();
 
-            if ($isMember) {
-                if (!empty($mapping->permission_ids)) {
-                    $permissions = Permission::whereIn('id', $mapping->permission_ids)->pluck('name');
-                    $user->givePermissionTo($permissions);
-                }
+        $permissions = Permission::whereIn('id', $mappedPermissionIds)->pluck('name', 'id');
+        foreach ($activePermissionIds as $permissionId) {
+            if ($permissions->has($permissionId)) {
+                $user->givePermissionTo($permissions->get($permissionId));
+            }
+        }
+        foreach ($mappedPermissionIds->diff($activePermissionIds) as $permissionId) {
+            if ($permissions->has($permissionId)) {
+                $user->revokePermissionTo($permissions->get($permissionId));
+            }
+        }
 
-                if (!empty($mapping->role_ids)) {
-                    $roles = Role::whereIn('id', $mapping->role_ids)->pluck('name');
-                    $user->assignRole($roles);
-                }
-            } else {
-                if (!empty($mapping->permission_ids)) {
-                    $permissions = Permission::whereIn('id', $mapping->permission_ids)->pluck('name');
-                    $user->revokePermissionTo($permissions);
-                }
+        $roles = Role::whereIn('id', $mappedRoleIds)->pluck('name', 'id');
+        foreach ($activeRoleIds as $roleId) {
+            if ($roles->has($roleId)) {
+                $user->assignRole($roles->get($roleId));
+            }
+        }
+        foreach ($mappedRoleIds->diff($activeRoleIds) as $roleId) {
+            if ($roles->has($roleId)) {
+                $user->removeRole($roles->get($roleId));
             }
         }
 
@@ -122,4 +151,3 @@ class ExternalUserService
         return $externalUser;
     }
 }
-

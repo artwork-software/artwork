@@ -1573,6 +1573,8 @@ class UserController extends Controller
 
     public function updateModalBackdrop(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update([
             'show_modal_backdrop' => $request->boolean('show_modal_backdrop'),
         ]);
@@ -1920,6 +1922,8 @@ class UserController extends Controller
 
     public function updateSortWorkersByQualification(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $request->validate(['sort_workers_by_qualification' => ['required', 'boolean']]);
 
         $user->update($request->only('sort_workers_by_qualification'));
@@ -1927,6 +1931,8 @@ class UserController extends Controller
 
     public function updateClosedQualificationGroups(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $request->validate([
             'closed_qualification_groups' => ['nullable', 'array'],
             'closed_qualification_groups.*' => ['string'],

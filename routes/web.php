@@ -213,10 +213,12 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 // OIDC / SSO Login (guest) - Authorization-Code-Flow gegen einen Identity Provider
-Route::get('/auth/oidc/{externalUserSource}/redirect', [OidcAuthController::class, 'redirect'])
-    ->name('auth.oidc.redirect');
-Route::get('/auth/oidc/{externalUserSource}/callback', [OidcAuthController::class, 'callback'])
-    ->name('auth.oidc.callback');
+Route::middleware(['guest', 'throttle:20,1'])->group(function (): void {
+    Route::get('/auth/oidc/{externalUserSource}/redirect', [OidcAuthController::class, 'redirect'])
+        ->name('auth.oidc.redirect');
+    Route::get('/auth/oidc/{externalUserSource}/callback', [OidcAuthController::class, 'callback'])
+        ->name('auth.oidc.callback');
+});
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 

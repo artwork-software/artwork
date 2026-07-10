@@ -27,6 +27,11 @@ class UserPolicy
         return Auth::user()->id === $user->id;
     }
 
+    public function updateOwnPreferences(User $user, User $targetUser): bool
+    {
+        return $user->is($targetUser);
+    }
+
     public function delete(User $user, User $model): bool
     {
         return $user->id === $model->id;

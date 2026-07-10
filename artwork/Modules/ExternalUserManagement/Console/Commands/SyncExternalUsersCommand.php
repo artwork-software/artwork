@@ -82,7 +82,7 @@ class SyncExternalUsersCommand extends Command
             $email = $ldapUser['email'] ?? null;
             $groups = $ldapUser['groups'] ?? [];
 
-            $user = $externalUserService->findOrCreateUser($ldapUser, $identifier);
+            $user = $externalUserService->findOrCreateUser($source, $ldapUser, $identifier);
 
             if (!$user->ad_managed) {
                 $this->warn("Skipping user {$email}: Not AD managed (ad_managed=false)");
@@ -103,4 +103,3 @@ class SyncExternalUsersCommand extends Command
     }
 
 }
-

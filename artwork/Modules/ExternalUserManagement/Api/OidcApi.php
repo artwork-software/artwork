@@ -154,6 +154,12 @@ class OidcApi implements ExternalUserManagementApi
      */
     private function fetchDiscovery(string $url): array
     {
-        return Http::acceptJson()->get($url)->throw()->json() ?? [];
+        return Http::acceptJson()
+            ->connectTimeout(5)
+            ->timeout(10)
+            ->retry(2, 200)
+            ->get($url)
+            ->throw()
+            ->json() ?? [];
     }
 }

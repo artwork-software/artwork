@@ -33,8 +33,20 @@ class ExternalUserSource extends Model
 
     protected $casts = [
         'active' => 'boolean',
-        'config' => 'array',
+        'config' => 'encrypted:array',
     ];
+
+    public function toArray(): array
+    {
+        $attributes = parent::toArray();
+        $config = $this->config ?? [];
+
+        unset($config['bind_password'], $config['client_secret']);
+
+        $attributes['config'] = $config;
+
+        return $attributes;
+    }
 
     public function externalUsers(): HasMany
     {
@@ -46,4 +58,3 @@ class ExternalUserSource extends Model
         return $this->hasMany(ExternalUserGroupMapping::class, 'source_id', 'id');
     }
 }
-

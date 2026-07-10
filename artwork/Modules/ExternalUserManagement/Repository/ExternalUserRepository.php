@@ -70,17 +70,18 @@ class ExternalUserRepository extends BaseRepository
 
     public function findOrCreateBySourceAndIdentification(int $sourceId, string $identification, array $attributes = []): ExternalUser
     {
-        $externalUser = $this->findBySourceAndIdentification($sourceId, $identification);
-
-        if (!$externalUser) {
-            $externalUser = $this->create([
+        $externalUser = $this->getNewModelQuery()->withTrashed()->firstOrCreate(
+            [
                 'source_id' => $sourceId,
                 'identification' => $identification,
-                ...$attributes
-            ]);
+            ],
+            $attributes
+        );
+
+        if ($externalUser->trashed()) {
+            $externalUser->restore();
         }
 
         return $externalUser;
     }
 }
-

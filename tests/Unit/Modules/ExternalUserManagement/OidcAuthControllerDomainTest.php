@@ -4,6 +4,7 @@ namespace Tests\Unit\Modules\ExternalUserManagement;
 
 use App\Http\Controllers\OidcAuthController;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
+use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -45,5 +46,16 @@ final class OidcAuthControllerDomainTest extends TestCase
     public function it_denies_when_the_allowlist_is_empty(): void
     {
         $this->assertFalse($this->isAllowed([], 'user@example.com'));
+    }
+
+    #[Test]
+    public function oidc_authentication_routes_are_throttled_for_guests(): void
+    {
+        foreach (['auth.oidc.redirect', 'auth.oidc.callback'] as $routeName) {
+            $middleware = Route::getRoutes()->getByName($routeName)->gatherMiddleware();
+
+            $this->assertContains('guest', $middleware);
+            $this->assertContains('throttle:20,1', $middleware);
+        }
     }
 }

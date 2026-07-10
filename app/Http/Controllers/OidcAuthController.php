@@ -64,29 +64,41 @@ class OidcAuthController extends Controller
             ]);
         }
 
-        $user = DB::transaction(function () use ($externalUserSource, $claims): User {
-            $user = $this->externalUserService->findOrCreateUser($claims, $claims['identifier']);
+        try {
+            $user = DB::transaction(function () use ($externalUserSource, $claims): User {
+                $user = $this->externalUserService->findOrCreateUser(
+                    $externalUserSource,
+                    $claims,
+                    $claims['identifier']
+                );
 
-            $this->externalUserService->findOrCreateExternalUser(
-                $externalUserSource,
-                $claims['identifier'],
-                $claims['meta_data'],
-                $user
-            );
+                $this->externalUserService->findOrCreateExternalUser(
+                    $externalUserSource,
+                    $claims['identifier'],
+                    $claims['meta_data'],
+                    $user
+                );
 
-            $this->externalUserService->syncUserGroups(
-                $externalUserSource,
-                $user,
-                $claims['groups'],
-                $this->groupMappingService
-            );
+                $this->externalUserService->syncUserGroups(
+                    $externalUserSource,
+                    $user,
+                    $claims['groups'],
+                    $this->groupMappingService
+                );
 
-            if (($claims['email_verified'] ?? false) && $user->email_verified_at === null) {
-                $user->forceFill(['email_verified_at' => now()])->save();
-            }
+                if (($claims['email_verified'] ?? false) && $user->email_verified_at === null) {
+                    $user->forceFill(['email_verified_at' => now()])->save();
+                }
 
-            return $user;
-        });
+                return $user;
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->route('login')->withErrors([
+                'email' => __('flash-messages.oidc.error.authentication_failed'),
+            ]);
+        }
 
         Auth::guard(config('fortify.guard'))->login($user, true);
 

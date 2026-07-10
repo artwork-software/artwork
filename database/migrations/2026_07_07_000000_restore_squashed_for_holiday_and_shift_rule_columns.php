@@ -36,22 +36,5 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasColumn('shift_rules', 'default_compensation_deadline_days')) {
-            Schema::table('shift_rules', function (Blueprint $table): void {
-                $table->dropColumn('default_compensation_deadline_days');
-            });
-        }
-
-        if (Schema::hasColumn('shift_rules', 'default_compensation_days')) {
-            Schema::table('shift_rules', function (Blueprint $table): void {
-                $table->dropColumn('default_compensation_days');
-            });
-        }
-
-        if (Schema::hasColumn('compensation_day_offs', 'for_holiday')) {
-            Schema::table('compensation_day_offs', function (Blueprint $table): void {
-                $table->dropColumn('for_holiday');
-            });
-        }
     }
 };

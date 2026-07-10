@@ -15,7 +15,8 @@ import { IconFileUpload, IconFileText, IconPrinter } from '@tabler/icons-vue'
 interface ProjectFile {
     id?: number | string
     name: string
-    file_size?: string
+    file_size?: string | null
+    storage_available?: boolean
     created_at?: string
     mime_type?: string | null
     url?: string | null
@@ -177,6 +178,7 @@ async function uploadDocumentToProject(file: File) {
 }
 
 function downloadFile(file: ProjectFile) {
+    if (!isFileAvailable(file)) return
     const a = document.createElement('a')
     a.href = fileUrl(file)
     a.target = '_blank'
@@ -217,14 +219,15 @@ function isPdf(file: ProjectFile) {
     const ext = fileExt(file.name)
     return m === 'application/pdf' || ext === 'pdf'
 }
-function isPreviewable(file: ProjectFile) { return isImage(file) || isPdf(file) }
+function isFileAvailable(file: ProjectFile) { return file.storage_available !== false }
+function isPreviewable(file: ProjectFile) { return isFileAvailable(file) && (isImage(file) || isPdf(file)) }
 
 function fileUrl(file: ProjectFile) {
     return file.url || route('download_file', { project_file: file.id ?? file })
 }
 
 function printFile(file: ProjectFile) {
-    if (!isInlinePrintableFile(file)) return
+    if (!isFileAvailable(file) || !isInlinePrintableFile(file)) return
     printInlineFile(fileUrl(file))
 }
 
@@ -268,7 +271,7 @@ onBeforeUnmount(() => {
 })
 
 function openPreview(file: ProjectFile) {
-    if (!isPreviewable(file)) return
+    if (!isFileAvailable(file) || !isPreviewable(file)) return
     lightboxType.value = isPdf(file) ? 'pdf' : 'image'
     lightboxName.value = file.name
     lightboxSrc.value = fileUrl(file)
@@ -361,7 +364,10 @@ function closePreview() {
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-medium text-zinc-900">{{ file.name }}</div>
                             <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                <span>{{ file.file_size }}</span>
+                                <span v-if="isFileAvailable(file)">{{ file.file_size }}</span>
+                                <span v-else class="font-medium text-rose-600">
+                                    {{ $t('File is unavailable in storage') }}
+                                </span>
                                 <span v-if="file.created_at" class="inline-flex items-center gap-1">
                                   • <span>{{ $t('Uploaded') }}:</span>
                                   <time :datetime="file.created_at">{{ formatDate(file.created_at) }}</time>
@@ -372,7 +378,7 @@ function closePreview() {
 
                     <div class="shrink-0 flex items-center gap-3 print:hidden">
                         <button
-                            v-if="isInlinePrintableFile(file)"
+                            v-if="isFileAvailable(file) && isInlinePrintableFile(file)"
                             type="button"
                             class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                             :aria-label="`${$t('Print')}: ${file.name}`"
@@ -381,7 +387,7 @@ function closePreview() {
                             <IconPrinter class="size-4" aria-hidden="true" />
                             {{ $t('Print') }}
                         </button>
-                        <button type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" @click="downloadFile(file)">
+                        <button v-if="isFileAvailable(file)" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" @click="downloadFile(file)">
                             {{ $t('Download') }}
                         </button>
                         <button v-if="canEditFull" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500" @click="openConfirmDeleteModal(file)">

@@ -182,7 +182,8 @@ import {
 import {Listbox, ListboxOption, ListboxOptions, MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {CheckIcon} from "@heroicons/vue/solid";
-import {onMounted, onUpdated, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
+import debounce from "lodash.debounce";
 import InventoryCraft from "@/Pages/Inventory/InventoryManagement/InventoryCraft.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
@@ -390,9 +391,11 @@ const props = defineProps({
             }
         );
     },
-    updateSearchValue = (value) => {
+    // Debounced: der computed filteredCrafts scannt/klont den gesamten Baum,
+    // daher nicht bei jedem Tastendruck neu berechnen.
+    updateSearchValue = debounce((value) => {
         searchValue.value = value;
-    },
+    }, 250),
     updateCraftFilters = (args = {list: []}) => {
         router.patch(
             route('inventory-management.inventory.filter.update'),
@@ -438,9 +441,9 @@ const props = defineProps({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    setTimeout(() => {
-                        router.reload()
-                    }, 5000);
+                    // Sortierung wird serverseitig im Baum angewandt -> nur den
+                    // Craft-Baum nachladen statt der gesamten Seiten-Props.
+                    router.reload({ only: ['crafts'] });
                 }
             }
         );
@@ -450,7 +453,13 @@ onMounted(() => {
     setFilterAndSearchData();
 });
 
-onUpdated(() => {
-    setFilterAndSearchData();
+// Nur bei tatsächlichem Prop-Wechsel (neue Inertia-Antwort) neu synchronisieren,
+// nicht bei jedem Re-Render (z.B. Hover) wie zuvor mit onUpdated.
+watch(() => props.crafts, (value) => {
+    crafts.value = value;
+});
+
+watch(() => props.craftFilters, (value) => {
+    craftFilters.value = value;
 });
 </script>

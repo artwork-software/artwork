@@ -171,7 +171,7 @@
                                                     </button>
                                                 </div>
 
-                                                <div class="px-2 py-2">
+                                                <div class="px-2 py-2 space-y-1.5">
                                                     <span class="text-xs font-medium text-zinc-900">
                                                         <template v-if="i.full_day">
                                                             {{ $t('All day') }}
@@ -180,16 +180,40 @@
                                                             {{ i.start_time }} – {{ i.end_time }}
                                                         </template>
                                                     </span>
+
+                                                    <!-- Kommentare/Notizen des Tages (aus der Schichtplan-Zelle) -->
+                                                    <div v-if="i._showDayComments && day.comments?.length" class="space-y-1">
+                                                        <div
+                                                            v-for="comment in day.comments"
+                                                            :key="`${day.date}-comment-${comment.id}`"
+                                                            class="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-1.5 py-1"
+                                                        >
+                                                            <PropertyIcon name="IconNote" class="size-3.5 shrink-0 mt-0.5 text-amber-600" aria-hidden="true" />
+                                                            <span class="break-words min-w-0 text-[11px] text-zinc-700">{{ comment.comment }}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </template>
 
                                     <div
-                                        v-else-if="!day.holidays?.length && !day.dayServices?.length"
+                                        v-else-if="!day.holidays?.length && !day.dayServices?.length && !day.comments?.length"
                                         class="h-full flex items-center justify-center text-xs text-zinc-300 select-none"
                                     >
                                         –
+                                    </div>
+
+                                    <!-- Kommentare/Notizen ohne Individualzeit am selben Tag trotzdem anzeigen -->
+                                    <div v-if="day.comments?.length && !hasIndividualTimes(day)" class="space-y-1">
+                                        <div
+                                            v-for="comment in day.comments"
+                                            :key="`${day.date}-comment-${comment.id}`"
+                                            class="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-1.5 py-1"
+                                        >
+                                            <PropertyIcon name="IconNote" class="size-3.5 shrink-0 mt-0.5 text-amber-600" aria-hidden="true" />
+                                            <span class="break-words min-w-0 text-[11px] text-zinc-700">{{ comment.comment }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -387,6 +411,9 @@ function isInRequestedRange(dateISO) {
 function hasWorkTime(day) {
     return parseHHMM(day?.totalWorkTime) > 0
 }
+function hasIndividualTimes(day) {
+    return Array.isArray(day?.individualTimes) && day.individualTimes.length > 0
+}
 function isoWeekNumber(date) {
     // ISO 8601: Woche des Donnerstags derselben Woche
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -406,6 +433,7 @@ function emptyDay(dateISO) {
         individualTimes: [],
         dayServices: [],
         holidays: [],
+        comments: [],
         totalWorkTime: '00:00',
         totalBreakTime: '00:00',
     }
@@ -466,6 +494,7 @@ function itemsForDay(day) {
         })
     }
 
+    let isFirstIndividualTime = true
     for (const it of (Array.isArray(day?.individualTimes) ? day.individualTimes : [])) {
         const startTime = it?.full_day ? '00:00' : (it?.start_time ?? '00:00')
         const endTime = it?.full_day ? '23:59' : (it?.end_time ?? '23:59')
@@ -482,8 +511,11 @@ function itemsForDay(day) {
             _startAt: startAt,
             _endAt: endAt,
             _crossesMidnight: endAt.toDateString() !== startAt.toDateString(),
+            // Tages-Kommentare nur an der ersten Individualzeit anzeigen (nicht mehrfach pro Tag)
+            _showDayComments: isFirstIndividualTime,
             _key: `it-${it.id}-${day.date}-${startTime}-${endTime}`
         })
+        isFirstIndividualTime = false
     }
 
     out.sort((a, b) => a._startAt.getTime() - b._startAt.getTime())

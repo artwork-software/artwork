@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submit" class="mx-auto max-w-7xl px-4 md:px-6">
+    <form @submit.prevent="submit" @keydown.enter="preventEnterSubmit" class="mx-auto w-full px-4 md:px-6">
         <!-- Page Title -->
         <header v-if="!props.issueOfMaterial?.id" class="mb-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -85,7 +85,7 @@
                                 :href="route('projects.tab', {project: selectedProject.id, projectTab: props.projectTabId})"
                                 class="text-sm font-semibold text-blue-800 hover:underline"
                             >{{ selectedProject.name }}</a>
-                            <button type="button" class="text-xs font-medium text-blue-700 underline" @click="selectedProject = null">
+                            <button type="button" class="text-xs font-medium text-blue-700 underline" @click="removeProject">
                                 {{ $t('Remove assignment') }}
                             </button>
                         </div>
@@ -108,6 +108,33 @@
                                     {{ $t('Remove assignment') }}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Projekträume: Schnellauswahl (aus Events/Schichten des Projekts) -->
+                    <div v-if="selectedProject && (projectRooms.length || projectRoomsLoading)" class="md:col-span-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-medium text-zinc-500">{{ $t('Project rooms') }}</span>
+                            <component :is="IconLoader" v-if="projectRoomsLoading" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
+                        </div>
+                        <p v-if="projectRooms.length" class="text-[11px] text-zinc-400">
+                            {{ $t('Click a room to set the period to that room’s span in the project.') }}
+                        </p>
+                        <div v-if="projectRooms.length" class="mt-1.5 flex flex-wrap gap-2">
+                            <button
+                                v-for="room in projectRooms"
+                                :key="room.id"
+                                type="button"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition"
+                                :class="selectedRoom?.id === room.id
+                                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-200'
+                                    : 'border-zinc-200 bg-white text-zinc-700 hover:border-indigo-300 hover:bg-indigo-50/50'"
+                                @click="assignRoomFromProject(room, { force: true })"
+                            >
+                                <component :is="IconHome" class="size-3.5 shrink-0" />
+                                <span class="truncate max-w-[160px]">{{ room.name }}</span>
+                                <span class="text-[10px] tabular-nums text-zinc-400">{{ formatRoomPeriod(room) }}</span>
+                            </button>
                         </div>
                     </div>
 
@@ -147,10 +174,12 @@
                 </div>
             </section>
             <!-- Artikel: Suche & Auswahl -->
-            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
-                <!-- Linke Spalte: Suche/Filter/Liste -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1 flex flex-col lg:max-h-[calc(80vh-12rem)] lg:sticky lg:top-0">
-                    <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
+            <section class="space-y-6">
+                <!-- Artikelsuche (links) + Auswahl (rechts) 50/50 nebeneinander -->
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+                <!-- Gefundene Artikel (linke Spalte) -->
+                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
+                    <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl space-y-3">
                         <div class="flex items-center w-full gap-x-3">
                             <BaseInput
                                 id="articleSearchFilter"
@@ -162,75 +191,100 @@
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
-                    </div>
-
-                    <div class="px-5 py-3 flex items-center justify-between">
-                        <h3 class="font-semibold flex items-center gap-2">
-                            <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
-                            {{ $t('Found Articles') }}
-                        </h3>
-                        <div v-if="filteredArticles && filteredArticles.length" class="text-sm text-zinc-500">
-                            {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
+                        <div class="flex items-center justify-between gap-3">
+                            <h3 class="font-semibold flex items-center gap-2">
+                                <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                {{ $t('Found Articles') }}
+                                <span v-if="filteredArticles && filteredArticles.length" class="text-sm font-normal text-zinc-500">
+                                    · {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
+                                </span>
+                            </h3>
+                            <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200 shrink-0">
+                                {{ internMaterialIssue.articles?.length || 0 }} {{ $t('selected') }}
+                            </span>
                         </div>
                     </div>
 
-                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-                        <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
-                            <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
-                                <div class="flex items-start gap-3">
-                                    <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
-                                    <div class="min-w-0">
-                                        <div class="font-medium truncate">{{ article.name }}</div>
-                                        <div class="text-xs text-zinc-500 line-clamp-2" v-if="article.description">{{ article.description }}</div>
-                                        <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                                            <template v-for="(status, i) in article.status_values" :key="i">
-                                                <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
-                                                    <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
-                                                    <span class="tabular-nums">{{ status.name }}</span>
-                                                    <span class="tabular-nums">{{ readyForUseCount(article) }}</span>
-                                                </div>
-                                            </template>
-
-                                            <!-- Period availability bubble -->
-                                            <div v-if="internMaterialIssue.start_date && internMaterialIssue.end_date" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 border-blue-300 bg-blue-50" :title="$t('Available in period')">
-                                                <span class="inline-block size-1.5 rounded-full bg-blue-500"></span>
-                                                <span class="text-blue-700 font-medium">{{ $t('in period') }}</span>
-                                                <span v-if="!article.periodAvailabilityLoading" class="tabular-nums text-blue-700" :class="{
-                                                    'text-emerald-600': (article.periodAvailability?.available ?? 0) > 0,
-                                                    'text-red-600': (article.periodAvailability?.available ?? 0) === 0
-                                                }">{{ article.periodAvailability?.available ?? 0 }}</span>
-                                                <span v-else class="inline-block h-3 w-3 animate-spin rounded-full border border-blue-500 border-t-transparent"></span>
+                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                        <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
+                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-emerald-300 bg-emerald-50/50 ring-1 ring-emerald-200' : 'border-zinc-200 bg-zinc-50/60 hover:bg-zinc-50 hover:border-indigo-300'">
+                                <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
+                                    <div class="flex items-start gap-3">
+                                        <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                        <div class="min-w-0 w-full">
+                                            <div class="font-medium truncate flex items-center gap-1.5">
+                                                <component :is="IconCircleCheck" v-if="selectedQuantityById[article.id]" class="h-4 w-4 shrink-0 text-emerald-600" />
+                                                <span class="truncate min-w-0">{{ article.name }}</span>
+                                                <span v-if="selectedQuantityById[article.id]" class="ml-auto shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700" :title="$t('selected')">×{{ selectedQuantityById[article.id] }}</span>
                                             </div>
+                                            <div class="text-xs text-zinc-500 line-clamp-2" v-if="article.description">{{ article.description }}</div>
+                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                                                <template v-for="(status, i) in article.status_values" :key="i">
+                                                    <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
+                                                        <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
+                                                        <span class="tabular-nums">{{ status.name }}</span>
+                                                        <span class="tabular-nums">{{ readyForUseCount(article) }}</span>
+                                                    </div>
+                                                </template>
 
-                                            <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
+                                                <!-- Period availability bubble -->
+                                                <div v-if="internMaterialIssue.start_date && internMaterialIssue.end_date" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 border-blue-300 bg-blue-50" :title="$t('Available in period')">
+                                                    <span class="inline-block size-1.5 rounded-full bg-blue-500"></span>
+                                                    <span class="text-blue-700 font-medium">{{ $t('in period') }}</span>
+                                                    <span v-if="!article.periodAvailabilityLoading" class="tabular-nums text-blue-700" :class="{
+                                                        'text-emerald-600': (article.periodAvailability?.available ?? 0) > 0,
+                                                        'text-red-600': (article.periodAvailability?.available ?? 0) === 0
+                                                    }">{{ article.periodAvailability?.available ?? 0 }}</span>
+                                                    <span v-else class="inline-block h-3 w-3 animate-spin rounded-full border border-blue-500 border-t-transparent"></span>
+                                                </div>
+
+                                                <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+                            </div>
                         </div>
 
-                        <div v-if="articles" class="flex justify-center pt-4">
-                            <button type="button" @click="loadMoreArticles" :disabled="loadingMore" class="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50">
-                                <span v-if="loadingMore" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                                {{ $t('Load more items') }}
-                            </button>
+                        <!-- Empty state -->
+                        <div v-if="!filteredArticles.length && !loadingMore" class="py-10 text-center text-sm text-zinc-500">
+                            {{ $t('No articles found') }}
+                        </div>
+
+                        <!-- Infinite-scroll sentinel + status -->
+                        <div ref="loadMoreSentinel" class="h-px"></div>
+                        <div v-if="loadingMore" class="flex justify-center py-4">
+                            <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"></span>
+                        </div>
+                        <div v-else-if="!hasMoreArticles && filteredArticles.length" class="pt-3 text-center text-xs text-zinc-400">
+                            {{ $t('All articles loaded') }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Rechte Spalte: Auswahl -->
-                <div class="lg:col-span-2 space-y-6">
-                    <!-- Ausgewählte Artikel -->
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
-                            <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
-                                <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
-                                {{ $t('Selected Articles') }}
-                            </h3>
-                            <p class="text-xs text-zinc-500">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
+                    <!-- Ausgewählte Artikel (rechte Spalte) -->
+                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
+                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                                    <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                    {{ $t('Selected Articles') }}
+                                </h3>
+                                <p class="text-xs text-zinc-500">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <div class="text-lg font-bold tabular-nums leading-none text-zinc-900">{{ internMaterialIssue.articles?.length || 0 }}</div>
+                                <div class="text-[11px] text-zinc-500">{{ $t('selected') }}</div>
+                            </div>
                         </div>
 
-                        <div class="p-5">
+                        <div class="min-h-0 flex-1 overflow-y-auto p-5">
+                            <div v-if="usageError" class="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                <span>{{ $t(usageError) }}</span>
+                                <button type="button" class="shrink-0 font-medium text-amber-700 hover:text-amber-900" @click="usageError = null">
+                                    <XIcon class="h-4 w-4" />
+                                </button>
+                            </div>
                             <div v-if="internMaterialIssue.articles.length" class="space-y-6">
                                 <!-- Loop through categories -->
                                 <div v-for="(subcategories, categoryName) in groupedSelectedArticles" :key="categoryName" class="space-y-4">
@@ -254,12 +308,12 @@
 
                                         <!-- Articles in this subcategory -->
                                         <div class="ml-8 divide-y divide-zinc-200/80">
-                                            <div v-for="article in articles" :key="article.originalIndex" :data-article-row="article.originalIndex" class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
+                                            <div v-for="article in articles" :key="article.originalIndex" :data-article-row="article.originalIndex" class="flex flex-col gap-3 py-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
                                                 <div class="flex w-full items-start gap-4">
                                                     <!-- Single preview with zoom overlay -->
-                                                    <div v-if="article?.images?.length" class="shrink-0" style="max-width: 120px">
-                                                        <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
-                                                            <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                                    <div v-if="article?.images?.length" class="shrink-0">
+                                                        <div class="group relative h-16 w-16 cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
+                                                            <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                                             <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
                                                                 <component :is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
                                                             </div>
@@ -286,9 +340,9 @@
                               <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
                             </span>
                                                         </div>
-                                                        <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (internMaterialIssue.start_date && internMaterialIssue.end_date))" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
-                                                            <span>{{ $t('You have selected more items than are available.') }}</span>
-                                                            <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
+                                                        <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (internMaterialIssue.start_date && internMaterialIssue.end_date))" class="mt-1 inline-flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                                            <span>{{ $t('Overbooking') }}</span>
+                                                            <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Details') }}</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -311,7 +365,11 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <!-- /50-50 Raster -->
 
+                <!-- Sekundär: Sonderartikel + Dateien (volle Breite) -->
+                <div class="space-y-6">
                     <!-- Sonderartikel -->
                     <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
                         <div class="flex items-center justify-between gap-3 border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
@@ -425,7 +483,7 @@
 
         <!-- Sticky Action Bar -->
         <div class="sticky bottom-0 z-40 mt-8 -mx-4 md:-mx-6 bg-gradient-to-t from-white via-white/80 to-transparent pt-4">
-            <div class="mx-auto max-w-7xl px-4 md:px-6">
+            <div class="mx-auto w-full px-4 md:px-6">
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white/90 p-3 backdrop-blur shadow-sm">
                     <div class="text-xs text-zinc-600">
                         {{ $t('Selected') }}: <span class="font-medium">{{ internMaterialIssue.articles?.length || 0 }}</span> {{ $t('articles') }} • {{ $t('Files') }}: <span class="font-medium">{{ internMaterialIssue.files?.length || 0 }}</span>
@@ -485,7 +543,7 @@ import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/Article
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
-import {computed, inject, nextTick, onMounted, provide, ref, watch} from "vue";
+import {computed, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import axios from "axios";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
@@ -494,7 +552,7 @@ import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFil
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import Galleria from "primevue/galleria";
-import { IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconCirclePlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
+import { IconCircleCheck, IconFile, IconHome, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconCirclePlus, IconTrash, IconWindowMaximize } from "@tabler/icons-vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import dayjs from "dayjs";
 
@@ -638,6 +696,10 @@ watch(() => internMaterialIssue.end_time, (val) => {
 
 const selectedProject = ref((props.project?.id ? props.project : null) || props.issueOfMaterial?.project || null);
 const selectedRoom = ref(props.issueOfMaterial?.room || null);
+// Rooms the linked project actually occupies (via its events/shifts), each with a
+// room-specific period. Offered as quick-select chips below the room field.
+const projectRooms = ref([]);
+const projectRoomsLoading = ref(false);
 const selectedResponsibleUsers = ref(
     props.issueOfMaterial?.responsible_users || []
 );
@@ -646,11 +708,16 @@ const showSelectMaterialSetModal = ref(false);
 // Artikel Pagination State
 const articles = ref([]);
 const loadingMore = ref(false);
+const isFetchingArticles = ref(false);
 const scrollContainer = ref(null);
+const loadMoreSentinel = ref(null);
+let articleObserver = null;
 const articleSearchFilter = ref("");
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
 const editingArticleQuantity = ref(null);
+// Translation key of the last usage-lookup error (shown inline in the selection panel).
+const usageError = ref(null);
 const hasMoreArticles = ref(true);
 const paginationPage = ref(1);
 const baskets = ref([]);
@@ -689,36 +756,28 @@ const filteredArticles = computed(() => {
     return articles.value;
 })
 
-// Server-side search for articles
-const searchArticlesFromServer = debounce(async (searchTerm: string) => {
-    if (!searchTerm || searchTerm.length < 2) {
-        // Bei leerem Suchfeld: normale Pagination laden
-        await reloadArticlesWithNewFilter();
-        return;
+// Lookup of already-selected article id -> chosen quantity, so the "Found Articles"
+// cards can show a "selected · ×N" marker without scanning the array per card.
+const selectedQuantityById = computed(() => {
+    const map = {};
+    for (const a of internMaterialIssue.articles) {
+        if (a?.id != null) {
+            map[a.id] = Number(a.quantity ?? 0);
+        }
     }
+    return map;
+})
 
-    loadingMore.value = true;
-    try {
-        const response = await axios.get(route('inventory.articles.api', {
-            search: searchTerm,
-            start_date: internMaterialIssue.start_date,
-            end_date: internMaterialIssue.end_date,
-        }));
-
-        articles.value = response.data.articles.data;
-        hasMoreArticles.value = !!response.data.articles.next_page_url;
-        paginationPage.value = 2;
-
-        await checkFoundArticlesAvailability();
-    } catch (e) {
-        console.error('Fehler bei der Suche:', e);
-    }
-    loadingMore.value = false;
+// Server-side search: just re-run the unified loader from page 1. The current
+// search term is always read inside fetchArticles(), so search and pagination
+// can never drift apart.
+const searchArticlesFromServer = debounce(() => {
+    fetchArticles({ reset: true });
 }, 300);
 
 // Watch for search input changes
-watch(articleSearchFilter, (newValue) => {
-    searchArticlesFromServer(newValue);
+watch(articleSearchFilter, () => {
+    searchArticlesFromServer();
 })
 
 // Group selected articles by category and subcategory
@@ -907,6 +966,12 @@ const addProject = (project?: ProjectLike) => {
             internMaterialIssue.end_time = DEFAULT_END;
         }
     }
+
+    // Load the project's rooms for the quick-select chips. Auto-select a single
+    // room only when creating a new issue (never when editing an existing one).
+    if (project.id) {
+        fetchProjectRooms(project.id, { allowAutoSelect: !props.issueOfMaterial?.id });
+    }
 };
 
 const dotDateToIso = (value: string | null | undefined): string | null => {
@@ -922,6 +987,64 @@ const dotDateToIso = (value: string | null | undefined): string | null => {
 
 const addRoom = (room) => {
     selectedRoom.value = room;
+};
+
+const isPeriodEmpty = () => !internMaterialIssue.start_date && !internMaterialIssue.end_date;
+
+// Assign a project room and (optionally) narrow the period to that room's span.
+// - force = true  → explicit chip click: always set the period to the room span.
+// - force = false → automatic single-room selection: only set when no period yet
+//   (never clobbers a period the user/project already provided).
+const assignRoomFromProject = (room, { force = false } = {}) => {
+    if (!room) return;
+    selectedRoom.value = { id: room.id, name: room.name };
+
+    if (force || isPeriodEmpty()) {
+        internMaterialIssue.start_date = room.start_date || '';
+        internMaterialIssue.start_time = normalizeTime(room.start_time) || '00:00';
+        internMaterialIssue.end_date = room.end_date || '';
+        internMaterialIssue.end_time = normalizeTime(room.end_time) || '23:59';
+    }
+};
+
+// Short "DD.MM.–DD.MM." period label for a room chip.
+const formatRoomPeriod = (room) => {
+    const short = (d) => {
+        if (!d) return '';
+        const [, m, day] = d.split('-');
+        return `${day}.${m}.`;
+    };
+    const s = short(room.start_date);
+    const e = short(room.end_date);
+    if (!s && !e) return '';
+    return s === e ? s : `${s}–${e}`;
+};
+
+const fetchProjectRooms = async (projectId, { allowAutoSelect = false } = {}) => {
+    if (!projectId) {
+        projectRooms.value = [];
+        return;
+    }
+    projectRoomsLoading.value = true;
+    try {
+        const { data } = await axios.get(route('projects.rooms-with-event-periods', { project: projectId }));
+        projectRooms.value = Array.isArray(data) ? data : [];
+
+        // Exactly one project room → auto-select it (still removable/changeable).
+        if (allowAutoSelect && projectRooms.value.length === 1 && !selectedRoom.value) {
+            assignRoomFromProject(projectRooms.value[0]);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden der Projekträume:', e);
+        projectRooms.value = [];
+    } finally {
+        projectRoomsLoading.value = false;
+    }
+};
+
+const removeProject = () => {
+    selectedProject.value = null;
+    projectRooms.value = [];
 };
 
 const addResponsibleUser = (user) => {
@@ -952,6 +1075,18 @@ const getArticleDataForUsage = async (article) => {
     if (!article?.id || !startDate || !endDate) {
         return;
     }
+
+    usageError.value = null;
+
+    // The usage detail endpoint iterates day by day and caps the range at one
+    // year. Catch this client-side so the user gets a clear hint instead of a
+    // silent 422.
+    const dayDiff = Math.abs((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000);
+    if (dayDiff > 366) {
+        usageError.value = 'The period is too large for the usage details (max. 1 year). Please narrow the period.';
+        return;
+    }
+
     article.availableStockRequestIsLoading = true;
     try {
         const response = await axios.get(route('inventory.articles.usage'), {
@@ -968,6 +1103,7 @@ const getArticleDataForUsage = async (article) => {
         articleForUsageModal.value = response.data.data;
         editingArticleQuantity.value = article.quantity;
     } catch (error) {
+        usageError.value = 'Usage details could not be loaded.';
         console.error('Fehler beim Abrufen der Artikel-Nutzungsdaten:', error);
     } finally {
         article.availableStockRequestIsLoading = false;
@@ -1041,10 +1177,10 @@ const addArticleToIssue = (article) => {
             status_values: article.status_values || [],
         });
     } else {
-        // Article exists, don't modify its quantity
-        // Just ensure it has the correct properties
+        // Article already selected → clicking it again increases the quantity by 1.
         const existingArticle =
             internMaterialIssue.articles[existingArticleIndex];
+        existingArticle.quantity = Number(existingArticle.quantity ?? 0) + 1;
         if (!existingArticle.availableStock) {
             existingArticle.availableStock = 0;
             existingArticle.availableStockRequestIsLoading = true;
@@ -1055,51 +1191,74 @@ const addArticleToIssue = (article) => {
     checkAvailableStock();
 };
 
-const loadMoreArticles = async () => {
+// Single source of truth for loading the "Found Articles" list. ALWAYS sends the
+// current search term + date window, so paging (reset:false) stays filtered just
+// like the initial search (reset:true). This fixes the old bug where "load more"
+// dropped the search term and returned unrelated articles.
+const fetchArticles = async ({ reset = false } = {}) => {
+    if (isFetchingArticles.value) return;
+    if (!reset && !hasMoreArticles.value) return;
+
+    isFetchingArticles.value = true;
     loadingMore.value = true;
+
+    if (reset) {
+        paginationPage.value = 1;
+        hasMoreArticles.value = true;
+    }
+
+    const search = (articleSearchFilter.value || '').trim();
 
     try {
         const response = await axios.get(route('inventory.articles.api', {
             page: paginationPage.value,
-            start_date: internMaterialIssue.start_date,
-            end_date: internMaterialIssue.end_date,
+            search: search || undefined,
+            start_date: internMaterialIssue.start_date || undefined,
+            end_date: internMaterialIssue.end_date || undefined,
         }));
 
-        const newArticles = response.data.articles.data.reverse();
+        const paginator = response.data.articles;
+        const incoming = paginator.data || [];
 
-        for (const article of newArticles) {
-            const exists = articles.value.find((a) => a.id === article.id);
-            if (!exists) {
-                articles.value.push(article);
+        if (reset) {
+            articles.value = incoming;
+        } else {
+            for (const article of incoming) {
+                if (!articles.value.some((a) => a.id === article.id)) {
+                    articles.value.push(article);
+                }
             }
         }
 
-        if (!response.data.articles.next_page_url) {
-            hasMoreArticles.value = false;
-            paginationPage.value = 1;
-        }
+        hasMoreArticles.value = !!paginator.next_page_url;
+        paginationPage.value = (paginator.current_page ?? paginationPage.value) + 1;
 
-        // Check availability for newly loaded articles
+        // Check availability for the currently loaded articles
         await checkFoundArticlesAvailability();
     } catch (e) {
-        console.error('Fehler beim Nachladen von Nachrichten:', e);
+        console.error('Fehler beim Laden der Artikel:', e);
     }
-    paginationPage.value += 1;
     loadingMore.value = false;
+    isFetchingArticles.value = false;
 };
 
-const reloadArticlesWithNewFilter = async () => {
-    articles.value = [];
-    loadingMore.value = true;
-    paginationPage.value = 1;
-
-    await loadMoreArticles()
-}
+// Kept as thin wrappers so existing callers (date watcher, filter bar, onMounted)
+// don't need to change.
+const loadMoreArticles = () => fetchArticles({ reset: false });
+const reloadArticlesWithNewFilter = () => fetchArticles({ reset: true });
 
 const removeArticle = (index) => {
     internMaterialIssue.articles.splice(index, 1);
 };
 const emits = defineEmits(["close", "saved"]);
+
+// Verhindert, dass Enter in einem Eingabefeld das Formular (und damit Speichern) auslöst.
+// Textareas bleiben ausgenommen, damit Zeilenumbrüche weiterhin möglich sind.
+const preventEnterSubmit = (event) => {
+    if (event.target?.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+    }
+};
 
 const submit = () => {
     // Ensure times are in HH:mm before submitting
@@ -1351,9 +1510,30 @@ onMounted(() => {
         addProject(props.project);
     }
 
-    loadMoreArticles();
+    fetchArticles({ reset: true });
     if (props.loadArticleFormBasket){
         loadBaskets();
+    }
+
+    // Auto-load the next page as the user scrolls the found-articles list to its
+    // end. Replaces the manual "load more" button. rootMargin pre-fetches a bit
+    // early; because the observer also fires when the sentinel is already visible,
+    // short (non-scrollable) result sets fill up automatically too.
+    nextTick(() => {
+        if (!loadMoreSentinel.value || !scrollContainer.value) return;
+        articleObserver = new IntersectionObserver((entries) => {
+            if (entries[0]?.isIntersecting && hasMoreArticles.value && !isFetchingArticles.value) {
+                fetchArticles({ reset: false });
+            }
+        }, { root: scrollContainer.value, rootMargin: '250px' });
+        articleObserver.observe(loadMoreSentinel.value);
+    });
+});
+
+onBeforeUnmount(() => {
+    if (articleObserver) {
+        articleObserver.disconnect();
+        articleObserver = null;
     }
 });
 

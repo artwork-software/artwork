@@ -1,7 +1,8 @@
 <template>
     <div
-        class="shiftCell h-full overflow-y-auto rounded-lg bg-gray-50/10 p-2 text-xs text-white hover:opacity-100 relative"
+        class="shiftCell h-full overflow-y-auto rounded-lg bg-gray-50/10 text-xs text-white hover:opacity-100 relative"
         :class="[
+      compactMode ? 'px-2 py-1' : 'p-2',
       hasUnavailableAssignment
           ? 'ring-2 ring-inset ring-amber-500 bg-amber-500/20'
           : hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
@@ -84,6 +85,9 @@ const props = defineProps({
 })
 
 const page = usePage()
+
+/** Kompakte Ansicht: weniger vertikales Padding, damit eine Textzeile ohne Scrollbalken in die 32px-Zeile passt */
+const compactMode = computed(() => !!page.props.auth?.user?.compact_mode)
 
 /**
  * Vacation types: Typ-Label-Mapping
@@ -186,7 +190,9 @@ const cellParts = computed(() => {
     for (const s of shiftsToday.value) {
         const craftSuffix =
             s?.craftAbbreviation !== s?.craftAbbreviationUser && s?.craftAbbreviationUser
-                ? ` [${s.craftAbbreviationUser}]`
+                ? s?.craftAbbreviation
+                    ? ` [${s.craftAbbreviationUser} ${t('in')} ${s.craftAbbreviation}]`
+                    : ` [${s.craftAbbreviationUser}]`
                 : ''
 
         // Determine time display for multi-day shifts
@@ -316,3 +322,20 @@ const hasMultiShiftGroups = computed(() => {
     return false
 })
 </script>
+
+<style scoped>
+/*
+ * Zellen der Mitarbeiter-Übersicht: nur vertikal scrollen (horizontaler Balken
+ * würde bei klassischen OS-Scrollbalken einen Großteil der Zellhöhe fressen).
+ * 6px statt Browser-Standard (~15px), aber bewusst breiter als die 2px des
+ * Hauptkalenders, damit er gut sichtbar und greifbar bleibt.
+ */
+.shiftCell {
+    overflow-x: hidden;
+    scrollbar-color: #d4d4d4 transparent;
+    scrollbar-width: thin;
+}
+.shiftCell::-webkit-scrollbar { width: 6px; }
+.shiftCell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
+.shiftCell::-webkit-scrollbar-track { background-color: transparent; }
+</style>

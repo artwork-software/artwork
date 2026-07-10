@@ -152,6 +152,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $drawer_height
  * @property int $inventory_sort_column_id
  * @property int $inventory_sort_direction
+ * @property boolean $inventory_grid_layout
+ * @property boolean $inventory_hide_images
  * @property boolean $checklist_has_projects
  * @property boolean $checklist_no_projects
  * @property boolean $checklist_private_checklists
@@ -256,6 +258,7 @@ class User extends Model implements
         'inventory_sort_column_id',
         'inventory_sort_direction',
         'inventory_grid_layout',
+        'inventory_hide_images',
         'checklist_has_projects',
         'checklist_no_projects',
         'checklist_private_checklists',
@@ -300,6 +303,7 @@ class User extends Model implements
         'show_notification_indicator' => 'boolean',
         'is_freelancer' => 'boolean',
         'inventory_grid_layout' => 'boolean',
+        'inventory_hide_images' => 'boolean',
         'checklist_has_projects' => 'boolean',
         'checklist_no_projects' => 'boolean',
         'checklist_private_checklists' => 'boolean',

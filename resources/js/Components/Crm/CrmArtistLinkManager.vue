@@ -1,5 +1,17 @@
 <template>
     <div class="w-full">
+        <!-- Initial-Load fehlgeschlagen: ohne Ist-Stand kein Bearbeiten/Emitten -->
+        <div v-if="loadFailed" class="flex items-center gap-x-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+            <span class="text-xs text-rose-700">{{ $t('Failed to load data') }}</span>
+            <button
+                type="button"
+                class="text-xs font-medium text-artwork-buttons-create hover:underline shrink-0"
+                @click="loadLinkedContacts"
+            >
+                {{ $t('Retry') }}
+            </button>
+        </div>
+
         <!-- Verknüpfte CRM-Künstler*innen -->
         <div v-if="linkedContacts.length > 0" class="space-y-2">
             <div
@@ -103,7 +115,7 @@
         </div>
 
         <!-- Verknüpfen-Button + Suche -->
-        <div v-if="canEdit" class="mt-2">
+        <div v-if="canEdit && !loadFailed" class="mt-2">
             <div v-if="!showSearch" class="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <button
                     type="button"
@@ -230,6 +242,7 @@ const { can } = usePermission(page.props);
 const uid = Math.random().toString(36).slice(2, 8);
 
 const linkedContacts = ref(props.initialContacts ? [...props.initialContacts] : []);
+const loadFailed = ref(false);
 const expandedIds = ref([]);
 const details = ref({});
 const detailsLoading = ref({});
@@ -248,17 +261,23 @@ const selectableResults = computed(() => {
     return searchResults.value.filter((r) => !linkedIds.has(r.id));
 });
 
-onMounted(async () => {
+onMounted(loadLinkedContacts);
+
+async function loadLinkedContacts() {
     if (props.initialContacts === null && props.projectId) {
         try {
             const response = await axios.get(route('projects.tabs.artist-name', { project: props.projectId }));
             linkedContacts.value = response.data.linked_crm_contacts ?? [];
+            loadFailed.value = false;
         } catch (e) {
-            linkedContacts.value = [];
+            // Ohne geladenen Ist-Stand keine IDs emittieren — ein leeres Array
+            // würde beim Speichern alle bestehenden Verknüpfungen löschen.
+            loadFailed.value = true;
+            return;
         }
     }
     emitIds();
-});
+}
 
 watch(searchQuery, (value) => {
     clearTimeout(searchTimeout);
@@ -282,6 +301,9 @@ watch(searchQuery, (value) => {
 });
 
 function emitIds() {
+    if (loadFailed.value) {
+        return;
+    }
     emit('update:contactIds', linkedContacts.value.map((c) => c.id));
 }
 

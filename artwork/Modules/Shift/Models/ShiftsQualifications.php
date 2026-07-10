@@ -10,9 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Contracts\Activity;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $shift_id
@@ -24,6 +21,14 @@ class ShiftsQualifications extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    /**
+     * Transient: wird von ShiftService::delete gesetzt, wenn der Schichtplatz nur
+     * als Teil der Schicht-Löschkaskade verschwindet — der Observer schreibt dann
+     * keinen eigenen "Schichtplatz entfernt"-Verlaufseintrag (die Schicht selbst
+     * bekommt ihren Lösch-Eintrag).
+     */
+    public bool $deletingViaShiftCascade = false;
 
     protected $fillable = [
         'shift_id',

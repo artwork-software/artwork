@@ -141,21 +141,14 @@ class CraftInventoryItemEventService
             $availableQuantity = $initialQuantity;
 
             foreach ($dayEvents as $itemEvent) {
-                // Bookings that are separated in time on this day do not compete.
-                $competes = $itemEvent->is_all_day
-                    || collect($dayEvents)->first(
-                        fn (CraftInventoryItemEvent $otherEvent): bool =>
-                            $otherEvent->id !== $itemEvent->id &&
-                            (
-                                $otherEvent->is_all_day ||
-                                (
-                                    $otherEvent->start->lt($itemEvent->end) &&
-                                    $otherEvent->end->gt($itemEvent->start)
-                                )
-                            )
-                    ) !== null;
-
-                if (!$competes) {
+                if (!$this->competesWithOtherBookings($itemEvent, $dayEvents)) {
+                    // Even without competing bookings the quantity itself can exceed the stock.
+                    if ($itemEvent->quantity > $initialQuantity) {
+                        $overbookedQuantities[$itemEvent->id] = max(
+                            $overbookedQuantities[$itemEvent->id],
+                            $itemEvent->quantity - $initialQuantity
+                        );
+                    }
                     continue;
                 }
 
@@ -174,6 +167,30 @@ class CraftInventoryItemEventService
         }
 
         return $overbookedQuantities;
+    }
+
+    /**
+     * Bookings that are separated in time on this day do not compete.
+     *
+     * @param array<int, CraftInventoryItemEvent> $dayEvents
+     */
+    private function competesWithOtherBookings(CraftInventoryItemEvent $itemEvent, array $dayEvents): bool
+    {
+        if ($itemEvent->is_all_day) {
+            return true;
+        }
+
+        return collect($dayEvents)->first(
+            fn (CraftInventoryItemEvent $otherEvent): bool =>
+                $otherEvent->id !== $itemEvent->id &&
+                (
+                    $otherEvent->is_all_day ||
+                    (
+                        $otherEvent->start->lt($itemEvent->end) &&
+                        $otherEvent->end->gt($itemEvent->start)
+                    )
+                )
+        ) !== null;
     }
 
 

@@ -16,11 +16,14 @@ class InventoryCategoryService
     ) {}
 
     /**
-     * Get all categories with optimized relations
+     * Get all categories with optimized relations.
+     *
+     * @param array<int, int>|null $filteredArticleIds Restrict eager-loaded articles to these IDs
+     *                                                  (null = full load, [] = zero matches).
      */
-    public function getAllWithRelations(): Collection
+    public function getAllWithRelations(?array $filteredArticleIds = null): Collection
     {
-        return $this->categoryRepository->getAllWithRelations();
+        return $this->categoryRepository->getAllWithRelations($filteredArticleIds);
     }
 
     /**

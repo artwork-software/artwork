@@ -381,6 +381,7 @@ export function useShiftPlanRequest() {
             case 'workflow': return t('Workflow');
             case 'post_commit': return t('Post-commit');
             case 'normal': return t('Normal');
+            case 'commit': return t('Commitment');
             default: return ctx;
         }
     };

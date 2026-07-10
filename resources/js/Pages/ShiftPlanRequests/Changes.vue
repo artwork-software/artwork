@@ -71,21 +71,32 @@
                                 </div>
                             </div>
 
-                            <BaseUIButton
-                                type="button"
-                                is-add-button
-                                label="Change craft"
-                                use-translation
-                                icon="IconRepeat"
-                                @click="openCraftSelector"
-                            />
+                            <div class="flex flex-wrap items-center gap-2">
+                                <BaseUIButton
+                                    v-if="pendingChanges > 0"
+                                    type="button"
+                                    is-add-button
+                                    :label="t('Approve all open changes') + ' (' + pendingChanges + ')'"
+                                    :use-translation="false"
+                                    icon="IconChecks"
+                                    @click="showAcknowledgeAllConfirm = true"
+                                />
+                                <BaseUIButton
+                                    type="button"
+                                    is-add-button
+                                    label="Change craft"
+                                    use-translation
+                                    icon="IconRepeat"
+                                    @click="openCraftSelector"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <!-- Filterleiste -->
                     <div class="border-t border-gray-100 px-4 py-3 sm:px-6">
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <button
                                     v-for="filter in filters"
                                     :key="filter.value"
@@ -110,6 +121,22 @@
                                         {{ totalChanges }}
                                     </span>
                                 </button>
+
+                                <!-- Intern/Extern-Filter über die betroffene Person -->
+                                <div class="flex flex-wrap gap-2 border-l border-gray-200 pl-2">
+                                    <button
+                                        v-for="wt in workerTypeFilters"
+                                        :key="wt.value"
+                                        type="button"
+                                        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition"
+                                        :class="activeWorkerType === wt.value
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                        @click="changeWorkerType(wt.value)"
+                                    >
+                                        {{ t(wt.label) }}
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Suche nach betroffener Einheit (serverseitig, über alle Seiten) -->
@@ -444,6 +471,37 @@
 
         <!-- Dein bestehendes Modal; API bleibt unverändert -->
         <CraftSelectorModal v-if="showCraftSelector" @close="showCraftSelector = false" />
+
+        <!-- Bestätigung: alle offenen Änderungen der aktuellen Filterauswahl genehmigen -->
+        <ArtworkBaseModal
+            v-if="showAcknowledgeAllConfirm"
+            :title="t('Approve all open changes')"
+            :description="t('All open changes matching the current filter selection will be approved.')"
+            @close="showAcknowledgeAllConfirm = false"
+        >
+            <div class="mt-4 text-sm text-gray-700">
+                {{ t('Do you really want to approve all {0} open changes?', [pendingChanges]) }}
+            </div>
+            <div class="mt-6 flex justify-between">
+                <BaseUIButton
+                    type="button"
+                    is-add-button
+                    label="Approve"
+                    use-translation
+                    icon="IconChecks"
+                    :processing="acknowledgingAll"
+                    :disabled="acknowledgingAll"
+                    @click="acknowledgeAll"
+                />
+                <BaseUIButton
+                    type="button"
+                    label="No, not really"
+                    use-translation
+                    icon="IconCancel"
+                    @click="showAcknowledgeAllConfirm = false"
+                />
+            </div>
+        </ArtworkBaseModal>
     </AppLayout>
 </template>
 
@@ -454,6 +512,7 @@ import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import CraftSelectorModal from "@/Pages/ShiftPlanRequests/components/CraftSelectorModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 
 const props = defineProps({
     craft: {
@@ -481,6 +540,11 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    // Aktiver Intern/Extern-Filter: 'all' | 'internal' | 'external'
+    workerType: {
+        type: String,
+        default: 'all',
+    },
     // Zähler über alle Seiten hinweg (unabhängig vom aktiven Filter)
     totalCount: {
         type: Number,
@@ -504,6 +568,26 @@ const filters = [
     { value: 'open', label: 'Open changes' },
     { value: 'ack',  label: 'Approval granted' },
 ];
+
+// Intern/Extern-Filter (serverseitig): intern = normale User, extern = Freelancer,
+// Dienstleister und User mit "als Freelancer anzeigen".
+const activeWorkerType = computed(() => props.workerType);
+
+const workerTypeFilters = [
+    { value: 'all',      label: 'All' },
+    { value: 'internal', label: 'Internal' },
+    { value: 'external', label: 'External' },
+];
+
+const changeWorkerType = (value) => {
+    if (value === props.workerType) {
+        return;
+    }
+    router.reload({
+        data: { worker_type: value, page: 1 },
+        preserveScroll: true,
+    });
+};
 
 // Zähler kommen serverseitig (über alle Seiten), nicht mehr aus dem geladenen Array.
 const totalChanges = computed(() => props.totalCount);
@@ -639,6 +723,33 @@ const acknowledge = (change) => {
         {
             preserveScroll: true,
             preserveState: true,
+        }
+    );
+};
+
+// Bulk-Genehmigung: alle offenen Änderungen der aktuellen Filterauswahl
+// (Gewerk + Suche + Intern/Extern) in einem Request genehmigen.
+const showAcknowledgeAllConfirm = ref(false);
+const acknowledgingAll = ref(false);
+
+const acknowledgeAll = () => {
+    if (acknowledgingAll.value) {
+        return;
+    }
+    acknowledgingAll.value = true;
+    router.post(
+        route('committed-shift-changes.acknowledge-all'),
+        {
+            craft_id: props.craft?.id,
+            search: search.value.trim(),
+            worker_type: props.workerType,
+        },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                acknowledgingAll.value = false;
+                showAcknowledgeAllConfirm.value = false;
+            },
         }
     );
 };

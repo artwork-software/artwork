@@ -8,6 +8,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftWorker;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -23,6 +24,29 @@ class AvailabilityConflictService
         $conflict = new AvailabilitiesConflict();
         $conflict->fill($data);
         $this->availabilityConflictRepository->save($conflict);
+    }
+
+    /**
+     * Name der Person, die den Worker dieser Schicht zugewiesen hat — nicht der
+     * Festschreibende: bei Bulk-Festschreiben/Workflow-Genehmigung stand sonst
+     * eine unbeteiligte Person im Konflikt-Hinweis. committedBy bleibt nur als
+     * Fallback für Alt-Zuweisungen ohne assigned_by_user_id.
+     */
+    private function resolveSchedulerName(Shift $shift, User|Freelancer|null $worker): ?string
+    {
+        if ($worker !== null) {
+            $assignedBy = ShiftWorker::byEmployableIdAndShiftId(
+                $worker instanceof User ? User::class : Freelancer::class,
+                $worker->id,
+                $shift->id
+            )->first()?->assignedBy;
+
+            if ($assignedBy !== null) {
+                return $assignedBy->full_name;
+            }
+        }
+
+        return $shift->committedBy()->first()?->full_name;
     }
 
     //@todo: fix phpcs error - fix nesting level
@@ -52,7 +76,7 @@ class AvailabilityConflictService
         }
 
         foreach ($shifts as $shift) {
-            $shiftCommittedBy = $shift->committedBy()->first();
+            $schedulerName = $this->resolveSchedulerName($shift, $user ?? $freelancer);
             if ($user) {
                 $notificationTitle = __(
                     'notification.shift.conflict',
@@ -70,7 +94,7 @@ class AvailabilityConflictService
                         'title' => __(
                             'notification.shift.conflict_text',
                             [
-                                'username' => $shiftCommittedBy->full_name,
+                                'username' => $schedulerName,
                                 'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
                                 'from' => $shift->start,
                                 'to' => $shift->end
@@ -110,7 +134,7 @@ class AvailabilityConflictService
                             $this->create([
                                 'availability_id' => $availability->id,
                                 'shift_id' => $shift->id,
-                                'user_name' => $shiftCommittedBy->full_name,
+                                'user_name' => $schedulerName,
                                 'date' => $shift->event_start_day,
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,
@@ -157,7 +181,7 @@ class AvailabilityConflictService
 
         $shiftDate = $shiftStartDate;
 
-        $shiftCommittedBy = $shift->committedBy()->first();
+        $schedulerName = $this->resolveSchedulerName($shift, $user ?? $freelancer);
         if ($user) {
             $notificationTitle = __(
                 'notification.shift.conflict',
@@ -175,7 +199,7 @@ class AvailabilityConflictService
                     'title' => __(
                         'notification.shift.conflict_text',
                         [
-                            'username' => $shiftCommittedBy->full_name,
+                            'username' => $schedulerName,
                             'date' => Carbon::parse($shiftDate)->format('d.m.Y'),
                             'from' => $shift->start,
                             'to' => $shift->end
@@ -214,7 +238,7 @@ class AvailabilityConflictService
                         $this->create([
                             'availability_id' => $availability->id,
                             'shift_id' => $shift->id,
-                            'user_name' => $shiftCommittedBy->full_name,
+                            'user_name' => $schedulerName,
                             'date' => $shiftDate,
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,

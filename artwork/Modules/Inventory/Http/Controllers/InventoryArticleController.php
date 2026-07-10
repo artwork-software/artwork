@@ -258,7 +258,14 @@ class InventoryArticleController extends Controller
         $articles = InventoryArticle::search($search)
             ->take(50)
             ->get()
-            ->load(['category', 'subCategory', 'detailedArticleQuantities.status', 'images']);
+            ->load([
+                'category',
+                'subCategory',
+                'properties',
+                'detailedArticleQuantities.status',
+                'detailedArticleQuantities.properties',
+                'images',
+            ]);
 
         return response()->json($articles);
     }

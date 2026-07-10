@@ -4,20 +4,54 @@
             <!-- Topbar -->
             <div class="sticky top-0 z-40 border-b bg-white">
                 <div class="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap">
-          <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-800 ring-1 ring-inset ring-sky-200">
-            {{ $t('Planning timeline') }}
-          </span>
-                    <span class="mx-1 inline-block size-1 rounded-full bg-zinc-300"></span>
+                    <!-- Datepicker first (top-left), as everywhere else in the app -->
+                    <div class="shrink-0">
+                        <DatePickerComponent
+                            v-if="dataArray"
+                            :dateValueArray="dataArray"
+                            :is_inventory_article_planning="true"
+                        />
+                    </div>
 
-                    <div class="relative" data-legend-wrapper ref="legendBtnRef">
+                    <!-- Search directly next to the datepicker -->
+                    <div class="shrink-0">
+                        <input
+                            type="text"
+                            v-model="searchFilter"
+                            :placeholder="$t('Search articles, categories...')"
+                            class="px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[200px]"
+                        />
+                    </div>
+
+                    <!-- Expand / collapse all categories -->
+                    <div class="shrink-0">
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                            :title="allExpanded ? $t('Collapse all') : $t('Expand all')"
+                            @click="toggleAllCategories"
+                        >
+                            <IconChevronRight
+                                class="size-4 transition-transform"
+                                :class="allExpanded ? 'rotate-90' : ''"
+                            />
+                            {{ allExpanded ? $t('Collapse all') : $t('Expand all') }}
+                        </button>
+                    </div>
+
+                    <div class="flex-1"></div>
+
+                    <!-- Legend (info icon only; click toggles the same tooltip) -->
+                    <div class="relative shrink-0" data-legend-wrapper ref="legendBtnRef">
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white/80 p-1.5 text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 transition-colors"
+                            :class="showLegend ? 'bg-zinc-100 text-zinc-700' : ''"
+                            :title="$t('Legend')"
+                            :aria-label="$t('Legend')"
                             @click="toggleLegend"
                         >
-                            <IconInfoCircle class="size-3.5" />
-                            {{ $t('Legend') }}
-                            <IconChevronDown class="size-3 transition-transform" :class="showLegend ? 'rotate-180' : ''" />
+                            <IconInfoCircle class="size-4" />
                         </button>
                     </div>
 
@@ -26,7 +60,7 @@
                             v-if="showLegend"
                             data-legend-wrapper
                             class="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-lg p-3 min-w-[200px]"
-                            :style="{ left: legendPos.x + 'px', top: legendPos.y + 'px' }"
+                            :style="{ right: legendPos.right + 'px', top: legendPos.top + 'px' }"
                         >
                             <div class="flex flex-col gap-2 text-[11px] text-zinc-600">
                                 <span class="inline-flex items-center gap-1.5">
@@ -34,9 +68,6 @@
                                 </span>
                                 <span class="inline-flex items-center gap-1.5">
                                     <span class="inline-block size-2 rounded-full bg-indigo-600"></span>{{ $t('Today') }}
-                                </span>
-                                <span class="inline-flex items-center gap-1.5">
-                                    <IconRouteSquare class="size-3" />{{ $t('Used in period') }}
                                 </span>
                                 <span class="inline-flex items-center gap-1.5">
                                     <span class="inline-block size-2 rounded bg-zinc-300"></span>{{ $t('Weekend') }}
@@ -51,35 +82,39 @@
                         </div>
                     </teleport>
 
-                    <!-- Ref 1.18: only show planned articles -->
-                    <label class="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-600 cursor-pointer select-none">
-                        <input
-                            type="checkbox"
-                            v-model="onlyPlanned"
-                            class="size-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        {{ $t('Only planned articles') }}
-                    </label>
-
-                    <div class="flex-1"></div>
-
-                    <!-- Search Input Field -->
-                    <div class="shrink-0 mr-3">
-                        <input
-                            type="text"
-                            v-model="searchFilter"
-                            :placeholder="$t('Search articles, categories...')"
-                            class="px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[200px]"
-                        />
+                    <!-- Display settings (extensible panel; holds the "only planned" toggle) -->
+                    <div class="relative shrink-0" data-settings-wrapper ref="settingsBtnRef">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                            :class="showSettings ? 'bg-zinc-100 text-zinc-700' : ''"
+                            @click="toggleSettings"
+                        >
+                            <IconAdjustmentsHorizontal class="size-4" />
+                            {{ $t('Display Settings') }}
+                        </button>
                     </div>
 
-                    <div class="shrink-0">
-                        <DatePickerComponent
-                            v-if="dataArray"
-                            :dateValueArray="dataArray"
-                            :is_inventory_article_planning="true"
-                        />
-                    </div>
+                    <teleport to="body">
+                        <div
+                            v-if="showSettings"
+                            data-settings-wrapper
+                            class="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-lg p-3 min-w-[220px]"
+                            :style="{ right: settingsPos.right + 'px', top: settingsPos.top + 'px' }"
+                        >
+                            <div class="text-[10px] font-semibold uppercase tracking-wide text-zinc-400 mb-2">
+                                {{ $t('Display Settings') }}
+                            </div>
+                            <label class="flex items-center gap-2 text-[12px] font-medium text-zinc-700 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    v-model="onlyPlanned"
+                                    class="size-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                {{ $t('Only planned articles') }}
+                            </label>
+                        </div>
+                    </teleport>
 
                     <InventoryFunctionBarFilter />
                 </div>
@@ -106,9 +141,16 @@
                             <div
                                 v-for="date in dates"
                                 :key="date.date"
-                                class="px-4 py-2 text-center font-lexend text-[11px] min-w-24 max-w-24 w-24 flex items-center justify-center border-r border-zinc-200"
-                                :class="date.date === todayIso ? 'bg-indigo-50 text-indigo-700 font-semibold' : ''"
+                                class="px-4 py-2 text-center font-lexend text-[11px] min-w-24 max-w-24 w-24 flex flex-col items-center justify-center border-r border-zinc-200"
+                                :class="[
+                                    date.date === todayIso ? 'bg-indigo-50 text-indigo-700 font-semibold' : '',
+                                    weekMeta.get(date.date)?.isWeekStart ? 'border-l-2 border-l-zinc-800' : ''
+                                ]"
                             >
+                                <span
+                                    v-if="weekMeta.get(date.date)?.isWeekStart"
+                                    class="text-[9px] font-bold uppercase tracking-wide text-zinc-800 leading-none mb-0.5"
+                                >{{ $t('KW') }} {{ weekMeta.get(date.date)?.week }}</span>
                                 {{ formattedDates[date.date] }}
                             </div>
                         </div>
@@ -117,7 +159,7 @@
                         <div>
                             <template v-for="group in filteredGroupedArticles" :key="group.category">
                                 <!-- Category row (toggle) -->
-                                <div class="flex bg-zinc-100/80">
+                                <div class="flex bg-zinc-100/80 border-t-2 border-zinc-800">
                                     <button
                                         type="button"
                                         class="sticky left-0 z-20 px-4 py-2 min-w-[220px] w-[220px] font-semibold text-[11px] text-zinc-700 inline-flex items-center gap-2 border-r border-zinc-200 select-none"
@@ -129,7 +171,6 @@
                                             class="size-4 transition-transform"
                                             :class="isCatOpen(group.category) ? 'rotate-90' : ''"
                                         />
-                                        <component :is="IconCategoryFilled" class="size-4 text-zinc-500" />
                                         <span class="truncate">{{ group.category }}</span>
                                         <span class="ml-auto text-[10px] text-zinc-500">
                       {{ countGroup(group) }}
@@ -169,7 +210,6 @@
                                                     class="size-4 transition-transform"
                                                     :class="isSubOpen(group.category, sub.name) ? 'rotate-90' : ''"
                                                 />
-                                                <component :is="IconCategory2" class="size-4 text-zinc-500" />
                                                 <span class="truncate">{{ sub.name }}</span>
                                                 <span class="ml-auto text-[10px] text-zinc-500">{{ sub.articles?.length ?? 0 }}</span>
                                             </button>
@@ -280,7 +320,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { ref, reactive, onMounted, onUnmounted, watch, computed, defineAsyncComponent, provide, nextTick } from "vue";
-import { IconCategory2, IconCategoryFilled, IconChevronDown, IconChevronRight, IconInfoCircle, IconRouteSquare } from "@tabler/icons-vue";
+import { IconAdjustmentsHorizontal, IconChevronRight, IconInfoCircle } from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
 import axios from "axios";
 import ArticleRow from "@/Pages/Inventory/Components/Planning/ArticleRow.vue";
@@ -312,27 +352,49 @@ const props = defineProps({
     },
 });
 
-// Legend popover
+// Toolbar popovers (legend + display settings). Both teleport their panel to
+// <body> to escape the toolbar's overflow-x-auto clipping, and are right-aligned
+// under their trigger button.
 const showLegend = ref(false);
 const legendBtnRef = ref(null);
-const legendPos = reactive({ x: 0, y: 0 });
+const legendPos = reactive({ right: 0, top: 0 });
+
+const showSettings = ref(false);
+const settingsBtnRef = ref(null);
+const settingsPos = reactive({ right: 0, top: 0 });
+
+const positionPanel = (btnRef, pos) => {
+    const rect = btnRef.value.getBoundingClientRect();
+    pos.right = Math.max(8, window.innerWidth - rect.right);
+    pos.top = rect.bottom + 4;
+};
 
 const toggleLegend = () => {
     if (!showLegend.value && legendBtnRef.value) {
-        const rect = legendBtnRef.value.getBoundingClientRect();
-        legendPos.x = rect.left;
-        legendPos.y = rect.bottom + 4;
+        positionPanel(legendBtnRef, legendPos);
+        showSettings.value = false;
     }
     showLegend.value = !showLegend.value;
 };
 
-const onClickOutsideLegend = (e) => {
+const toggleSettings = () => {
+    if (!showSettings.value && settingsBtnRef.value) {
+        positionPanel(settingsBtnRef, settingsPos);
+        showLegend.value = false;
+    }
+    showSettings.value = !showSettings.value;
+};
+
+const onClickOutsidePopovers = (e) => {
     if (showLegend.value && !e.target.closest('[data-legend-wrapper]')) {
         showLegend.value = false;
     }
+    if (showSettings.value && !e.target.closest('[data-settings-wrapper]')) {
+        showSettings.value = false;
+    }
 };
-onMounted(() => document.addEventListener('click', onClickOutsideLegend));
-onUnmounted(() => document.removeEventListener('click', onClickOutsideLegend));
+onMounted(() => document.addEventListener('click', onClickOutsidePopovers));
+onUnmounted(() => document.removeEventListener('click', onClickOutsidePopovers));
 
 // Ref 1.20: synchronized, always-visible horizontal scrollbar pinned above the
 // grid. The top scrollbar and the grid wrapper mirror each other's scrollLeft;
@@ -414,6 +476,33 @@ const planningRangeBounds = computed(() => ({
 }));
 provide('planningDateIndex', planningDateIndex);
 provide('planningRangeBounds', planningRangeBounds);
+
+// ISO calendar-week metadata per date. Drives the thicker black week divider
+// (drawn on the first day of each week) and the "CW xx" label in the header.
+// The first visible column is always treated as a week start so it gets a label.
+const isoWeekNumber = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    const day = dt.getUTCDay() || 7;                 // Mon=1 … Sun=7
+    dt.setUTCDate(dt.getUTCDate() + 4 - day);        // shift to the week's Thursday
+    const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+    return Math.ceil(((dt - yearStart) / 86400000 + 1) / 7);
+};
+const isMonday = (dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 1;
+};
+const weekMeta = computed(() => {
+    const map = new Map();
+    (props.dates ?? []).forEach((entry, idx) => {
+        map.set(entry.date, {
+            week: isoWeekNumber(entry.date),
+            isWeekStart: idx === 0 || isMonday(entry.date),
+        });
+    });
+    return map;
+});
+provide('planningWeekMeta', weekMeta);
 
 // Group issues by article id once for fast lookup
 const issuesByArticle = computed(() => {
@@ -560,6 +649,31 @@ const toggleCategory = (cat) => {
 const isSubOpen = (cat, sub) => subOpen[keyFor(cat, sub)] ?? false;
 const toggleSub = (cat, sub) => {
     subOpen[keyFor(cat, sub)] = !isSubOpen(cat, sub);
+    persistViewSettings();
+};
+
+// Are all currently visible categories (and their subcategories) expanded?
+const allExpanded = computed(() => {
+    const groups = filteredGroupedArticles.value ?? [];
+    if (groups.length === 0) return false;
+    for (const g of groups) {
+        if (!isCatOpen(g.category)) return false;
+        for (const s of g.subcategories ?? []) {
+            if (!isSubOpen(g.category, s.name)) return false;
+        }
+    }
+    return true;
+});
+
+// Expand or collapse every visible category and subcategory at once.
+const toggleAllCategories = () => {
+    const open = !allExpanded.value;
+    for (const g of filteredGroupedArticles.value ?? []) {
+        catOpen[g.category] = open;
+        for (const s of g.subcategories ?? []) {
+            subOpen[keyFor(g.category, s.name)] = open;
+        }
+    }
     persistViewSettings();
 };
 

@@ -45,13 +45,47 @@ class InventoryCategoryController extends Controller
         ?InventoryCategory $inventoryCategory = null,
         ?InventorySubCategory $inventorySubCategory = null
     ): \Inertia\Response {
+        $resolved = $this->filterResolver->resolve($inventoryCategory?->id, $inventorySubCategory?->id);
+        $statusId = request()->integer('status_id') ?: null;
+        $searchPropertyId = request()->integer('search_property_id') ?: null;
+        $search = request('search');
+
+        // Ist überhaupt ein Filter/eine Suche aktiv? Nur dann blenden wir leere
+        // Kategorien aus – ohne Filter bleibt die vollständige Sidebar erhalten.
+        $hasActiveFilter = !empty($resolved['filters'])
+            || !empty($resolved['tag_ids'])
+            || !empty($search)
+            || $statusId !== null;
+
+        // Globale (kategorieübergreifende) Menge der zu den Filtern passenden Artikel.
+        // null = kein Filter aktiv → keine Einschränkung der Sidebar-Artikel.
+        $filteredArticleIds = $hasActiveFilter
+            ? $this->articleService->getFilteredArticleIds(
+                $search,
+                $resolved['filters'],
+                $resolved['tag_ids'],
+                $statusId,
+                $searchPropertyId,
+            )
+            : null;
+
+        $restrictArticles = static function ($query) use ($filteredArticleIds): void {
+            if ($filteredArticleIds !== null) {
+                $query->whereIn('inventory_articles.id', $filteredArticleIds);
+            }
+        };
+
         $inventoryCategory?->load([
             'subcategories' => function ($query): void {
                 $query->orderBy('name');
             },
-            'subcategories.articles' => function ($query): void {
+            'subcategories.articles' => function ($query) use ($restrictArticles): void {
                 $query->orderBy('name');
+                $restrictArticles($query);
             },
+            'subcategories.articles.category:id,name',
+            'subcategories.articles.subCategory:id,name',
+            'subcategories.articles.properties',
             'subcategories.properties' => function ($query): void {
                 $query->orderBy('name');
             },
@@ -60,11 +94,18 @@ class InventoryCategoryController extends Controller
             }
         ]);
 
-        $inventorySubCategory?->load(['properties' => function ($query): void {
-            $query->orderBy('name');
-        }, 'articles' => function ($query): void {
-            $query->orderBy('name');
-        }]);
+        $inventorySubCategory?->load([
+            'properties' => function ($query): void {
+                $query->orderBy('name');
+            },
+            'articles' => function ($query) use ($restrictArticles): void {
+                $query->orderBy('name');
+                $restrictArticles($query);
+            },
+            'articles.category:id,name',
+            'articles.subCategory:id,name',
+            'articles.properties',
+        ]);
 
         $filterableProperties = collect();
 
@@ -90,14 +131,10 @@ class InventoryCategoryController extends Controller
             $filterableProperties = $this->propertyRepository->filterable();
         }
 
-        $resolved = $this->filterResolver->resolve($inventoryCategory?->id, $inventorySubCategory?->id);
-        $statusId = request()->integer('status_id') ?: null;
-        $searchPropertyId = request()->integer('search_property_id') ?: null;
-
         $articles = $this->articleService->getArticleList(
             $inventoryCategory,
             $inventorySubCategory,
-            request('search'),
+            $search,
             $resolved['filters'],
             $resolved['tag_ids'],
             $statusId,
@@ -113,7 +150,8 @@ class InventoryCategoryController extends Controller
         ]);
 
         return Inertia::render('Inventory/Index', [
-            'categories' => $this->categoryService->getAllWithRelations(),
+            'categories' => $this->categoryService->getAllWithRelations($filteredArticleIds),
+            'hasActiveFilter' => $hasActiveFilter,
             'currentCategory' => $inventoryCategory,
             'currentSubCategory' => $inventorySubCategory,
             'articles' => $articles,
@@ -147,6 +185,7 @@ class InventoryCategoryController extends Controller
                 ->orderBy('position')
                 ->get(),
             'inventoryGridLayout' => auth()->user()->inventory_grid_layout ?? true,
+            'inventoryHideImages' => auth()->user()->inventory_hide_images ?? false,
             'filterPresets' => InventoryArticleFilterPreset::query()
                 ->where('user_id', auth()->id())
                 ->orderByDesc('is_default')
@@ -235,7 +274,8 @@ class InventoryCategoryController extends Controller
                 $query->select('id', 'name', 'inventory_category_id', 'inventory_sub_category_id');
             },
             'articles.category:id,name',
-            'articles.subCategory:id,name'
+            'articles.subCategory:id,name',
+            'articles.properties'
         ])
         ->select('id', 'name')
         ->orderBy('name')
@@ -257,5 +297,16 @@ class InventoryCategoryController extends Controller
         ]);
 
 
+    }
+
+    public function updateInventoryHideImages(\Illuminate\Http\Request $request): void
+    {
+        $validated = $request->validate([
+            'inventory_hide_images' => 'required|boolean'
+        ]);
+
+        auth()->user()->update([
+            'inventory_hide_images' => $validated['inventory_hide_images']
+        ]);
     }
 }

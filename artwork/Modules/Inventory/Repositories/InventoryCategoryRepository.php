@@ -28,31 +28,52 @@ readonly class InventoryCategoryRepository
     }
 
     /**
-     * Get all categories with optimized eager loading
+     * Get all categories with optimized eager loading.
+     *
+     * When $filteredArticleIds is passed (not null), the eager-loaded articles are
+     * restricted to those IDs so the sidebar counts reflect the currently active
+     * filter/search. Passing null keeps the full, unfiltered load. An empty array
+     * intentionally restricts to zero matches (filter active, nothing matched).
+     *
+     * @param array<int, int>|null $filteredArticleIds
      */
-    public function getAllWithRelations(): Collection
+    public function getAllWithRelations(?array $filteredArticleIds = null): Collection
     {
+        $restrict = static function ($query) use ($filteredArticleIds): void {
+            if ($filteredArticleIds !== null) {
+                $query->whereIn('inventory_articles.id', $filteredArticleIds);
+            }
+        };
+
         return $this->getNewModelQuery()
             ->with([
                 'subcategories' => function ($query): void {
                     $query
                         ->orderBy('name');
                 },
-                'subcategories.articles',
+                'subcategories.articles' => function ($query) use ($restrict): void {
+                    $restrict($query);
+                },
+                'subcategories.articles.category:id,name',
+                'subcategories.articles.subCategory:id,name',
+                'subcategories.articles.properties',
                 'subcategories.properties:id,name,type,select_values',
                 'properties' => function ($query): void {
                     $query
                         ->orderBy('name');
                 },
-                'articles' => function ($query): void {
+                'articles' => function ($query) use ($restrict): void {
                     $query
                         ->with([
+                            'category:id,name',
                             'subCategory:id,name',
+                            'properties',
                             'images' => function ($q): void {
                                 $q->where('is_main_image', true)->select('id', 'inventory_article_id', 'image');
                             }
                         ])
                         ->withCount('detailedArticleQuantities');
+                    $restrict($query);
                 }
             ])
             ->orderBy('name')

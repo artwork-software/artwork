@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="submit" class="mx-auto max-w-7xl px-4 md:px-6">
+    <form @submit.prevent="submit" @keydown.enter="preventEnterSubmit" class="mx-auto w-full px-4 md:px-6">
         <!-- Page Header -->
         <header class="mb-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -142,10 +142,12 @@
             </section>
 
             <!-- Search & select items -->
-            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
-                <!-- Left: search -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm lg:col-span-1 flex flex-col lg:max-h-[calc(80vh-12rem)] lg:sticky lg:top-0">
-                    <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl">
+            <section class="space-y-6">
+                <!-- Artikelsuche (links) + Auswahl (rechts) 50/50 nebeneinander -->
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
+                <!-- Found articles (left column) -->
+                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
+                    <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl space-y-3">
                         <div class="flex items-center w-full gap-x-3">
                             <BaseInput
                                 id="articleSearchFilter"
@@ -157,69 +159,95 @@
                             <ToolTipComponent @click="showSelectMaterialSetModal = true" :icon="IconParentheses" :tooltip-text="$t('Select material set')" icon-size="size-7" tooltip-width="w-fit whitespace-nowrap" position="top" />
                             <InventoryFunctionBarFilter @close="reloadArticlesWithNewFilter" />
                         </div>
-                    </div>
-
-                    <div class="px-5 py-3 flex items-center justify-between">
-                        <h3 class="font-semibold flex items-center gap-2">
-                            <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
-                            {{ $t('Found Articles') }}
-                        </h3>
-                        <div v-if="filteredArticles && filteredArticles.length > 0" class="text-sm text-zinc-500">
-                            {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
+                        <div class="flex items-center justify-between gap-3">
+                            <h3 class="font-semibold flex items-center gap-2">
+                                <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                {{ $t('Found Articles') }}
+                                <span v-if="filteredArticles && filteredArticles.length > 0" class="text-sm font-normal text-zinc-500">
+                                    · {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
+                                </span>
+                            </h3>
+                            <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200 shrink-0">
+                                {{ externMaterialIssueForm.articles?.length || 0 }} {{ $t('selected') }}
+                            </span>
                         </div>
                     </div>
 
-                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-                        <div v-for="article in filteredArticles" :key="article.id" class="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 shadow-sm hover:bg-zinc-50 transition">
-                            <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
-                                <div class="flex items-start gap-3">
-                                    <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
-                                    <div class="min-w-0">
-                                        <div class="font-medium truncate">{{ article.name }}</div>
-                                        <div class="text-xs text-zinc-500 line-clamp-2" v-if="article.description">{{ article.description }}</div>
-                                        <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                                            <template v-for="(status, i) in article.status_values" :key="i">
-                                                <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
-                                                    <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
-                                                    <span class="tabular-nums">{{ status.name }}</span>
-                                                    <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
-                                                </div>
-                                            </template>
-                                            <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
+                    <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                        <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
+                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-emerald-300 bg-emerald-50/50 ring-1 ring-emerald-200' : 'border-zinc-200 bg-zinc-50/60 hover:bg-zinc-50 hover:border-indigo-300'">
+                                <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
+                                    <div class="flex items-start gap-3">
+                                        <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                        <div class="min-w-0 w-full">
+                                            <div class="font-medium truncate flex items-center gap-1.5">
+                                                <component :is="IconCircleCheck" v-if="selectedQuantityById[article.id]" class="h-4 w-4 shrink-0 text-emerald-600" />
+                                                <span class="truncate min-w-0">{{ article.name }}</span>
+                                                <span v-if="selectedQuantityById[article.id]" class="ml-auto shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700" :title="$t('selected')">×{{ selectedQuantityById[article.id] }}</span>
+                                            </div>
+                                            <div class="text-xs text-zinc-500 line-clamp-2" v-if="article.description">{{ article.description }}</div>
+                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                                                <template v-for="(status, i) in article.status_values" :key="i">
+                                                    <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
+                                                        <span class="inline-block size-1.5 rounded-full" :style="{ backgroundColor: status.color }"></span>
+                                                        <span class="tabular-nums">{{ status.name }}</span>
+                                                        <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
+                                                    </div>
+                                                </template>
+                                                <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+                            </div>
                         </div>
 
-                        <div v-if="articles" class="flex justify-center pt-4">
-                            <button type="button" @click="loadMoreArticles" :disabled="loadingMore" class="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50">
-                                <span v-if="loadingMore" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                                {{ $t('Load more items') }}
-                            </button>
+                        <!-- Empty state -->
+                        <div v-if="!filteredArticles.length && !loadingMore" class="py-10 text-center text-sm text-zinc-500">
+                            {{ $t('No articles found') }}
+                        </div>
+
+                        <!-- Infinite-scroll sentinel + status -->
+                        <div ref="loadMoreSentinel" class="h-px"></div>
+                        <div v-if="loadingMore" class="flex justify-center py-4">
+                            <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"></span>
+                        </div>
+                        <div v-else-if="!hasMoreArticles && filteredArticles.length" class="pt-3 text-center text-xs text-zinc-400">
+                            {{ $t('All articles loaded') }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: selected -->
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
-                            <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
-                                <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
-                                {{ $t('Selected items') }}
-                            </h3>
-                            <p class="text-xs text-zinc-500">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
+                    <!-- Selected items (right column) -->
+                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
+                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                                    <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                    {{ $t('Selected items') }}
+                                </h3>
+                                <p class="text-xs text-zinc-500">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <div class="text-lg font-bold tabular-nums leading-none text-zinc-900">{{ externMaterialIssueForm.articles?.length || 0 }}</div>
+                                <div class="text-[11px] text-zinc-500">{{ $t('selected') }}</div>
+                            </div>
                         </div>
 
-                        <div class="p-5">
+                        <div class="min-h-0 flex-1 overflow-y-auto p-5">
+                            <div v-if="usageError" class="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                <span>{{ $t(usageError) }}</span>
+                                <button type="button" class="shrink-0 font-medium text-amber-700 hover:text-amber-900" @click="usageError = null">
+                                    <XIcon class="h-4 w-4" />
+                                </button>
+                            </div>
                             <div v-if="externMaterialIssueForm.articles.length > 0" class="divide-y divide-zinc-200/80">
-                                <div v-for="(article, index) in externMaterialIssueForm.articles" :key="index" :data-article-row="index" class="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
+                                <div v-for="(article, index) in externMaterialIssueForm.articles" :key="index" :data-article-row="index" class="flex flex-col gap-3 py-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
                                     <div class="flex w-full items-start gap-4">
                                         <!-- Single preview with zoom overlay -->
-                                        <div v-if="article?.images?.length" class="shrink-0" style="max-width: 120px">
-                                            <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
-                                                <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                        <div v-if="article?.images?.length" class="shrink-0">
+                                            <div class="group relative h-16 w-16 cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
+                                                <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                                 <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
                                                     <component :is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
                                                 </div>
@@ -246,11 +274,9 @@
                                                     <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
                                                 </span>
                                             </div>
-                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date))" class="mt-1 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
-                                                <span>
-                                                    {{ $t('You have selected more items than are available.') }}
-                                                    <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Show usage') }}</button>
-                                                </span>
+                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date))" class="mt-1 inline-flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                                <span>{{ $t('Overbooking') }}</span>
+                                                <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Details') }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -270,7 +296,11 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <!-- /50-50 Raster -->
 
+                <!-- Sekundär: Sonderartikel (volle Breite) -->
+                <div class="space-y-6">
                     <!-- Special items -->
                     <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
                         <div class="flex items-center justify-between gap-3 border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
@@ -378,7 +408,7 @@
 
         <!-- Sticky Action Bar -->
         <div class="sticky bottom-0 z-40 mt-8 -mx-4 md:-mx-6 bg-gradient-to-t from-white via-white/80 to-transparent pt-4">
-            <div class="mx-auto max-w-7xl px-4 md:px-6">
+            <div class="mx-auto w-full px-4 md:px-6">
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white/90 p-3 backdrop-blur shadow-sm">
                     <div class="text-xs text-zinc-600">
                         {{ $t('Selected') }}: <span class="font-medium">{{ externMaterialIssueForm.articles?.length || 0 }}</span> {{ $t('articles') }} • {{ $t('Files') }}: <span class="font-medium">{{ externMaterialIssueForm.files?.length || 0 }}</span>
@@ -440,7 +470,7 @@ import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/Article
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
-import {computed, nextTick, onMounted, ref, watch} from "vue";
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import debounce from "lodash.debounce";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SelectMaterialSetModal from "@/Pages/IssueOfMaterial/Components/SelectMaterialSetModal.vue";
@@ -450,6 +480,7 @@ import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsag
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import Galleria from "primevue/galleria";
 import {
+    IconCircleCheck,
     IconFile,
     IconInfoCircle,
     IconListDetails,
@@ -532,11 +563,16 @@ const issueBy = ref(props.externMaterialIssue?.issued_by || null)
 // Artikel Pagination State (aligned with internal)
 const articles = ref([])
 const loadingMore = ref(false)
+const isFetchingArticles = ref(false)
 const scrollContainer = ref(null)
+const loadMoreSentinel = ref(null)
+let articleObserver = null
 const hasMoreArticles = ref(true)
 const paginationPage = ref(1)
 const articleForDetailModal = ref(null);
 const articleForUsageModal = ref(null);
+// Translation key of the last usage-lookup error (shown inline in the selection panel).
+const usageError = ref(null);
 const articleSearchFilter = ref("");
 
 const baskets = ref([]);
@@ -571,18 +607,31 @@ const conflicts = computed(() => {
 
 const hasConflicts = computed(() => conflicts.value.length > 0)
 
-// Filtered articles based on search input (name, category, subcategory)
-const filteredArticles = computed(() => {
-    if (!articleSearchFilter.value) {
-        return articles.value;
-    }
+// Server-side search: filtering happens in the API (name, category, subcategory),
+// so the found list always mirrors what the server returns for the current term.
+const filteredArticles = computed(() => articles.value)
 
-    const searchTerm = articleSearchFilter.value.toLowerCase();
-    return articles.value.filter(article =>
-        article.name?.toLowerCase().includes(searchTerm) ||
-        article.category?.name?.toLowerCase().includes(searchTerm) ||
-        article.sub_category?.name?.toLowerCase().includes(searchTerm)
-    );
+// Lookup of already-selected article id -> chosen quantity, so the "Found Articles"
+// cards can show a "selected · ×N" marker without scanning the array per card.
+const selectedQuantityById = computed(() => {
+    const map = {};
+    for (const a of externMaterialIssueForm.articles) {
+        if (a?.id != null) {
+            map[a.id] = Number(a.quantity ?? 0);
+        }
+    }
+    return map;
+})
+
+// Re-run the unified loader from page 1 on every search change. The current term
+// is always read inside fetchArticles(), so search and pagination stay in sync
+// (fixes the old client-side filter that only searched already-loaded pages).
+const searchArticlesFromServer = debounce(() => {
+    fetchArticles({ reset: true });
+}, 300);
+
+watch(articleSearchFilter, () => {
+    searchArticlesFromServer();
 })
 
 // Scrollt zur ersten konfliktbehafteten Zeile und hebt sie kurz hervor
@@ -687,10 +736,10 @@ const addArticleToIssue = (article) => {
             status_values: article.status_values || [],
         });
     } else {
-        // Article exists, don't modify its quantity
-        // Just ensure it has the correct properties
+        // Article already selected → clicking it again increases the quantity by 1.
         const existingArticle =
             externMaterialIssueForm.articles[existingArticleIndex];
+        existingArticle.quantity = Number(existingArticle.quantity ?? 0) + 1;
         if (!existingArticle.availableStock) {
             existingArticle.availableStock = 0;
             existingArticle.availableStockRequestIsLoading = true;
@@ -715,13 +764,56 @@ const addMaterialSetToIssue = (materialSet) => {
     checkAvailableStock()
 }
 
-const reloadArticlesWithNewFilter = async () => {
-    articles.value = []
-    loadingMore.value = true
-    paginationPage.value = 1
+// Single source of truth for the "Found Articles" list. ALWAYS sends the current
+// search term + date window, so paging (reset:false) stays filtered exactly like
+// the initial search (reset:true).
+const fetchArticles = async ({ reset = false } = {}) => {
+    if (isFetchingArticles.value) return;
+    if (!reset && !hasMoreArticles.value) return;
 
-    await loadMoreArticles()
+    isFetchingArticles.value = true;
+    loadingMore.value = true;
+
+    if (reset) {
+        paginationPage.value = 1;
+        hasMoreArticles.value = true;
+    }
+
+    const search = (articleSearchFilter.value || '').trim();
+
+    try {
+        const response = await axios.get(route('inventory.articles.api', {
+            page: paginationPage.value,
+            search: search || undefined,
+            start_date: externMaterialIssueForm.issue_date || undefined,
+            end_date: externMaterialIssueForm.return_date || undefined,
+        }));
+
+        const paginator = response.data.articles;
+        const incoming = paginator.data || [];
+
+        if (reset) {
+            articles.value = incoming;
+        } else {
+            for (const article of incoming) {
+                if (!articles.value.some((a) => a.id === article.id)) {
+                    articles.value.push(article);
+                }
+            }
+        }
+
+        hasMoreArticles.value = !!paginator.next_page_url;
+        paginationPage.value = (paginator.current_page ?? paginationPage.value) + 1;
+    } catch (e) {
+        console.error('Fehler beim Laden der Artikel:', e);
+    }
+    loadingMore.value = false;
+    isFetchingArticles.value = false;
 }
+
+// Thin wrappers so existing callers (date watcher, filter bar) don't need to change.
+const loadMoreArticles = () => fetchArticles({ reset: false })
+const reloadArticlesWithNewFilter = () => fetchArticles({ reset: true })
 
 const getArticleDataForUsage = async (article) => {
     const startDate = props.planningDate || externMaterialIssueForm.issue_date;
@@ -729,6 +821,18 @@ const getArticleDataForUsage = async (article) => {
     if (!article?.id || !startDate || !endDate) {
         return;
     }
+
+    usageError.value = null;
+
+    // The usage detail endpoint iterates day by day and caps the range at one
+    // year. Catch this client-side so the user gets a clear hint instead of a
+    // silent 422.
+    const dayDiff = Math.abs((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000);
+    if (dayDiff > 366) {
+        usageError.value = 'The period is too large for the usage details (max. 1 year). Please narrow the period.';
+        return;
+    }
+
     article.availableStockRequestIsLoading = true;
     try {
         const response = await axios.get(route('inventory.articles.usage'), {
@@ -741,46 +845,25 @@ const getArticleDataForUsage = async (article) => {
         // Die Nutzungsdaten werden im Modal angezeigt
         articleForUsageModal.value = response.data.data;
     } catch (error) {
+        usageError.value = 'Usage details could not be loaded.';
         console.error('Fehler beim Abrufen der Artikel-Nutzungsdaten:', error);
     } finally {
         article.availableStockRequestIsLoading = false;
     }
 };
 
-const loadMoreArticles = async () => {
-    loadingMore.value = true
-
-    try {
-        const response = await axios.get(route('inventory.articles.api', {
-            page: paginationPage.value,
-            start_date: externMaterialIssueForm.issue_date,
-            end_date: externMaterialIssueForm.return_date,
-        }))
-
-        const newArticles = response.data.articles.data.reverse()
-
-        for (const article of newArticles) {
-            const exists = articles.value.find((a) => a.id === article.id)
-            if (!exists) {
-                articles.value.push(article)
-            }
-        }
-
-        if (!response.data.articles.next_page_url) {
-            hasMoreArticles.value = false
-            paginationPage.value = 1
-        }
-    } catch (e) {
-        console.error('Fehler beim Nachladen von Nachrichten:', e)
-    }
-    paginationPage.value += 1
-    loadingMore.value = false
-}
-
 const removeArticle = (index) => {
     externMaterialIssueForm.articles.splice(index, 1)
 }
 const emits = defineEmits(['close'])
+
+// Verhindert, dass Enter in einem Eingabefeld das Formular (und damit Speichern) auslöst.
+// Textareas bleiben ausgenommen, damit Zeilenumbrüche weiterhin möglich sind.
+const preventEnterSubmit = (event) => {
+    if (event.target?.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+    }
+};
 
 const submit = () => {
 
@@ -918,13 +1001,33 @@ watch(
 )
 
 onMounted(() => {
-    if(props.externMaterialIssue.articles.length > 0){
+    if((props.externMaterialIssue?.articles?.length ?? 0) > 0){
         checkAvailableStock()
     }
-    loadMoreArticles()
+    fetchArticles({ reset: true })
 
     if (props.loadArticleFormBasket){
         loadBaskets();
+    }
+
+    // Auto-load the next page as the user scrolls the found-articles list to its
+    // end. Replaces the manual "load more" button; also fires when the sentinel is
+    // already visible, so short result sets fill up automatically too.
+    nextTick(() => {
+        if (!loadMoreSentinel.value || !scrollContainer.value) return;
+        articleObserver = new IntersectionObserver((entries) => {
+            if (entries[0]?.isIntersecting && hasMoreArticles.value && !isFetchingArticles.value) {
+                fetchArticles({ reset: false });
+            }
+        }, { root: scrollContainer.value, rootMargin: '250px' });
+        articleObserver.observe(loadMoreSentinel.value);
+    });
+})
+
+onBeforeUnmount(() => {
+    if (articleObserver) {
+        articleObserver.disconnect();
+        articleObserver = null;
     }
 })
 

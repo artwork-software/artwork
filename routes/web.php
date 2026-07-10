@@ -497,6 +497,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
+    Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
+        ->name('projects.rooms-with-event-periods');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
@@ -2392,6 +2394,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Update user's inventory grid layout preference
         Route::post('/update-grid-layout', [InventoryCategoryController::class, 'updateInventoryGridLayout'])
             ->name('inventory.update-grid-layout');
+
+        // Update user's inventory "hide article images" preference
+        Route::post('/update-hide-images', [InventoryCategoryController::class, 'updateInventoryHideImages'])
+            ->name('inventory.update-hide-images');
     });
 
 
@@ -3212,6 +3218,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/committed-shift-changes/{change}/acknowledge',
         [ShiftPlanRequestController::class, 'acknowledge']
     )->name('committed-shift-changes.acknowledge')
+        ->can('approve-shift-plan-requests');
+
+    // Bulk: alle offenen Änderungen der aktuellen Filterauswahl (Craft + Suche +
+    // Intern/Extern) genehmigen — ein einzelnes UPDATE, skaliert auch bei tausenden Zeilen.
+    Route::post(
+        '/committed-shift-changes/acknowledge-all',
+        [ShiftPlanRequestController::class, 'acknowledgeAll']
+    )->name('committed-shift-changes.acknowledge-all')
         ->can('approve-shift-plan-requests');
 
     Route::patch('/shift-plan-requests/{shiftPlanRequest}/change/{shiftChange}/revert', [App\Http\Controllers\ShiftPlanRequestController::class, 'revertChange'])

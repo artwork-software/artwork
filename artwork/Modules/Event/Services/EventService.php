@@ -524,6 +524,7 @@ readonly class EventService
                 'individualTimes' => [],
                 'dayServices' => [],
                 'holidays' => [],
+                'comments' => [],
                 'totalWorkTime' => '00:00',
                 'totalBreakTime' => '00:00',
             ];
@@ -553,6 +554,29 @@ readonly class EventService
                     'name' => $dayService->name,
                     'icon' => $dayService->icon,
                     'hex_color' => $dayService->hex_color,
+                ];
+            }
+
+            // Schichtplan-Kommentare (Notizen aus der Schichtplan-Zelle) pro Tag einsammeln.
+            $shiftPlanComments = $worker->shiftPlanComments()
+                ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->get();
+
+            foreach ($shiftPlanComments as $shiftPlanComment) {
+                if (trim((string) $shiftPlanComment->comment) === '') {
+                    continue;
+                }
+
+                $dayKey = Carbon::parse($shiftPlanComment->date)->format('Y-m-d');
+                if (!isset($daysWithData[$dayKey])) {
+                    continue;
+                }
+
+                $daysWithData[$dayKey]['comments'][] = [
+                    'id' => $shiftPlanComment->id,
+                    'comment' => $shiftPlanComment->comment,
+                    'date' => $dayKey,
+                    'created_by' => $shiftPlanComment->created_by,
                 ];
             }
         }
@@ -694,6 +718,7 @@ readonly class EventService
                     'break_minutes' => $shift->break_minutes,
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
+                    'in_workflow' => (bool) $shift->in_workflow,
                     'craft' => $shift->craft ?? [],
                     'users' => $shift->users ?? [],
                     'freelancer' => $shift->freelancer ?? [],
@@ -751,6 +776,7 @@ readonly class EventService
                     'break_minutes' => $shift->break_minutes,
                     'description' => $shift->description,
                     'is_committed' => (bool) $shift->is_committed,
+                    'in_workflow' => (bool) $shift->in_workflow,
                     'craft' => $shift->craft ?? [],
                     'users' => $shift->users ?? [],
                     'freelancer' => $shift->freelancer ?? [],

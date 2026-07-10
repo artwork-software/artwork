@@ -2,7 +2,10 @@
     <div>
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-4">
             <div class="col-span-2 flex items-center gap-x-2">
-                <PropertyIcon name="IconLock" v-if="shift.isCommitted" class="w-4 h-4" />
+                <PropertyIcon name="IconLock" v-if="shift.isCommitted" class="w-4 h-4"
+                              v-tooltip.bottom="{ value: $t('Committed'), class: 'aw-tooltip' }" />
+                <PropertyIcon name="IconGitPullRequest" v-else-if="shift.inWorkflow" class="w-4 h-4"
+                              v-tooltip.bottom="{ value: $t('Requested'), class: 'aw-tooltip' }" />
                 <div class="px-2 py-0.5 border rounded-lg text-xs w-fit" :style="{ backgroundColor: (craft.color ?? '#ccc') + '22', borderColor: blackColorIfColorIsWhite(craft.color ?? '#ccc') + '55', color: blackColorIfColorIsWhite(craft.color ?? '#ccc') }">
                     {{ shift.craftAbbreviation }}
                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">

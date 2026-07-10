@@ -181,7 +181,8 @@
                                                     <div class="flex-1 min-w-0">
                                                         <div class="flex items-center gap-x-2 flex-wrap">
                                                             <div class="flex items-center gap-x-1.5 text-sm">
-                                                                <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="section.shift.is_committed" />
+                                                                <ToolTipComponent v-if="section.shift.is_committed" icon="IconLock" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Committed')" direction="top" black-icon />
+                                                        <ToolTipComponent v-if="section.shift.in_workflow && !section.shift.is_committed" icon="IconGitPullRequest" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Requested')" direction="top" black-icon />
                                                                 <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(section.shift).name }})</span>
                                                                 <span class="font-medium" :style="{ color: section.shift.craft?.color }">{{ section.shift.craft?.abbreviation }}</span>
                                                                 <span>{{ section.shift.start }} - {{ section.shift.end }}</span>
@@ -301,7 +302,8 @@
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-center gap-x-2">
                                                     <div class="flex items-center gap-x-1.5 text-sm">
-                                                        <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="section.shift.is_committed" />
+                                                        <ToolTipComponent v-if="section.shift.is_committed" icon="IconLock" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Committed')" direction="top" black-icon />
+                                                        <ToolTipComponent v-if="section.shift.in_workflow && !section.shift.is_committed" icon="IconGitPullRequest" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Requested')" direction="top" black-icon />
                                                         <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(section.shift).name }})</span>
                                                         <span class="font-medium" :style="{ color: section.shift.craft?.color }">{{ section.shift.craft?.abbreviation }}</span>
                                                         <span>{{ section.shift.start }} - {{ section.shift.end }}</span>
@@ -400,7 +402,8 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-x-2">
                                                 <div class="flex items-center gap-x-1.5 text-sm">
-                                                    <PropertyIcon name="IconLock" class="h-3 w-3 text-black" stroke-width="2" v-if="shift.is_committed" />
+                                                    <ToolTipComponent v-if="shift.is_committed" icon="IconLock" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Committed')" direction="top" black-icon />
+                                                    <ToolTipComponent v-if="shift.in_workflow && !shift.is_committed" icon="IconGitPullRequest" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Requested')" direction="top" black-icon />
                                                     <span v-if="getShiftGroup(shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(shift).name }})</span>
                                                     <span class="font-medium" :style="{ color: shift.craft?.color }">{{ shift.craft?.abbreviation }}</span>
                                                     <span>{{ shift.start }} - {{ shift.end }}</span>

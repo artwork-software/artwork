@@ -1476,13 +1476,26 @@ class EventController extends Controller
 
         $craftId = $request->get('craft_id');
 
-        $this->shiftService->commitShiftsByDate($start, $end, $craftId);
+        $this->shiftService->commitShiftsByDate(
+            $start,
+            $end,
+            $craftId,
+            $request->filled('week_number') ? (int) $request->week_number : null,
+            $request->filled('year') ? (int) $request->year : null
+        );
     }
 
     public function changeCommitShifts(Request $request, Shift $shift): void
     {
+        $committed = $request->boolean('commit');
 
-        $shift->update(['is_committed' => $request->boolean('commit')]);
+        $shift->update([
+            'is_committed' => $committed,
+            'committing_user_id' => $committed ? Auth::id() : null,
+        ]);
+
+        // is_committed ist nicht in logOnly — Einzel-Toggle explizit loggen.
+        $this->shiftService->logSingleCommitActivity($shift, $committed);
     }
 
 
@@ -3973,10 +3986,29 @@ class EventController extends Controller
     }
 
 
+    /**
+     * Bulk-Endpunkte legen Termine direkt an (ohne Anfrage-Workflow) — deshalb reicht die
+     * EventPolicy::create (die auch reine Anfrage-Berechtigte durchlässt) hier nicht aus.
+     * Spiegelt das Frontend-Gating in BulkBody.vue (hasCreateEventsPermission);
+     * Admins passieren über Gate::before.
+     */
+    private function authorizeBulkEventCreation(): void
+    {
+        $user = $this->authManager->user();
+        if (
+            !$user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) &&
+            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
+        ) {
+            abort(403);
+        }
+    }
+
     public function bulkProjectEventStore(
         EventBulkCreateRequest $request,
         Project $project
     ): RedirectResponse {
+        $this->authorizeBulkEventCreation();
+
         $events = $request->input('events', []);
 
         foreach ($events as $event) {
@@ -4000,6 +4032,8 @@ class EventController extends Controller
         Request $request,
         Event $event
     ): void {
+        $this->authorize('update', $event);
+
         $data =  $request->collect('data');
         $this->eventService->updateBulkEvent(
             $data,
@@ -4018,6 +4052,8 @@ class EventController extends Controller
         Request $request,
         Project $project
     ): void {
+        $this->authorizeBulkEventCreation();
+
         $data =  $request->input('event', []);
 
         $event = $this->eventService->createBulkEvent(
@@ -4035,6 +4071,8 @@ class EventController extends Controller
 
     public function updateDescription(Request $request, Event $event): void
     {
+        $this->authorize('update', $event);
+
         $event->update($request->only(['description']));
 
         broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
@@ -4044,6 +4082,10 @@ class EventController extends Controller
     public function bulkMultiEditEvent(Request $request): void
     {
         $eventIds = $request->collect('eventIds');
+
+        foreach (Event::whereIn('id', $eventIds)->get() as $eventToAuthorize) {
+            $this->authorize('update', $eventToAuthorize);
+        }
 
         $this->eventService->bulkMultiEditEvent(
             $eventIds,
@@ -4071,6 +4113,10 @@ class EventController extends Controller
 
         // Fetch events before deletion to broadcast them
         $events = Event::whereIn('id', $eventIds)->get();
+
+        foreach ($events as $eventToAuthorize) {
+            $this->authorize('delete', $eventToAuthorize);
+        }
 
         $this->eventService->bulkDeleteEvent($eventIds);
 
@@ -4257,8 +4303,10 @@ class EventController extends Controller
         return $assignableByAllCrafts->merge($userRestrictedCrafts)->unique('id');
     }
 
-    public function getShiftPlanWorkers(GetShiftPlanWorkersRequest $request): JsonResponse
-    {
+    public function getShiftPlanWorkers(
+        GetShiftPlanWorkersRequest $request,
+        \Artwork\Modules\Shift\Services\ShiftPlanWorkflowStatusService $workflowStatusService
+    ): JsonResponse {
         $validated = $request->validated();
 
         $startDate = IlluminateCarbon::parse($validated['start_date']);
@@ -4293,10 +4341,22 @@ class EventController extends Controller
             $craftIds
         );
 
+        $workflowStatus = $workflowStatusService->computeForDateRange($startDate, $endDate);
+        $attachWorkflowStatus = static function (array $entries, string $workerKey) use ($workflowStatus): array {
+            foreach ($entries as &$entry) {
+                $workerId = $entry[$workerKey]['id'] ?? null;
+                $entry['weeklyWorkflowStatus'] = $workerId !== null
+                    ? ($workflowStatus[$workerKey][$workerId] ?? [])
+                    : [];
+            }
+
+            return $entries;
+        };
+
         return new JsonResponse([
-            'usersForShifts' => $usersForShifts,
-            'freelancersForShifts' => $freelancersForShifts,
-            'serviceProvidersForShifts' => $serviceProvidersForShifts,
+            'usersForShifts' => $attachWorkflowStatus($usersForShifts, 'user'),
+            'freelancersForShifts' => $attachWorkflowStatus($freelancersForShifts, 'freelancer'),
+            'serviceProvidersForShifts' => $attachWorkflowStatus($serviceProvidersForShifts, 'service_provider'),
         ]);
     }
 
@@ -4409,6 +4469,16 @@ class EventController extends Controller
             $workerData['availabilities'] = $freelancerRepository
                 ->getAvailabilitiesBetweenDatesGroupedByFormattedDate($worker, $startDate, $endDate);
         }
+
+        // Parität zum Bulk-Load: KW-Kachel-Färbung (angefragt/festgeschrieben/Achtung)
+        $workflowStatus = app(\Artwork\Modules\Shift\Services\ShiftPlanWorkflowStatusService::class)
+            ->computeForDateRange($startDate, $endDate, $modelClass, $workerId);
+        $workerDataKey = match ($workerType) {
+            'user' => 'user',
+            'freelancer' => 'freelancer',
+            'serviceProvider' => 'service_provider',
+        };
+        $workerData['weeklyWorkflowStatus'] = $workflowStatus[$workerDataKey][$workerId] ?? [];
 
         return new JsonResponse([
             'worker' => $workerData,

@@ -25,6 +25,7 @@ readonly class ShiftListViewSerializer
             'room_id' => $shift->room_id,
             'event_id' => $shift->event_id,
             'is_committed' => $shift->is_committed,
+            'in_workflow' => $shift->in_workflow,
             'shift_group_id' => $shift->shift_group_id,
             'craft' => $shift->craft ? [
                 'id' => $shift->craft->id,

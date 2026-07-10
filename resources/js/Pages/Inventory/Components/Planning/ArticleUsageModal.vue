@@ -75,36 +75,24 @@
                         >
                             <div v-show="isStatusDetailsExpanded" class="overflow-hidden">
                                 <div
-                                    class="ml-4 mt-3 bg-gradient-to-r from-blue-50/30 to-transparent border-2 border-blue-200 p-4 rounded-lg shadow-sm">
-                                    <div class="flex items-center gap-2 mb-3">
-                                        <span class="text-xs font-medium text-blue-700">{{
-                                                $t('Status composition')
-                                            }}:</span>
-                                        <div class="h-px bg-blue-200 flex-1"></div>
+                                    class="ml-4 mt-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-xs font-medium text-zinc-500">{{ $t('Status composition') }}</span>
+                                        <div class="h-px bg-zinc-200 flex-1"></div>
                                     </div>
-                                    <div class="flex flex-wrap gap-3 text-sm justify-start">
-                                        <div
+                                    <ul class="divide-y divide-zinc-100">
+                                        <li
                                             v-for="status in props.detailsForModal.article.status"
                                             :key="status.id"
-                                            class="flex flex-col items-center group"
+                                            class="flex items-center justify-between gap-3 py-2"
                                         >
-                                            <div
-                                                class="w-20 h-10 flex items-center justify-center rounded-xl font-semibold text-base mb-2 border-2 shadow-sm transition-all duration-200 group-hover:scale-105"
-                                                :style="{
-                                                    backgroundColor: status.color + '20',
-                                                    borderColor: status.color + '80',
-                                                    color: status.color,
-                                                    boxShadow: `0 2px 8px ${status.color}20`
-                                                }"
-                                            >
-                                                <span class="tabular-nums font-bold">{{ status.value }}</span>
-                                            </div>
-                                            <span
-                                                class="text-[10px] font-medium text-zinc-600 text-center leading-tight">{{
-                                                    status.name
-                                                }}</span>
-                                        </div>
-                                    </div>
+                                            <span class="flex min-w-0 items-center gap-2">
+                                                <span class="inline-block size-2.5 shrink-0 rounded-full" :style="{ backgroundColor: status.color }"></span>
+                                                <span class="truncate text-sm text-zinc-900">{{ status.name }}</span>
+                                            </span>
+                                            <span class="shrink-0 text-sm font-semibold tabular-nums text-zinc-900">{{ status.value }}</span>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </Transition>

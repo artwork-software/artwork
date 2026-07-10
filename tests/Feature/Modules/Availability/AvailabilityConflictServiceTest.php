@@ -73,6 +73,73 @@ final class AvailabilityConflictServiceTest extends FeatureTestCase
     }
 
     /**
+     * Der Konflikt-Hinweis muss die Person nennen, die die Zuweisung vorgenommen
+     * hat — nicht die Person, die den Schichtplan festgeschrieben/genehmigt hat
+     * (Bulk-Festschreiben und Workflow-Genehmigung setzen committing_user_id auf
+     * Unbeteiligte).
+     */
+    #[Test]
+    public function conflict_names_the_assigner_not_the_committer(): void
+    {
+        $user = User::factory()->create();
+        $assigner = User::factory()->create();
+
+        // Zuweisung als $assigner: der creating-Hook auf ShiftWorker persistiert
+        // Auth::id() als assigned_by_user_id.
+        $this->actingAs($assigner);
+        $shift = $this->assignToCommittedShift($user);
+
+        $user->availabilities()->create([
+            'date' => self::DAY,
+            'full_day' => false,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+        ]);
+
+        $this->actingAsAdmin();
+
+        app(AvailabilityConflictService::class)->checkAvailabilityConflictsOnDay(
+            self::DAY,
+            app(NotificationService::class),
+            user: $user,
+        );
+
+        $conflict = AvailabilitiesConflict::query()->sole();
+        $this->assertSame($assigner->full_name, $conflict->user_name);
+        $this->assertNotSame($shift->committedBy()->first()->full_name, $conflict->user_name);
+    }
+
+    /**
+     * Alt-Zuweisungen ohne assigned_by_user_id fallen auf den bisherigen
+     * Festschreibenden zurück.
+     */
+    #[Test]
+    public function conflict_falls_back_to_committer_for_legacy_assignments(): void
+    {
+        $user = User::factory()->create();
+        // Zuweisung ohne eingeloggten User → assigned_by_user_id bleibt null.
+        $shift = $this->assignToCommittedShift($user);
+
+        $user->availabilities()->create([
+            'date' => self::DAY,
+            'full_day' => false,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+        ]);
+
+        $this->actingAsAdmin();
+
+        app(AvailabilityConflictService::class)->checkAvailabilityConflictsOnDay(
+            self::DAY,
+            app(NotificationService::class),
+            user: $user,
+        );
+
+        $conflict = AvailabilitiesConflict::query()->sole();
+        $this->assertSame($shift->committedBy()->first()->full_name, $conflict->user_name);
+    }
+
+    /**
      * Festgeschriebene Schicht 13:00–17:00 am Tag — liegt komplett außerhalb
      * der (Teil-)Verfügbarkeit 10:00–12:00 und erzeugt damit einen Konflikt.
      */

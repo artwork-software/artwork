@@ -304,9 +304,11 @@ class ShiftController extends Controller
                 ShiftFreelancer::where('shift_id', $shift->id)->forceDelete();
                 ShiftServiceProvider::where('shift_id', $shift->id)->forceDelete();
 
-                if ($shift->shiftsQualifications()->exists()) {
-                    $shift->shiftsQualifications()->delete();
-                }
+                // Model-Deletes statt Bulk-Query: nur so feuert der Observer und die
+                // entfernten Schichtplätze erscheinen im Schichtverlauf.
+                $shift->shiftsQualifications()->get()->each(
+                    static fn ($shiftsQualification) => $shiftsQualification->delete()
+                );
 
                 // 3) Eager-Loaded Relation invalidieren, damit Response nicht alte Daten zeigt
                 $shift->unsetRelation('users');
@@ -443,6 +445,10 @@ class ShiftController extends Controller
         $notificationUsers = [];
 
         $shifts = Shift::whereIn('id', $shiftIds)->get();
+
+        // is_committed ist nicht in logOnly — ohne den Sammel-Eintrag wäre das
+        // (Bulk-)Festschreiben bzw. Aufheben im Schichtverlauf unsichtbar.
+        $this->shiftService->logCommitSummaryActivity($shifts, $request->boolean('is_committed'));
 
         foreach ($shifts as $shift) {
             $shift->update($updateData);

@@ -597,7 +597,21 @@
                             :sticky-col-width="191.5"
                             class="h-full"
                             :top-padding="10"
+                            :header-height="22"
                         >
+                            <!-- KW-Spaltenheader im unteren Bereich (Tages-Spalten bleiben leer) -->
+                            <template #colHeader="{ day }">
+                                <div
+                                    v-if="day.isExtraRow"
+                                    class="flex h-full items-center gap-1 border-l-2 border-gray-400 pl-2"
+                                >
+                                    <span class="text-[10px] font-semibold tracking-wide text-white/80">
+                                        KW {{ day.weekNumber }}
+                                    </span>
+                                    <span class="text-[10px] text-white/60">&rarr;</span>
+                                </div>
+                            </template>
+
                             <template #rowHeader="{ row }">
                                 <div v-if="row.kind === 'craft'" class="w-full px-2">
                                     <div
@@ -698,33 +712,30 @@
                             <template #cell="{ row, day }">
 
                                 <!-- Intern/Extern-Trennzeile: durchgehende Linie -->
-                                <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center">
+                                <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center"
+                                     :class="day.isExtraRow ? 'border-l-2 border-gray-400' : ''">
                                     <div class="w-full border-t border-white/30"></div>
                                 </div>
 
-                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen -->
-                                <div v-else-if="row.kind !== 'worker'" class="h-full w-full"></div>
+                                <!-- Craft-/Funktionsgruppen-Row: keine Zellen, aber KW-Trennlinie durchziehen -->
+                                <div v-else-if="row.kind !== 'worker'" class="h-full w-full"
+                                     :class="day.isExtraRow ? 'border-l-2 border-gray-400' : ''"></div>
 
                                 <!-- Worker row -->
                                 <div v-else class="relative h-full w-full">
-                                    <!-- ExtraRow / Wochenarbeitszeit -->
+                                    <!-- ExtraRow / Wochenarbeitszeit + Freigabe-Status (blau=angefragt, grün=festgeschrieben, gelb=Achtung) -->
                                     <div
                                         v-if="day.isExtraRow"
-                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg bg-gray-50/30 p-2 text-center text-white border-l-2 border-gray-400"
-                                        :class="cellWrapperClass(row, day)"
+                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white border-l-2 border-gray-400"
+                                        :class="[kwWorkflowStatusClass(row, day), cellWrapperClass(row, day)]"
+                                        :title="kwWorkflowStatusTitle(row, day)"
                                     >
-                                        <div :class="$page.props.auth.user.compact_mode ? 'flex items-center gap-x-1' : ''">
-                                            <div class="text-[9px] whitespace-nowrap">
-                                                 Arbeitszeit KW {{ day.weekNumber }}<span class="opacity-60">&rarr;</span>
-                                            </div>
-                                            <div
-                                                class="font-lexend text-xs"
-                                                :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'"
-                                            >
-                                                {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference }}
-                                            </div>
+                                        <div
+                                            class="font-lexend text-xs"
+                                            :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]?.isMinus ? 'text-red-100' : 'text-green-100'"
+                                        >
+                                            {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
                                         </div>
-
                                     </div>
 
                                     <!-- Normaler ShiftCell -->
@@ -1435,7 +1446,7 @@ async function measureBaselineMetrics() {
     if (fontFamily !== cellFont.family || fontSize !== cellFont.size) {
         cellFont.family = fontFamily
         cellFont.size = fontSize
-        textLinesCache.clear()
+        clearTextMeasureCaches()
         cellSummaryCache.clear()
     }
 
@@ -1487,6 +1498,14 @@ function getMeasureCtx(): CanvasRenderingContext2D | null {
 // damit Font-Fallbacks und Browser-Mindestschriftgrößen in die Messung einfließen
 const cellFont = reactive({ family: '', size: 12 })
 const textLinesCache = new Map<string, number>()
+// Wörter (Projekt-/Terminnamen, Wochentage …) wiederholen sich über Zellen massiv —
+// Breiten pro Wort cachen macht die Kalt-Berechnung deutlich billiger
+const wordWidthCache = new Map<string, number>()
+
+function clearTextMeasureCaches() {
+    textLinesCache.clear()
+    wordWidthCache.clear()
+}
 
 function estimateTextLinesFallback(text: string, availableWidth: number): number {
     const charsPerLine = Math.max(1, Math.floor(availableWidth / AVG_CHAR_WIDTH))
@@ -1502,15 +1521,24 @@ function measureTextLines(text: string | undefined | null, availableWidth: numbe
     if (cached !== undefined) return cached
 
     ctx.font = `${fontWeight} ${cellFont.size}px ${cellFont.family}`
+    const measureWord = (word: string): number => {
+        const key = `${fontWeight}|${word}`
+        let w = wordWidthCache.get(key)
+        if (w === undefined) {
+            w = ctx.measureText(word).width
+            wordWidthCache.set(key, w)
+        }
+        return w
+    }
     // Leicht konservativ messen: Subpixel-/Kerning-Differenzen zwischen Canvas und
     // DOM-Layout sollen eher eine Zeile zu viel als eine zu wenig ergeben
     const width = availableWidth * 0.98
-    const spaceWidth = ctx.measureText(' ').width
+    const spaceWidth = measureWord(' ')
     let lines = 1
     let lineWidth = 0
     for (const word of String(text).trim().split(/\s+/)) {
         if (!word) continue
-        const wordWidth = ctx.measureText(word).width
+        const wordWidth = measureWord(word)
         if (wordWidth > width) {
             // overflow-wrap: break-word — überlanges Wort wird hart umbrochen
             if (lineWidth > 0) lines++
@@ -1715,7 +1743,7 @@ function recomputeRowHeights() {
     if (_recomputeTimer) clearTimeout(_recomputeTimer)
     _recomputeTimer = setTimeout(() => {
         if (_recomputeRaf) cancelAnimationFrame(_recomputeRaf)
-        _recomputeRaf = requestAnimationFrame(() => {
+        const run = () => {
             if (!expandDays.value) {
                 shiftRowHeights.value = []
                 return
@@ -1738,7 +1766,14 @@ function recomputeRowHeights() {
 
             shiftRowHeights.value = result
             scheduleVerifyVisibleCellHeights()
-        })
+        }
+        // rAF ist in versteckten Tabs komplett pausiert (z. B. Plan im Hintergrund-Tab
+        // geöffnet) — dann direkt rechnen, sonst auf den nächsten Frame ausrichten
+        if (document.visibilityState === 'hidden') {
+            run()
+        } else {
+            _recomputeRaf = requestAnimationFrame(run)
+        }
     }, 80)
 }
 
@@ -1766,7 +1801,13 @@ let _verifyTimer: ReturnType<typeof setTimeout> | null = null
 function scheduleVerifyVisibleCellHeights(delay = 50) {
     if (_verifyTimer) clearTimeout(_verifyTimer)
     _verifyTimer = setTimeout(() => {
-        nextTick(() => requestAnimationFrame(verifyVisibleCellHeights))
+        nextTick(() => {
+            if (document.visibilityState === 'hidden') {
+                verifyVisibleCellHeights()
+            } else {
+                requestAnimationFrame(verifyVisibleCellHeights)
+            }
+        })
     }, delay)
 }
 
@@ -2219,7 +2260,7 @@ onMounted(async () => {
     // sonst basiert die Umbruch-Berechnung auf dem Fallback-Font
     document.fonts?.ready?.then(() => {
         if (expandDays.value) {
-            textLinesCache.clear()
+            clearTextMeasureCaches()
             cellSummaryCache.clear()
             measureBaselineMetrics()
         }
@@ -2401,6 +2442,39 @@ function cellWrapperClass(row: any, day: any) {
 
 function shiftPlanCellInnerClass(row: any, day: any) {
     return (multiEditMode.value && isSelectedMultiEditCell(row, day)) ? '!opacity-20' : ''
+}
+
+// Freigabe-Workflow-Status der KW-Kachel (Dienstplanfreigabe):
+// requested = angefragt (blau), committed = festgeschrieben (grün),
+// attention = nach Festschreibung geändert / nicht verfügbar (gelb)
+function kwWorkflowStatus(row: any, day: any): string | null {
+    return row.worker?.weeklyWorkflowStatus?.[day.weekNumber] ?? null
+}
+
+function kwWorkflowStatusClass(row: any, day: any): string {
+    switch (kwWorkflowStatus(row, day)) {
+        case 'attention':
+            return 'bg-yellow-500/50 ring-1 ring-inset ring-yellow-300/70'
+        case 'requested':
+            return 'bg-blue-500/50 ring-1 ring-inset ring-blue-300/70'
+        case 'committed':
+            return 'bg-green-500/50 ring-1 ring-inset ring-green-300/70'
+        default:
+            return 'bg-gray-50/30'
+    }
+}
+
+function kwWorkflowStatusTitle(row: any, day: any): string {
+    switch (kwWorkflowStatus(row, day)) {
+        case 'attention':
+            return $t('Changed after commit – confirmation pending')
+        case 'requested':
+            return $t('Requested')
+        case 'committed':
+            return $t('Committed')
+        default:
+            return ''
+    }
 }
 
 function getDayServicesForCell(worker: any, day: any) {
@@ -2735,6 +2809,7 @@ const dropWorkers = computed<any[]>(() => {
             assigned_craft_ids: user.user.assigned_craft_ids ?? [],
             availabilities: user.availabilities,
             weeklyWorkingHours: user.weeklyWorkingHours,
+            weeklyWorkflowStatus: user.weeklyWorkflowStatus,
             dayServices: user.dayServices,
             individual_times: user.individual_times,
             shift_comments: user.shift_comments,
@@ -2757,6 +2832,7 @@ const dropWorkers = computed<any[]>(() => {
                 individual_times: freelancer.individual_times,
                 shift_comments: freelancer.shift_comments,
                 weeklyWorkingHours: freelancer.weeklyWorkingHours,
+                weeklyWorkflowStatus: freelancer.weeklyWorkflowStatus,
                 key: `u_${freelancer.freelancer.id}_1`,
             })
         })
@@ -2771,6 +2847,7 @@ const dropWorkers = computed<any[]>(() => {
             individual_times: sp.individual_times,
             shift_comments: sp.shift_comments,
             weeklyWorkingHours: sp.weeklyWorkingHours,
+            weeklyWorkflowStatus: sp.weeklyWorkflowStatus,
             key: `u_${sp.service_provider.id}_2`,
         })
     })
@@ -3177,73 +3254,53 @@ function selectGoToMode(direction: 'next' | 'previous') {
 
 const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'previous') => {
     const container = shiftPlanEl.value ?? document.getElementById('shiftPlan')
-    if (!container || !days.value.length || !currentDayOnView.value) return
+    const daysArr = days.value
+    if (!container || !daysArr.length) return
 
-    const indexModifier = direction === 'next' ? 1 : -1
+    // Spalte i steht bündig neben der Raumspalte, wenn scrollLeft === offsets[i]
+    const offsets: number[] = new Array(daysArr.length)
+    let acc = 0
+    for (let i = 0; i < daysArr.length; i++) {
+        offsets[i] = acc
+        acc += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth
+    }
+
+    // Zielspalten je Modus: Tag → Tagesspalte, Woche → KW-Spalte, Monat → Monatserster
+    const isAnchor = (d: any) =>
+        period === 'day' ? !d.isExtraRow
+            : period === 'week' ? !!d.isExtraRow
+                : !d.isExtraRow && !!d.isFirstDayOfMonth
+
+    // Vom tatsächlichen Scrollstand ausgehen (nicht von gemerktem Zustand),
+    // damit die Buttons auch nach manuellem Scrollen vom Sichtbaren aus springen
+    const sl = container.scrollLeft
     let scrollOffset: number | null = null
 
-    if (period === 'day') {
-        const currentIndex = days.value.indexOf(currentDayOnView.value)
-        let targetIndex = currentIndex + indexModifier
-        while (targetIndex >= 0 && targetIndex < days.value.length) {
-            const targetDay = days.value[targetIndex]
-            if (!targetDay.isExtraRow) {
-                scrollOffset = targetIndex
+    if (direction === 'next') {
+        // erste Zielspalte rechts der aktuellen Position, die noch nicht bündig steht
+        for (let i = 0; i < daysArr.length; i++) {
+            if (isAnchor(daysArr[i]) && offsets[i] > sl + 1) {
+                scrollOffset = i
                 break
             }
-            targetIndex += indexModifier
         }
     } else {
-        const periodKey = period === 'week' ? 'weekNumber' : 'monthNumber'
-        const periodValue = (currentDayOnView.value as any)?.[periodKey]
-
-        if (period === 'week') {
-            // Bei Woche: zur KW-Spalte (isExtraRow) scrollen
-            let targetIndex = days.value.findIndex(d => (d as any).weekNumber === periodValue && d.isExtraRow)
-            while (true) {
-                targetIndex += indexModifier
-                if (targetIndex < 0 || targetIndex >= days.value.length) break
-                const day = days.value[targetIndex]
-                if (day.isExtraRow) {
-                    scrollOffset = targetIndex
-                    break
-                }
+        // letzte Zielspalte links der aktuellen Position; ohne Treffer zurück zum Anfang
+        for (let i = daysArr.length - 1; i >= 0; i--) {
+            if (isAnchor(daysArr[i]) && offsets[i] < sl - 1) {
+                scrollOffset = i
+                break
             }
-        } else {
-            // Bei Monat: zum ersten Tag des Monats scrollen
-            const condition = (d: Day) => d.isFirstDayOfMonth
-            let targetIndex = days.value.findIndex(d => (d as any)[periodKey] === periodValue && condition(d))
-            while (true) {
-                targetIndex += indexModifier
-                if (targetIndex < 0 || targetIndex >= days.value.length) break
-                const day = days.value[targetIndex]
-                if (!day.isExtraRow && condition(day)) {
-                    scrollOffset = targetIndex
-                    break
-                }
-            }
+        }
+        if (scrollOffset == null && sl > 0) {
+            scrollOffset = 0
         }
     }
 
     if (scrollOffset == null) return
 
-    currentDayOnView.value = days.value[scrollOffset]
-
-    const leftWidth = 191.5
-    const roomNameOffsetPx = 200
-
-    // Compute x offset using variable column widths
-    let x = 0
-    const daysArr = days.value
-    for (let i = 0; i < scrollOffset; i++) {
-        x += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth
-    }
-
-    const roomNameElement = document.getElementById('roomNameContainer_0')
-    const containerRect = container.getBoundingClientRect()
-    const roomNameLeft = roomNameElement ? roomNameElement.getBoundingClientRect().left : 0
-
-    container.scrollLeft = Math.max(0, x - (roomNameOffsetPx - leftWidth))
+    currentDayOnView.value = daysArr[scrollOffset]
+    container.scrollLeft = offsets[scrollOffset]
 }
 
 function selectGoToNextMode() {

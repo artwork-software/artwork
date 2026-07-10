@@ -455,6 +455,33 @@ class ShiftPlanRequestController extends Controller
         }
 
         DB::transaction(function () use ($shiftPlanRequest): void {
+            // Vor dem Bulk-Release loggen: das Query-Builder-Update unten feuert
+            // keine Model-Events — ohne diese Einträge wäre das Zurückziehen der
+            // Anfrage im Schichtverlauf unsichtbar.
+            $causer = $this->auth->user();
+            Shift::query()
+                ->where('current_request_id', $shiftPlanRequest->id)
+                ->get()
+                ->each(function (Shift $shift) use ($shiftPlanRequest, $causer): void {
+                    activity('shift')
+                        ->performedOn($shift)
+                        ->causedBy($causer)
+                        ->event('workflow_withdrawn')
+                        ->tap(function ($activity) use ($shift, $shiftPlanRequest): void {
+                            $activity->properties = $activity->properties->merge([
+                                'translation_key' => 'Shift released from withdrawn shift plan request from {0}',
+                                'translation_key_placeholder_values' => [
+                                    optional($shiftPlanRequest->created_at)->format('d.m.Y') ?? '–',
+                                ],
+                                'context' => 'normal',
+                                'shift_id' => $shift->id,
+                                'craft_id' => $shift->craft_id,
+                                'shift_snapshot' => $shift->toActivitySnapshot(),
+                            ]);
+                        })
+                        ->log('Shift released from withdrawn shift plan request');
+                });
+
             Shift::query()
                 ->where('current_request_id', $shiftPlanRequest->id)
                 ->update([
@@ -931,38 +958,14 @@ class ShiftPlanRequestController extends Controller
         // Relation (User/Freelancer/ServiceProvider).
         $search = trim((string) $request->query('search', ''));
 
-        // Basis-Query (Craft-Filter + Suche) als Grundlage für Zähler und Liste.
-        $baseQuery = CommittedShiftChange::query()
-            ->when($craft, fn ($q) => $q->where('craft_id', $craft->id))
-            ->when($search !== '', function ($q) use ($search): void {
-                $like = '%' . $search . '%';
+        // Intern/Extern-Filter über die betroffene Person (all|internal|external).
+        $workerType = $request->query('worker_type', 'all');
+        if (! in_array($workerType, ['all', 'internal', 'external'], true)) {
+            $workerType = 'all';
+        }
 
-                // Vor-/Nachname einzeln sowie als "Vorname Nachname" (User & Freelancer).
-                $personName = function ($w) use ($like): void {
-                    $w->where('first_name', 'like', $like)
-                        ->orWhere('last_name', 'like', $like)
-                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
-                };
-
-                // Hinweis: whereHasMorph ist mit der projektweiten Model-Basisklasse
-                // inkompatibel (sie verbietet belongsTo() mit Default-Signatur, die
-                // whereHasMorph intern nutzt). Daher pro Typ eine whereIn-Subquery –
-                // bleibt vollständig in SQL und nutzt den (affected_user_type,
-                // affected_user_id)-Index.
-                $q->where(function ($outer) use ($like, $personName): void {
-                    $outer->where(function ($w) use ($personName): void {
-                        $w->where('affected_user_type', User::class)
-                            ->whereIn('affected_user_id', User::query()->where($personName)->select('id'));
-                    })->orWhere(function ($w) use ($personName): void {
-                        $w->where('affected_user_type', Freelancer::class)
-                            ->whereIn('affected_user_id', Freelancer::query()->where($personName)->select('id'));
-                    })->orWhere(function ($w) use ($like): void {
-                        $w->where('affected_user_type', ServiceProvider::class)
-                            ->whereIn('affected_user_id', ServiceProvider::query()
-                                ->where('provider_name', 'like', $like)->select('id'));
-                    });
-                });
-            });
+        // Basis-Query (Craft-Filter + Suche + Intern/Extern) als Grundlage für Zähler und Liste.
+        $baseQuery = $this->committedShiftChangesBaseQuery($craft, $search, $workerType);
 
         // Zähler unabhängig vom aktiven Filter (für die Badges in den Tabs).
         $totalCount   = (clone $baseQuery)->count();
@@ -1126,9 +1129,118 @@ class ShiftPlanRequestController extends Controller
             'changes'      => $paginator,
             'filter'       => $filter,
             'search'       => $search,
+            'workerType'   => $workerType,
             'totalCount'   => $totalCount,
             'pendingCount' => $pendingCount,
         ]);
+    }
+
+    /**
+     * Basis-Query der Änderungsübersicht (Craft-Filter + Personensuche + Intern/Extern).
+     * Wird von changes() (Liste + Zähler) und acknowledgeAll() (Bulk-Genehmigung) geteilt,
+     * damit "Alle offenen genehmigen" exakt die Menge trifft, die der Nutzer gerade sieht.
+     */
+    private function committedShiftChangesBaseQuery(
+        ?Craft $craft,
+        string $search,
+        string $workerType
+    ): \Illuminate\Database\Eloquent\Builder {
+        return CommittedShiftChange::query()
+            ->when($craft, fn ($q) => $q->where('craft_id', $craft->id))
+            ->when($search !== '', function ($q) use ($search): void {
+                $like = '%' . $search . '%';
+
+                // Vor-/Nachname einzeln sowie als "Vorname Nachname" (User & Freelancer).
+                $personName = function ($w) use ($like): void {
+                    $w->where('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
+                };
+
+                // Hinweis: whereHasMorph ist mit der projektweiten Model-Basisklasse
+                // inkompatibel (sie verbietet belongsTo() mit Default-Signatur, die
+                // whereHasMorph intern nutzt). Daher pro Typ eine whereIn-Subquery –
+                // bleibt vollständig in SQL und nutzt den (affected_user_type,
+                // affected_user_id)-Index.
+                $q->where(function ($outer) use ($like, $personName): void {
+                    $outer->where(function ($w) use ($personName): void {
+                        $w->where('affected_user_type', User::class)
+                            ->whereIn('affected_user_id', User::query()->where($personName)->select('id'));
+                    })->orWhere(function ($w) use ($personName): void {
+                        $w->where('affected_user_type', Freelancer::class)
+                            ->whereIn('affected_user_id', Freelancer::query()->where($personName)->select('id'));
+                    })->orWhere(function ($w) use ($like): void {
+                        $w->where('affected_user_type', ServiceProvider::class)
+                            ->whereIn('affected_user_id', ServiceProvider::query()
+                                ->where('provider_name', 'like', $like)->select('id'));
+                    });
+                });
+            })
+            // Intern = normale User; Extern = Freelancer, Dienstleister und User mit
+            // "als Freelancer anzeigen" (is_freelancer). Reine Schicht-Änderungen ohne
+            // betroffene Person (affected_user_type = null, z.B. Zeitänderungen) betreffen
+            // alle Eingeteilten und bleiben deshalb in beiden Ansichten sichtbar.
+            ->when($workerType === 'internal', function ($q): void {
+                $q->where(function ($outer): void {
+                    $outer->whereNull('affected_user_type')
+                        ->orWhere(function ($w): void {
+                            $w->where('affected_user_type', User::class)
+                                ->whereIn('affected_user_id', User::query()
+                                    ->where(function ($u): void {
+                                        $u->where('is_freelancer', false)
+                                            ->orWhereNull('is_freelancer');
+                                    })
+                                    ->select('id'));
+                        });
+                });
+            })
+            ->when($workerType === 'external', function ($q): void {
+                $q->where(function ($outer): void {
+                    $outer->whereNull('affected_user_type')
+                        ->orWhereIn('affected_user_type', [Freelancer::class, ServiceProvider::class])
+                        ->orWhere(function ($w): void {
+                            $w->where('affected_user_type', User::class)
+                                ->whereIn(
+                                    'affected_user_id',
+                                    User::query()->where('is_freelancer', true)->select('id')
+                                );
+                        });
+                });
+            });
+    }
+
+    /**
+     * Genehmigt alle offenen Änderungen der aktuellen Filterauswahl in EINEM Bulk-Update.
+     * Bewusst kein Loop über Models und kein Activity-Log pro Schicht: Bei mehreren
+     * tausend offenen Änderungen darf weder der Request kippen noch der Schichtverlauf
+     * geflutet werden. Audit-Trail ist acknowledged_by_user_id/acknowledged_at auf jeder
+     * Zeile — identisch zur Einzel-Genehmigung, die ebenfalls kein Activity-Log schreibt.
+     */
+    public function acknowledgeAll(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $payload = $request->validate([
+            // Bewusst Pflicht: ohne Craft-Scope würde der Button versehentlich die
+            // offenen Änderungen ALLER Gewerke genehmigen.
+            'craft_id' => ['required', 'integer', 'exists:crafts,id'],
+            'search' => ['nullable', 'string'],
+            'worker_type' => ['nullable', 'string', \Illuminate\Validation\Rule::in(['all', 'internal', 'external'])],
+        ]);
+
+        $craft = Craft::find($payload['craft_id']);
+        $search = trim((string) ($payload['search'] ?? ''));
+        $workerType = $payload['worker_type'] ?? 'all';
+
+        $updated = $this->committedShiftChangesBaseQuery($craft, $search, $workerType)
+            ->whereNull('acknowledged_at')
+            ->update([
+                'acknowledged_at' => now(),
+                'acknowledged_by_user_id' => $this->auth->id(),
+            ]);
+
+        return back()->with(
+            'success',
+            __(':count open changes have been approved.', ['count' => $updated])
+        );
     }
 
 

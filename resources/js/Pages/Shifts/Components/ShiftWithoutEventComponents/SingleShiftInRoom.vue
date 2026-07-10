@@ -80,7 +80,8 @@ const clickOnEdit = (shift, mode = 'normal') => {
 }
 
 const areAllShiftsCommitted = (event) => {
-    return event.shifts.every(shift => shift.is_committed);
+    // ShiftDTO liefert camelCase (isCommitted), ältere Payloads snake_case
+    return event.shifts.every(shift => shift.isCommitted ?? shift.is_committed);
 }
 
 const checkIfShiftInDayString = (shift) => {

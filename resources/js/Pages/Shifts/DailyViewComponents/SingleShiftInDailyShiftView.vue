@@ -10,6 +10,27 @@
                     <div :class="['rounded-md whitespace-nowrap', timePillPadding]" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}90` }">
                         <span v-if="dayRole === 'end' || dayRole === 'middle'" class="opacity-60">→ </span>{{ displayStartTime }} - {{ displayEndTime }}<span v-if="dayRole === 'start' || dayRole === 'middle'" class="opacity-60"> →</span>
                     </div>
+                    <!-- Dienstplanfreigabe: festgeschrieben (Schloss) / angefragt (Pull-Request) -->
+                    <ToolTipComponent
+                        v-if="shift.isCommitted ?? shift.is_committed"
+                        icon="IconLock"
+                        icon-size="size-3.5 text-black"
+                        :stroke="2"
+                        :tooltip-text="$t('Committed')"
+                        direction="top"
+                        black-icon
+                        classes-button="ml-1"
+                    />
+                    <ToolTipComponent
+                        v-else-if="shift.inWorkflow ?? shift.in_workflow"
+                        icon="IconGitPullRequest"
+                        icon-size="size-3.5 text-black"
+                        :stroke="2"
+                        :tooltip-text="$t('Requested')"
+                        direction="top"
+                        black-icon
+                        classes-button="ml-1"
+                    />
                     <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
                         ({{ shiftGroupResolved.name }})
                     </div>

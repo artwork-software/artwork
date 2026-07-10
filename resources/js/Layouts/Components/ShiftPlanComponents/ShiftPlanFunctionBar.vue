@@ -208,7 +208,7 @@
                     />
 
                     <ToolTipComponent v-if="can('can commit shifts') || hasAdminRole()" direction="bottom"
-                                      :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
+                                      :tooltip-text="commitShiftsTooltip" icon="IconCalendarCheck" icon-size="h-5 w-5" classes-button="ui-button"
                                       @click="commitAllShifts()"/>
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
@@ -407,6 +407,12 @@ const isCalendarUsingProjectTimePeriod = computed(() => {
 
 const userGotoMode = computed(() => {
     return usePage().props.auth.user.goto_mode;
+});
+
+const commitShiftsTooltip = computed(() => {
+    return usePage().props.shiftCommitWorkflow
+        ? $t('Request shift plan for approval')
+        : $t('Commit shift plan');
 });
 
 const scrollBackTooltip = computed(() => {

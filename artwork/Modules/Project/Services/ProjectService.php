@@ -99,10 +99,11 @@ class ProjectService
                 'delete_permission_users' => function ($query): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
                 },
-                'biData',
-                'biEventData.event',
-                'biRoomCapacities',
-                'events.room',
+                // Keine events-/BI-Relationen hier eager laden: dieser Query paginiert die
+                // Projektübersicht, und alles Geladene landet im Inertia-Payload. Bei Projekten
+                // mit vielen Terminen sprengt das memory_limit und das Firefox-history.state-Limit.
+                // Der BI-Baustein lädt sich seine Relationen selbst (ProjectController::mapProjectsToComponents)
+                // und entfernt sie vor der Serialisierung wieder.
             ])
                 /** @todo für Jason:
                  * search muss raus wenn das mit Meilisearch klappt

@@ -22,9 +22,6 @@ export const BAR_PALETTE = [
 export const CELL_WIDTH = 96;          // px, matches Tailwind w-24
 export const BAR_HEIGHT = 5;
 export const BAR_GAP = 2;
-export const MAX_VISIBLE_LANES = 4;
-export const BAR_OVERLAY_HEIGHT = MAX_VISIBLE_LANES * (BAR_HEIGHT + BAR_GAP);
-export const ROW_PADDING = BAR_OVERLAY_HEIGHT + 4;
 
 /** Deterministic 32-bit hash of an issue id (number or string). */
 export function hashIssueId(id) {

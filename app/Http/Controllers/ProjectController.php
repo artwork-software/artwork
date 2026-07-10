@@ -116,6 +116,7 @@ use Artwork\Modules\Project\Events\ProjectTeamUpdated;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -319,7 +320,15 @@ class ProjectController extends Controller
         $firstTabId = $this->projectTabService->getDefaultOrFirstProjectTab();
         $projectStates = ProjectState::all()->keyBy('id');
 
-        return $projects->map(function ($project) use ($components, $componentData, $firstTabId, $projectStates) {
+        $projectPeriods = $this->prepareProjectsForComponentMapping($projects, $components);
+
+        $mapped = $projects->map(function ($project) use (
+            $components,
+            $componentData,
+            $firstTabId,
+            $projectStates,
+            $projectPeriods
+        ) {
             /** @var Project $project */
             $projectData = new stdClass(); // needed for the ProjectShowHeaderComponent
             $projectData->id = $project->id;
@@ -384,10 +393,7 @@ class ProjectController extends Controller
                             : null;
                         break;
                     case ProjectTabComponentEnum::PROJECT_PERIOD->value:
-                        // Derived from the project's events (event types flagged
-                        // relevant_for_project_period, falling back to all events). Soft-deleted
-                        // events are excluded because the accessor uses the events() relation.
-                        $projectData->project_period = $project->first_and_last_event_date;
+                        $projectData->project_period = $projectPeriods[$project->id] ?? null;
                         break;
                     case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
                         $projectData->cost_center = $project->costCenter;
@@ -406,6 +412,91 @@ class ProjectController extends Controller
 
             return $projectData;
         });
+
+        $this->unsetHeavyProjectRelations($projects);
+
+        return $mapped;
+    }
+
+    /**
+     * Der BI-Kennzahlen-Service rechnet auf den geladenen Relationen; nur laden, wenn der
+     * Baustein überhaupt konfiguriert ist. Nach dem Mapping werden die Relationen via
+     * unsetHeavyProjectRelations() wieder entfernt, damit sie nicht im Inertia-Payload landen.
+     *
+     * @return array<int, array{first_event_date: string, last_event_date: string}|null>
+     */
+    private function prepareProjectsForComponentMapping($projects, $components): array
+    {
+        $componentTypes = $components->pluck('type');
+
+        if ($componentTypes->contains(ProjectTabComponentEnum::BI_KEY_FIGURES->value)) {
+            $projects->loadMissing(['biData', 'biEventData.event', 'biRoomCapacities', 'events.room']);
+        }
+
+        return $componentTypes->contains(ProjectTabComponentEnum::PROJECT_PERIOD->value)
+            ? $this->getProjectPeriods($projects)
+            : [];
+    }
+
+    /**
+     * Die Projekt-Modelle gehen zusätzlich roh an Inertia (`projects`/`pinnedProjectsAll`).
+     * Events-/BI-Relationen werden nur für die Komponenten-Berechnung gebraucht — vor der
+     * Serialisierung entfernen, sonst wandern alle Termine jedes Projekts ins Payload.
+     */
+    private function unsetHeavyProjectRelations($projects): void
+    {
+        foreach ($projects as $project) {
+            $project->unsetRelation('events');
+            $project->unsetRelation('biData');
+            $project->unsetRelation('biEventData');
+            $project->unsetRelation('biRoomCapacities');
+        }
+    }
+
+    /**
+     * Batch-Ersatz für Project::getFirstAndLastEventDateAttribute(): zwei Aggregat-Queries
+     * für die ganze Seite statt bis zu vier Queries pro Projekt. Gleiche Semantik: Termine
+     * mit event_types.relevant_for_project_period, sonst Fallback auf alle Termine;
+     * Soft-Deletes sind über den Event-Global-Scope ausgeschlossen.
+     *
+     * @return array<int, array{first_event_date: string, last_event_date: string}|null>
+     */
+    private function getProjectPeriods($projects): array
+    {
+        $projectIds = $projects->pluck('id')->all();
+
+        if ($projectIds === []) {
+            return [];
+        }
+
+        $relevantPeriods = Event::query()
+            ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+            ->where('event_types.relevant_for_project_period', true)
+            ->whereIn('events.project_id', $projectIds)
+            ->groupBy('events.project_id')
+            ->selectRaw('events.project_id, MIN(events.start_time) as first_start, MAX(events.end_time) as last_end')
+            ->get()
+            ->keyBy('project_id');
+
+        $fallbackPeriods = Event::query()
+            ->whereIn('events.project_id', $projectIds)
+            ->groupBy('events.project_id')
+            ->selectRaw('events.project_id, MIN(events.start_time) as first_start, MAX(events.end_time) as last_end')
+            ->get()
+            ->keyBy('project_id');
+
+        $periods = [];
+        foreach ($projectIds as $projectId) {
+            $period = $relevantPeriods->get($projectId) ?? $fallbackPeriods->get($projectId);
+            $periods[$projectId] = $period && $period->first_start && $period->last_end
+                ? [
+                    'first_event_date' => Carbon::parse($period->first_start)->translatedFormat('d.m.Y H:i'),
+                    'last_event_date' => Carbon::parse($period->last_end)->translatedFormat('d.m.Y H:i'),
+                ]
+                : null;
+        }
+
+        return $periods;
     }
 
 
@@ -4778,6 +4869,94 @@ class ProjectController extends Controller
         }
 
         return $projects;
+    }
+
+    /**
+     * Returns the rooms this project actually occupies (via its events and shifts),
+     * each with the room-specific period: earliest start and latest end across all
+     * events and shifts of the project in that room.
+     *
+     * Used by the material-issue modal to offer the project's rooms as quick-select
+     * chips and to narrow the issue period to a single room's span.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function roomsWithEventPeriods(Project $project): array
+    {
+        // room_id => ['start' => Carbon, 'end' => Carbon]
+        $periods = [];
+
+        $accumulate = static function (?Carbon $start, ?Carbon $end, ?int $roomId) use (&$periods): void {
+            if (!$roomId || !$start || !$end) {
+                return;
+            }
+            if (!isset($periods[$roomId])) {
+                $periods[$roomId] = ['start' => $start, 'end' => $end];
+                return;
+            }
+            if ($start->lt($periods[$roomId]['start'])) {
+                $periods[$roomId]['start'] = $start;
+            }
+            if ($end->gt($periods[$roomId]['end'])) {
+                $periods[$roomId]['end'] = $end;
+            }
+        };
+
+        // Events of this project (room + datetime span).
+        Event::query()
+            ->where('project_id', $project->id)
+            ->whereNotNull('room_id')
+            ->get(['id', 'room_id', 'start_time', 'end_time'])
+            ->each(function (Event $event) use ($accumulate): void {
+                $start = $event->start_time ? Carbon::parse($event->start_time) : null;
+                $end = $event->end_time ? Carbon::parse($event->end_time) : null;
+                $accumulate($start, $end, $event->room_id ? (int) $event->room_id : null);
+            });
+
+        // Shifts of this project: either standalone (project_id set) or event-bound
+        // (their event belongs to the project). Room falls back to the event's room.
+        Shift::query()
+            ->where(function ($query) use ($project): void {
+                $query->where('project_id', $project->id)
+                    ->orWhereHas('event', fn ($q) => $q->where('project_id', $project->id));
+            })
+            ->with('event:id,room_id')
+            ->get(['id', 'room_id', 'event_id', 'start_date', 'end_date', 'start', 'end'])
+            ->each(function (Shift $shift) use ($accumulate): void {
+                $roomId = $shift->room_id ?? $shift->event?->room_id;
+                $startDate = $shift->start_date ? Carbon::parse($shift->start_date)->toDateString() : null;
+                $endDate = $shift->end_date ? Carbon::parse($shift->end_date)->toDateString() : null;
+                $start = $startDate ? Carbon::parse($startDate . ' ' . ($shift->start ?: '00:00')) : null;
+                $end = $endDate ? Carbon::parse($endDate . ' ' . ($shift->end ?: '23:59')) : null;
+                $accumulate($start, $end, $roomId ? (int) $roomId : null);
+            });
+
+        if (empty($periods)) {
+            return [];
+        }
+
+        $rooms = Room::whereIn('id', array_keys($periods))->get(['id', 'name'])->keyBy('id');
+
+        $result = [];
+        foreach ($periods as $roomId => $period) {
+            $room = $rooms->get($roomId);
+            if (!$room) {
+                continue;
+            }
+            $result[] = [
+                'id' => (int) $roomId,
+                'name' => $room->name,
+                'start_date' => $period['start']->toDateString(),
+                'start_time' => $period['start']->format('H:i'),
+                'end_date' => $period['end']->toDateString(),
+                'end_time' => $period['end']->format('H:i'),
+            ];
+        }
+
+        // Earliest-starting room first.
+        usort($result, static fn ($a, $b) => strcmp($a['start_date'] . $a['start_time'], $b['start_date'] . $b['start_time']));
+
+        return $result;
     }
 
     /**

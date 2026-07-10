@@ -122,26 +122,27 @@ class ShiftHistoryController
         // damit der komplette Verlauf inkl. Lösch-Eintrag erscheint, unabhängig vom Fortbestand.
         $matchedShiftIds = array_values(array_unique(array_merge($shiftIds, $snapshotShiftIds)));
 
-        if (empty($matchedShiftIds)) {
-            return response()->json([
-                'shifts' => $shifts ?? [],
-                'logs'   => [
-                    'data' => [],
-                    'meta' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $perPage, 'total' => 0],
-                ],
-                'range'  => [
-                    'start_date' => $startYmd,
-                    'end_date'   => $endYmd,
-                ],
-            ]);
-        }
-
         // Activity Logs (Spatie activity_log) – über die Schicht-Zugehörigkeit, NICHT über
         // den Fortbestand der Schicht. So bleiben Einträge gelöschter Schichten sichtbar.
+        // Zusätzlich: Sammel-Einträge (Festschreibung einer KW / eines Zeitraums) haben
+        // bewusst KEIN Subject — sie werden über den in properties->commit_summary
+        // gespeicherten Zeitraum (Überlappung) und optional die craft_ids eingesammelt.
         $paginator = Activity::query()
             ->where('log_name', 'shift')
-            ->where('subject_type', Shift::class)
-            ->whereIn('subject_id', $matchedShiftIds)
+            ->where(function ($q) use ($matchedShiftIds, $startYmd, $endYmd, $craftId): void {
+                $q->where(function ($q2) use ($matchedShiftIds): void {
+                    $q2->where('subject_type', Shift::class)
+                        ->whereIn('subject_id', $matchedShiftIds);
+                })->orWhere(function ($q2) use ($startYmd, $endYmd, $craftId): void {
+                    $q2->whereNull('subject_id')
+                        ->where('properties->commit_summary->start_date', '<=', $endYmd)
+                        ->where('properties->commit_summary->end_date', '>=', $startYmd)
+                        ->when(
+                            $craftId > 0,
+                            fn ($q3) => $q3->whereJsonContains('properties->craft_ids', $craftId)
+                        );
+                });
+            })
             ->when($search !== '', function ($q) use ($search): void {
                 // Groß-/Kleinschreibung bewusst ignorieren (LOWER auf beiden Seiten),
                 // damit z.B. "jannik" auch "Jannik Müller" findet – unabhängig von der
@@ -186,7 +187,10 @@ class ShiftHistoryController
                     ->select('activity_log.*')
                     ->orderByRaw(
                         'COALESCE(shifts.start_date, '
-                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date"))'
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date")), '
+                        // Sammel-Einträge (Festschreibung) haben kein Subject/Snapshot —
+                        // ihr Zeitraum-Beginn sortiert sie in den richtigen Schichttag ein.
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.commit_summary.start_date"))'
                         . ') DESC'
                     )
                     ->orderByDesc('activity_log.created_at');

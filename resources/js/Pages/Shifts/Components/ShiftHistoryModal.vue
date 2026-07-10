@@ -197,8 +197,35 @@
                                 :key="entry.id"
                                 class="rounded-xl border-2 border-zinc-900 bg-white overflow-hidden hover:shadow-md transition"
                             >
+                                <!-- Sammel-Eintrag (Festschreibung KW/Zeitraum): eigene Karte statt Schicht-Card -->
+                                <div v-if="entry.commitSummary" class="bg-gray-50/70 px-4 py-3 border-b border-gray-100">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ t('Commitment') }}
+                                        </p>
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100" :class="entry.commitSummary.week ? '' : 'col-span-2'">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Period') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900">{{ entry.shiftDetails.dateLabel }}</p>
+                                        </div>
+                                        <div v-if="entry.commitSummary.week" class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Calendar week') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900">{{ entry.commitSummary.week }}{{ entry.commitSummary.year ? '/' + entry.commitSummary.year : '' }}</p>
+                                        </div>
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Craft') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900 truncate">{{ entry.shiftDetails.craft }}</p>
+                                        </div>
+                                        <div class="rounded-lg bg-white px-2 py-1.5 border border-gray-100">
+                                            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('Shifts') }}</p>
+                                            <p class="text-[11px] font-medium text-gray-900">{{ entry.commitSummary.count ?? '–' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Schicht-Card: die betroffenen Schichtdaten klar dargestellt -->
-                                <div class="bg-gray-50/70 px-4 py-3 border-b border-gray-100">
+                                <div v-else class="bg-gray-50/70 px-4 py-3 border-b border-gray-100">
                                     <div class="flex items-center justify-between mb-2">
                                         <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                                             {{ t('Shift') }}
@@ -440,6 +467,7 @@ const contextItems = [
     { id: 'normal',      name: 'Normal' },
     { id: 'in_workflow', name: 'Workflow' },
     { id: 'post_commit', name: 'Post-commit' },
+    { id: 'commit',      name: 'Commitment' },
 ]
 
 const levelItems = [
@@ -516,6 +544,25 @@ const toIsoDay = (value?: string | null): string => {
 // Zeitpunkt, z.B. bei Lösch-/Update-Einträgen). So zeigen auch alte Einträge zu
 // (force-)gelöschten Schichten echte Daten statt nur "–".
 const buildShiftDetails = (log: RawShiftActivity): EntryShiftDetails => {
+    // Sammel-Einträge (Festschreibung KW/Zeitraum) haben keine einzelne Schicht —
+    // Zeitraum/Gewerke kommen aus properties.commit_summary, die Karte wird im
+    // Template separat gerendert.
+    const summary = (log.properties as any)?.commit_summary ?? null
+    if (summary) {
+        const sd = summary.start_date || ''
+        const ed = summary.end_date || ''
+        return {
+            id: null,
+            dayKey: toIsoDay(sd),
+            dateLabel: sd ? (ed && ed !== sd ? `${normalizeDate(sd)} – ${normalizeDate(ed)}` : normalizeDate(sd)) : '–',
+            timeLabel: '–',
+            craft: (summary.crafts || []).join(', ') || '–',
+            room: '–',
+            project: '–',
+            deleted: false,
+        }
+    }
+
     const snap = (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null
     const id = (
         (log.properties?.shift_id as number | null | undefined) ??
@@ -667,7 +714,19 @@ type NormalizedLogEntry = {
     shiftId: number | null
     snapshot: ShiftSnapshot | null
     shiftDetails: EntryShiftDetails
+    commitSummary: CommitSummary | null
     haystack: string
+}
+
+// Sammel-Eintrag einer Festschreibungs-Aktion (aus properties.commit_summary).
+type CommitSummary = {
+    committed?: boolean
+    start_date?: string | null
+    end_date?: string | null
+    week?: number | null
+    year?: number | null
+    crafts?: string[]
+    count?: number | null
 }
 
 // Zustand der Schicht zum Zeitpunkt des Log-Eintrags (aus properties.shift_snapshot).
@@ -716,6 +775,9 @@ const detectLevel = (log: RawShiftActivity): NormalizedLogEntry['level'] => {
     if (desc.includes('restored') || ev === 'restored' || key.includes('restored')) return 'success'
     if (desc.includes('updated')  || ev.includes('updated') || key.includes('updated') || key === 'shift_updated') return 'warning'
     if (key === 'committed_shift_change_reverted' || desc.includes('reverted')) return 'warning'
+    // Festschreibung: setzen = grün, aufheben/zurückziehen = gelb
+    if (ev === 'uncommitted' || ev === 'uncommitted_bulk' || ev === 'workflow_withdrawn') return 'warning'
+    if (ev === 'committed' || ev === 'committed_bulk' || ev === 'shift_committed') return 'success'
     return 'default'
 }
 
@@ -777,6 +839,8 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
             const placeholderValues = Array.isArray(log.properties?.translation_key_placeholder_values)
                 ? log.properties!.translation_key_placeholder_values!.map((v) => String(v ?? '')).join(' ')
                 : ''
+            const commitSummary = ((log.properties as any)?.commit_summary as CommitSummary | undefined) ?? null
+
             const haystack = [
                 message,
                 log.description ?? '',
@@ -784,6 +848,7 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 causerName ?? '',
                 contextLabel ?? '',
                 shiftId ? shiftLabelById(shiftId) : '',
+                commitSummary?.crafts?.join(' ') ?? '',
             ].join(' ').toLowerCase()
 
             return {
@@ -801,6 +866,7 @@ const normalizedLogs = computed<NormalizedLogEntry[]>(() => {
                 shiftId,
                 snapshot: (log.properties?.shift_snapshot as ShiftSnapshot | undefined) ?? null,
                 shiftDetails: buildShiftDetails(log),
+                commitSummary,
                 haystack,
             }
         })

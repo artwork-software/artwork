@@ -31,7 +31,20 @@
             </span>
 
             <div class="ml-auto flex items-center gap-2 shrink-0">
-                <PropertyIcon name="IconLock" v-if="shift.is_committed" stroke-width="1.5" class="h-5 w-5 opacity-90" />
+                <PropertyIcon
+                    name="IconLock"
+                    v-if="shift.is_committed"
+                    stroke-width="1.5"
+                    class="h-5 w-5 opacity-90"
+                    v-tooltip.bottom="{ value: $t('Committed'), class: 'aw-tooltip' }"
+                />
+                <PropertyIcon
+                    name="IconGitPullRequest"
+                    v-else-if="shift.in_workflow"
+                    stroke-width="1.5"
+                    class="h-5 w-5 opacity-90"
+                    v-tooltip.bottom="{ value: $t('Requested'), class: 'aw-tooltip' }"
+                />
                 <button
                     v-if="project"
                     type="button"

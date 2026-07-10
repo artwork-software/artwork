@@ -27,13 +27,21 @@
 
                         <div v-if="resolvedShiftGroup && usePage().props.auth.user.calendar_settings?.show_shift_group_tag" class="text-[8px]">({{ resolvedShiftGroup.name }})</div>
                         <div class="text-[11px] flex items-center gap-x-1.5 w-full">
-                            <PropertyIcon name="IconLock" class="text-right h-3 w-3 !text-black" stroke-width="2" v-if="shift.isCommitted" />
+                            <ToolTipComponent
+                                v-if="shift.isCommitted"
+                                icon="IconLock"
+                                icon-size="w-3 h-3 !text-black"
+                                :stroke="2"
+                                :tooltip-text="$t('Committed')"
+                                direction="top"
+                                black-icon
+                            />
                             <ToolTipComponent
                                 v-if="shift.inWorkflow && !shift.isCommitted"
                                 icon="IconGitPullRequest"
                                 icon-size="w-3 h-3 !text-black"
                                 :stroke="2"
-                                :tooltip-text="$t('This shift is currently in a workflow.')"
+                                :tooltip-text="$t('Requested')"
                                 direction="top"
                                 black-icon
                             />

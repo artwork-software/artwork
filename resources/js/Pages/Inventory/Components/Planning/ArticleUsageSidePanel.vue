@@ -76,6 +76,29 @@
                                     >{{ getAvailableQuantity() }}</div>
                                 </div>
                             </div>
+
+                            <!-- Breakdown of the total stock by article status -->
+                            <div
+                                v-if="statusBreakdown.length"
+                                class="border-t border-zinc-100 px-3 py-2.5"
+                            >
+                                <div class="text-[10px] font-medium uppercase tracking-wide text-zinc-400 mb-1">
+                                    {{ $t('Status composition') }}
+                                </div>
+                                <div class="divide-y divide-zinc-100">
+                                    <div
+                                        v-for="status in statusBreakdown"
+                                        :key="status.id"
+                                        class="flex items-center justify-between gap-2 py-1.5"
+                                    >
+                                        <span class="flex min-w-0 items-center gap-1.5">
+                                            <span class="inline-block size-2 shrink-0 rounded-full" :style="{ backgroundColor: status.color }"></span>
+                                            <span class="truncate text-[11px] text-zinc-900">{{ status.name }}</span>
+                                        </span>
+                                        <span class="shrink-0 text-[11px] font-semibold tabular-nums text-zinc-900">{{ status.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </section>
 
                         <!-- Tabs: internal / external -->
@@ -205,6 +228,13 @@ onBeforeUnmount(() => {
 const isRefreshing = ref(false);
 
 const defaultTabIndex = computed(() => (props.focusIssueType === 'extern' ? 1 : 0));
+
+// All status buckets of the article (Einsatzbereit, fest verbaut, ausgesondert, …)
+// with their configured colour, rendered as badges in the stock summary.
+const statusBreakdown = computed(() => {
+    const statuses = props.detailsForModal?.article?.status ?? [];
+    return statuses.filter((s) => s && s.color);
+});
 
 const handleDataChanged = async () => {
     const articleId = props.detailsForModal?.article?.id;

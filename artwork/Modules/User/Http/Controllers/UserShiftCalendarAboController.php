@@ -85,7 +85,11 @@ class UserShiftCalendarAboController extends Controller
         $individualTimes = $this->userShiftCalendarAboService
             ->getFilteredIndividualTimes($calendarAbo, $user->individualTimes);
         foreach ($individualTimes as $individualTime) {
-            $this->userShiftCalendarAboService->addIndividualTimeToCalendar($calendar, $calendarAbo, $individualTime);
+            $this->userShiftCalendarAboService->addIndividualTimeToCalendar(
+                $calendar,
+                $calendarAbo,
+                $individualTime
+            );
         }
 
         return response($calendar->get(), 200)

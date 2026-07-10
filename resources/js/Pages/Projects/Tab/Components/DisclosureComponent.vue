@@ -9,8 +9,8 @@
                 <span
                     v-if="nonDefaultValueCount > 0"
                     class="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-white/70 px-1 text-[10px] font-semibold tabular-nums text-artwork-buttons-hover ring-1 ring-inset ring-artwork-navigation-color/30"
-                    :aria-label="$t('Filled fields: {0}', [nonDefaultValueCount])"
-                    :title="$t('Filled fields: {0}', [nonDefaultValueCount])"
+                    :aria-label="$t('Changed fields: {0}', [nonDefaultValueCount])"
+                    :title="$t('Changed fields: {0}', [nonDefaultValueCount])"
                 >
                     {{ nonDefaultValueCount }}
                 </span>

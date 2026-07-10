@@ -64,13 +64,24 @@ final class ShiftPlanWorkflowStatusServiceTest extends FeatureTestCase
         return [$shift->fresh(), $user];
     }
 
-    private function statusFor(User $user): ?string
+    private function statusFor(User $user, ?int $craftId = null): ?string
     {
         $start = Carbon::parse(self::DAY)->startOfWeek();
         $end = Carbon::parse(self::DAY)->endOfWeek();
         $map = $this->service->computeForDateRange($start, $end);
+        $craftStatuses = $map['user'][$user->id] ?? [];
 
-        return $map['user'][$user->id][$this->weekKey()] ?? null;
+        if ($craftId !== null) {
+            return $craftStatuses[$craftId][$this->weekKey()] ?? null;
+        }
+
+        foreach ($craftStatuses as $weekStatuses) {
+            if (array_key_exists($this->weekKey(), $weekStatuses)) {
+                return $weekStatuses[$this->weekKey()];
+            }
+        }
+
+        return null;
     }
 
     #[Test]
@@ -84,12 +95,12 @@ final class ShiftPlanWorkflowStatusServiceTest extends FeatureTestCase
     #[Test]
     public function week_is_committed_only_when_all_shifts_of_user_are_committed(): void
     {
-        [, $user] = $this->createShiftWithUser(['is_committed' => true]);
+        [$committedShift, $user] = $this->createShiftWithUser(['is_committed' => true]);
 
         $this->assertSame('committed', $this->statusFor($user));
 
         // Zweite, nicht festgeschriebene Schicht in derselben KW → kein Grün mehr
-        $this->createShiftWithUser([], $user);
+        $this->createShiftWithUser(['craft_id' => $committedShift->craft_id], $user);
 
         $this->assertNull($this->statusFor($user));
     }
@@ -97,10 +108,44 @@ final class ShiftPlanWorkflowStatusServiceTest extends FeatureTestCase
     #[Test]
     public function requested_wins_over_committed_within_a_week(): void
     {
-        [, $user] = $this->createShiftWithUser(['is_committed' => true]);
-        $this->createShiftWithUser(['in_workflow' => true], $user);
+        [$committedShift, $user] = $this->createShiftWithUser(['is_committed' => true]);
+        $this->createShiftWithUser([
+            'craft_id' => $committedShift->craft_id,
+            'in_workflow' => true,
+        ], $user);
 
         $this->assertSame('requested', $this->statusFor($user));
+    }
+
+    #[Test]
+    public function status_is_calculated_independently_for_each_craft(): void
+    {
+        [$committedShift, $user] = $this->createShiftWithUser(['is_committed' => true]);
+        [$uncommittedShift] = $this->createShiftWithUser([], $user);
+
+        $this->assertSame('committed', $this->statusFor($user, $committedShift->craft_id));
+        $this->assertNull($this->statusFor($user, $uncommittedShift->craft_id));
+    }
+
+    #[Test]
+    public function attention_in_one_craft_does_not_override_another_craft(): void
+    {
+        [$firstShift, $user] = $this->createShiftWithUser(['is_committed' => true]);
+        [$changedShift] = $this->createShiftWithUser(['is_committed' => true], $user);
+
+        CommittedShiftChange::create([
+            'craft_id' => $changedShift->craft_id,
+            'shift_id' => $changedShift->id,
+            'subject_type' => Shift::class,
+            'subject_id' => $changedShift->id,
+            'change_type' => 'updated',
+            'field_changes' => ['start' => ['old' => '09:00', 'new' => '10:00']],
+            'changed_by_user_id' => User::factory()->create()->id,
+            'changed_at' => Carbon::parse(self::DAY)->setTime(12, 0),
+        ]);
+
+        $this->assertSame('committed', $this->statusFor($user, $firstShift->craft_id));
+        $this->assertSame('attention', $this->statusFor($user, $changedShift->craft_id));
     }
 
     #[Test]
@@ -213,12 +258,15 @@ final class ShiftPlanWorkflowStatusServiceTest extends FeatureTestCase
     #[Test]
     public function single_worker_filter_returns_same_status(): void
     {
-        [, $user] = $this->createShiftWithUser(['in_workflow' => true]);
+        [$shift, $user] = $this->createShiftWithUser(['in_workflow' => true]);
 
         $start = Carbon::parse(self::DAY)->startOfWeek();
         $end = Carbon::parse(self::DAY)->endOfWeek();
         $map = $this->service->computeForDateRange($start, $end, User::class, $user->id);
 
-        $this->assertSame('requested', $map['user'][$user->id][$this->weekKey()] ?? null);
+        $this->assertSame(
+            'requested',
+            $map['user'][$user->id][$shift->craft_id][$this->weekKey()] ?? null
+        );
     }
 }

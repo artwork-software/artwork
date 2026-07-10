@@ -81,7 +81,7 @@
                 </div>
             </template>
             <!-- Projektteam (Departments + Users) -->
-            <div v-if="(teamProject.departments || []).length > 0 || (teamProject.usersArray || []).length > 0">
+            <div v-if="(teamProject.departments || []).length > 0 || projectTeamMembers.length > 0">
                 <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
                     {{ $t('Project team') }}
                 </span>
@@ -104,7 +104,7 @@
                             </div>
                         </template>
                     </template>
-                    <template v-for="user in (teamProject.usersArray || [])" :key="user.id">
+                    <template v-for="user in projectTeamMembers" :key="user.id">
                         <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
                             <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                             <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
@@ -230,12 +230,16 @@ export default defineComponent({
                 ? this.$t('Email the entire project team') + '\n' + warning
                 : warning;
         },
-        onlyTeamMember() {
-            if (!this.teamProject?.usersArray) {
-                return [];
+        projectTeamMembers() {
+            if (Array.isArray(this.teamProject?.projectTeamMembers)) {
+                return this.teamProject.projectTeamMembers;
             }
-            const managerIds = (this.teamProject?.project_managers ?? []).map(manager => manager.id);
-            return this.teamProject.usersArray.filter(user => !managerIds.includes(user.id));
+
+            return (this.teamProject?.usersArray ?? []).filter(user =>
+                user.id !== this.teamProject?.user_id
+                && !user.pivot_is_manager
+                && (user.pivot_roles ?? []).length === 0
+            );
         }
     },
     watch: {

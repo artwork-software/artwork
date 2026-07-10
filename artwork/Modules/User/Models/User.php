@@ -29,6 +29,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
@@ -104,7 +105,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $profile_photo_url
  * @property float $zoom_factor
  * @property boolean $is_sidebar_opened
+ * @property boolean $show_modal_backdrop
  * @property boolean $compact_mode
+ * @property boolean $ad_managed
+ * @property string|null $ad_identifier
  * @property array $show_crafts
  * @property bool $at_a_glance
  * @property Collection<Department> $departments
@@ -143,11 +147,15 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $bulk_sort_id
  * @property boolean $show_notification_indicator
  * @property int $shift_plan_user_sort_by_id
+ * @property boolean $sort_workers_by_qualification
+ * @property array $closed_qualification_groups
  * @property boolean $is_freelancer
  * @property string $sort_type_shift_tab
  * @property int $drawer_height
  * @property int $inventory_sort_column_id
  * @property int $inventory_sort_direction
+ * @property boolean $inventory_grid_layout
+ * @property boolean $inventory_hide_images
  * @property boolean $checklist_has_projects
  * @property boolean $checklist_no_projects
  * @property boolean $checklist_private_checklists
@@ -159,6 +167,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $email_private
  * @property boolean $phone_private
  * @property boolean $daily_view
+ * @property boolean $calendar_daily_view
+ * @property boolean $shift_plan_daily_view
  * @property int $last_project_id
  * @property array $bulk_column_size
  * @property boolean $show_description_in_bulk
@@ -231,6 +241,7 @@ class User extends Model implements
         'language',
         'zoom_factor',
         'is_sidebar_opened',
+        'show_modal_backdrop',
         'compact_mode',
         'show_crafts',
         'opened_crafts',
@@ -241,12 +252,15 @@ class User extends Model implements
         'bulk_sort_id',
         'show_notification_indicator',
         'shift_plan_user_sort_by_id',
+        'sort_workers_by_qualification',
+        'closed_qualification_groups',
         'is_freelancer',
         'sort_type_shift_tab',
         'drawer_height',
         'inventory_sort_column_id',
         'inventory_sort_direction',
         'inventory_grid_layout',
+        'inventory_hide_images',
         'checklist_has_projects',
         'checklist_no_projects',
         'checklist_private_checklists',
@@ -258,6 +272,8 @@ class User extends Model implements
         'email_private',
         'phone_private',
         'daily_view',
+        'calendar_daily_view',
+        'shift_plan_daily_view',
         'entities_per_page',
         'last_project_id',
         'bulk_column_size',
@@ -268,6 +284,8 @@ class User extends Model implements
         'work_time_balance',
         'chat_popup_position',
         'chat_push_notification',
+        'ad_managed',
+        'ad_identifier',
         'is_time_preset_open'
     ];
 
@@ -280,6 +298,7 @@ class User extends Model implements
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
         'is_sidebar_opened' => 'boolean',
+        'show_modal_backdrop' => 'boolean',
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
         'opened_crafts' => 'array',
@@ -288,6 +307,7 @@ class User extends Model implements
         'show_notification_indicator' => 'boolean',
         'is_freelancer' => 'boolean',
         'inventory_grid_layout' => 'boolean',
+        'inventory_hide_images' => 'boolean',
         'checklist_has_projects' => 'boolean',
         'checklist_no_projects' => 'boolean',
         'checklist_private_checklists' => 'boolean',
@@ -296,9 +316,13 @@ class User extends Model implements
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
         'show_qualifications' => 'array',
+        'sort_workers_by_qualification' => 'boolean',
+        'closed_qualification_groups' => 'array',
         'email_private' => 'boolean',
         'phone_private' => 'boolean',
         'daily_view' => 'boolean',
+        'calendar_daily_view' => 'boolean',
+        'shift_plan_daily_view' => 'boolean',
         'bulk_column_size' => 'array',
         'show_description_in_bulk' => 'boolean',
         'show_project_team_names' => 'boolean',
@@ -433,6 +457,11 @@ class User extends Model implements
     {
         return $this->belongsToMany(Project::class)
             ->withPivot('access_budget', 'is_manager', 'can_write');
+    }
+
+    public function defaultProjectRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(ProjectRole::class, 'default_project_role_user');
     }
 
     public function comments(): HasMany
@@ -585,6 +614,32 @@ class User extends Model implements
         }
 
         return $this->roles()->pluck('name')->toArray();
+    }
+
+    /**
+     * Per-User gecachte Inertia-Share-Daten (HandleInertiaRequests) invalidieren.
+     * Nach Rollen-/Rechteänderungen aufrufen, damit der User nicht bis zum
+     * Cache-TTL (5 Min.) mit veralteter Navigation/Berechtigung arbeitet.
+     */
+    public function forgetCachedShareData(): void
+    {
+        static::forgetCachedShareDataForIds([$this->id]);
+    }
+
+    /**
+     * Wie forgetCachedShareData(), aber für mehrere User-IDs ohne Model-Load —
+     * für Stellen, die Rechte über Pivots ändern (Raum-Admins, Event-Verifier,
+     * Workflow-User, Craft-Planer).
+     *
+     * @param iterable<int|string> $userIds
+     */
+    public static function forgetCachedShareDataForIds(iterable $userIds): void
+    {
+        foreach ($userIds as $userId) {
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:roles_permissions");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:can_see_incoming_requests");
+            \Illuminate\Support\Facades\Cache::forget("user:{$userId}:shift_workflow_flags");
+        }
     }
 
 

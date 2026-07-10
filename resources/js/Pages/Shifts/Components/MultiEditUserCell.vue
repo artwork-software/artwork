@@ -32,7 +32,7 @@
                             </div>
                         </div>
                         <div class="flex items-center justify-center w-26">
-                            <div class="text-[9px] w-full " :class="workTimeBalanceClass" v-if="!$page.props.auth.user.compact_mode && type === 0">{{ workTimeBalance }}</div>
+                            <div class="text-[9px] w-full " :class="workTimeBalanceClass" v-if="!$page.props.auth.user.compact_mode && type === 0 && workTimeBalance">{{ workTimeBalance }}</div>
                         </div>
                     </div>
 

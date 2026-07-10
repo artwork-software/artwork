@@ -4,7 +4,9 @@ namespace Tests\Feature\Http\Controllers\Event;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -145,6 +147,106 @@ final class EventBulkActionsTest extends FeatureTestCase
 
         $this->postJson(route('event.store.bulk.single', $project), [])
             ->assertUnauthorized();
+    }
+
+    #[Test]
+    public function user_without_permission_cannot_change_room_via_single_bulk_update(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $event = Event::factory()->create();
+        $originalRoomId = $event->room_id;
+        $otherRoom = Room::factory()->create();
+
+        $response = $this->patchJson(route('event.update.single.bulk', $event), [
+            'data' => [
+                'name' => $event->name,
+                'day' => $event->start_time->format('Y-m-d'),
+                'type' => ['id' => $event->event_type_id],
+                'room' => ['id' => $otherRoom->id],
+            ],
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('events', ['id' => $event->id, 'room_id' => $originalRoomId]);
+    }
+
+    #[Test]
+    public function user_with_create_events_permission_can_change_room_via_single_bulk_update(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+        $event = Event::factory()->create();
+        $otherRoom = Room::factory()->create();
+
+        $response = $this->patchJson(route('event.update.single.bulk', $event), [
+            'data' => [
+                'name' => $event->name,
+                'day' => $event->start_time->format('Y-m-d'),
+                'type' => ['id' => $event->event_type_id],
+                'room' => ['id' => $otherRoom->id],
+            ],
+        ]);
+
+        $response->assertSuccessful();
+        $this->assertDatabaseHas('events', ['id' => $event->id, 'room_id' => $otherRoom->id]);
+    }
+
+    #[Test]
+    public function user_without_permission_cannot_update_event_description(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $event = Event::factory()->create(['description' => 'original']);
+
+        $this->patchJson(route('event.update.description', $event), ['description' => 'changed'])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('events', ['id' => $event->id, 'description' => 'original']);
+    }
+
+    #[Test]
+    public function user_without_permission_cannot_create_single_bulk_event(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project = Project::factory()->create();
+
+        $this->postJson(route('event.store.bulk.single', $project), ['event' => []])
+            ->assertForbidden();
+    }
+
+    #[Test]
+    public function user_without_permission_cannot_bulk_project_event_store(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $project = Project::factory()->create();
+
+        $this->postJson(route('events.bulk.store', $project), ['events' => [[]]])
+            ->assertForbidden();
+    }
+
+    #[Test]
+    public function user_without_permission_cannot_bulk_multi_edit_events(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $event = Event::factory()->create();
+        $otherRoom = Room::factory()->create();
+
+        $this->postJson(route('events.bulk-multi-edit'), [
+            'eventIds' => [$event->id],
+            'selectedRoom' => ['id' => $otherRoom->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('events', ['id' => $event->id, 'room_id' => $event->room_id]);
+    }
+
+    #[Test]
+    public function user_without_permission_cannot_bulk_delete_events(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $event = Event::factory()->create();
+
+        $this->deleteJson(route('event.bulk.multi-edit.delete'), ['eventIds' => [$event->id]])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('events', ['id' => $event->id, 'deleted_at' => null]);
     }
 
     #[Test]

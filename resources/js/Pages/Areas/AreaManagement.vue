@@ -164,11 +164,42 @@
                                     <BaseUIButton @click="openAddAreaModal()" :label="$t('Add area')" is-add-button />
                                 </div>
                             </div>
+                            <BaseFilter only-icon white-background :has-active-filters="hasActiveRoomFilters">
+                                <div class="p-3 space-y-5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-semibold text-gray-900">{{ $t('Filter rooms') }}</span>
+                                        <button type="button"
+                                                v-if="hasActiveRoomFilters"
+                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                                                @click="resetRoomFilter">
+                                            {{ $t('Reset filters') }}
+                                        </button>
+                                    </div>
+                                    <RoomPropertyCheckboxGroup
+                                        :label="$t('Room categories')"
+                                        :items="room_categories"
+                                        v-model="roomFilterCategoryIds"
+                                        :empty-text="$t('No room categories created yet')"
+                                        single-column
+                                    />
+                                    <RoomPropertyCheckboxGroup
+                                        :label="$t('Room properties')"
+                                        :items="room_attributes"
+                                        v-model="roomFilterAttributeIds"
+                                        :empty-text="$t('No room properties created yet')"
+                                        single-column
+                                    />
+                                </div>
+                            </BaseFilter>
                         </div>
                     <div class="flex w-full flex-wrap mt-8">
                         <!-- Modernisierte Liste: Bereiche & Räume -->
+                        <div v-if="hasActiveRoomFilters && filteredAreas.every(area => area.rooms.length === 0)"
+                             class="w-full my-4 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/40 p-4 text-sm text-zinc-500">
+                            {{ $t('No rooms found') }}
+                        </div>
                         <div
-                            v-for="area in areas"
+                            v-for="area in filteredAreas"
                             :key="area.id"
                             class="group relative my-4 w-full rounded-2xl border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md"
                         >
@@ -591,151 +622,25 @@
                         id="description"
                     />
                 </div>
-                <Menu as="span" class="relative inline-block w-full text-left">
-                    <div>
-                        <MenuButton class="menu-button">
-                            <span>{{ $t('Select room properties') }}</span>
-                            <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
-                        </MenuButton>
-                    </div>
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0">
-                        <MenuItems
-                            class="absolute right-0 px-4 py-2 w-full origin-top-right divide-y divide-gray-200 bg-artwork-navigation-background rounded-lg ring-1 ring-black text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-artwork-navigation-background border-none">
-                                <!-- Room Categories Section -->
-                                <Disclosure v-slot="{ open }">
-                                    <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                        <span
-                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{
-                                                $t('Room categories')
-                                            }}</span>
-                                        <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''"
-                                                         class="h-4 w-4 mt-0.5 text-white"
-                                        />
-                                    </DisclosureButton>
-                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                        <div v-if="room_categories.length > 0"
-                                             v-for="category in room_categories"
-                                             :key="category"
-                                             class="flex w-full items-center mb-2">
-                                            <input type="checkbox"
-                                                   v-model="newRoomForm.room_categoriesToDisplay"
-                                                   :value="{id:category.id,name: category.name}"
-                                                   class="input-checklist-dark"/>
-                                            <p :class="[newRoomForm.room_categoriesToDisplay.includes(category)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                               class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                {{ category.name }}
-                                            </p>
-                                        </div>
-                                        <div v-else class="text-secondary">{{ $t('No room categories created yet') }}
-                                        </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                                <Disclosure v-slot="{ open }">
-                                    <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                        <span
-                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{
-                                                $t('Adjoining rooms')
-                                            }}</span>
-                                        <ChevronDownIcon
-                                            :class="open ? 'rotate-180 transform' : ''"
-                                            class="h-4 w-4 mt-0.5 text-white"
-                                        />
-                                    </DisclosureButton>
-                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                        <div v-for="area in computedAreasAndRooms">
-                                            <div v-if="area.rooms.length > 0"
-                                                 v-for="room in area.rooms"
-                                                 :key="room"
-                                                 class="flex items-center w-full mb-2">
-                                                <input type="checkbox"
-                                                       v-model="newRoomForm.adjoining_roomsToDisplay"
-                                                       :value="{id:room.id,name: room.name}"
-                                                       class="input-checklist-dark"/>
-                                                <p :class="[newRoomForm.adjoining_roomsToDisplay.includes(room) ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                    {{ room.name }}
-                                                </p>
-                                            </div>
-                                            <div v-else class="text-secondary">{{ $t('No rooms created yet') }}</div>
-                                        </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                                <!-- Room Attributes Section -->
-                                <Disclosure v-slot="{ open }">
-                                    <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                    >
-                                        <span
-                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{
-                                                $t('Room properties')
-                                            }}</span>
-                                        <ChevronDownIcon
-                                            :class="open ? 'rotate-180 transform' : ''"
-                                            class="h-4 w-4 mt-0.5 text-white"
-                                        />
-                                    </DisclosureButton>
-
-                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                        <div v-if="room_attributes.length > 0"
-                                             v-for="attribute in room_attributes"
-                                             :key="attribute"
-                                             class="flex w-full items-center mb-2">
-                                            <input type="checkbox"
-                                                   v-model="newRoomForm.room_attributesToDisplay"
-                                                   :value="{id:attribute.id,name: attribute.name}"
-                                                   class="input-checklist-dark"/>
-                                            <p :class="[newRoomForm.room_attributesToDisplay.includes(attribute)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                               class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                {{ attribute.name }}
-                                            </p>
-                                        </div>
-                                        <div v-else class="text-secondary">
-                                            {{ $t('No room properties created yet') }}
-                                        </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-                <div class="flex flex-wrap">
-                        <span v-for="(category, index) in newRoomForm.room_categoriesToDisplay"
-                              class="flex rounded-full items-center font-medium text-tagText
-                             border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                            {{ category.name }}
-                            <button @click="newRoomForm.room_categoriesToDisplay.splice(index,1)" type="button">
-                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                            </button>
-                        </span>
-                    <span v-for="(attribute, index) in newRoomForm.room_attributesToDisplay"
-                          class="flex rounded-full items-center font-medium text-tagText
-                             border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                            {{ attribute.name }}
-                            <button @click="newRoomForm.room_attributesToDisplay.splice(index,1)" type="button">
-                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                            </button>
-                        </span>
-                    <span v-for="(room, index) in newRoomForm.adjoining_roomsToDisplay"
-                          class="flex rounded-full items-center font-medium text-tagText
-                                    border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                            {{ $t('adjoining room from') }} {{ room.name }}
-                            <button @click="newRoomForm.adjoining_roomsToDisplay.splice(index,1)" type="button">
-                                <PropertyIcon name="XIcon" class="ml-1 h-4 w-4 hover:text-error "/>
-                            </button>
-                        </span>
-
-
+                <div class="space-y-6 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
+                    <RoomPropertyCheckboxGroup
+                        :label="$t('Room categories')"
+                        :items="room_categories"
+                        v-model="newRoomForm.room_categories"
+                        :empty-text="$t('No room categories created yet')"
+                    />
+                    <RoomPropertyCheckboxGroup
+                        :label="$t('Room properties')"
+                        :items="room_attributes"
+                        v-model="newRoomForm.room_attributes"
+                        :empty-text="$t('No room properties created yet')"
+                    />
+                    <RoomPropertyCheckboxGroup
+                        :label="$t('Adjoining rooms')"
+                        :items="adjoiningRoomItems"
+                        v-model="newRoomForm.adjoining_rooms"
+                        :empty-text="$t('No rooms created yet')"
+                    />
                 </div>
                 <div class="flex items-center">
                     <input v-model="newRoomForm.temporary" type="checkbox" class="input-checklist"/>
@@ -830,159 +735,25 @@
                         :rows="4"
                     />
                 </div>
-                <Menu as="span" class="relative inline-block w-full text-left">
-                    <div>
-                        <MenuButton class="menu-button">
-                            <span>{{ $t('Select room properties') }}</span>
-                            <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
-                        </MenuButton>
-                    </div>
-
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0"
-                    >
-
-                        <MenuItems
-                            class="absolute right-0 px-4 py-2 w-full origin-top-right divide-y divide-gray-200 rounded-lg bg-artwork-navigation-background ring-1 ring-black text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-artwork-navigation-background border-none">
-                                <!-- Room Categories Section -->
-                                <Disclosure v-slot="{ open }">
-                                    <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                        <span
-                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{
-                                                $t('Room categories')
-                                            }}</span>
-                                        <ChevronDownIcon
-                                            :class="open ? 'rotate-180 transform' : ''"
-                                            class="h-4 w-4 mt-0.5 text-white"
-                                        />
-                                    </DisclosureButton>
-
-                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                        <div v-if="room_categories.length > 0"
-                                             v-for="category in room_categories"
-                                             :key="category"
-                                             class="flex w-full items-center mb-2">
-                                            <input type="checkbox"
-                                                   v-model="editRoomForm.room_categoriesToDisplay"
-                                                   :value="{id:category.id,name: category.name}"
-                                                   class="input-checklist-dark"/>
-                                            <p :class="[editRoomForm.room_categoriesToDisplay.includes(category)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                               class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                {{ category.name }}
-                                            </p>
-                                        </div>
-                                        <div v-else class="text-secondary">{{ $t('No room categories created yet') }}
-                                        </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-
-                                <Disclosure v-slot="{ open }">
-                                    <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                    >
-                                        <span
-                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{
-                                                $t('Adjoining rooms')
-                                            }}</span>
-                                        <ChevronDownIcon
-                                            :class="open ? 'rotate-180 transform' : ''"
-                                            class="h-4 w-4 mt-0.5 text-white"
-                                        />
-                                    </DisclosureButton>
-                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                        <div v-for="area in computedAreasAndRooms">
-                                            <div v-if="area.rooms.length > 0"
-                                                 v-for="room in area.rooms"
-                                                 :key="room"
-                                                 class="flex items-center w-full mb-2">
-                                                <input type="checkbox"
-                                                       v-model="editRoomForm.adjoining_roomsToDisplay"
-                                                       :value="{id:room.id,name: room.name}"
-                                                       class="input-checklist-dark"/>
-                                                <p :class="[editRoomForm.adjoining_roomsToDisplay.includes(room)
-                                                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                    {{ room.name }}
-                                                </p>
-                                            </div>
-                                            <div v-else class="text-secondary">{{ $t('No rooms created yet') }}</div>
-                                        </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                                <!-- Room Attributes Section -->
-                                <Disclosure v-slot="{ open }">
-                                    <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                    >
-                                        <span
-                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{
-                                                $t('Room properties')
-                                            }}</span>
-                                        <ChevronDownIcon
-                                            :class="open ? 'rotate-180 transform' : ''"
-                                            class="h-4 w-4 mt-0.5 text-white"
-                                        />
-                                    </DisclosureButton>
-                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                        <div v-if="room_attributes.length > 0"
-                                             v-for="attribute in room_attributes"
-                                             :key="attribute"
-                                             class="flex w-full items-center mb-2">
-                                            <input type="checkbox"
-                                                   v-model="editRoomForm.room_attributesToDisplay"
-                                                   :value="{id:attribute.id,name: attribute.name}"
-                                                   class="input-checklist-dark"/>
-                                            <p :class="[editRoomForm.room_attributesToDisplay.includes(attribute)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                               class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                {{ attribute.name }}
-                                            </p>
-                                        </div>
-                                        <div v-else class="text-secondary">
-                                            {{ $t('No room properties created yet') }}
-                                        </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-                <div class="mt-2 flex flex-wrap">
-                                    <span v-for="(category, index) in editRoomForm.room_categoriesToDisplay"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ category.name }}
-                                        <button @click="editRoomForm.room_categoriesToDisplay.splice(index,1)"
-                                                type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                    <span v-for="(attribute, index) in editRoomForm.room_attributesToDisplay"
-                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ attribute.name }}
-                                        <button @click="editRoomForm.room_attributesToDisplay.splice(index,1)"
-                                                type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                    <span v-for="(room, index) in editRoomForm.adjoining_roomsToDisplay"
-                          class="flex rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                        {{ $t('adjoining room from') }} {{ room.name }}
-                        <button @click="editRoomForm.adjoining_roomsToDisplay.splice(index,1)"
-                                type="button">
-                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                        </button>
-                    </span>
+                <div class="space-y-6 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
+                    <RoomPropertyCheckboxGroup
+                        :label="$t('Room categories')"
+                        :items="room_categories"
+                        v-model="editRoomForm.room_categories"
+                        :empty-text="$t('No room categories created yet')"
+                    />
+                    <RoomPropertyCheckboxGroup
+                        :label="$t('Room properties')"
+                        :items="room_attributes"
+                        v-model="editRoomForm.room_attributes"
+                        :empty-text="$t('No room properties created yet')"
+                    />
+                    <RoomPropertyCheckboxGroup
+                        :label="$t('Adjoining rooms')"
+                        :items="adjoiningRoomItems"
+                        v-model="editRoomForm.adjoining_rooms"
+                        :empty-text="$t('No rooms created yet')"
+                    />
                 </div>
                 <div class="flex items-center">
                     <input v-model="editRoomForm.temporary"
@@ -1117,8 +888,7 @@ import {
     TrashIcon,
     XIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
-import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {CheckIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {defineComponent} from 'vue'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
@@ -1147,11 +917,15 @@ import {IconClock, IconCopy, IconEdit, IconLayoutGrid, IconRecycle, IconTrash} f
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import RoomPropertyCheckboxGroup from "@/Pages/Areas/Components/RoomPropertyCheckboxGroup.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
         PropertyIcon,
+        BaseFilter,
+        RoomPropertyCheckboxGroup,
         ArtworkBaseModal,
         BaseUIButton,
         ArtworkBaseModalButton,
@@ -1177,28 +951,19 @@ export default defineComponent({
         PlusSmIcon,
         SearchIcon,
         CheckIcon,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
         JetButton,
         JetDialogModal,
         JetInput,
         JetInputError,
         JetSecondaryButton,
         InformationCircleIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
         XIcon,
         PencilAltIcon,
         TrashIcon,
         XCircleIcon,
         Link,
         DuplicateIcon,
-        DocumentTextIcon,
-        Disclosure,
-        DisclosureButton,
-        DisclosurePanel
+        DocumentTextIcon
     },
     name: 'Area Management',
     props: ['areas', 'opened_areas', 'room_categories', 'room_attributes'],
@@ -1221,6 +986,8 @@ export default defineComponent({
             successDescription: "",
             showTemporaryRooms: [],
             showEditRoomModal: false,
+            roomFilterCategoryIds: [],
+            roomFilterAttributeIds: [],
             newAreaForm: useForm({
                 name: ''
             }),
@@ -1237,10 +1004,7 @@ export default defineComponent({
                 capacity: null,
                 room_categories: [],
                 room_attributes: [],
-                adjoining_rooms: [],
-                room_categoriesToDisplay: [],
-                room_attributesToDisplay: [],
-                adjoining_roomsToDisplay: []
+                adjoining_rooms: []
             }),
             editRoomForm: useForm({
                 id: null,
@@ -1258,10 +1022,7 @@ export default defineComponent({
                 capacity: null,
                 room_categories: [],
                 room_attributes: [],
-                adjoining_rooms: [],
-                room_categoriesToDisplay: [],
-                room_attributesToDisplay: [],
-                adjoining_roomsToDisplay: []
+                adjoining_rooms: []
             }),
             editAreaForm: useForm({
                 id: null,
@@ -1293,6 +1054,24 @@ export default defineComponent({
             }
 
             return this.areas;
+        },
+        adjoiningRoomItems() {
+            return this.computedAreasAndRooms.flatMap((area) =>
+                area.rooms.map((room) => ({id: room.id, name: room.name, hint: area.name}))
+            );
+        },
+        hasActiveRoomFilters() {
+            return this.roomFilterCategoryIds.length > 0 || this.roomFilterAttributeIds.length > 0;
+        },
+        filteredAreas() {
+            if (!this.hasActiveRoomFilters) {
+                return this.areas;
+            }
+
+            return this.areas.map((area) => ({
+                ...area,
+                rooms: area.rooms.filter((room) => this.roomMatchesFilter(room))
+            }));
         }
     },
     methods: {
@@ -1415,16 +1194,19 @@ export default defineComponent({
             this.newAreaForm.post(route('areas.store'), {});
             this.closeAddAreaModal();
         },
+        roomMatchesFilter(room) {
+            const matchesCategories = this.roomFilterCategoryIds.length === 0
+                || room.room_categories?.some((category) => this.roomFilterCategoryIds.includes(category.id));
+            const matchesAttributes = this.roomFilterAttributeIds.length === 0
+                || room.room_attributes?.some((attribute) => this.roomFilterAttributeIds.includes(attribute.id));
+
+            return matchesCategories && matchesAttributes;
+        },
+        resetRoomFilter() {
+            this.roomFilterCategoryIds = [];
+            this.roomFilterAttributeIds = [];
+        },
         addRoom() {
-            this.newRoomForm.adjoining_roomsToDisplay.forEach((adjoining_room) => {
-                this.newRoomForm.adjoining_rooms.push(adjoining_room.id);
-            });
-            this.newRoomForm.room_categoriesToDisplay.forEach((room_category) => {
-                this.newRoomForm.room_categories.push(room_category.id);
-            });
-            this.newRoomForm.room_attributesToDisplay.forEach((room_attributes) => {
-                this.newRoomForm.room_attributes.push(room_attributes.id);
-            });
             this.newRoomForm.post(
                 route('rooms.store'),
                 {
@@ -1511,15 +1293,9 @@ export default defineComponent({
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
             this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
-            room.adjoining_rooms.forEach((adjoining_room) => {
-                this.editRoomForm.adjoining_roomsToDisplay.push({id: adjoining_room.id, name: adjoining_room.name})
-            });
-            room.room_categories.forEach((room_category) => {
-                this.editRoomForm.room_categoriesToDisplay.push({id: room_category.id, name: room_category.name})
-            });
-            room.room_attributes.forEach((room_attribute) => {
-                this.editRoomForm.room_attributesToDisplay.push({id: room_attribute.id, name: room_attribute.name})
-            });
+            this.editRoomForm.adjoining_rooms = room.adjoining_rooms.map((adjoining_room) => adjoining_room.id);
+            this.editRoomForm.room_categories = room.room_categories.map((room_category) => room_category.id);
+            this.editRoomForm.room_attributes = room.room_attributes.map((room_attribute) => room_attribute.id);
 
             if (room.temporary === true) {
                 this.editRoomForm.temporary = true;
@@ -1559,16 +1335,6 @@ export default defineComponent({
         editRoom() {
             this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
             this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
-
-            this.editRoomForm.adjoining_roomsToDisplay.forEach((adjoining_room) => {
-                this.editRoomForm.adjoining_rooms.push(adjoining_room.id);
-            });
-            this.editRoomForm.room_categoriesToDisplay.forEach((room_category) => {
-                this.editRoomForm.room_categories.push(room_category.id);
-            });
-            this.editRoomForm.room_attributesToDisplay.forEach((room_attributes) => {
-                this.editRoomForm.room_attributes.push(room_attributes.id);
-            });
 
             this.editRoomForm.patch(
                 route('rooms.update', {room: this.editRoomForm.id}),

@@ -1,18 +1,25 @@
 <script setup>
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
+import AddComponentToTargetModal from "@/Pages/Settings/Components/AddComponentToTargetModal.vue";
 import { EventListenerForDragging } from "@/Composeables/EventListenerForDragging.js";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { IconCirclePlus, IconFolder } from "@tabler/icons-vue";
 
 const props = defineProps({
     component: { type: Object, required: true },
+    // Für die Klick-Alternative ("+"): alle Tabs als mögliche Ziele
+    allTabs: { type: Array, required: false, default: null },
+    // Einsatzorte dieser Komponente: [{tab, folder|null, sidebar|null}]
+    usages: { type: Array, required: false, default: () => [] },
 });
 
 const { t } = useI18n();
 const { dispatchEventStart, dispatchEventEnd } = EventListenerForDragging();
 
 const isDragging = ref(false);
+const showAddModal = ref(false);
 
 const payload = computed(() => ({
     id: props.component.id,
@@ -38,7 +45,7 @@ function onDragStart(event) {
         // no-op
     }
     isDragging.value = true;
-    dispatchEventStart();
+    dispatchEventStart(payload.value);
 }
 
 function onDragEnd() {
@@ -49,7 +56,7 @@ function onDragEnd() {
 // Sofort sichtbarer Drag-State beim Drücken (ohne auf DragStart warten)
 function onMouseDown() {
     isDragging.value = true;
-    dispatchEventStart();
+    dispatchEventStart(payload.value);
 }
 function onMouseUp() {
     isDragging.value = false;
@@ -65,6 +72,25 @@ const showLine = computed(() => props.component?.data?.showLine === true);
 
 // Übersetzter Name
 const displayName = computed(() => t(props.component.name));
+
+const isFolder = computed(() => props.component.type === "DisclosureComponent");
+// Ordner-Titel, wie er im Projekt angezeigt wird (data.label, nicht der interne Name)
+const folderLabel = computed(() => props.component?.data?.label || null);
+
+// Komponenten, die nach dem Ablegen eine Tab-Auswahl (Scope) benötigen
+const needsScope = computed(() =>
+    ["ProjectDocumentsComponent", "CommentTab", "ChecklistComponent"].includes(props.component.type)
+);
+
+const usageTooltip = computed(() =>
+    props.usages
+        .map((u) => {
+            if (u.folder) return `${u.tab} → ${t("Folder")} "${u.folder}"`;
+            if (u.sidebar) return `${u.tab} → ${t("Sidebar")} "${u.sidebar}"`;
+            return u.tab;
+        })
+        .join("\n")
+);
 </script>
 
 <template>
@@ -100,12 +126,45 @@ const displayName = computed(() => t(props.component.name));
                 </div>
 
                 <!-- Text & Meta -->
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                     <div class="text-sm font-semibold truncate" :title="displayName">
                         {{ displayName }}
                     </div>
 
+                    <!-- Ordner-Titel, wie er im Projekt erscheint -->
+                    <div
+                        v-if="isFolder && folderLabel"
+                        class="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-600 min-w-0"
+                        :title="t('This title is displayed in the project')"
+                    >
+                        <IconFolder class="size-3.5 shrink-0 text-zinc-500" />
+                        <span class="truncate font-medium">{{ folderLabel }}</span>
+                    </div>
+
                     <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                        <!-- Verwendung -->
+                        <span
+                            v-if="usages.length > 0"
+                            class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50/70 px-2 py-0.5 text-[10px] leading-4 text-emerald-700 whitespace-pre-line"
+                            :title="usageTooltip"
+                        >
+                            {{ t('Used') }}: {{ usages.length }}
+                        </span>
+                        <span
+                            v-else
+                            class="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50/70 px-2 py-0.5 text-[10px] leading-4 text-zinc-500"
+                        >
+                            {{ t('Not used') }}
+                        </span>
+
+                        <!-- Scope-Konfiguration nötig -->
+                        <span
+                            v-if="needsScope"
+                            class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50/70 px-2 py-0.5 text-[10px] leading-4 text-amber-700"
+                            :title="t('When adding, you choose which tabs are included')"
+                        >
+                            {{ t('Requires configuration') }}
+                        </span>
                         <!-- Höhe -->
                         <span v-if="hasHeight"
                             class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-zinc-600"
@@ -130,17 +189,40 @@ const displayName = computed(() => t(props.component.name));
                     </div>
                 </div>
 
-                <!-- (Optional) dezenter Drag-Hinweis rechts -->
-                <div
-                    class="ml-auto h-8 w-5 rounded-md border"
-                    :class="isDragging ? 'border-emerald-300/70 bg-emerald-50/50 rounded-lg' : 'border-zinc-200 bg-white/60'"
-                    aria-hidden="true"
-                >
-                    <div class="h-full w-full grid place-items-center text-[10px] text-zinc-400">⋮⋮</div>
+                <!-- Rechts: Klick-Alternative + Drag-Hinweis -->
+                <div class="ml-auto flex items-center gap-1.5 shrink-0">
+                    <!-- Plus-Button: Hinzufügen ohne Drag & Drop -->
+                    <button
+                        v-if="allTabs"
+                        type="button"
+                        class="grid place-items-center size-8 rounded-md border border-zinc-200 bg-white/60 hover:bg-emerald-50 hover:border-emerald-300 transition"
+                        :title="t('Add without drag and drop')"
+                        :aria-label="t('Add component')"
+                        draggable="false"
+                        @mousedown.stop
+                        @click.stop="showAddModal = true"
+                    >
+                        <IconCirclePlus class="size-4 text-zinc-600" />
+                    </button>
+
+                    <div
+                        class="h-8 w-5 rounded-md border"
+                        :class="isDragging ? 'border-emerald-300/70 bg-emerald-50/50 rounded-lg' : 'border-zinc-200 bg-white/60'"
+                        aria-hidden="true"
+                    >
+                        <div class="h-full w-full grid place-items-center text-[10px] text-zinc-400">⋮⋮</div>
+                    </div>
                 </div>
             </div>
         </div>
     </DropComponentsToolTip>
+
+    <AddComponentToTargetModal
+        v-if="showAddModal && allTabs"
+        :component="component"
+        :tabs="allTabs"
+        @close="showAddModal = false"
+    />
 </template>
 
 <style scoped>

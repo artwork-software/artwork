@@ -83,7 +83,7 @@
                         v-model="projectSearch"
                         :no-margin-top="true"
                         ref="projectSearchInput"
-                        label="Search project"
+                        label="Search project or artist"
                         is-small
                     />
                     <div v-if="projectSearchResults.length > 0"
@@ -95,6 +95,9 @@
                             <div>{{ project.name }}</div>
                             <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
                                 {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
+                            </div>
+                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                                {{ $t('Artist') }}: {{ project.artists }}
                             </div>
                         </div>
                     </div>
@@ -497,7 +500,7 @@ const props = defineProps({
     }
 })
 
-const dailyViewMode = ref(usePage().props.auth.user.daily_view ?? false);
+const dailyViewMode = ref(usePage().props.auth.user.calendar_daily_view ?? false);
 const enableVerification = ref(false);
 const activeCalSettings = computed(() => {
     if (props.dailyView) {
@@ -538,7 +541,8 @@ const closeCalendarAboSettingModal = (bool) => {
 
 const changeDailyViewMode = () => {
     router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-        daily_view: dailyViewMode.value
+        daily_view: dailyViewMode.value,
+        context: 'calendar'
     }, {
         preserveScroll: false,
         preserveState: false
@@ -664,7 +668,8 @@ const jumpToToday = () => {
     if (!dailyViewMode.value) {
         dailyViewMode.value = true;
         router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: true
+            daily_view: true,
+            context: 'calendar'
         }, {
             preserveScroll: false,
             preserveState: false,
@@ -716,7 +721,8 @@ const jumpToCurrentMonth = () => {
     if (dailyViewMode.value) {
         dailyViewMode.value = false;
         router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: false
+            daily_view: false,
+            context: 'calendar'
         }, {
             preserveScroll: false,
             preserveState: false,

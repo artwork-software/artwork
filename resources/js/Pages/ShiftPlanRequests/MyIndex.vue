@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="isPlanner ? $t('Shift plan requests') : $t('Meine Dienstplananfragen')">
+    <AppLayout :title="isPlanner ? $t('Requested duty rosters') : $t('Meine Dienstplananfragen')">
         <div class="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
             <!-- Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

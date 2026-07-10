@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Shift\Http\Controllers;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Serializers\ShiftHistorySerializer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -10,11 +11,14 @@ use Spatie\Activitylog\Models\Activity;
 
 class ShiftHistoryController
 {
+    public function __construct(private readonly ShiftHistorySerializer $serializer)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $craftId = $request->query('craftId');
-        // craftId=0 or null means "all crafts"
-        $craftId = $craftId !== null ? (int) $craftId : 0;
+        $craftId = max(0, $request->integer('craftId'));
+        $shiftId = max(0, $request->integer('shiftId'));
 
         // Zeitraum (Default: aktueller Monat)
         $startParam = $request->query('start_date');
@@ -61,8 +65,7 @@ class ShiftHistoryController
             ->startAndEndDateOverlap($startYmd, $endYmd);
 
         if ($loadShiftDetails) {
-            // Erste Seite: volle Shift-Liste inkl. Relationen für die Filter-Dropdowns im Frontend.
-            // deleted_at mitgeben, damit das Frontend gelöschte Schichten kennzeichnen kann.
+            // Avoid serializing expensive Shift appends for the filter dropdown.
             $shifts = (clone $shiftQuery)
                 ->select([
                     'id',
@@ -85,13 +88,20 @@ class ShiftHistoryController
                 ])
                 ->orderBy('start_date')
                 ->orderBy('start')
-                ->get();
+                ->get()
+                ->map($this->serializer->serializeShift(...))
+                ->values();
 
-            $shiftIds = $shifts->pluck('id')->all();
+            $shiftIds = $shiftId > 0
+                ? $shifts->where('id', $shiftId)->pluck('id')->all()
+                : $shifts->pluck('id')->all();
         } else {
             // Folgeseiten: nur die IDs, um die Activities zu filtern.
             $shifts = null;
-            $shiftIds = (clone $shiftQuery)->pluck('id')->all();
+            $shiftIds = (clone $shiftQuery)
+                ->when($shiftId > 0, fn ($query) => $query->whereKey($shiftId))
+                ->pluck('id')
+                ->all();
         }
 
         // Force-gelöschte Schichten (Row physisch weg) über den im Log gespeicherten
@@ -110,6 +120,7 @@ class ShiftHistoryController
             ->where('log_name', 'shift')
             ->where('subject_type', Shift::class)
             ->where('event', 'deleted')
+            ->when($shiftId > 0, fn ($query) => $query->where('subject_id', $shiftId))
             ->when(!empty($shiftIds), fn ($q) => $q->whereNotIn('subject_id', $shiftIds))
             ->whereBetween('properties->shift_snapshot->start_date', [$startYmd, $endYmd])
             ->when($craftId > 0, fn ($q) => $q->where('properties->craft_id', $craftId))
@@ -121,27 +132,42 @@ class ShiftHistoryController
         // deren START im Zeitraum liegt. Für genau diese Schichten zeigen wir ALLE Activities –
         // damit der komplette Verlauf inkl. Lösch-Eintrag erscheint, unabhängig vom Fortbestand.
         $matchedShiftIds = array_values(array_unique(array_merge($shiftIds, $snapshotShiftIds)));
-
-        if (empty($matchedShiftIds)) {
-            return response()->json([
-                'shifts' => $shifts ?? [],
-                'logs'   => [
-                    'data' => [],
-                    'meta' => ['current_page' => 1, 'last_page' => 1, 'per_page' => $perPage, 'total' => 0],
-                ],
-                'range'  => [
-                    'start_date' => $startYmd,
-                    'end_date'   => $endYmd,
-                ],
-            ]);
-        }
+        $includeCommitSummaries = $shiftId === 0 || in_array($shiftId, $matchedShiftIds, true);
 
         // Activity Logs (Spatie activity_log) – über die Schicht-Zugehörigkeit, NICHT über
         // den Fortbestand der Schicht. So bleiben Einträge gelöschter Schichten sichtbar.
+        // Zusätzlich: Sammel-Einträge (Festschreibung einer KW / eines Zeitraums) haben
+        // bewusst KEIN Subject — sie werden über den in properties->commit_summary
+        // gespeicherten Zeitraum (Überlappung) und optional die craft_ids eingesammelt.
         $paginator = Activity::query()
             ->where('log_name', 'shift')
-            ->where('subject_type', Shift::class)
-            ->whereIn('subject_id', $matchedShiftIds)
+            ->where(function ($query) use (
+                $matchedShiftIds,
+                $startYmd,
+                $endYmd,
+                $craftId,
+                $shiftId,
+                $includeCommitSummaries
+            ): void {
+                $query->where(function ($subjectQuery) use ($matchedShiftIds): void {
+                    $subjectQuery->where('subject_type', Shift::class)
+                        ->whereIn('subject_id', $matchedShiftIds);
+                })->when($includeCommitSummaries, function ($query) use ($startYmd, $endYmd, $craftId, $shiftId): void {
+                    $query->orWhere(function ($summaryQuery) use ($startYmd, $endYmd, $craftId, $shiftId): void {
+                        $summaryQuery->whereNull('subject_id')
+                            ->where('properties->commit_summary->start_date', '<=', $endYmd)
+                            ->where('properties->commit_summary->end_date', '>=', $startYmd)
+                            ->when(
+                                $shiftId > 0,
+                                fn ($query) => $query->whereJsonContains('properties->shift_ids', $shiftId)
+                            )
+                            ->when(
+                                $craftId > 0,
+                                fn ($query) => $query->whereJsonContains('properties->craft_ids', $craftId)
+                            );
+                    });
+                });
+            })
             ->when($search !== '', function ($q) use ($search): void {
                 // Groß-/Kleinschreibung bewusst ignorieren (LOWER auf beiden Seiten),
                 // damit z.B. "jannik" auch "Jannik Müller" findet – unabhängig von der
@@ -186,12 +212,17 @@ class ShiftHistoryController
                     ->select('activity_log.*')
                     ->orderByRaw(
                         'COALESCE(shifts.start_date, '
-                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date"))'
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.shift_snapshot.start_date")), '
+                        // Sammel-Einträge (Festschreibung) haben kein Subject/Snapshot —
+                        // ihr Zeitraum-Beginn sortiert sie in den richtigen Schichttag ein.
+                        . 'JSON_UNQUOTE(JSON_EXTRACT(activity_log.properties, "$.commit_summary.start_date"))'
                         . ') DESC'
                     )
-                    ->orderByDesc('activity_log.created_at');
+                    ->orderByDesc('activity_log.created_at')
+                    ->orderByDesc('activity_log.id');
             }, function ($q): void {
-                $q->orderByDesc('created_at');
+                $q->orderByDesc('activity_log.created_at')
+                    ->orderByDesc('activity_log.id');
             })
             ->paginate($perPage);
 

@@ -1,38 +1,30 @@
-<!-- StatusInlineList.vue -->
+<!--
+    Status-Filter der Inventarübersicht als Pill-Leiste.
+    Klick wirkt sofort (Toggle); der aktive Status erscheint zusätzlich als
+    entfernbarer Chip in der Aktive-Filter-Zeile der InventoryFilterComponent.
+-->
 <template>
     <div class="overflow-x-auto">
-        <div class="flex items-center whitespace-nowrap gap-4 text-sm">
-            <template v-for="(item, idx) in items" :key="item.id">
-                <div
-                    class="inline-flex items-center gap-2 cursor-pointer rounded-md px-2 py-1 transition-colors"
-                    :class="[
-                        isActive(item.id) ? 'bg-gray-100 ring-1 ring-gray-300' : '',
-                        isReady(item.name) ? 'font-semibold ring-1 ring-artwork-buttons-create/40 bg-artwork-buttons-create/5' : ''
-                    ]"
-                    @click="toggleStatus(item.id)"
-                >
-                    <span
-                        class="inline-block rounded-full border"
-                        :class="isReady(item.name) ? 'size-4' : 'size-3.5'"
-                        :style="{ backgroundColor: item.color + '55' || palette[item.index % palette.length], borderColor: item.color }"
-                    />
-                    <span :class="isReady(item.name) ? 'text-[0.95rem]' : ''">{{ item.name }}</span>
-                    <span class="tabular-nums text-gray-600">
-                        ({{ item.count.toLocaleString('de-DE') }})
-                    </span>
-                </div>
-                <span v-if="idx < items.length - 1" class="text-gray-300">•</span>
-            </template>
-        </div>
-
-        <!-- Filter Bubble -->
-        <div v-if="activeStatusName" class="mt-2 inline-flex items-center gap-2 rounded-full bg-artwork-buttons-create/10 border border-artwork-buttons-create/30 px-3 py-1 text-sm text-artwork-buttons-create">
-            <span>{{ $t('Only articles with at least 1x') }} "{{ activeStatusName }}"</span>
+        <div class="flex items-center whitespace-nowrap gap-1.5 text-sm">
+            <span class="text-[11px] uppercase tracking-wide text-gray-400 mr-1">{{ $t('Status') }}</span>
             <button
-                class="ml-1 inline-flex items-center justify-center size-4 rounded-full hover:bg-artwork-buttons-create/20 transition-colors"
-                @click="toggleStatus(null)"
+                v-for="item in items"
+                :key="item.id"
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+                :class="[
+                    isActive(item.id) ? '' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                    isReady(item.name) && !isActive(item.id) ? 'font-semibold ring-1 ring-artwork-buttons-create/40 bg-artwork-buttons-create/5' : ''
+                ]"
+                :style="isActive(item.id) ? activeStyle(item) : {}"
+                @click="toggleStatus(item.id)"
             >
-                ✕
+                <span
+                    class="inline-block size-2.5 rounded-full border"
+                    :style="{ backgroundColor: (item.color || fallbackColor(item.index)) + '55', borderColor: item.color || fallbackColor(item.index) }"
+                />
+                <span>{{ item.name }}</span>
+                <span class="tabular-nums text-gray-500">{{ item.count.toLocaleString('de-DE') }}</span>
             </button>
         </div>
     </div>
@@ -58,20 +50,27 @@ const palette = [
     '#EF4444', '#10B981', '#6B7280', '#8915a3',
 ]
 
+const fallbackColor = (index: number) => palette[index % palette.length]
+
 const isActive = (id: string) => String(props.activeStatusId) === id
 
-const activeStatusName = computed(() => {
-    if (!props.activeStatusId) return null
-    const row = props.countsByStatus?.[String(props.activeStatusId)]
-    return row?.name ?? null
-})
+const activeStyle = (item: { color?: string, index: number }) => {
+    const base = item.color || fallbackColor(item.index)
+    return {
+        backgroundColor: base + '14',
+        borderColor: base,
+        color: '#1f2937',
+    }
+}
 
 const toggleStatus = (id: string | null) => {
     const newId = (id !== null && String(props.activeStatusId) === id) ? null : id
     router.reload({
         data: { status_id: newId },
         preserveScroll: true,
-        only: ['articles', 'activeStatusId'],
+        // Sidebar & Chips hängen an hasActiveFilter/categories -> mitladen,
+        // sonst zeigen sie nach einem Status-Toggle veraltete Zustände.
+        only: ['articles', 'activeStatusId', 'countsByStatus', 'categories', 'currentCategory', 'hasActiveFilter'],
     })
 }
 

@@ -41,13 +41,14 @@ class AvailabilityService
             'is_series' => $data->is_series,
         ]);
 
+        $userAvailable = $available instanceof User ? $available : null;
+        $freelancerAvailable = $available instanceof Freelancer ? $available : null;
+
         $availabilityConflictService->checkAvailabilityConflictsOnDay(
             $firstAvailable->date,
             $notificationService,
-            $firstAvailable->available_type === User::class ?
-                User::find($firstAvailable->available_id) : null,
-            $firstAvailable->available_type === Freelancer::class ?
-                Freelancer::find($firstAvailable->available_id) : null
+            $userAvailable,
+            $freelancerAvailable
         );
 
         if ($data->is_series) {
@@ -77,10 +78,8 @@ class AvailabilityService
                     $availabilityConflictService->checkAvailabilityConflictsOnDay(
                         $newAvailability->date,
                         $notificationService,
-                        $newAvailability->available_type === User::class ?
-                            User::find($newAvailability->available_id) : null,
-                        $newAvailability->available_type === Freelancer::class ?
-                            Freelancer::find($newAvailability->available_id) : null,
+                        $userAvailable,
+                        $freelancerAvailable
                     );
                 }
             }
@@ -99,10 +98,8 @@ class AvailabilityService
                     $availabilityConflictService->checkAvailabilityConflictsOnDay(
                         $newAvailability->date,
                         $notificationService,
-                        $newAvailability->available_type === User::class ?
-                            User::find($newAvailability->available_id) : null,
-                        $newAvailability->available_type === Freelancer::class ?
-                            Freelancer::find($newAvailability->available_id) : null,
+                        $userAvailable,
+                        $freelancerAvailable
                     );
                 }
             }

@@ -50,14 +50,26 @@
                     </div>
                 </div>
 
-                <div class="hidden sm:flex flex-col items-end gap-1 text-xs">
-                    <span class="inline-flex items-center gap-1 rounded-full bg-zinc-50 px-2 py-1 text-zinc-600 border border-zinc-100">
-                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                        {{ day.dayString }}
-                    </span>
-                    <span class="text-[11px] text-zinc-400">
-                        {{ day.fullDay }}
-                    </span>
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        :title="t('Show shift history for this person and day')"
+                        @click="openHistory"
+                    >
+                        <PropertyIcon name="IconHistory" class="h-3.5 w-3.5" stroke-width="2" />
+                        <span>{{ t('Shift history') }}</span>
+                    </button>
+
+                    <div class="hidden sm:flex flex-col items-end gap-1 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-zinc-50 px-2 py-1 text-zinc-600 border border-zinc-100">
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                            {{ day.dayString }}
+                        </span>
+                        <span class="text-[11px] text-zinc-400">
+                            {{ day.fullDay }}
+                        </span>
+                    </div>
                 </div>
             </section>
 
@@ -783,7 +795,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['closed', 'delete', 'desiresReload']);
+const emit = defineEmits(['closed', 'delete', 'desiresReload', 'openHistory']);
 
 const { t } = useI18n();
 const page = usePage();
@@ -1036,15 +1048,28 @@ function handleSeriesUpdated() {
     closeSeriesModal();
 }
 
-function deleteIndividualTimeById(individualTime) {
-    if (individualTime.id) {
-        router.delete(
-            route('delete.individualTimes', { individualTime }),
-            {
-                preserveScroll: true,
-                preserveState: false,
-            },
-        );
+function removeIndividualTimeFromModal(individualTimeId) {
+    props.user.individual_times = (props.user.individual_times || []).filter(
+        (individualTime) => individualTime.id !== individualTimeId,
+    );
+    originalIndividualTimes.value = originalIndividualTimes.value.filter(
+        (individualTime) => individualTime.id !== individualTimeId,
+    );
+}
+
+async function deleteIndividualTimeById(individualTime) {
+    const individualTimeId = individualTime?.id;
+
+    if (!individualTimeId) {
+        return;
+    }
+
+    try {
+        await axios.delete(route('delete.individualTimes', { individualTime: individualTimeId }));
+        removeIndividualTimeFromModal(individualTimeId);
+        emit('desiresReload');
+    } catch {
+        // Keep the current modal state if the delete request fails.
     }
 }
 
@@ -1079,6 +1104,16 @@ function closeModal(bool) {
     // Zustand auf ursprüngliche IndividualTimes zurücksetzen
     props.user.individual_times = JSON.parse(JSON.stringify(originalIndividualTimes.value));
     emit('closed', bool);
+}
+
+// Shortcut: Schichtverlauf mit dieser Person und diesem Tag vorausgewählt öffnen.
+// Das Verlauf-Modal wird vom Parent über dem Tagesmodal geöffnet.
+function openHistory() {
+    const el = props.user.element;
+    const name = el.type === 'service_provider'
+        ? el.provider_name
+        : (el.full_name ?? `${el.first_name ?? ''} ${el.last_name ?? ''}`.trim());
+    emit('openHistory', { search: name ?? '', date: props.day.withoutFormat });
 }
 
 function removeUserFromShift(shiftId, usersPivotId) {
@@ -1191,6 +1226,9 @@ function sendCheckVacation() {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },
@@ -1213,6 +1251,9 @@ function sendCheckVacation() {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },
@@ -1235,6 +1276,9 @@ function sendCheckVacation() {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
+                    // Worker-Zeile (vacations) und damit die "Eingeplant, aber nicht
+                    // verfügbar"-Hervorhebung sofort aktualisieren
+                    emit('desiresReload');
                     closeModal(true);
                 },
             },

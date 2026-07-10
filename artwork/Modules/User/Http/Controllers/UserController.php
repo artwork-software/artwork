@@ -21,6 +21,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Services\PermissionPresetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
@@ -42,6 +43,7 @@ use Artwork\Modules\Shift\Services\UserShiftQualificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\User\Enums\MemberSortEnum;
+use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
@@ -368,6 +370,30 @@ class UserController extends Controller
             "departments" => Department::all(),
             "password_reset_status" => session('status'),
             'calendar_settings' => $user->calendar_settings,
+        ]);
+    }
+
+    public function tooltipInfo(User $user): JsonResponse
+    {
+        $canViewPrivate = Auth::user()->can(PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value);
+
+        return response()->json([
+            'id' => $user->getAttribute('id'),
+            'first_name' => $user->getAttribute('first_name'),
+            'last_name' => $user->getAttribute('last_name'),
+            'profile_photo_url' => $user->getAttribute('profile_photo_url'),
+            'pronouns' => $user->getAttribute('pronouns'),
+            'position' => $user->getAttribute('position'),
+            'business' => $user->getAttribute('business'),
+            'description' => $user->getAttribute('description'),
+            'email' => !$user->getAttribute('email_private') || $canViewPrivate
+                ? $user->getAttribute('email')
+                : null,
+            'phone_number' => !$user->getAttribute('phone_private') || $canViewPrivate
+                ? $user->getAttribute('phone_number')
+                : null,
+            'email_private' => (bool) $user->getAttribute('email_private'),
+            'phone_private' => (bool) $user->getAttribute('phone_private'),
         ]);
     }
 
@@ -929,7 +955,7 @@ class UserController extends Controller
         CraftService $craftService
     ): Response|ResponseFactory {
 
-        $user->load(['assignedCrafts.qualifications', 'shiftQualifications']);
+        $user->load(['assignedCrafts.qualifications', 'shiftQualifications', 'defaultProjectRoles']);
 
         $globalQualifications = $this->qualificationService->getAll()->map(function ($qualification) use ($user) {
             return [
@@ -950,6 +976,7 @@ class UserController extends Controller
                 'currentTab' => 'workProfile',
                 'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending(),
                 'globalQualifications' => $globalQualifications,
+                'projectRoles' => ProjectRole::all(),
             ]
         );
     }
@@ -1107,6 +1134,8 @@ class UserController extends Controller
 
         $user->syncPermissions($permissionsToGrant);
         $user->syncRoles($rolesToGrant);
+        // Gecachte Inertia-Share-Daten sofort invalidieren statt auf den 5-Min.-TTL zu warten
+        $user->forgetCachedShareData();
 
         return Redirect::back();
     }
@@ -1155,6 +1184,25 @@ class UserController extends Controller
         $user->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
         ]);
+
+        return Redirect::back();
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateDefaultProjectRoles(User $user, Request $request): RedirectResponse
+    {
+        $this->authorize('updateWorkProfile', User::class);
+
+        $validated = $request->validate([
+            'defaultProjectRoleIds' => 'array',
+            'defaultProjectRoleIds.*' => 'integer',
+        ]);
+
+        $user->defaultProjectRoles()->sync(
+            ProjectRole::whereIn('id', $validated['defaultProjectRoleIds'] ?? [])->pluck('id')
+        );
 
         return Redirect::back();
     }
@@ -1523,6 +1571,15 @@ class UserController extends Controller
         ]));
     }
 
+    public function updateModalBackdrop(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $user->update([
+            'show_modal_backdrop' => $request->boolean('show_modal_backdrop'),
+        ]);
+    }
+
     public function updateChecklistStyle(User $user, Request $request): void
     {
         $user->update($request->only([
@@ -1547,12 +1604,57 @@ class UserController extends Controller
 
     public function updateDailyView(User $user, Request $request): void
     {
-        $user->update($request->only('daily_view'));
+        $dailyView = $request->boolean('daily_view');
+        // Calendar and shift plan keep their view mode independently. The legacy
+        // "daily_view" column is kept in sync as a fallback for un-migrated readers.
+        $context = $request->get('context', 'calendar');
+
+        $column = $context === 'shift_plan' ? 'shift_plan_daily_view' : 'calendar_daily_view';
+
+        $user->update([
+            $column => $dailyView,
+            'daily_view' => $dailyView,
+        ]);
+
+        // When switching *into* the day view, seed its date range from the current
+        // week-view range so the day view opens where the user currently is
+        // ("vom aktuellen Stand übernehmen"). The week filter stays untouched, so
+        // switching back returns to exactly where the user left off.
+        if ($dailyView) {
+            $seedMap = $context === 'shift_plan'
+                ? [UserFilterTypes::SHIFT_FILTER->value => UserFilterTypes::SHIFT_DAILY_FILTER->value]
+                : [
+                    UserFilterTypes::CALENDAR_FILTER->value => UserFilterTypes::CALENDAR_DAILY_FILTER->value,
+                    UserFilterTypes::PLANNING_FILTER->value => UserFilterTypes::PLANNING_DAILY_FILTER->value,
+                ];
+
+            foreach ($seedMap as $weekType => $dailyType) {
+                $weekFilter = $user->userFilters()->where('filter_type', $weekType)->first();
+                if ($weekFilter?->start_date === null) {
+                    continue;
+                }
+
+                $start = Carbon::parse($weekFilter->start_date)->startOfDay();
+
+                $user->userFilters()->updateOrCreate(
+                    ['filter_type' => $dailyType],
+                    [
+                        'start_date' => $start->format('Y-m-d'),
+                        'end_date' => $start->copy()->addDays(7)->format('Y-m-d'),
+                    ]
+                );
+            }
+        }
     }
 
-    public function updateBulkColumnSize(User $user, Request $request): void
+    public function updateBulkColumnSize(User $user, Request $request): \Illuminate\Http\RedirectResponse
     {
         $user->update($request->only('bulk_column_size'));
+
+        // Redirect zurückgeben, damit Inertia eine gültige Antwort erhält und die
+        // geteilten auth.user-Props (inkl. bulk_column_size) neu lädt – sonst greifen
+        // die neuen Spaltenbreiten erst nach einem vollständigen Reload.
+        return back();
     }
 
     public function updateShowDescriptionInBulk(User $user, Request $request): void
@@ -1577,6 +1679,19 @@ class UserController extends Controller
         SessionManager $sessionManager,
         Repository $config
     ): Response|ResponseFactory {
+        // Eigener Plan braucht "can view own roster"; fremde Pläne nur mit Team-
+        // oder Mitarbeiterverwaltung (Admins passieren via Gate::before).
+        if ($user->id === Auth::user()->id) {
+            if (!Auth::user()->can(PermissionEnum::CAN_VIEW_OWN_ROSTER->value)) {
+                abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+            }
+        } elseif (
+            !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)
+            && !Auth::user()->can(PermissionEnum::MA_MANAGER->value)
+        ) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
+
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
         $selectedDate = $showVacationsAndAvailabilities ?
@@ -1587,15 +1702,6 @@ class UserController extends Controller
             Carbon::today();
         $userService->shareCalendarAbo('shiftCalendar');
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
-
-        // Update workerShiftPlanFilter when month is changed (from availability calendar)
-        if ($request->has('month')) {
-            $monthDate = Carbon::parse($request->get('month'));
-            $user->workerShiftPlanFilter()->update([
-                'start_date' => $monthDate->copy()->startOfMonth()->format('Y-m-d'),
-                'end_date' => $monthDate->copy()->endOfMonth()->format('Y-m-d')
-            ]);
-        }
 
         return Inertia::render(
             'Shifts/UserOperationPlan',
@@ -1803,5 +1909,26 @@ class UserController extends Controller
     public function updateOpenedCrafts(User $user, Request $request): void
     {
         $user->update($request->only('opened_crafts'));
+    }
+
+    public function updateSortWorkersByQualification(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $request->validate(['sort_workers_by_qualification' => ['required', 'boolean']]);
+
+        $user->update($request->only('sort_workers_by_qualification'));
+    }
+
+    public function updateClosedQualificationGroups(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        $request->validate([
+            'closed_qualification_groups' => ['nullable', 'array'],
+            'closed_qualification_groups.*' => ['string'],
+        ]);
+
+        $user->update($request->only('closed_qualification_groups'));
     }
 }

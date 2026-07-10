@@ -4,6 +4,7 @@ namespace Artwork\Modules\ServiceProvider\Services;
 
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -58,15 +59,20 @@ readonly class ServiceProviderService
 
         $serviceProvidersWithPlannedWorkingHours = [];
 
+        // KW-Stunden externer Personen nur mit Berechtigung (eigene Werte gibt es hier nicht)
+        $canSeeWorkerHours = $currentUser?->can(PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value) ?? false;
+
         /** @var ServiceProvider $serviceProvider */
         foreach ($serviceProviders as $serviceProvider) {
             $desiredServiceProviderResource = $desiredResourceClass::make($serviceProvider);
 
-            $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
-                $serviceProvider,
-                $startDate,
-                $endDate
-            );
+            $weeklyWorkingHours = $canSeeWorkerHours
+                ? $this->workingHourService->calculateWeeklyWorkingHours(
+                    $serviceProvider,
+                    $startDate,
+                    $endDate
+                )
+                : [];
 
             $additionalData = [
                 'weeklyWorkingHours' => $weeklyWorkingHours,

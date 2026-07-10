@@ -17,25 +17,49 @@
     </div>
     <div class="grid grid-cols-12 w-full mb-20 items-start">
         <div ref="calendarCol" class="col-span-7">
-            <UserAvailabilityCalendar :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" :calendar-data="calendarData" :date-to-show="dateToShow" />
+            <UserAvailabilityCalendar
+                :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate"
+                :calendar-data="calendarData"
+                :date-to-show="dateToShow"
+                :interactive="canManage"
+                @select-range="openCreateModal"
+            />
         </div>
         <div class="col-span-1">
 
         </div>
         <div class="col-span-4 mt-12 overflow-y-auto" :style="{ maxHeight: calendarHeight + 'px' }">
-            <UserVacations :availabilities="availabilities" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" />
+            <UserVacations
+                :availabilities="availabilities"
+                :type="type"
+                :user="user"
+                :vacations="vacations"
+                :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate"
+                @create="openCreateModal(null)"
+            />
         </div>
     </div>
+
+    <AddEditVacationsModal
+        v-if="showCreateModal"
+        :type="type"
+        :user="user"
+        :initial-start="createRange.start"
+        :initial-end="createRange.end"
+        @closed="showCreateModal = false"
+    />
 </template>
 
 <script>
-import {defineComponent, ref, onMounted, onBeforeUnmount} from 'vue'
+import {defineComponent, ref, onMounted, onBeforeUnmount, computed} from 'vue'
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
 import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
+import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import TemporarilyHired from "@/Pages/Users/Components/TemporarilyHired.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import dayjs from "dayjs";
 import {usePage} from "@inertiajs/vue3";
+import {can, is} from "laravel-permission-to-vuejs";
 
 export default defineComponent({
     name: "Availability",
@@ -46,7 +70,7 @@ export default defineComponent({
         }
     },
     mixins: [Permissions],
-    components: {TemporarilyHired, UserVacations, UserAvailabilityCalendar},
+    components: {TemporarilyHired, UserVacations, UserAvailabilityCalendar, AddEditVacationsModal},
     props: [
         'calendarData',
         'dateToShow',
@@ -58,7 +82,7 @@ export default defineComponent({
         'showVacationsAndAvailabilitiesDate',
         'availabilities'
     ],
-    setup() {
+    setup(props) {
         const calendarCol = ref(null)
         const calendarHeight = ref(500)
         let observer = null
@@ -79,7 +103,26 @@ export default defineComponent({
             observer?.disconnect()
         })
 
-        return { calendarCol, calendarHeight }
+        const page = usePage()
+        const canManage = computed(() =>
+            can('can manage workers') ||
+            is('artwork admin') ||
+            (props.type !== 'freelancer' && props.user?.id === page.props?.auth?.user?.id) ||
+            can('can manage availability')
+        )
+
+        const showCreateModal = ref(false)
+        const createRange = ref({ start: '', end: '' })
+
+        const openCreateModal = (range) => {
+            if (!canManage.value) return
+            createRange.value = range?.start
+                ? { start: range.start, end: range.end }
+                : { start: dayjs().format('YYYY-MM-DD'), end: dayjs().format('YYYY-MM-DD') }
+            showCreateModal.value = true
+        }
+
+        return { calendarCol, calendarHeight, canManage, showCreateModal, createRange, openCreateModal }
     },
 })
 </script>

@@ -6,6 +6,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,11 +38,22 @@ class EventTypeController extends Controller
 
     public function update(Request $request, EventType $eventType, EventTypeService $eventTypeService): RedirectResponse
     {
-        //dd($request->all());
+        $previousSpecificVerifierId = $eventType->getOriginal('specific_verifier_id');
+        $previousVerifierIds = $eventType->verifiers()->pluck('users.id')->all();
+
         $eventType = $eventTypeService->save($this->setProperties($eventType, $request));
 
         $eventType->verifiers()->detach();
-        $eventType->verifiers()->attach($request->collect('users', [])->pluck('id'));
+        $newVerifierIds = $request->collect('users', [])->pluck('id')->all();
+        $eventType->verifiers()->attach($newVerifierIds);
+
+        // Verifier-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
+        User::forgetCachedShareDataForIds(array_unique(array_filter([
+            ...$previousVerifierIds,
+            ...$newVerifierIds,
+            $previousSpecificVerifierId,
+            $eventType->specific_verifier_id,
+        ])));
 
         return Redirect::route('event_types.management');
     }

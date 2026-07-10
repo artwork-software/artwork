@@ -157,7 +157,17 @@ class ShiftService
     ): bool {
         $this->workingHourCacheService->forgetForShift($shift);
 
+        // Die "Betroffen: …"-Namen für den Lösch-Verlaufseintrag JETZT erfassen:
+        // gleich werden die shift_workers-Pivots soft-deleted, danach liefern die
+        // users()/freelancer()/serviceProvider()-Relationen (whereNull deleted_at)
+        // nichts mehr — der deleting-Observer käme zu spät.
+        $shift->captureDeletionAffectedWorkers();
+
         foreach ($shift->shiftsQualifications as $shiftsQualification) {
+            // Kaskade: die Schicht selbst wird gleich gelöscht und bekommt ihren
+            // eigenen Verlaufseintrag — einzelne "Schichtplatz entfernt"-Einträge
+            // wären nur Rauschen daneben.
+            $shiftsQualification->deletingViaShiftCascade = true;
             $shiftsQualificationsService->delete($shiftsQualification);
         }
 
@@ -550,8 +560,13 @@ class ShiftService
         }
     }
 
-    public function commitShiftsByDate(Carbon $startDate, Carbon $endDate, int $craftId): void
-    {
+    public function commitShiftsByDate(
+        Carbon $startDate,
+        Carbon $endDate,
+        int $craftId,
+        ?int $weekNumber = null,
+        ?int $year = null
+    ): void {
         // orderBy: first()/last() müssen den tatsächlichen Zeitraum liefern —
         // ohne Sortierung war der in der Notification genannte Zeitraum zufällig.
         $shifts = Shift::whereBetween('start_date', [$startDate, $endDate])
@@ -589,9 +604,10 @@ class ShiftService
                             'title' => __(
                                 'notification.keyWords.concerns_time_period',
                                 [
-                                    // DATE-Spalten: H:i zeigte immer "00:00"
-                                    'start' => $firstShift->start_date->format('d.m.Y'),
-                                    'end' => $lastShift->end_date->format('d.m.Y'),
+                                    // DATE-Spalten: H:i zeigte immer "00:00";
+                                    // end_date ist nullable → auf start_date zurückfallen
+                                    'start' => $firstShift->start_date?->format('d.m.Y') ?? '',
+                                    'end' => ($lastShift->end_date ?? $lastShift->start_date)?->format('d.m.Y') ?? '',
                                 ],
                                 $user->language
                             ),
@@ -613,6 +629,10 @@ class ShiftService
                 }
             }
         }
+
+        // is_committed ist nicht in logOnly — ohne den Sammel-Eintrag wäre die
+        // Festschreibung im Schichtverlauf komplett unsichtbar.
+        $this->logCommitSummaryActivity($shifts, true, $weekNumber, $year);
     }
 
     public function handleGlobalQualificationChange(SupportCollection $globalQualification, Shift $shift): void
@@ -659,6 +679,111 @@ class ShiftService
 
             $this->logActivity($shift, $qualification, $old, $new);
         }
+    }
+
+    /**
+     * Schreibt EINEN Sammel-Eintrag für eine Festschreibungs-Aktion in den
+     * Schichtverlauf (statt eines Eintrags pro Schicht): "Festschreibung KW 24,
+     * Sound (12 Schichten)". Der Eintrag hat bewusst KEIN Subject — er gehört zur
+     * Aktion, nicht zu einer einzelnen Schicht. Der ShiftHistoryController sammelt
+     * ihn über properties->commit_summary (Zeitraum-Überlappung + craft_ids) ein.
+     */
+    public function logCommitSummaryActivity(
+        Collection $shifts,
+        bool $committed,
+        ?int $weekNumber = null,
+        ?int $year = null
+    ): void {
+        if ($shifts->isEmpty()) {
+            return;
+        }
+
+        $shifts->loadMissing('craft:id,name,abbreviation');
+
+        $startDate = $shifts->min('start_date')?->format('Y-m-d');
+        $endDate = $shifts->map(
+            static fn (Shift $shift) => $shift->end_date ?? $shift->start_date
+        )->filter()->max()?->format('Y-m-d');
+
+        $craftNames = $shifts->map(
+            static fn (Shift $shift) => $shift->craft?->name
+        )->filter()->unique()->values();
+        $craftIds = $shifts->pluck('craft_id')->filter()->unique()->values()->all();
+
+        $periodLabel = $startDate === $endDate
+            ? Carbon::parse($startDate)->format('d.m.Y')
+            : Carbon::parse($startDate)->format('d.m.Y') . ' – ' . Carbon::parse($endDate)->format('d.m.Y');
+
+        if ($committed && $weekNumber !== null) {
+            $translationKey = 'Shifts committed: calendar week {0} – {1} ({2} shifts)';
+            $placeholderValues = ["{$weekNumber}/{$year}", $craftNames->implode(', '), $shifts->count()];
+        } elseif ($committed) {
+            $translationKey = 'Shifts committed: {0} – {1} ({2} shifts)';
+            $placeholderValues = [$periodLabel, $craftNames->implode(', '), $shifts->count()];
+        } else {
+            $translationKey = 'Shift commitment revoked: {0} – {1} ({2} shifts)';
+            $placeholderValues = [$periodLabel, $craftNames->implode(', '), $shifts->count()];
+        }
+
+        activity('shift')
+            ->causedBy($this->authManager->user())
+            ->event($committed ? 'committed_bulk' : 'uncommitted_bulk')
+            ->tap(function (Activity $activity) use (
+                $shifts,
+                $committed,
+                $weekNumber,
+                $year,
+                $startDate,
+                $endDate,
+                $craftNames,
+                $craftIds,
+                $translationKey,
+                $placeholderValues
+            ): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => $translationKey,
+                    'translation_key_placeholder_values' => $placeholderValues,
+                    'context' => 'commit',
+                    'craft_ids' => $craftIds,
+                    'shift_ids' => $shifts->pluck('id')->all(),
+                    'commit_summary' => [
+                        'committed' => $committed,
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'week' => $weekNumber,
+                        'year' => $year,
+                        'crafts' => $craftNames->all(),
+                        'count' => $shifts->count(),
+                    ],
+                ]);
+            })
+            ->log($committed ? 'Shifts committed' : 'Shift commitment revoked');
+    }
+
+    /**
+     * Verlaufseintrag für das Festschreiben/Aufheben einer EINZELNEN Schicht
+     * (Einzel-Toggle) — is_committed ist nicht in logOnly, ohne diesen Eintrag
+     * wäre der Vorgang im Schichtverlauf unsichtbar.
+     */
+    public function logSingleCommitActivity(Shift $shift, bool $committed): void
+    {
+        activity('shift')
+            ->performedOn($shift)
+            ->causedBy($this->authManager->user())
+            ->event($committed ? 'committed' : 'uncommitted')
+            ->tap(function (Activity $activity) use ($shift, $committed): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => $committed
+                        ? 'Shift was committed'
+                        : 'Shift commitment was revoked',
+                    'translation_key_placeholder_values' => [],
+                    'context' => 'commit',
+                    'shift_id' => $shift->id,
+                    'craft_id' => $shift->craft_id,
+                    'shift_snapshot' => $shift->toActivitySnapshot(),
+                ]);
+            })
+            ->log($committed ? 'Shift was committed' : 'Shift commitment was revoked');
     }
 
     protected function logActivity(Shift $shift, GlobalQualification $qualification, $old, $new): void

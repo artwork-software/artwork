@@ -204,6 +204,7 @@ class WorkerShiftPlanResource extends JsonResource
 
                 'craft'                 => $craft ? $craft->only(['id', 'name', 'abbreviation']) : null,
                 'isCommitted'           => $shift->is_committed,
+                'inWorkflow'            => $shift->in_workflow,
                 'shiftGroup'            => $shiftGroup ? $shiftGroup->only(['id', 'name']) : null,
             ];
         });

@@ -117,7 +117,7 @@
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
                                     <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{$t('Shifts')}}</p>
+                                       class=" ml-4 my-auto text-secondary">{{$t('Show shifts')}}</p>
                                 </div>
                             </div>
                             <div class="flex justify-end">

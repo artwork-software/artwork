@@ -65,6 +65,7 @@ class InventoryArticleService
             },
             'statusValues',
             'detailedArticleQuantities.status',
+            'detailedArticleQuantities.properties',
             'tags',
             'tags.allowedUsers',
             'tags.allowedDepartments',
@@ -83,22 +84,68 @@ class InventoryArticleService
         }
 
         // Status-Filter: nur Artikel mit mindestens Menge 1 bei diesem Status
-        if ($statusId !== null) {
-            $query->where(function (Builder $q) use ($statusId): void {
-                $q->whereHas('statusValues', function ($sq) use ($statusId): void {
-                    $sq->where('inventory_article_status_id', $statusId)
-                       ->where('inventory_article_status_values.value', '>=', 1);
-                })
-                ->orWhereHas('detailedArticleQuantities', function ($sq) use ($statusId): void {
-                    $sq->where('inventory_article_status_id', $statusId)
-                       ->where('quantity', '>=', 1);
-                });
+        $this->applyStatusFilter($query, $statusId);
+
+        // Cap page size to avoid loading the whole inventory incl. relations at once.
+        $perPage = min(max((int) Request::get('per_page', Request::integer('entitiesPerPage', 50)), 1), 100);
+        $this->applyStableOrdering($query, $category, $subCategory);
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Status-Filter anwenden: nur Artikel mit mindestens Menge 1 bei diesem Status
+     * (Haupt-Artikel per Pivot-Wert oder Detail-Artikel per Menge).
+     */
+    protected function applyStatusFilter(Builder $query, ?int $statusId): void
+    {
+        if ($statusId === null) {
+            return;
+        }
+
+        $query->where(function (Builder $q) use ($statusId): void {
+            $q->whereHas('statusValues', function ($sq) use ($statusId): void {
+                $sq->where('inventory_article_status_id', $statusId)
+                   ->where('inventory_article_status_values.value', '>=', 1);
+            })
+            ->orWhereHas('detailedArticleQuantities', function ($sq) use ($statusId): void {
+                $sq->where('inventory_article_status_id', $statusId)
+                   ->where('quantity', '>=', 1);
+            });
+        });
+    }
+
+    /**
+     * Liefert die IDs ALLER Artikel (über alle Kategorien hinweg), die den aktuell
+     * aufgelösten Filtern/Tags/Status/der Suche entsprechen. Wird genutzt, um die
+     * Kategorie-Sidebar auf relevante Kategorien einzuschränken.
+     *
+     * @return array<int, int>
+     * @throws \JsonException
+     */
+    public function getFilteredArticleIds(
+        ?string $search = '',
+        ?array $resolvedFilters = null,
+        ?array $resolvedTagIds = null,
+        ?int $statusId = null,
+        ?int $searchPropertyId = null
+    ): array {
+        // Bewusst OHNE Kategorie/Subkategorie: die Sidebar zeigt alle Kategorien,
+        // daher muss die Filter-Menge global (kategorieübergreifend) bestimmt werden.
+        $query = $this->buildArticleQuery(null, null, $search, $searchPropertyId);
+
+        $filters = $resolvedFilters ?? [];
+        $query = $this->articleRepository->applyFilters($query, $filters);
+
+        $tagIds = $resolvedTagIds ?? [];
+        if (!empty($tagIds)) {
+            $query->whereHas('tags', function ($q) use ($tagIds): void {
+                $q->whereIn('inventory_tags.id', $tagIds);
             });
         }
 
-        $perPage = Request::get('per_page', Request::integer('entitiesPerPage', 50));
-        $this->applyStableOrdering($query, $category, $subCategory);
-        return $query->paginate($perPage);
+        $this->applyStatusFilter($query, $statusId);
+
+        return $query->pluck('inventory_articles.id')->all();
     }
 
     protected function applyStableOrdering(Builder $query, ?InventoryCategory $category, ?InventorySubCategory $subCategory): void
@@ -410,8 +457,25 @@ class InventoryArticleService
                 'is_detailed_quantity' => $request->boolean('is_detailed_quantity'),
             ];
 
-            if ($request->filled('inventory_sub_category_id')) {
-                $data['inventory_sub_category_id'] = $request->integer('inventory_sub_category_id');
+            if ($request->exists('inventory_sub_category_id')) {
+                // Explicitly sent null clears the sub category (previously it could never be removed).
+                $data['inventory_sub_category_id'] = $request->filled('inventory_sub_category_id')
+                    ? $request->integer('inventory_sub_category_id')
+                    : null;
+            }
+
+            // Consistency: the sub category must belong to the (possibly changed) category.
+            $subCategoryId = array_key_exists('inventory_sub_category_id', $data)
+                ? $data['inventory_sub_category_id']
+                : $article->inventory_sub_category_id;
+            if (
+                $subCategoryId !== null &&
+                !InventorySubCategory::query()
+                    ->where('id', $subCategoryId)
+                    ->where('inventory_category_id', $data['inventory_category_id'])
+                    ->exists()
+            ) {
+                $data['inventory_sub_category_id'] = null;
             }
 
             $this->articleRepository->update($article, $data);
@@ -633,7 +697,11 @@ class InventoryArticleService
     {
         $images = $request->file('newImages') ?? [];
         if (count($images) > 0) {
-            $mainImageIndex = $request->integer('main_image_index');
+            // Only treat main_image_index as set when it was actually sent —
+            // integer() would silently default to 0 (= first new image).
+            $mainImageIndex = $request->filled('main_image_index')
+                ? $request->integer('main_image_index')
+                : null;
             $this->articleRepository->addImages($article, $images, $mainImageIndex);
         }
     }

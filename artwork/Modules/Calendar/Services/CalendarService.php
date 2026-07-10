@@ -74,9 +74,6 @@ class CalendarService
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getAvailabilityData(Available $available, $month = null): array
     {
-        $vacationDays = $available->vacations()->orderBy('date', 'ASC')->get();
-        $availabilityDays = $available->availabilities()->orderBy('date', 'ASC')->get();
-
         $currentMonth = Carbon::now()->startOfMonth();
 
         if ($month) {
@@ -86,40 +83,36 @@ class CalendarService
         $startDate = $currentMonth->copy()->startOfWeek();
         $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
 
+        $vacationDays = $available->vacations()
+            ->betweenDates($startDate, $endDate)
+            ->orderBy('date', 'ASC')
+            ->get();
+        $availabilityDays = $available->availabilities()
+            ->betweenDates($startDate, $endDate)
+            ->orderBy('date', 'ASC')
+            ->get();
+
+        // Pro Tag aggregierte Flags, damit die Schleife nicht über alle Einträge iterieren muss
+        $vacationsByDate = $vacationDays->groupBy(fn($vacation) => Carbon::parse($vacation->date)->format('Y-m-d'));
+        $availabilitiesByDate = $availabilityDays->groupBy(
+            fn($availability) => Carbon::parse($availability->date)->format('Y-m-d')
+        );
+
         $calendarData = [];
         $currentDate = $startDate->copy();
 
         while ($currentDate <= $endDate) {
-            $onVacation = false;
-            $hasAvailability = false;
-            $hasConflict = false;
+            $dateKey = $currentDate->format('Y-m-d');
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
-            foreach ($vacationDays as $vacationDay) {
-                if ($currentDate->isSameDay($vacationDay->date)) {
-                    $onVacation = true;
-                }
-            }
 
-            foreach ($availabilityDays as $availabilityDay) {
-                if ($currentDate->isSameDay($availabilityDay->date)) {
-                    $hasAvailability = true;
-                }
-            }
+            $vacationsOnDay = $vacationsByDate->get($dateKey, collect());
+            $availabilitiesOnDay = $availabilitiesByDate->get($dateKey, collect());
 
-            // check if vacation and availability conflicts
-            foreach ($vacationDays as $vacationDay) {
-                if ($vacationDay->conflicts->count() > 0 && $currentDate->isSameDay($vacationDay->date)) {
-                    $hasConflict = true;
-                }
-            }
-
-            foreach ($availabilityDays as $availabilityDay) {
-                if ($availabilityDay->conflicts->count() > 0 && $currentDate->isSameDay($availabilityDay->date)) {
-                    $hasConflict = true;
-                }
-            }
-
+            $onVacation = $vacationsOnDay->isNotEmpty();
+            $hasAvailability = $availabilitiesOnDay->isNotEmpty();
+            $hasConflict = $vacationsOnDay->contains(fn($vacation) => $vacation->conflicts->isNotEmpty())
+                || $availabilitiesOnDay->contains(fn($availability) => $availability->conflicts->isNotEmpty());
 
             if (!isset($calendarData[$weekNumber])) {
                 $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
@@ -133,6 +126,10 @@ class CalendarService
                 'onVacation' => $onVacation,
                 'hasAvailability' => $hasAvailability,
                 'hasConflict' => $hasConflict,
+                'vacationFullDay' => $vacationsOnDay->contains(fn($vacation) => (bool) $vacation->full_day),
+                'availabilityFullDay' => $availabilitiesOnDay->contains(
+                    fn($availability) => (bool) $availability->full_day
+                ),
                 'day_formatted' => $currentDate->format('Y-m-d'),
                 'isToday' => $currentDate->isToday(),
             ];

@@ -44,14 +44,16 @@ class Task extends Model
         'user_id',
         'done_at',
         'contract_id',
-        'sent_deadline_notification'
+        'sent_deadline_notification',
+        'sent_deadline_tomorrow_notification'
     ];
 
     protected $casts = [
         'done' => 'boolean',
         'done_at' => 'datetime',
         'deadline' => 'datetime',
-        'sent_deadline_notification' => 'boolean'
+        'sent_deadline_notification' => 'boolean',
+        'sent_deadline_tomorrow_notification' => 'boolean'
     ];
 
     public function contract(): BelongsTo

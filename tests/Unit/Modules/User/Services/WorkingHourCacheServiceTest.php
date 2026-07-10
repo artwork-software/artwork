@@ -38,7 +38,7 @@ final class WorkingHourCacheServiceTest extends TestCase
     }
 
     #[Test]
-    public function forget_for_entity_clears_all_indexed_weeks(): void
+    public function forget_for_entity_invalidates_cached_weeks(): void
     {
         $this->service->setWeeklyData('user', 7, 2024, 10, ['a' => 1]);
         $this->service->setWeeklyData('user', 7, 2024, 11, ['a' => 2]);
@@ -76,13 +76,29 @@ final class WorkingHourCacheServiceTest extends TestCase
     }
 
     #[Test]
-    public function setting_same_week_twice_does_not_duplicate_index(): void
+    public function setting_same_week_twice_keeps_the_latest_cached_value(): void
     {
         $this->service->setWeeklyData('user', 9, 2024, 14, ['v' => 1]);
         $this->service->setWeeklyData('user', 9, 2024, 14, ['v' => 2]);
 
-        // Should still resolve and forgetForEntity should clear it once
+        $this->assertSame(['v' => 2], $this->service->getWeeklyData('user', 9, 2024, 14));
+
         $this->service->forgetForEntity('user', 9);
         $this->assertNull($this->service->getWeeklyData('user', 9, 2024, 14));
+    }
+
+    #[Test]
+    public function data_cached_after_an_invalidation_uses_the_current_version(): void
+    {
+        $this->service->setWeeklyData('user', 10, 2024, 14, ['v' => 1]);
+        $this->service->forgetForEntity('user', 10);
+
+        $this->service->setWeeklyData('user', 10, 2024, 14, ['v' => 2]);
+
+        $this->assertSame(['v' => 2], $this->service->getWeeklyData('user', 10, 2024, 14));
+
+        $this->service->forgetForEntity('user', 10);
+
+        $this->assertNull($this->service->getWeeklyData('user', 10, 2024, 14));
     }
 }

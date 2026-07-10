@@ -3,10 +3,20 @@
         <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">
             {{ $t('Total Working Time') }}
         </div>
-        <div class="flex justify-center items-end gap-x-1 text-4xl font-bold ">
-            <span class="text-artwork-buttons-create">{{ formatMinutes(displayWorked) }}</span>
-            <span class="text-gray-400 text-4xl font-normal"> - </span>
-            <span class="text-gray-800">{{ formatMinutes(displayWanted) }}</span>
+        <div class="flex justify-center items-end gap-x-3 text-4xl font-bold">
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wide font-normal mb-0.5">
+                    {{ $t('Total actual for period') }}
+                </span>
+                <span class="text-artwork-buttons-create">{{ formatMinutes(displayWorked) }}</span>
+            </div>
+            <span class="text-gray-400 text-4xl font-normal pb-1"> - </span>
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wide font-normal mb-0.5">
+                    {{ $t('Total target for period') }}
+                </span>
+                <span class="text-gray-800">{{ formatMinutes(displayWanted) }}</span>
+            </div>
         </div>
     </div>
 </template>

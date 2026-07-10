@@ -14,6 +14,7 @@ use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\CostCenter\Models\CostCenter;
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
@@ -79,6 +80,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property Collection<Comment> $comments
  * @property Collection<ArtistResidency> $artistResidencies
  * @property Collection<ProjectState> $status
+ * @property Collection<CrmContact> $crmContacts
  */
 class Project extends Model
 {
@@ -154,6 +156,11 @@ class Project extends Model
     public function artistResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'project_id', 'id');
+    }
+
+    public function crmContacts(): BelongsToMany
+    {
+        return $this->belongsToMany(CrmContact::class, 'crm_contact_project')->withTimestamps();
     }
 
     public function costCenter(): BelongsTo

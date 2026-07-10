@@ -1,6 +1,5 @@
 <template>
-    <div class="mb-8 border-b border-dashed border-gray-400 pb-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $t('Production data') }}</h3>
+    <div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <BaseCheckbox
                 :model-value="localData.is_new_production"

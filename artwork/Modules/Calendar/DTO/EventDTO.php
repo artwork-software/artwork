@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Calendar\DTO;
 
-use App\Http\Resources\MinimalShiftPlanShiftResource;
 use Artwork\Modules\Calendar\Traits\SerializesEventRelations;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\UserCalendarSettings;
@@ -77,9 +76,9 @@ class EventDTO extends Data
                 'abbreviation' => $eventType->abbreviation,
                 'hex_code' => $eventType->hex_code,
             ] : null,
-            shifts: $userCalendarSettings->work_shifts ?
-                MinimalShiftPlanShiftResource::collection($event->shifts)->resolve() :
-                null,
+            // Termingebundene Schichten sind Alt-Bestand und werden nicht mehr in der
+            // Termin-Kachel angezeigt; work_shifts steuert jetzt eigenständige Schicht-Karten.
+            shifts: null,
             allDay: $event->allDay,
             roomId: $event->room_id,
             roomName: $event->room?->name,

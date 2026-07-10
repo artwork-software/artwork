@@ -7,6 +7,7 @@ use Artwork\Modules\BusinessIntelligence\Http\Requests\UpdateBiEventDataRequest;
 use Artwork\Modules\BusinessIntelligence\Http\Requests\UpdateBiProjectDataRequest;
 use Artwork\Modules\BusinessIntelligence\Services\BiDerivedValuesService;
 use Artwork\Modules\BusinessIntelligence\Services\BiProjectDataService;
+use Artwork\Modules\BusinessIntelligence\Services\BiProjectMetricsService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
@@ -20,12 +21,21 @@ class BiProjectDataController extends Controller
 {
     public function __construct(
         private readonly BiProjectDataService $biProjectDataService,
-        private readonly BiDerivedValuesService $biDerivedValuesService
+        private readonly BiDerivedValuesService $biDerivedValuesService,
+        private readonly BiProjectMetricsService $biProjectMetricsService
     ) {
     }
 
     public function show(Project $project): JsonResponse
     {
+        $project->load([
+            'biData',
+            'biEventData.event',
+            'biRoomCapacities',
+            'events.room',
+            'events.event_type.biTags',
+        ]);
+
         $biData = $this->biProjectDataService->getOrCreateForProject($project->id);
         $eventData = $this->biProjectDataService->getEventData($project->id);
         $roomCapacities = $this->biProjectDataService->getRoomCapacities($project->id);
@@ -86,6 +96,7 @@ class BiProjectDataController extends Controller
             : null;
 
         return response()->json([
+            'metrics_summary' => $this->biProjectMetricsService->summary($project),
             'bi_data' => $biData,
             'event_data' => $eventData,
             'room_capacities' => $roomCapacities,

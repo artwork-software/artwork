@@ -1,7 +1,7 @@
 <template>
-    <div class="my-2" @click="openTextField" v-if="!showTextField">
+    <div class="my-2" @click="openTextField" v-if="!showTextField" :class="canEditDescription ? '' : 'cursor-default'">
         <div v-if="event.description?.length === 0 || event.description === null">
-            <PropertyIcon name="IconNote" class="w-4 h-4 text-artwork-buttons-context"/>
+            <PropertyIcon v-if="canEditDescription" name="IconNote" class="w-4 h-4 text-artwork-buttons-context"/>
         </div>
         <p v-else class="text-xs">
             {{ cutDescription }}
@@ -38,6 +38,18 @@ export default {
     computed: {
         cutDescription() {
             return this.event.description?.length > 70 ? this.event.description.substring(0, 70) + '...' : this.event.description;
+        },
+        // Spiegelt die EventPolicy::update-Prüfung des Backends (event.update.description
+        // antwortet sonst mit 403); Raum-Admins sind clientseitig nicht auflösbar und
+        // erhalten das Textfeld daher nur, wenn sie zusätzlich eine der Rechte/Rollen haben.
+        canEditDescription() {
+            return this.hasAdminRole() ||
+                this.$canAny([
+                    'management projects',
+                    'can edit planning calendar',
+                    'create events without request'
+                ]) ||
+                this.event?.created_by?.id === this.$page.props.auth.user.id;
         }
     },
     data() {
@@ -74,6 +86,9 @@ export default {
             }
         },
         openTextField() {
+            if (!this.canEditDescription) {
+                return;
+            }
             this.showTextField = true
             this.$nextTick(() => {
                 this.$refs.descriptionField.focus()

@@ -35,6 +35,9 @@ class ShiftAssigned implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
+        // Payload stabil halten: diese Relationen kamen früher über das globale $with
+        // des Shift-Models (analog PushesShiftModification::broadcastWith)
+        $this->shift->loadMissing(['craft', 'users', 'freelancer', 'serviceProvider', 'committedBy']);
         $event = $this->shift->event;
         $eventStudlyCase = [];
 

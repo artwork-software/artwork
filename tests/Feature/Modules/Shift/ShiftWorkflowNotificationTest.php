@@ -82,6 +82,79 @@ final class ShiftWorkflowNotificationTest extends FeatureTestCase
     }
 
     #[Test]
+    public function accept_with_comment_stores_comment_and_sends_it_to_requester(): void
+    {
+        $requester = User::factory()->create();
+        $this->actingAsAdmin();
+        $request = ShiftPlanRequest::create([
+            'craft_id' => Craft::factory()->create()->id,
+            'week_number' => 19,
+            'year' => 2026,
+            'status' => 'pending',
+            'requested_by_user_id' => $requester->id,
+            'requested_at' => now(),
+        ]);
+
+        $this->post(route('shift-plan-requests.accept', $request), [
+            'comment' => 'Bitte Pausenzeiten beachten',
+        ]);
+
+        $this->assertSame('Bitte Pausenzeiten beachten', $request->fresh()->review_comment);
+        Notification::assertSentTo(
+            $requester,
+            ShiftNotification::class,
+            fn (ShiftNotification $notification) => collect($notification->toArray()->description)
+                ->contains(fn ($row) => str_contains((string) ($row['title'] ?? ''), 'Bitte Pausenzeiten beachten'))
+        );
+    }
+
+    #[Test]
+    public function accept_without_comment_keeps_review_comment_empty(): void
+    {
+        $requester = User::factory()->create();
+        $this->actingAsAdmin();
+        $request = ShiftPlanRequest::create([
+            'craft_id' => Craft::factory()->create()->id,
+            'week_number' => 19,
+            'year' => 2026,
+            'status' => 'pending',
+            'requested_by_user_id' => $requester->id,
+            'requested_at' => now(),
+        ]);
+
+        $this->post(route('shift-plan-requests.accept', $request));
+
+        $this->assertNull($request->fresh()->review_comment);
+        Notification::assertSentTo($requester, ShiftNotification::class);
+    }
+
+    #[Test]
+    public function reject_global_reason_is_included_in_notification(): void
+    {
+        $requester = User::factory()->create();
+        $this->actingAsAdmin();
+        $request = ShiftPlanRequest::create([
+            'craft_id' => Craft::factory()->create()->id,
+            'week_number' => 19,
+            'year' => 2026,
+            'status' => 'pending',
+            'requested_by_user_id' => $requester->id,
+            'requested_at' => now(),
+        ]);
+
+        $this->post(route('shift-plan-requests.reject', $request), [
+            'global_reason' => 'Zu viele Überstunden geplant',
+        ]);
+
+        Notification::assertSentTo(
+            $requester,
+            ShiftNotification::class,
+            fn (ShiftNotification $notification) => collect($notification->toArray()->description)
+                ->contains(fn ($row) => str_contains((string) ($row['title'] ?? ''), 'Zu viele Überstunden geplant'))
+        );
+    }
+
+    #[Test]
     public function already_processed_request_sends_no_decision_notification(): void
     {
         $requester = User::factory()->create();

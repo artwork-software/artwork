@@ -8,6 +8,7 @@ use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmContactTypeService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Services\ProjectTabService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -74,7 +75,7 @@ class CrmController extends Controller
         ]);
     }
 
-    public function show(CrmContact $crmContact): Response
+    public function show(CrmContact $crmContact, ProjectTabService $projectTabService): Response
     {
         $crmContact->load(['contactType.properties', 'propertyValues.property.group', 'roomTypes']);
 
@@ -92,10 +93,31 @@ class CrmController extends Controller
             $crmContact->propertyValues->whereIn('crm_property_id', $visiblePropertyIds)->values()
         );
 
+        // Protokoll der Projekte, mit denen dieser Kontakt (als Künstler*in) verknüpft ist
+        $linkedProjects = $crmContact->projects()
+            ->orderByDesc('crm_contact_project.created_at')
+            ->get()
+            ->map(function ($project) {
+                $dates = $project->first_and_last_event_date;
+
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'first_event_date' => $dates['first_event_date'] ?? null,
+                    'last_event_date' => $dates['last_event_date'] ?? null,
+                    'linked_at' => $project->pivot?->created_at?->format('d.m.Y'),
+                ];
+            })
+            ->values();
+
         return Inertia::render('CRM/Show', [
             'contact' => $crmContact,
             'propertyGroups' => $propertyGroups,
             'externalAccessStatus' => $this->resolveExternalAccessStatus($crmContact),
+            'linkedProjects' => $linkedProjects,
+            'firstProjectTabId' => $linkedProjects->isNotEmpty()
+                ? $projectTabService->getDefaultOrFirstProjectTab()->getAttribute('id')
+                : null,
         ]);
     }
 

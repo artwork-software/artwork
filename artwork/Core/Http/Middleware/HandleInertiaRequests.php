@@ -76,8 +76,24 @@ class HandleInertiaRequests extends Middleware
         $bigLogo = $generalSettings->big_logo_path ? $storage->url($generalSettings->big_logo_path) : null;
         $banner = $generalSettings->banner_path ? $storage->url($generalSettings->banner_path) : null;
 
-        $rolesArray = $user ? $user->allRoles() : [];
-        $permissionsArray = $user ?  $user->hasRole([RoleEnum::ARTWORK_ADMIN->value]) ? Permission::all()->pluck('name') : $user->allPermissions() : [];
+        // Rollen/Permissions pro User kurz cachen: diese Queries liefen sonst bei jedem Request
+        // (inkl. Permission::all() für Admins) und ein zweites Mal für den 'permissions'-Prop
+        // (vormals jsPermissions()). Rollen-Änderungen greifen dadurch mit max. 5 Minuten Verzögerung.
+        [$rolesArray, $userPermissions, $permissionsArray] = $user
+            ? Cache::remember(
+                "user:{$user->id}:roles_permissions",
+                now()->addMinutes(5),
+                static function () use ($user): array {
+                    $roles = $user->allRoles();
+                    $userPermissions = $user->allPermissions();
+                    $permissions = in_array(RoleEnum::ARTWORK_ADMIN->value, $roles, true)
+                        ? Permission::query()->pluck('name')->toArray()
+                        : $userPermissions;
+
+                    return [$roles, $userPermissions, $permissions];
+                }
+            )
+            : [[], [], []];
 
         // erstelle mir ein Array aus $generalCalendarSettings (Start und end ) für stunden z.b. Start: 22:00 end: 08:00 array = [22:00, 23:00, 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00]
         $start = explode(':', $generalCalendarSettings->start);
@@ -149,13 +165,18 @@ class HandleInertiaRequests extends Middleware
                 || ($user && $user->hasRole(RoleEnum::ARTWORK_ADMIN->value))
             );
 
-        $canSeeIncomingRequests = $user && (
-            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
-            || $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
-            || DB::table('room_user')->where('user_id', $user->id)->where('is_admin', true)->exists()
-            || DB::table('event_type_user')->where('user_id', $user->id)->exists()
-            || DB::table('event_types')->where('specific_verifier_id', $user->id)->exists()
-        );
+        // Drei exists()-Queries pro Request vermeiden — Ergebnis ändert sich selten, 5 Minuten cachen
+        $canSeeIncomingRequests = $user
+            ? Cache::remember(
+                "user:{$user->id}:can_see_incoming_requests",
+                now()->addMinutes(5),
+                static fn (): bool => $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+                    || $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+                    || DB::table('room_user')->where('user_id', $user->id)->where('is_admin', true)->exists()
+                    || DB::table('event_type_user')->where('user_id', $user->id)->exists()
+                    || DB::table('event_types')->where('specific_verifier_id', $user->id)->exists()
+            )
+            : false;
 
         $canSeeEventVerifications = (bool) $user;
 
@@ -216,14 +237,11 @@ class HandleInertiaRequests extends Middleware
                 'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
                 'calendarHours' => $hours,
-                'permissions' => json_decode(
-                    auth()->check() ?
-                        auth()->user()?->jsPermissions() :
-                    '{}',
-                    true,
-                    512,
-                    JSON_THROW_ON_ERROR
-                ),
+                // Gleiche Struktur wie vormals jsPermissions() ({roles, permissions}), aber ohne die
+                // doppelten Rollen-/Permission-Queries und den json_encode/json_decode-Roundtrip
+                'permissions' => $user
+                    ? ['roles' => $rolesArray, 'permissions' => $userPermissions]
+                    : [],
                 // chatUsers only on reload and not on page change
                 'chats' => Inertia::lazy(fn() => $user?->chats()->with(['users'])->get()),
                 'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,

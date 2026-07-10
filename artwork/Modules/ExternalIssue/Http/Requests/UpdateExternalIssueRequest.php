@@ -41,7 +41,7 @@ class UpdateExternalIssueRequest extends FormRequest
             'special_items.*.inventory_category_id' => 'nullable|exists:inventory_categories,id',
             'special_items.*.inventory_sub_category_id' => 'nullable|exists:inventory_sub_categories,id',
             'articles' => 'nullable|array',
-            'articles.*.id' => 'required|exists:inventory_articles,id',
+            'articles.*.id' => ['required', \Illuminate\Validation\Rule::exists('inventory_articles', 'id')->whereNull('deleted_at')],
             'articles.*.quantity' => 'required|integer|min:1',
             'special_items_done' => 'boolean',
         ];

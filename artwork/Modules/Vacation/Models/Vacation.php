@@ -95,7 +95,9 @@ class Vacation extends Model
 
     public function getHasConflictsAttribute(): bool
     {
-        return $this->conflicts()->exists();
+        return $this->relationLoaded('conflicts')
+            ? $this->conflicts->isNotEmpty()
+            : $this->conflicts()->exists();
     }
 
     public function scopeBetweenDates(Builder $builder, Carbon $startDate, Carbon $endDate): Builder
@@ -111,5 +113,35 @@ class Vacation extends Model
     public function scopeOrderedByDate(Builder $builder, string $direction = 'ASC'): Builder
     {
         return $builder->orderBy('date', $direction);
+    }
+
+    /**
+     * Reichert eine (z.B. monatsgefilterte) Collection um die echten Datumsgrenzen ihrer Serien an
+     * (series_start_date/series_end_date über ALLE Serientage, auch außerhalb des Filters), damit
+     * das Frontend Serien als einen Zeitraum-Eintrag anzeigen und korrekt bearbeiten kann.
+     *
+     * @param \Illuminate\Support\Collection<int, self> $vacations
+     */
+    public static function attachSeriesDateBounds(\Illuminate\Support\Collection $vacations): void
+    {
+        $seriesIds = $vacations->pluck('series_id')->filter()->unique()->values();
+        if ($seriesIds->isEmpty()) {
+            return;
+        }
+
+        $bounds = self::query()
+            ->whereIn('series_id', $seriesIds)
+            ->groupBy('series_id')
+            ->selectRaw('series_id, MIN(date) as min_date, MAX(date) as max_date')
+            ->get()
+            ->keyBy('series_id');
+
+        foreach ($vacations as $vacation) {
+            $bound = $vacation->series_id !== null ? $bounds->get($vacation->series_id) : null;
+            if ($bound !== null) {
+                $vacation->setAttribute('series_start_date', $bound->getAttribute('min_date'));
+                $vacation->setAttribute('series_end_date', $bound->getAttribute('max_date'));
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssueFile;
 use Artwork\Modules\Inventory\Services\InventoryArticleService;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 
@@ -19,25 +20,29 @@ class InternalIssueService
 
     public function store(array $data, array $files = []): InternalIssue
     {
-        $issue = InternalIssue::create($data);
+        $issue = DB::transaction(function () use ($data, $files): InternalIssue {
+            $issue = InternalIssue::create($data);
 
-        if (!empty($files)) {
-            $this->handleFiles($issue, $files);
-        }
-
-        if (isset($data['special_items'])) {
-            $issue->specialItems()->delete();
-            foreach ($data['special_items'] as $item) {
-                $issue->specialItems()->create($item);
+            if (!empty($files)) {
+                $this->handleFiles($issue, $files);
             }
-        }
 
-        // Artikel zuordnen über morph
-        if (!empty($data['articles'])) {
-            $this->syncArticles($issue, $data['articles']);
-        }
+            if (isset($data['special_items'])) {
+                $issue->specialItems()->delete();
+                foreach ($data['special_items'] as $item) {
+                    $issue->specialItems()->create($item);
+                }
+            }
 
-        $issue->responsibleUsers()->sync($data['responsible_user_ids'] ?? []);
+            // Artikel zuordnen über morph
+            if (!empty($data['articles'])) {
+                $this->syncArticles($issue, $data['articles']);
+            }
+
+            $issue->responsibleUsers()->sync($data['responsible_user_ids'] ?? []);
+
+            return $issue;
+        });
 
         $issue->load(['articles', 'project']);
 
@@ -68,31 +73,34 @@ class InternalIssueService
             'quantity' => $a->pivot->quantity,
         ])->toArray();
 
-        $issue->update($data);
+        DB::transaction(function () use ($issue, $data, $files): void {
+            $issue->update($data);
 
-        if (!empty($files)) {
-            $this->handleFiles($issue, $files);
-        }
-
-        if (isset($data['special_items'])) {
-            $issue->specialItems()->delete();
-            $issue->update([
-                'special_items_done' => $data['special_items_done'] ?? false,
-            ]);
-            foreach ($data['special_items'] as $item) {
-                $issue->specialItems()->create($item);
+            if (!empty($files)) {
+                $this->handleFiles($issue, $files);
             }
-        }
 
-        // Clear cached articles relation before sync to avoid stale data
-        $issue->unsetRelation('articles');
+            if (isset($data['special_items'])) {
+                $issue->specialItems()->delete();
+                $issue->update([
+                    'special_items_done' => $data['special_items_done'] ?? false,
+                ]);
+                foreach ($data['special_items'] as $item) {
+                    $issue->specialItems()->create($item);
+                }
+            }
 
-        // Artikel zuordnen über morph
-        if (!empty($data['articles'])) {
-            $this->syncArticles($issue, $data['articles']);
-        }
+            // Clear cached articles relation before sync to avoid stale data
+            $issue->unsetRelation('articles');
 
-        $issue->responsibleUsers()->sync($data['responsible_user_ids'] ?? []);
+            // Artikel zuordnen über morph — an explicitly sent empty array must
+            // clear the assignment, otherwise the last article can never be removed.
+            if (array_key_exists('articles', $data)) {
+                $this->syncArticles($issue, $data['articles'] ?? []);
+            }
+
+            $issue->responsibleUsers()->sync($data['responsible_user_ids'] ?? []);
+        });
 
         $issue->load(['articles', 'project']);
         $newAttributes = $this->normalizeAttributes($issue->only($trackedFields));
@@ -174,7 +182,11 @@ class InternalIssueService
 
         foreach ($articles as $article) {
             $articleFounded = $issue->articles->firstWhere('id', $article['id']);
-            $this->articleService->checkAndNotifyOverbooking($articleFounded);
+            // Soft-deleted articles pass the exists rule but are not in the
+            // loaded relation — skip them instead of crashing.
+            if ($articleFounded !== null) {
+                $this->articleService->checkAndNotifyOverbooking($articleFounded);
+            }
         }
     }
 

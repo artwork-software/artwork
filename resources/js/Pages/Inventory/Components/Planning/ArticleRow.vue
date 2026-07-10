@@ -1,7 +1,6 @@
 <template>
     <div
         class="flex border-b border-zinc-200 relative article-row-cv"
-        :style="{ paddingBottom: `${ROW_PADDING}px` }"
     >
         <div
             class="sticky left-0 z-20 bg-white px-4 py-2 text-xs text-zinc-900 font-medium border-r border-zinc-200 w-[220px] min-w-[220px]"
@@ -12,14 +11,16 @@
             v-for="(date, idx) in dates"
             :key="date.date"
             @click="onCellClick(date.date)"
-            class="text-xs px-2 py-2 text-center border-r border-zinc-200 min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition relative"
+            :style="cellBarStyle"
+            class="text-xs px-2 pt-2 text-center border-r border-zinc-200 min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition relative"
             :class="[
                 cellValue(date.date) < 0
                     ? 'bg-red-100'
                     : (date.isWeekend ? 'bg-zinc-50' : 'bg-white'),
                 isToday(date.date)
                     ? 'ring-1 ring-indigo-300 ring-inset'
-                    : (cellValue(date.date) < 0 ? 'hover:bg-red-200' : 'hover:bg-zinc-50')
+                    : (cellValue(date.date) < 0 ? 'hover:bg-red-200' : 'hover:bg-zinc-50'),
+                isWeekStart(date.date) ? 'border-l-2 border-l-zinc-800' : ''
             ]"
         >
             <div class="inline-flex items-center gap-1">
@@ -29,27 +30,18 @@
                 >
                     {{ cellValue(date.date) }}
                 </span>
-                <IconRouteSquare
-                    v-if="usedDates.has(date.date)"
-                    class="size-3 text-zinc-500"
-                />
             </div>
-            <!-- Per-cell overflow badge (issues in hidden lanes) -->
-            <span
-                v-if="overflowByCol[idx] > 0"
-                class="absolute bottom-0.5 right-1 inline-flex items-center justify-center h-3 min-w-[14px] px-1 rounded-sm bg-zinc-800 text-white text-[9px] font-semibold pointer-events-none"
-                :title="$t('More issues in this cell')"
-            >+{{ overflowByCol[idx] }}</span>
         </div>
 
-        <!-- Bars overlay -->
+        <!-- Bars overlay — grows with the number of overlapping issues so every
+             material issue is always visible (and hoverable), no overflow badge. -->
         <div
             class="absolute pointer-events-none"
             :style="{
                 left: '220px',
                 right: '0',
                 bottom: '2px',
-                height: `${BAR_OVERLAY_HEIGHT}px`,
+                height: `${barsAreaHeight}px`,
             }"
         >
             <button
@@ -72,16 +64,15 @@
 
 <script setup>
 import { computed, inject } from 'vue';
-import { IconRouteSquare } from '@tabler/icons-vue';
 import {
     CELL_WIDTH,
     BAR_HEIGHT,
     BAR_GAP,
-    MAX_VISIBLE_LANES,
-    BAR_OVERLAY_HEIGHT,
-    ROW_PADDING,
     colorForIssue,
 } from './planningBars.js';
+
+// Vertical distance between two stacked bars (lane stride).
+const LANE_STRIDE = BAR_HEIGHT + BAR_GAP;
 
 const props = defineProps({
     article: { type: Object, required: true },
@@ -104,6 +95,32 @@ const rangeBounds = inject('planningRangeBounds', computed(() => ({
     first: props.dates[0]?.date ?? null,
     last:  props.dates[props.dates.length - 1]?.date ?? null,
 })));
+
+// Calendar-week metadata (provided once per page). Used to draw the thicker
+// black divider on the first day of each ISO week.
+const weekMeta = inject('planningWeekMeta', computed(() => new Map()));
+const isWeekStart = (date) => weekMeta.value.get(date)?.isWeekStart ?? false;
+
+// Number of lanes actually used by this article's overlapping issues. The row
+// grows to fit them all so no issue is ever hidden behind an overflow badge.
+const lanesUsed = computed(() => {
+    let max = -1;
+    for (const bar of laneAssignments.value) {
+        if (bar.lane > max) max = bar.lane;
+    }
+    return max + 1; // 0 when the article has no issues in range
+});
+
+// Height of the reserved bar strip at the bottom of each cell.
+const barsAreaHeight = computed(() => lanesUsed.value * LANE_STRIDE);
+
+// The bar strip is reserved *inside* the flex cells (rather than as row padding)
+// so the sticky article column stretches over the full row height and bars
+// scroll behind it instead of bleeding over the article names. Rows without
+// issues keep a compact, symmetric padding.
+const cellBarStyle = computed(() => ({
+    paddingBottom: lanesUsed.value > 0 ? `${barsAreaHeight.value + 4}px` : '8px',
+}));
 
 const clampedIssues = computed(() => {
     const { first, last } = rangeBounds.value;
@@ -143,18 +160,6 @@ const cellValue = (date) => {
     return baseValue.value;
 };
 
-// B7: usedFlag derived from issues instead of shipped from backend.
-// Returns the set of visible date strings on which this article is used.
-const usedDates = computed(() => {
-    const set = new Set();
-    for (const bar of clampedIssues.value) {
-        for (let i = bar.startIdx; i <= bar.endIdx; i++) {
-            set.add(props.dates[i].date);
-        }
-    }
-    return set;
-});
-
 // Greedy lane assignment so overlapping issues stack vertically
 const laneAssignments = computed(() => {
     const lanes = []; // lanes[i] = endIdx of last assigned issue in lane i
@@ -170,8 +175,8 @@ const laneAssignments = computed(() => {
     });
 });
 
+// All bars are rendered — the row height (barsAreaHeight) is sized to fit them.
 const visibleBars = computed(() => laneAssignments.value
-    .filter((bar) => bar.lane < MAX_VISIBLE_LANES)
     .map((bar) => ({
         ...bar,
         key: `bar-${bar.issue.id}`,
@@ -179,22 +184,10 @@ const visibleBars = computed(() => laneAssignments.value
     }))
 );
 
-// Per-column count of bars that would be hidden (lane >= MAX_VISIBLE_LANES)
-const overflowByCol = computed(() => {
-    const counts = new Array(props.dates.length).fill(0);
-    for (const bar of laneAssignments.value) {
-        if (bar.lane < MAX_VISIBLE_LANES) continue;
-        for (let i = bar.startIdx; i <= bar.endIdx; i++) {
-            counts[i] += 1;
-        }
-    }
-    return counts;
-});
-
 const barStyle = (bar) => {
     const left = bar.startIdx * CELL_WIDTH + 2;
     const width = (bar.endIdx - bar.startIdx + 1) * CELL_WIDTH - 4;
-    const top = bar.lane * (BAR_HEIGHT + BAR_GAP);
+    const top = bar.lane * LANE_STRIDE;
 
     const base = {
         left: `${left}px`,

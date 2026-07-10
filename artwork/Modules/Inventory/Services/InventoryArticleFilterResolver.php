@@ -63,10 +63,14 @@ class InventoryArticleFilterResolver
                     $tagIds  = $this->normalizeTagIds($defaultPreset->tag_ids ?? []);
                     $source  = 'default_preset';
                 } else {
+                    // Filter gelten GLOBAL pro User (nicht pro Kategorie): es gibt genau
+                    // eine State-Zeile (category/sub = null). So bleibt ein aktiver Filter
+                    // beim Kategoriewechsel erhalten und ein entfernter Filter taucht nicht
+                    // in einer anderen Kategorie wieder auf.
                     $state = InventoryArticleFilterState::query()
                         ->where('user_id', $user->id)
-                        ->where('inventory_category_id', $categoryId)
-                        ->where('inventory_sub_category_id', $subCategoryId)
+                        ->whereNull('inventory_category_id')
+                        ->whereNull('inventory_sub_category_id')
                         ->first();
 
                     if ($state) {
@@ -79,11 +83,13 @@ class InventoryArticleFilterResolver
         }
 
         if ($user && $hasExplicit) {
+            // Immer in die EINE globale State-Zeile schreiben (category/sub = null),
+            // damit der zuletzt gesetzte Filter userweit gilt.
             InventoryArticleFilterState::query()->updateOrCreate(
                 [
                     'user_id' => $user->id,
-                    'inventory_category_id' => $categoryId,
-                    'inventory_sub_category_id' => $subCategoryId,
+                    'inventory_category_id' => null,
+                    'inventory_sub_category_id' => null,
                 ],
                 [
                     'filters' => $filters,

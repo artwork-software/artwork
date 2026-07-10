@@ -240,15 +240,44 @@ class ShiftWorkerService
         }
 
         $employable = $pivot->employable;
+        $workerName = $employable?->name ?? $employable?->full_name ?? '';
 
         $fieldChanges = [
             $fieldKey => [
                 'user_id' => $employable?->id,
-                'user_name' => $employable?->name ?? $employable?->full_name ?? '',
+                'user_name' => $workerName,
                 'before_label' => $beforeLabel,
                 'after_label' => $afterLabel,
             ],
         ];
+
+        // Immer auch in den Schichtverlauf (Spatie shift-Log) schreiben — die
+        // Workflow-/Festschreibungs-Tabellen unten greifen nur bei in_workflow/
+        // committed Schichten; auf normalen Schichten wäre die Änderung sonst in
+        // keinem Verlauf sichtbar.
+        activity('shift')
+            ->performedOn($shift)
+            ->causedBy($this->auth->user())
+            ->event('updated')
+            ->tap(function ($activity) use ($shift, $fieldKey, $workerName, $beforeLabel, $afterLabel): void {
+                $activity->properties = $activity->properties->merge([
+                    'translation_key' => $fieldKey === 'individual_time'
+                        ? 'Individual working time for {0} changed from {1} to {2}'
+                        : 'Short description for {0} changed from {1} to {2}',
+                    'translation_key_placeholder_values' => [
+                        $workerName,
+                        $beforeLabel ?? '–',
+                        $afterLabel ?? '–',
+                    ],
+                    'context' => $shift->is_committed
+                        ? 'post_commit'
+                        : ($shift->in_workflow ? 'in_workflow' : 'normal'),
+                    'shift_id' => $shift->id,
+                    'craft_id' => $shift->craft_id,
+                    'shift_snapshot' => $shift->toActivitySnapshot(),
+                ]);
+            })
+            ->log('Individual assignment changed');
 
         if ($shift->in_workflow && $shift->current_request_id) {
             ShiftPlanRequestChange::create([

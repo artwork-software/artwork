@@ -205,14 +205,6 @@
                 </div>
             </div>
         </div>
-        <div v-if="$page.props.auth.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
-            <div v-for="shift in event.shifts">
-                <span>{{ shift.craft.abbreviation }}</span>
-                <span>
-                    &nbsp;({{ shift.worker_count }}/{{ shift.max_worker_count }})
-                </span>
-            </div>
-        </div>
     </div>
     <div v-show="event.subEvents?.length > 0">
         <div v-for="subEvent in event.subEvents" class="mb-1">
@@ -299,18 +291,6 @@
                                     new Date(subEvent.start).format("DD.MM. HH:mm")
                                 }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
                             </div>
-                        </div>
-                    </div>
-                    <div v-if="$page.props.auth.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
-                        <div v-for="shift in subEvent.shifts">
-                            <span>{{ shift.craft.abbreviation }}</span>
-                            (
-                            <VueMathjax
-                                :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>
-                            /{{ shift.number_employees }}
-                            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{
-                                    shift.number_masters
-                                }}</span>)
                         </div>
                     </div>
                 </div>
@@ -411,7 +391,6 @@ export default {
             if (this.$page.props.auth.user.calendar_settings.options) height += 0;
             if (this.$page.props.auth.user.calendar_settings.project_management) height += 17;
             if (this.$page.props.auth.user.calendar_settings.repeating_events) height += 20;
-            if (this.$page.props.auth.user.calendar_settings.work_shifts) height += 18;
             return height;
         },
         isRoomAdmin() {
@@ -452,9 +431,6 @@ export default {
             }
             if (this.$page.props.auth.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
                 heightSubtraction += 20;
-            }
-            if (this.$page.props.auth.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
-                heightSubtraction += 18;
             }
             return heightSubtraction;
         },

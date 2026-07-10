@@ -141,7 +141,7 @@ import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const columnSizeForm = useForm({
     bulk_column_size: { ...usePage().props.auth.user.bulk_column_size }
@@ -204,13 +204,11 @@ const submit = () => {
         route('user.bulk-column-size.update', usePage().props.auth.user.id),
         {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
-                // optional: Toast einblenden
-                // useToast().success($t('Saved'))
-                // close modal
-                // Emit hier, damit der Parent den Refresh/Close steuert
-                // (du hast das bereits so gemacht)
-                // eslint-disable-next-line no-undef
+                // Geteilte Prop sofort aktualisieren, damit Header + Event-Zeilen die
+                // neuen Spaltenbreiten ohne Reload übernehmen (sie lesen daraus).
+                usePage().props.auth.user.bulk_column_size = { ...columnSizeForm.bulk_column_size }
                 emit('close')
             }
         }

@@ -5,6 +5,7 @@ namespace Tests\Unit\Health;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Schema;
+use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -27,6 +28,12 @@ final class SmokeTest extends TestCase
     public function users_table_exists(): void
     {
         $this->assertTrue(Schema::hasTable('users'));
+    }
+
+    #[Test]
+    public function passport_uses_legacy_integer_client_ids(): void
+    {
+        $this->assertFalse(Passport::$clientUuids);
     }
 
     #[Test]

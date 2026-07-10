@@ -1,5 +1,5 @@
 <template>
-    <div class="print:w-full group w-full">
+    <div ref="rowRootEl" class="print:w-full group w-full">
         <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
         <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
             :class="[
@@ -130,7 +130,7 @@
                         type="date"
                         :id="'day-' + index"
                         :label="$t('Start date') + ' ' + dayString"
-                        :disabled="canEditComponent === false"
+                        :disabled="canEditComponent === false || !hasPermission"
                         @mousedown="storeFocus('day-' + index)"
                         @focusout="onStartDateFocusOut"
                         class="min-w-0 flex-1"
@@ -157,7 +157,7 @@
                         :id="'start-time-' + index"
                         :label="$t('Start time')"
                         class="print:border-0 min-w-0 flex-1"
-                        :disabled="canEditComponent === false"
+                        :disabled="canEditComponent === false || !hasPermission"
                         @mousedown="storeFocus('start-time-' + index)"
                         @focusout="onStartTimeFocusOut"
                     />
@@ -172,7 +172,7 @@
                         type="date"
                         :id="'end-day-' + index"
                         :label="$t('End date')"
-                        :disabled="canEditComponent === false"
+                        :disabled="canEditComponent === false || !hasPermission"
                         @mousedown="storeFocus('end-day-' + index)"
                         @focusout="updateEventInDatabase"
                     />
@@ -188,7 +188,7 @@
                         :id="'end_time-' + index"
                         :label="$t('End time')"
                         class="print:border-0"
-                        :disabled="canEditComponent === false"
+                        :disabled="canEditComponent === false || !hasPermission"
                         @focusout="onEndTimeFocusOut"
                         @mousedown="storeFocus('end_time-' + index)"
                     />
@@ -312,11 +312,13 @@
             v-if="showDescriptionInBulk"
             class="border-t border-b border-dashed border-zinc-300 border-l-2 border-l-zinc-300 ml-6 bg-zinc-50/50 rounded-b-lg px-3 py-1.5"
         >
-            <div v-if="!editingDescription" @click="startEditDescription" class="cursor-pointer min-h-[24px] flex items-center">
+            <div v-if="!editingDescription" @click="startEditDescription"
+                 class="min-h-[24px] flex items-center"
+                 :class="canEditRow ? 'cursor-pointer' : 'cursor-default'">
                 <template v-if="event.description && event.description.toString().trim().length > 0">
                     <span class="text-sm text-zinc-700 whitespace-pre-line break-words">{{ event.description }}</span>
                 </template>
-                <template v-else>
+                <template v-else-if="canEditRow">
                     <IconNote class="size-4 text-zinc-400 mr-1.5" stroke-width="1.5" />
                     <span class="text-sm text-zinc-400 italic">{{ $t('Add description') }}</span>
                 </template>
@@ -449,6 +451,9 @@ const openEventComponent = (payload) => emit('openEventComponent', payload);
 // B: Bevorzugt den zentral bereitgestellten Multi-Edit-Status, sonst die Prop.
 const effectiveMultiEdit = computed(() => injectedMultiEdit ? injectedMultiEdit.value : props.multiEdit);
 
+// Sammel-Gate für alle Bearbeitungen einer Zeile: Tab-Schreibrecht UND Event-Berechtigung.
+const canEditRow = computed(() => props.canEditComponent !== false && props.hasPermission);
+
 const showMenu = ref(false);
 const dayString = ref(null);
 const openNoteModal = ref(false);
@@ -466,6 +471,7 @@ const draftDescription = ref(props.event.description || '');
 const descriptionTextarea = ref(null);
 
 const startEditDescription = () => {
+    if (!canEditRow.value) return;
     draftDescription.value = props.event.description || '';
     editingDescription.value = true;
     nextTick(() => {
@@ -503,6 +509,20 @@ const draftStartDate = ref(props.event.day);
 // Local draft state for times to prevent immediate re-sorting while typing
 const draftStartTime = ref(props.event.start_time || '');
 const draftEndTime = ref(props.event.end_time || '');
+
+// Wurzel-Element der Zeile, um beim focusout zu erkennen, ob der Fokus in ein
+// anderes Feld derselben Event-Zeile wandert.
+const rowRootEl = ref(null);
+
+// True, wenn der Fokus beim focusout in ein anderes Eingabefeld derselben Zeile
+// wandert (Feld-zu-Feld-Wechsel). Dann wird die Speicherung/das Autofill aufgeschoben,
+// damit kein Patch/Re-Sort/Autofill den Cursor aus dem gerade angeklickten Feld reißt.
+// Klicks auf Buttons/Menüs zählen NICHT – die sollen ganz normal speichern.
+const focusStaysInRow = (e) => {
+    const rt = e?.relatedTarget;
+    if (!rt || !rowRootEl.value || !rowRootEl.value.contains(rt)) return false;
+    return rt.tagName === 'INPUT' || rt.tagName === 'SELECT' || rt.tagName === 'TEXTAREA';
+};
 
 const parseISODateToUTCMidnight = (iso) => {
     if (!iso) return null;
@@ -682,18 +702,23 @@ const onStartDateFocusOut = async () => {
     // Now apply reactive changes (may trigger re-sort and component re-render)
     props.event.day = newStart;
     props.event.end_day = newEndDay;
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
 };
 
-const onStartTimeFocusOut = () => {
-    // Commit draft start time to actual event object only on focusout
+const onStartTimeFocusOut = (e) => {
+    // Draft immer lokal übernehmen, damit der Wert nicht verloren geht ...
     props.event.start_time = draftStartTime.value;
+    // ... aber Speicherung/Autofill aufschieben, wenn der Fokus in ein anderes Feld
+    // derselben Zeile geht (z.B. Endzeit). Sonst füllt das Autofill die Endzeit vor
+    // und der Cursor springt aus dem gerade angeklickten Feld.
+    if (focusStaysInRow(e)) return;
     updateEventInDatabase();
 };
 
-const onEndTimeFocusOut = () => {
+const onEndTimeFocusOut = (e) => {
     // Commit draft end time to actual event object only on focusout
     props.event.end_time = draftEndTime.value;
+    if (focusStaysInRow(e)) return;
     updateEventInDatabase();
 };
 
@@ -740,6 +765,8 @@ watch(() => props.event.day, (v) => {
     if (v && v !== draftStartDate.value) {
         draftStartDate.value = v;
     }
+    // Wochentags-Label mitziehen, wenn sich das Datum extern ändert.
+    dayString.value = getDayOfWeek(v).replace('.', '');
 });
 
 watch(() => props.event.start_time, (v) => {
@@ -761,13 +788,18 @@ const sortedEventTypes = computed(() => props.event_types.sort((a,b) => a.name.l
 
 
 const getDayOfWeek = (date) => {
-    const d = new Date(date);
     const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
-    return days[d.getDay()];
+    // Datum in UTC parsen und mit getUTCDay auslesen, damit der Wochentag zum
+    // angezeigten Kalenderdatum passt – unabhängig von der Zeitzone des Nutzers.
+    // (new Date('2026-04-09') wird als UTC-Mitternacht geparst, .getDay() liest
+    //  aber lokal → je nach Offset Off-by-one, z.B. "Fr" statt "Do".)
+    const d = parseISODateToUTCMidnight(date);
+    if (!d) return '';
+    return days[d.getUTCDay()];
 };
 
 onMounted(() => {
-    dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '');
+    dayString.value = getDayOfWeek(props.event.day).replace('.', '');
     // ensure end_day initialized
     if (!props.event.end_day) props.event.end_day = props.event.day;
     // initialize snapshot so first change is detected

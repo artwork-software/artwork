@@ -43,35 +43,49 @@
             </div>
         </div>
     </td>
-    <td class="py-3 flex justify-center text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
-        <img
-            :src="getMainImageInImage.image"
-            @error="(e) => e.target.src = usePage().props.big_logo"
-            alt=""
-            class="w-12 h-12 object-fill rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-            @click="imageClick(0)"
-        >
+    <td v-if="!hideImage" class="sticky left-0 z-10 bg-inherit p-3 text-sm font-medium whitespace-nowrap text-gray-900 first-letter:capitalize">
+        <div class="flex justify-center">
+            <img
+                :src="getMainImageInImage.image"
+                @error="(e) => e.target.src = usePage().props.big_logo"
+                alt=""
+                class="w-12 h-12 object-fill rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                @click="imageClick(0)"
+            >
+        </div>
     </td>
-    <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold">
+    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap text-secondary font-semibold" :class="hideImage ? 'left-0' : 'left-20'">
         <div class="flex items-center">
-            {{ item?.name }}
-            <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2" />
+            <span class="truncate">{{ item?.name }}</span>
+            <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2 shrink-0" />
         </div>
         <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-gray-400">
             {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
         </div>
     </td>
-    <td class="p-3 text-sm whitespace-nowrap" :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">{{ formatQuantity(item?.quantity) }}</td>
-    <td class="p-3 text-sm whitespace-nowrap text-secondary font-semibold" v-for="property in subcategoryProperties" :key="property.id">
-        <template v-if="property.type === 'file'">
-            <a v-if="filePropertyPath(property)"
-               :href="route('inventory-management.articles.property-file.download', { path: filePropertyPath(property) })"
+    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap" :class="[hideImage ? 'left-[256px]' : 'left-[336px]', item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create']">{{ formatQuantity(item?.quantity) }}</td>
+    <td class="p-3 text-sm whitespace-nowrap font-semibold truncate"
+        :class="[
+            isNumericProperty(property) ? 'text-right tabular-nums' : '',
+            isEmptyProperty(property) ? 'text-gray-300 font-normal' : 'text-secondary'
+        ]"
+        v-for="property in columnProperties" :key="property.id">
+        <template v-if="cellDisplays[property.id].type === 'file'">
+            <a v-if="cellDisplays[property.id].file"
+               :href="route('inventory-management.articles.property-file.download', { path: cellDisplays[property.id].file.path })"
                class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
-                {{ fileName(filePropertyPath(property)) }}
+                {{ cellDisplays[property.id].file.name }}
             </a>
             <span v-else>-</span>
         </template>
-        <template v-else>{{ formatPropertyValue(property) }}</template>
+        <PropertyDiffTooltip
+            v-else-if="cellDisplays[property.id].varied"
+            :values="cellDisplays[property.id].distinctValues"
+            :heading="$t('Values')"
+        >
+            {{ cellDisplays[property.id].text }}
+        </PropertyDiffTooltip>
+        <template v-else>{{ cellDisplays[property.id].empty ? '-' : cellDisplays[property.id].text }}</template>
     </td>
     <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-secondary font-semibold sm:pr-0">
         <div class="flex items-center gap-x-4">
@@ -96,17 +110,20 @@
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {useInventoryPropertyDisplay} from "@/Composeables/InventoryPropertyDisplay.js";
+import PropertyDiffTooltip from "@/Pages/Inventory/Components/PropertyDiffTooltip.vue";
 import {IconEye, IconIdBadge, IconPhoto} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import Galleria from 'primevue/galleria';
 const $t = useTranslation()
+const {getPropertyDisplay} = useInventoryPropertyDisplay()
 
 const props = defineProps({
     item: {
         type: Object,
         required: true
     },
-    subcategoryProperties: {
+    columnProperties: {
         type: Array,
         required: true
     },
@@ -119,6 +136,11 @@ const props = defineProps({
         type: Function,
         required: false,
         default: () => null
+    },
+    hideImage: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 
@@ -207,79 +229,27 @@ const getMainImageInImage = computed(() => {
     };
 });
 
-const formatProperty = (property) => {
-    if (property.type === 'room') {
-        return props.item.room?.name === 'Room not found' ? $t(props.item?.room?.name) : props.item?.room?.name;
+// Precompute a display descriptor per (category-wide) property column. Handles both
+// regular articles and aggregated detailed-quantity articles (see composable).
+const cellDisplays = computed(() => {
+    const map = {};
+    for (const property of props.columnProperties) {
+        map[property.id] = getPropertyDisplay(props.item, property);
     }
+    return map;
+})
 
-    if (property.type === 'manufacturer') {
-        return props.item.manufacturer?.name === 'Manufacturer not found' ? $t(props.item.manufacturer?.name) : props.item.manufacturer?.name;
+// Numeric columns are right-aligned + tabular for easier comparison down the column.
+const isNumericProperty = (property) => property?.type === 'number' || property?.type === 'year'
+
+// A cell is "empty" when the article does not define this column's property, so it
+// is rendered as a dimmed dash. File columns count as empty when no file is stored.
+const isEmptyProperty = (property) => {
+    const display = cellDisplays.value[property.id]
+    if (!display) {
+        return true
     }
-
-    if (property.type === 'date') {
-        return new Date(property.pivot.value).toLocaleDateString();
-    }
-
-    if (property.type === 'time') {
-        return property.pivot.value;
-    }
-
-    if (property.type === 'datetime') {
-        return new Date(property.pivot.value).toLocaleString();
-    }
-
-    if (property.type === 'checkbox') {
-        return property.pivot.value ? $t('Yes') : $t('No');
-    }
-
-    return property.pivot.value;
-}
-
-// Resolve the stored file path for a 'file' type property from the article's own properties
-const filePropertyPath = (subcategoryProperty) => {
-    const articleProperty = props.item.properties.find(p => p.id === subcategoryProperty.id);
-    const value = articleProperty?.pivot?.value;
-    return typeof value === 'string' && value.length > 0 ? value : null;
-}
-
-const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
-
-// New function to format property values correctly by looking up from article's own properties
-const formatPropertyValue = (subcategoryProperty) => {
-    // Find the matching property in the article's own properties
-    const articleProperty = props.item.properties.find(p => p.id === subcategoryProperty.id);
-
-    // If the article doesn't have this property, return a dash
-    if (!articleProperty) {
-        return '-';
-    }
-
-    // Handle special property types
-    if (subcategoryProperty.type === 'room') {
-        return props.item.room?.name === 'Room not found' ? $t(props.item?.room?.name) : props.item?.room?.name;
-    }
-
-    if (subcategoryProperty.type === 'manufacturer') {
-        return props.item.manufacturer?.name === 'Manufacturer not found' ? $t(props.item.manufacturer?.name) : props.item.manufacturer?.name;
-    }
-
-    if (subcategoryProperty.type === 'date') {
-        return articleProperty.pivot.value ? new Date(articleProperty.pivot.value).toLocaleDateString() : '-';
-    }
-
-    if (subcategoryProperty.type === 'time') {
-        return articleProperty.pivot.value || '-';
-    }
-
-    if (subcategoryProperty.type === 'datetime') {
-        return articleProperty.pivot.value ? new Date(articleProperty.pivot.value).toLocaleString() : '-';
-    }
-
-    if (subcategoryProperty.type === 'checkbox') {
-        return articleProperty.pivot.value ? $t('Yes') : $t('No');
-    }
-
-    return articleProperty.pivot.value || '-';
+    return display.type === 'file' ? !display.file : !!display.empty
 }
 
 </script>

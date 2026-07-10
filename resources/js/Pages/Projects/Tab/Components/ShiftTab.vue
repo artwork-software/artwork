@@ -42,22 +42,32 @@ const projectLite = computed(() => {
 
 // Projekt hat weder Termine noch Schichten
 const hasNoEvents = computed(() => {
-    return !props.headerObject?.firstEventInProject && !props.headerObject?.lastEventInProject
+    return !props.headerObject?.firstEventInProject
+        && !props.headerObject?.lastEventInProject
+        && !props.headerObject?.firstShiftInProject
 })
 
-// Datumsbereich für den Schicht-Tab strikt am Projektzeitraum ausrichten
-// -> firstEventInProject.start_time bis lastEventInProject.end_time
+// Datumsbereich für den Schicht-Tab: Min/Max über Events UND Schichten,
+// damit Schichten vor/nach dem Event-Zeitraum (z.B. Auf-/Abbau) sichtbar sind
 const dateRange = computed(() => {
-    const first = props.headerObject?.firstEventInProject?.start_time
-    const last = props.headerObject?.lastEventInProject?.end_time
-
     const toYMD = (val) => {
+        if (!val) return null
         const d = dayjs(val)
         return d.isValid() ? d.format('YYYY-MM-DD') : null
     }
 
-    const start = toYMD(first) || usePage().props.dateValue?.[0] || null
-    const end = toYMD(last) || usePage().props.dateValue?.[1] || null
+    const starts = [
+        toYMD(props.headerObject?.firstEventInProject?.start_time),
+        toYMD(props.headerObject?.firstShiftInProject),
+    ].filter(Boolean)
+    const ends = [
+        toYMD(props.headerObject?.lastEventInProject?.end_time),
+        toYMD(props.headerObject?.lastShiftInProject),
+    ].filter(Boolean)
+
+    // YYYY-MM-DD sortiert lexikographisch = chronologisch
+    const start = (starts.length ? starts.sort()[0] : null) || usePage().props.dateValue?.[0] || null
+    const end = (ends.length ? ends.sort()[ends.length - 1] : null) || usePage().props.dateValue?.[1] || null
     return [start, end]
 })
 

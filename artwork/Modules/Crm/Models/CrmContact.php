@@ -97,6 +97,14 @@ class CrmContact extends Model
         return $this->hasMany(ArtistResidency::class, 'artist_crm_contact_id');
     }
 
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Project\Models\Project::class,
+            'crm_contact_project'
+        )->withTimestamps();
+    }
+
     public function accommodationResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'accommodation_crm_contact_id');

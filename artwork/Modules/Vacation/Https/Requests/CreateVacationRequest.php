@@ -19,7 +19,7 @@ class CreateVacationRequest extends FormRequest
             'date' => 'required',
             'type' => 'required|string',
             'full_day' => 'nullable|boolean',
-            'comment' => 'nullable|string|max:20',
+            'comment' => 'nullable|string|max:100',
             'is_series' => 'nullable|boolean',
             'series_repeat' => 'nullable|string',
             'series_repeat_until' => 'nullable|date',

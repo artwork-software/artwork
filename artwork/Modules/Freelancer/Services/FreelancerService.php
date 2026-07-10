@@ -2,14 +2,17 @@
 
 namespace Artwork\Modules\Freelancer\Services;
 
+use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\DTOs\ShowDto;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShowResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Repositories\FreelancerRepository;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -61,15 +64,20 @@ readonly class FreelancerService
 
         $freelancersWithPlannedWorkingHours = [];
 
+        // KW-Stunden externer Personen nur mit Berechtigung (eigene Werte gibt es hier nicht)
+        $canSeeWorkerHours = $currentUser?->can(PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value) ?? false;
+
         /** @var Freelancer $freelancer */
         foreach ($freelancers as $freelancer) {
             $desiredFreelancerResource = $desiredResourceClass::make($freelancer);
 
-            $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
-                $freelancer,
-                $startDate,
-                $endDate
-            );
+            $weeklyWorkingHours = $canSeeWorkerHours
+                ? $this->workingHourService->calculateWeeklyWorkingHours(
+                    $freelancer,
+                    $startDate,
+                    $endDate
+                )
+                : [];
 
             $additionalData = [
                 'weeklyWorkingHours' => $weeklyWorkingHours,
@@ -139,10 +147,10 @@ readonly class FreelancerService
             $userService->getAuthUser()
         );
 
-        // Derive the displayed calendar month from the filter start date (always in sync with the calendar)
-        $calendarMonth = $startDate->copy()->startOfMonth();
-        // Override $month so getAvailabilityData uses the same month
-        $month = $startDate->format('Y-m-d');
+        // Verfügbarkeitskalender ist vom Einsatzplan-Filter entkoppelt: expliziter month-Parameter
+        // gewinnt, sonst startet der Kalender im Monat des Einsatzplan-Filters.
+        $month = $month ?: $startDate->format('Y-m-d');
+        $calendarMonth = Carbon::parse($month)->startOfMonth();
 
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($startDate, $endDate)->map(
@@ -153,13 +161,6 @@ readonly class FreelancerService
         );
         $startOfWeek = $startDate->copy()->startOfWeek();
         $endOfWeek = $endDate->copy()->endOfWeek();
-
-        $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
-            $freelancer->id,
-            'freelancer',
-            $startOfWeek,
-            $endOfWeek
-        );
 
         [
             $calendarData,
@@ -183,7 +184,11 @@ readonly class FreelancerService
             )
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)
-            ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
+            // Schwere Props als Closures: Inertia wertet sie bei partiellen Reloads
+            // (z.B. nach Speichern/Löschen von Verfügbarkeiten) gar nicht erst aus
+            ->setVacationSelectCalendar(
+                static fn() => $calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth)
+            )
             ->setCreateShowDate(
                 [
                     $calendarMonth->copy()->locale($selectedPeriodDate->locale)->isoFormat('MMMM YYYY'),
@@ -217,15 +222,27 @@ readonly class FreelancerService
             )
             //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
             //->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
-            ->setRooms($roomService->getAllWithoutTrashed())
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setProjects($projectService->getAll())
-            ->setVacations($this->getVacationsByMonthOrderedByDateAscending($freelancer, $calendarMonth))
-            ->setShifts($this->getShiftsWithEventsOrderedByStart($freelancer))
-            ->setAvailabilities($this->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $calendarMonth))
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
+            ->setEventTypes(static fn() => EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setProjects(static fn() => $projectService->getAll())
+            ->setVacations(
+                tap(
+                    $this->getVacationsByMonthOrderedByDateAscending($freelancer, $calendarMonth),
+                    static fn($vacations) => Vacation::attachSeriesDateBounds($vacations)
+                )
+            )
+            ->setShifts(fn() => $this->getShiftsWithEventsOrderedByStart($freelancer))
+            ->setAvailabilities(
+                tap(
+                    $this->getAvailabilitiesByMonthOrderedByDateAscending($freelancer, $calendarMonth),
+                    static fn($availabilities) => Availability::attachSeriesDateBounds($availabilities)
+                )
+            )
+            ->setShiftQualifications(
+                static fn() => $shiftQualificationService->getAllOrderedByCreationDateAscending()
+            )
             ->setFirstProjectShiftTabId(
-                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                fn() => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
             );

@@ -600,6 +600,17 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "User can manually book out overtime (payout) and thereby reduce the time account.",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
+                'name_de' => "Stundenkonten im Dienstplan sehen",
+                'translation_key' => "View hour accounts in shift plan",
+                'group' => 'Shifts',
+                'tooltipText' => 'Darf Arbeitszeitkonto und Wochenstunden (KW) aller Personen in den ' .
+                    'Dienstplan-Ansichten sehen. Ohne diese Berechtigung sind nur die eigenen Werte sichtbar.',
+                'tooltipKey' => 'User can see the work time account and weekly (CW) hours of all persons in the ' .
+                    'shift plan views. Without this permission only their own values are visible.',
+                'checked' => false
+            ],
         ];
     }
 

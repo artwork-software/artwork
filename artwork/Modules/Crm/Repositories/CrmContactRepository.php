@@ -13,7 +13,13 @@ class CrmContactRepository
     public function getByType(int $typeId, ?string $search = null, int $perPage = 15, array $filters = [], array $allowedPropertyIds = []): LengthAwarePaginator
     {
         $query = CrmContact::where('crm_contact_type_id', $typeId)
-            ->with(['contactType', 'propertyValues.property']);
+            ->with([
+                'contactType',
+                // Only expose property values the user is allowed to see
+                // (confidential groups) — mirrors the filtering in show()/getData().
+                'propertyValues' => fn ($q) => $q->whereIn('crm_property_id', $allowedPropertyIds),
+                'propertyValues.property',
+            ]);
 
         if ($search) {
             $query->where('display_name', 'like', "%{$search}%");
@@ -26,7 +32,7 @@ class CrmContactRepository
             }
 
             // Skip filters for properties the user is not allowed to see (confidential groups)
-            if (!empty($allowedPropertyIds) && !in_array($propId, $allowedPropertyIds)) {
+            if (!in_array($propId, $allowedPropertyIds, true)) {
                 continue;
             }
 

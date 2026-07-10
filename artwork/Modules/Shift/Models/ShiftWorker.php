@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class ShiftWorker extends MorphPivot
 {
@@ -29,9 +30,23 @@ class ShiftWorker extends MorphPivot
         'is_overbooked' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // Zentral statt an jeder Zuweisungsstelle: erfasst auch attach()-Pfade
+        // über die Pivot-Klasse; Seeder/Konsole ohne Auth bleiben null.
+        static::creating(function (ShiftWorker $shiftWorker): void {
+            $shiftWorker->assigned_by_user_id ??= Auth::id();
+        });
+    }
+
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by_user_id');
     }
 
     public function shiftQualification(): BelongsTo

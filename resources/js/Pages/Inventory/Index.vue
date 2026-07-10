@@ -1,82 +1,118 @@
 <template>
     <AppLayout :title="$t('Inventory')">
         <div class="w-full px-10 min-h-screen">
-            <div class="border-b border-gray-200 pt-8 pb-5 flex items-center justify-between">
-                <div class="">
-                    <div>
-                        <BasePageTitle
-                            :title="$t('Inventory')"
-                            :description="$t('Welcome to the {0} inventory! Here you will find a complete overview of all available products. You can browse through the various items, view details and manage which products are currently in stock.', [usePage().props.name])"
-                        />
-                    </div>
-
-                    <div class="max-w-xs pt-5">
-                        <!-- name filter and search -->
+            <!-- Sticky Funktionsleiste über die gesamte Breite -->
+            <div class="sticky top-0 z-40 -mx-10 px-10 bg-white border-b border-gray-200 pt-3 pb-2 shadow-sm">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+                    <div class="w-72">
                         <BaseInput
                             id="productSearch"
                             v-model="searchArticleInput"
                             :label="$t('Search Articles')"
-                            />
-                        <p class="mt-1 text-xs text-gray-400">{{ $t('Searches all properties (incl. serial number). Use * as a wildcard, e.g. *158.') }}</p>
+                            is-small
+                        />
                     </div>
 
-                    <!-- Ref 1.28: optionale Einschränkung auf eine bestimmte Eigenschaft -->
-                    <div class="max-w-xs pt-3">
+                    <div
+                        class="w-56"
+                        v-tooltip.bottom="{ value: $t('Here you can specify whether to search all properties or only a specific one.'), class: 'aw-tooltip', appendTo: 'body' }"
+                    >
                         <ArtworkBaseListbox
                             :model-value="selectedSearchProperty"
                             @update:model-value="onSearchPropertyChange"
                             :items="propertySearchOptions"
                             by="id"
                             option-label="name"
-                            :label="$t('Search in property (optional)')"
+                            :button-class="COMPACT_LISTBOX_BUTTON_CLASS"
+                        />
+                    </div>
+
+                    <div class="grow"></div>
+
+                    <div class="flex items-center gap-x-4">
+                        <div class="relative">
+                            <ToolTipComponent
+                                direction="bottom"
+                                :tooltip-text="$t('Opens your product basket. Enable the toggle next to it to add articles by clicking them in the overview; when you are done, open the basket here, make final adjustments and create a material issue from it.')"
+                                icon="IconBasket"
+                                icon-size="h-5 w-5"
+                                classesButton="ui-button"
+                                @click="showProductBasketModal = true"
+                            />
+                            <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-1 ring-blue-200 text-blue-500 text-xs flex items-center justify-center pointer-events-none">
+                                {{ productBaskets?.basket_articles?.length ?? 0 }}
+                            </span>
+                        </div>
+
+                        <SwitchIconTooltip
+                            v-model="enableAddArticleToBasket"
+                            :tooltip-text="$t('Enable this toggle to add articles to your product basket by clicking them in the overview. Then use the basket button next to it to review the basket and create a material issue.')"
+                            size="md"
+                            icon="IconBasket"
+                        />
+
+                        <InventoryLayoutSwitchComponent :grid-layout="gridLayout" @update:gridLayout="updateGridLayout" />
+
+                        <div class="relative">
+                            <ToolTipComponent
+                                direction="bottom"
+                                :tooltip-text="$t('Display settings')"
+                                icon="IconSettings"
+                                icon-size="h-5 w-5"
+                                classesButton="ui-button"
+                                @click="showDisplaySettingsModal = true"
+                            />
+                            <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="hideArticleImages">
+                                <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
+                            </span>
+                        </div>
+
+                        <InventoryFilterComponent :filterable-properties="filterableProperties ?? []" />
+
+                        <ToolTipComponent
+                            v-if="can('inventory.create_edit') || hasAdminRole()"
+                            direction="bottom"
+                            :tooltip-text="$t('Add Article')"
+                            icon="IconCirclePlus"
+                            icon-size="h-5 w-5"
+                            classesButton="ui-button"
+                            @click="showAddEditArticleModal = true"
                         />
                     </div>
                 </div>
 
-
-                <div class="mt-5">
-                    <BaseUIButton is-add-button v-if="can('inventory.create_edit') || hasAdminRole()"@click="showAddEditArticleModal = true" label="Add Article" use-translation />
+                <!-- Status-Schnellfilter: eine Zeile, direkt klickbar -->
+                <div class="mt-2 overflow-x-auto" v-if="Object.keys(props.countsByStatus ?? {}).length">
+                    <StatusOverview :counts-by-status="props.countsByStatus" :active-status-id="props.activeStatusId" />
                 </div>
-
             </div>
 
-            <div class="pt-12 pb-24 grid grid-cols-1 sm:grid-cols-4 md:grid-cols-6 lg:gap-x-8 lg:grid-cols-8 2xl:flex 2xl:w-full">
+            <!-- Aktive Filter-Chips -->
+            <div class="mt-3">
+                <InventoryActiveFilterChips
+                    :search="searchArticleInput"
+                    :search-property-id="searchPropertyId"
+                    :counts-by-status="props.countsByStatus"
+                    :active-status-id="props.activeStatusId"
+                    @clear-search="onClearSearchChip"
+                    @reset="clearSearchLocal"
+                />
+            </div>
+
+            <div class="pt-4 pb-24 grid grid-cols-1 sm:grid-cols-4 md:grid-cols-6 lg:gap-x-8 lg:grid-cols-8 2xl:flex 2xl:w-full">
 
                 <div class="col-span-full md:col-span-full lg:col-span-2 xl:col-span-2 2xl:max-w-96 2xl:w-96">
                     <InventorySidebarComponent
                         :current-category="props.currentCategory"
                         :articles-count="props.articlesCount"
+                        :has-active-filter="props.hasActiveFilter"
                         :categories="props.categories"
+                        :link-query="persistentLinkQuery"
                     />
                 </div>
                 <section aria-labelledby="product-heading" class="col-span-full lg:col-span-6 2xl:w-full">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory"/>
-                        </div>
-
-                        <div class="flex items-center gap-x-6">
-                            <div class="relative">
-                                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-1 ring-blue-200 text-blue-500 text-xs flex items-center justify-center">
-                                    {{ productBaskets?.basket_articles?.length ?? 0 }}
-                                </span>
-                                <BaseUIButton :label="$t('Product Basket')" icon="IconBasket" @click="showProductBasketModal = true" />
-                            </div>
-                            <SwitchIconTooltip
-                                v-model="enableAddArticleToBasket"
-                                :tooltip-text="$t('Enable adding articles to a temporary product basket')"
-                                size="md"
-                                icon="IconBasket"
-                            />
-                            <InventoryLayoutSwitchComponent :grid-layout="gridLayout" @update:gridLayout="updateGridLayout" />
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <StatusOverview :counts-by-status="props.countsByStatus" :active-status-id="props.activeStatusId" />
-                    </div>
-                    <div class="mb-3" v-if="filterableProperties?.length > 0">
-                        <InventoryFilterComponent :filterableProperties="filterableProperties" />
+                    <div class="mb-3" v-if="props.currentCategory?.id">
+                        <InventoryBreadcrumbComponent :current-category="props.currentCategory" :current-sub-category="props.currentSubCategory" :link-query="persistentLinkQuery"/>
                     </div>
                     <div v-if="props.articles.data.length > 0">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4 items-stretch" v-if="gridLayout">
@@ -93,67 +129,102 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <InventorySingleArticleInGrid :item="item" />
+                                    <InventorySingleArticleInGrid :item="item" :hide-image="hideArticleImages" />
                                 </div>
                             </div>
                         </div>
-                        <div v-else class="space-y-8">
+                        <div v-else class="space-y-10">
                             <!-- Loop through each category -->
-                            <div v-for="(category, index) in groupedArticles" :key="category.id" class="space-y-6">
+                            <div v-for="(category, index) in groupedArticles" :key="category.id" class="space-y-3">
                                 <!-- Category Header -->
                                 <div class="border-b-2 border-gray-300 pb-2">
                                     <h2 class="text-xl font-bold text-gray-900">{{ category.name }}</h2>
                                 </div>
 
-                                <!-- Loop through each subcategory within the category -->
-                                <div v-for="subcategory in category.subcategories" :key="subcategory.id" class="space-y-3">
-                                    <!-- Subcategory Header -->
-                                    <div class="bg-gray-50 px-4 py-2 rounded-t-lg border-l-4 border-artwork-buttons-create">
-                                        <h3 class="text-lg font-semibold text-gray-800">{{ subcategory.name }}</h3>
-                                    </div>
-
-                                    <!-- Table for this subcategory -->
-                                    <div class="overflow-x-auto">
-                                        <table class="min-w-full divide-y divide-gray-300 border border-gray-200 rounded-b-lg">
-                                            <thead class="bg-gray-50">
-                                                <tr class="divide-x divide-gray-200">
-                                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left flex justify-center text-sm font-semibold text-gray-900 sm:pl-0">
-                                                        {{ $t('Image') }}
-                                                    </th>
-                                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                                        {{ $t('Name') }}
-                                                    </th>
-                                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                                        {{ $t('Quantity') }}
-                                                    </th>
-                                                    <!-- Only show properties that exist in this subcategory -->
-                                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                                        v-for="property in subcategory.properties"
-                                                        :key="property.id">
-                                                        {{ property?.name }}
-                                                    </th>
-                                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
-                                                        {{ $t('Actions') }}
-                                                    </th>
+                                <!--
+                                    One table for the WHOLE category so that identical properties line up
+                                    vertically across all subcategories. The union of every subcategory's
+                                    properties defines a fixed column set (fixed order + fixed widths).
+                                    Subcategories become full-width group rows inside this single table;
+                                    the whole category scrolls horizontally as one unit when there are many
+                                    properties. Articles without a given property show a dash.
+                                -->
+                                <!--
+                                    The category scrolls inside itself (both axes) via max-height + overflow-auto
+                                    so that `sticky top-0` on the header has a scroll container to dock to — with
+                                    page-level scrolling a sticky header would have no reference point and scroll
+                                    away. Short categories simply don't scroll internally.
+                                -->
+                                <div class="max-h-[75vh] overflow-auto border border-gray-200 rounded-lg">
+                                    <!--
+                                        NOTE: no `min-w-full` here. With `table-fixed`, a table narrower than
+                                        its container would distribute the slack proportionally across ALL
+                                        columns, which would break the hardcoded sticky `left` offsets below
+                                        (Bild/Name/Menge would render wider than nominal → gaps appear and
+                                        scrolling columns bleed through). Letting the table size to the sum of
+                                        the fixed column widths keeps the sticky offsets exact.
+                                    -->
+                                    <table class="w-max table-fixed divide-y divide-gray-200">
+                                        <colgroup>
+                                            <col v-if="!hideArticleImages" class="w-20" />
+                                            <col class="w-64" />
+                                            <col class="w-28" />
+                                            <col v-for="property in category.unionProperties" :key="property.id" class="w-44" />
+                                            <col class="w-24" />
+                                        </colgroup>
+                                        <thead class="bg-gray-50">
+                                            <tr class="divide-x divide-gray-200">
+                                                <!-- Corner cells: pinned both top (header) and left (identity columns) -> higher z -->
+                                                <th v-if="!hideArticleImages" scope="col" class="sticky top-0 left-0 z-30 bg-gray-50 py-3.5 pr-4 pl-4 text-center text-sm font-semibold text-gray-900">
+                                                    {{ $t('Image') }}
+                                                </th>
+                                                <th scope="col" class="sticky top-0 z-30 bg-gray-50 px-4 py-3.5 text-left text-sm font-semibold text-gray-900" :class="hideArticleImages ? 'left-0' : 'left-20'">
+                                                    {{ $t('Name') }}
+                                                </th>
+                                                <th scope="col" class="sticky top-0 z-30 bg-gray-50 px-4 py-3.5 text-left text-sm font-semibold text-gray-900" :class="hideArticleImages ? 'left-[256px]' : 'left-[336px]'">
+                                                    {{ $t('Quantity') }}
+                                                </th>
+                                                <!-- Union of all properties across this category's subcategories (pinned top only) -->
+                                                <th scope="col" class="sticky top-0 z-20 bg-gray-50 px-4 py-3.5 text-left text-sm font-semibold text-gray-900 truncate"
+                                                    :class="isNumericProperty(property) ? 'text-right' : ''"
+                                                    v-for="property in category.unionProperties"
+                                                    :key="property.id"
+                                                    :title="property?.name">
+                                                    {{ property?.name }}
+                                                </th>
+                                                <th scope="col" class="sticky top-0 z-20 bg-gray-50 py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900">
+                                                    {{ $t('Actions') }}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                            <template v-for="subcategory in category.subcategories" :key="subcategory.id">
+                                                <!-- Subcategory group row (spans the full width of the shared table) -->
+                                                <tr class="bg-gray-50/80">
+                                                    <td :colspan="category.unionProperties.length + (hideArticleImages ? 3 : 4)" class="p-0">
+                                                        <div class="sticky left-0 w-fit px-4 py-2 border-l-4 border-artwork-buttons-create flex items-center gap-x-2">
+                                                            <h3 class="text-sm font-semibold text-gray-800">{{ subcategory.name }}</h3>
+                                                            <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                                {{ subcategory.articles.length }}
+                                                            </span>
+                                                        </div>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-gray-200 bg-white">
-                                                <tr v-for="item in subcategory.articles" :key="item?.id" class="divide-x divide-gray-200 relative hover:bg-gray-50">
+                                                <!-- Article rows share the category-wide column layout -->
+                                                <tr v-for="item in subcategory.articles" :key="item?.id" class="divide-x divide-gray-200 relative bg-white hover:bg-gray-50">
                                                     <InventorySingleArticleInTable
                                                         :item="item"
-                                                        :subcategory-properties="subcategory.properties"
+                                                        :column-properties="category.unionProperties"
                                                         :enable-add-article-to-basket="enableAddArticleToBasket"
                                                         :find-basket-for-article="findBasketForArticle"
+                                                        :hide-image="hideArticleImages"
                                                         @add-to-basket="addArticleToBasket"
                                                     />
                                                 </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            </template>
+                                        </tbody>
+                                    </table>
                                 </div>
-
-                                <!-- Divider between categories (not after the last one) -->
-                                <div v-if="index < Object.keys(groupedArticles).length - 1" class="border-t-2 border-gray-400 my-8"></div>
                             </div>
                         </div>
                         <div class="mt-10">
@@ -161,7 +232,23 @@
                         </div>
                     </div>
                     <div v-else>
-                        <InventoryEmptyProductsAlertComponent />
+                        <!-- Bei aktiven Filtern direkt anbieten, sie zurückzusetzen -->
+                        <div
+                            v-if="props.hasActiveFilter || props.activeStatusId"
+                            class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+                        >
+                            <span class="text-sm text-blue-700">
+                                {{ $t('No articles match your search or filters.') }}
+                            </span>
+                            <BaseUIButton
+                                type="button"
+                                icon="IconRefresh"
+                                label="Reset all filters"
+                                use-translation
+                                @click="onResetFromEmptyState"
+                            />
+                        </div>
+                        <InventoryEmptyProductsAlertComponent v-else />
                     </div>
                 </section>
             </div>
@@ -189,6 +276,23 @@
                 @close="showIssueOfMaterialModal = false"
                 :load-article-form-basket="true"
             />
+
+            <ArtworkBaseModal
+                v-if="showDisplaySettingsModal"
+                modalSize="sm:max-w-lg"
+                :title="$t('Display settings')"
+                :description="$t('These settings only affect your own view.')"
+                @close="showDisplaySettingsModal = false"
+            >
+                <div class="mt-2">
+                    <BaseCheckbox
+                        :model-value="hideArticleImages"
+                        :label="$t('Hide article images in overview')"
+                        :description="$t('Shows more article tiles at once by hiding the images.')"
+                        @update:model-value="updateHideArticleImages"
+                    />
+                </div>
+            </ArtworkBaseModal>
         </div>
 
     </AppLayout>
@@ -206,23 +310,28 @@ import InventoryEmptyProductsAlertComponent
 import InventorySingleArticleInGrid from "@/Pages/Inventory/GridComponents/InventorySingleArticleInGrid.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {Switch} from "@headlessui/vue";
-import {computed, onMounted, ref, watch, provide, defineAsyncComponent} from "vue";
+import {computed, nextTick, ref, watch, provide, defineAsyncComponent} from "vue";
+import debounce from "lodash.debounce";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import InventoryFilterComponent from "@/Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue";
+import InventoryActiveFilterChips from "@/Pages/Inventory/LayoutComponents/InventoryActiveFilterChips.vue";
+import {COMPACT_LISTBOX_BUTTON_CLASS, INVENTORY_FILTER_RELOAD_PROPS, useInventoryFilters} from "@/Pages/Inventory/Composables/useInventoryFilters.js";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
 import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
-import debounce from "lodash.debounce";
-import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {can} from "laravel-permission-to-vuejs";
 import {usePermission} from "@/Composeables/Permission.js";
-import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import ProductBasketModal from "@/Pages/Inventory/ProductBasket/Components/ProductBasketModal.vue";
+import StatusOverview from "@/Pages/Inventory/Components/StatusOverview.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 
@@ -251,6 +360,11 @@ const props = defineProps({
     articlesCount: {
         type: Number,
         required: true
+    },
+    hasActiveFilter: {
+        type: Boolean,
+        required: false,
+        default: false
     },
     filterableProperties: {
         type: Object,
@@ -300,6 +414,11 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: true
+    },
+    inventoryHideImages: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 
@@ -316,15 +435,26 @@ provide('tags', props.tags)
 
 
 const gridLayout = ref(props.inventoryGridLayout)
+const hideArticleImages = ref(props.inventoryHideImages)
 const enableAddArticleToBasket = ref(false)
 const showProductBasketModal = ref(false)
 const showIssueOfMaterialModal = ref(false)
 const internOrExternIssue = ref(false)
-const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
 const showAddEditArticleModal = ref(false);
+const showDisplaySettingsModal = ref(false);
 
-// Ref 1.28: optionaler Such-Scope auf eine bestimmte Eigenschaft (null = alle).
-const searchPropertyId = ref(usePage().props?.urlParameters?.search_property_id ?? null)
+const { resetAllFilters } = useInventoryFilters()
+
+/**
+ * Suche (+ optionaler Eigenschafts-Scope) in der Funktionsleiste.
+ */
+const searchArticleInput = ref(usePage().props?.urlParameters?.search ?? '')
+const searchPropertyId = ref(
+    usePage().props?.urlParameters?.search_property_id
+        ? Number(usePage().props.urlParameters.search_property_id)
+        : null
+)
+
 const propertySearchOptions = computed(() => [
     { id: null, name: $t('All properties') },
     ...(props.properties ?? []),
@@ -334,6 +464,64 @@ const selectedSearchProperty = computed(() =>
 )
 const onSearchPropertyChange = (value) => {
     searchPropertyId.value = (value && typeof value === 'object') ? (value.id ?? null) : (value ?? null)
+}
+
+// Status und Suche leben nur in der URL (nicht im serverseitigen Filter-State).
+// Damit sie beim Kategoriewechsel aktiv bleiben, bekommen Sidebar- und
+// Breadcrumb-Links sie als Query-Parameter mit.
+const persistentLinkQuery = computed(() => {
+    const query = {}
+    if (props.activeStatusId) query.status_id = props.activeStatusId
+    if ((searchArticleInput.value ?? '').trim() !== '') query.search = searchArticleInput.value
+    if (searchPropertyId.value) query.search_property_id = searchPropertyId.value
+    return query
+})
+
+// Programmatischen Wechsel (Reset/Chip-Entfernung) vom User-Tippen
+// unterscheiden, damit kein doppelter Reload ausgelöst wird.
+let suppressSearchWatch = false
+
+const debouncedSearch = debounce(() => {
+    router.reload({
+        data: {
+            search: searchArticleInput.value,
+            search_property_id: searchPropertyId.value,
+        },
+        preserveScroll: true,
+        only: INVENTORY_FILTER_RELOAD_PROPS,
+    })
+}, 500)
+
+watch([searchArticleInput, searchPropertyId], () => {
+    if (suppressSearchWatch) return
+    debouncedSearch()
+})
+
+const clearSearchLocal = () => {
+    suppressSearchWatch = true
+    searchArticleInput.value = ''
+    searchPropertyId.value = null
+    nextTick(() => {
+        suppressSearchWatch = false
+    })
+    debouncedSearch.cancel()
+}
+
+// Such-Chip in der Chips-Zeile entfernt -> lokal leeren + Suche zurücksetzen
+const onClearSearchChip = () => {
+    clearSearchLocal()
+    router.reload({
+        data: { search: '', search_property_id: null },
+        preserveScroll: true,
+        only: INVENTORY_FILTER_RELOAD_PROPS,
+    })
+}
+
+// Reset-Button im Leer-Zustand: alles zurücksetzen (Filter, Tags, Preset,
+// Suche, Status) und die lokalen Suchfelder leeren.
+const onResetFromEmptyState = () => {
+    clearSearchLocal()
+    resetAllFilters()
 }
 
 const AddEditArticleModal = defineAsyncComponent({
@@ -346,6 +534,18 @@ const updateGridLayout = (value) => {
     // Persist the preference to the backend
     router.post(route('inventory.update-grid-layout'), {
         inventory_grid_layout: value
+    }, {
+        preserveScroll: true,
+        preserveState: true
+    })
+}
+
+const updateHideArticleImages = (value) => {
+    hideArticleImages.value = value
+
+    // Persist the per-user preference to the backend
+    router.post(route('inventory.update-hide-images'), {
+        inventory_hide_images: value
     }, {
         preserveScroll: true,
         preserveState: true
@@ -367,6 +567,16 @@ const allPropertiesFromArticles = computed(() => {
 
     return properties;
 })
+
+// Stable, global property order (by id) so union columns keep a consistent order
+// across every subcategory of a category. Unknown properties are appended.
+const propertyOrderIndex = computed(() => {
+    const map = new Map()
+    ;(props.properties ?? []).forEach((property, index) => map.set(property.id, index))
+    return map
+})
+
+const isNumericProperty = (property) => property?.type === 'number' || property?.type === 'year'
 
 // Group articles by category and subcategory for the new list view
 const groupedArticles = computed(() => {
@@ -400,21 +610,29 @@ const groupedArticles = computed(() => {
         grouped[categoryId].subcategories[subCategoryId].articles.push(article)
     })
 
+    // Build one shared, ordered column set (union) per category so that identical
+    // properties end up in the same column across all its subcategories.
+    const orderIndex = propertyOrderIndex.value
+    const rank = (property) => (orderIndex.has(property.id) ? orderIndex.get(property.id) : Number.MAX_SAFE_INTEGER)
+
+    Object.values(grouped).forEach((category) => {
+        const union = new Map()
+        Object.values(category.subcategories).forEach((subcategory) => {
+            subcategory.properties.forEach((property) => {
+                if (!union.has(property.id)) {
+                    union.set(property.id, property)
+                }
+            })
+        })
+
+        category.unionProperties = [...union.values()].sort((a, b) => {
+            const rankDiff = rank(a) - rank(b)
+            return rankDiff !== 0 ? rankDiff : (a.name || '').localeCompare(b.name || '')
+        })
+    })
+
     return grouped
 })
-
-const searchArticles = debounce(() => {
-    // search for articles
-    router.reload({
-        data: {
-            search: searchArticleInput.value,
-            search_property_id: searchPropertyId.value,
-        },
-        preserveScroll: true,
-        only: ['articles', 'countsByStatus']
-    })
-}, 500)
-
 
 const addArticleToBasket = (articleId) => {
     // add article to basket
@@ -436,17 +654,6 @@ const findBasketForArticle = (articleId) => {
 
     return props.productBaskets.basket_articles.find(basketArticle => basketArticle.article_id === articleId) || null;
 }
-
-// watch for search input
-watch(searchArticleInput, (value) => {
-    // search for articles with debounce
-    searchArticles()
-})
-
-// re-run search when the optional property scope changes
-watch(searchPropertyId, () => {
-    searchArticles()
-})
 
 const closeModalProductBasket = (payload) => {
     showProductBasketModal.value = false;

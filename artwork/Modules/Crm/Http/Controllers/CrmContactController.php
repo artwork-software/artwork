@@ -4,7 +4,9 @@ namespace Artwork\Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
+use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Services\CrmContactService;
 use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -21,9 +23,20 @@ class CrmContactController extends Controller
 
     public function search(Request $request): JsonResponse
     {
+        $typeId = $request->integer('type_id') ?: null;
+
+        // Alternativ zur type_id kann der stabile Slug (z.B. "artist") übergeben werden.
+        if ($typeId === null && ($typeSlug = $request->string('type_slug')->toString()) !== '') {
+            $typeId = CrmContactType::query()->where('slug', $typeSlug)->value('id');
+
+            if ($typeId === null) {
+                return response()->json([]);
+            }
+        }
+
         $contacts = $this->contactService->searchForLinking(
             $request->get('search'),
-            $request->integer('type_id') ?: null,
+            $typeId,
             20
         );
 
@@ -38,6 +51,68 @@ class CrmContactController extends Controller
                 'color' => $c->contactType->color,
             ] : null,
         ]));
+    }
+
+    /**
+     * Liefert die Anlage-Maske für einen Kontakttyp: alle für den aktuellen User
+     * editierbaren Properties des Typs, gruppiert nach Property-Gruppen.
+     * Upload-Felder sind ausgenommen (brauchen einen bestehenden Kontakt).
+     */
+    public function createMask(Request $request): JsonResponse
+    {
+        $typeSlug = $request->string('type_slug')->toString();
+        $contactType = CrmContactType::query()
+            ->where('slug', $typeSlug)
+            ->with('properties')
+            ->firstOrFail();
+
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        $editablePropertyIds = array_flip(
+            $this->propertyGroupService->getEditablePropertyIds($user->id, $deptIds, $isCrmManager)
+        );
+        $typeProperties = $contactType->properties->keyBy('id');
+
+        $groups = $this->propertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+        $groups->loadMissing('properties');
+
+        $maskGroups = $groups
+            ->map(function ($group) use ($editablePropertyIds, $typeProperties) {
+                $properties = $group->properties
+                    ->filter(fn ($property) => isset($editablePropertyIds[$property->id])
+                        && $typeProperties->has($property->id)
+                        && $property->type !== CrmPropertyTypeEnum::UPLOAD)
+                    ->sortBy(fn ($property) => $typeProperties[$property->id]->pivot->sort_order ?? 0)
+                    ->values()
+                    ->map(fn ($property) => [
+                        'id' => $property->id,
+                        'name' => $property->name,
+                        'type' => $property->type,
+                        'select_values' => $property->select_values,
+                        'tooltip_text' => $property->tooltip_text,
+                        'is_required' => (bool) ($typeProperties[$property->id]->pivot->is_required ?? false),
+                    ]);
+
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'icon' => $group->icon,
+                    'properties' => $properties,
+                ];
+            })
+            ->filter(fn ($group) => count($group['properties']) > 0)
+            ->values();
+
+        return response()->json([
+            'contact_type' => [
+                'id' => $contactType->id,
+                'name' => $contactType->name,
+                'slug' => $contactType->slug,
+            ],
+            'groups' => $maskGroups,
+        ]);
     }
 
     public function getData(CrmContact $crmContact): JsonResponse
@@ -65,7 +140,7 @@ class CrmContactController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'crm_contact_type_id' => 'required|exists:crm_contact_types,id',
@@ -83,6 +158,24 @@ class CrmContactController extends Controller
             $validated,
             $propertyValues
         );
+
+        // JSON-Clients (z.B. "Neue Künstler*in anlegen & verknüpfen" im Projekt)
+        // brauchen den Kontakt direkt zurück statt eines Redirects
+        if ($request->wantsJson()) {
+            $contact->load('contactType');
+
+            return response()->json([
+                'id' => $contact->id,
+                'display_name' => $contact->display_name,
+                'profile_photo_url' => $contact->profile_photo_url,
+                'contact_type' => $contact->contactType ? [
+                    'id' => $contact->contactType->id,
+                    'name' => $contact->contactType->name,
+                    'slug' => $contact->contactType->slug,
+                    'color' => $contact->contactType->color,
+                ] : null,
+            ], 201);
+        }
 
         return redirect()->route('crm.contacts.show', $contact);
     }

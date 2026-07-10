@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, toRef, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, toRef, nextTick, inject } from 'vue'
 import { router, useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { useI18n } from 'vue-i18n'
@@ -69,6 +69,10 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['closed'])
 
+// Vom Dienstplan bereitgestellter Schichtverlauf-Shortcut; fehlt er (z.B. im
+// Projekt-Kontext), wird der Verlauf-Button im Modal nicht angezeigt.
+const openShiftHistory = inject<((shift: any) => void) | null>('openShiftHistory', null)
+
 // Page
 const page = usePage()
 
@@ -123,9 +127,15 @@ const selectedProject = ref(
             : (props.project ?? (props.event?.project ?? null)))
 );
 
+// Freie Datumswahl: beim Erstellen aus dem Projekt-Schichttab wird kein Tag übergeben,
+// der Nutzer muss das Datum selbst festlegen (auch außerhalb des Projektzeitraums möglich)
+const needsDaySelection = computed(() =>
+    props.shiftPlanModal && !props.edit && !props.day && !props.multiAddMode
+)
+
 // Warnung: Schicht liegt außerhalb des Projektzeitraumes
 const shiftOutsideProjectPeriod = computed(() => {
-    if (!selectedProject.value || !shiftForm.start_date) return false
+    if (!selectedProject.value || (!shiftForm.start_date && !shiftForm.day)) return false
     const dates = selectedProject.value.first_and_last_event_date
     if (!dates?.first_event_date || !dates?.last_event_date) return false
 
@@ -140,7 +150,7 @@ const shiftOutsideProjectPeriod = computed(() => {
     const projectEnd = parseDMY(dates.last_event_date)
     if (!projectStart || !projectEnd) return false
 
-    const shiftDate = new Date(shiftForm.start_date)
+    const shiftDate = new Date(shiftForm.start_date ?? shiftForm.day)
     // Nur Datum vergleichen (ohne Uhrzeit)
     shiftDate.setHours(0, 0, 0, 0)
     projectStart.setHours(0, 0, 0, 0)
@@ -768,6 +778,11 @@ function validateShiftDates() {
         }
     }
 
+    if (needsDaySelection.value && !shiftForm.day) {
+        validationMessages.errors.shift_start.push($t('Please select a date.'))
+        hasErrors = true
+    }
+
     if (!shiftForm.automaticMode) {
         if (!shiftForm.start || !shiftForm.start_date) {
             validationMessages.errors.shift_start.push($t('Please enter a start time and date.'))
@@ -1022,6 +1037,18 @@ const lockOrUnlockShift = (commit = false) => {
     >
         <form @submit.prevent="saveShift" class="relative z-40 artwork">
             <div class="space-y-6">
+                <!-- Shortcut: Schichtverlauf vorgefiltert auf diese Schicht (nur beim Bearbeiten) -->
+                <div v-if="edit && shift && openShiftHistory" class="flex justify-end">
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        :title="$t('Show shift history for this shift')"
+                        @click="openShiftHistory(shift)"
+                    >
+                        <PropertyIcon name="IconHistory" class="h-4 w-4" stroke-width="2" />
+                        <span>{{ $t('Shift history') }}</span>
+                    </button>
+                </div>
                 <!-- REPLACE: Sektion Schichtvorlagen -->
                 <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
@@ -1324,6 +1351,18 @@ const lockOrUnlockShift = (commit = false) => {
                             </div>
                         </div>
 
+                    <!-- Datum (freie Wahl, wenn kein Tag vorgegeben — z.B. Button im Projekt-Schichttab) -->
+                    <div class="grid grid-cols-1 my-4 gap-2" v-if="needsDaySelection">
+                        <BaseInput
+                            type="date"
+                            v-model="shiftForm.day"
+                            :label="$t('Date')"
+                            id="shift_day"
+                            required
+                            @change="validateShiftDates()"
+                        />
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- Start -->
                         <div class="flex gap-3">
@@ -1615,7 +1654,7 @@ const lockOrUnlockShift = (commit = false) => {
                         :label="$t('Save')"
                         type="submit"
                         is-add-button
-                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !checkIfMultiEditEnabled"
+                        :disabled="shiftForm.processing || !shiftForm.start || !shiftForm.end || !selectedCraft || !checkIfMultiEditEnabled || (needsDaySelection && !shiftForm.day)"
                     />
 
                     <BaseUIButton

@@ -18,7 +18,7 @@
                             <div class="flex items-center justify-end px-5 pt-5 pb-2">
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-gray-700 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
-                                        <div @click="showBackdrop = !showBackdrop">
+                                        <div @click="toggleBackdrop">
                                             <ToolTipDefault bottom show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                         </div>
                                     </div>
@@ -47,6 +47,7 @@
     </TransitionRoot>
 </template>
 <script>
+import axios from 'axios';
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -67,7 +68,7 @@ export default {
     data() {
         return {
             open: true,
-            showBackdrop: true,
+            showBackdrop: this.$page.props.auth.user?.show_modal_backdrop ?? true,
             isDragging: false
         }
     },
@@ -96,6 +97,22 @@ export default {
     methods: {
         closeModal(bool) {
             this.$emit('closed', bool)
+        },
+        toggleBackdrop() {
+            this.showBackdrop = !this.showBackdrop
+
+            const user = this.$page.props.auth.user
+            if (!user) {
+                return
+            }
+
+            // Keep the shared page props in sync so modals opened later in the
+            // same page visit start with the new preference without a reload.
+            user.show_modal_backdrop = this.showBackdrop
+
+            axios.patch(route('user.modal.backdrop.update', {user: user.id}), {
+                show_modal_backdrop: this.showBackdrop
+            })
         },
         makeContainerDraggable(){
             const container = this.$refs.containerRef?.$el || this.$refs.containerRef

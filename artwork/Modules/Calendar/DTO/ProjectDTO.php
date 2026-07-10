@@ -87,12 +87,13 @@ class ProjectDTO extends Data
      */
     private static function serializeLeaders($managers): array
     {
+        // Bewusst ohne E-Mail: Kontaktdaten (inkl. Privacy-Flags) lädt das
+        // UserPopoverTooltip lazy über user.tooltip.info nach.
         return $managers->map(fn ($user) => [
             'id' => $user->id,
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
             'position' => $user->position ?? null,
-            'email' => $user->email,
             'profile_photo_url' => $user->profile_photo_path
                 ? '/storage/' . $user->profile_photo_path
                 : null,

@@ -35,11 +35,16 @@ class ProjectTabTeamService
             ]
         )->values();
 
+        $projectTeamMembers = $users
+            ->filter(fn(array $user): bool => $this->shouldDisplayInProjectTeam($user, $project->user_id))
+            ->values();
+
         return [
             'project' => [
                 'id'                      => $project->id,
                 'user_id'                 => $project->user_id,
                 'usersArray'              => $users,
+                'projectTeamMembers'      => $projectTeamMembers,
                 'project_managers'        => $project->managerUsers,
                 'write_auth'              => $project->writeUsers,
                 'delete_permission_users' => $project->delete_permission_users,
@@ -50,6 +55,14 @@ class ProjectTabTeamService
             'projectWriteIds'   => $project->writeUsers()->pluck('user_id'),
         ];
     }
+
+    /**
+     * @param array{id: int, pivot_is_manager: bool, pivot_roles: array<int>} $user
+     */
+    private function shouldDisplayInProjectTeam(array $user, ?int $creatorId): bool
+    {
+        return $user['id'] !== $creatorId
+            && ! $user['pivot_is_manager']
+            && $user['pivot_roles'] === [];
+    }
 }
-
-

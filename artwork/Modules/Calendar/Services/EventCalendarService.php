@@ -68,6 +68,14 @@ readonly class EventCalendarService
             $room->events = $eventDTOs[$room->id] ?? collect();
         }
 
+        if ($userCalendarSettings?->work_shifts) {
+            $this->attachStandaloneShiftsToRooms($rooms, $startDate, $endDate, $filter);
+        } else {
+            foreach ($rooms as $room) {
+                $room->shifts = collect();
+            }
+        }
+
         return $rooms;
     }
 
@@ -177,9 +185,9 @@ readonly class EventCalendarService
                 'event_type:id,name,abbreviation,hex_code',
                 'room:id,name',
                 'creator:id,first_name,last_name,position,email,profile_photo_path',
-                'shifts:id,event_id,start_date,end_date,craft_id',
                 'eventProperties',
                 'subEvents',
+                'subEvents.eventProperties',
             ])
             ->withExists([
                 'timelines',

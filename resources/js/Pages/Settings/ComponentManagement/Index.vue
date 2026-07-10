@@ -38,7 +38,7 @@
                                 <div
                                     class="group relative flex h-28 w-28 flex-col items-center justify-center truncate rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm"
                                 >
-                                    <SingleComponent :component="component" />
+                                    <SingleComponent :component="component" :usages="componentUsages?.[component.id] ?? []" />
                                 </div>
                             </DropComponentsToolTip>
                         </div>
@@ -66,7 +66,7 @@
                             <div
                                 class="group relative flex h-28 w-28 flex-col items-center justify-center truncate rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm"
                             >
-                                <SingleComponent :component="component" />
+                                <SingleComponent :component="component" :usages="componentUsages?.[component.id] ?? []" />
                             </div>
                         </DropComponentsToolTip>
                     </div>
@@ -106,6 +106,7 @@ const props = defineProps<{
     components: Record<string, Array<{ id?: number|string; name: string; special?: boolean; type?: string; data?: any }>>
     componentsSpecial: Array<{ id?: number|string; name: string; special?: boolean; type?: string; data?: any }>
     tabComponentTypes: Record<string, any>
+    componentUsages?: Record<string, Array<{ tab: string; folder: string|null; sidebar: string|null }>>
 }>()
 
 const searchComponent = ref('')

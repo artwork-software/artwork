@@ -9,6 +9,7 @@ use Artwork\Modules\Room\Http\Requests\UpdateRoomUserRequest;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomChangeService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Room\Services\RoomFrontendModelService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -152,6 +153,8 @@ class RoomController extends Controller
 
     public function updateRoomUsers(Room $room, UpdateRoomUserRequest $request): RedirectResponse
     {
+        $affectedUserIds = $room->users()->pluck('users.id')->all();
+
         $room->users()->detach();
 
         foreach ($request->all() as $user) {
@@ -162,7 +165,11 @@ class RoomController extends Controller
                     'can_request' => $user['can_request'],
                 ]
             );
+            $affectedUserIds[] = $user['id'];
         }
+
+        // Raum-Admin-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
+        User::forgetCachedShareDataForIds(array_unique($affectedUserIds));
 
         return $this->redirector->back();
     }
@@ -201,9 +208,14 @@ class RoomController extends Controller
                 $requestable_by_ids[$can_request['id']] = ['can_request' => true];
             }
 
+            $previousUserIds = $room->users()->pluck('users.id')->all();
+
             $new_users = collect($room_admins_ids + $requestable_by_ids);
             $room->users()->detach();
             $room->users()->sync($new_users);
+
+            // Raum-Admin-Status beeinflusst den gecachten canSeeIncomingRequests-Flag
+            User::forgetCachedShareDataForIds(array_unique([...$previousUserIds, ...$new_users->keys()->all()]));
         }
 
         $room->adjoining_rooms()->sync($request->adjoining_rooms);

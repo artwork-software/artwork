@@ -135,17 +135,21 @@
 
 @font-face {
     font-family: 'Inter';
-    src: local('Inter-Regular'), url('../fonts/Inter-Regular.ttf') format('truetype');
+    src: local('Inter-Regular'), url('../fonts/Inter-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 
 @font-face {
+    /* Deko-Handschrift-Font (ex-NanumPenScript), auf Latein subsettet: 3,4 MB TTF -> ~50 KB woff2 */
     font-family: 'artwork Pen';
-    src: local('artworkPen'), url('../fonts/artworkPen.ttf') format('truetype');
+    src: local('artworkPen'), url('../fonts/artworkPen.woff2') format('woff2');
+    font-display: swap;
 }
 
 @font-face {
     font-family: 'Lexend';
-    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.ttf') format('truetype');
+    src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 
     body {
@@ -695,7 +699,13 @@
 
 
     .event-disabled {
-        background: repeating-linear-gradient( -45deg, transparent, transparent 13px, rgba(189, 189, 189, 0.3) 10px, rgba(189, 189, 189, 0.3) 30px);
+        background-image: repeating-linear-gradient(
+            -45deg,
+            transparent 0,
+            transparent 10px,
+            color-mix(in srgb, var(--event-contrast-color, currentColor) 18%, transparent) 10px,
+            color-mix(in srgb, var(--event-contrast-color, currentColor) 18%, transparent) 20px
+        );
     }
 
 .tooltip {
@@ -1269,11 +1279,28 @@
     --aw-tooltip-max-width: 24rem;  /* ≈ Tailwind max-w-sm */
     z-index: 9999 !important;       /* ensure tooltip renders above HeadlessUI Float portals */
 }
+/* PrimeVue-Theme deckelt .p-tooltip auf 12.5rem — hier gilt stattdessen die CSS-Variable */
+.aw-tooltip.p-tooltip {
+    max-width: var(--aw-tooltip-max-width);
+}
+/* Breitere Variante für erklärende Tooltips (per tooltip-css-class="aw-tooltip-wide") */
+.aw-tooltip-wide {
+    --aw-tooltip-max-width: 32rem;
+}
+/* Aufzählungen in HTML-Tooltips (allow-html): echte Liste mit hängendem Einzug */
+.aw-tooltip .p-tooltip-text ul {
+    margin: 0.375rem 0 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
 .aw-tooltip .p-tooltip-text {
     display: inline-block;
     min-width: var(--aw-tooltip-min-width);
     max-width: var(--aw-tooltip-max-width);
-    white-space: normal;
+    white-space: pre-line; /* wie normal, erhält aber \n → mehrzeilige Tooltips (z.B. Aufzählungen) */
     overflow-wrap: anywhere; /* modern, allows breaking long tokens */
     word-break: break-word;  /* fallback for older browsers */
 

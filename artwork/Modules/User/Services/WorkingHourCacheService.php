@@ -21,18 +21,14 @@ class WorkingHourCacheService
     public function setWeeklyData(string $type, int $id, int $year, int $week, array $data): void
     {
         Cache::put($this->key($type, $id, $year, $week), $data, self::TTL);
-        $this->addToIndex($type, $id, $year, $week);
     }
 
     public function forgetForEntity(string $type, int $id): void
     {
-        $index = Cache::get($this->indexKey($type, $id), []);
+        $versionKey = $this->versionKey($type, $id);
 
-        foreach ($index as $yearWeek) {
-            Cache::forget($this->key($type, $id, $yearWeek['y'], $yearWeek['w']));
-        }
-
-        Cache::forget($this->indexKey($type, $id));
+        Cache::add($versionKey, 0, self::TTL);
+        Cache::increment($versionKey);
     }
 
     public function forgetForShift(Shift $shift): void
@@ -69,27 +65,16 @@ class WorkingHourCacheService
 
     private function key(string $type, int $id, int $year, int $week): string
     {
-        return self::PREFIX . "{$type}:{$id}:{$year}:{$week}";
+        return self::PREFIX . "{$type}:{$id}:v" . $this->version($type, $id) . ":{$year}:{$week}";
     }
 
-    private function indexKey(string $type, int $id): string
+    private function version(string $type, int $id): int
     {
-        return self::PREFIX . "{$type}:{$id}:_index";
+        return (int) Cache::get($this->versionKey($type, $id), 0);
     }
 
-    private function addToIndex(string $type, int $id, int $year, int $week): void
+    private function versionKey(string $type, int $id): string
     {
-        $indexKey = $this->indexKey($type, $id);
-        $index = Cache::get($indexKey, []);
-
-        // Check if already tracked
-        foreach ($index as $entry) {
-            if ($entry['y'] === $year && $entry['w'] === $week) {
-                return;
-            }
-        }
-
-        $index[] = ['y' => $year, 'w' => $week];
-        Cache::put($indexKey, $index, self::TTL);
+        return self::PREFIX . "{$type}:{$id}:_version";
     }
 }

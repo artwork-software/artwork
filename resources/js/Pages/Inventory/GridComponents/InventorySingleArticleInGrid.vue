@@ -3,11 +3,11 @@
         class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend"
         @click="showArticleDetail = true"
     >
-        <div class="flex items-center justify-center">
+        <div v-if="!hideImage" class="flex items-center justify-center">
             <img :src="getMainImageInImage.image" @error="handleImageError" alt="" :class="imageClasses" />
         </div>
 
-        <div class="mt-4">
+        <div :class="hideImage ? '' : 'mt-4'">
             <div class="flex items-center">
                 <h3 class="xsDark break-words min-w-0">
                     {{ item.name }}
@@ -55,22 +55,29 @@
                     </div>
                 </div>
 
-                <div v-for="property in item.properties" :key="property.id">
-                    <div
-                        class="flex items-center justify-between py-2 font-lexend"
-                        v-if="property.show_in_list"
-                    >
+                <div v-for="property in displayProperties" :key="property.id">
+                    <div class="flex items-center justify-between py-2 font-lexend">
                         <div>
                             {{ property.name }}
                         </div>
                         <div>
-                            <a v-if="property.type === 'file' && property.pivot?.value"
-                               :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
-                               class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
-                                {{ fileName(property.pivot.value) }}
-                            </a>
-                            <span v-else-if="property.type === 'file'">-</span>
-                            <template v-else>{{ formatProperty(property) }}</template>
+                            <template v-if="property.type === 'file'">
+                                <a v-if="property.file"
+                                   :href="route('inventory-management.articles.property-file.download', { path: property.file.path })"
+                                   class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
+                                    {{ property.file.name }}
+                                </a>
+                                <span v-else>-</span>
+                            </template>
+                            <PropertyDiffTooltip
+                                v-else-if="property.varied"
+                                :values="property.distinctValues"
+                                :heading="$t('Values')"
+                                class="text-gray-500"
+                            >
+                                {{ property.text }}
+                            </PropertyDiffTooltip>
+                            <template v-else>{{ property.empty ? '-' : property.text }}</template>
                         </div>
                     </div>
                 </div>
@@ -96,16 +103,26 @@
 import { Link, usePage } from '@inertiajs/vue3'
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import { useInventoryPropertyDisplay } from '@/Composeables/InventoryPropertyDisplay.js'
+import PropertyDiffTooltip from '@/Pages/Inventory/Components/PropertyDiffTooltip.vue'
 import { IconIdBadge, IconPhoto } from '@tabler/icons-vue'
 
 const $t = useTranslation()
+const { getDisplayProperties } = useInventoryPropertyDisplay()
 
 const props = defineProps({
     item: {
         type: Object,
         required: true,
     },
+    hideImage: {
+        type: Boolean,
+        required: false,
+        default: false,
+    },
 })
+
+const displayProperties = computed(() => getDisplayProperties(props.item))
 
 const showEditArticleModal = ref(false)
 const showArticleDetail = ref(false)
@@ -178,38 +195,6 @@ const getMainImageInImage = computed(() => {
         image: usePage().props.big_logo,
     }
 })
-
-const fileName = (path) => (typeof path === 'string' ? path.split('/').pop() : '')
-
-const formatProperty = (property) => {
-    if (property.type === 'room') {
-        return props.item.room?.name === 'Room not found' ? '-' : props.item?.room?.name
-    }
-
-    if (property.type === 'manufacturer') {
-        return props.item.manufacturer?.name === 'Manufacturer not found'
-            ? '-'
-            : props.item?.manufacturer?.name
-    }
-
-    if (property.type === 'date') {
-        return new Date(property.pivot.value).toLocaleDateString()
-    }
-
-    if (property.type === 'time') {
-        return property.pivot.value
-    }
-
-    if (property.type === 'datetime') {
-        return new Date(property.pivot.value).toLocaleString()
-    }
-
-    if (property.type === 'checkbox') {
-        return property.pivot.value ? $t('Yes') : $t('No')
-    }
-
-    return property.pivot.value
-}
 
 const formatQuantity = (quantity) => {
     if (quantity === 0) return $t('Out of stock')

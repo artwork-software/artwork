@@ -1,5 +1,5 @@
 <template>
-    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed || hasAdminRole()">
+    <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !(shift.isCommitted ?? shift.is_committed) || hasAdminRole()">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
             <PopoverButton class="gap-x-2 font-lexend rounded-lg">
                 <div

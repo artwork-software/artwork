@@ -14,7 +14,7 @@
                 </div>
             </div>
             <div class="col-span-3 flex items-center">
-                <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !shift.is_committed">
+                <Popover v-slot="{ open, close }" as="div" class="relative text-left artwork" v-if="isCurrentUserPlannerOfShiftCraft && !(shift.isCommitted ?? shift.is_committed)">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <PopoverButton class="font-lexend rounded-lg ring-0 focus:ring-0 focus:outline-none">
                             <p class="text-xs text-left font-lexend">{{ shift.startPivot }} - {{ shift.endPivot }}</p>

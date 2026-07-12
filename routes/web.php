@@ -341,6 +341,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/interfaces/sage/deleteBookingDays',
             [ToolSettingsInterfacesController::class, 'deleteSageBookingDays']
         )->name('tool.interfaces.sage.deleteBookingDays');
+        Route::get('/interfaces/sage/logs', [ToolSettingsInterfacesController::class, 'sageLogs'])
+            ->name('tool.interfaces.sage.logs');
+        Route::get(
+            '/interfaces/sage/logs/{sageBookingLog}/entries',
+            [ToolSettingsInterfacesController::class, 'sageLogEntries']
+        )->name('tool.interfaces.sage.logs.entries');
+        Route::get(
+            '/interfaces/sage/logs/{sageBookingLog}/export',
+            [ToolSettingsInterfacesController::class, 'sageLogExport']
+        )->name('tool.interfaces.sage.logs.export');
         Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])

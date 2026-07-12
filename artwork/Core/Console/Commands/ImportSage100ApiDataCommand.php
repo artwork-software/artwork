@@ -8,7 +8,8 @@ use Throwable;
 
 class ImportSage100ApiDataCommand extends Command
 {
-    protected $signature = 'artwork:import-sage100-api-data {--delete-sage-data} {count?} {specificDayFrom?} {specificDayTo?}';
+    protected $signature = 'artwork:import-sage100-api-data {--delete-sage-data} {--ktr=} ' .
+        '{count?} {specificDayFrom?} {specificDayTo?}';
 
     protected $description = 'Get data from Sage100 and import it to budget.';
 
@@ -28,6 +29,7 @@ class ImportSage100ApiDataCommand extends Command
             $this->argument('count'),
             $specificDayFrom,
             $specificDayTo,
+            $this->option('ktr'),
         );
     }
 }

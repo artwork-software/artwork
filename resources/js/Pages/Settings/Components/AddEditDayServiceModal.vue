@@ -6,10 +6,15 @@
     >
         <div>
             <div class="flex items-center gap-x-3">
-                <IconSelector
-                    @update:modelValue="addIconToForm"
-                    :current-icon="dayServiceForm ? dayServiceForm.icon : null"
-                />
+                <div
+                    class="rounded-full"
+                    :class="{ 'ring-2 ring-red-500 ring-offset-2': dayServiceForm.errors.icon }"
+                >
+                    <IconSelector
+                        @update:modelValue="addIconToForm"
+                        :current-icon="dayServiceForm.icon"
+                    />
+                </div>
 
                 <div class="w-full">
                     <BaseInput
@@ -17,6 +22,7 @@
                         no-margin-top
                         v-model="dayServiceForm.name"
                         :label="$t('Name of the day service')"
+                        :error="dayServiceForm.errors.name"
                     />
                 </div>
 
@@ -27,6 +33,10 @@
                     />
                 </div>
             </div>
+
+            <p v-if="dayServiceForm.errors.icon" class="mt-2 text-xs text-artwork-messages-error">
+                {{ dayServiceForm.errors.icon }}
+            </p>
 
             <div class="flex justify-end mt-6">
                 <BaseUIButton
@@ -75,6 +85,7 @@ const dayServiceForm = useForm({
 // Events/Methoden
 function addIconToForm(icon: string) {
     dayServiceForm.icon = icon
+    dayServiceForm.clearErrors('icon')
 }
 
 function addColor(color: string) {

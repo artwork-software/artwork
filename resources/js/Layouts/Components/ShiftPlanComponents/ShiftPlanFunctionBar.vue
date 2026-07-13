@@ -264,7 +264,7 @@
     <ExportModal
         v-if="showShiftPlanExportModal"
         @close="showShiftPlanExportModal = false"
-        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]"
+        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT, exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]"
         :configuration="shiftPlanExportConfiguration"
     />
 </template>
@@ -367,6 +367,9 @@ const shiftPlanExportConfiguration = computed(() => {
         },
         [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
             crafts: props.crafts.map(({id, name}) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]: {
+            crafts: props.crafts.map(({id, name, universally_applicable}) => ({id, name, universally_applicable})),
         },
     };
 });

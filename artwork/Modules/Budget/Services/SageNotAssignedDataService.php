@@ -17,8 +17,10 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
 {
     use HandlesCollectiveBookings;
 
-    public function __construct(private SageNotAssignedDataRepository $sageNotAssignedDataRepository)
-    {
+    public function __construct(
+        private SageNotAssignedDataRepository $sageNotAssignedDataRepository,
+        private SageBookingLogRecorder $sageBookingLogRecorder,
+    ) {
     }
 
     public function create(array $attributes): SageNotAssignedData
@@ -27,12 +29,16 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
 
         $this->sageNotAssignedDataRepository->save($sageNotAssignedData);
 
+        $this->sageBookingLogRecorder->record('created', $sageNotAssignedData);
+
         return $sageNotAssignedData;
     }
 
     public function update(SageNotAssignedData $sageNotAssignedData, array $attributes): SageNotAssignedData
     {
         $this->sageNotAssignedDataRepository->update($sageNotAssignedData, $attributes);
+
+        $this->sageBookingLogRecorder->record('updated', $sageNotAssignedData);
 
         return $sageNotAssignedData;
     }
@@ -113,11 +119,15 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
 
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
+        $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
+
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
     }
 
     public function forceDelete(SageNotAssignedData $sageNotAssignedData): bool
     {
+        $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
+
         return $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
     }
 

@@ -40,6 +40,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();
+        // Explicit prune for Prunable models outside app/Models (auto-discovery only scans app/Models).
+        $schedule->command('model:prune', [
+            '--model' => [\Artwork\Modules\Budget\Models\SageBookingLog::class],
+        ])->daily();
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();

@@ -11,7 +11,8 @@ readonly class SageBookingDataDeleteService
 {
     public function __construct(
         private SageNotAssignedDataService $sageNotAssignedDataService,
-        private SageAssignedDataService $sageAssignedDataService
+        private SageAssignedDataService $sageAssignedDataService,
+        private SageBookingLogRecorder $sageBookingLogRecorder
     ) {
     }
 
@@ -24,10 +25,26 @@ readonly class SageBookingDataDeleteService
         $dateFromFormatted = $dateFrom ? Carbon::parse($dateFrom)->format('Y-m-d') : null;
         $dateToFormatted = $dateTo ? Carbon::parse($dateTo)->addDay()->format('Y-m-d') : null;
 
-        $this->deleteSageNotAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+        $this->sageBookingLogRecorder->startRun(
+            'delete',
+            [
+                'ktr' => $ktr,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'deleteAssignedData' => $deleteAssignedData,
+            ],
+            auth()->id(),
+            'delete_bookings'
+        );
 
-        if ($deleteAssignedData) {
-            $this->deleteSageAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+        try {
+            $this->deleteSageNotAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+
+            if ($deleteAssignedData) {
+                $this->deleteSageAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+            }
+        } finally {
+            $this->sageBookingLogRecorder->finishRun();
         }
     }
 

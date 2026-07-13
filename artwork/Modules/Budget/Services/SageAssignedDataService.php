@@ -20,6 +20,7 @@ class SageAssignedDataService implements CollectiveBookingService
         private readonly SageAssignedDataRepository $sageAssignedDataRepository,
         private readonly SageNotAssignedDataService $sageNotAssignedDataService,
         private readonly ColumnCellService $columnCellService,
+        private readonly SageBookingLogRecorder $sageBookingLogRecorder,
     ) {
     }
 
@@ -43,12 +44,16 @@ class SageAssignedDataService implements CollectiveBookingService
 
         $this->recalculateForCell($sageAssignedData->column_cell_id);
 
+        $this->sageBookingLogRecorder->record('created', $sageAssignedData);
+
         return $sageAssignedData;
     }
 
     public function update(SageAssignedData $sageAssignedData, array $attributes): SageAssignedData
     {
         $this->sageAssignedDataRepository->update($sageAssignedData, $attributes);
+
+        $this->sageBookingLogRecorder->record('updated', $sageAssignedData);
 
         return $sageAssignedData;
     }
@@ -118,6 +123,7 @@ class SageAssignedDataService implements CollectiveBookingService
 
     public function delete(SageAssignedData $sageAssignedData): void
     {
+        $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
         $columnCellId = $sageAssignedData->column_cell_id;
         $this->sageAssignedDataRepository->delete($sageAssignedData);
         $this->recalculateForCell($columnCellId);
@@ -125,6 +131,7 @@ class SageAssignedDataService implements CollectiveBookingService
 
     public function forceDelete(SageAssignedData $sageAssignedData): bool
     {
+        $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
         $columnCellId = $sageAssignedData->column_cell_id;
         $result = $this->sageAssignedDataRepository->forceDelete($sageAssignedData);
         $this->recalculateForCell($columnCellId);

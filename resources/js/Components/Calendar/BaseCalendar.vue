@@ -64,7 +64,7 @@
                                 :data-month="monthKeyFromDay(day)"
                                 :ref="el => registerMonthSentinel(el, day)"
                             >
-                                <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" />
+                                <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" :sticky-top="dayStickyTop" />
 
                                 <!-- Räume -->
                                 <template v-if="!day.isExtraRow">
@@ -484,6 +484,9 @@ const eventsWithoutRoomLen = computed(() =>
 const topbarRef = ref(null);
 const calendarRef = ref(null);
 const topbarHeight = ref(80); // default fallback
+
+// Sticky offset for the date in the day column: topbar + room header (h-16) + spacing
+const dayStickyTop = computed(() => topbarHeight.value + 64 + 8);
 let topbarObserver = null;
 
 // State

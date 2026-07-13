@@ -205,11 +205,15 @@
                         <!-- Row Header (Room Name) -->
                         <template #rowHeader="{ room, rowIndex }">
                             <div
-                                class="xsDark h-full flex items-center"
+                                class="xsDark h-full flex items-start"
                                 :class="[rowIndex % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover']"
                                 :style="{ width: shiftLeftWidth + 'px', maxWidth: shiftLeftWidth + 'px' }"
                             >
-                                <div class="flex items-center font-semibold w-full">
+                                <!-- Sticky so the room name stays visible when scrolling through very tall rows -->
+                                <div
+                                    class="sticky flex items-center font-semibold w-full py-1"
+                                    :style="{ top: shiftHeaderHeight + 'px' }"
+                                >
                                     <span class="pl-3">{{ room.roomName }}</span>
                                 </div>
                             </div>

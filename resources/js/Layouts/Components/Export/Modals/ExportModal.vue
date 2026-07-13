@@ -45,6 +45,11 @@
                                                     :project-preselect="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.project ?? null"
                                                     @close="close()"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT">
+                    <ExcelWorkTimeOverviewExport v-if="activeTab === exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT"
+                                                 :crafts="configuration[exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]?.crafts ?? []"
+                                                 @close="close()"/>
+                </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
                 </template>
@@ -77,6 +82,9 @@ const exportTabEnums = useExportTabEnums(),
     ),
     ExcelEventListOrCalendarExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelEventListOrCalendarExport.vue")
+    ),
+    ExcelWorkTimeOverviewExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelWorkTimeOverviewExport.vue")
     ),
     props = defineProps({
         enums: {

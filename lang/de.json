@@ -5261,5 +5261,7 @@
     "A sync for this source is already running.": "Für diese Quelle läuft bereits eine Synchronisation.",
     "Sync failed. Please check the configuration and the logs.": "Synchronisation fehlgeschlagen. Bitte Konfiguration und Logs prüfen.",
     ":synced of :total users synced (:skipped skipped).": ":synced von :total Nutzer*innen synchronisiert (:skipped übersprungen).",
-    "LDAP connection successful, but the user search failed.": "LDAP-Verbindung erfolgreich, aber die Nutzersuche ist fehlgeschlagen."
+    "LDAP connection successful, but the user search failed.": "LDAP-Verbindung erfolgreich, aber die Nutzersuche ist fehlgeschlagen.",
+    "Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.": "Unter 100% Zoom zeigen Schichtkarten nur Zeit, Gewerk und Besetzung. Klick öffnet die Schicht — für Zuweisung per Drag & Drop zurück auf 100% zoomen.",
+    "more days at a glance": "mehr Tage auf einen Blick"
 }

@@ -221,7 +221,7 @@ defineExpose({
         <div
             v-for="vr in allRows"
             :key="vr.row.key"
-            class="relative flex border-b border-dashed border-gray-400"
+            class="relative flex border-b border-gray-400"
             :style="{ width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px', height: vr.height + 'px' }"
         >
             <!-- Sticky left column -->
@@ -287,7 +287,7 @@ defineExpose({
                 :style="{ top: vr.top + 'px', height: vr.height + 'px', width: totalW + 'px' }"
             >
                 <!-- Durchgehende gestrichelte Trennlinie zwischen Räumen -->
-                <div class="absolute bottom-0 left-0 w-full border-b border-dashed border-gray-400 z-40 pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 w-full border-b border-gray-400 z-40 pointer-events-none"></div>
                 <div class="relative h-full w-full">
                     <!-- Sticky left column -->
                     <div

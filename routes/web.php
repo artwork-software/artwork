@@ -1231,6 +1231,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
         ->name('user.update.zoom_factor');
 
+    // Schichtplan-Spaltenzoom (eigener Faktor in user_shift_plan_settings)
+    Route::patch('/user/{user}/update/shift-plan-zoom-factor', [UserController::class, 'updateShiftPlanZoomFactor'])
+        ->name('user.update.shift_plan_zoom_factor');
+
     // user.update.at_a_glance
     Route::patch('/user/{user}/update/at_a_glance', [UserController::class, 'updateAtAGlance'])
         ->name('user.update.at_a_glance');

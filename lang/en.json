@@ -5216,5 +5216,7 @@
     "A sync for this source is already running.": "A sync for this source is already running.",
     "Sync failed. Please check the configuration and the logs.": "Sync failed. Please check the configuration and the logs.",
     ":synced of :total users synced (:skipped skipped).": ":synced of :total users synced (:skipped skipped).",
-    "LDAP connection successful, but the user search failed.": "LDAP connection successful, but the user search failed."
+    "LDAP connection successful, but the user search failed.": "LDAP connection successful, but the user search failed.",
+    "Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.": "Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.",
+    "more days at a glance": "more days at a glance"
 }

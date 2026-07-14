@@ -78,4 +78,31 @@ final class UserCalendarZoomDisplaySettingsTest extends FeatureTestCase
 
         self::assertSame(0.4, $user->fresh()->zoom_factor);
     }
+
+    #[Test]
+    public function shiftPlanZoomFactorIsPersistedAndCreatesSettingsIfMissing(): void
+    {
+        $user = $this->makeUserWithCalendarSettings();
+        self::assertNull($user->shift_plan_settings);
+
+        $this->actingAs($user)
+            ->patch(route('user.update.shift_plan_zoom_factor', ['user' => $user->id]), [
+                'zoom_factor' => 0.55,
+            ])
+            ->assertSessionHasNoErrors();
+
+        self::assertSame(0.55, $user->shift_plan_settings()->first()->zoom_factor);
+    }
+
+    #[Test]
+    public function shiftPlanZoomFactorRejectsOutOfRangeValues(): void
+    {
+        $user = $this->makeUserWithCalendarSettings();
+
+        $this->actingAs($user)
+            ->patch(route('user.update.shift_plan_zoom_factor', ['user' => $user->id]), [
+                'zoom_factor' => 3,
+            ])
+            ->assertSessionHasErrors('zoom_factor');
+    }
 }

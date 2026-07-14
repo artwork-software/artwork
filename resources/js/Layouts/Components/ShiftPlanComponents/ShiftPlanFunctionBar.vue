@@ -188,6 +188,53 @@
                     <slot name="moreButtons">
 
                     </slot>
+
+                    <!-- Kompaktmodus-Hinweis: unter 100 % zeigen Schichtkarten nur Zeit·Gewerk·Besetzung,
+                         Zuweisen per Drag & Drop braucht 100 % (Klick öffnet weiterhin das Schicht-Modal) -->
+                    <div
+                        v-if="isCompactShiftZoom && !isDailyView"
+                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                    >
+                        <ToolTipWithTextComponent
+                            direction="bottom"
+                            :text="$t('Compact')"
+                            :icon="IconInfoCircle"
+                            icon-size="size-4"
+                            tooltip-width="w-72"
+                            :tooltip-text="$t('Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.')"
+                        />
+                    </div>
+
+                    <!-- Zoom-Schnellauswahl: Tagesspaltenbreite (mehr Tage auf einen Blick) -->
+                    <Menu v-if="!isDailyView" as="div" class="relative">
+                        <MenuButton class="ui-button text-xs" :title="$t('Zoom')">
+                            {{ shiftZoomPercent }}%
+                            <PropertyIcon name="IconChevronDown" class="size-3.5" />
+                        </MenuButton>
+                        <transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="opacity-0 scale-95"
+                            enter-to-class="opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="opacity-100 scale-100"
+                            leave-to-class="opacity-0 scale-95"
+                        >
+                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
+                                <div class="w-56 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                    <BaseMenuItem
+                                        v-for="step in shiftZoomSteps"
+                                        :key="step"
+                                        white-menu-background
+                                        without-translation
+                                        :icon="step === shiftZoomFactor ? 'IconCheck' : 'IconPercentage'"
+                                        :title="Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : ' – ' + $t('more days at a glance'))"
+                                        @click="setShiftZoomFactor(step)"
+                                    />
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+
                     <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
                                       @click="showCalendarSettingsModal = true"/>-->
 
@@ -296,6 +343,10 @@ import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettin
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
+import {IconInfoCircle} from "@tabler/icons-vue";
+import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
@@ -312,6 +363,15 @@ const DatePickerComponent = defineAsyncComponent({
     delay: 200,
     timeout: 3000,
 })
+
+// Schichtplan-Spaltenzoom (reaktiv, debounced persistiert)
+const {
+    zoomFactor: shiftZoomFactor,
+    zoomPercent: shiftZoomPercent,
+    zoomSteps: shiftZoomSteps,
+    setZoomFactor: setShiftZoomFactor,
+    isCompact: isCompactShiftZoom,
+} = useShiftPlanZoom();
 
 const props = defineProps({
     dateValue: Array,

@@ -1614,6 +1614,22 @@ class UserController extends Controller
         $user->update($request->only('at_a_glance'));
     }
 
+    public function updateShiftPlanZoomFactor(User $user, Request $request): void
+    {
+        // Stufen 0.55/0.75/1 des Schichtplan-Spaltenzooms; ohne Validierung
+        // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
+        $request->validate([
+            'zoom_factor' => 'required|numeric|between:0.5,1',
+        ]);
+
+        $settings = $user->shift_plan_settings;
+        if ($settings === null) {
+            $user->shift_plan_settings()->create($request->only('zoom_factor'));
+        } else {
+            $settings->update($request->only('zoom_factor'));
+        }
+    }
+
     public function updateBulkSortId(User $user, Request $request): void
     {
         $user->update($request->only('bulk_sort_id'));

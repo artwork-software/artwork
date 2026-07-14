@@ -5,8 +5,8 @@ namespace Artwork\Modules\ExternalUserManagement\Api;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Support\Collection;
 use LdapRecord\Connection;
-use LdapRecord\Models\ActiveDirectory\Group;
-use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use LdapRecord\Container;
+use LdapRecord\Models\Entry as LdapUser;
 use LdapRecord\Query\Collection as LdapCollection;
 
 class LdapApi implements ExternalUserManagementApi
@@ -37,6 +37,18 @@ class LdapApi implements ExternalUserManagementApi
     }
 
     /**
+     * Registriert die Verbindung im LdapRecord-Container und liefert deren Namen zurück.
+     * Model::on() erwartet einen Connection-Namen (string), kein Connection-Objekt.
+     */
+    private function registerConnection(ExternalUserSource $source): string
+    {
+        $name = 'external_user_source_' . $source->getKey();
+        Container::getInstance()->addConnection($this->createConnection($source), $name);
+
+        return $name;
+    }
+
+    /**
      * Extrahiert den Host aus einer LDAP-URL (z.B. ldaps://ad.domain.tld -> ad.domain.tld)
      */
     private function extractHost(string $host): string
@@ -48,6 +60,26 @@ class LdapApi implements ExternalUserManagementApi
         $host = preg_replace('#:\d+$#', '', $host);
 
         return $host;
+    }
+
+    /**
+     * Normalisiert einen LDAP-Suchfilter.
+     * LDAP verlangt umschließende Klammern – ein Filter wie "objectClass=user" ohne
+     * Klammern führt zu "Bad search filter". Leerer Filter -> sinnvoller Default.
+     */
+    private function normalizeFilter(?string $filter): string
+    {
+        $filter = trim((string) $filter);
+
+        if ($filter === '') {
+            return '(objectClass=user)';
+        }
+
+        if (!str_starts_with($filter, '(')) {
+            $filter = '(' . $filter . ')';
+        }
+
+        return $filter;
     }
 
     /**
@@ -69,27 +101,40 @@ class LdapApi implements ExternalUserManagementApi
 
     public function fetchUsers(ExternalUserSource $source): Collection
     {
-        $connection = $this->createConnection($source);
-        $connection->connect();
+        $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
         $baseDn = $config['base_dn'] ?? '';
-        $filter = $config['user_filter'] ?? '(objectClass=user)';
+        $filter = $this->normalizeFilter($config['user_filter'] ?? null);
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        $users = LdapUser::on($connection)
+        $users = LdapUser::on($connectionName)
+            ->select([
+                '*',
+                $identifierAttribute,
+                'mail',
+                'givenName',
+                'sn',
+                'memberOf',
+                'sAMAccountName',
+                'userPrincipalName',
+                'displayName',
+                'department',
+                'title',
+                'telephoneNumber',
+            ])
             ->in($baseDn)
             ->rawFilter($filter)
             ->get();
 
-        return $users->map(function (LdapUser $ldapUser) use ($source, $connection, $identifierAttribute) {
+        return $users->map(function (LdapUser $ldapUser) use ($source, $connectionName, $identifierAttribute) {
             $identifier = $this->getAttributeValue($ldapUser, $identifierAttribute);
             $email = $this->getAttributeValue($ldapUser, 'mail');
             $firstName = $this->getAttributeValue($ldapUser, 'givenName') ?? '';
             $lastName = $this->getAttributeValue($ldapUser, 'sn') ?? '';
 
             // Hole Gruppenmitgliedschaften
-            $groups = $this->fetchUserGroupsFromLdapUser($ldapUser, $source, $connection);
+            $groups = $this->fetchUserGroupsFromLdapUser($ldapUser, $source, $connectionName);
 
             return [
                 'identifier' => $identifier,
@@ -110,15 +155,52 @@ class LdapApi implements ExternalUserManagementApi
         });
     }
 
+    /**
+     * Liefert die ersten $limit gefundenen User (ohne Gruppen-Auflösung) für den
+     * Verbindungstest – schnell und ohne teure verschachtelte Gruppen-Rekursion.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function previewUsers(ExternalUserSource $source, int $limit = 3): array
+    {
+        $connectionName = $this->registerConnection($source);
+
+        $config = $source->config ?? [];
+        $baseDn = $config['base_dn'] ?? '';
+        $filter = $this->normalizeFilter($config['user_filter'] ?? null);
+        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+
+        $query = LdapUser::on($connectionName)
+            ->select(['*', $identifierAttribute, 'mail', 'givenName', 'sn', 'displayName', 'cn'])
+            ->rawFilter($filter)
+            ->limit($limit);
+
+        if ($baseDn !== '') {
+            $query->in($baseDn);
+        }
+
+        return $query->get()
+            ->take($limit)
+            ->map(fn (LdapUser $ldapUser): array => [
+                'identifier' => $this->getAttributeValue($ldapUser, $identifierAttribute),
+                'email' => $this->getAttributeValue($ldapUser, 'mail'),
+                'first_name' => $this->getAttributeValue($ldapUser, 'givenName') ?? '',
+                'last_name' => $this->getAttributeValue($ldapUser, 'sn') ?? '',
+                'display_name' => $this->getAttributeValue($ldapUser, 'displayName'),
+                'dn' => $ldapUser->getDn(),
+            ])
+            ->values()
+            ->all();
+    }
+
     public function fetchUserGroups(ExternalUserSource $source, string $userIdentifier, bool $includeNested = true): array
     {
-        $connection = $this->createConnection($source);
-        $connection->connect();
+        $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        $user = LdapUser::on($connection)
+        $user = LdapUser::on($connectionName)
             ->where($identifierAttribute, '=', $userIdentifier)
             ->first();
 
@@ -126,13 +208,13 @@ class LdapApi implements ExternalUserManagementApi
             return [];
         }
 
-        return $this->fetchUserGroupsFromLdapUser($user, $source, $connection, $includeNested);
+        return $this->fetchUserGroupsFromLdapUser($user, $source, $connectionName, $includeNested);
     }
 
     private function fetchUserGroupsFromLdapUser(
         LdapUser $ldapUser,
         ExternalUserSource $source,
-        Connection $connection,
+        string $connectionName,
         bool $includeNested = true
     ): array {
         $groups = [];
@@ -145,7 +227,7 @@ class LdapApi implements ExternalUserManagementApi
             $processedGroups[$groupDn] = true;
 
             if ($includeNested) {
-                $nestedGroups = $this->fetchNestedGroups($groupDn, $connection, $processedGroups);
+                $nestedGroups = $this->fetchNestedGroups($groupDn, $connectionName, $processedGroups);
                 $groups = array_merge($groups, $nestedGroups);
             }
         }
@@ -153,11 +235,11 @@ class LdapApi implements ExternalUserManagementApi
         return array_unique($groups);
     }
 
-    private function fetchNestedGroups(string $groupDn, Connection $connection, array &$processedGroups = []): array
+    private function fetchNestedGroups(string $groupDn, string $connectionName, array &$processedGroups = []): array
     {
         $nestedGroups = [];
 
-        $group = Group::on($connection)->findByDn($groupDn);
+        $group = LdapUser::on($connectionName)->findByDn($groupDn);
 
         if (!$group) {
             return [];
@@ -173,7 +255,7 @@ class LdapApi implements ExternalUserManagementApi
             $processedGroups[$nestedGroupDn] = true;
             $nestedGroups[] = $nestedGroupDn;
 
-            $deeperNested = $this->fetchNestedGroups($nestedGroupDn, $connection, $processedGroups);
+            $deeperNested = $this->fetchNestedGroups($nestedGroupDn, $connectionName, $processedGroups);
             $nestedGroups = array_merge($nestedGroups, $deeperNested);
         }
 
@@ -182,15 +264,13 @@ class LdapApi implements ExternalUserManagementApi
 
     public function authenticate(ExternalUserSource $source, string $username, string $password): bool
     {
-        $connection = $this->createConnection($source);
+        $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
         $baseDn = $config['base_dn'] ?? '';
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        $connection->connect();
-
-        $user = LdapUser::on($connection)
+        $user = LdapUser::on($connectionName)
             ->in($baseDn)
             ->where('sAMAccountName', '=', $username)
             ->orWhere('userPrincipalName', '=', $username)

@@ -294,6 +294,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.external-user-management.sources.destroy');
         Route::post('/external-user-management/sources/{externalUserSource}/test-connection', [ExternalUserSourceController::class, 'testConnection'])
             ->name('tool.external-user-management.sources.test-connection');
+        Route::post('/external-user-management/sources/{externalUserSource}/sync', [ExternalUserSourceController::class, 'sync'])
+            ->name('tool.external-user-management.sources.sync');
 
         Route::post('/external-user-management/sources/test-connection-config', [ExternalUserSourceController::class, 'testConnectionConfig'])
             ->name('tool.external-user-management.sources.test-connection-config');

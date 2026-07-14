@@ -23,6 +23,14 @@ class LdapService
         return $this->ldapApi->fetchUsers($source);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function previewUsers(ExternalUserSource $source, int $limit = 3): array
+    {
+        return $this->ldapApi->previewUsers($source, $limit);
+    }
+
     public function fetchUserGroups(
         ExternalUserSource $source,
         string $userIdentifier,

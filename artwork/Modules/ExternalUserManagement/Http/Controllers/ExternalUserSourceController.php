@@ -7,6 +7,7 @@ use Artwork\Modules\ExternalUserManagement\Http\Requests\StoreExternalUserSource
 use Artwork\Modules\ExternalUserManagement\Http\Requests\UpdateExternalUserSourceRequest;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSourceService;
+use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSyncService;
 use Artwork\Modules\ExternalUserManagement\Service\LdapService;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -21,7 +22,8 @@ class ExternalUserSourceController extends Controller
     public function __construct(
         private readonly ExternalUserSourceService $externalUserSourceService,
         private readonly LdapService $ldapService,
-        private readonly OidcService $oidcService
+        private readonly OidcService $oidcService,
+        private readonly ExternalUserSyncService $externalUserSyncService
     ) {
     }
 
@@ -99,6 +101,44 @@ class ExternalUserSourceController extends Controller
         return $this->runConnectionTest($tempSource);
     }
 
+    public function sync(ExternalUserSource $externalUserSource): JsonResponse
+    {
+        $this->authorize('view', GeneralSettings::class);
+
+        if ($externalUserSource->type !== 'ldap') {
+            return response()->json([
+                'success' => false,
+                'message' => __('Manual sync is only available for LDAP / Active Directory sources.'),
+            ], 422);
+        }
+
+        if (!$externalUserSource->active) {
+            return response()->json([
+                'success' => false,
+                'message' => __('This source is inactive. Activate it before syncing.'),
+            ], 422);
+        }
+
+        try {
+            $result = $this->externalUserSyncService->syncSource($externalUserSource);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Sync failed: ') . $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __(':synced of :total users synced (:skipped skipped).', [
+                'synced' => $result['synced'],
+                'total' => $result['total'],
+                'skipped' => $result['skipped'],
+            ]),
+            'result' => $result,
+        ]);
+    }
+
     private function runConnectionTest(ExternalUserSource $source): JsonResponse
     {
         if ($source->type === 'identity_provider') {
@@ -121,19 +161,36 @@ class ExternalUserSourceController extends Controller
 
         try {
             $success = $this->ldapService->testConnection($source);
-
-            return response()->json([
-                'success' => $success,
-                'message' => $success
-                    ? __('LDAP connection successful')
-                    : __('LDAP connection failed. Please check your configuration.')
-            ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => __('LDAP connection failed. Please check your configuration.')
             ], 500);
         }
+
+        if (!$success) {
+            return response()->json([
+                'success' => false,
+                'message' => __('LDAP connection failed. Please check your configuration.')
+            ]);
+        }
+
+        // Verbindung steht – zusätzlich die ersten gefundenen User zur Kontrolle laden.
+        try {
+            $users = $this->ldapService->previewUsers($source, 3);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => __('LDAP connection successful, but the user search failed: ') . $e->getMessage(),
+                'users' => [],
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('LDAP connection successful'),
+            'users' => $users,
+        ]);
     }
 }
 

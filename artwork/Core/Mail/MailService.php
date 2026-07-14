@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Mail;
 
+use Artwork\Modules\ExternalUserManagement\Mail\ExternalUserImported;
 use Artwork\Modules\Invitation\Mail\InvitationCreated;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\User\Models\User;
@@ -32,6 +33,14 @@ class MailService
                 $this->getFallbackPageTitle(),
                 $this->getSystemMail()
             )
+        );
+    }
+
+    public function sendExternalUserImported(User $user, string $token): void
+    {
+        $this->mailTo(
+            $user->email,
+            new ExternalUserImported($user, $token)
         );
     }
 

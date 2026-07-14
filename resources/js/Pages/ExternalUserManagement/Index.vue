@@ -36,6 +36,17 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button
+                                v-if="source.type === 'ldap'"
+                                @click="syncSource(source)"
+                                :disabled="syncingSource === source.id || !source.active"
+                                class="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                                :title="!source.active ? $t('Activate this source before syncing') : $t('Sync now')"
+                            >
+                                <component :is="IconRefresh" class="h-4 w-4" :class="{ 'animate-spin': syncingSource === source.id }" />
+                                <span v-if="syncingSource === source.id">{{ $t('Syncing...') }}</span>
+                                <span v-else>{{ $t('Sync now') }}</span>
+                            </button>
+                            <button
                                 @click="testConnection(source)"
                                 :disabled="testingConnection === source.id"
                                 class="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50"
@@ -66,6 +77,12 @@
                     <div v-if="connectionTestResult[source.id]" class="mb-4 p-3 rounded"
                          :class="connectionTestResult[source.id].success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
                         {{ connectionTestResult[source.id].message }}
+                    </div>
+
+                    <!-- Sync Result -->
+                    <div v-if="syncResult[source.id]" class="mb-4 p-3 rounded"
+                         :class="syncResult[source.id].success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
+                        {{ syncResult[source.id].message }}
                     </div>
 
                     <!-- Group Mappings -->
@@ -116,7 +133,7 @@
 import {defineComponent} from "vue";
 import {router} from "@inertiajs/vue3";
 import axios from "axios";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconTrash, IconRefresh} from "@tabler/icons-vue";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -130,6 +147,7 @@ export default defineComponent({
         SourceModal,
         IconEdit,
         IconTrash,
+        IconRefresh,
     },
     props: {
         sources: {
@@ -144,6 +162,8 @@ export default defineComponent({
             showDeleteModal: null,
             testingConnection: null,
             connectionTestResult: {},
+            syncingSource: null,
+            syncResult: {},
         }
     },
     methods: {
@@ -169,6 +189,34 @@ export default defineComponent({
                     this.showDeleteModal = null;
                 }
             });
+        },
+        async syncSource(source) {
+            if (this.syncingSource) return;
+
+            this.syncingSource = source.id;
+            this.syncResult[source.id] = null;
+
+            try {
+                const response = await axios.post(
+                    route('tool.external-user-management.sources.sync', {
+                        externalUserSource: source.id
+                    })
+                );
+
+                this.syncResult[source.id] = {
+                    success: response.data.success,
+                    message: response.data.message
+                };
+
+                router.reload({ only: ['sources'] });
+            } catch (error) {
+                this.syncResult[source.id] = {
+                    success: false,
+                    message: error.response?.data?.message || this.$t('Sync failed')
+                };
+            } finally {
+                this.syncingSource = null;
+            }
         },
         async testConnection(source) {
             this.testingConnection = source.id;

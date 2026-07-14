@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $user_id
  * @property string $identification
  * @property array|null $meta_data
+ * @property \Carbon\Carbon|null $import_notification_sent_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property \Carbon\Carbon|null $deleted_at
@@ -30,20 +31,22 @@ class ExternalUser extends Model
         'user_id',
         'identification',
         'meta_data',
+        'import_notification_sent_at',
     ];
 
     protected $casts = [
         'meta_data' => 'array',
+        'import_notification_sent_at' => 'datetime',
     ];
 
     public function source(): BelongsTo
     {
-        return $this->belongsTo(ExternalUserSource::class, 'source_id', 'id');
+        return $this->belongsTo(ExternalUserSource::class, 'source_id', 'id', 'source');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id', 'user');
     }
 }
 

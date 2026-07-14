@@ -364,7 +364,7 @@
     "Add LDAP Source": "LDAP-Quelle hinzufügen",
     "Edit LDAP Source": "LDAP-Quelle bearbeiten",
     "or": "oder",
-    "Sign in with :name": "Anmelden mit :name",
+    "Sign in with :name": "Anmelden mit {name}",
     "Source Type": "Quellen-Typ",
     "LDAP / Active Directory": "LDAP / Active Directory",
     "Identity Provider (OIDC / SSO)": "Identity Provider (OIDC / SSO)",

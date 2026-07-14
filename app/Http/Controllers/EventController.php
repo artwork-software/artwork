@@ -2145,6 +2145,9 @@ class EventController extends Controller
 
         $this->craftInventoryItemEventService->updateEventTimesInInventory($event);
 
+        // Projektzuordnungen (Re-Materialisierung/Auflösung bei Zeitraum-Änderung)
+        // laufen zentral über den ProjectDayAssignmentEventObserver.
+
         broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
     }
 
@@ -4341,6 +4344,30 @@ class EventController extends Controller
             $craftIds
         );
 
+        // Projektzuordnungen (verbindlich + Wunsch) je Person/Tag — eine Batch-Query pro Worker-Typ
+        $dayAssignmentService = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class);
+        $usersForShifts = $dayAssignmentService->attachAssignmentsToWorkerEntries(
+            $usersForShifts,
+            'user',
+            User::class,
+            $startDate,
+            $endDate
+        );
+        $freelancersForShifts = $dayAssignmentService->attachAssignmentsToWorkerEntries(
+            $freelancersForShifts,
+            'freelancer',
+            Freelancer::class,
+            $startDate,
+            $endDate
+        );
+        $serviceProvidersForShifts = $dayAssignmentService->attachAssignmentsToWorkerEntries(
+            $serviceProvidersForShifts,
+            'service_provider',
+            ServiceProvider::class,
+            $startDate,
+            $endDate
+        );
+
         $workflowStatus = $workflowStatusService->computeForDateRange(
             $startDate,
             $endDate,
@@ -4481,6 +4508,11 @@ class EventController extends Controller
             'serviceProvider' => 'service_provider',
         };
         $workerData['weeklyWorkflowStatus'] = $workflowStatus[$workerDataKey][$workerId] ?? [];
+
+        // Parität zum Bulk-Load: Projektzuordnungen je Tag
+        $workerData['project_assignments'] = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+            ->getAssignmentsGroupedByDate($modelClass, [$workerId], $startDate, $endDate)
+            ->get($workerId) ?? new \stdClass();
 
         return new JsonResponse([
             'worker' => $workerData,

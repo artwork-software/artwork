@@ -464,6 +464,11 @@ class ShiftWorkerService
             $this->assignUserToProjectIfNecessary($shift, $worker);
         }
 
+        // Schicht-Zuweisung "verwandelt" eine Projektzuordnung desselben Projekts
+        // an den Schicht-Tagen (Soft-Delete mit Schicht-Verweis für Auto-Restore).
+        app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+            ->supersedeForShiftAssignment($shift, $employableType, $worker->id);
+
         if ($shift->is_committed && $this->supportsNotifications($worker)) {
             $this->handleAssignedToShift(
                 $shift,
@@ -702,6 +707,11 @@ class ShiftWorkerService
             $worker instanceof ServiceProvider => $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $worker->id),
             default => throw new \InvalidArgumentException("Unbekannter Worker-Typ: {$employableType}"),
         };
+
+        // Gegenstück zum Verwandeln: durch diese Schicht supersedete Projekt-
+        // zuordnungen kommen zurück, sofern der Tag nicht anderweitig abgedeckt ist.
+        app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+            ->restoreForShiftRemoval($shift, $employableType, $worker->id);
 
         $this->workingHourCacheService->forgetForEntity(
             WorkingHourCacheService::entityType($worker),

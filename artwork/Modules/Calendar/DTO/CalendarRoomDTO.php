@@ -12,6 +12,7 @@ class CalendarRoomDTO extends Data
         public ?array $content,
         public ?array $eventsById = null,
         public ?array $shiftsById = null,
+        public ?string $roomColor = null,
     ) {
     }
 }

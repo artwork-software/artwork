@@ -23,6 +23,7 @@
                       :date-to-show="dateToShow"
                       :user="user_to_edit"
                       :vacations="vacations"
+                      :project-wishes="projectWishes"
                       v-if="$can('can manage availability') || user_to_edit.id === usePage().props.auth.user.id || this.hasAdminRole()"/>
     </UserEditHeader>
 </template>
@@ -68,7 +69,8 @@ export default {
         'showVacationsAndAvailabilitiesDate',
         'availabilities',
         'shiftQualifications',
-        'firstProjectShiftTabId'
+        'firstProjectShiftTabId',
+        'projectWishes'
     ],
     data() {
         return {

@@ -78,6 +78,14 @@
                                 </p>
                                 <div v-else class="mb-4"></div>
 
+                                <!-- Hinweis: Abwesenheit löst bestehende Projektwünsche auf -->
+                                <div
+                                    v-if="entry.type === 'vacation' && conflictingWishDates.length"
+                                    class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                                >
+                                    {{ $t('There are project wishes on {0}. They will be dissolved by this absence.', [conflictingWishDates.join(', ')]) }}
+                                </div>
+
                                 <!-- Ganztägig -->
                                 <div class="mb-4 flex items-center gap-3">
                                     <input
@@ -183,6 +191,8 @@ const props = defineProps({
     // Vorbelegung bei Neuanlage (Klick/Drag im Kalender)
     initialStart: { type: String, default: '' },
     initialEnd: { type: String, default: '' },
+    // Projektwünsche des Monats – für den Hinweis, dass eine Abwesenheit sie auflöst
+    projectWishes: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['closed'])
@@ -206,6 +216,17 @@ const entry = reactive({
 })
 
 const isRange = computed(() => !!entry.start_date && !!entry.end_date && entry.end_date > entry.start_date)
+
+/** Wunsch-Tage im gewählten Zeitraum (Abwesenheit würde sie auflösen) — DD.MM.YYYY */
+const conflictingWishDates = computed(() => {
+    if (!entry.start_date) return []
+    const rangeEnd = entry.end_date || entry.start_date
+    return (props.projectWishes ?? [])
+        .filter(wish => wish.date >= entry.start_date && wish.date <= rangeEnd)
+        .map(wish => wish.date.split('-').reverse().join('.'))
+        .filter((value, index, arr) => arr.indexOf(value) === index)
+        .sort()
+})
 
 // Zeitraum und wöchentliche Wiederholung schließen sich aus
 watch(isRange, (value) => {

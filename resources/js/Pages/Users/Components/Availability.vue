@@ -22,6 +22,7 @@
                 :calendar-data="calendarData"
                 :date-to-show="dateToShow"
                 :interactive="canManage"
+                :project-wishes="projectWishes ?? []"
                 @select-range="openCreateModal"
             />
         </div>
@@ -35,6 +36,7 @@
                 :user="user"
                 :vacations="vacations"
                 :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate"
+                :project-wishes="projectWishes ?? []"
                 @create="openCreateModal(null)"
             />
         </div>
@@ -46,6 +48,7 @@
         :user="user"
         :initial-start="createRange.start"
         :initial-end="createRange.end"
+        :project-wishes="projectWishes ?? []"
         @closed="showCreateModal = false"
     />
 </template>
@@ -80,7 +83,8 @@ export default defineComponent({
         'vacationSelectCalendar',
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
-        'availabilities'
+        'availabilities',
+        'projectWishes'
     ],
     setup(props) {
         const calendarCol = ref(null)

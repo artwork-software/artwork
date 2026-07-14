@@ -62,6 +62,7 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCrmContactController;
+use App\Http\Controllers\ProjectDayAssignmentController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectPrintLayoutController;
@@ -553,6 +554,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
         ->name('projects.rooms-with-event-periods');
+
+    // Projektzuordnungen im Dienstplan (+ Wünsche); Autorisierung im Controller
+    // (verbindlich = Schichtplanungsrecht, Wunsch = nur für sich selbst)
+    Route::get('/project-day-assignments/projects', [ProjectDayAssignmentController::class, 'projectOptions'])
+        ->name('project-day-assignments.projects');
+    Route::post('/project-day-assignments', [ProjectDayAssignmentController::class, 'store'])
+        ->name('project-day-assignments.store');
+    Route::delete('/project-day-assignments/{projectDayAssignment}', [ProjectDayAssignmentController::class, 'destroy'])
+        ->name('project-day-assignments.destroy');
+    Route::patch('/project-day-assignments/{projectDayAssignment}/accept-wish', [ProjectDayAssignmentController::class, 'acceptWish'])
+        ->name('project-day-assignments.accept-wish');
+    Route::get('/projects/{project}/day-assignments', [ProjectDayAssignmentController::class, 'forProject'])
+        ->name('projects.day-assignments');
+    Route::get('/shifts/{shift}/project-assignees', [ProjectDayAssignmentController::class, 'forShift'])
+        ->name('shifts.project-assignees');
+    Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
+        ->name('events.project-assignment-impact');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');

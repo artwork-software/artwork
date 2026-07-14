@@ -34,6 +34,12 @@ return [
         'add' => 'Ein Vertrag wurde für dich freigegeben',
         'delete' => 'Ein Vertrag wurde gelöscht',
     ],
+    'project_assignment' => [
+        'dissolved_by_free_day' =>
+            'Projektzuordnung von :workerName für :projectName durch Frei-Eintrag aufgehoben',
+        'dissolved_by_reschedule' =>
+            'Projektzuordnung von :workerName für :projectName durch Terminverschiebung aufgehoben',
+    ],
     'shift' => [
         'without_event' => 'Schicht ohne Termin',
         'without_project' => 'Schicht ohne Projekt',

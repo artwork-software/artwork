@@ -70,7 +70,8 @@ class UserShiftPlanDailySettings extends Model
         'hide_unoccupied_days',
         'show_shift_group_tag',
         'show_timeline',
-        'show_only_not_fully_staffed_shifts'
+        'show_only_not_fully_staffed_shifts',
+        'show_project_assignments'
     ];
 
     protected $casts = [
@@ -97,6 +98,7 @@ class UserShiftPlanDailySettings extends Model
         'show_shift_group_tag' => 'boolean',
         'show_timeline' => 'boolean',
         'show_only_not_fully_staffed_shifts' => 'boolean',
+        'show_project_assignments' => 'boolean',
     ];
 
     public function user(): BelongsTo

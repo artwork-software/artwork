@@ -34,6 +34,12 @@ return [
         'add' => 'A contract has been shared with you',
         'delete' => 'A contract has been deleted',
     ],
+    'project_assignment' => [
+        'dissolved_by_free_day' =>
+            'Project assignment of :workerName for :projectName dissolved by a free day entry',
+        'dissolved_by_reschedule' =>
+            'Project assignment of :workerName for :projectName dissolved because the project was rescheduled',
+    ],
     'shift' => [
         'without_event' => 'Shift without event',
         'without_project' => 'Shift without project',

@@ -43,6 +43,48 @@
             />
         </div>
 
+        <!-- Projektwünsche -->
+        <div v-if="wishEntries.length > 0" class="mb-6">
+            <h4 class="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400 italic">
+                {{ $t('Project wishes') }}
+            </h4>
+            <div
+                v-for="entry in wishEntries"
+                :key="`wish-${entry.groupId}`"
+                class="mb-2 flex items-center justify-between gap-2 rounded-lg border border-dashed border-emerald-200 bg-emerald-50/40 dark:border-emerald-800 dark:bg-emerald-900/20 px-3 py-2"
+            >
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span
+                            class="inline-block size-2 shrink-0 rounded-full"
+                            :style="{ backgroundColor: colorForProjectId(entry.projectId) }"
+                        />
+                        <span class="truncate text-sm italic text-zinc-800 dark:text-zinc-200">{{ entry.projectName }}</span>
+                    </div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        <template v-if="entry.isFullPeriod || entry.dates.length > 3">
+                            {{ formatAssignmentDate(entry.startDate) }} - {{ formatAssignmentDate(entry.endDate) }}
+                            <template v-if="entry.isFullPeriod"> &middot; {{ $t('Entire project period') }}</template>
+                        </template>
+                        <template v-else>
+                            {{ entry.dates.map(formatAssignmentDate).join(', ') }}
+                        </template>
+                    </div>
+                </div>
+                <button
+                    v-if="canManage"
+                    type="button"
+                    class="shrink-0 rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
+                    :title="$t('Remove entire wish')"
+                    @click="deleteWish(entry)"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
         <!-- Empty state -->
         <div v-if="hasNoEntries" class="mb-6 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 p-4">
             <p class="text-sm text-zinc-500 dark:text-zinc-400">
@@ -54,11 +96,13 @@
 
 <script setup>
 import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import { PlusIcon } from '@heroicons/vue/outline'
 import dayjs from 'dayjs'
+import axios from 'axios'
 import SingleUserVacation from '@/Pages/Users/Components/SingleUserVacation.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
+import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js'
 
 const props = defineProps({
     user: { type: Object, required: true },
@@ -66,6 +110,7 @@ const props = defineProps({
     type: { type: String, default: '' },
     availabilities: { type: Array, default: () => [] },
     showVacationsAndAvailabilitiesDate: { type: String, default: '' },
+    projectWishes: { type: Array, default: () => [] },
 })
 
 defineEmits(['create'])
@@ -158,8 +203,38 @@ const buildEntries = (rows, dataType) => {
 const vacationEntries = computed(() => buildEntries(props.vacations, 'vacation'))
 const availabilityEntries = computed(() => buildEntries(props.availabilities, 'available'))
 
+/** Projektwünsche: ein Eintrag pro Anlage-Vorgang (group_id), Zeitraum aus den Serien-Grenzen */
+const wishEntries = computed(() => {
+    const byGroup = new Map()
+    for (const wish of props.projectWishes ?? []) {
+        if (!byGroup.has(wish.group_id)) {
+            byGroup.set(wish.group_id, {
+                groupId: wish.group_id,
+                id: wish.id,
+                projectId: wish.project_id,
+                projectName: wish.project_name,
+                isFullPeriod: !!wish.is_full_period,
+                startDate: wish.series_start,
+                endDate: wish.series_end,
+                dates: [],
+            })
+        }
+        byGroup.get(wish.group_id).dates.push(wish.date)
+    }
+    return [...byGroup.values()].sort((a, b) => a.startDate.localeCompare(b.startDate))
+})
+
+const deleteWish = async (entry) => {
+    await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: entry.id }), {
+        params: { whole_group: true },
+    })
+    router.reload({ only: ['projectWishes'] })
+}
+
 const hasNoEntries = computed(
-    () => vacationEntries.value.length === 0 && availabilityEntries.value.length === 0
+    () => vacationEntries.value.length === 0
+        && availabilityEntries.value.length === 0
+        && wishEntries.value.length === 0
 )
 
 const entryKey = (entry) => `${entry.type}-${entry.seriesId ?? `single-${entry.id}`}`

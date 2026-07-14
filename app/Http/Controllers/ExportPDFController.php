@@ -822,6 +822,16 @@ class ExportPDFController extends Controller
             $gridEnd->copy()
         );
 
+        // Verbindliche Projektzuordnungen je Tag (Wünsche bewusst nicht im PDF)
+        $assignmentEmployableClass = match ($type) {
+            'freelancer' => \Artwork\Modules\Freelancer\Models\Freelancer::class,
+            'service_provider', 'serviceProvider' => \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
+            default => User::class,
+        };
+        $projectAssignmentsByDate = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+            ->getAssignmentsGroupedByDate($assignmentEmployableClass, [$modelId], $gridStart->copy(), $gridEnd->copy())
+            ->get($modelId) ?? collect();
+
         // Feiertage im Zeitraum -> map[Y-m-d] = name
         $holidayMap = [];
         $holidays = Holiday::query()
@@ -889,6 +899,13 @@ class ExportPDFController extends Controller
                         $monthWorkMinutes += $this->hhmmToMinutes($dayData['totalWorkTime'] ?? '00:00');
                     }
 
+                    $projectAssignmentBlocks = collect($projectAssignmentsByDate->get($key) ?? [])
+                        ->filter(static fn (array $assignment) => ($assignment['type'] ?? null) === 'binding')
+                        ->pluck('project_name')
+                        ->unique()
+                        ->values()
+                        ->all();
+
                     $cells[] = [
                         'dayNumber' => $day->day,
                         'inMonth' => $inMonth,
@@ -897,6 +914,7 @@ class ExportPDFController extends Controller
                         'holidayName' => $showHolidayLabel ? $holidayName : null,
                         'shifts' => $shiftBlocks,
                         'individualTimes' => $individualBlocks,
+                        'projectAssignments' => $projectAssignmentBlocks,
                     ];
                 }
                 $weeks[] = [

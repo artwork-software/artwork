@@ -108,6 +108,99 @@
                         </div>
                     </section>
 
+                    <!-- Projekte (Zuordnungen + Wünsche an diesem Tag) -->
+                    <section class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                    {{ t('Projects') }}
+                                </h3>
+                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                    {{ t('Binding project assignments and wishes for this day.') }}
+                                </p>
+                            </div>
+                            <button
+                                v-if="canPlanShifts || isOwnCell"
+                                type="button"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                                @click="showProjectAssignmentModal = true"
+                            >
+                                <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
+                                <span>{{ canPlanShifts ? t('Assign project') : t('Enter project wish') }}</span>
+                            </button>
+                        </div>
+
+                        <div v-if="assignmentsForDay.length" class="rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2">
+                            <div
+                                v-for="assignment in assignmentsForDay"
+                                :key="assignment.id"
+                                class="flex items-center justify-between gap-2 border-b last:border-b-0 border-dashed border-zinc-200 py-2"
+                            >
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                                            :style="{ backgroundColor: colorForProjectId(assignment.project_id) }"
+                                        ></span>
+                                        <span
+                                            class="truncate text-xs text-zinc-800"
+                                            :class="assignment.type === 'wish' ? 'italic' : ''"
+                                        >
+                                            {{ assignment.project_name }}
+                                        </span>
+                                        <span
+                                            v-if="assignment.type === 'wish'"
+                                            class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 italic"
+                                        >
+                                            {{ t('Wish') }}
+                                        </span>
+                                    </div>
+                                    <div class="text-[11px] text-zinc-400 mt-0.5 pl-4.5">
+                                        {{ formatAssignmentDate(assignment.series_start) }} - {{ formatAssignmentDate(assignment.series_end) }}
+                                        <template v-if="assignment.is_full_period"> &middot; {{ t('Entire project period') }}</template>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button
+                                        v-if="assignment.type === 'wish' && canPlanShifts"
+                                        type="button"
+                                        class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] text-emerald-700 hover:border-emerald-400 transition-colors"
+                                        :title="t('Accept wish as binding assignment')"
+                                        @click="acceptAssignmentWish(assignment)"
+                                    >
+                                        <PropertyIcon name="IconCheck" class="h-3 w-3" stroke-width="2" />
+                                        {{ t('Accept') }}
+                                    </button>
+                                    <button
+                                        v-if="canDeleteAssignment(assignment)"
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                        :title="t('Remove for this day only')"
+                                        @click="deleteAssignment(assignment, false)"
+                                    >
+                                        <PropertyIcon name="IconTrash" class="h-3.5 w-3.5" stroke-width="1.5" />
+                                    </button>
+                                    <button
+                                        v-if="canDeleteAssignment(assignment) && assignment.series_start !== assignment.series_end"
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                        :title="t('Remove entire assignment')"
+                                        @click="deleteAssignment(assignment, true)"
+                                    >
+                                        <PropertyIcon name="IconTrashX" class="h-3.5 w-3.5" stroke-width="1.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            class="flex items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-3 text-xs text-zinc-500"
+                        >
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
+                            <span>{{ t('No project assignments for this day.') }}</span>
+                        </div>
+                    </section>
+
                     <!-- Individuelle Zeiten -->
                     <section class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -633,6 +726,16 @@
         </div>
 
         <!-- Modale -->
+        <ProjectAssignmentModal
+            v-if="showProjectAssignmentModal"
+            :worker-type="user.type"
+            :worker-id="user.element.id"
+            :worker-name="workerDisplayName"
+            :mode="canPlanShifts ? 'binding' : 'wish'"
+            :initial-days="[day.withoutFormat]"
+            @close="handleProjectAssignmentModalClose"
+        />
+
         <ConfirmDeleteModal
             v-if="showConfirmDeleteModal"
             :title="t('Delete user from shift')"
@@ -775,6 +878,8 @@ import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
 import { useLegalBreak } from '@/Composeables/useLegalBreak';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from '@/Composeables/Permission.js';
+import ProjectAssignmentModal from '@/Pages/Shifts/Components/ProjectAssignmentModal.vue';
+import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
 
 defineOptions({
     name: 'ShowUserShiftsModal',
@@ -819,6 +924,79 @@ const freeDayPartOptions = [
 
 const checked = ref(null);
 const vacationTypeBeforeUpdate = ref(null);
+
+// --- Projekte (Zuordnungen + Wünsche) ---
+const showProjectAssignmentModal = ref(false);
+// Lokale Kopie, damit die Liste nach Mutationen ohne Voll-Reload aktuell ist
+const localAssignmentsForDay = ref(
+    [...(props.user.project_assignments?.[props.day.withoutFormat] ?? [])],
+);
+
+const assignmentsForDay = computed(() => localAssignmentsForDay.value);
+
+const canPlanShifts = computed(() => can('can plan shifts') || hasAdminRole());
+
+const isOwnCell = computed(() =>
+    props.user.type === 0 && props.user.element?.id === page.props.auth?.user?.id,
+);
+
+const workerDisplayName = computed(() => {
+    const el = props.user.element ?? {};
+    return el.name ?? el.provider_name ?? [el.first_name, el.last_name].filter(Boolean).join(' ');
+});
+
+const canDeleteAssignment = (assignment) =>
+    canPlanShifts.value || (assignment.type === 'wish' && isOwnCell.value);
+
+async function deleteAssignment(assignment, wholeGroup) {
+    await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
+        params: { whole_group: wholeGroup },
+    });
+
+    localAssignmentsForDay.value = wholeGroup
+        ? localAssignmentsForDay.value.filter(a => a.group_id !== assignment.group_id)
+        : localAssignmentsForDay.value.filter(a => a.id !== assignment.id);
+
+    emit('desiresReload');
+}
+
+async function acceptAssignmentWish(assignment) {
+    await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }));
+
+    localAssignmentsForDay.value = localAssignmentsForDay.value.map(a =>
+        a.group_id === assignment.group_id ? { ...a, type: 'binding' } : a,
+    );
+
+    emit('desiresReload');
+}
+
+async function refreshAssignmentsForDay() {
+    const workerTypeName = props.user.type === 1
+        ? 'freelancer'
+        : props.user.type === 2 ? 'serviceProvider' : 'user';
+
+    const { data } = await axios.get(route('shifts.worker.single'), {
+        params: {
+            worker_id: props.user.element.id,
+            worker_type: workerTypeName,
+            start_date: props.day.withoutFormat,
+            end_date: props.day.withoutFormat,
+        },
+    });
+
+    localAssignmentsForDay.value = [
+        ...(data.worker?.project_assignments?.[props.day.withoutFormat] ?? []),
+    ];
+}
+
+async function handleProjectAssignmentModalClose({ saved } = { saved: false }) {
+    showProjectAssignmentModal.value = false;
+
+    if (saved) {
+        await refreshAssignmentsForDay();
+        emit('desiresReload');
+    }
+}
 
 // Kopie des ursprünglichen Zustands der individuellen Zeiten (zum Zurücksetzen bei Close)
 const originalIndividualTimes = ref(

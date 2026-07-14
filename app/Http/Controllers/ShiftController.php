@@ -840,8 +840,30 @@ class ShiftController extends Controller
         ChangeService $changeService
     ): bool {
         $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
+        // Ganz-Zeitraum-Projektzuordnungen aus dem Personen-Multiedit (Checkbox
+        // "Person dem gesamten Projekt zuweisen" neben dem Projekttitel)
+        $fullPeriodProjectIds = $request->get('fullPeriodProjectAssignments', []);
+
+        if (!empty($fullPeriodProjectIds)) {
+            $employableType = match ($request->get('userType')) {
+                1 => Freelancer::class,
+                2 => ServiceProvider::class,
+                default => User::class,
+            };
+            $dayAssignmentService = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class);
+
+            foreach (\Artwork\Modules\Project\Models\Project::query()->findMany($fullPeriodProjectIds) as $projectToAssign) {
+                $dayAssignmentService->createFullPeriodAssignments(
+                    $projectToAssign,
+                    $employableType,
+                    (int) $request->get('userTypeId'),
+                    \Artwork\Modules\Project\Enum\ProjectDayAssignmentType::BINDING
+                );
+            }
+        }
+
         if (empty($shiftsToHandle['assignToShift']) && empty($shiftsToHandle['removeFromShift'])) {
-            return false;
+            return !empty($fullPeriodProjectIds);
         }
 
         $serviceToUse = match ($request->get('userType')) {
@@ -1404,6 +1426,10 @@ class ShiftController extends Controller
         $vacationType = $request->get('vacation_type');
         $entities = $request->get('entities');
         $individualTimes = $request->get('individual_times');
+        $projectId = $request->get('project_id');
+        $assignmentProject = $projectId
+            ? \Artwork\Modules\Project\Models\Project::findOrFail($projectId)
+            : null;
 
         foreach ($entities as $entity) {
             $modelClass = match ($entity['type']) {
@@ -1442,6 +1468,21 @@ class ShiftController extends Controller
                     $modelClass,
                     $entityModel,
                     $entity['days']
+                );
+            }
+
+            // Verbindliche Projektzuordnung für die selektierten Tage — nach dem
+            // Vacation-Update, damit ein gleichzeitig gesetzter Status die frisch
+            // angelegte Zuordnung nicht sofort wieder auflöst. Route ist bereits
+            // auf "can plan shifts" gegated.
+            if ($assignmentProject !== null) {
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->createAssignments(
+                    $assignmentProject,
+                    $modelClass,
+                    (int) $entity['id'],
+                    \Artwork\Modules\Project\Enum\ProjectDayAssignmentType::BINDING,
+                    $entity['days'],
+                    false
                 );
             }
         }

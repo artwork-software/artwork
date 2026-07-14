@@ -1524,6 +1524,7 @@ class UserController extends Controller
             'show_shift_group_tag',
             'show_timeline',
             'show_only_not_fully_staffed_shifts',
+            'show_project_assignments',
             'show_user_overview'
         ]);
 

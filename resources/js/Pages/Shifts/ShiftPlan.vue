@@ -304,7 +304,20 @@
                                                         data-sp-shiftgroupheader
                                                         class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800"
                                                     >
-                                                        <span>{{ group.project.name }}</span>
+                                                        <span class="flex items-center gap-1.5 min-w-0">
+                                                            <!-- Personen-Multiedit: Person dem GESAMTEN Projekt (Zeitraum) zuweisen -->
+                                                            <input
+                                                                v-if="multiEditMode && userForMultiEdit"
+                                                                type="checkbox"
+                                                                class="input-checklist h-3.5 w-3.5 shrink-0"
+                                                                :checked="fullPeriodAssignedProjects.has(group.projectId)"
+                                                                :disabled="savingFullPeriodProjectIds.has(group.projectId)"
+                                                                :title="$t('Assign person to the entire project period')"
+                                                                @click.stop
+                                                                @change="toggleFullPeriodProjectAssignment(group.projectId)"
+                                                            />
+                                                            <span class="truncate">{{ group.project.name }}</span>
+                                                        </span>
                                                         <span class="text-[10px] text-sky-600">({{ group.shifts.length }})</span>
                                                     </div>
 
@@ -2872,6 +2885,7 @@ const dropWorkers = computed<any[]>(() => {
             violations: user.violations,
             compensation_day_offs: user.compensation_day_offs,
             compensation_period: user.compensation_period,
+            project_assignments: user.project_assignments,
             key: `u_${user.user.id}_0`,
         })
     })
@@ -2889,6 +2903,7 @@ const dropWorkers = computed<any[]>(() => {
                 shift_comments: freelancer.shift_comments,
                 weeklyWorkingHours: freelancer.weeklyWorkingHours,
                 weeklyWorkflowStatus: freelancer.weeklyWorkflowStatus,
+                project_assignments: freelancer.project_assignments,
                 key: `u_${freelancer.freelancer.id}_1`,
             })
         })
@@ -2904,6 +2919,7 @@ const dropWorkers = computed<any[]>(() => {
             shift_comments: sp.shift_comments,
             weeklyWorkingHours: sp.weeklyWorkingHours,
             weeklyWorkflowStatus: sp.weeklyWorkflowStatus,
+            project_assignments: sp.project_assignments,
             key: `u_${sp.service_provider.id}_2`,
         })
     })
@@ -3550,6 +3566,82 @@ function addUserToMultiEdit(item: any) {
     if (Array.isArray(item?.shift_qualifications)) {
         userForMultiEdit.value.shift_qualifications = [...item.shift_qualifications]
     }
+
+    refreshFullPeriodAssignedProjects()
+}
+
+/**
+ * Ganz-Zeitraum-Projektzuordnungen der Multiedit-Person: projectId -> eine
+ * Assignment-ID der Gruppe (Referenz für das Gruppen-Delete beim Abhaken).
+ */
+const fullPeriodAssignedProjects = ref<Map<number, number>>(new Map())
+const savingFullPeriodProjectIds = ref<Set<number>>(new Set())
+
+function refreshFullPeriodAssignedProjects() {
+    const map = new Map<number, number>()
+    const item = userForMultiEdit.value
+
+    if (item) {
+        const targetKey = item.type === 1
+            ? 'freelancersForShifts'
+            : item.type === 2 ? 'serviceProvidersForShifts' : 'usersForShifts'
+        const workerKey = item.type === 1
+            ? 'freelancer'
+            : item.type === 2 ? 'service_provider' : 'user'
+        const entry = (workersLoaded.value[targetKey] ?? [])
+            .find((w: any) => w[workerKey]?.id === item.id)
+
+        for (const dayAssignments of Object.values(entry?.project_assignments ?? {})) {
+            for (const assignment of (dayAssignments as any[])) {
+                if (assignment.type === 'binding' && assignment.is_full_period && !map.has(assignment.project_id)) {
+                    map.set(assignment.project_id, assignment.id)
+                }
+            }
+        }
+    }
+
+    fullPeriodAssignedProjects.value = map
+}
+
+async function toggleFullPeriodProjectAssignment(projectId: number) {
+    const item = userForMultiEdit.value
+    if (!item || savingFullPeriodProjectIds.value.has(projectId)) return
+
+    savingFullPeriodProjectIds.value = new Set([...savingFullPeriodProjectIds.value, projectId])
+
+    try {
+        const existingAssignmentId = fullPeriodAssignedProjects.value.get(projectId)
+
+        if (existingAssignmentId) {
+            await axios.delete(
+                route('project-day-assignments.destroy', { projectDayAssignment: existingAssignmentId }),
+                { params: { whole_group: true } }
+            )
+            showNotice('success', 'Removed', 'The project assignment was removed.')
+        } else {
+            await axios.post(route('project-day-assignments.store'), {
+                project_id: projectId,
+                worker_type: item.type,
+                worker_id: item.id,
+                type: 'binding',
+                full_period: true,
+                days: [],
+            })
+            showNotice('success', 'Assigned', 'The person was assigned to the entire project period.')
+        }
+
+        await reloadSingleWorker(item.id, numericTypeToWorkerType(item.type))
+        refreshFullPeriodAssignedProjects()
+    } catch (error: any) {
+        const errors = error?.response?.data?.errors
+        const message = errors ? Object.values(errors).flat()[0] : $t('Saving failed')
+        $toast?.error?.(message)
+        refreshFullPeriodAssignedProjects()
+    } finally {
+        const next = new Set(savingFullPeriodProjectIds.value)
+        next.delete(projectId)
+        savingFullPeriodProjectIds.value = next
+    }
 }
 
 function _cancelOpenPickersAndModals() {
@@ -3641,6 +3733,7 @@ function resetMultiEditMode(closeMultiEdit = true) {
     if (closeMultiEdit) {
         multiEditMode.value = false
         multiEditCellByDayAndUser.value = {}
+        fullPeriodAssignedProjects.value = new Map()
     }
 }
 

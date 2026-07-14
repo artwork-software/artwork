@@ -148,6 +148,41 @@ final class RoomControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_can_set_and_reset_room_color(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create(['name' => 'Colored']);
+
+        $payload = [
+            'name' => 'Colored',
+            'description' => '',
+            'temporary' => false,
+            'everyone_can_book' => false,
+            'relevant_for_disposition' => false,
+        ];
+
+        // Eigene Farbe setzen
+        $this->patch(route('rooms.update', $room), $payload + ['color' => '#dc2626'])->assertRedirect();
+        $this->assertSame('#dc2626', $room->fresh()->color);
+
+        // Zurück auf "erbt vom Areal" (null)
+        $this->patch(route('rooms.update', $room), $payload + ['color' => null])->assertRedirect();
+        $this->assertNull($room->fresh()->color);
+    }
+
+    #[Test]
+    public function room_effective_color_falls_back_to_area_color(): void
+    {
+        $area = \Artwork\Modules\Area\Models\Area::factory()->create(['color' => '#1e40af']);
+        $room = Room::factory()->create(['area_id' => $area->id, 'color' => null]);
+
+        $this->assertSame('#1e40af', $room->getEffectiveColor());
+
+        $room->color = '#dc2626';
+        $this->assertSame('#dc2626', $room->getEffectiveColor());
+    }
+
+    #[Test]
     public function guest_cannot_duplicate_room(): void
     {
         $room = Room::factory()->create();

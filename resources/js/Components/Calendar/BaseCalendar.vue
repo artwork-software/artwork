@@ -697,6 +697,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
             return {
                 roomId: inc?.roomId,
                 roomName: inc?.roomName ?? '',
+                roomColor: inc?.roomColor ?? null,
                 content: pruned,
             };
         });
@@ -730,7 +731,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
 
         let target = targetByRoomId.get(roomId);
         if (!target) {
-            target = { roomId: roomId, roomName: inc?.roomName ?? '', content: {} };
+            target = { roomId: roomId, roomName: inc?.roomName ?? '', roomColor: inc?.roomColor ?? null, content: {} };
             targetRooms.push(target);
             targetByRoomId.set(roomId, target);
         }
@@ -757,6 +758,9 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
         target.content = pruned;
         if (inc?.roomName && inc.roomName !== target.roomName) {
             target.roomName = inc.roomName;
+        }
+        if ((inc?.roomColor ?? null) !== (target.roomColor ?? null)) {
+            target.roomColor = inc?.roomColor ?? null;
         }
     }
     // Sort rooms to match the order from the rooms prop (position-based from DB)

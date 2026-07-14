@@ -24,14 +24,14 @@ class AreaService
 
     public function updateByRequest(Area $area, Request $request): Area|Model
     {
-        $area->fill($request->only('name'));
+        $area->fill($request->only('name', 'color'));
         return $this->areaRepository->save($area);
     }
 
     public function createByRequest(Request $request): Area|Model
     {
         $area = new Area();
-        $area->fill($request->only('name'));
+        $area->fill($request->only('name', 'color'));
         return $this->areaRepository->save($area);
     }
 

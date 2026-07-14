@@ -1,13 +1,18 @@
 <template>
     <div
-        class="shiftCell h-full overflow-y-auto rounded-lg bg-gray-50/10 text-xs text-white hover:opacity-100 relative"
+        class="shiftCell h-full overflow-hidden rounded-lg bg-gray-50/10 text-xs text-white hover:opacity-100 relative"
         :class="[
-      compactMode ? 'px-2 py-1' : 'p-2',
       hasUnavailableAssignment
           ? 'ring-2 ring-inset ring-amber-500 bg-amber-500/20'
           : hasMultiShiftGroups && 'ring-2 ring-inset ring-rose-400',
     ]"
     >
+        <!-- Innerer Scroll-Container: Streifen unten bleiben fix am Zellboden -->
+        <div
+            class="shiftCellScroll h-full overflow-y-auto"
+            :class="[compactMode ? 'px-2 py-1' : 'p-2']"
+            :style="assignmentsToday.length ? { paddingBottom: assignmentStripAreaHeight + 'px' } : undefined"
+        >
         <div :class="classes">
             <!-- Abwesenheit -->
             <span
@@ -33,6 +38,36 @@
                     {{ part.text }}
                 </span>
             </template>
+        </div>
+        </div>
+
+        <!--
+            Projektzuordnungs-Streifen: Per-Zellen-Segmente statt Overlay (Virtual2DGrid
+            virtualisiert Spalten). Abgerundete Enden nur an Serien-Grenzen, dadurch
+            wirken die Segmente benachbarter Tage wie ein durchlaufender Balken.
+            Verbindlich = gefüllt, Wunsch = gestreift; Name + Zeitraum on Hover.
+        -->
+        <div
+            v-if="assignmentsToday.length"
+            class="absolute bottom-0 left-0 right-0 z-10"
+        >
+            <div
+                v-for="assignment in visibleAssignmentsToday"
+                :key="`pda:${assignment.id}`"
+                class="h-[5px] mt-[2px]"
+                :class="[
+                    assignment.date === assignment.series_start ? 'rounded-l-full ml-0.5' : '',
+                    assignment.date === assignment.series_end ? 'rounded-r-full mr-0.5' : '',
+                    isAssignmentDimmed(assignment) ? 'opacity-30' : '',
+                ]"
+                :style="assignmentStripStyle(assignment)"
+                :title="assignmentLabel(assignment, t('Wish'))"
+            />
+            <div
+                v-if="overflowAssignmentsToday.length"
+                class="h-[5px] mt-[2px] rounded-full mx-0.5 bg-zinc-400/70"
+                :title="overflowAssignmentsToday.map(a => assignmentLabel(a, t('Wish'))).join('\n')"
+            />
         </div>
 
         <!-- Violation indicators -->
@@ -75,6 +110,7 @@
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { useI18n } from 'vue-i18n'
+import { assignmentStripStyle, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js'
 
 const { t } = useI18n()
 
@@ -275,6 +311,35 @@ const compensationHalfPeriod = computed(() => {
     return half ? half.half_day_period : null
 })
 
+/** Projektzuordnungen am Tag (verbindlich + Wunsch), sortiert für stabile Lanes */
+const assignmentsToday = computed(() => {
+    const list = props.user?.project_assignments?.[props.day.withoutFormat] ?? []
+    if (!list.length) return []
+    return [...list].sort((a, b) =>
+        a.series_start === b.series_start
+            ? String(a.group_id).localeCompare(String(b.group_id))
+            : a.series_start < b.series_start ? -1 : 1
+    )
+})
+
+const MAX_ASSIGNMENT_LANES = 2
+const visibleAssignmentsToday = computed(() => assignmentsToday.value.slice(0, MAX_ASSIGNMENT_LANES))
+const overflowAssignmentsToday = computed(() => assignmentsToday.value.slice(MAX_ASSIGNMENT_LANES))
+
+/** Höhe des Streifen-Bereichs (Lanes à 5px + 2px Abstand) als Padding fürs Scroll-Div */
+const assignmentStripAreaHeight = computed(() => {
+    const lanes = Math.min(assignmentsToday.value.length, MAX_ASSIGNMENT_LANES)
+        + (overflowAssignmentsToday.value.length ? 1 : 0)
+    return lanes * 7 + 2
+})
+
+/** Projektmodus (DP-07/2.20): Streifen fremder Projekte dimmen */
+const isAssignmentDimmed = (assignment) => {
+    const settings = page.props.shift_plan_settings ?? page.props.auth?.user?.calendar_settings
+    if (!settings?.use_project_time_period || !settings?.time_period_project_id) return false
+    return assignment.project_id !== settings.time_period_project_id
+}
+
 /** Violations am Tag */
 const violationsToday = computed(() => {
     const violations = props.user?.violations?.[props.day.withoutFormat]
@@ -330,12 +395,12 @@ const hasMultiShiftGroups = computed(() => {
  * 6px statt Browser-Standard (~15px), aber bewusst breiter als die 2px des
  * Hauptkalenders, damit er gut sichtbar und greifbar bleibt.
  */
-.shiftCell {
+.shiftCellScroll {
     overflow-x: hidden;
     scrollbar-color: #d4d4d4 transparent;
     scrollbar-width: thin;
 }
-.shiftCell::-webkit-scrollbar { width: 6px; }
-.shiftCell::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
-.shiftCell::-webkit-scrollbar-track { background-color: transparent; }
+.shiftCellScroll::-webkit-scrollbar { width: 6px; }
+.shiftCellScroll::-webkit-scrollbar-thumb { background-color: #d4d4d4; border-radius: 10px; }
+.shiftCellScroll::-webkit-scrollbar-track { background-color: transparent; }
 </style>

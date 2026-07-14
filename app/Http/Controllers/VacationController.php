@@ -172,6 +172,11 @@ class VacationController extends Controller
                 }
             }
             $this->workingHourCacheService->forgetForEntity('user', $user->id);
+
+            // Typ-Wechsel läuft am VacationService::create-Hook vorbei → Auflösung
+            // von Projektzuordnungen/-wünschen hier explizit anstoßen.
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->handleVacationEntry($user, [$day], (string) $checked['type']);
         }
 
         // Schichten VOR einem evtl. Detach einsammeln, damit auch entfernte
@@ -239,6 +244,9 @@ class VacationController extends Controller
                 }
             }
             $this->workingHourCacheService->forgetForEntity('freelancer', $freelancer->id);
+
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->handleVacationEntry($freelancer, [$day], (string) $checked['type']);
         }
 
         $shiftsOnDay = $this->shiftsOnDay($freelancer, $day);
@@ -302,6 +310,9 @@ class VacationController extends Controller
                 }
             }
             $this->workingHourCacheService->forgetForEntity('service_provider', $serviceProvider->id);
+
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->handleVacationEntry($serviceProvider, [$day], (string) $checked['type']);
         }
 
         $shiftsOnDay = $this->shiftsOnDay($serviceProvider, $day);

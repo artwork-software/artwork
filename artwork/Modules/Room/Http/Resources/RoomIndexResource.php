@@ -29,6 +29,7 @@ class RoomIndexResource extends JsonResource
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
+            'color' => $this->color,
             'description' => $this->description,
             'temporary' => $this->temporary,
             'created_by' => $this->creator,

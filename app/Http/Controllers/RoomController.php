@@ -97,6 +97,7 @@ class RoomController extends Controller
     {
         $room = Room::create([
             'name' => $request->name,
+            'color' => $request->color,
             'description' => $request->description,
             'temporary' => $request->temporary,
             'start_date' => $request->start_date,
@@ -187,6 +188,7 @@ class RoomController extends Controller
         $room->update(
             $request->only(
                 'name',
+                'color',
                 'description',
                 'temporary',
                 'start_date',

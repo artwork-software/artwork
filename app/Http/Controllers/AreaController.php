@@ -32,6 +32,7 @@ class AreaController extends Controller
             'areas' => Area::all()->map(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
+                'color' => $area->color ?? '#000000',
                 // showContent declares if the area should be showing all details when loading the page
                 'showContent' => true,
                 'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('position')->orderBy('id')->get())->resolve(),

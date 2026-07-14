@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Services;
 
 use App\Settings\ShiftSettings;
+use Artwork\Modules\DayService\Models\DayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
 use Artwork\Modules\User\Repositories\UserShiftCalendarAboRepository;
@@ -10,6 +11,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Spatie\IcalendarGenerator\Components\Calendar;
+use Spatie\IcalendarGenerator\Components\Event;
 
 readonly class UserShiftCalendarAboService
 {
@@ -110,6 +113,37 @@ readonly class UserShiftCalendarAboService
                 $individualTime->start_time ?? '00:00'
             ))
             ->values();
+    }
+
+    public function addDayServiceToCalendar(
+        Calendar $calendar,
+        UserShiftCalendarAbo $calendarAbo,
+        DayService $dayService
+    ): void {
+        try {
+            $title = 'Tagesdienst: ' . $dayService->name;
+            $date = Carbon::parse($dayService->pivot->date);
+
+            $calendar->event(function (Event $event) use (
+                $calendarAbo,
+                $dayService,
+                $title,
+                $date
+            ): void {
+                $event->name($title)
+                    ->description($title)
+                    ->uniqueIdentifier('day-service-' . $dayService->pivot->id)
+                    ->createdAt(Carbon::parse($dayService->pivot->created_at ?? $dayService->created_at))
+                    ->fullDay()
+                    // Kopien übergeben: endsAt() mutiert die Instanz bei fullDay via modify('+1 day')
+                    ->startsAt($date->copy())
+                    ->endsAt($date->copy());
+
+                $this->addStartAlertToEvent($event, $calendarAbo, $date->copy()->startOfDay(), $title);
+            });
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**
@@ -225,14 +259,14 @@ readonly class UserShiftCalendarAboService
                     $event->startsAt($eventStart)->endsAt($eventEnd);
                 }
 
-                $this->addIndividualTimeAlertToEvent($event, $calendarAbo, $eventStart, $title);
+                $this->addStartAlertToEvent($event, $calendarAbo, $eventStart, $title);
             });
         } catch (\Throwable $e) {
             return;
         }
     }
 
-    private function addIndividualTimeAlertToEvent(
+    private function addStartAlertToEvent(
         $event,
         UserShiftCalendarAbo $calendarAbo,
         Carbon $eventStart,

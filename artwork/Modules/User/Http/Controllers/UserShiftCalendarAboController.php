@@ -92,6 +92,19 @@ class UserShiftCalendarAboController extends Controller
             );
         }
 
+        $dayServices = $user->dayServices()->withPivot('id')->orderByPivot('date');
+        if ($calendarAbo->date_range) {
+            $dayServices->wherePivotBetween('date', [$calendarAbo->start_date, $calendarAbo->end_date]);
+        }
+
+        foreach ($dayServices->get() as $dayService) {
+            $this->userShiftCalendarAboService->addDayServiceToCalendar(
+                $calendar,
+                $calendarAbo,
+                $dayService
+            );
+        }
+
         return response($calendar->get(), 200)
             ->header('Content-Type', 'text/calendar; charset=utf-8')
             ->header('Content-Disposition', 'inline; filename="schichtplan.ics"')

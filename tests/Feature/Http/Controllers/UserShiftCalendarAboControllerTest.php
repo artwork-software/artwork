@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\DayService\Models\DayService;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserShiftCalendarAbo;
@@ -84,6 +85,63 @@ final class UserShiftCalendarAboControllerTest extends FeatureTestCase
             '/DTEND[^:]*;VALUE=DATE:20260722/',
             $response->getContent()
         );
+    }
+
+    #[Test]
+    public function shiftCalendarFeedExportsDayServicesAsAllDayEvents(): void
+    {
+        $user = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($user, [
+            'date_range' => true,
+            'start_date' => '2026-07-01',
+            'end_date' => '2026-07-31',
+        ]);
+
+        $dayService = DayService::factory()->create(['name' => 'Abendschluss']);
+        $user->dayServices()->attach($dayService->id, ['date' => '2026-07-15']);
+        $dayServiceAssignment = $user->dayServices()
+            ->withPivot('id')
+            ->wherePivot('date', '2026-07-15')
+            ->firstOrFail();
+
+        $outOfRangeDayService = DayService::factory()->create(['name' => 'Nicht im Zeitraum']);
+        $user->dayServices()->attach($outOfRangeDayService->id, ['date' => '2026-08-05']);
+
+        $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
+
+        $response->assertOk()
+            ->assertSee('SUMMARY:Tagesdienst: Abendschluss', false)
+            ->assertSee('UID:day-service-' . $dayServiceAssignment->pivot->id, false)
+            ->assertDontSee('Nicht im Zeitraum', false);
+
+        $this->assertMatchesRegularExpression(
+            '/DTSTART[^:]*;VALUE=DATE:20260715/',
+            $response->getContent()
+        );
+        $this->assertMatchesRegularExpression(
+            '/DTEND[^:]*;VALUE=DATE:20260716/',
+            $response->getContent()
+        );
+    }
+
+    #[Test]
+    public function shiftCalendarFeedKeepsDayServiceAssignmentsDistinct(): void
+    {
+        $user = User::factory()->create();
+        $calendarAbo = $this->createCalendarAbo($user);
+        $dayService = DayService::factory()->create(['name' => 'Bereitschaft']);
+
+        $user->dayServices()->attach($dayService->id, ['date' => '2026-07-15']);
+        $user->dayServices()->attach($dayService->id, ['date' => '2026-07-15']);
+
+        $assignmentIds = $user->dayServices()->withPivot('id')->get()->pluck('pivot.id');
+        $response = $this->get(route('user-shift-calendar-abo.show', $calendarAbo->calendar_abo_id));
+
+        foreach ($assignmentIds as $assignmentId) {
+            $response->assertSee('UID:day-service-' . $assignmentId, false);
+        }
+
+        $this->assertSame(2, substr_count($response->getContent(), 'SUMMARY:Tagesdienst: Bereitschaft'));
     }
 
     /**

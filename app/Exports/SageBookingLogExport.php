@@ -4,13 +4,13 @@ namespace App\Exports;
 
 use Artwork\Modules\Budget\Models\SageBookingLog;
 use Artwork\Modules\Budget\Models\SageBookingLogEntry;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class SageBookingLogExport implements FromCollection, WithHeadings, WithMapping
+class SageBookingLogExport implements FromQuery, WithHeadings, WithMapping
 {
     use Exportable;
 
@@ -18,9 +18,11 @@ class SageBookingLogExport implements FromCollection, WithHeadings, WithMapping
     {
     }
 
-    public function collection(): Collection
+    // FromQuery statt FromCollection: der erste Full-Import kann sechsstellige
+    // Entry-Zahlen loggen — chunked lesen statt alle Models in den RAM laden
+    public function query(): Relation
     {
-        return $this->log->entries()->orderBy('id')->get();
+        return $this->log->entries()->orderBy('id');
     }
 
     /**

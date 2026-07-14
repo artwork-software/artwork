@@ -105,6 +105,7 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Change/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalAccess/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Inventory/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

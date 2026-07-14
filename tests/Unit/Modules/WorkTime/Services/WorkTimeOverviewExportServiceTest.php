@@ -114,6 +114,32 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
     }
 
     #[Test]
+    public function itCountsBookingsOfMultiCraftUsersOnlyOnce(): void
+    {
+        $craftA = Craft::factory()->create(['position' => 1]);
+        $craftB = Craft::factory()->create(['position' => 2]);
+        $user = $this->createCraftWorker($craftA);
+        $craftB->users()->attach($user->id);
+
+        $this->insertBooking($user, '2026-05-04', 480, 510);
+        // Schichtminuten nur in Gewerk B → Buchung wird B zugeordnet, nicht doppelt gezählt
+        $this->assignShift($craftB, $user, '2026-05-04', '09:00:00', '18:00:00');
+
+        $matrix = $this->service->buildMatrix(
+            Carbon::parse('2026-05-01'),
+            Carbon::parse('2026-05-31'),
+            [$craftA->id, $craftB->id],
+            'en'
+        );
+
+        $mayRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'May 2026');
+        $this->assertSame(0, $mayRow['cells'][$craftA->id]['ist_intern']);
+        $this->assertSame(510, $mayRow['cells'][$craftB->id]['ist_intern']);
+        $this->assertSame(510, $mayRow['total']['ist_intern']);
+        $this->assertSame(480, $mayRow['total']['soll_intern']);
+    }
+
+    #[Test]
     public function itAppendsAYearSumRowPerYear(): void
     {
         $craft = Craft::factory()->create();

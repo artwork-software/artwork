@@ -1013,6 +1013,8 @@ readonly class EventService
             })
             ->orderBy('position')
             ->orderBy('id')
+            // Für getEffectiveColor() (Farb-Vererbung Raum → Areal) ohne Lazy-Load pro Raum
+            ->with('area:id,color')
             ->get();
 
     }
@@ -1204,6 +1206,9 @@ readonly class EventService
             return [
                 'roomId' => $room->id,
                 'roomName' => $room->name,
+                // Raum-/Areal-Farbe wie in MapRoomsToContentForCalendar/ShiftCalendarService
+                // durchreichen — sonst bleibt die Raumleiste im Projekt-Tab-Kalender farblos
+                'roomColor' => $room->getEffectiveColor(),
                 'content' => $content,
             ];
         })->toArray();
@@ -1245,6 +1250,9 @@ readonly class EventService
             return [
                 'roomId' => $room->id,
                 'roomName' => $room->name,
+                // Raum-/Areal-Farbe wie in MapRoomsToContentForCalendar/ShiftCalendarService
+                // durchreichen — sonst bleibt die Raumleiste im Projekt-Tab-Kalender farblos
+                'roomColor' => $room->getEffectiveColor(),
                 'content' => $content,
             ];
         })->toArray();

@@ -1,5 +1,12 @@
 {
     "Filter name": "Filtername",
+    "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP and SVG.": "Das Bild \"{0}\" hat ein nicht unterstütztes Format – erlaubt sind JPG, PNG, GIF, WEBP, BMP und SVG.",
+    "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.": "Das Bild \"{0}\" hat ein nicht unterstütztes Format – erlaubt sind JPG, PNG, GIF, WEBP, BMP, SVG und HEIC.",
+    "The image \"{0}\" is too large ({1} MB) – each image may be a maximum of {2} MB.": "Das Bild \"{0}\" ist zu groß ({1} MB) – jedes Bild darf maximal {2} MB groß sein.",
+    "The article could not be saved:": "Der Artikel konnte nicht gespeichert werden:",
+    "Article images": "Artikelbilder",
+    "Maximum size per article image (MB)": "Maximale Größe pro Artikelbild (MB)",
+    "Images larger than this are rejected when uploading article images. Note: the server upload limits (e.g. nginx/PHP) must allow at least this size.": "Größere Bilder werden beim Hochladen von Artikelbildern abgelehnt. Hinweis: Die Upload-Limits des Servers (z. B. nginx/PHP) müssen mindestens diese Größe zulassen.",
     "Switch view": "Ansicht wechseln",
     "Here you can specify whether to search all properties or only a specific one.": "Hier kannst du näher festlegen, ob in allen Eigenschaften gesucht werden soll oder nur in bestimmten.",
     "Opens your product basket. Enable the toggle next to it to add articles by clicking them in the overview; when you are done, open the basket here, make final adjustments and create a material issue from it.": "Öffnet deinen Produkt-Warenkorb. Aktiviere den Schalter daneben, danach kannst du per Klick Artikel zu deinem Warenkorb hinzufügen. Wenn du fertig bist, kannst du hier den Warenkorb anzeigen lassen, letzte Anpassungen vornehmen und daraus eine Materialausgabe erstellen.",
@@ -5231,5 +5238,16 @@
     "Project assignment of {0} for {1} ({2}) was removed": "Projektzuordnung von {0} für {1} ({2}) wurde entfernt",
     "Project wish of {0} for {1} ({2}) was removed": "Projektwunsch von {0} für {1} ({2}) wurde entfernt",
     "Project wish of {0} for {1} ({2}) was accepted as binding assignment": "Projektwunsch von {0} für {1} ({2}) wurde als verbindliche Zuordnung übernommen",
-    "Project assignment of {0} for {1} ({2}) was dissolved by a free day entry": "Projektzuordnung von {0} für {1} ({2}) wurde durch einen Frei-Eintrag aufgelöst"
+    "Project assignment of {0} for {1} ({2}) was dissolved by a free day entry": "Projektzuordnung von {0} für {1} ({2}) wurde durch einen Frei-Eintrag aufgelöst",
+    "Sync now": "Jetzt synchronisieren",
+    "Syncing...": "Synchronisiert...",
+    "Sync failed": "Synchronisation fehlgeschlagen",
+    "Activate this source before syncing": "Aktiviere diese Quelle vor der Synchronisation",
+    "First found users": "Erste gefundene Nutzer*innen",
+    "Manual sync is only available for LDAP / Active Directory sources.": "Manuelle Synchronisation ist nur für LDAP-/Active-Directory-Quellen verfügbar.",
+    "This source is inactive. Activate it before syncing.": "Diese Quelle ist inaktiv. Aktiviere sie vor der Synchronisation.",
+    "A sync for this source is already running.": "Für diese Quelle läuft bereits eine Synchronisation.",
+    "Sync failed. Please check the configuration and the logs.": "Synchronisation fehlgeschlagen. Bitte Konfiguration und Logs prüfen.",
+    ":synced of :total users synced (:skipped skipped).": ":synced von :total Nutzer*innen synchronisiert (:skipped übersprungen).",
+    "LDAP connection successful, but the user search failed.": "LDAP-Verbindung erfolgreich, aber die Nutzersuche ist fehlgeschlagen."
 }

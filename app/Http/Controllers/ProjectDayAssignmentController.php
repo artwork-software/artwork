@@ -30,7 +30,7 @@ class ProjectDayAssignmentController extends Controller
     public function projectOptions(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'days' => 'required|array|min:1',
+            'days' => 'required|array|min:1|max:366',
             'days.*' => 'date',
             'search' => 'nullable|string|max:255',
         ]);
@@ -51,12 +51,15 @@ class ProjectDayAssignmentController extends Controller
             'worker_id' => 'required|integer',
             'type' => 'required|string|in:binding,wish',
             'full_period' => 'required|boolean',
-            'days' => 'required_if:full_period,false|array',
+            'days' => 'required_if:full_period,false|array|max:366',
             'days.*' => 'date',
         ]);
 
         $type = ProjectDayAssignmentType::from($validated['type']);
         $employableType = $this->resolveEmployableType($validated['worker_type']);
+
+        // Existenz der Person sicherstellen — sonst entstehen verwaiste Zuordnungszeilen
+        $employableType::query()->findOrFail((int) $validated['worker_id']);
 
         $this->authorizeMutation($type, $employableType, (int) $validated['worker_id'], isCreation: true);
 

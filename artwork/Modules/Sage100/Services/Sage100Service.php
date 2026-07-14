@@ -67,7 +67,13 @@ class Sage100Service
 
         $ktr = ($ktr !== null && trim($ktr) !== '') ? trim($ktr) : null;
 
-        $source ??= ($ktr !== null || $specificDayFrom !== null) ? 'specific_day_import' : 'full_import';
+        // Quelle fürs Protokoll: mit gesetztem Watermark ist der argumentlose Lauf
+        // der inkrementelle tägliche Sync, kein Full-Import
+        $source ??= match (true) {
+            $ktr !== null || $specificDayFrom !== null => 'specific_day_import',
+            $this->sageApiSettingsService->getFirst()?->bookingDate !== null => 'daily_import',
+            default => 'full_import',
+        };
 
         $this->sageBookingLogRecorder->startRun(
             'import',

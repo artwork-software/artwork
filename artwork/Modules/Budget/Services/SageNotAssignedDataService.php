@@ -38,7 +38,10 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
     {
         $this->sageNotAssignedDataRepository->update($sageNotAssignedData, $attributes);
 
-        $this->sageBookingLogRecorder->record('updated', $sageNotAssignedData);
+        // Nur echte Änderungen protokollieren (siehe SageAssignedDataService::update)
+        if ($sageNotAssignedData->wasChanged()) {
+            $this->sageBookingLogRecorder->record('updated', $sageNotAssignedData);
+        }
 
         return $sageNotAssignedData;
     }
@@ -119,16 +122,21 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
 
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
-        $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
-
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
+
+        // Erst nach erfolgreichem Delete protokollieren (siehe SageAssignedDataService)
+        $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
     }
 
     public function forceDelete(SageNotAssignedData $sageNotAssignedData): bool
     {
-        $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
+        $result = $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
 
-        return $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
+        if ($result) {
+            $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
+        }
+
+        return $result;
     }
 
     public function getTrashed(): Collection

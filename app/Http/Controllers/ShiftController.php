@@ -852,6 +852,9 @@ class ShiftController extends Controller
             };
             $dayAssignmentService = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class);
 
+            // Existenz der Person sicherstellen — sonst entstehen verwaiste Zuordnungszeilen
+            $employableType::query()->findOrFail((int) $request->get('userTypeId'));
+
             foreach (\Artwork\Modules\Project\Models\Project::query()->findMany($fullPeriodProjectIds) as $projectToAssign) {
                 $dayAssignmentService->createFullPeriodAssignments(
                     $projectToAssign,

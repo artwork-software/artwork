@@ -86,12 +86,28 @@ class WorkTimeOverviewExportService
             ),
         ];
 
+        // Reihenfolge der Gewerks-Mitgliedschaften pro User (Position der Gewerke),
+        // als Fallback für die Buchungs-Attribution
+        $craftsByUser = [];
+        foreach ($crafts as $craft) {
+            foreach ($craft->users->unique('id') as $user) {
+                $craftsByUser[$user->id][] = $craft->id;
+            }
+        }
+
         $rows = collect();
         $yearAccumulator = [];
         $currentYear = null;
 
         foreach ($months as $month) {
             $monthKey = $month->format('Y-m');
+
+            $bookingAttribution = $this->bookingAttributionByUser(
+                $monthKey,
+                $bookingsByUserAndMonth,
+                $shiftMinutesByType[User::class],
+                $craftsByUser,
+            );
 
             if ($currentYear !== null && $month->year !== $currentYear) {
                 $rows->push($this->yearSumRow($currentYear, $yearAccumulator));
@@ -101,7 +117,13 @@ class WorkTimeOverviewExportService
 
             $cells = [];
             foreach ($crafts as $craft) {
-                $cell = $this->craftCell($craft, $monthKey, $bookingsByUserAndMonth, $shiftMinutesByType);
+                $cell = $this->craftCell(
+                    $craft,
+                    $monthKey,
+                    $bookingsByUserAndMonth,
+                    $shiftMinutesByType,
+                    $bookingAttribution,
+                );
 
                 $cells[$craft->id] = $cell;
                 $yearAccumulator[$craft->id] = $this->addCells(
@@ -138,6 +160,7 @@ class WorkTimeOverviewExportService
         string $month,
         array $bookings,
         array $shiftMinutesByType,
+        array $bookingAttribution,
     ): array {
         $cell = $this->emptyCell();
 
@@ -146,9 +169,11 @@ class WorkTimeOverviewExportService
                 $cell,
                 $this->userCell(
                     $user,
+                    $craft->id,
                     $month,
                     $bookings,
                     $shiftMinutesByType[User::class][$craft->id] ?? [],
+                    $bookingAttribution,
                 ),
             );
         }
@@ -172,11 +197,25 @@ class WorkTimeOverviewExportService
      * @param array<int, array<string, int>> $shiftMinutes
      * @return array{soll_intern: int, ist_intern: int, soll_extern: int, ist_extern: int}
      */
-    private function userCell(User $user, string $month, array $bookings, array $shiftMinutes): array
-    {
+    private function userCell(
+        User $user,
+        int $craftId,
+        string $month,
+        array $bookings,
+        array $shiftMinutes,
+        array $bookingAttribution,
+    ): array {
         $booking = $bookings[$user->id][$month] ?? null;
-        $actualMinutes = $booking['ist'] ?? $shiftMinutes[$user->id][$month] ?? 0;
         $cell = $this->emptyCell();
+
+        // Buchungen (Soll/Ist) sind pro User, nicht pro Gewerk: sie zählen nur im
+        // Attributions-Gewerk, sonst fließen Personen in mehreren Gewerken mehrfach
+        // in Gesamt- und Jahressummen ein
+        if ($booking !== null && ($bookingAttribution[$user->id] ?? null) !== $craftId) {
+            return $cell;
+        }
+
+        $actualMinutes = $booking['ist'] ?? $shiftMinutes[$user->id][$month] ?? 0;
 
         if ($user->is_freelancer) {
             $cell['soll_extern'] = $booking['soll'] ?? 0;
@@ -189,6 +228,44 @@ class WorkTimeOverviewExportService
         $cell['ist_intern'] = $actualMinutes;
 
         return $cell;
+    }
+
+    /**
+     * Ordnet die Monats-Buchung jedes Users genau einem Gewerk zu: dem mit den meisten
+     * Schichtminuten des Users in diesem Monat, sonst dem ersten Mitglieds-Gewerk.
+     *
+     * @param array<int, array<string, array{soll: int, ist: int}>> $bookings
+     * @param array<int, array<int, array<string, int>>> $shiftMinutesByCraft [craftId][userId][Y-m] => minutes
+     * @param array<int, array<int>> $craftsByUser userId => craftIds in Gewerk-Reihenfolge
+     * @return array<int, int> userId => craftId
+     */
+    private function bookingAttributionByUser(
+        string $month,
+        array $bookings,
+        array $shiftMinutesByCraft,
+        array $craftsByUser,
+    ): array {
+        $attribution = [];
+
+        foreach ($bookings as $userId => $byMonth) {
+            if (!isset($byMonth[$month]) || !isset($craftsByUser[$userId])) {
+                continue;
+            }
+
+            $bestCraftId = $craftsByUser[$userId][0];
+            $bestMinutes = -1;
+            foreach ($craftsByUser[$userId] as $craftId) {
+                $minutes = $shiftMinutesByCraft[$craftId][$userId][$month] ?? 0;
+                if ($minutes > $bestMinutes) {
+                    $bestMinutes = $minutes;
+                    $bestCraftId = $craftId;
+                }
+            }
+
+            $attribution[$userId] = $bestCraftId;
+        }
+
+        return $attribution;
     }
 
     /**

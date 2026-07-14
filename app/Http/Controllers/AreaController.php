@@ -45,12 +45,17 @@ class AreaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
+        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+
         $this->areaService->createByRequest($request);
         return Redirect::route('areas.management');
     }
 
     public function update(Request $request, Area $area): RedirectResponse
     {
+        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+
         $this->areaService->updateByRequest($area, $request);
         return Redirect::route('areas.management');
     }

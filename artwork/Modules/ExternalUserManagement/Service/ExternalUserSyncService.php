@@ -58,6 +58,12 @@ class ExternalUserSyncService
                 // Erwartete Exception: User ohne E-Mail wird übersprungen
                 $skipped++;
                 $notify('warn', "Skipping user {$ldapUser['identifier']}: {$e->getMessage()}");
+            } catch (\Throwable $e) {
+                // Ein fehlgeschlagener User darf nicht den restlichen Lauf abbrechen
+                // (sonst stoppt z. B. ein einzelner DB-/Mail-Fehler den 30-Minuten-Sync komplett)
+                report($e);
+                $skipped++;
+                $notify('error', "Failed to sync user {$ldapUser['identifier']}");
             }
         }
 
@@ -94,8 +100,16 @@ class ExternalUserSyncService
                 $token = Password::broker()->createToken($user);
                 $externalUser->forceFill(['import_notification_sent_at' => now()])->save();
 
-                DB::afterCommit(function () use ($user, $token): void {
-                    $this->mailService->sendExternalUserImported($user, $token);
+                DB::afterCommit(function () use ($externalUser, $user, $token): void {
+                    try {
+                        $this->mailService->sendExternalUserImported($user, $token);
+                    } catch (\Throwable $e) {
+                        // Mail-Fehler (z. B. SMTP down) darf den Sync nicht abbrechen und die
+                        // Willkommens-Mail nicht dauerhaft verlieren: Flag zurücksetzen,
+                        // damit der nächste Lauf den Versand erneut versucht
+                        report($e);
+                        $externalUser->forceFill(['import_notification_sent_at' => null])->save();
+                    }
                 });
             }
         });

@@ -216,6 +216,7 @@ class HandleInertiaRequests extends Middleware
                 'inventoryDetailedArticlesAlwaysQuantityOne' => $generalSettings->inventory_detailed_articles_always_quantity_one,
                 'inventoryShowInventoryNumberAsName' => $generalSettings->inventory_show_inventory_number_as_name,
                 'inventoryNumberPrefix' => $generalSettings->inventory_number_prefix,
+                'inventoryArticleImageMaxSizeMb' => $generalSettings->inventory_article_image_max_size_mb,
                 'show_hints' => Auth::guest() ? false : false,
                 'rolesArray' => $rolesArray,
                 'permissionsArray' => $permissionsArray,

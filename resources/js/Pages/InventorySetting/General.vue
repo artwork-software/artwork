@@ -43,6 +43,31 @@
                 </div>
             </div>
         </div>
+
+        <div class="card white p-5 mt-4">
+            <h3 class="font-lexend font-semibold text-primary mb-4">
+                {{ $t('Article images') }}
+            </h3>
+            <div class="space-y-6">
+                <div>
+                    <BaseInput
+                        id="inventory_article_image_max_size_mb"
+                        v-model="imageSizeForm.inventory_article_image_max_size_mb"
+                        type="number"
+                        min="1"
+                        max="1024"
+                        :label="$t('Maximum size per article image (MB)')"
+                        @change="saveImageMaxSize"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                        {{ $t('Images larger than this are rejected when uploading article images. Note: the server upload limits (e.g. nginx/PHP) must allow at least this size.') }}
+                    </p>
+                    <p v-if="imageSizeForm.errors.inventory_article_image_max_size_mb" class="text-xs text-red-500 mt-1">
+                        {{ imageSizeForm.errors.inventory_article_image_max_size_mb }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </InventorySettingsHeader>
 </template>
 
@@ -65,6 +90,10 @@ const props = defineProps({
     inventoryNumberPrefix: {
         type: String,
         default: ''
+    },
+    inventoryArticleImageMaxSizeMb: {
+        type: Number,
+        default: 10
     }
 })
 
@@ -86,6 +115,16 @@ const save = (value) => {
 
 const saveDisplaySettings = () => {
     displayForm.patch(route('inventory-management.settings.general.update-inventory-display-settings'), {
+        preserveScroll: true
+    })
+}
+
+const imageSizeForm = useForm({
+    inventory_article_image_max_size_mb: props.inventoryArticleImageMaxSizeMb
+})
+
+const saveImageMaxSize = () => {
+    imageSizeForm.patch(route('inventory-management.settings.general.update-article-image-max-size'), {
         preserveScroll: true
     })
 }

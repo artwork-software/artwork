@@ -336,6 +336,144 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     }
 
     #[Test]
+    public function deleted_group_is_not_restored_after_shift_removal(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        $created = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02', '2026-08-03'],
+            false
+        );
+
+        $shift = Shift::factory()->create([
+            'project_id' => $project->id,
+            'start_date' => '2026-08-02',
+            'end_date' => '2026-08-02',
+        ]);
+        $this->service()->supersedeForShiftAssignment($shift, User::class, $worker->id);
+
+        $supersededRow = $created->first(fn ($row) => $row->date->format('Y-m-d') === '2026-08-02');
+        $activeRow = $created->first(fn ($row) => $row->date->format('Y-m-d') === '2026-08-03');
+
+        // Planer entfernt die gesamte Zuordnung — danach darf der Schicht-Entzug
+        // den supersedeten Tag nicht wieder herstellen (Zombie-Restore)
+        $this->service()->deleteAssignment($activeRow->fresh(), true);
+        $this->service()->restoreForShiftRemoval($shift, User::class, $worker->id);
+
+        $this->assertSoftDeleted('project_day_assignments', ['id' => $supersededRow->id]);
+    }
+
+    #[Test]
+    public function restore_is_skipped_on_free_day(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        $assignment = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        )->first();
+
+        $shift = Shift::factory()->create([
+            'project_id' => $project->id,
+            'start_date' => '2026-08-02',
+            'end_date' => '2026-08-02',
+        ]);
+        $this->service()->supersedeForShiftAssignment($shift, User::class, $worker->id);
+
+        // Person trägt danach "Frei" ein — der spätere Schicht-Entzug darf die
+        // verbindliche Zuordnung auf dem Frei-Tag nicht restaurieren
+        $worker->vacations()->create([
+            'date' => '2026-08-02',
+            'full_day' => true,
+            'type' => 'FREE_WORK',
+            'comment' => 'FREE_WORK',
+            'is_series' => false,
+            'created_by' => $worker->id,
+        ]);
+
+        $this->service()->restoreForShiftRemoval($shift, User::class, $worker->id);
+
+        $this->assertSoftDeleted('project_day_assignments', ['id' => $assignment->id]);
+        $this->assertNull(
+            ProjectDayAssignment::withTrashed()->find($assignment->id)->superseded_by_shift_id
+        );
+    }
+
+    #[Test]
+    public function removal_of_one_of_two_covering_shifts_repoints_the_superseded_reference(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        $assignment = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        )->first();
+
+        $qualificationId = \Artwork\Modules\Shift\Models\ShiftQualification::factory()->create()->id;
+        $makeShift = function () use ($project, $worker, $qualificationId) {
+            $shift = Shift::factory()->create([
+                'project_id' => $project->id,
+                'start_date' => '2026-08-02',
+                'end_date' => '2026-08-02',
+            ]);
+            \Artwork\Modules\Shift\Models\ShiftWorker::create([
+                'shift_id' => $shift->id,
+                'employable_type' => User::class,
+                'employable_id' => $worker->id,
+                'shift_qualification_id' => $qualificationId,
+            ]);
+
+            return $shift;
+        };
+
+        $shiftA = $makeShift();
+        $this->service()->supersedeForShiftAssignment($shiftA, User::class, $worker->id);
+        $shiftB = $makeShift();
+
+        // Schicht A wird entfernt, B deckt den Tag weiter ab: der Verweis muss auf B
+        // umgehängt werden, damit der spätere Entzug von B die Zuordnung restauriert
+        \Artwork\Modules\Shift\Models\ShiftWorker::query()
+            ->where('shift_id', $shiftA->id)
+            ->where('employable_id', $worker->id)
+            ->forceDelete();
+        $this->service()->restoreForShiftRemoval($shiftA, User::class, $worker->id);
+
+        $this->assertSoftDeleted('project_day_assignments', ['id' => $assignment->id]);
+        $this->assertSame(
+            $shiftB->id,
+            ProjectDayAssignment::withTrashed()->find($assignment->id)->superseded_by_shift_id
+        );
+
+        \Artwork\Modules\Shift\Models\ShiftWorker::query()
+            ->where('shift_id', $shiftB->id)
+            ->where('employable_id', $worker->id)
+            ->forceDelete();
+        $this->service()->restoreForShiftRemoval($shiftB, User::class, $worker->id);
+
+        $restored = ProjectDayAssignment::find($assignment->id);
+        $this->assertNotNull($restored);
+        $this->assertNull($restored->superseded_by_shift_id);
+    }
+
+    #[Test]
     public function shift_of_other_project_does_not_supersede_assignment(): void
     {
         $this->actingAsAdmin();

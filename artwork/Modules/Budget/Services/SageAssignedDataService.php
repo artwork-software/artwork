@@ -53,7 +53,12 @@ class SageAssignedDataService implements CollectiveBookingService
     {
         $this->sageAssignedDataRepository->update($sageAssignedData, $attributes);
 
-        $this->sageBookingLogRecorder->record('updated', $sageAssignedData);
+        // Nur echte Änderungen protokollieren: der tägliche Watermark-Sync liest den
+        // letzten Buchungstag jedes Mal neu ein — ohne Guard entstünden täglich
+        // "updated"-Einträge für unveränderte Buchungen
+        if ($sageAssignedData->wasChanged()) {
+            $this->sageBookingLogRecorder->record('updated', $sageAssignedData);
+        }
 
         return $sageAssignedData;
     }
@@ -123,17 +128,21 @@ class SageAssignedDataService implements CollectiveBookingService
 
     public function delete(SageAssignedData $sageAssignedData): void
     {
-        $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
         $columnCellId = $sageAssignedData->column_cell_id;
         $this->sageAssignedDataRepository->delete($sageAssignedData);
+        // Erst nach erfolgreichem Delete protokollieren — sonst behauptet das
+        // Protokoll bei einem Fehler eine Löschung, die nie passiert ist
+        $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
         $this->recalculateForCell($columnCellId);
     }
 
     public function forceDelete(SageAssignedData $sageAssignedData): bool
     {
-        $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
         $columnCellId = $sageAssignedData->column_cell_id;
         $result = $this->sageAssignedDataRepository->forceDelete($sageAssignedData);
+        if ($result) {
+            $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
+        }
         $this->recalculateForCell($columnCellId);
         return $result;
     }

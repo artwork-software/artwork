@@ -70,8 +70,16 @@ class UpdateArtwork extends Command
         $this->cleanupFalseConflicts();
         $this->migrateChangesHistoryToActivityLog();
         $this->backfillShiftPlanRequestShifts();
+        $this->generateInventoryArticleThumbnails();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function generateInventoryArticleThumbnails(): void
+    {
+        $this->section('Inventory Article Image Thumbnails');
+        // Idempotent: erzeugt nur fehlende Thumbnails und konvertiert HEIC-Altbestände nach JPEG.
+        $this->call('artwork:generate-inventory-article-thumbnails');
     }
 
     private function backfillShiftPlanRequestShifts(): void

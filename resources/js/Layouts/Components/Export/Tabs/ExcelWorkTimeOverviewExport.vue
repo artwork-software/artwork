@@ -140,7 +140,15 @@ const isActivePreset = (preset) => {
         end.month === preset.value[1].month && end.year === preset.value[1].year;
 };
 
-const toMonthString = (entry) => `${entry.year}-${String(entry.month + 1).padStart(2, "0")}`;
+// Der Month-Picker liefert {month, year}-Objekte, Preset-Klicks im Popup können
+// aber Date-Instanzen durchreichen — beide Formen akzeptieren, sonst entsteht
+// "undefined-NaN" und der Export-Button bleibt kommentarlos deaktiviert
+const toMonthString = (entry) => {
+    if (entry instanceof Date) {
+        return `${entry.getFullYear()}-${String(entry.getMonth() + 1).padStart(2, "0")}`;
+    }
+    return `${entry.year}-${String(entry.month + 1).padStart(2, "0")}`;
+};
 
 const startMonth = computed(() => monthRange.value?.[0] ? toMonthString(monthRange.value[0]) : "");
 const endMonth = computed(() => monthRange.value?.[1] ? toMonthString(monthRange.value[1]) : "");

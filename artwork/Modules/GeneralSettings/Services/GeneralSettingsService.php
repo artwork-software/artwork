@@ -124,4 +124,15 @@ class GeneralSettingsService
             (string) $request->get('inventory_number_prefix', '');
         $this->generalSettings->save();
     }
+
+    public function updateInventoryArticleImageMaxSize(Request $request): void
+    {
+        $validated = $request->validate([
+            'inventory_article_image_max_size_mb' => ['required', 'integer', 'min:1', 'max:1024'],
+        ]);
+
+        $this->generalSettings->inventory_article_image_max_size_mb =
+            (int) $validated['inventory_article_image_max_size_mb'];
+        $this->generalSettings->save();
+    }
 }

@@ -15,6 +15,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 
 class ExternalUserSourceController extends Controller
@@ -119,13 +120,26 @@ class ExternalUserSourceController extends Controller
             ], 422);
         }
 
+        // Verhindert parallele Läufe (manueller Klick vs. 30-Minuten-Scheduler):
+        // doppelte firstOrCreate-Races und doppelte Willkommens-Mails
+        $lock = Cache::lock('external-user-sync-' . $externalUserSource->id, 600);
+        if (!$lock->get()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('A sync for this source is already running.'),
+            ], 409);
+        }
+
         try {
             $result = $this->externalUserSyncService->syncSource($externalUserSource);
         } catch (\Throwable $e) {
+            report($e);
             return response()->json([
                 'success' => false,
-                'message' => __('Sync failed: ') . $e->getMessage(),
+                'message' => __('Sync failed. Please check the configuration and the logs.'),
             ], 500);
+        } finally {
+            $lock->release();
         }
 
         return response()->json([
@@ -179,9 +193,10 @@ class ExternalUserSourceController extends Controller
         try {
             $users = $this->ldapService->previewUsers($source, 3);
         } catch (\Throwable $e) {
+            report($e);
             return response()->json([
                 'success' => false,
-                'message' => __('LDAP connection successful, but the user search failed: ') . $e->getMessage(),
+                'message' => __('LDAP connection successful, but the user search failed.'),
                 'users' => [],
             ], 500);
         }

@@ -566,9 +566,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/project-day-assignments/{projectDayAssignment}/accept-wish', [ProjectDayAssignmentController::class, 'acceptWish'])
         ->name('project-day-assignments.accept-wish');
     Route::get('/projects/{project}/day-assignments', [ProjectDayAssignmentController::class, 'forProject'])
-        ->name('projects.day-assignments');
+        ->name('projects.day-assignments')
+        ->can('can view shift plan');
     Route::get('/shifts/{shift}/project-assignees', [ProjectDayAssignmentController::class, 'forShift'])
-        ->name('shifts.project-assignees');
+        ->name('shifts.project-assignees')
+        ->can('can view shift plan');
     Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
         ->name('events.project-assignment-impact');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
@@ -949,7 +951,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/shifts/export/craft-distribution', CraftDistributionExportController::class)
         ->name('shifts.export.craft-distribution')
-        ->can('can view shift plan');
+        ->can('can view shift plan')
+        // Export enthält namentliche Stunden einzelner Personen — gleiches Gating wie
+        // WorkingHourService/EventController (Stunden anderer nur mit dieser Permission)
+        ->can('can view shift worker hours');
 
     Route::post('/shift/delete/calendar/cell', [ShiftController::class, 'deleteCalendarCell'])
         ->name('multi-edit.calendar.cell.delete')
@@ -2662,6 +2667,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
                 ->name('inventory-management.settings.general.update-inventory-display-settings');
+
+            Route::patch('/general/article-image-max-size', [GeneralSettingsController::class, 'updateInventoryArticleImageMaxSize'])
+                ->name('inventory-management.settings.general.update-article-image-max-size');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');

@@ -223,9 +223,12 @@ const conflictingWishDates = computed(() => {
     const rangeEnd = entry.end_date || entry.start_date
     return (props.projectWishes ?? [])
         .filter(wish => wish.date >= entry.start_date && wish.date <= rangeEnd)
-        .map(wish => wish.date.split('-').reverse().join('.'))
+        .map(wish => wish.date)
         .filter((value, index, arr) => arr.indexOf(value) === index)
+        // erst auf ISO sortieren, dann formatieren — DD.MM.YYYY sortiert über
+        // Monatsgrenzen sonst falsch
         .sort()
+        .map(date => date.split('-').reverse().join('.'))
 })
 
 // Zeitraum und wöchentliche Wiederholung schließen sich aus

@@ -18,8 +18,10 @@ class WorkTimeOverviewExportController
     public function __invoke(WorkTimeOverviewExportRequest $request): BinaryFileResponse
     {
         $validated = $request->validated();
-        $rangeStart = Carbon::createFromFormat('Y-m', $validated['start_month'])->startOfMonth();
-        $rangeEnd = Carbon::createFromFormat('Y-m', $validated['end_month'])->endOfMonth();
+        // 'Y-m' ohne Tag erbt den heutigen Monatstag (am 31. → Overflow in den Folgemonat),
+        // daher explizit auf den Monatsersten parsen
+        $rangeStart = Carbon::createFromFormat('Y-m-d', $validated['start_month'] . '-01')->startOfMonth();
+        $rangeEnd = Carbon::createFromFormat('Y-m-d', $validated['end_month'] . '-01')->endOfMonth();
         $language = $request->user()->language;
         $matrix = $this->exportService->buildMatrix(
             $rangeStart,

@@ -198,9 +198,11 @@ class ToolSettingsInterfacesController extends Controller
     {
         $this->authorize('view', Token::class);
 
+        // clampen: perPage=0 wirft DivisionByZeroError (500), riesige Werte liefern
+        // den kompletten Log als eine Antwort
         $logs = SageBookingLog::with('user:id,first_name,last_name')
             ->orderByDesc('created_at')
-            ->paginate((int) $request->integer('perPage', 15));
+            ->paginate(min(max((int) $request->integer('perPage', 15), 1), 100));
 
         return response()->json(['logs' => $logs]);
     }
@@ -216,7 +218,7 @@ class ToolSettingsInterfacesController extends Controller
 
         $entries = $sageBookingLog->entries()
             ->orderBy('id')
-            ->paginate((int) $request->integer('perPage', 25));
+            ->paginate(min(max((int) $request->integer('perPage', 25), 1), 100));
 
         return response()->json([
             'log' => $sageBookingLog->load('user:id,first_name,last_name'),

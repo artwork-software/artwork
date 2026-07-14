@@ -264,7 +264,7 @@
     <ExportModal
         v-if="showShiftPlanExportModal"
         @close="showShiftPlanExportModal = false"
-        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT, exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]"
+        :enums="shiftPlanExportTabs"
         :configuration="shiftPlanExportConfiguration"
     />
 </template>
@@ -350,6 +350,15 @@ const activeSettings = computed(() => {
 });
 
 // Configuration handed to the export modal.
+const shiftPlanExportTabs = computed(() => {
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT];
+    // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
+    if (can('can view shift worker hours') || hasAdminRole()) {
+        tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT);
+    }
+    return tabs;
+});
+
 const shiftPlanExportConfiguration = computed(() => {
     const projectId = usePage().props.projectId ?? null;
     const settings = activeSettings.value;

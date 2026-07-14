@@ -225,10 +225,17 @@ const wishEntries = computed(() => {
 })
 
 const deleteWish = async (entry) => {
-    await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: entry.id }), {
-        params: { whole_group: true },
-    })
-    router.reload({ only: ['projectWishes'] })
+    try {
+        await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: entry.id }), {
+            params: { whole_group: true },
+        })
+    } catch (e) {
+        console.error('Deleting project wish failed', e)
+    } finally {
+        // Reload auch im Fehlerfall: zeigt den tatsächlichen Serverstand statt
+        // eines stummen, evtl. veralteten Eintrags
+        router.reload({ only: ['projectWishes'] })
+    }
 }
 
 const hasNoEntries = computed(

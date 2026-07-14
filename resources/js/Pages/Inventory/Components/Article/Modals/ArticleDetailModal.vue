@@ -28,7 +28,7 @@
                         </template>
                         <template #thumbnail="slotProps">
                             <img
-                                :src="'/storage/' + slotProps.item.image"
+                                :src="'/storage/' + (slotProps.item.thumbnail || slotProps.item.image)"
                                 :alt="slotProps.item.alt"
                                 style="display: block"
                                 @error="(e) => (e.target.src = usePage().props.big_logo)"
@@ -57,10 +57,12 @@
                                 </div>
                             </div>
                             <img
-                                :src="'/storage/' + image.image"
+                                :src="'/storage/' + (image.thumbnail || image.image)"
                                 alt=""
                                 style="cursor: pointer"
                                 class="cursor-pointer rounded-lg"
+                                loading="lazy"
+                                decoding="async"
                                 @click="imageClick(index)"
                             />
                         </div>

@@ -92,6 +92,10 @@ createInertiaApp({
         if (status === 401 || status === 419 || status === 409) {
             alert('Deine Sitzung ist abgelaufen. Die Seite wird neu geladen, damit du dich wieder einloggen kannst.')
             window.location.reload()
+        } else if (status === 413) {
+            // Server (nginx client_max_body_size / PHP post_max_size) hat den
+            // Request abgelehnt, weil die Dateien zusammen zu groß sind.
+            alert('Die hochgeladenen Dateien sind zusammen zu groß für den Server. Bitte lade weniger oder kleinere Dateien auf einmal hoch.')
         }
     })
 })

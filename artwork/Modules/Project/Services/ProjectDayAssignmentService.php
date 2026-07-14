@@ -201,64 +201,89 @@ class ProjectDayAssignmentService
             return new Collection();
         }
 
-        $existingDates = ProjectDayAssignment::query()
-            ->where('project_id', $project->id)
-            ->forEmployable($employableType, $employableId)
-            ->where('type', $type->value)
-            ->whereIn('date', $dates)
-            ->pluck('date')
-            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
-
-        $shiftCoveredDates = $type === ProjectDayAssignmentType::BINDING
-            ? $this->getShiftCoveredDates($project->id, $employableType, $employableId, $dates->first(), $dates->last())
-            : collect();
-
-        $datesToCreate = $dates
-            ->reject(static fn (string $date) => $existingDates->contains($date))
-            ->reject(static fn (string $date) => $shiftCoveredDates->contains($date))
-            ->values();
-
-        if ($datesToCreate->isEmpty()) {
-            return new Collection();
-        }
-
         $groupId = (string) Str::uuid();
         $created = new Collection();
 
-        DB::transaction(function () use (
+        // Lock pro Projekt/Person: Duplikat-Prüfung und Insert müssen zusammen atomar
+        // sein (Doppel-Submit/paralleler zweiter Planer erzeugt sonst doppelte Zeilen —
+        // ein Unique-Index ist wegen SoftDeletes bewusst nicht möglich)
+        $lock = \Illuminate\Support\Facades\Cache::lock(
+            sprintf('pda-create-%d-%s-%d', $project->id, $employableType, $employableId),
+            15
+        );
+
+        $datesToCreate = $lock->block(10, function () use (
             $project,
             $employableType,
             $employableId,
             $type,
-            $datesToCreate,
+            $dates,
             $isFullPeriod,
             $groupId,
             $created
-        ): void {
-            // Verbindliche Einträge absorbieren bestehende Wünsche derselben Person
-            // für dasselbe Projekt an denselben Tagen.
-            if ($type === ProjectDayAssignmentType::BINDING) {
-                ProjectDayAssignment::query()
-                    ->where('project_id', $project->id)
-                    ->forEmployable($employableType, $employableId)
-                    ->wish()
-                    ->whereIn('date', $datesToCreate)
-                    ->delete();
+        ) {
+            $existingDates = ProjectDayAssignment::query()
+                ->where('project_id', $project->id)
+                ->forEmployable($employableType, $employableId)
+                ->where('type', $type->value)
+                ->whereIn('date', $dates)
+                ->pluck('date')
+                ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
+
+            $shiftCoveredDates = $type === ProjectDayAssignmentType::BINDING
+                ? $this->getShiftCoveredDates($project->id, $employableType, $employableId, $dates->first(), $dates->last())
+                : collect();
+
+            $datesToCreate = $dates
+                ->reject(static fn (string $date) => $existingDates->contains($date))
+                ->reject(static fn (string $date) => $shiftCoveredDates->contains($date))
+                ->values();
+
+            if ($datesToCreate->isEmpty()) {
+                return $datesToCreate;
             }
 
-            foreach ($datesToCreate as $date) {
-                $created->push(ProjectDayAssignment::create([
-                    'project_id' => $project->id,
-                    'employable_type' => $employableType,
-                    'employable_id' => $employableId,
-                    'date' => $date,
-                    'type' => $type->value,
-                    'group_id' => $groupId,
-                    'is_full_period' => $isFullPeriod,
-                    'created_by' => Auth::id(),
-                ]));
-            }
+            DB::transaction(function () use (
+                $project,
+                $employableType,
+                $employableId,
+                $type,
+                $datesToCreate,
+                $isFullPeriod,
+                $groupId,
+                $created
+            ): void {
+                // Verbindliche Einträge absorbieren bestehende Wünsche derselben Person
+                // für dasselbe Projekt an denselben Tagen.
+                if ($type === ProjectDayAssignmentType::BINDING) {
+                    ProjectDayAssignment::query()
+                        ->where('project_id', $project->id)
+                        ->forEmployable($employableType, $employableId)
+                        ->wish()
+                        ->whereIn('date', $datesToCreate)
+                        ->delete();
+                }
+
+                foreach ($datesToCreate as $date) {
+                    $created->push(ProjectDayAssignment::create([
+                        'project_id' => $project->id,
+                        'employable_type' => $employableType,
+                        'employable_id' => $employableId,
+                        'date' => $date,
+                        'type' => $type->value,
+                        'group_id' => $groupId,
+                        'is_full_period' => $isFullPeriod,
+                        'created_by' => Auth::id(),
+                    ]));
+                }
+            });
+
+            return $datesToCreate;
         });
+
+        if ($datesToCreate->isEmpty()) {
+            return new Collection();
+        }
 
         if ($type === ProjectDayAssignmentType::BINDING) {
             $this->ensureUserInProjectTeam($project, $employableType, $employableId);
@@ -304,6 +329,14 @@ class ProjectDayAssignmentService
         $lastDate = $rows->max('date');
 
         ProjectDayAssignment::query()->whereIn('id', $rows->pluck('id'))->delete();
+
+        // Bereits von Schichten supersedete (soft-gelöschte) Zeilen desselben Scopes
+        // dürfen nach dem expliziten Löschen nicht per Schicht-Entzug wiederauferstehen
+        ProjectDayAssignment::onlyTrashed()
+            ->where('group_id', $assignment->group_id)
+            ->whereNotNull('superseded_by_shift_id')
+            ->when(!$wholeGroup, static fn ($query) => $query->whereDate('date', $assignment->date))
+            ->update(['superseded_by_shift_id' => null]);
 
         if ($assignment->isBinding() && $assignment->project) {
             $this->logProjectChange(
@@ -356,9 +389,21 @@ class ProjectDayAssignmentService
             ->pluck('date')
             ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
 
-        DB::transaction(static function () use ($wishRows, $existingBindingDates): void {
+        // Tage mit bestehender Schicht desselben Projekts werden absorbiert statt
+        // konvertiert (Parität zu createAssignments: dort werden sie übersprungen)
+        $shiftCoveredDates = $this->getShiftCoveredDates(
+            $assignment->project_id,
+            $assignment->employable_type,
+            $assignment->employable_id,
+            $wishRows->min('date')->format('Y-m-d'),
+            $wishRows->max('date')->format('Y-m-d')
+        );
+
+        DB::transaction(static function () use ($wishRows, $existingBindingDates, $shiftCoveredDates): void {
             foreach ($wishRows as $row) {
-                if ($existingBindingDates->contains($row->date->format('Y-m-d'))) {
+                $date = $row->date->format('Y-m-d');
+
+                if ($existingBindingDates->contains($date) || $shiftCoveredDates->contains($date)) {
                     $row->delete();
 
                     continue;
@@ -416,10 +461,12 @@ class ProjectDayAssignmentService
             ->betweenDates($shift->start_date, $shift->end_date)
             ->get();
 
-        foreach ($assignments as $assignment) {
-            $assignment->update(['superseded_by_shift_id' => $shift->id]);
-            $assignment->delete();
-        }
+        DB::transaction(static function () use ($assignments, $shift): void {
+            foreach ($assignments as $assignment) {
+                $assignment->update(['superseded_by_shift_id' => $shift->id]);
+                $assignment->delete();
+            }
+        });
     }
 
     /**
@@ -439,8 +486,9 @@ class ProjectDayAssignmentService
         }
 
         $projectId = $supersededRows->first()->project_id;
+        $dateStrings = $supersededRows->pluck('date')->map(static fn ($date) => $date->format('Y-m-d'));
 
-        $stillCoveredDates = $this->getShiftCoveredDates(
+        $coveringShiftIdsByDate = $this->getCoveringShiftIdsByDate(
             $projectId,
             $employableType,
             $employableId,
@@ -452,8 +500,20 @@ class ProjectDayAssignmentService
         $activeRows = ProjectDayAssignment::query()
             ->where('project_id', $projectId)
             ->forEmployable($employableType, $employableId)
-            ->whereIn('date', $supersededRows->pluck('date')->map(static fn ($date) => $date->format('Y-m-d')))
+            ->whereIn('date', $dateStrings)
             ->get();
+
+        // Zwischenzeitliche Frei-/Abwesenheits-Einträge: dort nicht restaurieren
+        // (Frei löst verbindliche Zuordnungen und Wünsche auf, Abwesenheit nur Wünsche —
+        // gleiche Invariante wie handleVacationEntry)
+        $vacationTypesByDate = \Artwork\Modules\Vacation\Models\Vacation::query()
+            ->without(['series', 'conflicts'])
+            ->where('vacationer_type', $employableType)
+            ->where('vacationer_id', $employableId)
+            ->whereIn('date', $dateStrings)
+            ->whereIn('type', ['FREE_WORK', 'OFF_WORK', 'NOT_AVAILABLE'])
+            ->get(['date', 'type'])
+            ->groupBy(static fn ($vacation) => Carbon::parse($vacation->date)->format('Y-m-d'));
 
         foreach ($supersededRows as $row) {
             $date = $row->date->format('Y-m-d');
@@ -463,7 +523,29 @@ class ProjectDayAssignmentService
                     && $active->type === $row->type
             );
 
-            if ($hasActiveDuplicate || $stillCoveredDates->contains($date)) {
+            if ($hasActiveDuplicate) {
+                $row->update(['superseded_by_shift_id' => null]);
+
+                continue;
+            }
+
+            if ($coveringShiftIdsByDate->has($date)) {
+                // Verweis auf die noch abdeckende Schicht umhängen — sonst findet deren
+                // späterer Entzug die Zeile nicht mehr und die Zuordnung geht verloren
+                $row->update(['superseded_by_shift_id' => $coveringShiftIdsByDate->get($date)]);
+
+                continue;
+            }
+
+            $dayVacations = $vacationTypesByDate->get($date);
+            $dissolvedByVacation = $dayVacations !== null && (
+                $dayVacations->contains(static fn ($vacation) => $vacation->type === 'FREE_WORK')
+                || !$row->isBinding()
+            );
+
+            if ($dissolvedByVacation) {
+                $row->update(['superseded_by_shift_id' => null]);
+
                 continue;
             }
 
@@ -697,6 +779,31 @@ class ProjectDayAssignmentService
         string $rangeEnd,
         ?int $excludeShiftId = null
     ): SupportCollection {
+        return $this->getCoveringShiftIdsByDate(
+            $projectId,
+            $employableType,
+            $employableId,
+            $rangeStart,
+            $rangeEnd,
+            $excludeShiftId
+        )->keys()->values();
+    }
+
+    /**
+     * Wie getShiftCoveredDates, aber als Map Y-m-d => abdeckende shift_id —
+     * damit beim Schicht-Entzug der superseded_by_shift_id-Verweis auf eine
+     * noch abdeckende Schicht umgehängt werden kann.
+     *
+     * @return SupportCollection<string, int>
+     */
+    private function getCoveringShiftIdsByDate(
+        int $projectId,
+        string $employableType,
+        int $employableId,
+        string $rangeStart,
+        string $rangeEnd,
+        ?int $excludeShiftId = null
+    ): SupportCollection {
         $shiftRanges = ShiftWorker::query()
             ->where('employable_type', $employableType)
             ->where('employable_id', $employableId)
@@ -726,11 +833,15 @@ class ProjectDayAssignmentService
             }
 
             foreach (CarbonPeriod::create($shift->start_date, $shift->end_date) as $day) {
-                $covered->push($day->format('Y-m-d'));
+                $key = $day->format('Y-m-d');
+
+                if (!$covered->has($key)) {
+                    $covered->put($key, (int) $shift->id);
+                }
             }
         }
 
-        return $covered->unique()->values();
+        return $covered;
     }
 
     private function resolveShiftProjectId(Shift $shift): ?int
@@ -854,6 +965,14 @@ class ProjectDayAssignmentService
 
         // Ganz-Zeitraum-Gruppen auf den neuen Zeitraum re-materialisieren
         $rematerialized = 0;
+
+        // Gleicher Guard wie createFullPeriodAssignments: ein kaputter Termin (z. B.
+        // Tippfehler-Jahr) dehnt den Zeitraum — ohne Cap würden hier synchron im
+        // Event-Save-Request tausende Zeilen pro Gruppe materialisiert
+        if ($period['start']->diffInDays($period['end']) > self::MAX_FULL_PERIOD_DAYS) {
+            return ['dissolved' => $dissolvedRows, 'rematerialized' => 0];
+        }
+
         $fullPeriodGroups = ProjectDayAssignment::query()
             ->where('project_id', $project->id)
             ->where('is_full_period', true)
@@ -870,8 +989,55 @@ class ProjectDayAssignmentService
 
             $existingDates = $rows->map(static fn ($row) => $row->date->format('Y-m-d'));
 
-            $missingDates = $targetDates->reject(static fn ($date) => $existingDates->contains($date));
+            // Von Schichten supersedete Tage der Gruppe gelten nicht als fehlend —
+            // die Zuordnung ist dort durch die Schicht konkretisiert (Supersede-Design)
+            $supersededDates = ProjectDayAssignment::onlyTrashed()
+                ->where('group_id', $groupId)
+                ->whereNotNull('superseded_by_shift_id')
+                ->pluck('date')
+                ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
+
+            // Aktive Zeilen anderer Gruppen (gleiches Projekt/Person/Typ, z. B. Einzeltage)
+            // dürfen nicht dupliziert werden
+            $otherGroupDates = ProjectDayAssignment::query()
+                ->where('project_id', $first->project_id)
+                ->forEmployable($first->employable_type, $first->employable_id)
+                ->where('type', $first->type)
+                ->where('group_id', '!=', $groupId)
+                ->whereBetween('date', [$targetDates->first(), $targetDates->last()])
+                ->pluck('date')
+                ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'));
+
+            // Verbindliche: Tage mit bestehender Schicht desselben Projekts überspringen
+            // (Parität zu createAssignments)
+            $shiftCoveredDates = $first->isBinding()
+                ? $this->getShiftCoveredDates(
+                    $first->project_id,
+                    $first->employable_type,
+                    $first->employable_id,
+                    $targetDates->first(),
+                    $targetDates->last()
+                )
+                : collect();
+
+            $missingDates = $targetDates
+                ->reject(static fn ($date) => $existingDates->contains($date))
+                ->reject(static fn ($date) => $supersededDates->contains($date))
+                ->reject(static fn ($date) => $otherGroupDates->contains($date))
+                ->reject(static fn ($date) => $shiftCoveredDates->contains($date));
             $obsoleteRows = $rows->reject(static fn ($row) => $targetDates->contains($row->date->format('Y-m-d')));
+
+            // Supersedete Zeilen außerhalb des neuen Zeitraums neutralisieren: ein späterer
+            // Schicht-Entzug darf keine Zuordnung außerhalb des Projektzeitraums restaurieren
+            ProjectDayAssignment::onlyTrashed()
+                ->where('group_id', $groupId)
+                ->whereNotNull('superseded_by_shift_id')
+                ->where(static function ($query) use ($targetDates): void {
+                    $query
+                        ->whereDate('date', '<', $targetDates->first())
+                        ->orWhereDate('date', '>', $targetDates->last());
+                })
+                ->update(['superseded_by_shift_id' => null]);
 
             if ($missingDates->isEmpty() && $obsoleteRows->isEmpty()) {
                 continue;

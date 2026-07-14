@@ -1,5 +1,12 @@
 {
     "Filter name": "Filter name",
+    "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP and SVG.": "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP and SVG.",
+    "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.": "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.",
+    "The image \"{0}\" is too large ({1} MB) – each image may be a maximum of {2} MB.": "The image \"{0}\" is too large ({1} MB) – each image may be a maximum of {2} MB.",
+    "The article could not be saved:": "The article could not be saved:",
+    "Article images": "Article images",
+    "Maximum size per article image (MB)": "Maximum size per article image (MB)",
+    "Images larger than this are rejected when uploading article images. Note: the server upload limits (e.g. nginx/PHP) must allow at least this size.": "Images larger than this are rejected when uploading article images. Note: the server upload limits (e.g. nginx/PHP) must allow at least this size.",
     "Switch view": "Switch view",
     "Here you can specify whether to search all properties or only a specific one.": "Here you can specify whether to search all properties or only a specific one.",
     "Opens your product basket. Enable the toggle next to it to add articles by clicking them in the overview; when you are done, open the basket here, make final adjustments and create a material issue from it.": "Opens your product basket. Enable the toggle next to it to add articles by clicking them in the overview; when you are done, open the basket here, make final adjustments and create a material issue from it.",
@@ -5186,5 +5193,16 @@
     "Project assignment of {0} for {1} ({2}) was removed": "Project assignment of {0} for {1} ({2}) was removed",
     "Project wish of {0} for {1} ({2}) was removed": "Project wish of {0} for {1} ({2}) was removed",
     "Project wish of {0} for {1} ({2}) was accepted as binding assignment": "Project wish of {0} for {1} ({2}) was accepted as binding assignment",
-    "Project assignment of {0} for {1} ({2}) was dissolved by a free day entry": "Project assignment of {0} for {1} ({2}) was dissolved by a free day entry"
+    "Project assignment of {0} for {1} ({2}) was dissolved by a free day entry": "Project assignment of {0} for {1} ({2}) was dissolved by a free day entry",
+    "Sync now": "Sync now",
+    "Syncing...": "Syncing...",
+    "Sync failed": "Sync failed",
+    "Activate this source before syncing": "Activate this source before syncing",
+    "First found users": "First found users",
+    "Manual sync is only available for LDAP / Active Directory sources.": "Manual sync is only available for LDAP / Active Directory sources.",
+    "This source is inactive. Activate it before syncing.": "This source is inactive. Activate it before syncing.",
+    "A sync for this source is already running.": "A sync for this source is already running.",
+    "Sync failed. Please check the configuration and the logs.": "Sync failed. Please check the configuration and the logs.",
+    ":synced of :total users synced (:skipped skipped).": ":synced of :total users synced (:skipped skipped).",
+    "LDAP connection successful, but the user search failed.": "LDAP connection successful, but the user search failed."
 }

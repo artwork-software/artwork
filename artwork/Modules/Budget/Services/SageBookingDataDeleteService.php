@@ -91,7 +91,12 @@ readonly class SageBookingDataDeleteService
 
         foreach ($sageAssignedDataToDelete as $data) {
             if ($data->is_collective_booking) {
-                $this->sageAssignedDataService->deleteChildData($data);
+                // Kinder einzeln über den Service löschen (statt deleteChildData direkt am
+                // Model), damit jede Löschung im Booking-Log landet — Parität zum
+                // Not-Assigned-Pfad oben
+                foreach ($data->findChildren()->get() as $child) {
+                    $this->sageAssignedDataService->delete($child);
+                }
             }
             $this->sageAssignedDataService->delete($data);
         }

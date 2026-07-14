@@ -6,11 +6,17 @@ use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
+use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class InventoryArticleRepository
 {
+    public function __construct(
+        private readonly InventoryArticleImageService $imageService
+    ) {
+    }
+
     public function count(): int
     {
         return InventoryArticle::count();
@@ -217,8 +223,7 @@ class InventoryArticleRepository
         }
 
         foreach ($images as $index => $image) {
-            $created = $article->images()->create([
-                'image' => $image->store('inventory_articles', 'public'),
+            $created = $article->images()->create($this->imageService->store($image) + [
                 'is_main_image' => false,
                 'order' => 0
             ]);

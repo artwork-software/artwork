@@ -193,6 +193,11 @@ class VacationController extends Controller
                 ->get();
             foreach ($shifts as $shift) {
                 $shift->users()->detach($user->id);
+                // Parität zu ShiftWorkerService::removeFromShift: durch diese Schicht
+                // supersedete Projektzuordnungen auflösen bzw. umhängen — sonst stranden
+                // sie mit Verweis auf eine Schicht, in der die Person nicht mehr steht
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->restoreForShiftRemoval($shift, User::class, $user->id);
             }
         }
 
@@ -259,6 +264,8 @@ class VacationController extends Controller
                 ->get();
             foreach ($shifts as $shift) {
                 $shift->freelancer()->detach($freelancer->id);
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->restoreForShiftRemoval($shift, Freelancer::class, $freelancer->id);
             }
         }
 
@@ -325,6 +332,8 @@ class VacationController extends Controller
                 ->get();
             foreach ($shifts as $shift) {
                 $shift->serviceProvider()->detach($serviceProvider->id);
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->restoreForShiftRemoval($shift, ServiceProvider::class, $serviceProvider->id);
             }
         }
 

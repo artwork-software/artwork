@@ -24,9 +24,26 @@ final class CraftDistributionExportControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function itRequiresShiftWorkerHoursPermission(): void
+    {
+        // Export enthält namentliche Stunden einzelner Personen — Schichtplan-Sicht allein reicht nicht
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $universalCraft = Craft::factory()->create(['universally_applicable' => true]);
+
+        $this->get(route('shifts.export.craft-distribution', [
+            'start_date' => '2026-06-01',
+            'end_date' => '2026-06-30',
+            'universal_craft_id' => $universalCraft->id,
+        ]))->assertForbidden();
+    }
+
+    #[Test]
     public function itValidatesTheDateRangeAndUniversalCraft(): void
     {
-        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $this->actingAsUserWith([
+            PermissionEnum::VIEW_SHIFT_PLAN->value,
+            PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
+        ]);
         $craft = Craft::factory()->create(['universally_applicable' => false]);
 
         $this->get(route('shifts.export.craft-distribution', [
@@ -40,7 +57,10 @@ final class CraftDistributionExportControllerTest extends FeatureTestCase
     public function itDownloadsTheCraftDistributionWorkbook(): void
     {
         Excel::fake();
-        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $this->actingAsUserWith([
+            PermissionEnum::VIEW_SHIFT_PLAN->value,
+            PermissionEnum::CAN_VIEW_SHIFT_WORKER_HOURS->value,
+        ]);
         $universalCraft = Craft::factory()->create(['universally_applicable' => true]);
         $craft = Craft::factory()->create();
 

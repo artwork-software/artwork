@@ -4,7 +4,7 @@
         @click="showArticleDetail = true"
     >
         <div v-if="!hideImage" class="flex items-center justify-center">
-            <img :src="getMainImageInImage.image" @error="handleImageError" alt="" :class="imageClasses" />
+            <img :src="getMainImageInImage.image" @error="handleImageError" alt="" :class="imageClasses" loading="lazy" decoding="async" />
         </div>
 
         <div :class="hideImage ? '' : 'mt-4'">
@@ -178,16 +178,12 @@ const hasImage = computed(() => {
 const getMainImageInImage = computed(() => {
     const images = props.item.images || []
 
-    const mainImage = images.find((image) => image.is_main_image)
+    // The overview only renders a small preview — serve the WebP thumbnail
+    // and fall back to the original for images without one (e.g. SVG).
+    const mainImage = images.find((image) => image.is_main_image) ?? images[0]
     if (mainImage) {
         return {
-            image: '/storage/' + mainImage.image,
-        }
-    }
-
-    if (images.length > 0) {
-        return {
-            image: '/storage/' + images[0].image,
+            image: '/storage/' + (mainImage.thumbnail || mainImage.image),
         }
     }
 

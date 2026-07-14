@@ -1257,6 +1257,9 @@ async function doSaveEvent() {
         isLoading.value = false
         return
     }
+    // Bestätigung gilt nur für genau diesen Speichervorgang — sonst überspringt
+    // ein späteres erneutes Verschieben im selben Modal den Precheck stumm
+    assignmentImpactConfirmed = false
 
     if (!props.requiresAxiosRequests &&
         (props.usedInBulkComponent ||

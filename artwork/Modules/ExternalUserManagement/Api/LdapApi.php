@@ -72,7 +72,11 @@ class LdapApi implements ExternalUserManagementApi
         $filter = trim((string) $filter);
 
         if ($filter === '') {
-            return '(objectClass=user)';
+            // In AD haben auch Computer-/gMSA-Konten objectClass=user; objectCategory=person
+            // schließt sie aus (ersetzt den früheren RejectComputerObjectClass-Scope des
+            // ActiveDirectory\User-Models). Nicht-AD-Verzeichnisse brauchen ohnehin einen
+            // eigenen user_filter.
+            return '(&(objectCategory=person)(objectClass=user))';
         }
 
         if (!str_starts_with($filter, '(')) {

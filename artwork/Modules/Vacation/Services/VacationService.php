@@ -201,6 +201,20 @@ readonly class VacationService
 
         $this->invalidateVacationCache($vacation);
 
+        // Parität zu create()/updateEntry(): auch der Legacy-Update-Pfad (z. B. Datums-
+        // Verschiebung) löst Projektzuordnungen/-wünsche am neuen Tag auf
+        $vacationer = $vacation->vacationer_type::find($vacation->vacationer_id);
+        if ($vacationer instanceof User
+            || $vacationer instanceof Freelancer
+            || $vacationer instanceof ServiceProvider
+        ) {
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->handleVacationEntry(
+                $vacationer,
+                [Carbon::parse($vacation->date)->format('Y-m-d')],
+                (string) $vacation->type
+            );
+        }
+
         return $vacation;
     }
 

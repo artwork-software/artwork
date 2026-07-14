@@ -166,31 +166,38 @@ final class SageBookingLogRecorderTest extends TestCase
     public function a_failing_entry_insert_never_throws_or_rolls_back_the_wrapping_transaction(): void
     {
         // Guarantee the entry insert fails regardless of the connection's default sql_mode.
+        // Session-Variablen überleben Transaktions-Rollbacks — vorherigen Wert sichern
+        // und am Ende wiederherstellen, damit Folgetests unbeeinflusst bleiben.
+        $previousSqlMode = DB::selectOne('SELECT @@SESSION.sql_mode AS mode')->mode;
         DB::statement("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 
-        $this->recorder->startRun('import', [], null, 'full_import');
-
-        // Mimic importRegularBookings(): each booking runs inside its own transaction and a
-        // logging failure must not roll it back.
-        DB::beginTransaction();
-        $threw = false;
         try {
-            // buchungstext far exceeds the VARCHAR(255) snapshot column -> insert fails.
-            $this->recorder->record('created', $this->booking(['buchungstext' => str_repeat('x', 6000)]));
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            $threw = true;
+            $this->recorder->startRun('import', [], null, 'full_import');
+
+            // Mimic importRegularBookings(): each booking runs inside its own transaction and a
+            // logging failure must not roll it back.
+            DB::beginTransaction();
+            $threw = false;
+            try {
+                // buchungstext far exceeds the VARCHAR(255) snapshot column -> insert fails.
+                $this->recorder->record('created', $this->booking(['buchungstext' => str_repeat('x', 6000)]));
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                $threw = true;
+            }
+
+            $this->assertFalse($threw, 'record() must swallow logging failures instead of throwing');
+
+            $this->recorder->finishRun();
+
+            // The failed entry was simply skipped; nothing was recorded, but the run still closed cleanly.
+            $log = SageBookingLog::latest('id')->first();
+            $this->assertSame(0, $log->created_count);
+            $this->assertNotNull($log->finished_at);
+        } finally {
+            DB::statement('SET SESSION sql_mode = ?', [$previousSqlMode]);
         }
-
-        $this->assertFalse($threw, 'record() must swallow logging failures instead of throwing');
-
-        $this->recorder->finishRun();
-
-        // The failed entry was simply skipped; nothing was recorded, but the run still closed cleanly.
-        $log = SageBookingLog::latest('id')->first();
-        $this->assertSame(0, $log->created_count);
-        $this->assertNotNull($log->finished_at);
     }
 
     #[Test]

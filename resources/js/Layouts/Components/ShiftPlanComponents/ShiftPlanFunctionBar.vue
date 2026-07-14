@@ -213,7 +213,7 @@
 
                     <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="openHistoryModal()"/>
-                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Export as PDF')" icon="IconFileExport"
+                    <ToolTipComponent direction="bottom" :tooltip-text="$t('Export')" icon="IconFileExport"
                                       icon-size="h-5 w-5" classes-button="ui-button" @click="showShiftPlanExportModal = true"/>
                     <ToolTipComponent direction="bottom" :tooltip-text="isFullscreen ? $t('Exit full screen') : $t('Full screen')"
                                       :icon="isFullscreen ? 'IconArrowsDiagonalMinimize' : 'IconArrowsDiagonal'"
@@ -264,7 +264,7 @@
     <ExportModal
         v-if="showShiftPlanExportModal"
         @close="showShiftPlanExportModal = false"
-        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT]"
+        :enums="[exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]"
         :configuration="shiftPlanExportConfiguration"
     />
 </template>
@@ -349,8 +349,7 @@ const activeSettings = computed(() => {
     return usePage().props.shift_plan_settings;
 });
 
-// Configuration handed to the PDF export modal so the export mirrors the currently displayed view
-// (time period, active filters and project mode are all taken over via these parameters).
+// Configuration handed to the export modal.
 const shiftPlanExportConfiguration = computed(() => {
     const projectId = usePage().props.projectId ?? null;
     const settings = activeSettings.value;
@@ -365,6 +364,9 @@ const shiftPlanExportConfiguration = computed(() => {
             projectName: (projectId || useProjectMode) ? props.projectNameUsedForProjectTimePeriod : null,
             // In project mode, shifts/events belonging to this project are highlighted in the PDF.
             highlightProjectId: useProjectMode ? settings.time_period_project_id : null,
+        },
+        [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
+            crafts: props.crafts.map(({id, name}) => ({id, name})),
         },
     };
 });

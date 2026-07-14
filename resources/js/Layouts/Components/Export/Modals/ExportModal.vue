@@ -50,6 +50,11 @@
                                                  :crafts="configuration[exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]?.crafts ?? []"
                                                  @close="close()"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT">
+                    <ExcelCraftDistributionExport v-if="activeTab === exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT"
+                                                  :crafts="configuration[exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]?.crafts ?? []"
+                                                  @close="close()"/>
+                </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
                 </template>
@@ -85,6 +90,9 @@ const exportTabEnums = useExportTabEnums(),
     ),
     ExcelWorkTimeOverviewExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelWorkTimeOverviewExport.vue")
+    ),
+    ExcelCraftDistributionExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelCraftDistributionExport.vue")
     ),
     props = defineProps({
         enums: {

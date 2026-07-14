@@ -1,7 +1,7 @@
 <template>
     <header
-        class="sticky z-30 rounded-lg bg-artwork-navigation-background flex items-center gap-0.5 h-16"
-        :style="{'--col-w': zoomColWidth + 'px','--lead-w': leadWidth + 'px', top: stickyTop + 'px'}"
+        class="sticky z-30 rounded-lg bg-artwork-navigation-background flex items-center gap-0.5 h-11"
+        :style="{'--col-w': columnWidth + 'px','--lead-w': dateColumnWidth + 'px', top: stickyTop + 'px'}"
         role="row">
         <!-- linker Spacer -->
         <div class="lead shrink-0" aria-hidden="true"></div>
@@ -12,17 +12,19 @@
             :key="room.id ?? room.roomId"
             :room="room"
             is-light
-            class="room-col mt-1 line-clamp-2 text-white"
+            class="room-col text-white"
             role="columnheader"
         />
     </header>
 </template>
 
 <script setup>
-import { usePage } from '@inertiajs/vue3'
-import { defineAsyncComponent, computed, ref } from 'vue'
+import { defineAsyncComponent } from 'vue'
+import { useCalendarZoom } from '@/Composeables/useCalendarZoom.js'
 
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1)
+// Spaltenbreite ist vom Zoom entkoppelt (Anzeigeeinstellung); die Schrift im
+// Raumheader bleibt bei jedem Zoom gleich groß.
+const { columnWidth, dateColumnWidth } = useCalendarZoom()
 
 const props = defineProps({
     rooms: {
@@ -38,12 +40,6 @@ const props = defineProps({
         default: 71
     }
 })
-
-/** Breiten nur EINMAL berechnen und als CSS-Variablen durchreichen */
-const zoomColWidth = computed(() => Math.round(zoom_factor.value * 212))
-const leadWidth    = computed(() =>
-    zoom_factor.value === 0.2 ? 50 : Math.round(zoom_factor.value * 90)
-)
 
 const AsyncSingleRoomInHeader = defineAsyncComponent({
     loader: () => import('@/Components/Calendar/Elements/SingleRoomInHeader.vue'),

@@ -123,10 +123,12 @@ import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeade
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import { getDaysInRange, computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
+import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props)
 
 
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+// Reaktiv aus dem zentralen Zoom-Store (Layout-Formeln der Tagesansicht unverändert)
+const { zoomFactor: zoom_factor } = useCalendarZoom();
 const props = defineProps({
     rooms: {
         type: Object,

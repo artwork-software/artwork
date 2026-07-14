@@ -125,6 +125,15 @@ export function formatDate(dateStr) {
 }
 
 /**
+ * German month label for the calendar month separator row, e.g. "Juli 2026".
+ * @param {string} isoDate
+ * @returns {string}
+ */
+export function formatMonthLabel(isoDate) {
+    return dayjs(isoDate).locale('de').format('MMMM YYYY')
+}
+
+/**
  * Compute formatted dates for a shift (replaces server-side formatted_dates).
  * @param {string} startDate
  * @param {string} endDate

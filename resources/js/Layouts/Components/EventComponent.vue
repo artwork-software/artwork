@@ -478,8 +478,8 @@
                     <div class="space-y-1.5">
                         <div class="ui-hint">{{ $t('Date & Time') }}</div>
                         <div class="text-[13px] text-zinc-800">
-                            <span v-if="startDate === endDate">{{ startDate }} • {{ startTime }} – {{ endTime }}</span>
-                            <span v-else>{{ startDate }} {{ startTime }} — {{ endDate }} {{ endTime }}</span>
+                            <span v-if="startDate === endDate">{{ formatDateGerman(startDate) }} • {{ startTime }} – {{ endTime }}</span>
+                            <span v-else>{{ formatDateGerman(startDate) }} {{ startTime }} — {{ formatDateGerman(endDate) }} {{ endTime }}</span>
                         </div>
                     </div>
                     <div class="space-y-1.5">
@@ -825,6 +825,12 @@ onMounted(() => {
 })
 
 // --- Methods
+// Anzeige im Read-only-Modus: ISO (Input-Format) → DD.MM.YYYY
+function formatDateGerman(isoDate) {
+    const parts = (isoDate ?? '').split('-')
+    if (parts.length !== 3) return isoDate ?? ''
+    return `${parts[2]}.${parts[1]}.${parts[0]}`
+}
 function canAccessProject() {
     if (can('view projects') || can('write projects')) return true
     if (selectedProject.value?.creator_id === page.props.auth.user.id) return true

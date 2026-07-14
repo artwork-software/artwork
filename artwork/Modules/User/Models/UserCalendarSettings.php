@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $event_name
  * @property boolean $high_contrast
  * @property boolean $expand_days
+ * @property int $calendar_column_width
+ * @property boolean $show_artist_names_as_title
  * @property boolean $use_event_status_color
  * @property boolean $use_main_category_color
  * @property boolean $work_shifts
@@ -60,6 +62,8 @@ class UserCalendarSettings extends Model
         'event_name',
         'high_contrast',
         'expand_days',
+        'calendar_column_width',
+        'show_artist_names_as_title',
         'use_event_status_color',
         'use_main_category_color',
         'show_qualifications',
@@ -87,6 +91,8 @@ class UserCalendarSettings extends Model
         'event_name' => 'boolean',
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
+        'calendar_column_width' => 'integer',
+        'show_artist_names_as_title' => 'boolean',
         'use_event_status_color' => 'boolean',
         'use_main_category_color' => 'boolean',
         'show_qualifications' => 'boolean',

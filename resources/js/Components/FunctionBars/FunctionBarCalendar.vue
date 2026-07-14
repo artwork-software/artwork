@@ -77,7 +77,8 @@
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
-                <div v-else-if="!project" class="relative">
+                <!-- w-72, damit das Label "Projekt oder Künstler*in suchen" nicht abgeschnitten wird -->
+                <div v-else-if="!project" class="relative w-72">
                     <BaseInput
                         id="calendarProjectSearch"
                         v-model="projectSearch"
@@ -103,7 +104,7 @@
                     </div>
                 </div>
                 <div v-if="!project && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class=" text-sm">
-                    {{ $t('Project period')}}:
+                    {{ $t('Project')}}:
                     <Link :href="route('projects.tab', {projectTab: first_project_tab_id, project: getTimePeriodProjectId()})"
                           class="font-bold">
                         {{ projectNameUsedForProjectTimePeriod }}
@@ -155,30 +156,60 @@
                 </div>
                 <div class="hidden 2xl:flex items-center gap-x-2">
 
-                    <ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Zoom in')"
-                        :icon="IconZoomIn"
-                        icon-size="h-5 w-5"
-                        :disabled="zoom_factor >= 1.4"
-                        @click="incrementZoomFactor"
-                        v-if="!atAGlance"
-                        classesButton="ui-button"
-                    />
-                    <p class="xsDark ui-button !bg-gray-50 text-xs">
-                        {{ zoom_factor * 100 }}%
-                    </p>
+                    <!-- Kompaktmodus-Hinweis: bei < 80 % öffnen Termine ihr Modal per Klick,
+                         das Drei-Punkte-Menü auf der Kachel entfällt -->
+                    <div
+                        v-if="isCompactZoom && !atAGlance"
+                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                    >
+                        <ToolTipWithTextComponent
+                            direction="bottom"
+                            :text="$t('Compact')"
+                            :icon="IconInfoCircle"
+                            icon-size="size-4"
+                            tooltip-width="w-72"
+                            :tooltip-text="$t('Below 80% zoom the compact mode is active: clicking an event opens its editing or detail view directly. The menu for further actions is not available in compact mode.')"
+                        />
+                    </div>
 
-                    <ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Zoom out')"
-                        :icon="IconZoomOut"
-                        icon-size="h-5 w-5"
-                        :disabled="zoom_factor <= 0.2"
-                        @click="decrementZoomFactor"
-                        v-if="!atAGlance"
-                        classesButton="ui-button"
-                    />
+                    <!-- Zoom-Schnellauswahl: Klick auf die %-Anzeige öffnet die Stufenliste -->
+                    <Menu as="div" class="relative" v-if="!atAGlance">
+                        <MenuButton class="ui-button text-xs" :title="$t('Zoom')">
+                            {{ zoomPercent }}%
+                            <component :is="IconChevronDown" class="size-3.5" />
+                        </MenuButton>
+                        <transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="opacity-0 scale-95"
+                            enter-to-class="opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="opacity-100 scale-100"
+                            leave-to-class="opacity-0 scale-95"
+                        >
+                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
+                                <!-- Panel-Optik identisch zu BaseMenu -->
+                                <div class="w-52 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                    <BaseMenuItem
+                                        white-menu-background
+                                        without-translation
+                                        :icon="IconCalendarMonth"
+                                        :title="$t('Month view') + ' (40%)'"
+                                        @click="selectMonthView"
+                                    />
+                                    <div class="my-1 border-t border-gray-100"></div>
+                                    <BaseMenuItem
+                                        v-for="step in zoomSteps"
+                                        :key="step"
+                                        white-menu-background
+                                        without-translation
+                                        :icon="step === zoomFactor ? IconCheck : IconPercentage"
+                                        :title="Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : '')"
+                                        @click="setZoomFactor(step)"
+                                    />
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
 
                     <ToolTipComponent
                         direction="bottom"
@@ -279,25 +310,22 @@
                     <BaseMenu class="pt-2" tooltip-direction="bottom" show-custom-icon :icon="IconList" translation-key="More options" has-no-offset>
                         <BaseMenuItem
                             v-if="!atAGlance"
-                            :icon="IconZoomIn"
-                            white-menu-background
-                            :title="$t('Zoom in')"
-                            :disabled="zoom_factor >= 1.4"
-                            @click="incrementZoomFactor"
-                        />
-                        <BaseMenuItem
+                            :icon="IconCalendarMonth"
                             white-menu-background
                             without-translation
-                            :title="zoom_factor * 100 + '%'"
+                            :title="$t('Month view') + ' (40%)'"
+                            @click="selectMonthView"
                         />
-                        <BaseMenuItem
-                            v-if="!atAGlance"
-                            :icon="IconZoomOut"
-                            white-menu-background
-                            :title="$t('Zoom out')"
-                            :disabled="zoom_factor <= 0.2"
-                            @click="decrementZoomFactor"
-                        />
+                        <template v-if="!atAGlance">
+                            <BaseMenuItem
+                                v-for="step in zoomSteps"
+                                :key="step"
+                                white-menu-background
+                                without-translation
+                                :title="Math.round(step * 100) + '%' + (step === zoomFactor ? ' ✓' : '')"
+                                @click="setZoomFactor(step)"
+                            />
+                        </template>
                         <BaseMenuItem
                             v-if="!atAGlance && !isFullscreen"
                             :icon="IconArrowsDiagonal"
@@ -350,20 +378,26 @@ import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue"
 import {
     IconChevronLeft,
     IconChevronRight,
+    IconChevronDown,
+    IconCheck,
+    IconPercentage,
+    IconInfoCircle,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
-    IconGeometry, IconCalendarRepeat, IconList, IconZoomIn, IconZoomOut, IconArrowsDiagonal, IconCalendarStar,
+    IconGeometry, IconCalendarRepeat, IconList, IconArrowsDiagonal, IconCalendarStar,
     IconFileExport, IconCirclePlus, IconReorder
 } from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
-import {Switch} from "@headlessui/vue";
+import {Switch, Menu, MenuButton, MenuItems} from "@headlessui/vue";
+import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
@@ -393,7 +427,16 @@ const emits = defineEmits([
 ]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+// Zentraler reaktiver Zoom (debounced persistiert, kein Full-Reload mehr)
+const {
+    zoomFactor,
+    zoomPercent,
+    zoomSteps,
+    setZoomFactor,
+    requestMonthView,
+    isCompact: isCompactZoom,
+} = useCalendarZoom();
+const selectMonthView = () => requestMonthView();
 const dateValueCopy = ref(dateValue ?? []);
 const showExportModal = ref(false);
 const roomCollisions = ref([]);
@@ -559,26 +602,6 @@ const changeAtAGlance = () => {
     }, {
         preserveState: false,
         preserveScroll: true
-    })
-}
-const incrementZoomFactor = () => {
-    if (zoom_factor.value < 1.4) {
-        zoom_factor.value = Math.round((zoom_factor.value + 0.2) * 10) / 10;
-        updateZoomFactorInUser();
-    }
-}
-const decrementZoomFactor = () => {
-    if (zoom_factor.value > 0.4) {
-        zoom_factor.value = Math.round((zoom_factor.value - 0.2) * 10) / 10;
-        updateZoomFactorInUser();
-    }
-}
-const updateZoomFactorInUser = () => {
-    router.patch(route('user.update.zoom_factor', {user: usePage().props.auth.user.id}), {
-        zoom_factor: zoom_factor.value
-    }, {
-        preserveScroll: true,
-        preserveState: false
     })
 }
 const calculateDateDifference = () => {

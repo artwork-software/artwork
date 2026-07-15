@@ -2491,7 +2491,15 @@
     "Project mode": "Project mode",
     "Export as PDF": "Export as PDF",
     "Event types": "Event types",
-    "The current shift plan view is exported: time period, active filters and project mode are taken over. Each calendar week is placed on its own page.": "The current shift plan view is exported: time period, active filters and project mode are taken over. Each calendar week is placed on its own page.",
+    "The export is prefilled with your current shift plan view. Time period and filters can be adjusted below before exporting. Each calendar week is placed on its own page.": "The export is prefilled with your current shift plan view. Time period and filters can be adjusted below before exporting. Each calendar week is placed on its own page.",
+    "A maximum of six months can be exported in one PDF.": "A maximum of six months can be exported in one PDF.",
+    "No selection in a group means it is not filtered by it.": "No selection in a group means it is not filtered by it.",
+    "Hide empty rooms": "Hide empty rooms",
+    "Rooms without events or shifts in the selected period are omitted from the PDF.": "Rooms without events or shifts in the selected period are omitted from the PDF.",
+    "Please select a start and end date.": "Please select a start and end date.",
+    "Next 4 weeks": "Next 4 weeks",
+    "Current view": "Current view",
+    "No rooms with events or shifts in the selected period.": "No rooms with events or shifts in the selected period.",
     "Landscape format is recommended so a whole calendar week fits on one page.": "Landscape format is recommended so a whole calendar week fits on one page.",
     "EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT": "Budget export by deadline",
     "EXCEL_EVENT_LIST_EXPORT": "Excel Event List Export",
@@ -5218,5 +5226,7 @@
     ":synced of :total users synced (:skipped skipped).": ":synced of :total users synced (:skipped skipped).",
     "LDAP connection successful, but the user search failed.": "LDAP connection successful, but the user search failed.",
     "Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.": "Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.",
-    "more days at a glance": "more days at a glance"
+    "more days at a glance": "more days at a glance",
+    "Week": "Week",
+    "Free selection": "Free selection"
 }

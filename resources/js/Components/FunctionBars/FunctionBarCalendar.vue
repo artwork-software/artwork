@@ -1,60 +1,16 @@
 <template>
-    <div class="py-4 px-7 bg-white border-b border-zinc-200 shadow-sm">
+    <div class="py-4 px-5 bg-white border-b border-zinc-200 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-y-2">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
-                    <!-- Date Shortcuts - 3 vertical icons -->
-                    <div class="flex items-center ">
-                        <ToolTipComponent
-                            v-if="!dailyView"
-                            direction="bottom"
-                            :tooltip-text="$t('Time range back')"
-                            :icon="IconChevronLeft"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="previousTimeRange"
-                            classesButton="ui-button"
-                        />
-                        <ToolTipComponent
-                            v-else
-                            direction="bottom"
-                            :tooltip-text="$t('Time range back')"
-                            :icon="IconChevronLeft"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="previousDay"
-                            classesButton="ui-button"
-                        />
-                    </div>
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning" :is_daily_view="dailyView"/>
-                    <div class="flex items-center">
-                        <ToolTipComponent
-                            v-if="!dailyView"
-                            direction="bottom"
-                            :tooltip-text="$t('Time range forward')"
-                            :icon="IconChevronRight"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="nextTimeRange"
-                            classesButton="ui-button"
-                        />
-                        <ToolTipComponent
-                            v-else
-                            direction="bottom"
-                            :tooltip-text="$t('Time range forward')"
-                            :icon="IconChevronRight"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="nextDay"
-                            classesButton="ui-button"
-                        />
-
-                    </div>
-                    <div class="flex gap-x-1 mx-2">
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Today')"
-                            :icon="IconCalendar"
-                            icon-size="h-5 w-5"
-                            @click="jumpToToday"
-                            classesButton="ui-button"
-                        />
+                    <DateRangeControl
+                        v-if="dateValue"
+                        :date-value-array="dateValue"
+                        mode="calendar"
+                        :extra-params="{ isPlanning: isPlanning, isDailyView: dailyView }"
+                        :show-today="false"
+                    />
+                    <div class="flex gap-x-1 mx-1">
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current week')"
@@ -73,7 +29,7 @@
                         />
                     </div>
 
-                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance && startAndEndDateInDifferentMonths" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance && startAndEndDateInDifferentMonths" class="mx-1" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
@@ -373,7 +329,7 @@
 </template>
 
 <script setup>
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue";
 import {
     IconChevronLeft,
@@ -420,8 +376,6 @@ const emits = defineEmits([
     'updateMultiEdit',
     'openFullscreenMode',
     'wantsToAddNewEvent',
-    'previousDay',
-    'nextDay',
     'searchingForProject',
     'jumpToDayOfMonth',
 ]);
@@ -604,67 +558,6 @@ const changeAtAGlance = () => {
         preserveScroll: true
     })
 }
-const calculateDateDifference = () => {
-    const date1 = new Date(dateValueCopy.value[0]);
-    const date2 = new Date(dateValueCopy.value[1]);
-    const timeDifference = date2.getTime() - date1.getTime();
-    return timeDifference / (1000 * 3600 * 24);
-}
-const previousTimeRange = () => {
-    const dayDifference = calculateDateDifference();
-    dateValueCopy.value[1] = getPreviousDay(dateValueCopy.value[0]);
-    const newDate = new Date(dateValueCopy.value[1]);
-    newDate.setDate(newDate.getDate() - dayDifference);
-    dateValueCopy.value[0] = newDate.toISOString().slice(0, 10);
-    updateTimes();
-}
-const nextTimeRange = () => {
-    const dayDifference = calculateDateDifference();
-    dateValueCopy.value[0] = getNextDay(dateValueCopy.value[1]);
-    const newDate = new Date(dateValueCopy.value[1]);
-    newDate.setDate(newDate.getDate() + dayDifference + 1);
-    dateValueCopy.value[1] = newDate.toISOString().slice(0, 10);
-    updateTimes();
-}
-const getNextDay = (dateString) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() + 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-const previousDay = () => {
-    const dayDifference = calculateDateDifference();
-    const newStart = new Date(dateValueCopy.value[0]);
-    newStart.setDate(newStart.getDate() - (dayDifference + 1));
-    const newEnd = new Date(dateValueCopy.value[0]);
-    newEnd.setDate(newEnd.getDate() - 1);
-    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
-    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
-    updateTimes();
-}
-
-const nextDay = () => {
-    const dayDifference = calculateDateDifference();
-    const newStart = new Date(dateValueCopy.value[1]);
-    newStart.setDate(newStart.getDate() + 1);
-    const newEnd = new Date(dateValueCopy.value[1]);
-    newEnd.setDate(newEnd.getDate() + dayDifference + 1);
-    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
-    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
-    updateTimes();
-}
-
-const getPreviousDay = (dateString) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() - 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
 const updateTimes = () => {
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
@@ -683,34 +576,7 @@ const jumpToDayOfMonth = (day) => {
     emits('jumpToDayOfMonth', day);
 }
 
-// Shortcut functions for the three icons
-const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
-
-    // Switch to daily mode if not already in daily mode
-    if (!dailyViewMode.value) {
-        dailyViewMode.value = true;
-        router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: true,
-            context: 'calendar'
-        }, {
-            preserveScroll: false,
-            preserveState: false,
-            onSuccess: () => {
-                // Set dates and update only after the mode change is completed
-                dateValueCopy.value[0] = today;
-                dateValueCopy.value[1] = today;
-                updateTimes();
-            }
-        });
-    } else {
-        // If already in daily mode, set dates and update
-        dateValueCopy.value[0] = today;
-        dateValueCopy.value[1] = today;
-        updateTimes();
-    }
-}
-
+// Shortcut functions for the two icons
 const jumpToCurrentWeek = () => {
     const today = new Date();
     const currentWeekStart = new Date(today);

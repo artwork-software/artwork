@@ -13,10 +13,9 @@
             </div>
         </div>
         <div class="flex items-center justify-between mb-5">
-            <DatePickerComponent
-                :dateValueArray="[dateRange.start, dateRange.end]"
-                :project="false"
-                :is_work_times="true"
+            <DateRangeControl
+                :date-value-array="[dateRange.start, dateRange.end]"
+                mode="work-times"
             />
 
             <WorkTimeTimerComponent :totals="totals" />
@@ -183,7 +182,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import WorkTimeTimerComponent from "@/Pages/Users/Components/WorkTimeTimerComponent.vue";
 import {IconAlarmPlus} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 
 const props = defineProps({
     userToEdit: {

@@ -62,8 +62,6 @@
             <div class="bg-white grow">
 
                 <ShiftPlanFunctionBar
-                    @previousTimeRange="previousTimeRange"
-                    @next-time-range="nextTimeRange"
                     :date-value="dateValue"
                     :all-shifts-committed="true"
                     :filter-options="filterOptions"
@@ -3432,35 +3430,6 @@ function openFullscreen() {
             elem.msRequestFullscreen()
         }
     }
-}
-
-function previousTimeRange() {
-    const dateDifference = calculateDateDifference()
-    const newStart = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    const newEnd = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes(newStart, newEnd)
-}
-
-function nextTimeRange() {
-    const dateDifference = calculateDateDifference()
-    const newStart = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    const newEnd = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes(newStart, newEnd)
-}
-
-function calculateDateDifference() {
-    const date1 = new Date(props.dateValue[0])
-    const date2 = new Date(props.dateValue[1])
-    const timeDifference = date2.getTime() - date1.getTime()
-    return timeDifference / (1000 * 3600 * 24)
-}
-
-function updateTimes(startDate: string, endDate: string) {
-    router.patch(
-        route('update.user.shift.calendar.filter.dates', authUser.value.id),
-        {start_date: startDate, end_date: endDate},
-        {preserveScroll: true, preserveState: false},
-    )
 }
 
 function openHistoryModal(config: HistoryModalConfig = {}) {

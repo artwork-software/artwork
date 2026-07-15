@@ -2495,7 +2495,15 @@
     "Project mode": "Projektmodus",
     "Export as PDF": "Als PDF exportieren",
     "Event types": "Veranstaltungsarten",
-    "The current shift plan view is exported: time period, active filters and project mode are taken over. Each calendar week is placed on its own page.": "Es wird die aktuelle Schichtplan-Ansicht exportiert: Zeitraum, aktive Filter und Projektmodus werden übernommen. Jede Kalenderwoche wird auf einer eigenen Seite dargestellt.",
+    "The export is prefilled with your current shift plan view. Time period and filters can be adjusted below before exporting. Each calendar week is placed on its own page.": "Der Export ist mit deiner aktuellen Schichtplan-Ansicht vorbelegt. Zeitraum und Filter können unten vor dem Export angepasst werden. Jede Kalenderwoche wird auf einer eigenen Seite dargestellt.",
+    "A maximum of six months can be exported in one PDF.": "Es können maximal sechs Monate in ein PDF exportiert werden.",
+    "No selection in a group means it is not filtered by it.": "Keine Auswahl in einer Gruppe bedeutet, dass danach nicht gefiltert wird.",
+    "Hide empty rooms": "Leere Räume ausblenden",
+    "Rooms without events or shifts in the selected period are omitted from the PDF.": "Räume ohne Termine oder Schichten im gewählten Zeitraum werden im PDF weggelassen.",
+    "Please select a start and end date.": "Bitte Start- und Enddatum auswählen.",
+    "Next 4 weeks": "Nächste 4 Wochen",
+    "Current view": "Aktuelle Ansicht",
+    "No rooms with events or shifts in the selected period.": "Keine Räume mit Terminen oder Schichten im gewählten Zeitraum.",
     "Landscape format is recommended so a whole calendar week fits on one page.": "Querformat wird empfohlen, damit eine ganze Kalenderwoche auf eine Seite passt.",
     "EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT": "Budget-Export nach Stichtag",
     "EXCEL_EVENT_LIST_EXPORT": "Excel Terminliste Export",
@@ -5263,5 +5271,7 @@
     ":synced of :total users synced (:skipped skipped).": ":synced von :total Nutzer*innen synchronisiert (:skipped übersprungen).",
     "LDAP connection successful, but the user search failed.": "LDAP-Verbindung erfolgreich, aber die Nutzersuche ist fehlgeschlagen.",
     "Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.": "Unter 100% Zoom zeigen Schichtkarten nur Zeit, Gewerk und Besetzung. Klick öffnet die Schicht — für Zuweisung per Drag & Drop zurück auf 100% zoomen.",
-    "more days at a glance": "mehr Tage auf einen Blick"
+    "more days at a glance": "mehr Tage auf einen Blick",
+    "Week": "Woche",
+    "Free selection": "Freie Auswahl"
 }

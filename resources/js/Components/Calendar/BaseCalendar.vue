@@ -16,19 +16,21 @@
                 :daily-view="isDaily"
             >
                 <template #buttonsRight>
-                    <!-- Dezenter Hinweis-Chip statt des früheren vollflächigen roten Banners -->
+                    <!-- Dezenter Hinweis-Chip statt des früheren vollflächigen roten Banners;
+                         nur Icon + Anzahl, Details im Tooltip. Tooltip öffnet nach rechts,
+                         damit er beim Umbruch der Leiste nicht unter der Mainnav (z-50) liegt -->
                     <div
                         v-if="eventsWithoutRoomLen > 0"
                         class="ui-button !bg-amber-50 !border-amber-300/80 !text-amber-800 text-xs"
                         @click="showEventsWithoutRoomComponent = true"
                     >
                         <ToolTipWithTextComponent
-                            direction="bottom"
-                            :text="eventsWithoutRoomLen + ' ' + $t('without room')"
+                            direction="right"
+                            :text="String(eventsWithoutRoomLen)"
                             :icon="IconAlertTriangle"
                             icon-size="size-4"
                             tooltip-width="w-64"
-                            :tooltip-text="$t('There are events without a room in this period. Click to view and assign them.')"
+                            :tooltip-text="eventsWithoutRoomLen + ' ' + $t('without room') + ' – ' + $t('There are events without a room in this period. Click to view and assign them.')"
                         />
                     </div>
                 </template>

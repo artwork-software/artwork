@@ -3,18 +3,14 @@
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
-                    <!-- Date Shortcuts - 3 vertical icons -->
-                    <DatePickerComponent v-if="dateValue" :dateValueArray="dateValue"
-                                           :is_shift_plan="true" :is_daily_view="isDailyView"></DatePickerComponent>
+                    <DateRangeControl
+                        v-if="dateValue"
+                        :date-value-array="dateValue"
+                        mode="shift-plan"
+                        :extra-params="{ isDailyView: isDailyView }"
+                        :on-today-override="jumpToToday"
+                    />
                     <div class="flex gap-x-1 mx-2">
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Today')"
-                            icon="IconCalendar"
-                            icon-size="h-5 w-5"
-                            @click="jumpToToday"
-                            classesButton="ui-button"
-                        />
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current week')"
@@ -33,13 +29,6 @@
                         />
                     </div>
                     <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="$t('Previous time range')"
-                            icon="IconChevronLeftPipe"
-                            icon-size="h-7 w-7"
-                            @click="previousTimeRange"
-                        />
                         <ToolTipComponent
                             direction="bottom"
                             :tooltip-text="scrollBackTooltip"
@@ -109,24 +98,6 @@
                             icon-size="h-7 w-7"
                             @click="scrollToNextDay"
                         />
-
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="$t('Next time range')"
-                            icon="IconChevronRightPipe"
-                            icon-size="h-7 w-7"
-                            @click="nextTimeRange"
-                        />
-                    </div>
-                    <div class="items-center hidden">
-                        <div class="flex items-center">
-                            <button class="ml-2 text-black" @click="previousTimeRange">
-                                <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
-                            </button>
-                            <button class="ml-2  text-black" @click="nextTimeRange">
-                                <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -331,6 +302,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router, useForm, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
 import {useI18n} from "vue-i18n";
 const {t: $t} = useI18n();
@@ -357,12 +329,6 @@ const ExportModal = defineAsyncComponent({
     delay: 200,
     timeout: 3000,
 });
-
-const DatePickerComponent = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
-    delay: 200,
-    timeout: 3000,
-})
 
 // Schichtplan-Spaltenzoom (reaktiv, debounced persistiert)
 const {
@@ -391,7 +357,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
+const emit = defineEmits(['enterFullscreenMode', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
 
 // Data properties
 const showConfirmCommitModal = ref(false);
@@ -433,6 +399,20 @@ const shiftPlanExportConfiguration = computed(() => {
             projectName: (projectId || useProjectMode) ? props.projectNameUsedForProjectTimePeriod : null,
             // In project mode, shifts/events belonging to this project are highlighted in the PDF.
             highlightProjectId: useProjectMode ? settings.time_period_project_id : null,
+            // Selectable filter dimensions for the export dialog …
+            filterOptions: {
+                rooms: (props.filterOptions?.room_ids ?? []).map(({id, name}) => ({id, name})),
+                areas: (props.filterOptions?.area_ids ?? []).map(({id, name}) => ({id, name})),
+                eventTypes: (props.filterOptions?.event_type_ids ?? []).map(({id, name}) => ({id, name})),
+                crafts: props.crafts.map(({id, name}) => ({id, name})),
+            },
+            // … prefilled with the filters currently active in the shift plan.
+            activeFilters: {
+                room_ids: props.user_filters?.room_ids ?? [],
+                area_ids: props.user_filters?.area_ids ?? [],
+                event_type_ids: props.user_filters?.event_type_ids ?? [],
+                craft_ids: props.user_filters?.craft_ids ?? [],
+            },
         },
         [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
             crafts: props.crafts.map(({id, name}) => ({id, name})),
@@ -581,14 +561,6 @@ const scrollToPreviousDay = () => {
 
 const enterFullscreenMode = () => {
     emit('enterFullscreenMode');
-};
-
-const previousTimeRange = () => {
-    emit('previousTimeRange');
-};
-
-const nextTimeRange = () => {
-    emit('nextTimeRange');
 };
 
 const filtersChanged = (activeFilters) => {

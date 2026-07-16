@@ -32,7 +32,7 @@ class SyncExternalUsersCommand extends Command
 
         foreach ($sources as $source) {
             // Gleicher Lock wie der manuelle Sync-Endpunkt — verhindert parallele Läufe
-            $lock = Cache::lock('external-user-sync-' . $source->id, 600);
+            $lock = Cache::lock('external-user-sync-' . $source->id, 1800);
             if (!$lock->get()) {
                 $this->warn("Skipping source {$source->name}: a sync is already running.");
                 continue;

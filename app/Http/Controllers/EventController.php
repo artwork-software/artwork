@@ -1474,15 +1474,21 @@ class EventController extends Controller
             $request->year
         );
 
-        $craftId = $request->get('craft_id');
+        // Mehrfachauswahl im Modal: craft_ids (Array) ODER einzelnes craft_id (Altbestand).
+        $craftIds = $request->input('craft_ids');
+        if (! is_array($craftIds) || $craftIds === []) {
+            $craftIds = [$request->get('craft_id')];
+        }
 
-        $this->shiftService->commitShiftsByDate(
-            $start,
-            $end,
-            $craftId,
-            $request->filled('week_number') ? (int) $request->week_number : null,
-            $request->filled('year') ? (int) $request->year : null
-        );
+        foreach (array_unique(array_map('intval', array_filter($craftIds))) as $craftId) {
+            $this->shiftService->commitShiftsByDate(
+                $start,
+                $end,
+                $craftId,
+                $request->filled('week_number') ? (int) $request->week_number : null,
+                $request->filled('year') ? (int) $request->year : null
+            );
+        }
     }
 
     public function changeCommitShifts(Request $request, Shift $shift): void

@@ -48,22 +48,30 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
         ]);
     }
 
-    private function assignShift(Craft $craft, User|Freelancer $worker, string $day, string $start, string $end): void
-    {
+    private function assignShift(
+        Craft $craft,
+        User|Freelancer $worker,
+        string $day,
+        string $start,
+        string $end,
+        ?string $endDay = null,
+        int $breakMinutes = 60,
+    ): void {
+        $endDay ??= $day;
         $shift = Shift::factory()->create([
             'craft_id' => $craft->id,
             'start_date' => $day,
-            'end_date' => $day,
+            'end_date' => $endDay,
             'start' => $start,
             'end' => $end,
-            'break_minutes' => 60,
+            'break_minutes' => $breakMinutes,
         ]);
 
         $qualification = ShiftQualification::factory()->create();
         $pivotAttributes = [
             'shift_qualification_id' => $qualification->id,
             'start_date' => $day,
-            'end_date' => $day,
+            'end_date' => $endDay,
             'start_time' => $start,
             'end_time' => $end,
         ];
@@ -193,6 +201,34 @@ final class WorkTimeOverviewExportServiceTest extends TestCase
         $juneRow = $matrix['rows']->first(fn (array $row) => !$row['is_sum']);
         $this->assertSame(420, $juneRow['cells'][$craft->id]['ist_intern']);
         $this->assertSame(0, $juneRow['cells'][$craft->id]['soll_intern']);
+    }
+
+    #[Test]
+    public function itIncludesOverlappingShiftsAndSplitsTheirMinutesAcrossMonths(): void
+    {
+        $craft = Craft::factory()->create();
+        $user = $this->createCraftWorker($craft);
+
+        // Four hours across the month boundary, minus a 60-minute break:
+        // the proportional split assigns 90 worked minutes to each month.
+        $this->assignShift(
+            $craft,
+            $user,
+            '2026-03-31',
+            '22:00',
+            '02:00',
+        );
+
+        $matrix = $this->buildMatrix($craft, '2026-03-01', '2026-04-30');
+
+        $marchRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'March 2026');
+        $aprilRow = $matrix['rows']->first(fn (array $row) => $row['label'] === 'April 2026');
+        $this->assertSame(90, $marchRow['cells'][$craft->id]['ist_intern']);
+        $this->assertSame(90, $aprilRow['cells'][$craft->id]['ist_intern']);
+
+        $overlapOnlyMatrix = $this->buildMatrix($craft, '2026-04-01', '2026-04-30');
+        $overlapOnlyAprilRow = $overlapOnlyMatrix['rows']->first(fn (array $row) => !$row['is_sum']);
+        $this->assertSame(90, $overlapOnlyAprilRow['cells'][$craft->id]['ist_intern']);
     }
 
     #[Test]

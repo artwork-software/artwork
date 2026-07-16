@@ -5,11 +5,12 @@ namespace Artwork\Modules\ExternalUserManagement\Mail;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Config;
 
-class ExternalUserImported extends Mailable
+class ExternalUserImported extends Mailable implements ShouldQueue
 {
     use Queueable;
     use SerializesModels;

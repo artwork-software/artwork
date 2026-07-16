@@ -30,7 +30,7 @@ class BroadcastEventDTOWithVerifications extends Data
         public ?MinimalCreatorDTO $created_by,
         public ?bool $is_series,
         public ?bool $occupancy_option,
-        public ?int $declinedRoomId = null,
+        public ?int $declinedRoomId,
         public ?array $eventStatus,
         public ?array $eventProperties,
         public ?array $subEvents,

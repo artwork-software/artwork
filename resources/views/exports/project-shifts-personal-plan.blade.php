@@ -110,12 +110,12 @@
             <td>{{ $r['total_headcount'] }}</td>
 
             @foreach($quals as $q)
-                <td>{{ $r['int_labels'][$q->id] ?? __('export.shift_plan.defaults.zero_duration', [], $language) }}</td>
+                <td>{{ $r['int_labels'][$q->id] ?? $zeroDuration }}</td>
             @endforeach
             <td>{{ $r['int_sum_label'] }}</td>
 
             @foreach($quals as $q)
-                <td>{{ $r['ext_labels'][$q->id] ?? __('export.shift_plan.defaults.zero_duration', [], $language) }}</td>
+                <td>{{ $r['ext_labels'][$q->id] ?? $zeroDuration }}</td>
             @endforeach
             <td>{{ $r['ext_sum_label'] }}</td>
 
@@ -127,8 +127,24 @@
     <tr>
         <td colspan="{{ 7 + (2*$quals->count()+2) }}"></td>
         <td>{{ $totalHeadcount }}</td>
-        <td colspan="{{ (2*$quals->count()+2) }}"></td>
-        <td>{{ $totalMinutesLabel }}</td>
+
+        @if($decimalNumbers && $hoursTotals !== null)
+            @foreach($quals as $q)
+                <td>{{ $hoursTotals['int'][$q->id] ?? 0 }}</td>
+            @endforeach
+            <td>{{ $hoursTotals['int_sum'] }}</td>
+
+            @foreach($quals as $q)
+                <td>{{ $hoursTotals['ext'][$q->id] ?? 0 }}</td>
+            @endforeach
+            <td>{{ $hoursTotals['ext_sum'] }}</td>
+
+            <td>{{ $hoursTotals['total'] }}</td>
+        @else
+            <td colspan="{{ (2*$quals->count()+2) }}"></td>
+            <td>{{ $totalMinutesLabel }}</td>
+        @endif
+
         <td></td>
     </tr>
 </table>

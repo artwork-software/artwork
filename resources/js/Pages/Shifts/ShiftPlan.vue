@@ -3574,33 +3574,38 @@ function addUserToMultiEdit(item: any) {
  * Ganz-Zeitraum-Projektzuordnungen der Multiedit-Person: projectId -> eine
  * Assignment-ID der Gruppe (Referenz für das Gruppen-Delete beim Abhaken).
  */
-const fullPeriodAssignedProjects = ref<Map<number, number>>(new Map())
+const fullPeriodAssignedProjects = ref<Map<number, string>>(new Map())
 const savingFullPeriodProjectIds = ref<Set<number>>(new Set())
+let fullPeriodAssignmentRequestSequence = 0
 
-function refreshFullPeriodAssignedProjects() {
-    const map = new Map<number, number>()
+async function refreshFullPeriodAssignedProjects() {
+    const requestSequence = ++fullPeriodAssignmentRequestSequence
+    const map = new Map<number, string>()
     const item = userForMultiEdit.value
 
-    if (item) {
-        const targetKey = item.type === 1
-            ? 'freelancersForShifts'
-            : item.type === 2 ? 'serviceProvidersForShifts' : 'usersForShifts'
-        const workerKey = item.type === 1
-            ? 'freelancer'
-            : item.type === 2 ? 'service_provider' : 'user'
-        const entry = (workersLoaded.value[targetKey] ?? [])
-            .find((w: any) => w[workerKey]?.id === item.id)
-
-        for (const dayAssignments of Object.values(entry?.project_assignments ?? {})) {
-            for (const assignment of (dayAssignments as any[])) {
-                if (assignment.type === 'binding' && assignment.is_full_period && !map.has(assignment.project_id)) {
-                    map.set(assignment.project_id, assignment.id)
-                }
+    try {
+        if (item) {
+            const { data } = await axios.get(route('project-day-assignments.full-period.index'), {
+                params: { worker_type: item.type, worker_id: item.id },
+            })
+            for (const assignment of data.assignments ?? []) {
+                map.set(assignment.project_id, assignment.group_id)
             }
         }
-    }
 
-    fullPeriodAssignedProjects.value = map
+        if (
+            requestSequence === fullPeriodAssignmentRequestSequence
+            && userForMultiEdit.value?.id === item?.id
+            && userForMultiEdit.value?.type === item?.type
+        ) {
+            fullPeriodAssignedProjects.value = map
+        }
+    } catch (error) {
+        if (requestSequence === fullPeriodAssignmentRequestSequence) {
+            fullPeriodAssignedProjects.value = new Map()
+            $toast?.error?.($t('Project assignments could not be loaded.'))
+        }
+    }
 }
 
 async function toggleFullPeriodProjectAssignment(projectId: number) {
@@ -3610,12 +3615,19 @@ async function toggleFullPeriodProjectAssignment(projectId: number) {
     savingFullPeriodProjectIds.value = new Set([...savingFullPeriodProjectIds.value, projectId])
 
     try {
-        const existingAssignmentId = fullPeriodAssignedProjects.value.get(projectId)
+        const existingGroupId = fullPeriodAssignedProjects.value.get(projectId)
 
-        if (existingAssignmentId) {
+        if (existingGroupId) {
             await axios.delete(
-                route('project-day-assignments.destroy', { projectDayAssignment: existingAssignmentId }),
-                { params: { whole_group: true } }
+                route('project-day-assignments.full-period.destroy'),
+                {
+                    params: {
+                        project_id: projectId,
+                        worker_type: item.type,
+                        worker_id: item.id,
+                        group_id: existingGroupId,
+                    },
+                }
             )
             showNotice('success', 'Removed', 'The project assignment was removed.')
         } else {
@@ -3631,12 +3643,12 @@ async function toggleFullPeriodProjectAssignment(projectId: number) {
         }
 
         await reloadSingleWorker(item.id, numericTypeToWorkerType(item.type))
-        refreshFullPeriodAssignedProjects()
+        await refreshFullPeriodAssignedProjects()
     } catch (error: any) {
         const errors = error?.response?.data?.errors
         const message = errors ? Object.values(errors).flat()[0] : $t('Saving failed')
         $toast?.error?.(message)
-        refreshFullPeriodAssignedProjects()
+        await refreshFullPeriodAssignedProjects().catch(() => {})
     } finally {
         const next = new Set(savingFullPeriodProjectIds.value)
         next.delete(projectId)

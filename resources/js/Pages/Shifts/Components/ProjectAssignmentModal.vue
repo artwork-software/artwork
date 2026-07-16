@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -215,28 +215,46 @@ const canSubmit = computed(() => {
 });
 
 let searchDebounce = null;
+let projectRequest = null;
+let projectRequestSequence = 0;
 
 async function loadProjects() {
+    const requestSequence = ++projectRequestSequence;
+    projectRequest?.abort();
+    projectRequest = new AbortController();
     loadingProjects.value = true;
     try {
         const { data } = await axios.get(route('project-day-assignments.projects'), {
+            signal: projectRequest.signal,
             params: {
                 days: daysForSuggestion.value,
                 search: searchQuery.value || undefined,
             },
         });
-        projectOptions.value = data.projects ?? [];
+        if (requestSequence === projectRequestSequence) {
+            projectOptions.value = data.projects ?? [];
+        }
+    } catch (error) {
+        if (error?.code !== 'ERR_CANCELED' && requestSequence === projectRequestSequence) {
+            projectOptions.value = [];
+        }
     } finally {
-        loadingProjects.value = false;
+        if (requestSequence === projectRequestSequence) {
+            loadingProjects.value = false;
+        }
     }
 }
 
-watch(searchQuery, () => {
+watch([searchQuery, () => daysForSuggestion.value.join(',')], () => {
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(loadProjects, 300);
 });
 
 onMounted(loadProjects);
+onUnmounted(() => {
+    clearTimeout(searchDebounce);
+    projectRequest?.abort();
+});
 
 function selectProject(project) {
     selectedProject.value = project;

@@ -18,17 +18,6 @@ export default defineConfig({
     build: {
         // for modern browsers / node versions — ESNext includes top-level await
         target: 'esnext',
-        rollupOptions: {
-            output: {
-                manualChunks(id) {
-                    // Bundle all Tabler icons into one chunk instead of ~130 tiny
-                    // per-icon files (HTTP/1.1 connection-limit queueing on prod).
-                    if (id.includes('@tabler/icons-vue')) {
-                        return 'tabler-icons';
-                    }
-                },
-            },
-        },
     },
     // you can also tweak esbuildOptions directly:
     esbuild: {

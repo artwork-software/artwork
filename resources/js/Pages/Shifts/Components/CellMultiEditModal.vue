@@ -289,7 +289,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import {
     Listbox,
     ListboxButton,
@@ -349,29 +349,50 @@ const loadingAssignmentProjects = ref(false);
 const selectedAssignmentProject = ref(null);
 
 let assignmentProjectDebounce = null;
+let assignmentProjectRequest = null;
+let assignmentProjectRequestSequence = 0;
 
 async function loadAssignmentProjects() {
-    if (!selectedDays.value.length) return;
+    if (!selectedDays.value.length) {
+        assignmentProjectOptions.value = [];
+        return;
+    }
+    const requestSequence = ++assignmentProjectRequestSequence;
+    assignmentProjectRequest?.abort();
+    assignmentProjectRequest = new AbortController();
     loadingAssignmentProjects.value = true;
     try {
         const { data } = await axios.get(route('project-day-assignments.projects'), {
+            signal: assignmentProjectRequest.signal,
             params: {
                 days: selectedDays.value,
                 search: assignmentProjectSearch.value || undefined,
             },
         });
-        assignmentProjectOptions.value = data.projects ?? [];
+        if (requestSequence === assignmentProjectRequestSequence) {
+            assignmentProjectOptions.value = data.projects ?? [];
+        }
+    } catch (error) {
+        if (error?.code !== 'ERR_CANCELED' && requestSequence === assignmentProjectRequestSequence) {
+            assignmentProjectOptions.value = [];
+        }
     } finally {
-        loadingAssignmentProjects.value = false;
+        if (requestSequence === assignmentProjectRequestSequence) {
+            loadingAssignmentProjects.value = false;
+        }
     }
 }
 
-watch(assignmentProjectSearch, () => {
+watch([assignmentProjectSearch, () => selectedDays.value.join(',')], () => {
     clearTimeout(assignmentProjectDebounce);
     assignmentProjectDebounce = setTimeout(loadAssignmentProjects, 300);
 });
 
 onMounted(loadAssignmentProjects);
+onUnmounted(() => {
+    clearTimeout(assignmentProjectDebounce);
+    assignmentProjectRequest?.abort();
+});
 
 function selectAssignmentProject(project) {
     selectedAssignmentProject.value = project;

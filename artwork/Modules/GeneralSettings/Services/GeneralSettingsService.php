@@ -128,7 +128,7 @@ class GeneralSettingsService
     public function updateInventoryArticleImageMaxSize(Request $request): void
     {
         $validated = $request->validate([
-            'inventory_article_image_max_size_mb' => ['required', 'integer', 'min:1', 'max:1024'],
+            'inventory_article_image_max_size_mb' => ['required', 'integer', 'min:1', 'max:50'],
         ]);
 
         $this->generalSettings->inventory_article_image_max_size_mb =

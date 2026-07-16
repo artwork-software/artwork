@@ -380,15 +380,22 @@ class WorkTimeOverviewExportService
         }
 
         $minutesByWorker = [];
+        $overlapQueryStart = $rangeStart->copy()->subDay();
 
         ShiftWorker::query()
             ->where('employable_type', $employableType)
             ->whereIn('employable_id', $workerIds)
-            ->whereBetween('start_date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
+            ->where('start_date', '<=', $rangeEnd->toDateString())
+            ->where('end_date', '>=', $overlapQueryStart->toDateString())
             ->whereHas('shift', fn ($query) => $query->whereIn('craft_id', $craftIds))
             ->with('shift:id,craft_id,break_minutes')
             ->get()
-            ->each(function (ShiftWorker $worker) use (&$minutesByWorker, $employableType): void {
+            ->each(function (ShiftWorker $worker) use (
+                &$minutesByWorker,
+                $employableType,
+                $rangeStart,
+                $rangeEnd,
+            ): void {
                 if (!$worker->start_date || !$worker->end_date || !$worker->start_time || !$worker->end_time) {
                     return;
                 }
@@ -399,20 +406,93 @@ class WorkTimeOverviewExportService
                     $end = $end->addDay();
                 }
 
-                $minutes = (int) max(0, $start->diffInMinutes($end) - (int) ($worker->shift?->break_minutes ?? 0));
-
-                // shift_count is a headcount only for service providers
-                if ($employableType === ServiceProvider::class) {
-                    $minutes *= max(1, (int) ($worker->shift_count ?? 1));
-                }
-
                 $workerId = (int) $worker->employable_id;
                 $craftId = (int) $worker->shift->craft_id;
-                $monthKey = $worker->start_date->format('Y-m');
-                $minutesByWorker[$craftId][$workerId][$monthKey] =
-                    ($minutesByWorker[$craftId][$workerId][$monthKey] ?? 0) + $minutes;
+                $headcount = $employableType === ServiceProvider::class
+                    ? max(1, (int) ($worker->shift_count ?? 1))
+                    : 1;
+
+                foreach ($this->workedMinutesByMonth(
+                    $start,
+                    $end,
+                    (int) ($worker->shift?->break_minutes ?? 0),
+                    $rangeStart,
+                    $rangeEnd,
+                ) as $monthKey => $minutes) {
+                    $minutesByWorker[$craftId][$workerId][$monthKey] =
+                        ($minutesByWorker[$craftId][$workerId][$monthKey] ?? 0) + ($minutes * $headcount);
+                }
             });
 
         return $minutesByWorker;
+    }
+
+    /**
+     * Splits a shift across calendar months and distributes its break proportionally.
+     * The proportional distribution is deterministic and preserves the exact total
+     * number of worked minutes even when rounding is required.
+     *
+     * @return array<string, int> [Y-m] => minutes
+     */
+    private function workedMinutesByMonth(
+        Carbon $start,
+        Carbon $end,
+        int $breakMinutes,
+        Carbon $rangeStart,
+        Carbon $rangeEnd,
+    ): array {
+        $segments = [];
+        $cursor = $start->copy();
+
+        while ($cursor->lessThan($end)) {
+            $nextMonth = $cursor->copy()->startOfMonth()->addMonth();
+            $segmentEnd = $nextMonth->lessThan($end) ? $nextMonth : $end->copy();
+            $segments[] = [
+                'month' => $cursor->format('Y-m'),
+                'start' => $cursor->copy(),
+                'minutes' => (int) $cursor->diffInMinutes($segmentEnd),
+            ];
+            $cursor = $segmentEnd;
+        }
+
+        $totalMinutes = array_sum(array_column($segments, 'minutes'));
+        if ($totalMinutes <= 0) {
+            return [];
+        }
+
+        $workedMinutes = max(0, $totalMinutes - max(0, $breakMinutes));
+        $distributedMinutes = 0;
+
+        foreach ($segments as $index => $segment) {
+            $weightedMinutes = $segment['minutes'] * $workedMinutes;
+            $segments[$index]['worked_minutes'] = intdiv($weightedMinutes, $totalMinutes);
+            $segments[$index]['remainder'] = $weightedMinutes % $totalMinutes;
+            $distributedMinutes += $segments[$index]['worked_minutes'];
+        }
+
+        $roundingMinutes = $workedMinutes - $distributedMinutes;
+        $segmentIndexes = array_keys($segments);
+        usort($segmentIndexes, function (int $left, int $right) use ($segments): int {
+            return $segments[$right]['remainder'] <=> $segments[$left]['remainder']
+                ?: $left <=> $right;
+        });
+
+        for ($index = 0; $index < $roundingMinutes; $index++) {
+            $segments[$segmentIndexes[$index]]['worked_minutes']++;
+        }
+
+        $exportStart = $rangeStart->copy()->startOfDay();
+        $exportEnd = $rangeEnd->copy()->addDay()->startOfDay();
+        $result = [];
+
+        foreach ($segments as $segment) {
+            if ($segment['start']->lessThan($exportStart) || !$segment['start']->lessThan($exportEnd)) {
+                continue;
+            }
+
+            $result[$segment['month']] = ($result[$segment['month']] ?? 0) + $segment['worked_minutes'];
+        }
+
+        return $result;
     }
 }

@@ -7,9 +7,12 @@
 
 namespace Tests\Feature\Modules\Inventory;
 
+use App\Jobs\GenerateInventoryArticleImageThumbnail;
 use Artwork\Modules\Inventory\Console\Commands\GenerateInventoryArticleImageThumbnailsCommand;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryCategory;
+use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
+use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
@@ -75,6 +78,9 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
         $articleImage = InventoryArticle::query()
             ->where('name', 'Thumbnailartikel')->firstOrFail()
             ->images->first();
+        (new GenerateInventoryArticleImageThumbnail($articleImage))
+            ->handle(app(InventoryArticleImageService::class));
+        $articleImage->refresh();
 
         $this->assertNotNull($articleImage->thumbnail);
         $this->assertStringStartsWith('inventory_articles/thumbnails/', $articleImage->thumbnail);
@@ -84,7 +90,7 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
     }
 
     #[Test]
-    public function itStoresSvgWithoutThumbnail(): void
+    public function itRejectsSvgUploads(): void
     {
         $image = UploadedFile::fake()->createWithContent(
             'logo.svg',
@@ -92,14 +98,31 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
         );
 
         $this->post(route('inventory-management.articles.store'), $this->storePayload($image))
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('newImages.0');
 
-        $articleImage = InventoryArticle::query()
-            ->where('name', 'Thumbnailartikel')->firstOrFail()
-            ->images->first();
+        $this->assertDatabaseMissing('inventory_articles', ['name' => 'Thumbnailartikel']);
+    }
 
-        $this->assertNull($articleImage->thumbnail);
-        Storage::disk('public')->assertExists($articleImage->image);
+    #[Test]
+    public function forceDeleteRemovesOriginalAndThumbnailFiles(): void
+    {
+        $article = InventoryArticle::factory()->create([
+            'inventory_category_id' => $this->category->id,
+        ]);
+        $original = UploadedFile::fake()->image('original.jpg')->store('inventory_articles', 'public');
+        $thumbnail = UploadedFile::fake()->image('thumbnail.webp')
+            ->store('inventory_articles/thumbnails', 'public');
+        $article->images()->create([
+            'image' => $original,
+            'thumbnail' => $thumbnail,
+            'is_main_image' => true,
+            'order' => 0,
+        ]);
+
+        app(InventoryArticleRepository::class)->forceDelete($article);
+
+        Storage::disk('public')->assertMissing($original);
+        Storage::disk('public')->assertMissing($thumbnail);
     }
 
     #[Test]
@@ -113,6 +136,9 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
         $articleImage = InventoryArticle::query()
             ->where('name', 'Thumbnailartikel')->firstOrFail()
             ->images->first();
+        (new GenerateInventoryArticleImageThumbnail($articleImage))
+            ->handle(app(InventoryArticleImageService::class));
+        $articleImage->refresh();
 
         $this->assertStringEndsWith('.jpg', $articleImage->image);
         $this->assertNotNull($articleImage->thumbnail);

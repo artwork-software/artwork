@@ -55,7 +55,7 @@
                         v-model="imageSizeForm.inventory_article_image_max_size_mb"
                         type="number"
                         min="1"
-                        max="1024"
+                        max="50"
                         :label="$t('Maximum size per article image (MB)')"
                         @change="saveImageMaxSize"
                     />

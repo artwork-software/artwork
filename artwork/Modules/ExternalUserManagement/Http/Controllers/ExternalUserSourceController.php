@@ -122,7 +122,7 @@ class ExternalUserSourceController extends Controller
 
         // Verhindert parallele Läufe (manueller Klick vs. 30-Minuten-Scheduler):
         // doppelte firstOrCreate-Races und doppelte Willkommens-Mails
-        $lock = Cache::lock('external-user-sync-' . $externalUserSource->id, 600);
+        $lock = Cache::lock('external-user-sync-' . $externalUserSource->id, 1800);
         if (!$lock->get()) {
             return response()->json([
                 'success' => false,
@@ -208,4 +208,3 @@ class ExternalUserSourceController extends Controller
         ]);
     }
 }
-

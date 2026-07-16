@@ -5,19 +5,35 @@ namespace Artwork\Modules\Inventory\Console\Commands;
 use Artwork\Modules\Inventory\Models\InventoryArticleImage;
 use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Illuminate\Console\Command;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class GenerateInventoryArticleImageThumbnailsCommand extends Command
 {
     protected $signature = 'artwork:generate-inventory-article-thumbnails
-        {--force : Regenerate thumbnails that already exist}';
+        {--force : Regenerate thumbnails that already exist}
+        {--once : Run only once per environment (marker in one_time_tasks)}';
+
+    private const string ONCE_KEY = 'inventory-article-images:generate-thumbnails';
 
     protected $description = 'Backfill WebP thumbnails for inventory article images and ' .
         'convert HEIC/HEIF originals to JPEG so browsers can display them';
 
     public function handle(InventoryArticleImageService $imageService): int
     {
+        if ($this->option('once')) {
+            $this->ensureOnceTableExists();
+
+            if (DB::table('one_time_tasks')->where('key', self::ONCE_KEY)->exists()) {
+                $this->info('Thumbnail backfill already completed (--once); skipping.');
+
+                return self::SUCCESS;
+            }
+        }
+
         $disk = Storage::disk('public');
         $generated = 0;
         $converted = 0;
@@ -74,6 +90,33 @@ class GenerateInventoryArticleImageThumbnailsCommand extends Command
         $this->info("Thumbnails generated: {$generated}, HEIC converted: {$converted}, " .
             "skipped (missing file): {$skipped}, failed: {$failed}");
 
+        if ($this->option('once')) {
+            DB::table('one_time_tasks')->updateOrInsert(
+                ['key' => self::ONCE_KEY],
+                ['executed_at' => now(), 'updated_at' => now(), 'created_at' => now()]
+            );
+        }
+
         return self::SUCCESS;
+    }
+
+    private function ensureOnceTableExists(): void
+    {
+        if (Schema::hasTable('one_time_tasks')) {
+            return;
+        }
+
+        try {
+            Schema::create('one_time_tasks', function (Blueprint $table): void {
+                $table->id();
+                $table->string('key')->unique();
+                $table->timestamp('executed_at')->nullable();
+                $table->timestamps();
+            });
+        } catch (\Throwable $exception) {
+            if (!Schema::hasTable('one_time_tasks')) {
+                throw $exception;
+            }
+        }
     }
 }

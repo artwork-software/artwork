@@ -4,12 +4,10 @@ namespace Tests\Unit\Modules\Holidays;
 
 use Artwork\Modules\Holidays\Api\OpenHolidaysApi;
 use Artwork\Modules\Holidays\Models\Subdivision;
-use CalderoSystems\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
-use Saloon\Http\Faking\MockClient;
-use Saloon\Http\Faking\MockResponse;
 use Tests\TestCase;
 
 final class OpenHolidaysApiTest extends TestCase
@@ -43,12 +41,11 @@ final class OpenHolidaysApiTest extends TestCase
 
     private function apiWithResponse(array $body, int $status): OpenHolidaysApi
     {
-        $vendorApi = new VendorApi();
-        $vendorApi->withMockClient(new MockClient([
-            MockResponse::make($body, $status),
-        ]));
+        Http::fake([
+            'openholidaysapi.org/*' => Http::response($body, $status),
+        ]);
 
-        return new OpenHolidaysApi($vendorApi);
+        return app(OpenHolidaysApi::class);
     }
 
     private function subdivision(): Subdivision

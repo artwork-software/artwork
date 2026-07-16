@@ -78,8 +78,8 @@ class UpdateArtwork extends Command
     private function generateInventoryArticleThumbnails(): void
     {
         $this->section('Inventory Article Image Thumbnails');
-        // Idempotent: erzeugt nur fehlende Thumbnails und konvertiert HEIC-Altbestände nach JPEG.
-        $this->call('artwork:generate-inventory-article-thumbnails');
+        // Der Altbestand wird pro Umgebung nur einmal verarbeitet; neue Uploads nutzen Queue-Jobs.
+        $this->call('artwork:generate-inventory-article-thumbnails', ['--once' => true]);
     }
 
     private function backfillShiftPlanRequestShifts(): void

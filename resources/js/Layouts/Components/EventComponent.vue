@@ -1228,7 +1228,7 @@ async function checkProjectAssignmentImpact(data) {
     try {
         const { data: response } = await axios.get(
             route('events.project-assignment-impact', { event: props.event.id }),
-            { params: { start_time: data.start, end_time: data.end } },
+            { params: { start_time: data.start, end_time: data.end, project_id: data.projectId } },
         )
 
         if ((response.affected ?? []).length) {

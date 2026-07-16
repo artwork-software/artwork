@@ -21,9 +21,9 @@ class InventoryArticleImageService
     private const HEIC_MIME_TYPES = ['image/heic', 'image/heif'];
 
     /**
-     * Store an uploaded article image and generate a small WebP thumbnail for
-     * the overview. HEIC/HEIF uploads (iPhone photos) are converted to JPEG
-     * because browsers cannot render HEIC.
+     * Store an uploaded article image. Thumbnail generation is dispatched by
+     * the repository after the database row exists. HEIC/HEIF uploads (iPhone
+     * photos) are converted to JPEG because browsers cannot render HEIC.
      *
      * @return array{image: string, thumbnail: string|null}
      */
@@ -37,7 +37,7 @@ class InventoryArticleImageService
 
         return [
             'image' => $path,
-            'thumbnail' => $path ? $this->generateThumbnail($path) : null,
+            'thumbnail' => null,
         ];
     }
 

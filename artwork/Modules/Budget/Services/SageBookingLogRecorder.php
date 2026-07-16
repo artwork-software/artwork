@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\SageBookingLog;
 use Artwork\Modules\Budget\Models\SageBookingLogEntry;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Records which Sage booking records are created/updated/deleted during an import or delete run.
@@ -18,6 +19,8 @@ use Illuminate\Support\Carbon;
  */
 class SageBookingLogRecorder
 {
+    private const int INSERT_BATCH_SIZE = 250;
+
     private const array ACTIONS_IMPORT = ['created', 'updated'];
 
     private const array ACTIONS_DELETE = ['deleted'];
@@ -28,6 +31,9 @@ class SageBookingLogRecorder
 
     /** @var array<int, string> */
     private array $trackedActions = [];
+
+    /** @var array<int, array<string, mixed>> */
+    private array $pendingEntries = [];
 
     /**
      * Start a new run. Creates the log header immediately (outside of any per-booking
@@ -62,13 +68,25 @@ class SageBookingLogRecorder
             return;
         }
 
+        $entry = $this->snapshot($action, $model);
+
+        // Only buffer snapshots whose surrounding booking transaction commits. This preserves
+        // the previous rollback semantics while allowing committed rows to be inserted in bulk.
+        if (DB::connection()->transactionLevel() > 0) {
+            DB::afterCommit(fn () => $this->buffer($entry));
+        } else {
+            $this->buffer($entry);
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function snapshot(string $action, SageAssignedData|SageNotAssignedData $model): array
+    {
         $isAssigned = $model instanceof SageAssignedData;
 
-        // Logging must never break the actual import/delete. record() runs inside the caller's
-        // per-booking transaction, so a throwing entry insert would roll the real booking back.
-        // Swallow and report any logging failure instead.
-        try {
-            SageBookingLogEntry::create([
+        return [
                 'sage_booking_log_id' => $this->logId,
                 'action' => $action,
                 'target_type' => $isAssigned ? 'assigned' : 'not_assigned',
@@ -91,9 +109,45 @@ class SageBookingLogRecorder
                 'project_id' => $isAssigned ? null : $model->project_id,
                 'column_cell_id' => $isAssigned ? $model->column_cell_id : null,
                 'created_at' => Carbon::now(),
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
+            ];
+    }
+
+    /** @param array<string, mixed> $entry */
+    private function buffer(array $entry): void
+    {
+        if (!$this->recording) {
+            return;
+        }
+
+        $this->pendingEntries[] = $entry;
+
+        if (count($this->pendingEntries) >= self::INSERT_BATCH_SIZE) {
+            $this->flush();
+        }
+    }
+
+    private function flush(): void
+    {
+        if ($this->pendingEntries === []) {
+            return;
+        }
+
+        $entries = $this->pendingEntries;
+        $this->pendingEntries = [];
+
+        try {
+            SageBookingLogEntry::query()->insert($entries);
+        } catch (\Throwable $batchException) {
+            report($batchException);
+
+            // Isolate malformed legacy data without dropping the remaining valid snapshots.
+            foreach ($entries as $entry) {
+                try {
+                    SageBookingLogEntry::query()->insert($entry);
+                } catch (\Throwable $entryException) {
+                    report($entryException);
+                }
+            }
         }
     }
 
@@ -109,6 +163,7 @@ class SageBookingLogRecorder
         }
 
         try {
+            $this->flush();
             $log = SageBookingLog::find($this->logId);
             if ($log !== null) {
                 $counts = SageBookingLogEntry::query()
@@ -139,5 +194,6 @@ class SageBookingLogRecorder
         $this->recording = false;
         $this->logId = null;
         $this->trackedActions = [];
+        $this->pendingEntries = [];
     }
 }

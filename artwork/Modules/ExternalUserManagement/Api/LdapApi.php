@@ -72,11 +72,9 @@ class LdapApi implements ExternalUserManagementApi
         $filter = trim((string) $filter);
 
         if ($filter === '') {
-            // In AD haben auch Computer-/gMSA-Konten objectClass=user; objectCategory=person
-            // schließt sie aus (ersetzt den früheren RejectComputerObjectClass-Scope des
-            // ActiveDirectory\User-Models). Nicht-AD-Verzeichnisse brauchen ohnehin einen
-            // eigenen user_filter.
-            return '(&(objectCategory=person)(objectClass=user))';
+            // Portable across Active Directory, OpenLDAP and other LDAP servers. AD-specific
+            // installations can still exclude computer accounts via an explicit user_filter.
+            return '(objectClass=person)';
         }
 
         if (!str_starts_with($filter, '(')) {

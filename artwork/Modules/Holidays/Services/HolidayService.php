@@ -3,18 +3,18 @@
 namespace Artwork\Modules\Holidays\Services;
 
 use Artwork\Modules\Holidays\Api\ApiDto;
+use Artwork\Modules\Holidays\Api\OpenHolidaysApi;
 use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Holidays\Models\Subdivision;
 use Artwork\Modules\Holidays\Repository\HolidayRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use CalderoSystems\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 
 class HolidayService
 {
     public function __construct(
         private readonly HolidayRepository $holidayRepository,
-        private readonly VendorApi $holidayApi
+        private readonly OpenHolidaysApi $holidayApi
     ) {
     }
 
@@ -81,25 +81,21 @@ class HolidayService
         foreach ($selectedSubdivisions as $subdivision) {
             $subdivisionModel = Subdivision::find($subdivision['id']);
             if ($publicHolidays) {
-                $data = $this->holidayApi->holidays()->publicHolidays(
-                    $subdivisionModel->country_code,
-                    'DE',
-                    now()->startOfYear()->format('Y-m-d'),
-                    now()->addYears(2)->endOfYear()->format('Y-m-d'),
-                    $subdivisionModel->country_code . '-' . $subdivisionModel->code,
-                )->array();
+                $data = $this->holidayApi->getRawHolidays(
+                    now()->startOfYear(),
+                    now()->addYears(2)->endOfYear(),
+                    $subdivisionModel,
+                );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
             }
 
             if ($schoolHolidays) {
-                $data =  $this->holidayApi->holidays()->schoolHolidays(
-                    $subdivisionModel->country_code,
-                    'DE',
-                    now()->startOfYear()->format('Y-m-d'),
-                    now()->addYears(2)->endOfYear()->format('Y-m-d'),
-                    $subdivisionModel->country_code . '-' . $subdivisionModel->code
-                )->array();
+                $data = $this->holidayApi->getRawSchoolHolidays(
+                    now()->startOfYear(),
+                    now()->addYears(2)->endOfYear(),
+                    $subdivisionModel,
+                );
                 $data['country'] = $subdivisionModel->country_code;
                 $responses[] = $data;
             }

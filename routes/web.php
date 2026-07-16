@@ -42,6 +42,7 @@ use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\EventVerificationController;
 use App\Http\Controllers\ExportPDFController;
+use App\Http\Controllers\WorkerShiftPlanPdfExportController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
@@ -561,6 +562,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project-day-assignments.projects');
     Route::post('/project-day-assignments', [ProjectDayAssignmentController::class, 'store'])
         ->name('project-day-assignments.store');
+    Route::get('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'fullPeriodForWorker'])
+        ->name('project-day-assignments.full-period.index')
+        ->can('can plan shifts');
+    Route::delete('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'destroyFullPeriod'])
+        ->name('project-day-assignments.full-period.destroy')
+        ->can('can plan shifts');
     Route::delete('/project-day-assignments/{projectDayAssignment}', [ProjectDayAssignmentController::class, 'destroy'])
         ->name('project-day-assignments.destroy');
     Route::patch('/project-day-assignments/{projectDayAssignment}/accept-wish', [ProjectDayAssignmentController::class, 'acceptWish'])
@@ -572,7 +579,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.project-assignees')
         ->can('can view shift plan');
     Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
-        ->name('events.project-assignment-impact');
+        ->name('events.project-assignment-impact')
+        ->can('can view shift plan');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
@@ -2107,6 +2115,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
         ->name('shift.plan.export.pdf');
+    Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)
+        ->name('shift.plan.export.worker-matrix.pdf')
+        ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
     Route::get(

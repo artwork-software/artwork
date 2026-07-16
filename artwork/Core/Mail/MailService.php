@@ -38,10 +38,9 @@ class MailService
 
     public function sendExternalUserImported(User $user, string $token): void
     {
-        $this->mailTo(
-            $user->email,
-            new ExternalUserImported($user, $token)
-        );
+        $this->mailManager
+            ->to($user->email)
+            ->queue((new ExternalUserImported($user, $token))->afterCommit());
     }
 
     final public function mailTo(string $email, Mailable $mailable): void

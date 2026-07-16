@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Http\Requests;
 
+use App\Rules\InventoryArticleImageDimensions;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -33,7 +34,12 @@ class StoreInventoryArticleRequest extends FormRequest
             'newImages' => ['nullable', 'array'],
             // Laravel's 'image' rule plus HEIC/HEIF (iPhone photos) — those
             // get converted to JPEG on upload (InventoryArticleImageService).
-            'newImages.*' => ['mimes:jpg,jpeg,png,gif,webp,bmp,svg,heic,heif', 'max:' . $maxImageSizeKb],
+            'newImages.*' => [
+                'bail',
+                'mimes:jpg,jpeg,png,gif,webp,bmp,heic,heif',
+                'max:' . $maxImageSizeKb,
+                new InventoryArticleImageDimensions(),
+            ],
             'quantity' => ['required', 'integer'],
             'properties' => ['nullable', 'array'],
             'properties.*.id' => ['required', 'integer', 'exists:inventory_article_properties,id'],

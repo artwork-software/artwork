@@ -76,6 +76,17 @@ final class InventoryArticleImageMaxSizeSettingTest extends FeatureTestCase
     }
 
     #[Test]
+    public function itRejectsImagesWithUnsafePixelDimensions(): void
+    {
+        $image = UploadedFile::fake()->image('zu-breit.jpg', 8193, 10);
+
+        $this->post(route('inventory-management.articles.store'), $this->storePayload($image))
+            ->assertSessionHasErrors('newImages.0');
+
+        $this->assertDatabaseMissing('inventory_articles', ['name' => 'Testartikel']);
+    }
+
+    #[Test]
     public function itUpdatesTheLimitViaTheSettingsEndpoint(): void
     {
         $this->patch(route('inventory-management.settings.general.update-article-image-max-size'), [
@@ -94,6 +105,10 @@ final class InventoryArticleImageMaxSizeSettingTest extends FeatureTestCase
 
         $this->patch(route('inventory-management.settings.general.update-article-image-max-size'), [
             'inventory_article_image_max_size_mb' => 'abc',
+        ])->assertSessionHasErrors('inventory_article_image_max_size_mb');
+
+        $this->patch(route('inventory-management.settings.general.update-article-image-max-size'), [
+            'inventory_article_image_max_size_mb' => 51,
         ])->assertSessionHasErrors('inventory_article_image_max_size_mb');
 
         $this->assertSame(10, app(GeneralSettings::class)->refresh()->inventory_article_image_max_size_mb);

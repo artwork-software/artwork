@@ -45,7 +45,9 @@ class BiProjectData extends Model
             'is_co_production' => 'boolean',
             'is_own_production' => 'boolean',
             'is_germany_premiere' => 'boolean',
-            'premiere_date' => 'date',
+            // date:Y-m-d statt date: die ISO-Serialisierung mit UTC-Umrechnung ließe das
+            // Datum bei Europe/Berlin im Frontend einen Tag früher erscheinen
+            'premiere_date' => 'date:Y-m-d',
             'revenue_total' => 'decimal:2',
         ];
     }

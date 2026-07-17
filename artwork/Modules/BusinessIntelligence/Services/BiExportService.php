@@ -3,8 +3,11 @@
 namespace Artwork\Modules\BusinessIntelligence\Services;
 
 use Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum;
+use Artwork\Modules\BusinessIntelligence\Exports\BiExportWorkbook;
 use Artwork\Modules\BusinessIntelligence\Exports\BiProjectExport;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
+use Artwork\Modules\BusinessIntelligence\Models\BiExportPreset;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Component;
@@ -23,6 +26,43 @@ class BiExportService
         private readonly BiProjectMetricsService $biProjectMetricsService,
         private readonly GeneralSettings $generalSettings
     ) {
+    }
+
+    /**
+     * Auswahl-Optionen (Spalten, Tag-/Custom-Feld-Spalten, Presets) für die
+     * Export-UIs — geteilt zwischen Settings-Exportseite und BI-Dashboard.
+     *
+     * @return array<string, mixed>
+     */
+    public function exportConfigurationOptions(): array
+    {
+        $columns = collect(self::columnLabelMap())
+            ->map(fn (string $label, string $key) => ['key' => $key, 'label' => $label])
+            ->values();
+
+        $tagColumns = BiEventTypeTag::query()
+            ->get(['id', 'name', 'name_de'])
+            ->map(fn (BiEventTypeTag $tag) => [
+                'key' => 'tag_' . $tag->id,
+                'label' => $tag->name_de ?: $tag->name,
+            ]);
+
+        $customFieldColumns = Component::isBiField()
+            ->orderBy('bi_order')
+            ->get(['id', 'name'])
+            ->map(fn (Component $component) => [
+                'key' => 'custom_field_' . $component->id,
+                'label' => $component->name,
+            ]);
+
+        $presets = BiExportPreset::query()->orderBy('name')->get(['id', 'name', 'columns', 'is_shared']);
+
+        return [
+            'columns' => $columns,
+            'tagColumns' => $tagColumns,
+            'customFieldColumns' => $customFieldColumns,
+            'presets' => $presets,
+        ];
     }
 
     public function cacheExportConfiguration(array $config): string
@@ -92,9 +132,13 @@ class BiExportService
         return 'bi-exports/' . $token . '.xlsx';
     }
 
-    private function buildExport(array $config): BiProjectExport
+    private function buildExport(array $config): BiExportWorkbook
     {
         [$from, $to] = $this->resolveDateRange($config);
+
+        $granularity = $config['granularity'] ?? 'both';
+        $columns = $config['columns'] ?? [];
+        $tagFilter = $config['event_tag_filter'] ?? [];
 
         $projects = Project::whereIn('id', $config['project_ids'])
             ->with([
@@ -104,6 +148,7 @@ class BiExportService
                 'biTimeEfforts.user',
                 'categories',
                 'contracts',
+                'costCenter',
                 'events.room.area',
                 'events.event_type.biTags',
                 'checklists.tasks',
@@ -113,14 +158,160 @@ class BiExportService
             ])
             ->get();
 
-        $rows = [];
-        foreach ($projects as $project) {
-            $rows[] = $this->buildProjectRow($project, $config['columns'], $from, $to);
+        $sheets = [];
+
+        if ($granularity !== 'events' && count($columns) > 0) {
+            $rows = [];
+            foreach ($projects as $project) {
+                $rows[] = $this->buildProjectRow($project, $columns, $from, $to);
+            }
+
+            $sheets[] = new BiProjectExport(
+                $rows,
+                $columns,
+                $this->buildColumnLabels($columns),
+                __('Productions')
+            );
         }
 
-        $labels = $this->buildColumnLabels($config['columns']);
+        if ($granularity !== 'projects') {
+            $eventColumns = array_keys(self::eventColumnLabelMap());
+            $eventRows = [];
+            foreach ($projects as $project) {
+                foreach ($this->buildEventRows($project, $from, $to, $tagFilter) as $eventRow) {
+                    $eventRows[] = $eventRow;
+                }
+            }
 
-        return new BiProjectExport($rows, $config['columns'], $labels);
+            $eventLabels = array_map(
+                static fn (string $label): string => __($label),
+                self::eventColumnLabelMap()
+            );
+
+            $sheets[] = new BiProjectExport($eventRows, $eventColumns, $eventLabels, __('Events'));
+        }
+
+        return new BiExportWorkbook($sheets);
+    }
+
+    /**
+     * Fixed column set of the per-event sheet. Values are translation keys.
+     *
+     * @return array<string, string>
+     */
+    public static function eventColumnLabelMap(): array
+    {
+        return [
+            'project_name' => 'Project name',
+            'event_date' => 'Date',
+            'event_time' => 'Time period',
+            'event_type' => 'Event type',
+            'bi_tags' => 'BI tags',
+            'room' => 'Room',
+            'area' => 'Area',
+            'visitors' => 'Visitors',
+            'sold_tickets' => 'Sold tickets',
+            'revenue' => 'Revenue',
+            'seats_capacity' => 'Number of seats',
+            'occupancy_rate' => 'Occupancy rate',
+        ];
+    }
+
+    /**
+     * One row per event of the project within the date range, optionally
+     * filtered by BI tags ('untagged' matches events whose event type has none).
+     *
+     * @param array<int, int|string> $tagFilter
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildEventRows(Project $project, ?Carbon $from, ?Carbon $to, array $tagFilter): array
+    {
+        $eventDataByEventId = $project->biEventData->keyBy('event_id');
+        $capacityOverrides = $project->biRoomCapacities->keyBy('room_id');
+
+        $tagIds = array_map('intval', array_filter($tagFilter, 'is_numeric'));
+        $includeUntagged = in_array('untagged', $tagFilter, true);
+
+        return $project->events
+            ->filter(function (Event $event) use ($from, $to): bool {
+                if (!$event->start_time) {
+                    return false;
+                }
+
+                if ($from && $event->end_time && $event->end_time->lt($from->copy()->startOfDay())) {
+                    return false;
+                }
+
+                if ($to && $event->start_time->gt($to->copy()->endOfDay())) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->filter(function (Event $event) use ($tagIds, $includeUntagged): bool {
+                if (empty($tagIds) && !$includeUntagged) {
+                    return true;
+                }
+
+                $eventTagIds = $event->event_type?->biTags?->pluck('id')->all() ?? [];
+
+                if (empty($eventTagIds)) {
+                    return $includeUntagged;
+                }
+
+                return count(array_intersect($tagIds, $eventTagIds)) > 0;
+            })
+            ->sortBy('start_time')
+            ->values()
+            ->map(function (Event $event) use ($project, $eventDataByEventId, $capacityOverrides): array {
+                $eventData = $eventDataByEventId->get($event->id);
+                $room = $event->room;
+
+                $capacity = null;
+                if ($room) {
+                    $override = $capacityOverrides->get($room->id)?->capacity_override;
+                    $capacity = (int) ($override ?? $room->capacity ?? 0);
+                }
+
+                $soldTickets = $eventData?->sold_tickets;
+
+                return [
+                    'project_name' => $project->name,
+                    'event_date' => $event->start_time?->format('d.m.Y') ?? '',
+                    'event_time' => $this->formatEventTime($event),
+                    'event_type' => $event->event_type?->name ?? '',
+                    'bi_tags' => $event->event_type?->biTags
+                        ?->map(fn (BiEventTypeTag $tag) => $tag->name_de ?: $tag->name)
+                        ->implode(', ') ?? '',
+                    'room' => $room?->name ?? '',
+                    'area' => $room?->area?->name ?? '',
+                    'visitors' => $eventData?->visitors ?? '',
+                    'sold_tickets' => $soldTickets ?? '',
+                    'revenue' => $eventData?->revenue ?? '',
+                    'seats_capacity' => $capacity ?? '',
+                    'occupancy_rate' => $this->biProjectMetricsService->occupancyRate(
+                        $soldTickets !== null ? (int) $soldTickets : null,
+                        (int) ($capacity ?? 0)
+                    ) ?? '',
+                ];
+            })
+            ->all();
+    }
+
+    private function formatEventTime(Event $event): string
+    {
+        if ($event->allDay) {
+            return __('Full day');
+        }
+
+        $start = $event->start_time?->format('H:i');
+        $end = $event->end_time?->format('H:i');
+
+        if (!$start) {
+            return '';
+        }
+
+        return $end ? $start . ' – ' . $end : $start;
     }
 
     /**
@@ -135,6 +326,7 @@ class BiExportService
             'project_name' => 'Project name',
             'project_state' => 'Project status',
             'artists' => 'Artist / Group',
+            'cost_center' => 'Cost bearer',
             'rooms' => 'Room',
             'areas' => 'Area',
             'main_category' => 'Category (Sector)',
@@ -236,6 +428,7 @@ class BiExportService
                 'project_name' => $project->name,
                 'project_state' => $project->status?->name ?? '',
                 'artists' => $project->artists ?? '',
+                'cost_center' => $project->costCenter?->name ?? '',
                 'rooms' => $this->getRoomNames($project),
                 'areas' => $this->getAreaNames($project),
                 'main_category' => $this->getMainCategory($project),

@@ -4,12 +4,9 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\BusinessIntelligence\Http\Requests\BiExportCacheRequest;
 use Artwork\Modules\BusinessIntelligence\Jobs\GenerateBiExportJob;
-use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
-use Artwork\Modules\BusinessIntelligence\Models\BiExportPreset;
 use Artwork\Modules\BusinessIntelligence\Services\BiExportService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
-use Artwork\Modules\Project\Models\Component;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -30,38 +27,19 @@ class BiExportController extends Controller
             403
         );
 
-        $columns = collect(BiExportService::columnLabelMap())
-            ->map(fn(string $label, string $key) => ['key' => $key, 'label' => $label])
-            ->values();
-
-        $tags = BiEventTypeTag::query()
-            ->get(['id', 'name', 'name_de'])
-            ->map(fn(BiEventTypeTag $tag) => [
-                'key' => 'tag_' . $tag->id,
-                'label' => $tag->name_de ?: $tag->name,
-            ]);
-
-        $customFields = Component::isBiField()
-            ->orderBy('bi_order')
-            ->get(['id', 'name'])
-            ->map(fn(Component $component) => [
-                'key' => 'custom_field_' . $component->id,
-                'label' => $component->name,
-            ]);
+        $options = $this->biExportService->exportConfigurationOptions();
 
         $projects = Project::query()
             ->where('is_group', false)
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $presets = BiExportPreset::query()->orderBy('name')->get(['id', 'name', 'columns', 'is_shared']);
-
         return Inertia::render('Settings/BiSettings/Export', [
             'projects' => $projects,
-            'columns' => $columns,
-            'tagColumns' => $tags,
-            'customFieldColumns' => $customFields,
-            'presets' => $presets,
+            'columns' => $options['columns'],
+            'tagColumns' => $options['tagColumns'],
+            'customFieldColumns' => $options['customFieldColumns'],
+            'presets' => $options['presets'],
             'defaultDateFrom' => $generalSettings->playing_time_window_start ?: null,
             'defaultDateTo' => $generalSettings->playing_time_window_end ?: null,
         ]);

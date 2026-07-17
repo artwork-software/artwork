@@ -25,7 +25,7 @@ class BiProjectMetricsService
         ['value' => $visitors, 'estimated' => $visitorsEstimated] = $this->visitorsWithEstimate($project, $from, $to);
         $soldTickets = $this->soldTickets($project, $from, $to);
         $revenue = $this->revenue($project, $from, $to);
-        $capacity = $this->seatsCapacity($project);
+        $capacity = $this->seatsCapacity($project, $from, $to);
         $performances = $this->performances($project, $from, $to);
 
         return [
@@ -161,12 +161,17 @@ class BiProjectMetricsService
 
     /**
      * Sum of distinct project-room capacities (per-project override else room default).
+     * With a date range only rooms of events in that range count — otherwise a
+     * season-filtered occupancy would divide range tickets by all-time capacity.
      */
-    public function seatsCapacity(Project $project): int
+    public function seatsCapacity(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
     {
         $overrides = $project->biRoomCapacities->keyBy('room_id');
 
-        return (int) $project->events
+        // Ohne Range weiterhin alle Events (auch undatierte), damit Bestandsaufrufer identisch bleiben
+        $events = ($from || $to) ? $this->eventsInRange($project, $from, $to) : $project->events;
+
+        return (int) $events
             ->pluck('room')
             ->filter()
             ->unique('id')

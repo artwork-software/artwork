@@ -374,6 +374,7 @@ const shiftPlanExportConfiguration = computed(() => {
             // In project mode, shifts/events belonging to this project are highlighted in the PDF.
             highlightProjectId: useProjectMode ? settings.time_period_project_id : null,
             craftIds: props.user_filters?.craft_ids ?? [],
+            crafts: props.crafts.map(({id, name}) => ({id, name})),
         },
         [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
             crafts: props.crafts.map(({id, name}) => ({id, name})),

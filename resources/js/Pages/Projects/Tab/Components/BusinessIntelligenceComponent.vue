@@ -41,13 +41,33 @@
                 </div>
                 <p class="text-xs text-amber-800">
                     {{ $t('Still missing') }}:
-                    <span class="font-medium">{{ dataQuality.missing.map(item => $t(item)).join(', ') }}</span>
-                    — {{ $t('evaluations stay incomplete until these are recorded.') }}
+                    <button
+                        v-for="item in dataQuality.missing"
+                        :key="item"
+                        type="button"
+                        class="ml-1.5 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white/70 px-2 py-0.5 font-medium text-amber-900 hover:bg-white transition"
+                        @click="goToMissingItem(item)"
+                    >
+                        {{ $t(item) }}
+                        <IconArrowDown class="size-3" />
+                    </button>
+                    <span class="ml-1">— {{ $t('evaluations stay incomplete until these are recorded.') }}</span>
                 </p>
             </div>
 
+            <!-- Positives Signal, wenn alles gepflegt ist -->
+            <div
+                v-else-if="canEditComponent && dataQuality.total > 0"
+                class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 print:hidden flex items-center gap-2"
+            >
+                <IconCircleCheck class="size-4 text-emerald-600 shrink-0" />
+                <span class="text-sm text-emerald-800">
+                    {{ $t('Data quality') }}: {{ $t('All key figures are recorded.') }}
+                </span>
+            </div>
+
             <div class="space-y-4">
-                <BiSectionCard :title="$t('Audience & revenue')" :icon="IconUsers" :completeness="audienceCompleteness">
+                <BiSectionCard ref="audienceCard" :title="$t('Audience & revenue')" :icon="IconUsers" :completeness="audienceCompleteness">
                     <BiAudienceRevenueSection
                         :bi-data="biData"
                         :metrics-summary="metricsSummary"
@@ -71,6 +91,7 @@
                 </BiSectionCard>
 
                 <BiSectionCard
+                    ref="capacityCard"
                     :title="$t('Room capacities & utilisation')"
                     :icon="IconArmchair"
                     :completeness="projectRooms.length > 0 ? capacityCompleteness : null"
@@ -135,12 +156,14 @@
                 :default-date-to="projectPeriod?.to ?? null"
                 @close="showExportModal = false"
             />
+
+            <BiSaveIndicator :status="saveFeedback.status.value" />
         </template>
     </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, nextTick } from 'vue';
 import { usePage } from "@inertiajs/vue3";
 import {
     IconUsers,
@@ -150,8 +173,12 @@ import {
     IconClockHour4,
     IconCamera,
     IconForms,
+    IconArrowDown,
+    IconCircleCheck,
 } from '@tabler/icons-vue';
 import { usePermission } from "@/Composeables/Permission.js";
+import { provideBiSaveFeedback } from "@/Composeables/BiSaveFeedback.js";
+import BiSaveIndicator from "@/Pages/Projects/Components/BiComponents/BiSaveIndicator.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BiKpiHeader from "@/Pages/Projects/Components/BiComponents/BiKpiHeader.vue";
 import BiSectionCard from "@/Pages/Projects/Components/BiComponents/BiSectionCard.vue";
@@ -172,6 +199,9 @@ const props = defineProps({
 
 const { can, hasAdminRole } = usePermission(usePage().props);
 const canExport = can('can export bi data');
+
+// Ein Statusindikator für alle Sektions-Saves (Sektionen injizieren den Runner)
+const saveFeedback = provideBiSaveFeedback();
 
 const isLoading = ref(true);
 const loadError = ref(null);
@@ -251,9 +281,34 @@ const dataQuality = computed(() => {
     };
 });
 
+// Banner-Klick: zugehörige Karte aufklappen und hinscrollen
+const audienceCard = ref(null);
+const capacityCard = ref(null);
+
+const missingItemTargets = {
+    'Visitors': 'audienceCard',
+    'Sold tickets': 'audienceCard',
+    'Revenue': 'audienceCard',
+    'Room capacities': 'capacityCard',
+};
+
+const goToMissingItem = async (item) => {
+    const card = missingItemTargets[item] === 'capacityCard' ? capacityCard.value : audienceCard.value;
+    if (!card) return;
+    card.expand();
+    await nextTick();
+    card.$el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+// Sequenz-Guard: bei schnell aufeinanderfolgenden Saves darf eine überholte
+// Antwort den State einer neueren nicht überschreiben
+let fetchSeq = 0;
+
 const fetchData = async () => {
+    const seq = ++fetchSeq;
     try {
         const response = await axios.get(route('projects.bi.show', props.project.id));
+        if (seq !== fetchSeq) return;
         metricsSummary.value = response.data.metrics_summary || {};
         biData.value = response.data.bi_data;
         eventData.value = response.data.event_data;
@@ -269,6 +324,7 @@ const fetchData = async () => {
         projectPeriod.value = response.data.project_period || null;
         loadError.value = null;
     } catch (error) {
+        if (seq !== fetchSeq) return;
         loadError.value = 'Error loading BI data.';
     } finally {
         isLoading.value = false;

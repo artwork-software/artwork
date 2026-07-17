@@ -109,21 +109,10 @@
 
                         <ToolTipComponent
                             direction="right"
-                            :tooltip-text="$t('Export Shift Plan as PDF')"
+                            :tooltip-text="$t('Export')"
                             :icon="IconFileExport"
                             icon-size="h-5 w-5"
-                            @click="openExportDailyProjectShiftPlanModal = true"
-                            v-if="isInProjectView"
-                            classesButton="ui-button"
-                        />
-
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Export Shift personnel plan as xlsx')"
-                            :icon="IconFileTypeXls"
-                            icon-size="h-5 w-5"
-                            @click="openExportShiftPersonnelPlanXlsxModal = true"
-                            v-if="isInProjectView"
+                            @click="showProjectShiftExportModal = true"
                             classesButton="ui-button"
                         />
 
@@ -517,16 +506,11 @@
                 :wanted-date="wantedDate"
             />
 
-            <ExportDailyProjectShiftPlanModal
-                v-if="openExportDailyProjectShiftPlanModal"
-                @close="openExportDailyProjectShiftPlanModal = false"
-                :project="props.project"
-            />
-
-            <ExportShiftPersonnelPlanXlsxModal
-                v-if="openExportShiftPersonnelPlanXlsxModal"
-                @close="openExportShiftPersonnelPlanXlsxModal = false"
-                :project="props.project"
+            <ExportModal
+                v-if="showProjectShiftExportModal"
+                @close="showProjectShiftExportModal = false"
+                :enums="projectShiftExportTabs"
+                :configuration="projectShiftExportConfiguration"
             />
         </component>
     </div>
@@ -535,7 +519,7 @@
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef } from "vue";
+import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -550,7 +534,7 @@ import {
     IconChevronRight,
     IconX, IconFileExport,
     IconCalendarPlus,
-    IconCalendarUser, IconFileTypeXls,
+    IconCalendarUser,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
@@ -562,8 +546,8 @@ import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
-import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
-import ExportShiftPersonnelPlanXlsxModal from "@/Pages/Projects/Components/ExportShiftPersonnelPlanXlsxModal.vue";
+import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Export/Modals/ExportModal.vue"));
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
@@ -779,8 +763,54 @@ const shiftToEdit = ref(null)
 const roomForShiftAdd = ref<number | null>(null)
 const dayForShiftAdd = ref<string | null>(null)
 const showAddShiftModal = ref(false)
-const openExportDailyProjectShiftPlanModal = ref(false)
-const openExportShiftPersonnelPlanXlsxModal = ref(false)
+
+// Gemeinsames Export-Modal: ein Reiter pro Export. Im Projekt-Schichtentab
+// die projektgebundenen Exporte, in der allgemeinen Tagesansicht dieselben
+// Exporte wie in der Schichtplan-Funktionsleiste.
+const exportTabEnums = useExportTabEnums()
+const showProjectShiftExportModal = ref(false)
+const projectShiftExportTabs = computed(() => {
+    if (props.isInProjectView) {
+        return [
+            exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT,
+            exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT,
+        ]
+    }
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]
+    // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
+    if (can('can view shift worker hours') || is('artwork admin')) {
+        tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT)
+    }
+    return tabs
+})
+const projectShiftExportConfiguration = computed(() => {
+    if (props.isInProjectView) {
+        return {
+            [exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT]: { project: props.project },
+            [exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT]: { project: props.project },
+        }
+    }
+    const craftList = (craftsResolved.value ?? []) as any[]
+    return {
+        [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]: {
+            startDate: props.dateValue?.[0] ?? null,
+            endDate: props.dateValue?.[1] ?? null,
+            projectId: null,
+            isInProjectView: false,
+            isDailyView: true,
+            projectName: null,
+            highlightProjectId: null,
+            craftIds: (user_filtersResolved.value as any)?.craft_ids ?? [],
+            crafts: craftList.map(({id, name}: any) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
+            crafts: craftList.map(({id, name}: any) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]: {
+            crafts: craftList.map(({id, name, universally_applicable}: any) => ({id, name, universally_applicable})),
+        },
+    }
+})
 
 const dayForPreset = ref<any | null>(null)
 const roomForPreset = ref<any | null>(null)

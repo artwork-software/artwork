@@ -50,10 +50,15 @@
                     <td>
                         <div class="title">{{ $title }}</div>
                         <div class="meta">
-                            {{ __('Period') }}: {{ $startDate }} - {{ $endDate }} ·
+                            {{ __('Period') }}: {{ $startDate }} - {{ $endDate }}@if(!empty($kwRange)) ({{ $kwRange }})@endif ·
                             {{ __('Workers') }}: {{ $workerCount }} ·
                             {{ __('Created by') }}: {{ $createdBy }} · {{ $createdAt }}
                         </div>
+                        @if(!empty($craftFilterNames))
+                            <div class="meta">
+                                {{ __('Crafts') }}: {{ implode(', ', $craftFilterNames) }}
+                            </div>
+                        @endif
                     </td>
                     <td>
                         <div class="week">KW {{ $page['weekNumber'] }} / {{ $page['weekYear'] }}</div>

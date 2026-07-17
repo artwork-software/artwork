@@ -225,7 +225,7 @@ class BiExportService
         $visitors = $this->biProjectMetricsService->visitors($project, $from, $to);
         $soldTickets = $this->biProjectMetricsService->soldTickets($project, $from, $to);
         $revenue = $this->biProjectMetricsService->revenue($project, $from, $to);
-        $capacity = $this->biProjectMetricsService->seatsCapacity($project);
+        $capacity = $this->biProjectMetricsService->seatsCapacity($project, $from, $to);
         $avgPrice = $this->biProjectMetricsService->averagePrice($revenue, $soldTickets);
         $occupancy = $this->biProjectMetricsService->occupancyRate($soldTickets, $capacity);
 
@@ -243,10 +243,12 @@ class BiExportService
                 'season_year' => $this->getSeasonYear($from, $to),
                 'visitors' => $visitors ?? '',
                 'sold_tickets' => $soldTickets ?? '',
+                // Rohzahlen ausgeben: der FromView-Reader macht daraus echte Excel-Zahlen,
+                // die Anzeige (€ / %) übernimmt columnFormats() im Export
                 'revenue' => $revenue ?? '',
-                'avg_price' => $avgPrice !== null ? number_format($avgPrice, 2, ',', '.') : '',
+                'avg_price' => $avgPrice ?? '',
                 'seats_capacity' => $capacity,
-                'occupancy_rate' => $occupancy !== null ? number_format($occupancy, 1, ',', '.') . ' %' : '',
+                'occupancy_rate' => $occupancy ?? '',
                 'production_type' => $this->getProductionType($biData),
                 'is_new_production' => $biData?->is_new_production ? 'Ja' : 'Nein',
                 'is_co_production' => $biData?->is_co_production ? 'Ja' : 'Nein',

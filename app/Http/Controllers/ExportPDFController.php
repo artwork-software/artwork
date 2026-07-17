@@ -420,6 +420,14 @@ class ExportPDFController extends Controller
             ]
         );
 
+        // Gewerke-Override aus dem Export-Dialog: nur in-memory anwenden, der
+        // gespeicherte Schichtplan-Filter des Users bleibt unverändert.
+        // Leeres Array = keine Gewerke-Einschränkung.
+        if ($request->has('craft_ids')) {
+            $craftIdsOverride = array_map('intval', (array) $request->get('craft_ids', []));
+            $userCalendarFilter->setAttribute('craft_ids', $craftIdsOverride !== [] ? $craftIdsOverride : null);
+        }
+
         // Respect the date range currently shown in the shift plan (sent by the frontend).
         $startDateParam = $request->get('start');
         $endDateParam = $request->get('end');
@@ -519,6 +527,18 @@ class ExportPDFController extends Controller
             ? optional($this->projectService->findById($highlightProjectId))->name
             : null;
 
+        // Kalenderwochen des Zeitraums für den Kopfbereich, damit ein nach KW
+        // gefilterter Export als solcher erkennbar ist.
+        $kwRange = ($startDate->isoWeek === $endDate->isoWeek && $startDate->isoWeekYear === $endDate->isoWeekYear)
+            ? sprintf('KW %d/%d', $startDate->isoWeek, $startDate->isoWeekYear)
+            : sprintf(
+                'KW %d/%d – KW %d/%d',
+                $startDate->isoWeek,
+                $startDate->isoWeekYear,
+                $endDate->isoWeek,
+                $endDate->isoWeekYear
+            );
+
         $pdf = $this->snappyPdf->loadView(
             'pdf.shiftplan_export',
             [
@@ -532,6 +552,7 @@ class ExportPDFController extends Controller
                 'created_by' => $user->full_name,
                 'startDate' => $startDate->format('d.m.Y'),
                 'endDate' => $endDate->format('d.m.Y'),
+                'kwRange' => $kwRange,
                 'highlightProjectId' => $highlightProjectId,
                 'highlightProjectName' => $highlightProjectName,
             ]

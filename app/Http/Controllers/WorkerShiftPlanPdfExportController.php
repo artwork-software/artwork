@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\WorkerShiftPlanPdfExportRequest;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Services\WorkerShiftPlanPdfBuilder;
 use Artwork\Modules\User\Models\User;
 use Barryvdh\Snappy\PdfWrapper;
@@ -35,6 +36,21 @@ class WorkerShiftPlanPdfExportController extends Controller
         $user = $request->user();
         $title = trim((string) ($validated['title'] ?? '')) ?: __('Shift plan - personnel overview');
 
+        // Kopfbereich weist Kalenderwochen und Gewerke-Filter aus, damit ein
+        // gefilterter Export als solcher erkennbar ist.
+        $kwRange = ($startDate->isoWeek === $endDate->isoWeek && $startDate->isoWeekYear === $endDate->isoWeekYear)
+            ? sprintf('KW %d/%d', $startDate->isoWeek, $startDate->isoWeekYear)
+            : sprintf(
+                'KW %d/%d - KW %d/%d',
+                $startDate->isoWeek,
+                $startDate->isoWeekYear,
+                $endDate->isoWeek,
+                $endDate->isoWeekYear
+            );
+        $craftFilterNames = !empty($validated['craft_ids'])
+            ? Craft::whereIn('id', $validated['craft_ids'])->pluck('name')->all()
+            : [];
+
         $this->pdf
             ->loadView('pdf.shiftplan_worker_matrix', [
                 ...$matrix,
@@ -43,6 +59,8 @@ class WorkerShiftPlanPdfExportController extends Controller
                 'createdAt' => Carbon::now()->format('d.m.Y H:i'),
                 'startDate' => $startDate->format('d.m.Y'),
                 'endDate' => $endDate->format('d.m.Y'),
+                'kwRange' => $kwRange,
+                'craftFilterNames' => $craftFilterNames,
             ])
             ->setPaper($validated['paperSize'], $validated['paperOrientation'])
             ->setOption('dpi', $validated['dpi']);

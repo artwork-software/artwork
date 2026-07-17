@@ -81,8 +81,13 @@ class BiDerivedValuesService
         $uniqueDates = collect();
 
         foreach ($events as $event) {
-            $start = $event->start_time->startOfDay();
-            $end = $event->end_time->startOfDay();
+            // start_time/end_time sind nullable — ohne beide Daten ist keine Tageszählung möglich
+            if (!$event->start_time || !$event->end_time) {
+                continue;
+            }
+
+            $start = $event->start_time->copy()->startOfDay();
+            $end = $event->end_time->copy()->startOfDay();
 
             if ($from && $start->lt($from->copy()->startOfDay())) {
                 $start = $from->copy()->startOfDay();
@@ -122,7 +127,8 @@ class BiDerivedValuesService
 
     public function getBookingCount(Project $project): int
     {
-        $table = $project->table()->first();
+        // Property-Zugriff nutzt die eager-geladene Relation (table()->first() feuert immer eine frische Query)
+        $table = $project->table;
 
         if (!$table) {
             return 0;

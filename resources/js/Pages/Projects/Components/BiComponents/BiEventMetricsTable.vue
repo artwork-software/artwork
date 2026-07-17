@@ -102,7 +102,10 @@
                             v-for="event in displayedEvents"
                             :key="event.id"
                             class="hover:bg-gray-50"
-                            :class="{ 'bg-indigo-50/60': event.id === latestPastEventId }"
+                            :class="{
+                                'bg-indigo-50/60': event.id === latestPastEventId,
+                                'opacity-50': isFutureEvent(event),
+                            }"
                         >
                             <td v-if="canEdit" class="py-2 pr-2 print:hidden">
                                 <input
@@ -132,8 +135,11 @@
                                     class="w-24 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
                                     :min="0"
                                     :step="field.key === 'revenue' ? 0.01 : 1"
-                                    :value="getEventValue(event.id, field.key)"
+                                    :data-bi-cell="field.key"
+                                    :value="cellValue(event.id, field.key)"
+                                    @input="setDraft(event.id, field.key, $event.target.value)"
                                     @change="saveEventValue(event.id, field.key, $event.target.value)"
+                                    @keydown.enter.prevent="focusNextRow(event.id, field.key)"
                                 />
                                 <span v-else class="text-gray-700">{{ getEventValue(event.id, field.key) ?? '–' }}</span>
                             </td>
@@ -183,11 +189,12 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { IconChevronDown, IconChevronUp, IconArrowsSort, IconFilter, IconCopy } from '@tabler/icons-vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     eventData: { type: Array, default: () => [] },
@@ -203,10 +210,13 @@ const props = defineProps({
 
 const emit = defineEmits(['updated']);
 
+const biSave = useBiSaveFeedback();
+
 const expanded = ref(true);
 const showFilters = ref(false);
 const sortKey = ref('date');
-const sortAsc = ref(true);
+// Neueste zuerst: nach einer Vorstellung erfasst man den jüngsten Termin
+const sortAsc = ref(false);
 const filterRoomId = ref(null);
 const search = ref('');
 
@@ -239,6 +249,58 @@ const entriesByEventId = computed(() => new Map(props.eventData.map(e => [e.even
 const getEventValue = (eventId, fieldKey) => {
     const entry = entriesByEventId.value.get(eventId);
     return entry ? entry[fieldKey] : null;
+};
+
+// --- Draft-Puffer: laufende Eingaben überleben den Daten-Refetch des Parents ---
+// Ohne Puffer setzt jede Prop-Aktualisierung (nach dem Save einer ANDEREN Zelle)
+// den DOM-Wert der gerade getippten Zelle zurück.
+
+const drafts = reactive({});
+
+const draftKey = (eventId, fieldKey) => `${eventId}:${fieldKey}`;
+
+const setDraft = (eventId, fieldKey, value) => {
+    drafts[draftKey(eventId, fieldKey)] = value;
+};
+
+const cellValue = (eventId, fieldKey) => {
+    const key = draftKey(eventId, fieldKey);
+    return key in drafts ? drafts[key] : getEventValue(eventId, fieldKey);
+};
+
+const valuesEqual = (draft, propValue) => {
+    const draftEmpty = draft === '' || draft === null || draft === undefined;
+    const propEmpty = propValue === null || propValue === undefined;
+    if (draftEmpty || propEmpty) return draftEmpty && propEmpty;
+    return Number(draft) === Number(propValue);
+};
+
+// Draft verwerfen, sobald der Server denselben Wert liefert (Save angekommen)
+watch(() => props.eventData, () => {
+    Object.keys(drafts).forEach((key) => {
+        const [eventId, fieldKey] = key.split(':');
+        if (valuesEqual(drafts[key], getEventValue(Number(eventId), fieldKey))) {
+            delete drafts[key];
+        }
+    });
+});
+
+const isFutureEvent = (event) => {
+    const ts = parseDate(event.start_time);
+    return ts > Date.now();
+};
+
+// Enter springt zur nächsten Zeile derselben Spalte (Serien-Erfassung);
+// der Fokuswechsel committet die aktuelle Zelle über das change-Event
+const focusNextRow = (eventId, fieldKey) => {
+    const row = document.activeElement?.closest('tr');
+    const next = row?.nextElementSibling?.querySelector(`input[data-bi-cell="${fieldKey}"]`);
+    if (next) {
+        next.focus();
+        next.select();
+    } else {
+        document.activeElement?.blur();
+    }
 };
 
 const parseDate = (value) => {
@@ -388,29 +450,34 @@ const applyBulk = async () => {
             data[field.key] = Number(value);
         }
     });
-    try {
-        await Promise.all(
+    const ok = await biSave.run(async () => {
+        // allSettled statt all: bei Teilfehlern wissen, was durchging —
+        // Auswahl bleibt dann stehen, der Refetch zeigt die gespeicherten Zeilen
+        const results = await Promise.allSettled(
             [...selectedIds.value].map(eventId =>
                 axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data)
             )
         );
+        const failed = results.filter(r => r.status === 'rejected');
+        if (failed.length > 0) {
+            throw new Error(`${failed.length}/${results.length} bulk saves failed`);
+        }
+    });
+    if (ok) {
         clearSelection();
-        emit('updated');
-    } catch (error) {
-        console.error('Error applying bulk values', error);
-    } finally {
-        bulkSaving.value = false;
     }
+    emit('updated');
+    bulkSaving.value = false;
 };
 
 const saveEventValue = async (eventId, fieldKey, value) => {
-    try {
-        const data = {};
-        data[fieldKey] = value === '' ? null : Number(value);
-        await axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data);
+    const data = {};
+    data[fieldKey] = value === '' ? null : Number(value);
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data)
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error saving event data', error);
     }
 };
 </script>

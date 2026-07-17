@@ -574,12 +574,26 @@
                                     {{ t('Availability status for this day') }}
                                 </h3>
                                 <p class="text-[11px] text-zinc-400 mt-0.5">
-                                    {{ t('Define whether this person is available, off work or not available.') }}
+                                    {{ canPlanShifts
+                                        ? t('Define whether this person is available, off work or not available.')
+                                        : t('The availability status is set by shift planning. Enter absences via your availability calendar.') }}
                                 </p>
                             </div>
                         </div>
 
-                        <Listbox as="div" v-model="checked" class="relative mt-2 w-full">
+                        <!-- Ohne Planungsrecht (eigene Zelle): Status nur lesend anzeigen -->
+                        <div
+                            v-if="!canPlanShifts"
+                            class="mt-2 flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-700"
+                        >
+                            <span
+                                class="inline-flex h-1.5 w-1.5 rounded-full"
+                                :class="dotClassForChecked"
+                            ></span>
+                            <span class="truncate">{{ checked?.name }}</span>
+                        </div>
+
+                        <Listbox v-else as="div" v-model="checked" class="relative mt-2 w-full">
                             <ListboxButton class="menu-button flex items-center justify-between">
                                 <div class="flex items-center gap-2 truncate">
                                     <span
@@ -630,7 +644,7 @@
                     </section>
 
                     <!-- DP-18: "Frei" als ganzer oder halber freier Tag (Vormittag/Nachmittag) -->
-                    <section v-if="checked && checked.type === 'FREE_WORK'"
+                    <section v-if="canPlanShifts && checked && checked.type === 'FREE_WORK'"
                              class="space-y-2 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
                         <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
                             {{ t('Free day type') }}
@@ -1421,6 +1435,13 @@ function revokeCompensationDay(id) {
 }
 
 function sendCheckVacation() {
+    // Ohne Planungsrecht (eigene Zelle) ist der Status nur lesend — nie mitsenden,
+    // sonst würde schon ein Kommentar-Speichern am Backend-Gate (403) scheitern.
+    if (!canPlanShifts.value) {
+        closeModal(true);
+        return;
+    }
+
     if (compensationDayForDate.value.length > 0) {
         closeModal(true);
         return;
@@ -1530,7 +1551,9 @@ function checkVacation() {
 
     // Bei "Frei"/"Nicht Verfügbar" autoritativ im Backend prüfen, ob an dem Tag aktive
     // Schichtzuweisungen oder individuelle Zeiten existieren. Falls ja -> Rückfrage.
-    if (isBlockingAvailabilityStatus()) {
+    // Ohne Planungsrecht ist der Status lesend — die Rückfrage (inkl. Schicht-Entfernung)
+    // darf dann nie erscheinen.
+    if (canPlanShifts.value && isBlockingAvailabilityStatus()) {
         cleanupProcessing.value = true;
         axios
             .get(route('shift.dayAssignments'), {

@@ -281,7 +281,7 @@ import {
 
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router, useForm, Link, usePage} from "@inertiajs/vue3";
+import {router, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
@@ -385,15 +385,6 @@ const shiftPlanExportConfiguration = computed(() => {
     };
 });
 
-const userCalendarSettings = useForm({
-    is_daily_view: props.isDailyView,
-    show_qualifications: activeSettings.value ? activeSettings.value.show_qualifications : false,
-    shift_notes: activeSettings.value ? activeSettings.value.shift_notes : false,
-    high_contrast: activeSettings.value ? activeSettings.value.high_contrast : false,
-    expand_days: activeSettings.value ? activeSettings.value.expand_days : false,
-    display_project_groups: activeSettings.value ? activeSettings.value.display_project_groups : false,
-});
-
 const CalendarSettingsModal = defineAsyncComponent({
     loader: () => import('@/Artwork/Modals/CalendarSettingsModal.vue'),
     delay: 200,
@@ -448,13 +439,6 @@ const scrollForwardTooltip = computed(() => {
 });
 
 // Methods
-const saveUserCalendarSettings = () => {
-    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.auth.user.id}), {
-        preserveScroll: true
-    });
-    document.getElementById('displaySettings').click();
-};
-
 const getTimePeriodProjectId = () => {
     return activeSettings.value?.time_period_project_id;
 };

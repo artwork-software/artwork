@@ -852,7 +852,7 @@ import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js"
 const { t } = useI18n(), $t = t;
 const pageProps = usePage().props;
 const calSettings = computed(() => pageProps.auth.user.calendar_settings);
-const highContrastPercent = computed(() => pageProps.high_contrast_percent);
+const highContrastPercent = computed(() => getHighContrastPercent(calSettings.value));
 const currentUserId = computed(() => pageProps.auth.user.id);
 const zoom_factor = ref(pageProps.auth.user.zoom_factor ?? 1);
 // Über 100 % wächst die Karte per CSS zoom: Inhalt layoutet wie bei 100 % und wird
@@ -1131,7 +1131,7 @@ const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find((room) => room.id === props.event.roomId).everyone_can_book;
 });
 
-const { backgroundColorWithOpacity, detectParentBackgroundColor, getTextColorBasedOnBackground } = useColorHelper();
+const { backgroundColorWithOpacity, detectParentBackgroundColor, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper();
 
 const textColorWithDarken = computed(() => {
     const percent = 75;

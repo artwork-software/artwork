@@ -235,7 +235,6 @@ class HandleInertiaRequests extends Middleware
                 'shift_plan_settings' => $shiftPlanSettings,
                 'shift_plan_daily_settings' => $shiftPlanDailySettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
-                'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
                 'calendarHours' => $hours,
                 // Gleiche Struktur wie vormals jsPermissions() ({roles, permissions}), aber ohne die

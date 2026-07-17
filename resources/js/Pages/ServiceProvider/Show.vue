@@ -30,6 +30,8 @@
                 <div v-if="currentTab === 1">
                     <UserShiftPlan type="service_provider"
                                    :total-planned-working-hours="totalPlannedWorkingHours"
+                                   :crafts="crafts"
+                                   :days-with-data="daysWithData"
                                    :date-value="dateValue"
                                    :whole-week-date-period="wholeWeekDatePeriod"
                                    :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
@@ -225,7 +227,9 @@ export default defineComponent({
         'projects',
         'totalPlannedWorkingHours',
         'shiftQualifications',
-        'firstProjectShiftTabId'
+        'firstProjectShiftTabId',
+        'daysWithData',
+        'crafts'
     ],
     mounted() {
         this.showSidebar = true;
@@ -237,7 +241,7 @@ export default defineComponent({
         return {
             showSuccessModal: false,
             tabs: [
-                { id: 1, name: this.$t('Operational plan'), href: '#', current: false, has_permission: this.hasAdminRole() },
+                { id: 1, name: this.$t('Operational plan'), href: '#', current: false, has_permission: this.$can('can plan shifts') || this.hasAdminRole() },
                 { id: 2, name: this.$t('Conditions'), href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
                 { id: 3, name: this.$t('Company data'), href: '#', current: true, has_permission: true },
                 { id: 4, name: this.$t('Work profile'), href: '#', current: false, has_permission: this.$can('can manage workers') || this.hasAdminRole() },

@@ -17,8 +17,10 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
 {
     use HandlesCollectiveBookings;
 
-    public function __construct(private SageNotAssignedDataRepository $sageNotAssignedDataRepository)
-    {
+    public function __construct(
+        private SageNotAssignedDataRepository $sageNotAssignedDataRepository,
+        private SageBookingLogRecorder $sageBookingLogRecorder,
+    ) {
     }
 
     public function create(array $attributes): SageNotAssignedData
@@ -27,12 +29,19 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
 
         $this->sageNotAssignedDataRepository->save($sageNotAssignedData);
 
+        $this->sageBookingLogRecorder->record('created', $sageNotAssignedData);
+
         return $sageNotAssignedData;
     }
 
     public function update(SageNotAssignedData $sageNotAssignedData, array $attributes): SageNotAssignedData
     {
         $this->sageNotAssignedDataRepository->update($sageNotAssignedData, $attributes);
+
+        // Nur echte Änderungen protokollieren (siehe SageAssignedDataService::update)
+        if ($sageNotAssignedData->wasChanged()) {
+            $this->sageBookingLogRecorder->record('updated', $sageNotAssignedData);
+        }
 
         return $sageNotAssignedData;
     }
@@ -114,11 +123,20 @@ readonly class SageNotAssignedDataService implements CollectiveBookingService
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
+
+        // Erst nach erfolgreichem Delete protokollieren (siehe SageAssignedDataService)
+        $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
     }
 
     public function forceDelete(SageNotAssignedData $sageNotAssignedData): bool
     {
-        return $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
+        $result = $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
+
+        if ($result) {
+            $this->sageBookingLogRecorder->record('deleted', $sageNotAssignedData);
+        }
+
+        return $result;
     }
 
     public function getTrashed(): Collection

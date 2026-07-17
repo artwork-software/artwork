@@ -538,7 +538,7 @@ class Shift extends Model
         return $this->hasMany(CommittedShiftChange::class, 'shift_id', 'id');
     }
 
-    public function currentRequest()
+    public function currentRequest(): BelongsTo
     {
         return $this->belongsTo(ShiftPlanRequest::class, 'current_request_id', 'id', 'shift_plan_requests');
     }

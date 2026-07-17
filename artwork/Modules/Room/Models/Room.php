@@ -72,6 +72,7 @@ class Room extends Model
 
     protected $fillable = [
         'name',
+        'color',
         'description',
         'temporary',
         'start_date',
@@ -99,6 +100,15 @@ class Room extends Model
         'temporary' => 'boolean',
         'relevant_for_disposition' => 'boolean',
     ];
+
+    /**
+     * Effektive Anzeigefarbe: eigene Farbe, sonst die des Areals (Standard Schwarz).
+     * Setzt voraus, dass die area-Relation geladen ist, sonst lazy-load.
+     */
+    public function getEffectiveColor(): string
+    {
+        return $this->color ?? $this->area?->color ?? '#000000';
+    }
 
     public function area(): BelongsTo
     {

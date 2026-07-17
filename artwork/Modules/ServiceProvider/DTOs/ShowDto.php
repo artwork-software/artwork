@@ -30,6 +30,10 @@ class ShowDto extends BaseDto
 
     public ?int $firstProjectShiftTabId = null;
 
+    public ?array $daysWithData = null;
+
+    public ?Collection $crafts = null;
+
     public function setServiceProvider(?ServiceProviderShowResource $serviceProvider): self
     {
         $this->serviceProvider = $serviceProvider;
@@ -110,6 +114,20 @@ class ShowDto extends BaseDto
         return $this;
     }
 
+    public function setDaysWithData(?array $daysWithData): self
+    {
+        $this->daysWithData = $daysWithData;
+
+        return $this;
+    }
+
+    public function setCrafts(?Collection $crafts): self
+    {
+        $this->crafts = $crafts;
+
+        return $this;
+    }
+
     public function getServiceProvider(): ?ServiceProviderShowResource
     {
         return $this->serviceProvider;
@@ -175,6 +193,19 @@ class ShowDto extends BaseDto
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public function getDaysWithData(): ?array
+    {
+        return $this->daysWithData;
+    }
+
+    public function getCrafts(): ?Collection
+    {
+        return $this->crafts;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -191,6 +222,8 @@ class ShowDto extends BaseDto
             'shifts' => $this->getShifts(),
             'shiftQualifications' => $this->getShiftQualifications(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
+            'daysWithData' => $this->getDaysWithData(),
+            'crafts' => $this->getCrafts(),
         ];
     }
 }

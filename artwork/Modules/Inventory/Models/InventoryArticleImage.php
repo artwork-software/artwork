@@ -15,6 +15,7 @@ class InventoryArticleImage extends Model
     protected $fillable = [
         'inventory_article_id',
         'image',
+        'thumbnail',
         'is_main_image',
         'order'
     ];

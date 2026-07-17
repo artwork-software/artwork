@@ -45,6 +45,30 @@
                                                     :project-preselect="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.project ?? null"
                                                     @close="close()"/>
                 </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT">
+                    <ExcelWorkTimeOverviewExport v-if="activeTab === exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT"
+                                                 :crafts="configuration[exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]?.crafts ?? []"
+                                                 @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT">
+                    <ExcelCraftDistributionExport v-if="activeTab === exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT"
+                                                  :crafts="configuration[exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]?.crafts ?? []"
+                                                  @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_PROJECT_ROLE_MATRIX_EXPORT">
+                    <ExcelProjectRoleMatrixExport v-if="activeTab === exportTabEnums.EXCEL_PROJECT_ROLE_MATRIX_EXPORT"
+                                                  @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT">
+                    <PdfDailyProjectShiftPlanExport v-if="activeTab === exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT"
+                                                    :configuration="configuration[exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT]"
+                                                    @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT">
+                    <ExcelShiftPersonnelPlanExport v-if="activeTab === exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT"
+                                                   :configuration="configuration[exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT]"
+                                                   @close="close()"/>
+                </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
                 </template>
@@ -77,6 +101,21 @@ const exportTabEnums = useExportTabEnums(),
     ),
     ExcelEventListOrCalendarExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelEventListOrCalendarExport.vue")
+    ),
+    ExcelWorkTimeOverviewExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelWorkTimeOverviewExport.vue")
+    ),
+    ExcelCraftDistributionExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelCraftDistributionExport.vue")
+    ),
+    ExcelProjectRoleMatrixExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelProjectRoleMatrixExport.vue")
+    ),
+    PdfDailyProjectShiftPlanExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/PdfDailyProjectShiftPlanExport.vue")
+    ),
+    ExcelShiftPersonnelPlanExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelShiftPersonnelPlanExport.vue")
     ),
     props = defineProps({
         enums: {

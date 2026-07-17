@@ -133,14 +133,31 @@
                                     <div class="flex items-start justify-between w-full">
                                         <div class="">
                                             <p class="text-sm font-semibold text-gray-900" :style="{color: event?.event_type.hex_code}">
-                                                {{ event?.event_type.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
+                                                {{ event?.event_type.abbreviation }}:
+                                                <template v-if="event?.eventName">{{ event.eventName }}</template>
+                                                <Link
+                                                    v-else-if="event?.project"
+                                                    :href="route('projects.tab', { project: event.project.id, projectTab: first_project_tab_id })"
+                                                    class="hover:underline"
+                                                >
+                                                    {{ event.project.name }}
+                                                </Link>
+                                            </p>
+                                            <p v-if="event?.eventName && event?.project?.name" class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                                <span class="font-bold">{{ $t('Project') }}:</span>
+                                                <Link
+                                                    :href="route('projects.tab', { project: event.project.id, projectTab: first_project_tab_id })"
+                                                    class="hover:underline"
+                                                >
+                                                    {{ event.project.name }}
+                                                </Link>
                                             </p>
                                             <div class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
                                                 <p v-if="!event.allDay" class="flex items-center gap-x-1">
                                                     <span class="font-bold">{{ $t('Start') }}:</span>
-                                                    <span class="">{{ event?.start_time }}</span>
+                                                    <span class="">{{ event?.start_time_without_day ?? event?.start_time }}</span>
                                                     <span class="font-bold">{{ $t('End') }}:</span>
-                                                    <span class="">{{ event?.end_time }}</span>
+                                                    <span class="">{{ event?.end_time_without_day ?? event?.end_time }}</span>
                                                 </p>
                                                 <p v-else>
                                                     <span class="font-bold">{{ $t('All day') }}</span>
@@ -149,6 +166,10 @@
                                             <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
                                                 <span class="font-bold">{{ $t('Room') }}:</span>
                                                 <span class="">{{ event?.room?.name }}</span>
+                                            </p>
+                                            <p v-if="event?.description" class="mt-1 text-xs text-gray-500 whitespace-pre-line" :title="event.description">
+                                                <span class="font-bold">{{ $t('Description') }}:</span>
+                                                {{ event.description }}
                                             </p>
 
                                         </div>

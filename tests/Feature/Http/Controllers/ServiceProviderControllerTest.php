@@ -2,7 +2,11 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
+use Inertia\Testing\AssertableInertia;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -12,6 +16,38 @@ use Tests\Feature\FeatureTestCase;
  */
 final class ServiceProviderControllerTest extends FeatureTestCase
 {
+    #[Test]
+    public function show_provides_operational_plan_days_with_data(): void
+    {
+        $this->actingAsAdmin();
+        $serviceProvider = ServiceProvider::factory()->create();
+
+        $shift = Shift::factory()->create([
+            'event_id' => Event::factory()->create([
+                'start_time' => today()->setHour(10),
+                'end_time' => today()->setHour(18),
+            ])->id,
+            'start_date' => today(),
+            'end_date' => today(),
+            'start' => '10:00',
+            'end' => '18:00',
+            'break_minutes' => 30,
+        ]);
+        $serviceProvider->shifts()->attach($shift->id, [
+            'craft_abbreviation' => 'TST',
+            'shift_qualification_id' => ShiftQualification::factory()->create()->id,
+        ]);
+
+        $today = today()->format('Y-m-d');
+
+        $this->get(route('service_provider.show', $serviceProvider))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('ServiceProvider/Show')
+                ->has('crafts')
+                ->has("daysWithData.{$today}.shifts", 1));
+    }
+
     #[Test]
     public function guest_cannot_create_service_provider(): void
     {

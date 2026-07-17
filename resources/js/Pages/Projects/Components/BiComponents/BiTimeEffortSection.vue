@@ -53,6 +53,7 @@ import { ref } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     timeEfforts: { type: Array, default: () => [] },
@@ -73,28 +74,30 @@ const bucketOptions = [
     { value: '100+', label: '100+' },
 ];
 
+const biSave = useBiSaveFeedback();
+
 const addEffort = async () => {
     if (!newLabel.value || !newBucket.value) return;
-    try {
-        await axios.post(route('projects.bi.time-efforts.store', props.projectId), {
+    const ok = await biSave.run(
+        () => axios.post(route('projects.bi.time-efforts.store', props.projectId), {
             label: newLabel.value,
             effort_bucket: newBucket.value.value,
-        });
+        })
+    );
+    if (ok) {
         newLabel.value = '';
         newBucket.value = null;
         emit('updated');
-    } catch (error) {
-        console.error('Error adding time effort', error);
     }
 };
 
 const deleteEffort = async (effortId) => {
     if (!confirm('Delete this time effort entry?')) return;
-    try {
-        await axios.delete(route('projects.bi.time-efforts.destroy', [props.projectId, effortId]));
+    const ok = await biSave.run(
+        () => axios.delete(route('projects.bi.time-efforts.destroy', [props.projectId, effortId]))
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error deleting time effort', error);
     }
 };
 </script>

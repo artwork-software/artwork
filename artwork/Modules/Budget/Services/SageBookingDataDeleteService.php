@@ -11,7 +11,8 @@ readonly class SageBookingDataDeleteService
 {
     public function __construct(
         private SageNotAssignedDataService $sageNotAssignedDataService,
-        private SageAssignedDataService $sageAssignedDataService
+        private SageAssignedDataService $sageAssignedDataService,
+        private SageBookingLogRecorder $sageBookingLogRecorder
     ) {
     }
 
@@ -24,10 +25,26 @@ readonly class SageBookingDataDeleteService
         $dateFromFormatted = $dateFrom ? Carbon::parse($dateFrom)->format('Y-m-d') : null;
         $dateToFormatted = $dateTo ? Carbon::parse($dateTo)->addDay()->format('Y-m-d') : null;
 
-        $this->deleteSageNotAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+        $this->sageBookingLogRecorder->startRun(
+            'delete',
+            [
+                'ktr' => $ktr,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'deleteAssignedData' => $deleteAssignedData,
+            ],
+            auth()->id(),
+            'delete_bookings'
+        );
 
-        if ($deleteAssignedData) {
-            $this->deleteSageAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+        try {
+            $this->deleteSageNotAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+
+            if ($deleteAssignedData) {
+                $this->deleteSageAssignedDataInRange($ktr, $dateFromFormatted, $dateToFormatted);
+            }
+        } finally {
+            $this->sageBookingLogRecorder->finishRun();
         }
     }
 
@@ -74,7 +91,12 @@ readonly class SageBookingDataDeleteService
 
         foreach ($sageAssignedDataToDelete as $data) {
             if ($data->is_collective_booking) {
-                $this->sageAssignedDataService->deleteChildData($data);
+                // Kinder einzeln über den Service löschen (statt deleteChildData direkt am
+                // Model), damit jede Löschung im Booking-Log landet — Parität zum
+                // Not-Assigned-Pfad oben
+                foreach ($data->findChildren()->get() as $child) {
+                    $this->sageAssignedDataService->delete($child);
+                }
             }
             $this->sageAssignedDataService->delete($data);
         }

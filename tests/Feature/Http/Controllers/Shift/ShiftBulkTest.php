@@ -62,7 +62,7 @@ final class ShiftBulkTest extends FeatureTestCase
     }
 
     #[Test]
-    public function admin_save_multi_edit_with_empty_shifts_returns_falsy(): void
+    public function admin_save_multi_edit_requires_a_worker(): void
     {
         $this->actingAsAdmin();
 
@@ -71,12 +71,13 @@ final class ShiftBulkTest extends FeatureTestCase
             'userType' => 0,
         ]);
 
-        $response->assertSuccessful();
-        $this->assertContains(trim($response->getContent()), ['', 'false', '0']);
+        $response
+            ->assertRedirect()
+            ->assertSessionHasErrors('userTypeId');
     }
 
     #[Test]
-    public function admin_save_multi_edit_with_unknown_user_type_returns_falsy(): void
+    public function admin_save_multi_edit_rejects_an_unknown_user_type(): void
     {
         $this->actingAsAdmin();
 
@@ -85,8 +86,9 @@ final class ShiftBulkTest extends FeatureTestCase
             'userType' => 99,
         ]);
 
-        $response->assertSuccessful();
-        $this->assertContains(trim($response->getContent()), ['', 'false', '0']);
+        $response
+            ->assertRedirect()
+            ->assertSessionHasErrors(['userType', 'userTypeId']);
     }
 
     #[Test]

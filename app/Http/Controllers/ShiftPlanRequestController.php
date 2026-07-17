@@ -251,49 +251,77 @@ class ShiftPlanRequestController extends Controller
 
         /** @var \App\Models\User $user */
         $user = $this->auth->user();
-        $data['requested_by_user_id'] = $user->id;
+
+        // Mehrfachauswahl im Modal: craft_ids (Array) ODER einzelnes craft_id (Altbestand).
+        // Die Anfragen bleiben bewusst pro Gewerk getrennt — pro Craft entsteht/aktualisiert
+        // sich EINE eigene ShiftPlanRequest für die KW.
+        $craftIds = collect($data['craft_ids'] ?? [$data['craft_id']])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
         $service = app(ShiftPlanRequestService::class);
 
-        // Check-then-create unter Lock auf der Craft-Zeile: zwei gleichzeitige
-        // "Alle Schichten festsetzen"-Aufrufe erzeugten sonst zwei pending-Requests
-        // für dieselbe KW, auf die sich die Schichten zufällig verteilten.
-        $shiftPlanRequest = DB::transaction(function () use ($data, $service) {
-            Craft::query()->whereKey($data['craft_id'])->lockForUpdate()->first();
+        $createdCount = 0;
+        $updatedCount = 0;
 
-            // 1. Prüfen, ob es bereits ein PENDING-Request für Craft/KW/Jahr gibt
-            $shiftPlanRequest = ShiftPlanRequest::query()
-                ->where('craft_id', $data['craft_id'])
-                ->where('week_number', $data['week_number'])
-                ->where('year', $data['year'])
-                ->where('status', 'pending')
-                ->first();
+        foreach ($craftIds as $craftId) {
+            $payload = [
+                'craft_id' => $craftId,
+                'week_number' => $data['week_number'],
+                'year' => $data['year'],
+                'requested_by_user_id' => $user->id,
+            ];
 
-            // 2. Wenn keines existiert → neues anlegen, sonst vorhandenes nutzen
-            if (! $shiftPlanRequest) {
-                $shiftPlanRequest = $service->createRequestWithShifts($data, [], true);
+            // Check-then-create unter Lock auf der Craft-Zeile: zwei gleichzeitige
+            // "Alle Schichten festsetzen"-Aufrufe erzeugten sonst zwei pending-Requests
+            // für dieselbe KW, auf die sich die Schichten zufällig verteilten.
+            $shiftPlanRequest = DB::transaction(function () use ($payload, $service) {
+                Craft::query()->whereKey($payload['craft_id'])->lockForUpdate()->first();
+
+                // 1. Prüfen, ob es bereits ein PENDING-Request für Craft/KW/Jahr gibt
+                $shiftPlanRequest = ShiftPlanRequest::query()
+                    ->where('craft_id', $payload['craft_id'])
+                    ->where('week_number', $payload['week_number'])
+                    ->where('year', $payload['year'])
+                    ->where('status', 'pending')
+                    ->first();
+
+                // 2. Wenn keines existiert → neues anlegen, sonst vorhandenes nutzen
+                if (! $shiftPlanRequest) {
+                    $shiftPlanRequest = $service->createRequestWithShifts($payload, [], true);
+                }
+
+                return $shiftPlanRequest;
+            });
+
+            // 3. Freie Schichten des Gewerks/der KW an die Anfrage anhängen (Auswahl, Activity-Log,
+            //    Pivot-Historie, Workflow-Flags). Gemeinsame Logik in ShiftPlanRequestService, damit
+            //    der Backfill-Command exakt dasselbe Verhalten nutzt.
+            $service->attachFreeShiftsToRequest($shiftPlanRequest, $user, true);
+
+            // Genehmiger ueber die neue Anfrage benachrichtigen (nur bei Neuanlage,
+            // nicht beim Nachreichen weiterer Schichten an eine bestehende Anfrage).
+            if ($shiftPlanRequest->wasRecentlyCreated) {
+                $this->notifyApproversAboutNewRequest($shiftPlanRequest);
+                $createdCount++;
+            } else {
+                $updatedCount++;
             }
-
-            return $shiftPlanRequest;
-        });
-
-        // 3. Freie Schichten des Gewerks/der KW an die Anfrage anhängen (Auswahl, Activity-Log,
-        //    Pivot-Historie, Workflow-Flags). Gemeinsame Logik in ShiftPlanRequestService, damit
-        //    der Backfill-Command exakt dasselbe Verhalten nutzt.
-        $service->attachFreeShiftsToRequest($shiftPlanRequest, $user, true);
-
-        // Genehmiger ueber die neue Anfrage benachrichtigen (nur bei Neuanlage,
-        // nicht beim Nachreichen weiterer Schichten an eine bestehende Anfrage).
-        if ($shiftPlanRequest->wasRecentlyCreated) {
-            $this->notifyApproversAboutNewRequest($shiftPlanRequest);
         }
 
-        return back()->with(
-            'success',
-            $shiftPlanRequest->wasRecentlyCreated
+        if ($craftIds->count() > 1) {
+            $message = __(
+                ':created shift plan requests created, :updated existing requests updated.',
+                ['created' => $createdCount, 'updated' => $updatedCount]
+            );
+        } else {
+            $message = $createdCount > 0
                 ? __('Shift plan request created successfully.')
-                : __('Existing shift plan request updated successfully.')
-        );
+                : __('Existing shift plan request updated successfully.');
+        }
+
+        return back()->with('success', $message);
     }
 
 

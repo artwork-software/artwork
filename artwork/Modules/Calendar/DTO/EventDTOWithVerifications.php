@@ -34,7 +34,7 @@ class EventDTOWithVerifications extends Data
         public ?bool $is_series,
         public ?array $eventProperties,
         public ?bool $occupancy_option,
-        public ?int $declinedRoomId = null,
+        public ?int $declinedRoomId,
         // Kann ein Array, null ODER ein Lazy/InertiaLazy sein (siehe fromModel: Lazy::inertia(...)),
         // wenn ein Event-Status existiert, aber use_event_status_color deaktiviert ist.
         public array|Lazy|null $eventStatus,

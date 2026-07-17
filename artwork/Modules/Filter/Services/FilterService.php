@@ -60,12 +60,13 @@ class FilterService
             'event_property_ids' => $this->map($eventProperties),
             'area_ids' => $this->map($this->areaRepository->getAll()),
             'room_ids' => $this->roomRepository
-                ->allWithoutTrashed()
+                ->allWithoutTrashed(['area:id,color'])
                 ->map(fn(Room $room) => [
                     'id' => $room->getAttribute('id'),
                     'name' => $room->getAttribute('name'),
                     'label' => $room->getAttribute('name'),
                     'relevant_for_disposition' => (bool) $room->getAttribute('relevant_for_disposition'),
+                    'color' => $room->getEffectiveColor(),
                 ]),
             'craft_ids' => $this->map($crafts),
         ];

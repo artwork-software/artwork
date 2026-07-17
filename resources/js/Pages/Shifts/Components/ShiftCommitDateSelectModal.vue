@@ -36,17 +36,58 @@
             />
 
             <div class="col-span-full">
-                <ArtworkBaseListbox
-                    v-model="selectedCraft"
-                    :items="crafts"
-                    by="id"
-                    option-label="name"
-                    option-key="id"
-                    label="Craft"
-                    :use-translations="false"
-                    :show-color-indicator="true"
-                    color-property="color"
-                />
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-900 font-lexend">
+                        {{ $t('Craft') }}
+                        <span v-if="selectedCrafts.length > 0" class="ml-1 text-xs font-normal text-gray-400">
+                            ({{ selectedCrafts.length }}/{{ crafts.length }})
+                        </span>
+                    </span>
+                    <button
+                        type="button"
+                        class="text-xs font-lexend text-blue-500 hover:text-blue-600 transition-colors"
+                        @click="toggleAllCrafts"
+                    >
+                        {{ allCraftsSelected ? $t('Deselect all crafts') : $t('Select all crafts') }}
+                    </button>
+                </div>
+
+                <!-- Alle Gewerke direkt sichtbar als Toggle-Chips -->
+                <div class="mt-2 flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+                    <button
+                        v-for="craft in crafts"
+                        :key="craft.id"
+                        type="button"
+                        :aria-pressed="isCraftSelected(craft)"
+                        class="group inline-flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full border text-xs font-lexend transition-colors"
+                        :class="isCraftSelected(craft)
+                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+                        @click="toggleCraft(craft)"
+                    >
+                        <span
+                            v-if="craft.color"
+                            class="inline-block size-2.5 rounded-full shrink-0"
+                            :style="{ backgroundColor: craft.color }"
+                        ></span>
+                        <span class="truncate max-w-40">{{ craft.name }}</span>
+                        <svg
+                            v-if="isCraftSelected(craft)"
+                            class="size-3.5 shrink-0 text-blue-500"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                            stroke-linecap="round" stroke-linejoin="round"
+                        >
+                            <path d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <p v-if="craftError" class="mt-1 text-xs text-red-600 font-lexend">
+                    {{ $t('Please select at least one craft.') }}
+                </p>
+                <p v-else-if="isShiftCommitWorkflowEnabled" class="mt-1 text-xs text-gray-400 font-lexend">
+                    {{ $t('One separate request per selected craft will be created.') }}
+                </p>
             </div>
         </div>
 
@@ -126,6 +167,7 @@
         <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <BaseUIButton
                 is-cancel-button
+                :disabled="newShiftCommitForm.processing"
                 @click="$emit('close')"
                 :label="$t('Cancel')"
             />
@@ -135,12 +177,14 @@
                     v-if="isShiftCommitWorkflowEnabled"
                     :label="$t('Request a firm commitment')"
                     is-add-button
+                    :processing="newShiftCommitForm.processing"
                     @click="submit"
                 />
                 <BaseUIButton
                     v-else
                     :label="$t('Lock all shifts')"
                     is-add-button
+                    :processing="newShiftCommitForm.processing"
                     @click="submitWithoutWorkflow"
                 />
             </div>
@@ -149,14 +193,13 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import {useForm, usePage} from '@inertiajs/vue3'
 import axios from 'axios'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
-import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 
 const emit = defineEmits(['close'])
 
@@ -184,7 +227,7 @@ const currentWeek = getIsoWeek(today)
 const newShiftCommitForm = useForm({
     week_number: currentWeek,
     year: currentYear,
-    craft_id: null,
+    craft_ids: [],
 })
 
 const dateRange = ref({
@@ -195,7 +238,31 @@ const isLoadingDateRange = ref(false)
 const dateRangeError = ref(null)
 const isShiftCommitWorkflowEnabled = ref(usePage().props.shiftCommitWorkflow)
 const crafts = ref(props.crafts || [])
-const selectedCraft = ref(null)
+const selectedCrafts = ref([])
+const craftError = ref(false)
+
+const allCraftsSelected = computed(
+    () => crafts.value.length > 0 && selectedCrafts.value.length === crafts.value.length
+)
+
+const isCraftSelected = (craft) => selectedCrafts.value.some((c) => c.id === craft.id)
+
+const toggleCraft = (craft) => {
+    selectedCrafts.value = isCraftSelected(craft)
+        ? selectedCrafts.value.filter((c) => c.id !== craft.id)
+        : [...selectedCrafts.value, craft]
+}
+
+const toggleAllCrafts = () => {
+    selectedCrafts.value = allCraftsSelected.value ? [] : [...crafts.value]
+}
+
+// Sobald eine Auswahl getroffen wurde, den Fehlerhinweis zurücksetzen
+watch(selectedCrafts, (value) => {
+    if (value.length > 0) {
+        craftError.value = false
+    }
+})
 
 const getDateRangeByCalendarWeekAndYear = async (week, year) => {
     if (!week || !year) return
@@ -235,17 +302,19 @@ onMounted(() => {
     getDateRangeByCalendarWeekAndYear(newShiftCommitForm.week_number, newShiftCommitForm.year)
 })
 
-const submit = () => {
-
-    // add checks
-    if (!selectedCraft.value) {
-        alert('Please select a craft before submitting.');
-        return;
+const submitToRoute = (routeName) => {
+    if (newShiftCommitForm.processing) {
+        return
     }
 
-    newShiftCommitForm.craft_id = selectedCraft.value.id;
+    if (selectedCrafts.value.length === 0) {
+        craftError.value = true
+        return
+    }
 
-    newShiftCommitForm.post(route('commit-shift-workflow-request.store'), {
+    newShiftCommitForm.craft_ids = selectedCrafts.value.map((craft) => craft.id)
+
+    newShiftCommitForm.post(route(routeName), {
         onSuccess: () => {
             emit('close')
         },
@@ -255,25 +324,9 @@ const submit = () => {
     })
 }
 
-const submitWithoutWorkflow = () => {
+const submit = () => submitToRoute('commit-shift-workflow-request.store')
 
-    // add checks
-    if (!selectedCraft.value) {
-        alert('Please select a craft before submitting.');
-        return;
-    }
-
-    newShiftCommitForm.craft_id = selectedCraft.value.id;
-
-    newShiftCommitForm.post(route('shifts.commit'), {
-        onSuccess: () => {
-            emit('close')
-        },
-        onError: (errors) => {
-            console.error('Error submitting shift commit form:', errors)
-        },
-    })
-}
+const submitWithoutWorkflow = () => submitToRoute('shifts.commit')
 </script>
 
 <style scoped>

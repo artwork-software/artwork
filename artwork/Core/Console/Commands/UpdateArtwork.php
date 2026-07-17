@@ -70,8 +70,16 @@ class UpdateArtwork extends Command
         $this->cleanupFalseConflicts();
         $this->migrateChangesHistoryToActivityLog();
         $this->backfillShiftPlanRequestShifts();
+        $this->generateInventoryArticleThumbnails();
 
         $this->info('--- Artwork Update Finished ---');
+    }
+
+    private function generateInventoryArticleThumbnails(): void
+    {
+        $this->section('Inventory Article Image Thumbnails');
+        // Der Altbestand wird pro Umgebung nur einmal verarbeitet; neue Uploads nutzen Queue-Jobs.
+        $this->call('artwork:generate-inventory-article-thumbnails', ['--once' => true]);
     }
 
     private function backfillShiftPlanRequestShifts(): void

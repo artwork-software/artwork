@@ -46,6 +46,18 @@ final class DayServiceControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function validationErrorsUseTranslatedAttributeNames(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->post(route('day-service.store'))->assertSessionHasErrors([
+            'name' => __('validation.required', ['attribute' => __('Name')]),
+            'icon' => __('validation.required', ['attribute' => __('Icon')]),
+            'hex_color' => __('validation.required', ['attribute' => __('Color')]),
+        ]);
+    }
+
+    #[Test]
     public function admin_can_update(): void
     {
         $this->actingAsAdmin();

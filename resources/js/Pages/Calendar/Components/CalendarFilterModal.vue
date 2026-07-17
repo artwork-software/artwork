@@ -107,7 +107,9 @@
                                 <div v-if="isOpen(mainKey, subKey)">
                                     <div class="grid gird-cols-1 md:grid-cols-4 gap-4 my-3">
                                         <div v-for="(filter, index) in filterSubCategory" :key="index">
-                                            <div class="flex items-center gap-x-2">
+                                            <div class="flex items-center gap-x-2"
+                                                 :class="filter.color ? 'rounded-lg px-2 py-1' : ''"
+                                                 :style="filter.color ? { backgroundColor: colorWithLightOpacity(filter.color) } : null">
                                                 <div class="flex h-6 shrink-0 items-center">
                                                     <div class="group grid size-4 grid-cols-1">
                                                         <input v-model="filter.checked" :id="removeSpaceFromKey(filter.name)" :aria-describedby="removeSpaceFromKey(filter.name) + '-description'" :name="removeSpaceFromKey(filter.name)" type="checkbox" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
@@ -269,6 +271,14 @@ const filteredOptionsByCategories = computed(() => {
 
 const removeSpaceFromKey = (key) => {
     return key.replace(/\s/g, '');
+}
+
+// Raum-Einträge werden mit ihrer Raumfarbe leicht transparent hinterlegt
+const colorWithLightOpacity = (color) => {
+    const r = parseInt(color.slice(-6, -4), 16);
+    const g = parseInt(color.slice(-4, -2), 16);
+    const b = parseInt(color.slice(-2), 16);
+    return `rgba(${r}, ${g}, ${b}, 0.15)`;
 }
 
 const removeActiveFilter = (filterToRemove) => {

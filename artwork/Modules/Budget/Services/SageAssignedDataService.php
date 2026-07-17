@@ -20,6 +20,7 @@ class SageAssignedDataService implements CollectiveBookingService
         private readonly SageAssignedDataRepository $sageAssignedDataRepository,
         private readonly SageNotAssignedDataService $sageNotAssignedDataService,
         private readonly ColumnCellService $columnCellService,
+        private readonly SageBookingLogRecorder $sageBookingLogRecorder,
     ) {
     }
 
@@ -43,12 +44,21 @@ class SageAssignedDataService implements CollectiveBookingService
 
         $this->recalculateForCell($sageAssignedData->column_cell_id);
 
+        $this->sageBookingLogRecorder->record('created', $sageAssignedData);
+
         return $sageAssignedData;
     }
 
     public function update(SageAssignedData $sageAssignedData, array $attributes): SageAssignedData
     {
         $this->sageAssignedDataRepository->update($sageAssignedData, $attributes);
+
+        // Nur echte Änderungen protokollieren: der tägliche Watermark-Sync liest den
+        // letzten Buchungstag jedes Mal neu ein — ohne Guard entstünden täglich
+        // "updated"-Einträge für unveränderte Buchungen
+        if ($sageAssignedData->wasChanged()) {
+            $this->sageBookingLogRecorder->record('updated', $sageAssignedData);
+        }
 
         return $sageAssignedData;
     }
@@ -120,6 +130,9 @@ class SageAssignedDataService implements CollectiveBookingService
     {
         $columnCellId = $sageAssignedData->column_cell_id;
         $this->sageAssignedDataRepository->delete($sageAssignedData);
+        // Erst nach erfolgreichem Delete protokollieren — sonst behauptet das
+        // Protokoll bei einem Fehler eine Löschung, die nie passiert ist
+        $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
         $this->recalculateForCell($columnCellId);
     }
 
@@ -127,6 +140,9 @@ class SageAssignedDataService implements CollectiveBookingService
     {
         $columnCellId = $sageAssignedData->column_cell_id;
         $result = $this->sageAssignedDataRepository->forceDelete($sageAssignedData);
+        if ($result) {
+            $this->sageBookingLogRecorder->record('deleted', $sageAssignedData);
+        }
         $this->recalculateForCell($columnCellId);
         return $result;
     }

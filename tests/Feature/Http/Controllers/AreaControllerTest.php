@@ -54,6 +54,18 @@ final class AreaControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function admin_can_update_area_color(): void
+    {
+        $this->actingAsAdmin();
+        $area = Area::factory()->create(['name' => 'Stage']);
+
+        $response = $this->patch(route('areas.update', $area), ['name' => 'Stage', 'color' => '#1e40af']);
+
+        $response->assertRedirect();
+        $this->assertSame('#1e40af', $area->fresh()->color);
+    }
+
+    #[Test]
     public function admin_can_duplicate_area(): void
     {
         $this->actingAsAdmin();

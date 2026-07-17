@@ -115,6 +115,7 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import BiChart from '@/Artwork/Charts/BiChart.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const t = useTranslation();
 
@@ -262,28 +263,30 @@ const toggleDetail = (id) => {
     expandedId.value = expandedId.value === id ? null : id;
 };
 
+const biSave = useBiSaveFeedback();
+
 const createSnapshot = async () => {
     if (!newName.value || !newDate.value) return;
-    try {
-        await axios.post(route('projects.bi.snapshots.store', props.projectId), {
+    const ok = await biSave.run(
+        () => axios.post(route('projects.bi.snapshots.store', props.projectId), {
             name: newName.value,
             snapshot_date: newDate.value,
-        });
+        })
+    );
+    if (ok) {
         newName.value = '';
         newDate.value = '';
         emit('updated');
-    } catch (error) {
-        console.error('Error creating snapshot', error);
     }
 };
 
 const deleteSnapshot = async (snapshotId) => {
     if (!confirm('Delete this snapshot? This cannot be undone.')) return;
-    try {
-        await axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]));
+    const ok = await biSave.run(
+        () => axios.delete(route('projects.bi.snapshots.destroy', [props.projectId, snapshotId]))
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error deleting snapshot', error);
     }
 };
 </script>

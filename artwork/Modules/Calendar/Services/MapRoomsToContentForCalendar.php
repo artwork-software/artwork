@@ -65,7 +65,8 @@ trait MapRoomsToContentForCalendar
             return new CalendarRoomDTO(
                 roomId: $room->id,
                 roomName: $room->name,
-                content: $content
+                content: $content,
+                roomColor: $room->getEffectiveColor()
             );
         })->values()->toArray();
 

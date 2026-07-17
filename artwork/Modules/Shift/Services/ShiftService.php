@@ -591,7 +591,6 @@ class ShiftService
             $shift->is_committed = true;
             $shift->committing_user_id = Auth::id();
             $shift->save();
-            broadcast(new UpdateEventShiftInShiftPlan($shift, $shift->room_id ?? $shift->event?->room_id));
 
             foreach ($shift->users as $user) {
                 if (!in_array($user->id, $userIdHasGetNotification)) {
@@ -629,6 +628,18 @@ class ShiftService
                 }
             }
         }
+
+        // UpdateEventShiftInShiftPlan ist ShouldBroadcastNow: jeder broadcast() ist ein
+        // synchroner HTTP-Call an Reverb + Relation-Loads für das DTO. Deshalb erst nach
+        // dem Response ausführen (läuft im selben Prozess, braucht keinen Queue-Worker).
+        dispatch(function () use ($shifts): void {
+            foreach ($shifts as $shift) {
+                $roomId = $shift->room_id ?? $shift->event?->room_id;
+                if ($roomId !== null) {
+                    broadcast(new UpdateEventShiftInShiftPlan($shift, $roomId));
+                }
+            }
+        })->afterResponse();
 
         // is_committed ist nicht in logOnly — ohne den Sammel-Eintrag wäre die
         // Festschreibung im Schichtverlauf komplett unsichtbar.

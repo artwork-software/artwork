@@ -1474,15 +1474,21 @@ class EventController extends Controller
             $request->year
         );
 
-        $craftId = $request->get('craft_id');
+        // Mehrfachauswahl im Modal: craft_ids (Array) ODER einzelnes craft_id (Altbestand).
+        $craftIds = $request->input('craft_ids');
+        if (! is_array($craftIds) || $craftIds === []) {
+            $craftIds = [$request->get('craft_id')];
+        }
 
-        $this->shiftService->commitShiftsByDate(
-            $start,
-            $end,
-            $craftId,
-            $request->filled('week_number') ? (int) $request->week_number : null,
-            $request->filled('year') ? (int) $request->year : null
-        );
+        foreach (array_unique(array_map('intval', array_filter($craftIds))) as $craftId) {
+            $this->shiftService->commitShiftsByDate(
+                $start,
+                $end,
+                $craftId,
+                $request->filled('week_number') ? (int) $request->week_number : null,
+                $request->filled('year') ? (int) $request->year : null
+            );
+        }
     }
 
     public function changeCommitShifts(Request $request, Shift $shift): void
@@ -2144,6 +2150,9 @@ class EventController extends Controller
         }
 
         $this->craftInventoryItemEventService->updateEventTimesInInventory($event);
+
+        // Projektzuordnungen (Re-Materialisierung/Auflösung bei Zeitraum-Änderung)
+        // laufen zentral über den ProjectDayAssignmentEventObserver.
 
         broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
     }
@@ -4341,6 +4350,30 @@ class EventController extends Controller
             $craftIds
         );
 
+        // Projektzuordnungen (verbindlich + Wunsch) je Person/Tag — eine Batch-Query pro Worker-Typ
+        $dayAssignmentService = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class);
+        $usersForShifts = $dayAssignmentService->attachAssignmentsToWorkerEntries(
+            $usersForShifts,
+            'user',
+            User::class,
+            $startDate,
+            $endDate
+        );
+        $freelancersForShifts = $dayAssignmentService->attachAssignmentsToWorkerEntries(
+            $freelancersForShifts,
+            'freelancer',
+            Freelancer::class,
+            $startDate,
+            $endDate
+        );
+        $serviceProvidersForShifts = $dayAssignmentService->attachAssignmentsToWorkerEntries(
+            $serviceProvidersForShifts,
+            'service_provider',
+            ServiceProvider::class,
+            $startDate,
+            $endDate
+        );
+
         $workflowStatus = $workflowStatusService->computeForDateRange(
             $startDate,
             $endDate,
@@ -4481,6 +4514,11 @@ class EventController extends Controller
             'serviceProvider' => 'service_provider',
         };
         $workerData['weeklyWorkflowStatus'] = $workflowStatus[$workerDataKey][$workerId] ?? [];
+
+        // Parität zum Bulk-Load: Projektzuordnungen je Tag
+        $workerData['project_assignments'] = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+            ->getAssignmentsGroupedByDate($modelClass, [$workerId], $startDate, $endDate)
+            ->get($workerId) ?? new \stdClass();
 
         return new JsonResponse([
             'worker' => $workerData,

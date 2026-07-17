@@ -52,6 +52,34 @@ class UserShiftPlanPageDto extends BaseDto
 
     public int|Closure|null $firstProjectShiftTabId = null;
 
+    public Collection|Closure|null $projectAssignments = null;
+
+    public array|Closure|null $projectWishes = null;
+
+    public function setProjectAssignments(Collection|Closure|null $projectAssignments): self
+    {
+        $this->projectAssignments = $projectAssignments;
+
+        return $this;
+    }
+
+    public function getProjectAssignments(): Collection|Closure|null
+    {
+        return $this->projectAssignments;
+    }
+
+    public function setProjectWishes(array|Closure|null $projectWishes): self
+    {
+        $this->projectWishes = $projectWishes;
+
+        return $this;
+    }
+
+    public function getProjectWishes(): array|Closure|null
+    {
+        return $this->projectWishes;
+    }
+
     public function setUserToEdit(?UserShowResource $userToEdit): self
     {
         $this->userToEdit = $userToEdit;
@@ -352,6 +380,8 @@ class UserShiftPlanPageDto extends BaseDto
             'shiftQualifications' => $this->getShiftQualifications(),
             'shifts' => $this->getShifts(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
+            'projectAssignments' => $this->getProjectAssignments(),
+            'projectWishes' => $this->getProjectWishes(),
         ];
     }
 }

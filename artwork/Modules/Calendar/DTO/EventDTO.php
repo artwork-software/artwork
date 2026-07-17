@@ -36,7 +36,7 @@ class EventDTO extends Data
         public ?int $series_id,
         public ?array $eventProperties,
         public ?bool $occupancy_option,
-        public ?int $declinedRoomId = null,
+        public ?int $declinedRoomId,
         public ?array $eventStatus,
         public ?array $subEvents,
         public ?string $option_string,

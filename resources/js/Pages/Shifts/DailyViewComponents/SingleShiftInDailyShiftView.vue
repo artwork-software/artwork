@@ -147,7 +147,7 @@
             <div v-for="drop in computedShiftQualificationDropElements" :key="`${drop.shift_qualification_id}-${drop.isOverbooked ? 'overbooked' : 'regular'}`" class="flex items-center w-full gap-x-2 font-lexend rounded-lg" :class="drop.isOverbooked ? 'bg-amber-50 border border-dashed border-amber-500' : 'bg-red-100'">
                 <Menu as="div" class="relative w-full">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
-                        <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true)">
+                        <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true); loadShiftProjectAssignees()">
                             <!-- Unbesetzt-Balken: gleiche Breite wie Zeit-Pill der zugewiesenen Entity -->
                             <div
                                 class="py-1.5 pl-1 pr-0.75 rounded-l-lg"
@@ -188,8 +188,24 @@
                                 <div class="overflow-y-auto">
                                 <MenuItem as="div" v-slot="{ active }" v-for="user in filteredAssignablePeople(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                                     <div class="flex justify-between items-center gap-x-2 w-48" @click="createOnDropElementAndSave(user, user.originCraft, drop.shift_qualification_id, drop.isOverbooked) ">
-                                        <span class="text-xs truncate w-36">{{ user.name || user.full_name }}</span>
+                                        <span class="text-xs truncate w-36" :class="projectAssignmentFor(user) === 'wish' ? 'italic' : ''">{{ user.name || user.full_name }}</span>
                                         <div class="text-xs text-gray-500 flex items-center gap-x-1">
+                                            <ToolTipComponent
+                                                v-if="projectAssignmentFor(user) === 'binding'"
+                                                :icon="IconUserCheck"
+                                                icon-size="w-4 h-4"
+                                                :tooltip-text="$t('Bindingly assigned to this project')"
+                                                direction="top"
+                                                classes="text-emerald-600 w-fit"
+                                            />
+                                            <ToolTipComponent
+                                                v-else-if="projectAssignmentFor(user) === 'wish'"
+                                                :icon="IconHeart"
+                                                icon-size="w-4 h-4"
+                                                :tooltip-text="$t('Has entered a wish for this project')"
+                                                direction="top"
+                                                classes="text-emerald-500 w-fit"
+                                            />
                                             <ToolTipComponent
                                                 :icon="IconId"
                                                 icon-size="w-4 h-4"
@@ -363,6 +379,8 @@ import {
     IconCirclePlus,
     IconNote,
     IconDeviceFloppy,
+    IconUserCheck,
+    IconHeart,
     IconX
 } from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -859,12 +877,42 @@ const getAssignablePeople = (shiftQualificationId) => {
 const filteredAssignablePeople = (shiftQualificationId) => {
     const people = getAssignablePeopleWithCollision(shiftQualificationId);
     const query = (dropSearchQueries[shiftQualificationId] || '').trim().toLowerCase();
-    if (!query) return people;
-    return people.filter(user => {
-        const name = (user.name || user.full_name || '').toLowerCase();
-        return name.includes(query);
-    });
+    const filtered = query
+        ? people.filter(user => {
+            const name = (user.name || user.full_name || '').toLowerCase();
+            return name.includes(query);
+        })
+        : people;
+
+    // Dem Projekt Zugeordnete zuoberst (verbindlich vor Wunsch), Rest dahinter
+    const rank = (user) => {
+        const assignment = projectAssignmentFor(user);
+        return assignment === 'binding' ? 0 : assignment === 'wish' ? 1 : 2;
+    };
+
+    return [...filtered].sort((a, b) => rank(a) - rank(b));
 };
+
+// --- Projektzuordnungen fürs Unbesetzt-Dropdown (einmal je Schicht lazy geladen) ---
+const shiftProjectAssignees = ref(null); // Map `${type}_${id}` -> 'binding' | 'wish'
+let shiftProjectAssigneesPromise = null;
+
+const loadShiftProjectAssignees = () => {
+    if (shiftProjectAssigneesPromise || !props.shift?.id) return;
+    shiftProjectAssigneesPromise = axios
+        .get(route('shifts.project-assignees', { shift: props.shift.id }))
+        .then(({ data }) => {
+            const map = new Map();
+            (data.assignees ?? []).forEach(a => map.set(`${a.type}_${a.id}`, a.assignment_type));
+            shiftProjectAssignees.value = map;
+        })
+        .catch(() => {
+            shiftProjectAssignees.value = new Map();
+        });
+};
+
+const projectAssignmentFor = (user) =>
+    shiftProjectAssignees.value?.get(`${user.type}_${user.id}`) ?? null;
 
 // Angepasste Methode für das Menü, die bereits zugewiesene Personen anzeigt
 // Diese Funktion sollte KEINE Requests auslösen, da sie bei jedem Rendering aufgerufen wird

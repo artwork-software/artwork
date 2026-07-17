@@ -118,10 +118,30 @@ class VacationController extends Controller
         }
     }
 
+    /**
+     * Der Verfügbarkeitsstatus (Arbeitsfrei/Frei/Nicht verfügbar) ist Planungssache:
+     * niemand darf ihn für sich selbst setzen — eigene Abwesenheiten laufen über den
+     * Verfügbarkeitskalender (store/updateEntry). Admins passieren via Gate::before.
+     */
+    private function authorizeAvailabilityStatusChange(): void
+    {
+        abort_unless(
+            (bool) auth()->user()?->can(
+                \Artwork\Modules\Permission\Enums\PermissionEnum::SHIFT_PLANNER->value
+            )
+                || (bool) auth()->user()?->can(
+                    \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+                ),
+            403
+        );
+    }
+
     public function checkVacation(
         Request $request,
         User $user
     ): void {
+        $this->authorizeAvailabilityStatusChange();
+
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
@@ -172,6 +192,11 @@ class VacationController extends Controller
                 }
             }
             $this->workingHourCacheService->forgetForEntity('user', $user->id);
+
+            // Typ-Wechsel läuft am VacationService::create-Hook vorbei → Auflösung
+            // von Projektzuordnungen/-wünschen hier explizit anstoßen.
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->handleVacationEntry($user, [$day], (string) $checked['type']);
         }
 
         // Schichten VOR einem evtl. Detach einsammeln, damit auch entfernte
@@ -188,6 +213,11 @@ class VacationController extends Controller
                 ->get();
             foreach ($shifts as $shift) {
                 $shift->users()->detach($user->id);
+                // Parität zu ShiftWorkerService::removeFromShift: durch diese Schicht
+                // supersedete Projektzuordnungen auflösen bzw. umhängen — sonst stranden
+                // sie mit Verweis auf eine Schicht, in der die Person nicht mehr steht
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->restoreForShiftRemoval($shift, User::class, $user->id);
             }
         }
 
@@ -198,6 +228,8 @@ class VacationController extends Controller
         Request $request,
         Freelancer $freelancer
     ): void {
+        $this->authorizeAvailabilityStatusChange();
+
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
@@ -239,6 +271,9 @@ class VacationController extends Controller
                 }
             }
             $this->workingHourCacheService->forgetForEntity('freelancer', $freelancer->id);
+
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->handleVacationEntry($freelancer, [$day], (string) $checked['type']);
         }
 
         $shiftsOnDay = $this->shiftsOnDay($freelancer, $day);
@@ -251,6 +286,8 @@ class VacationController extends Controller
                 ->get();
             foreach ($shifts as $shift) {
                 $shift->freelancer()->detach($freelancer->id);
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->restoreForShiftRemoval($shift, Freelancer::class, $freelancer->id);
             }
         }
 
@@ -261,6 +298,8 @@ class VacationController extends Controller
         Request $request,
         ServiceProvider $serviceProvider
     ): void {
+        $this->authorizeAvailabilityStatusChange();
+
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
@@ -302,6 +341,9 @@ class VacationController extends Controller
                 }
             }
             $this->workingHourCacheService->forgetForEntity('service_provider', $serviceProvider->id);
+
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                ->handleVacationEntry($serviceProvider, [$day], (string) $checked['type']);
         }
 
         $shiftsOnDay = $this->shiftsOnDay($serviceProvider, $day);
@@ -314,6 +356,8 @@ class VacationController extends Controller
                 ->get();
             foreach ($shifts as $shift) {
                 $shift->serviceProvider()->detach($serviceProvider->id);
+                app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->restoreForShiftRemoval($shift, ServiceProvider::class, $serviceProvider->id);
             }
         }
 

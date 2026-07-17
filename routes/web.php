@@ -42,6 +42,7 @@ use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\EventVerificationController;
 use App\Http\Controllers\ExportPDFController;
+use App\Http\Controllers\WorkerShiftPlanPdfExportController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
@@ -62,6 +63,7 @@ use App\Http\Controllers\PresetTimelineTimeController;
 use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCrmContactController;
+use App\Http\Controllers\ProjectDayAssignmentController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectManagementBuilderController;
 use App\Http\Controllers\ProjectPrintLayoutController;
@@ -167,6 +169,7 @@ use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
+use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
@@ -175,6 +178,8 @@ use Artwork\Modules\Shift\Http\Controllers\ShiftCommitWorkflowUserController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftGroupController;
 use Artwork\Modules\Shift\Http\Controllers\ShiftHistoryController;
 use Artwork\Modules\System\ApiManagement\Http\Controller\ApiManagementController;
+use Artwork\Modules\WorkTime\Http\Controllers\CraftDistributionExportController;
+use Artwork\Modules\WorkTime\Http\Controllers\WorkTimeOverviewExportController;
 use Artwork\Modules\User\Http\Controllers\UserCalendarFilterController;
 use Artwork\Modules\User\Http\Controllers\UserCalenderAboController;
 use Artwork\Modules\User\Http\Controllers\UserBudgetAccountDisplaySettingController;
@@ -293,6 +298,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.external-user-management.sources.destroy');
         Route::post('/external-user-management/sources/{externalUserSource}/test-connection', [ExternalUserSourceController::class, 'testConnection'])
             ->name('tool.external-user-management.sources.test-connection');
+        Route::post('/external-user-management/sources/{externalUserSource}/sync', [ExternalUserSourceController::class, 'sync'])
+            ->name('tool.external-user-management.sources.sync');
+        Route::get('/external-user-management/sources/{externalUserSource}/sync-status', [ExternalUserSourceController::class, 'syncStatus'])
+            ->name('tool.external-user-management.sources.sync-status');
 
         Route::post('/external-user-management/sources/test-connection-config', [ExternalUserSourceController::class, 'testConnectionConfig'])
             ->name('tool.external-user-management.sources.test-connection-config');
@@ -341,6 +350,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             '/interfaces/sage/deleteBookingDays',
             [ToolSettingsInterfacesController::class, 'deleteSageBookingDays']
         )->name('tool.interfaces.sage.deleteBookingDays');
+        Route::get('/interfaces/sage/logs', [ToolSettingsInterfacesController::class, 'sageLogs'])
+            ->name('tool.interfaces.sage.logs');
+        Route::get(
+            '/interfaces/sage/logs/{sageBookingLog}/entries',
+            [ToolSettingsInterfacesController::class, 'sageLogEntries']
+        )->name('tool.interfaces.sage.logs.entries');
+        Route::get(
+            '/interfaces/sage/logs/{sageBookingLog}/export',
+            [ToolSettingsInterfacesController::class, 'sageLogExport']
+        )->name('tool.interfaces.sage.logs.export');
         Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
@@ -536,9 +555,41 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
+
+    // Matrix über alle Produktionen hinweg — braucht das globale Projekt-Leserecht,
+    // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)
+    Route::get('/projects/export/project-role-matrix', ProjectRoleMatrixExportController::class)
+        ->name('projects.export.project-role-matrix')
+        ->can('view projects');
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
         ->name('projects.rooms-with-event-periods');
+
+    // Projektzuordnungen im Dienstplan (+ Wünsche); Autorisierung im Controller
+    // (verbindlich = Schichtplanungsrecht, Wunsch = nur für sich selbst)
+    Route::get('/project-day-assignments/projects', [ProjectDayAssignmentController::class, 'projectOptions'])
+        ->name('project-day-assignments.projects');
+    Route::post('/project-day-assignments', [ProjectDayAssignmentController::class, 'store'])
+        ->name('project-day-assignments.store');
+    Route::get('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'fullPeriodForWorker'])
+        ->name('project-day-assignments.full-period.index')
+        ->can('can plan shifts');
+    Route::delete('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'destroyFullPeriod'])
+        ->name('project-day-assignments.full-period.destroy')
+        ->can('can plan shifts');
+    Route::delete('/project-day-assignments/{projectDayAssignment}', [ProjectDayAssignmentController::class, 'destroy'])
+        ->name('project-day-assignments.destroy');
+    Route::patch('/project-day-assignments/{projectDayAssignment}/accept-wish', [ProjectDayAssignmentController::class, 'acceptWish'])
+        ->name('project-day-assignments.accept-wish');
+    Route::get('/projects/{project}/day-assignments', [ProjectDayAssignmentController::class, 'forProject'])
+        ->name('projects.day-assignments')
+        ->can('can view shift plan');
+    Route::get('/shifts/{shift}/project-assignees', [ProjectDayAssignmentController::class, 'forShift'])
+        ->name('shifts.project-assignees')
+        ->can('can view shift plan');
+    Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
+        ->name('events.project-assignment-impact')
+        ->can('can view shift plan');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
@@ -911,6 +962,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.crafts')
         ->can('can view shift plan');
 
+    Route::get('/shifts/export/work-time-overview', WorkTimeOverviewExportController::class)
+        ->name('shifts.export.work-time-overview')
+        ->can('can view shift plan');
+
+    Route::get('/shifts/export/craft-distribution', CraftDistributionExportController::class)
+        ->name('shifts.export.craft-distribution')
+        ->can('can view shift plan')
+        // Export enthält namentliche Stunden einzelner Personen — gleiches Gating wie
+        // WorkingHourService/EventController (Stunden anderer nur mit dieser Permission)
+        ->can('can view shift worker hours');
 
     Route::post('/shift/delete/calendar/cell', [ShiftController::class, 'deleteCalendarCell'])
         ->name('multi-edit.calendar.cell.delete')
@@ -2063,6 +2124,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
         ->name('shift.plan.export.pdf');
+    Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)
+        ->name('shift.plan.export.worker-matrix.pdf')
+        ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
     Route::get(
@@ -2623,6 +2687,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
             Route::patch('/general/inventory-display-settings', [GeneralSettingsController::class, 'updateInventoryDisplaySettings'])
                 ->name('inventory-management.settings.general.update-inventory-display-settings');
+
+            Route::patch('/general/article-image-max-size', [GeneralSettingsController::class, 'updateInventoryArticleImageMaxSize'])
+                ->name('inventory-management.settings.general.update-article-image-max-size');
 
             Route::get('/categories', [InventoryCategoryController::class, 'settings'])
                 ->name('inventory-management.settings.category');

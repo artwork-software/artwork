@@ -101,6 +101,18 @@
         .it .body { padding: 2px 3px; }
         .it .ittitle { font-size: 7.5px; color: #52525b; }
 
+        /* Verbindliche Projektzuordnung ohne konkrete Schicht */
+        .pa {
+            border: 1px solid #bae6fd;
+            background: #f0f9ff;
+            color: #075985;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            padding: 2px 3px;
+            font-size: 7.5px;
+            font-weight: 700;
+        }
+
         .legend { margin-top: 8px; font-size: 7.5px; color: #71717a; }
         .legend span { margin-right: 14px; }
         .swatch {
@@ -217,6 +229,11 @@
                                         @endif
                                     </div>
                                 @endforeach
+
+                                {{-- Verbindliche Projektzuordnungen (ohne konkrete Schicht) --}}
+                                @foreach (($cell['projectAssignments'] ?? []) as $assignmentProjectName)
+                                    <div class="pa">{{ $assignmentProjectName }}</div>
+                                @endforeach
                             </td>
                         @endforeach
                     </tr>
@@ -229,6 +246,7 @@
             <span><span class="swatch" style="background:#fef2f2;"></span>Feiertag</span>
             <span><span class="swatch" style="background:#f4f4f5;"></span>anderer Monat</span>
             <span><span class="swatch" style="background:#a1a1aa;"></span>Individuelle Zeit</span>
+            <span><span class="swatch" style="background:#f0f9ff;"></span>Projektzuordnung</span>
             <span>&#10003; = bestätigt</span>
         </div>
 

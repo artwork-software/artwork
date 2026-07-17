@@ -82,6 +82,8 @@
 
         <BiModeSwitchModal
             v-if="showModeModal"
+            :metric-label="$t(pendingSwitch?.metric?.label ?? '')"
+            :entry-count="pendingSwitch?.entryCount ?? 0"
             @confirm="confirmModeSwitch"
             @close="showModeModal = false"
         />
@@ -95,8 +97,10 @@ import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue';
 import BiEventMetricsTable from '@/Pages/Projects/Components/BiComponents/BiEventMetricsTable.vue';
 import BiModeSwitchModal from '@/Pages/Projects/Components/BiComponents/BiModeSwitchModal.vue';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const t = useTranslation();
+const biSave = useBiSaveFeedback();
 
 const props = defineProps({
     biData: { type: Object, default: null },
@@ -152,7 +156,12 @@ watch(() => props.biData, (val) => {
     if (!val) return;
     metrics.forEach((metric) => {
         modes[metric.key] = val[metric.modeField] ?? 'total';
-        totals[metric.key] = val[metric.totalField];
+        // Fokussierte Eingabe nicht überschreiben: der Refetch nach einem Save
+        // (auch aus anderen Sektionen) darf laufendes Tippen nicht zurücksetzen
+        const input = document.getElementById('bi_total_' + metric.key);
+        if (!input || document.activeElement !== input) {
+            totals[metric.key] = val[metric.totalField];
+        }
         notApplicable[metric.key] = !!val[metric.naField];
     });
 }, { immediate: true });
@@ -187,43 +196,68 @@ const perEventSummary = (metric) => {
     return `${formatted} (${entries.length}/${props.projectEvents.length})`;
 };
 
+// Anzahl der Werte, die beim Verlassen des aktuellen Modus verworfen würden
+const currentModeEntryCount = (metric) => {
+    if (modes[metric.key] === 'total') {
+        const total = totals[metric.key];
+        return total !== null && total !== undefined && total !== '' ? 1 : 0;
+    }
+    return props.eventData.filter(
+        e => e[metric.key] !== null && e[metric.key] !== undefined
+    ).length;
+};
+
 const onToggleChange = (metric, isPerEvent) => {
-    pendingSwitch.value = { metric, mode: isPerEvent ? 'per_event' : 'total' };
+    const mode = isPerEvent ? 'per_event' : 'total';
+    const entryCount = currentModeEntryCount(metric);
+    pendingSwitch.value = { metric, mode, entryCount };
+
+    // Nichts zu verlieren → direkt wechseln, ohne Warnmodal-Reibung
+    if (entryCount === 0) {
+        confirmModeSwitch();
+        return;
+    }
     showModeModal.value = true;
 };
 
 const confirmModeSwitch = async () => {
     const { metric, mode } = pendingSwitch.value;
     showModeModal.value = false;
+    const previousMode = modes[metric.key];
     modes[metric.key] = mode;
-    try {
-        await axios.put(route(metric.switchRoute, props.projectId), { mode });
+    const ok = await biSave.run(
+        () => axios.put(route(metric.switchRoute, props.projectId), { mode })
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error switching input mode', error);
+    } else {
+        // Optimistischen Toggle zurückrollen, sonst divergieren UI und Server
+        modes[metric.key] = previousMode;
     }
 };
 
 const toggleNotApplicable = async (metric, value) => {
     notApplicable[metric.key] = value;
-    try {
-        await axios.put(route('projects.bi.update-data', props.projectId), {
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-data', props.projectId), {
             [metric.naField]: value,
-        });
+        })
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error toggling not-applicable flag', error);
+    } else {
+        notApplicable[metric.key] = !value;
     }
 };
 
 const saveTotal = async (metric) => {
-    try {
-        await axios.put(route('projects.bi.update-data', props.projectId), {
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-data', props.projectId), {
             [metric.totalField]: totals[metric.key] === '' ? null : totals[metric.key],
-        });
+        })
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error saving total value', error);
     }
 };
 </script>

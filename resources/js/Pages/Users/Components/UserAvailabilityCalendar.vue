@@ -71,6 +71,20 @@
                             v-if="day.hasConflict && !day.notInMonth"
                             class="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500"
                         />
+                        <!-- Projektwünsche: Streifen am unteren Zellrand, laufen über die Serie hinweg -->
+                        <template v-if="!day.notInMonth">
+                            <span
+                                v-for="(wish, wishIndex) in wishesForDay(day).slice(0, 2)"
+                                :key="`wish-${wish.id}`"
+                                class="absolute h-[4px] pointer-events-none"
+                                :class="[
+                                    wish.date === wish.series_start ? 'rounded-l-full left-1' : 'left-0',
+                                    wish.date === wish.series_end ? 'rounded-r-full right-1' : 'right-0',
+                                ]"
+                                :style="{ bottom: (2 + wishIndex * 6) + 'px', ...assignmentStripStyle(wish) }"
+                                :title="assignmentLabel(wish, $t('Wish'))"
+                            />
+                        </template>
                     </button>
                 </td>
             </tr>
@@ -95,6 +109,10 @@
                 <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
                 <span>{{ $t('Conflict with your shift!') }}</span>
             </div>
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block w-4 h-[4px] rounded-full border border-emerald-400 border-dashed bg-emerald-100"></span>
+                <span>{{ $t('Project wish') }}</span>
+            </div>
         </div>
         <p v-if="interactive" class="mt-1.5 px-2 text-xs text-zinc-400 dark:text-zinc-500">
             {{ $t('Click a day or drag across several days to create an entry.') }}
@@ -107,12 +125,14 @@ import { computed, ref, onBeforeUnmount } from 'vue'
 import { router } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/solid'
+import { assignmentStripStyle, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js'
 
 const props = defineProps({
     calendarData: { type: Array, required: true },
     dateToShow: { type: Array, required: true }, // [Titel, { date: 'YYYY-MM-DD' }]
     showVacationsAndAvailabilitiesDate: { type: String, default: '' },
     interactive: { type: Boolean, default: true },
+    projectWishes: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['select-range'])
@@ -120,7 +140,19 @@ const emit = defineEmits(['select-range'])
 const weekdayNames = computed(() => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
 
 // Nur die Verfügbarkeits-Props neu laden – der Einsatzplan bleibt unberührt
-const AVAILABILITY_PROPS = ['calendarData', 'dateToShow', 'vacations', 'availabilities', 'createShowDate']
+const AVAILABILITY_PROPS = ['calendarData', 'dateToShow', 'vacations', 'availabilities', 'createShowDate', 'projectWishes']
+
+// Projektwünsche je Tag (Map Y-m-d => Einträge)
+const wishesByDate = computed(() => {
+    const map = new Map()
+    for (const wish of props.projectWishes ?? []) {
+        if (!map.has(wish.date)) map.set(wish.date, [])
+        map.get(wish.date).push(wish)
+    }
+    return map
+})
+
+const wishesForDay = (day) => wishesByDate.value.get(day.day_formatted) ?? []
 
 const currentMonth = computed(() => dayjs(props.dateToShow[1]?.date ?? props.dateToShow[1]))
 

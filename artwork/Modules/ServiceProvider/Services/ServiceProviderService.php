@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ServiceProvider\Services;
 
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -163,8 +164,9 @@ readonly class ServiceProviderService
                         )
                 )
             )
-            //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
-            //->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
+            // Einsatzplan-Daten pro Tag – wurden bisher berechnet, aber nie ans Frontend gegeben
+            ->setDaysWithData($daysWithData)
+            ->setCrafts(Craft::all())
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes($eventTypeService->getAll())
             ->setProjects($projectService->getAll())

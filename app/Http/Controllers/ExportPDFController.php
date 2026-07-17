@@ -420,6 +420,14 @@ class ExportPDFController extends Controller
             ]
         );
 
+        // Gewerke-Override aus dem Export-Dialog: nur in-memory anwenden, der
+        // gespeicherte Schichtplan-Filter des Users bleibt unverändert.
+        // Leeres Array = keine Gewerke-Einschränkung.
+        if ($request->has('craft_ids')) {
+            $craftIdsOverride = array_map('intval', (array) $request->get('craft_ids', []));
+            $userCalendarFilter->setAttribute('craft_ids', $craftIdsOverride !== [] ? $craftIdsOverride : null);
+        }
+
         // Respect the date range currently shown in the shift plan (sent by the frontend).
         $startDateParam = $request->get('start');
         $endDateParam = $request->get('end');
@@ -519,6 +527,18 @@ class ExportPDFController extends Controller
             ? optional($this->projectService->findById($highlightProjectId))->name
             : null;
 
+        // Kalenderwochen des Zeitraums für den Kopfbereich, damit ein nach KW
+        // gefilterter Export als solcher erkennbar ist.
+        $kwRange = ($startDate->isoWeek === $endDate->isoWeek && $startDate->isoWeekYear === $endDate->isoWeekYear)
+            ? sprintf('KW %d/%d', $startDate->isoWeek, $startDate->isoWeekYear)
+            : sprintf(
+                'KW %d/%d – KW %d/%d',
+                $startDate->isoWeek,
+                $startDate->isoWeekYear,
+                $endDate->isoWeek,
+                $endDate->isoWeekYear
+            );
+
         $pdf = $this->snappyPdf->loadView(
             'pdf.shiftplan_export',
             [
@@ -532,6 +552,7 @@ class ExportPDFController extends Controller
                 'created_by' => $user->full_name,
                 'startDate' => $startDate->format('d.m.Y'),
                 'endDate' => $endDate->format('d.m.Y'),
+                'kwRange' => $kwRange,
                 'highlightProjectId' => $highlightProjectId,
                 'highlightProjectName' => $highlightProjectName,
             ]
@@ -778,13 +799,22 @@ class ExportPDFController extends Controller
      */
     public function createUserShiftPlanPDF(
         Request $request,
-        User $user,
+        int $user,
         EventService $eventService
     ): Response {
         $authUser = $this->authManager->guard()->user();
 
         $type = $request->string('type', 'user')->toString();
-        $modelId = (int) ($request->integer('model_id') ?: $user->id);
+        $modelId = (int) ($request->integer('model_id') ?: $user);
+
+        // {user} ist je nach type eine User-, Freelancer- oder Dienstleister-ID –
+        // deshalb bewusst kein Route-Model-Binding auf User (404 bei Freelancer-IDs).
+        $worker = match ($type) {
+            'freelancer' => \Artwork\Modules\Freelancer\Models\Freelancer::query()->findOrFail($modelId),
+            'service_provider', 'serviceProvider' =>
+                \Artwork\Modules\ServiceProvider\Models\ServiceProvider::query()->findOrFail($modelId),
+            default => User::query()->findOrFail($modelId),
+        };
 
         // Monatsliste (je YYYY-MM)
         $startMonth = $request->get('startMonth');
@@ -822,6 +852,16 @@ class ExportPDFController extends Controller
             $gridEnd->copy()
         );
 
+        // Verbindliche Projektzuordnungen je Tag (Wünsche bewusst nicht im PDF)
+        $assignmentEmployableClass = match ($type) {
+            'freelancer' => \Artwork\Modules\Freelancer\Models\Freelancer::class,
+            'service_provider', 'serviceProvider' => \Artwork\Modules\ServiceProvider\Models\ServiceProvider::class,
+            default => User::class,
+        };
+        $projectAssignmentsByDate = app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+            ->getAssignmentsGroupedByDate($assignmentEmployableClass, [$modelId], $gridStart->copy(), $gridEnd->copy())
+            ->get($modelId) ?? collect();
+
         // Feiertage im Zeitraum -> map[Y-m-d] = name
         $holidayMap = [];
         $holidays = Holiday::query()
@@ -837,7 +877,7 @@ class ExportPDFController extends Controller
         }
 
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-        $weeklyWorkingHours = $type === 'user' ? (float) ($user->weekly_working_hours ?? 0) : null;
+        $weeklyWorkingHours = $type === 'user' ? (float) ($worker->weekly_working_hours ?? 0) : null;
 
         // Schichtqualifikationen (Funktion) -> [id => name]
         $shiftQualifications = \Artwork\Modules\Shift\Models\ShiftQualification::query()
@@ -889,6 +929,13 @@ class ExportPDFController extends Controller
                         $monthWorkMinutes += $this->hhmmToMinutes($dayData['totalWorkTime'] ?? '00:00');
                     }
 
+                    $projectAssignmentBlocks = collect($projectAssignmentsByDate->get($key) ?? [])
+                        ->filter(static fn (array $assignment) => ($assignment['type'] ?? null) === 'binding')
+                        ->pluck('project_name')
+                        ->unique()
+                        ->values()
+                        ->all();
+
                     $cells[] = [
                         'dayNumber' => $day->day,
                         'inMonth' => $inMonth,
@@ -897,6 +944,7 @@ class ExportPDFController extends Controller
                         'holidayName' => $showHolidayLabel ? $holidayName : null,
                         'shifts' => $shiftBlocks,
                         'individualTimes' => $individualBlocks,
+                        'projectAssignments' => $projectAssignmentBlocks,
                     ];
                 }
                 $weeks[] = [
@@ -938,7 +986,7 @@ class ExportPDFController extends Controller
         $pdf = $this->snappyPdf->loadView(
             'pdf.user_shift_plan',
             [
-                'userName' => $user->full_name,
+                'userName' => $worker->getAttribute('full_name') ?? $worker->getAttribute('name'),
                 'showSoll' => $weeklyWorkingHours !== null,
                 'pages' => $pages,
                 'created_by' => $authUser->first_name . ' ' . $authUser->last_name,

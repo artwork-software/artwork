@@ -95,8 +95,12 @@ class RoomController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
+        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+
         $room = Room::create([
             'name' => $request->name,
+            'color' => $request->color,
             'description' => $request->description,
             'temporary' => $request->temporary,
             'start_date' => $request->start_date,
@@ -178,6 +182,9 @@ class RoomController extends Controller
         Request $request,
         Room $room
     ): RedirectResponse {
+        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
+        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+
         $roomReplicate = $room->replicate();
         $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
         $roomReplicate->adjoining_rooms = $room->adjoining_rooms()->get();
@@ -187,6 +194,7 @@ class RoomController extends Controller
         $room->update(
             $request->only(
                 'name',
+                'color',
                 'description',
                 'temporary',
                 'start_date',

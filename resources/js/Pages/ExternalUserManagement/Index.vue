@@ -36,6 +36,17 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button
+                                v-if="source.type === 'ldap'"
+                                @click="syncSource(source)"
+                                :disabled="syncingSource === source.id || !source.active"
+                                class="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                                :title="!source.active ? $t('Activate this source before syncing') : $t('Sync now')"
+                            >
+                                <component :is="IconRefresh" class="h-4 w-4" :class="{ 'animate-spin': syncingSource === source.id }" />
+                                <span v-if="syncingSource === source.id">{{ $t('Syncing...') }}</span>
+                                <span v-else>{{ $t('Sync now') }}</span>
+                            </button>
+                            <button
                                 @click="testConnection(source)"
                                 :disabled="testingConnection === source.id"
                                 class="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded hover:bg-blue-100 disabled:opacity-50"
@@ -66,6 +77,21 @@
                     <div v-if="connectionTestResult[source.id]" class="mb-4 p-3 rounded"
                          :class="connectionTestResult[source.id].success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
                         {{ connectionTestResult[source.id].message }}
+                    </div>
+
+                    <!-- Sync Result -->
+                    <div v-if="syncResult[source.id]" class="mb-4 p-3 rounded"
+                         :class="syncResult[source.id].success === false
+                             ? 'bg-red-50 text-red-800'
+                             : syncResult[source.id].complete
+                                 ? 'bg-green-50 text-green-800'
+                                 : 'bg-blue-50 text-blue-800'">
+                        <div>{{ syncResult[source.id].message }}</div>
+                        <div v-if="syncResult[source.id].result" class="mt-1 text-xs">
+                            {{ $t('Processed') }}: {{ syncResult[source.id].result.total }} ·
+                            {{ $t('Synchronized') }}: {{ syncResult[source.id].result.synced }} ·
+                            {{ $t('Skipped') }}: {{ syncResult[source.id].result.skipped }}
+                        </div>
                     </div>
 
                     <!-- Group Mappings -->
@@ -116,7 +142,7 @@
 import {defineComponent} from "vue";
 import {router} from "@inertiajs/vue3";
 import axios from "axios";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconTrash, IconRefresh} from "@tabler/icons-vue";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -130,6 +156,7 @@ export default defineComponent({
         SourceModal,
         IconEdit,
         IconTrash,
+        IconRefresh,
     },
     props: {
         sources: {
@@ -144,6 +171,8 @@ export default defineComponent({
             showDeleteModal: null,
             testingConnection: null,
             connectionTestResult: {},
+            syncingSource: null,
+            syncResult: {},
         }
     },
     methods: {
@@ -169,6 +198,66 @@ export default defineComponent({
                     this.showDeleteModal = null;
                 }
             });
+        },
+        async syncSource(source) {
+            if (this.syncingSource) return;
+
+            this.syncingSource = source.id;
+            this.syncResult[source.id] = null;
+
+            try {
+                const response = await axios.post(
+                    route('tool.external-user-management.sources.sync', {
+                        externalUserSource: source.id
+                    })
+                );
+
+                this.syncResult[source.id] = {
+                    success: true,
+                    complete: false,
+                    message: response.data.message,
+                };
+
+                await this.waitForSyncCompletion(source.id);
+            } catch (error) {
+                this.syncResult[source.id] = {
+                    success: false,
+                    message: error.response?.data?.message || error.message || this.$t('Sync failed')
+                };
+            } finally {
+                this.syncingSource = null;
+            }
+        },
+        async waitForSyncCompletion(sourceId) {
+            const terminalStatuses = ['completed', 'failed', 'cancelled'];
+
+            for (let attempt = 0; attempt < 900; attempt += 1) {
+                await new Promise((resolve) => window.setTimeout(resolve, 2000));
+
+                const response = await axios.get(
+                    route('tool.external-user-management.sources.sync-status', {
+                        externalUserSource: sourceId
+                    })
+                );
+                const status = response.data;
+
+                this.syncResult[sourceId] = {
+                    success: status.status !== 'failed' && status.status !== 'cancelled',
+                    complete: terminalStatuses.includes(status.status),
+                    message: status.message,
+                    result: status.result,
+                };
+
+                if (terminalStatuses.includes(status.status)) {
+                    if (status.status === 'completed') {
+                        router.reload({ only: ['sources'] });
+                    }
+
+                    return;
+                }
+            }
+
+            throw new Error(this.$t('The synchronization is still running. You can leave this page and check again later.'));
         },
         async testConnection(source) {
             this.testingConnection = source.id;

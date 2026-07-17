@@ -15,6 +15,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataService;
+use Artwork\Modules\Budget\Services\SageBookingLogRecorder;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -35,6 +36,8 @@ class Sage100Service
 {
     private const string FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 
+    private const string FILTER_FIELD_KSTTRAEGER = 'KstTraeger';
+
     private SageClient $sage100Client;
 
     public function __construct(
@@ -46,7 +49,8 @@ class Sage100Service
         private readonly SageNotAssignedDataService $sageNotAssignedDataService,
         private readonly SageApiSettingsService $sageApiSettingsService,
         private readonly ProjectService $projectService,
-        private readonly SageDataBookingTypeSplitter $sageDataBookingTypeSplitter
+        private readonly SageDataBookingTypeSplitter $sageDataBookingTypeSplitter,
+        private readonly SageBookingLogRecorder $sageBookingLogRecorder
     ) {
         $this->sage100Client = $this->sage100ClientFactory->createClient();
     }
@@ -55,18 +59,44 @@ class Sage100Service
         ?int $count,
         ?string $specificDayFrom,
         ?string $specificDayTo = null,
+        ?string $ktr = null,
+        ?string $source = null,
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        $data = $this->getDataForDateRange($count, $specificDayFrom, $specificDayTo);
-        [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
-            ->splitDataIntoRegularAndCollectiveBookings($data);
+        $ktr = $this->normalizeKtr($ktr);
 
-        $this->importRegularBookings($regularBookings);
-        $this->importCollectiveBookings($collectiveBookings);
+        // Quelle fürs Protokoll: mit gesetztem Watermark ist der argumentlose Lauf
+        // der inkrementelle tägliche Sync, kein Full-Import
+        $source ??= match (true) {
+            $ktr !== null || $specificDayFrom !== null => 'specific_day_import',
+            $this->sageApiSettingsService->getFirst()?->bookingDate !== null => 'daily_import',
+            default => 'full_import',
+        };
 
-        return 0;
+        $this->sageBookingLogRecorder->startRun(
+            'import',
+            ['count' => $count, 'from' => $specificDayFrom, 'to' => $specificDayTo, 'ktr' => $ktr],
+            auth()->id(),
+            $source
+        );
+
+        try {
+            $data = $this->getDataForDateRange($count, $specificDayFrom, $specificDayTo, $ktr);
+            [$regularBookings, $collectiveBookings] = $this->sageDataBookingTypeSplitter
+                ->splitDataIntoRegularAndCollectiveBookings($data);
+
+            // A targeted KTR import is a manual backfill and must not move the daily-sync
+            // watermark (sage_api_settings.bookingDate), otherwise the next scheduled sync
+            // would re-read from the backfilled date.
+            $this->importRegularBookings($regularBookings, $ktr === null);
+            $this->importCollectiveBookings($collectiveBookings);
+
+            return 0;
+        } finally {
+            $this->sageBookingLogRecorder->finishRun();
+        }
     }
 
     /**
@@ -76,9 +106,10 @@ class Sage100Service
         ?int $count,
         ?string $specificDayFrom,
         ?string $specificDayTo,
+        ?string $ktr = null,
     ): array {
         if ($specificDayFrom === null) {
-            return $this->getData($count, null);
+            return $this->getData($count, null, $ktr);
         }
 
         $start = Carbon::parse($specificDayFrom);
@@ -89,7 +120,7 @@ class Sage100Service
 
         $allData = [];
         foreach ($period as $date) {
-            $dayData = $this->getData($count, $date->format('Y-m-d'));
+            $dayData = $this->getData($count, $date->format('Y-m-d'), $ktr);
             $allData = array_merge($allData, $dayData);
         }
 
@@ -172,6 +203,7 @@ class Sage100Service
 
     private function importRegularBookings(
         array $regularBookings,
+        bool $updateBookingDate = true,
     ): void {
         /** @var array $item */
         foreach ($regularBookings as $item) {
@@ -189,7 +221,7 @@ class Sage100Service
         }
 
         //if data was imported update import date from latest given booking-date (Buchungsdatum)
-        if (!empty($regularBookings)) {
+        if ($updateBookingDate && !empty($regularBookings)) {
             $this->updateSageApiSettingsBookingDateFromData($regularBookings);
         }
     }
@@ -757,8 +789,9 @@ class Sage100Service
     private function getData(
         int|null $count,
         string|null $specificDay,
+        string|null $ktr = null,
     ): array {
-        return $this->sage100Client->getData($this->buildQuery($count, $specificDay));
+        return $this->sage100Client->getData($this->buildQuery($count, $specificDay, $ktr));
     }
 
     /**
@@ -767,6 +800,7 @@ class Sage100Service
     private function buildQuery(
         int|null $count,
         string|null $specificDay,
+        string|null $ktr = null,
     ): array {
         $query = [];
 
@@ -774,17 +808,22 @@ class Sage100Service
             $query['count'] = $count;
         }
 
+        $ktr = ($ktr !== null && trim($ktr) !== '') ? trim($ktr) : null;
+
+        $conditions = [];
+
         if ($specificDay) {
             $parsedDay = Carbon::parse($specificDay);
-            $query['where'] = sprintf(
+            $conditions[] = sprintf(
                 '%s ge "%s" and %s lt "%s"',
                 self::FILTER_FIELD_BOOKINGDATE,
                 $parsedDay->format('d.m.Y'),
                 self::FILTER_FIELD_BOOKINGDATE,
                 $parsedDay->copy()->addDay()->format('d.m.Y')
             );
-        } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
-            $query['where'] = sprintf(
+        } elseif ($ktr === null && ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate)) {
+            // Watermark clause only applies to the daily sync (no explicit day, no KTR filter).
+            $conditions[] = sprintf(
                 '%s eq "%s" or %s gt "%s"',
                 self::FILTER_FIELD_BOOKINGDATE,
                 Carbon::parse($desiredBookingDate)->format('d.m.Y'),
@@ -793,9 +832,30 @@ class Sage100Service
             );
         }
 
+        if ($ktr !== null) {
+            $conditions[] = sprintf('%s eq "%s"', self::FILTER_FIELD_KSTTRAEGER, $ktr);
+        }
+
+        if (!empty($conditions)) {
+            // No parenthesising needed: the watermark clause (the only one containing an `or`)
+            // is never combined with the KTR clause, so all combined conditions are pure `and`.
+            $query['where'] = implode(' and ', $conditions);
+        }
+
         $query['orderBy'] = 'Buchungsdatum asc';
 
         return $query;
+    }
+
+    private function normalizeKtr(?string $ktr): ?string
+    {
+        $ktr = ($ktr !== null && trim($ktr) !== '') ? trim($ktr) : null;
+
+        if ($ktr !== null && preg_match('/\A[A-Za-z0-9._\-\/ ]+\z/u', $ktr) !== 1) {
+            throw new \InvalidArgumentException('The KTR contains unsupported characters.');
+        }
+
+        return $ktr;
     }
 
     private function createSageCellsForSageColumn(Table $table, Column $sageColumn): void

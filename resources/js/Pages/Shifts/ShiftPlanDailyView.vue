@@ -109,21 +109,10 @@
 
                         <ToolTipComponent
                             direction="right"
-                            :tooltip-text="$t('Export Shift Plan as PDF')"
+                            :tooltip-text="$t('Export')"
                             :icon="IconFileExport"
                             icon-size="h-5 w-5"
-                            @click="openExportDailyProjectShiftPlanModal = true"
-                            v-if="isInProjectView"
-                            classesButton="ui-button"
-                        />
-
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Export Shift personnel plan as xlsx')"
-                            :icon="IconFileTypeXls"
-                            icon-size="h-5 w-5"
-                            @click="downloadShiftPersonnelPlanXLSX()"
-                            v-if="isInProjectView"
+                            @click="showProjectShiftExportModal = true"
                             classesButton="ui-button"
                         />
 
@@ -131,6 +120,143 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Zugewiesene Personen (Projektzuordnungen; nur Projektansicht, per Anzeigeeinstellung) -->
+            <section
+                v-if="showProjectAssignments && hasAnyProjectAssignments"
+                class="mx-1 mt-3 rounded-xl border border-zinc-200 bg-white px-4 py-3"
+            >
+                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-3">
+                    {{ $t('Assigned persons') }}
+                </h3>
+                <p
+                    v-if="projectAssignmentError"
+                    class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+                >
+                    {{ projectAssignmentError }}
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <h4 class="text-[11px] font-medium text-zinc-400 mb-1.5">{{ $t('Entire project period') }}</h4>
+                        <div class="space-y-1.5">
+                            <div
+                                v-for="group in assignmentOverviewGroups.fullPeriod"
+                                :key="group.group_id"
+                                class="flex items-center gap-2"
+                            >
+                                <UserPopoverTooltip
+                                    v-if="group.worker.type === 0"
+                                    :user="group.worker"
+                                    lazy-load
+                                    height="7"
+                                    width="7"
+                                />
+                                <img
+                                    v-else-if="group.worker.profile_photo_url"
+                                    :src="group.worker.profile_photo_url"
+                                    :alt="group.worker.name"
+                                    class="h-7 w-7 rounded-full object-cover"
+                                />
+                                <div class="min-w-0">
+                                    <div class="text-xs text-zinc-800 truncate">{{ group.worker.name }}</div>
+                                    <div class="text-[10px] text-zinc-400">
+                                        {{ formatAssignmentDate(group.series_start) }} - {{ formatAssignmentDate(group.series_end) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="!assignmentOverviewGroups.fullPeriod.length" class="text-[11px] text-zinc-400 italic">
+                                {{ $t('None') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-[11px] font-medium text-zinc-400 mb-1.5">{{ $t('Single days') }}</h4>
+                        <div class="space-y-1.5">
+                            <div
+                                v-for="group in assignmentOverviewGroups.singleDays"
+                                :key="group.group_id"
+                                class="flex items-center gap-2"
+                            >
+                                <UserPopoverTooltip
+                                    v-if="group.worker.type === 0"
+                                    :user="group.worker"
+                                    lazy-load
+                                    height="7"
+                                    width="7"
+                                />
+                                <img
+                                    v-else-if="group.worker.profile_photo_url"
+                                    :src="group.worker.profile_photo_url"
+                                    :alt="group.worker.name"
+                                    class="h-7 w-7 rounded-full object-cover"
+                                />
+                                <div class="min-w-0">
+                                    <div class="text-xs text-zinc-800 truncate">{{ group.worker.name }}</div>
+                                    <div class="text-[10px] text-zinc-400 truncate" :title="group.dates.map(formatAssignmentDate).join(', ')">
+                                        {{ group.dates.map(formatAssignmentDate).join(', ') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="!assignmentOverviewGroups.singleDays.length" class="text-[11px] text-zinc-400 italic">
+                                {{ $t('None') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-[11px] font-medium text-zinc-400 mb-1.5 italic">{{ $t('Wishes') }}</h4>
+                        <div class="space-y-1.5">
+                            <div
+                                v-for="group in assignmentOverviewGroups.wishes"
+                                :key="group.group_id"
+                                class="flex items-center gap-2"
+                            >
+                                <span class="rounded-full border-2 border-dashed border-emerald-400 p-[1px] shrink-0">
+                                    <UserPopoverTooltip
+                                        v-if="group.worker.type === 0"
+                                        :user="group.worker"
+                                        lazy-load
+                                        height="6"
+                                        width="6"
+                                    />
+                                    <img
+                                        v-else-if="group.worker.profile_photo_url"
+                                        :src="group.worker.profile_photo_url"
+                                        :alt="group.worker.name"
+                                        class="h-6 w-6 rounded-full object-cover"
+                                    />
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs text-zinc-800 italic truncate">{{ group.worker.name }}</div>
+                                    <div class="text-[10px] text-zinc-400 truncate" :title="group.dates.map(formatAssignmentDate).join(', ')">
+                                        <template v-if="group.is_full_period">
+                                            {{ formatAssignmentDate(group.series_start) }} - {{ formatAssignmentDate(group.series_end) }}
+                                        </template>
+                                        <template v-else>
+                                            {{ group.dates.map(formatAssignmentDate).join(', ') }}
+                                        </template>
+                                    </div>
+                                </div>
+                                <button
+                                    v-if="can('can plan shifts') || is('artwork admin')"
+                                    type="button"
+                                    class="shrink-0 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] text-emerald-700 hover:border-emerald-400 transition-colors"
+                                    :disabled="projectAssignmentActionId === group.id"
+                                    :class="projectAssignmentActionId === group.id ? 'cursor-wait opacity-50' : ''"
+                                    :title="$t('Accept wish as binding assignment')"
+                                    @click="acceptProjectWish(group)"
+                                >
+                                    {{ $t('Accept') }}
+                                </button>
+                            </div>
+                            <div v-if="!assignmentOverviewGroups.wishes.length" class="text-[11px] text-zinc-400 italic">
+                                {{ $t('None') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <div
                 v-for="day in daysToRender"
@@ -158,6 +284,42 @@
                                     class="!bg-white/10 !text-white hover:!bg-white/20"
                                     @click="openNewEventModalWithBaseData(day.withoutFormat, null)"
                                 />
+
+                                <!-- Wünsche für diesen Tag: links vom Datum, gestrichelt-grüner Ring -->
+                                <div
+                                    v-if="showProjectAssignments && dayAssignmentAvatars(day, 'wish').length"
+                                    class="ml-auto flex items-center gap-1 pr-2"
+                                >
+                                    <span
+                                        v-for="assignment in dayAssignmentAvatars(day, 'wish').slice(0, 5)"
+                                        :key="`wish-${assignment.id}`"
+                                        class="rounded-full border-2 border-dashed border-emerald-400 p-[1px]"
+                                        :title="`${assignment.worker.name} (${$t('Wish')})`"
+                                    >
+                                        <UserPopoverTooltip
+                                            v-if="assignment.worker.type === 0"
+                                            :user="assignment.worker"
+                                            lazy-load
+                                            height="6"
+                                            width="6"
+                                        />
+                                        <img
+                                            v-else-if="assignment.worker.profile_photo_url"
+                                            :src="assignment.worker.profile_photo_url"
+                                            :alt="assignment.worker.name"
+                                            class="h-6 w-6 rounded-full object-cover"
+                                        />
+                                        <span
+                                            v-else
+                                            class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-[9px]"
+                                        >{{ assignment.worker.name?.slice(0, 2) }}</span>
+                                    </span>
+                                    <span
+                                        v-if="dayAssignmentAvatars(day, 'wish').length > 5"
+                                        class="text-[10px] text-white/70"
+                                        :title="dayAssignmentAvatars(day, 'wish').slice(5).map(a => a.worker.name).join(', ')"
+                                    >+{{ dayAssignmentAvatars(day, 'wish').length - 5 }}</span>
+                                </div>
                             </div>
 
                             <div class="font-lexend text-sm font-bold py-4 text-center shrink-0 px-4 flex items-center gap-2">
@@ -197,6 +359,41 @@
                             </div>
 
                             <div class="flex items-center justify-end min-w-0 flex-1">
+                                <!-- Verbindlich Zugeordnete: rechts vom Datum -->
+                                <div
+                                    v-if="showProjectAssignments && dayAssignmentAvatars(day, 'binding').length"
+                                    class="mr-auto flex items-center gap-1 pl-2"
+                                >
+                                    <span
+                                        v-for="assignment in dayAssignmentAvatars(day, 'binding').slice(0, 5)"
+                                        :key="`binding-${assignment.id}`"
+                                        :title="assignment.worker.name"
+                                    >
+                                        <UserPopoverTooltip
+                                            v-if="assignment.worker.type === 0"
+                                            :user="assignment.worker"
+                                            lazy-load
+                                            height="6"
+                                            width="6"
+                                        />
+                                        <img
+                                            v-else-if="assignment.worker.profile_photo_url"
+                                            :src="assignment.worker.profile_photo_url"
+                                            :alt="assignment.worker.name"
+                                            class="h-6 w-6 rounded-full object-cover"
+                                        />
+                                        <span
+                                            v-else
+                                            class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-[9px]"
+                                        >{{ assignment.worker.name?.slice(0, 2) }}</span>
+                                    </span>
+                                    <span
+                                        v-if="dayAssignmentAvatars(day, 'binding').length > 5"
+                                        class="text-[10px] text-white/70"
+                                        :title="dayAssignmentAvatars(day, 'binding').slice(5).map(a => a.worker.name).join(', ')"
+                                    >+{{ dayAssignmentAvatars(day, 'binding').length - 5 }}</span>
+                                </div>
+
                                 <BaseUIButton
                                     v-if="isDayWithoutRooms(day.fullDay) && (can('can plan shifts') || is('artwork admin'))"
                                     :label="$t('Add Shift')"
@@ -309,10 +506,11 @@
                 :wanted-date="wantedDate"
             />
 
-            <ExportDailyProjectShiftPlanModal
-                v-if="openExportDailyProjectShiftPlanModal"
-                @close="openExportDailyProjectShiftPlanModal = false"
-                :project="props.project"
+            <ExportModal
+                v-if="showProjectShiftExportModal"
+                @close="showProjectShiftExportModal = false"
+                :enums="projectShiftExportTabs"
+                :configuration="projectShiftExportConfiguration"
             />
         </component>
     </div>
@@ -321,7 +519,7 @@
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef } from "vue";
+import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -336,7 +534,7 @@ import {
     IconChevronRight,
     IconX, IconFileExport,
     IconCalendarPlus,
-    IconCalendarUser, IconFileTypeXls,
+    IconCalendarUser,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
@@ -348,10 +546,13 @@ import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
-import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
+import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Export/Modals/ExportModal.vue"));
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import { formatAssignmentDate } from "@/Composeables/UseProjectDayAssignments.js";
 
 type AnyRoom = any
 type AnyEvent = any
@@ -391,6 +592,79 @@ const props = defineProps({
 })
 
 const hasAdminRole = () => is("artwork admin")
+
+// --- Projektzuordnungen (Zugewiesene Personen + Wünsche; nur Projektansicht) ---
+const projectDayAssignments = ref<any[]>([])
+const projectAssignmentActionId = ref<number | null>(null)
+const projectAssignmentError = ref('')
+let projectAssignmentEchoChannel: any = null
+
+const showProjectAssignments = computed(() => {
+    if (!props.isInProjectView || !props.project?.id) return false
+    const settings = page.props.shift_plan_daily_settings
+        ?? page.props.shift_plan_settings
+        ?? (page.props.auth as any)?.user?.calendar_settings
+    // Default AN: fehlender Wert (Alt-Settings ohne Spalte) zählt als aktiviert
+    return (settings as any)?.show_project_assignments !== false
+})
+
+const hasAnyProjectAssignments = computed(() => projectDayAssignments.value.length > 0)
+
+const loadProjectDayAssignments = async () => {
+    if (!props.isInProjectView || !props.project?.id) return
+    try {
+        const { data } = await axios.get(route('projects.day-assignments', { project: props.project.id }))
+        projectDayAssignments.value = data.assignments ?? []
+        projectAssignmentError.value = ''
+    } catch (error: any) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+    }
+}
+
+const assignmentsByDate = computed(() => {
+    const map = new Map<string, any[]>()
+    for (const assignment of projectDayAssignments.value) {
+        if (!map.has(assignment.date)) map.set(assignment.date, [])
+        map.get(assignment.date)!.push(assignment)
+    }
+    return map
+})
+
+const dayAssignmentAvatars = (day: any, kind: 'binding' | 'wish') => {
+    const list = assignmentsByDate.value.get(day.withoutFormat) ?? []
+    return list.filter((assignment: any) => assignment.type === kind)
+}
+
+/** Overview-Gruppen: ein Eintrag pro Anlage-Vorgang (group_id) */
+const assignmentOverviewGroups = computed(() => {
+    const byGroup = new Map<string, any>()
+    for (const assignment of projectDayAssignments.value) {
+        if (!byGroup.has(assignment.group_id)) {
+            byGroup.set(assignment.group_id, { ...assignment, dates: [] })
+        }
+        byGroup.get(assignment.group_id).dates.push(assignment.date)
+    }
+    const groups = [...byGroup.values()]
+    return {
+        fullPeriod: groups.filter(g => g.type === 'binding' && g.is_full_period),
+        singleDays: groups.filter(g => g.type === 'binding' && !g.is_full_period),
+        wishes: groups.filter(g => g.type === 'wish'),
+    }
+})
+
+const acceptProjectWish = async (group: any) => {
+    if (projectAssignmentActionId.value !== null) return
+    projectAssignmentActionId.value = group.id
+    projectAssignmentError.value = ''
+    try {
+        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: group.id }))
+        await loadProjectDayAssignments()
+    } catch (error: any) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+    } finally {
+        projectAssignmentActionId.value = null
+    }
+}
 
 
 const shiftQualificationsResolved = computed(() => {
@@ -489,7 +763,54 @@ const shiftToEdit = ref(null)
 const roomForShiftAdd = ref<number | null>(null)
 const dayForShiftAdd = ref<string | null>(null)
 const showAddShiftModal = ref(false)
-const openExportDailyProjectShiftPlanModal = ref(false)
+
+// Gemeinsames Export-Modal: ein Reiter pro Export. Im Projekt-Schichtentab
+// die projektgebundenen Exporte, in der allgemeinen Tagesansicht dieselben
+// Exporte wie in der Schichtplan-Funktionsleiste.
+const exportTabEnums = useExportTabEnums()
+const showProjectShiftExportModal = ref(false)
+const projectShiftExportTabs = computed(() => {
+    if (props.isInProjectView) {
+        return [
+            exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT,
+            exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT,
+        ]
+    }
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]
+    // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
+    if (can('can view shift worker hours') || is('artwork admin')) {
+        tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT)
+    }
+    return tabs
+})
+const projectShiftExportConfiguration = computed(() => {
+    if (props.isInProjectView) {
+        return {
+            [exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT]: { project: props.project },
+            [exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT]: { project: props.project },
+        }
+    }
+    const craftList = (craftsResolved.value ?? []) as any[]
+    return {
+        [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]: {
+            startDate: props.dateValue?.[0] ?? null,
+            endDate: props.dateValue?.[1] ?? null,
+            projectId: null,
+            isInProjectView: false,
+            isDailyView: true,
+            projectName: null,
+            highlightProjectId: null,
+            craftIds: (user_filtersResolved.value as any)?.craft_ids ?? [],
+            crafts: craftList.map(({id, name}: any) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
+            crafts: craftList.map(({id, name}: any) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]: {
+            crafts: craftList.map(({id, name, universally_applicable}: any) => ({id, name, universally_applicable})),
+        },
+    }
+})
 
 const dayForPreset = ref<any | null>(null)
 const roomForPreset = ref<any | null>(null)
@@ -1376,11 +1697,6 @@ function measureTopBarHeight() {
     if (typeof h === "number" && h > 0 && h !== topBarHeightPx.value) topBarHeightPx.value = h
 }
 
-const downloadShiftPersonnelPlanXLSX = () => {
-    const url = route("projects.exports.shifts-personal-plan", props.project.id)
-    window.open(url, "_blank")
-}
-
 onMounted(async () => {
     setTimeout(() => { showCalendarWarning.value = "" }, 5000)
 
@@ -1392,6 +1708,7 @@ onMounted(async () => {
         axios.get(route("shifts.crafts"), { params: { lightweight: 1 } }).then(({ data }) => {
             craftsLoaded.value = data.crafts ?? []
         }).catch(() => { craftsLoaded.value = [] }),
+        loadProjectDayAssignments(),
     ])
 
     const ShiftCalendarListener = useShiftCalendarListener(shiftPlanCopy as any, {
@@ -1400,6 +1717,11 @@ onMounted(async () => {
         onLookupsReceived: mergeLookups,
     })
     ShiftCalendarListener.init()
+
+    if (props.isInProjectView && props.project?.id) {
+        projectAssignmentEchoChannel = Echo.private(`project.${props.project.id}`)
+        projectAssignmentEchoChannel.listen('.project-day-assignments.changed', loadProjectDayAssignments)
+    }
 
     await nextTick()
     measureTopBarHeight()
@@ -1415,6 +1737,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+    projectAssignmentEchoChannel?.stopListening('.project-day-assignments.changed', loadProjectDayAssignments)
+    projectAssignmentEchoChannel = null
     if (ro && topBarEl.value) ro.unobserve(topBarEl.value)
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)

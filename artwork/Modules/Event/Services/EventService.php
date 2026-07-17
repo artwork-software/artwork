@@ -46,6 +46,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
@@ -611,8 +612,7 @@ readonly class EventService
             }
         }
 
-        // Individualzeiten nur für User im Zeitraum einsammeln.
-        // Hinweis: IndividualTime ist morph (`timeable_type`/`timeable_id`) – es gibt keine `user_id` Spalte.
+        // Schichtregel-Verstöße gibt es nur für User (`shift_rule_violations.user_id`).
         if ($modelType === 'user') {
             $violations = ShiftRuleViolation::query()
                 ->select(['id', 'shift_rule_id', 'violation_date', 'status'])
@@ -628,41 +628,43 @@ readonly class EventService
                     $daysWithData[$dayKey]['violations'] = $dayViolations->values()->all();
                 }
             }
+        }
 
-            $individualTimes = IndividualTime::query()
-                ->where('timeable_type', User::class)
-                ->where('timeable_id', $modelId)
-                ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
-                ->where(function (Builder $query) use ($startDate): void {
-                    $query->whereNull('end_date')
-                        ->orWhereDate('end_date', '>=', $startDate->format('Y-m-d'));
-                })
-                ->with(['series'])
-                ->get();
+        // Individualzeiten sind morph (`timeable_type`/`timeable_id`) und existieren auch für
+        // Freelancer und Dienstleister – deshalb über die Worker-Klasse statt user-only laden.
+        $individualTimes = IndividualTime::query()
+            ->where('timeable_type', $workerClass)
+            ->where('timeable_id', $modelId)
+            ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
+            ->where(function (Builder $query) use ($startDate): void {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $startDate->format('Y-m-d'));
+            })
+            ->with(['series'])
+            ->get();
 
-            foreach ($individualTimes as $it) {
-                $itStart = Carbon::parse($it->start_date)->startOfDay();
-                $itEnd = Carbon::parse($it->end_date ?? $it->start_date)->endOfDay();
+        foreach ($individualTimes as $it) {
+            $itStart = Carbon::parse($it->start_date)->startOfDay();
+            $itEnd = Carbon::parse($it->end_date ?? $it->start_date)->endOfDay();
 
-                $clampedStart = $itStart->copy()->max($startDate->copy()->startOfDay());
-                $clampedEnd = $itEnd->copy()->min($endDate->copy()->endOfDay());
+            $clampedStart = $itStart->copy()->max($startDate->copy()->startOfDay());
+            $clampedEnd = $itEnd->copy()->min($endDate->copy()->endOfDay());
 
-                $itPeriod = CarbonPeriod::create($clampedStart, $clampedEnd);
-                foreach ($itPeriod as $d) {
-                    $dayKey = $d->format('Y-m-d');
-                    if (!isset($daysWithData[$dayKey])) {
-                        continue;
-                    }
-
-                    $daysWithData[$dayKey]['individualTimes'][] = [
-                        'id' => $it->id,
-                        'start_time' => $it->start_time,
-                        'end_time' => $it->end_time,
-                        'full_day' => (bool)$it->full_day,
-                        'title' => $it->title,
-                        'series' => $it->series,
-                    ];
+            $itPeriod = CarbonPeriod::create($clampedStart, $clampedEnd);
+            foreach ($itPeriod as $d) {
+                $dayKey = $d->format('Y-m-d');
+                if (!isset($daysWithData[$dayKey])) {
+                    continue;
                 }
+
+                $daysWithData[$dayKey]['individualTimes'][] = [
+                    'id' => $it->id,
+                    'start_time' => $it->start_time,
+                    'end_time' => $it->end_time,
+                    'full_day' => (bool)$it->full_day,
+                    'title' => $it->title,
+                    'series' => $it->series,
+                ];
             }
         }
 
@@ -1013,6 +1015,8 @@ readonly class EventService
             })
             ->orderBy('position')
             ->orderBy('id')
+            // Für getEffectiveColor() (Farb-Vererbung Raum → Areal) ohne Lazy-Load pro Raum
+            ->with('area:id,color')
             ->get();
 
     }
@@ -1204,6 +1208,9 @@ readonly class EventService
             return [
                 'roomId' => $room->id,
                 'roomName' => $room->name,
+                // Raum-/Areal-Farbe wie in MapRoomsToContentForCalendar/ShiftCalendarService
+                // durchreichen — sonst bleibt die Raumleiste im Projekt-Tab-Kalender farblos
+                'roomColor' => $room->getEffectiveColor(),
                 'content' => $content,
             ];
         })->toArray();
@@ -1245,6 +1252,9 @@ readonly class EventService
             return [
                 'roomId' => $room->id,
                 'roomName' => $room->name,
+                // Raum-/Areal-Farbe wie in MapRoomsToContentForCalendar/ShiftCalendarService
+                // durchreichen — sonst bleibt die Raumleiste im Projekt-Tab-Kalender farblos
+                'roomColor' => $room->getEffectiveColor(),
                 'content' => $content,
             ];
         })->toArray();
@@ -2136,7 +2146,21 @@ readonly class EventService
             return;
         }
 
-        $this->eventRepository->deleteEvents($eventIds);
-    }
+        DB::transaction(function () use ($eventIds): void {
+            $projectIds = Event::query()
+                ->whereIn('id', $eventIds)
+                ->whereNotNull('project_id')
+                ->distinct()
+                ->pluck('project_id');
 
+            $this->eventRepository->deleteEvents($eventIds);
+
+            $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
+
+            Project::query()
+                ->whereIn('id', $projectIds)
+                ->each(fn (Project $project) => $projectDayAssignmentService
+                    ->rematerializeForProjectPeriodChange($project));
+        });
+    }
 }

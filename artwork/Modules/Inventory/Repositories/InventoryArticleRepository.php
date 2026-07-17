@@ -2,15 +2,22 @@
 
 namespace Artwork\Modules\Inventory\Repositories;
 
+use App\Jobs\GenerateInventoryArticleImageThumbnail;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
 use Artwork\Modules\Inventory\Models\InventoryPropertyValue;
+use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class InventoryArticleRepository
 {
+    public function __construct(
+        private readonly InventoryArticleImageService $imageService
+    ) {
+    }
+
     public function count(): int
     {
         return InventoryArticle::count();
@@ -217,8 +224,7 @@ class InventoryArticleRepository
         }
 
         foreach ($images as $index => $image) {
-            $created = $article->images()->create([
-                'image' => $image->store('inventory_articles', 'public'),
+            $created = $article->images()->create($this->imageService->store($image) + [
                 'is_main_image' => false,
                 'order' => 0
             ]);
@@ -226,6 +232,8 @@ class InventoryArticleRepository
             if ($index === $mainImageIndex) {
                 $created->update(['is_main_image' => true]);
             }
+
+            GenerateInventoryArticleImageThumbnail::dispatch($created)->afterCommit();
         }
     }
 
@@ -298,6 +306,9 @@ class InventoryArticleRepository
         foreach ($images as $image) {
             if ($image->image && Storage::disk('public')->exists($image->image)) {
                 Storage::disk('public')->delete($image->image);
+            }
+            if ($image->thumbnail && Storage::disk('public')->exists($image->thumbnail)) {
+                Storage::disk('public')->delete($image->thumbnail);
             }
             // permanently delete image record
             $image->forceDelete();

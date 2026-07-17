@@ -8,10 +8,11 @@ use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColumnFormatting
+class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColumnFormatting, WithTitle
 {
     use Exportable;
 
@@ -29,7 +30,13 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColum
         private readonly array $rows,
         private readonly array $columns,
         private readonly array $labels = [],
+        private readonly string $title = 'Export',
     ) {
+    }
+
+    public function title(): string
+    {
+        return $this->title;
     }
 
     public function view(): View

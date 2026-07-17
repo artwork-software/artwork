@@ -1,76 +1,147 @@
 <template>
     <div class="mt-10 border-t border-gray-200 pt-8">
-        <div class="sm:flex sm:items-center mb-6">
+        <div class="sm:flex sm:items-center mb-4">
             <div class="sm:flex-auto">
                 <h2 class="text-lg font-semibold text-gray-900">{{ $t('BI Tags') }}</h2>
                 <p class="text-sm text-gray-500">{{ $t('Define tags for BI counting of event types.') }}</p>
             </div>
+            <div class="mt-3 sm:mt-0 sm:ml-4">
+                <button class="ui-button-add" @click="openAddTagModal">
+                    <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
+                    {{ $t('New BI tag') }}
+                </button>
+            </div>
         </div>
 
-        <!-- Add new tag form -->
-        <div class="mb-6 rounded-lg border border-gray-200 p-4">
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] lg:items-end">
-                <BaseInput id="tag_name" v-model="newTag.name" :label="$t('Internal name')" />
-                <BaseInput id="tag_name_de" v-model="newTag.name_de" :label="$t('Display name (DE)')" />
-                <div class="flex flex-col gap-1">
-                    <label for="tag_color" class="text-xs text-gray-500">{{ $t('Color') }}</label>
-                    <input
-                        id="tag_color"
-                        type="color"
-                        v-model="newTag.color"
-                        class="h-11 w-16 cursor-pointer rounded-md border border-gray-200 bg-white p-1"
-                    />
+        <!-- Explanation of what BI tags are used for -->
+        <div class="mb-6 rounded-lg border border-indigo-100 bg-indigo-50/60 px-4 py-3">
+            <div class="flex gap-3">
+                <component :is="IconInfoCircle" class="size-5 shrink-0 text-indigo-500 mt-0.5" stroke-width="1.5" />
+                <div class="text-sm text-indigo-900 space-y-1">
+                    <p>{{ $t('BI tags group event types for the BI module. For each tag, the number of event days per project is counted and shown in the BI dashboard and in BI exports (one column per tag).') }}</p>
+                    <p class="text-indigo-700">{{ $t('The tags "Vorstellung" and "Veranstaltungstag" additionally control the key figures performances and event days. If they have no event types assigned, all events of a project are counted there as a fallback.') }}</p>
                 </div>
-                <BaseUIButton @click="createTag" :label="$t('Add')" is-add-button :disabled="!newTag.name || !newTag.name_de" />
             </div>
         </div>
 
         <!-- Warning: tags without linked event types -->
         <div v-if="tagsWithoutEventTypes.length > 0" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             {{ $t('The following tags are not linked to any event type yet, so they will not be counted in the dashboard and exports:') }}
-            <span class="font-medium">{{ tagsWithoutEventTypes.map(t => t.name_de).join(', ') }}</span>
+            <button
+                v-for="tag in tagsWithoutEventTypes"
+                :key="tag.id"
+                type="button"
+                class="ml-1.5 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2.5 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                @click="openAssignModal(tag)"
+            >
+                <span v-if="tag.color" class="w-2 h-2 rounded-full" :style="{ backgroundColor: tag.color }" />
+                {{ tag.name_de }}
+                <component :is="IconCirclePlus" class="size-3.5" stroke-width="1.5" />
+            </button>
         </div>
 
         <!-- Tags list -->
-        <div class="space-y-4" v-if="tags.length > 0">
+        <div class="space-y-3" v-if="tags.length > 0">
             <div v-for="tag in tags" :key="tag.id" class="border border-gray-200 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        <span v-if="tag.color" class="w-4 h-4 rounded-full" :style="{ backgroundColor: tag.color }"></span>
-                        <span class="font-medium text-sm">{{ tag.name_de }}</span>
-                        <span class="text-xs text-gray-400">({{ tag.name }})</span>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-4 h-4 rounded-full shrink-0" :style="{ backgroundColor: tag.color ?? '#d1d5db' }" />
+                        <span class="font-medium text-sm truncate">{{ tag.name_de }}</span>
+                        <span class="text-xs text-gray-400 shrink-0">({{ tag.name }})</span>
+                        <span
+                            v-if="kpiLabel(tag)"
+                            class="hidden sm:inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700 shrink-0"
+                        >
+                            {{ $t('Controls the key figure {kpi}', { kpi: kpiLabel(tag) }) }}
+                        </span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button @click="deleteTag(tag.id)" class="text-xs text-red-500 hover:text-red-700">
-                            {{ $t('Delete') }}
-                        </button>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <BaseMenu has-no-offset white-menu-background>
+                            <BaseMenuItem title="Assign event types" :icon="IconLink" white-menu-background @click="openAssignModal(tag)" />
+                            <BaseMenuItem title="Edit BI tag" :icon="IconEdit" white-menu-background @click="openEditTagModal(tag)" />
+                            <BaseMenuItem title="Delete BI tag" :icon="IconTrash" white-menu-background @click="openDeleteModal(tag)" />
+                        </BaseMenu>
                     </div>
                 </div>
 
-                <!-- Event type assignment -->
-                <div class="mt-2">
-                    <ArtworkBaseListbox
-                        :model-value="getAssignedEventTypes(tag)"
-                        @update:model-value="syncEventTypes(tag.id, $event)"
-                        :items="eventTypes"
-                        by="id"
-                        option-label="name"
-                        :label="$t('Assigned event types')"
-                        :placeholder="$t('Select event types')"
-                        multiple
-                    />
+                <!-- Assigned event types as chips -->
+                <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span
+                        v-for="eventType in tag.event_types ?? []"
+                        :key="eventType.id"
+                        class="group inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 pl-2 pr-1 py-0.5 text-xs text-gray-700"
+                    >
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: eventType.hex_code }" />
+                        {{ eventType.name }}
+                        <button
+                            type="button"
+                            class="rounded-full p-0.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
+                            :title="$t('Remove')"
+                            @click="removeEventType(tag, eventType)"
+                        >
+                            <component :is="IconX" class="size-3" stroke-width="1.5" />
+                        </button>
+                    </span>
+                    <span v-if="!(tag.event_types?.length)" class="text-xs text-gray-400 italic">
+                        {{ $t('No event types assigned yet') }}
+                    </span>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 px-2 py-0.5 text-xs text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                        @click="openAssignModal(tag)"
+                    >
+                        <component :is="IconCirclePlus" class="size-3.5" stroke-width="1.5" />
+                        {{ $t('Assign event types') }}
+                    </button>
                 </div>
             </div>
         </div>
         <p v-else class="text-sm text-gray-400">{{ $t('No BI tags defined yet.') }}</p>
+
+        <!-- Event types not covered by any tag -->
+        <div v-if="tags.length > 0 && unassignedEventTypes.length > 0" class="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-gray-400">
+            <span>{{ $t('Event types without a BI tag') }}:</span>
+            <span
+                v-for="eventType in unassignedEventTypes"
+                :key="eventType.id"
+                class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2 py-0.5"
+            >
+                <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: eventType.hex_code }" />
+                {{ eventType.name }}
+            </span>
+        </div>
+
+        <AddEditBiTagModal
+            v-if="showTagModal"
+            :tag="tagToEdit"
+            @close="closeTagModal"
+        />
+        <AssignBiTagEventTypesModal
+            v-if="tagToAssign"
+            :tag="tagToAssign"
+            :event-types="eventTypes"
+            @close="closeAssignModal"
+        />
+        <DeleteBiTagConfirmationModal
+            v-if="tagToDelete"
+            :tag="tagToDelete"
+            @closed="tagToDelete = null"
+            @delete="deleteTag"
+        />
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
-import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
+import { IconCirclePlus, IconEdit, IconInfoCircle, IconLink, IconTrash, IconX } from '@tabler/icons-vue';
+import BaseMenu from '@/Components/Menu/BaseMenu.vue';
+import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue';
+import AddEditBiTagModal from '@/Pages/Settings/EventType/Components/Modals/AddEditBiTagModal.vue';
+import AssignBiTagEventTypesModal from '@/Pages/Settings/EventType/Components/Modals/AssignBiTagEventTypesModal.vue';
+import DeleteBiTagConfirmationModal from '@/Pages/Settings/EventType/Components/Modals/DeleteBiTagConfirmationModal.vue';
+import { useTranslation } from '@/Composeables/Translation.js';
+
+const $t = useTranslation();
 
 const props = defineProps({
     eventTypes: { type: Array, default: () => [] },
@@ -78,8 +149,26 @@ const props = defineProps({
 
 const tags = ref([]);
 
-const tagsWithoutEventTypes = computed(() => tags.value.filter(tag => !(tag.event_types && tag.event_types.length)));
-const newTag = ref({ name: '', name_de: '', color: '#6366f1' });
+const showTagModal = ref(false);
+const tagToEdit = ref(null);
+const tagToAssign = ref(null);
+const tagToDelete = ref(null);
+
+const tagsWithoutEventTypes = computed(() => tags.value.filter((tag) => !(tag.event_types && tag.event_types.length)));
+
+const unassignedEventTypes = computed(() => {
+    const assignedIds = new Set(tags.value.flatMap((tag) => (tag.event_types ?? []).map((eventType) => eventType.id)));
+    return props.eventTypes.filter((eventType) => !assignedIds.has(eventType.id));
+});
+
+// Spiegelt die Backend-Heuristik (BiProjectMetricsService::eventHasTag): Vergleich
+// case-insensitive auf name UND name_de gegen die deutschen KPI-Tag-Namen.
+const kpiLabel = (tag) => {
+    const names = [tag.name, tag.name_de].map((name) => (name ?? '').toLowerCase());
+    if (names.includes('vorstellung')) return $t('Performances');
+    if (names.includes('veranstaltungstag')) return $t('Event days');
+    return null;
+};
 
 const fetchTags = async () => {
     try {
@@ -90,38 +179,54 @@ const fetchTags = async () => {
     }
 };
 
-const createTag = async () => {
-    if (!newTag.value.name || !newTag.value.name_de) return;
-    try {
-        await axios.post(route('bi.tags.store'), newTag.value);
-        newTag.value = { name: '', name_de: '', color: '#6366f1' };
-        await fetchTags();
-    } catch (error) {
-        console.error('Error creating tag', error);
-    }
+const openAddTagModal = () => {
+    tagToEdit.value = null;
+    showTagModal.value = true;
 };
 
-const deleteTag = async (tagId) => {
-    if (!confirm('Delete this BI tag?')) return;
+const openEditTagModal = (tag) => {
+    tagToEdit.value = tag;
+    showTagModal.value = true;
+};
+
+const closeTagModal = async (saved) => {
+    showTagModal.value = false;
+    tagToEdit.value = null;
+    if (saved) await fetchTags();
+};
+
+const openAssignModal = (tag) => {
+    tagToAssign.value = tag;
+};
+
+const closeAssignModal = async (saved) => {
+    tagToAssign.value = null;
+    if (saved) await fetchTags();
+};
+
+const openDeleteModal = (tag) => {
+    tagToDelete.value = tag;
+};
+
+const deleteTag = async () => {
     try {
-        await axios.delete(route('bi.tags.destroy', tagId));
+        await axios.delete(route('bi.tags.destroy', tagToDelete.value.id));
+        tagToDelete.value = null;
         await fetchTags();
     } catch (error) {
         console.error('Error deleting tag', error);
     }
 };
 
-const getAssignedEventTypes = (tag) => {
-    return tag.event_types || [];
-};
-
-const syncEventTypes = async (tagId, selectedEventTypes) => {
+const removeEventType = async (tag, eventType) => {
     try {
-        const ids = selectedEventTypes.map(et => et.id);
-        await axios.post(route('bi.tags.sync-event-types', tagId), { event_type_ids: ids });
+        const remainingIds = (tag.event_types ?? [])
+            .filter((assigned) => assigned.id !== eventType.id)
+            .map((assigned) => assigned.id);
+        await axios.post(route('bi.tags.sync-event-types', tag.id), { event_type_ids: remainingIds });
         await fetchTags();
     } catch (error) {
-        console.error('Error syncing event types', error);
+        console.error('Error removing event type from tag', error);
     }
 };
 

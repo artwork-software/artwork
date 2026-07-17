@@ -546,16 +546,6 @@ const navigation = ref([
         prefetch: ['projects']
     },
     {
-        name: 'BI Dashboard',
-        href: route('bi.dashboard'),
-        icon: 'IconChartHistogram',
-        current: route().current('bi.dashboard'),
-        isMenu: false,
-        showToolTipForItem: false,
-        has_permission: moduleIsVisible('business_intelligence') && usePage().props.canViewBiDashboard,
-        prefetch: false
-    },
-    {
         name: 'Calendar',
         href: '#',
         icon: 'IconCalendarClock',
@@ -713,6 +703,16 @@ const navigation = ref([
         showToolTipForItem: false,
         has_permission: moduleIsVisible('tasks'),
         prefetch: false,
+    },
+    {
+        name: 'BI Dashboard',
+        href: route('bi.dashboard'),
+        icon: 'IconChartHistogram',
+        current: route().current('bi.dashboard'),
+        isMenu: false,
+        showToolTipForItem: false,
+        has_permission: moduleIsVisible('business_intelligence') && usePage().props.canViewBiDashboard,
+        prefetch: false
     },
     {
         name: 'Sources of funding',

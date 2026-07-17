@@ -45,7 +45,7 @@ class BiEventTypeTagController extends Controller
     public function syncEventTypes(Request $request, BiEventTypeTag $biEventTypeTag): JsonResponse
     {
         $request->validate([
-            'event_type_ids' => ['required', 'array'],
+            'event_type_ids' => ['present', 'array'],
             'event_type_ids.*' => ['integer', 'exists:event_types,id'],
         ]);
 

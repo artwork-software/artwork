@@ -27,9 +27,31 @@
                         <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40" />
                         <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40" />
                         <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon />
+                        <BaseUIButton
+                            v-if="exportOptions"
+                            :label="$t('Excel-Export')"
+                            @click="showExportModal = true"
+                            hide-icon
+                        />
                     </div>
                 </template>
             </ToolbarHeader>
+
+            <BiDashboardExportModal
+                v-if="showExportModal && exportOptions"
+                :options="exportOptions"
+                :default-date-from="dateFrom"
+                :default-date-to="dateTo"
+                @close="showExportModal = false"
+            />
+
+            <!-- Onboarding hint: BI component not placed in any project tab -->
+            <div v-if="!biComponentInTab" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
+                <span>{{ $t('The BI component is not yet included in any project tab. Add it in the project settings under "Tab Settings" so BI figures can be entered on projects.') }}</span>
+                <Link :href="route('tab.index')" class="shrink-0 font-medium text-amber-900 hover:underline">
+                    {{ $t('Open tab settings') }}
+                </Link>
+            </div>
 
             <!-- Onboarding hint: no tag linked to event types -->
             <div v-if="!tagsLinked" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
@@ -222,6 +244,7 @@ import { ref, computed, watch } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import { IconChartHistogram, IconX, IconPencil } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
+import BiDashboardExportModal from '@/Pages/Projects/Components/BiComponents/BiDashboardExportModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -235,7 +258,13 @@ const t = useTranslation();
 const props = defineProps({
     dashboard: { type: Object, required: true },
     firstProjectTabId: { type: [Number, String], default: null },
+    biComponentInTab: { type: Boolean, default: true },
+    // null, wenn der User kein Export-Recht hat → Button bleibt verborgen
+    exportOptions: { type: Object, default: null },
 });
+
+const exportOptions = computed(() => props.exportOptions);
+const showExportModal = ref(false);
 
 const firstProjectTabId = computed(() => props.firstProjectTabId);
 

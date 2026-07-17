@@ -121,6 +121,7 @@
                                     <span
                                         v-if="event.id === latestPastEventId"
                                         class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 whitespace-nowrap print:hidden"
+                                        v-tooltip.top="{ value: $t('The most recent event that already took place — the usual starting point for entering figures after a performance.'), appendTo: 'body', class: 'aw-tooltip' }"
                                     >
                                         {{ $t('Most recent event') }}
                                     </span>

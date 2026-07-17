@@ -39,6 +39,7 @@ class BiExportController extends Controller
             'columns' => $options['columns'],
             'tagColumns' => $options['tagColumns'],
             'customFieldColumns' => $options['customFieldColumns'],
+            'audienceCategoryColumns' => $options['audienceCategoryColumns'],
             'presets' => $options['presets'],
             'defaultDateFrom' => $generalSettings->playing_time_window_start ?: null,
             'defaultDateTo' => $generalSettings->playing_time_window_end ?: null,
@@ -49,10 +50,7 @@ class BiExportController extends Controller
     {
         $token = $this->biExportService->cacheExportConfiguration($request->validated());
 
-        // Run synchronously so the export is reliably generated even without a running
-        // queue worker. Switch to ::dispatch() for true async once a worker processes
-        // the configured ("database") queue.
-        GenerateBiExportJob::dispatchSync($token);
+        GenerateBiExportJob::dispatch($token);
 
         return response()->json(['token' => $token]);
     }

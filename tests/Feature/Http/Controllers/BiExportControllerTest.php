@@ -58,7 +58,7 @@ final class BiExportControllerTest extends FeatureTestCase
             'granularity' => 'events',
         ])->assertOk()->assertJsonStructure(['token']);
 
-        Bus::assertDispatchedSync(GenerateBiExportJob::class);
+        Bus::assertDispatched(GenerateBiExportJob::class);
     }
 
     #[Test]

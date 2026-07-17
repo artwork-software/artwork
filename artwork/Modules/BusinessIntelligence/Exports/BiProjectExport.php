@@ -24,6 +24,13 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColum
         'revenue' => '#,##0.00 "€"',
         'avg_price' => '#,##0.00 "€"',
         'occupancy_rate' => '0.0" %"',
+        'free_tickets_rate' => '0.0" %"',
+        'reduced_tickets_rate' => '0.0" %"',
+        'paying_rate' => '0.0" %"',
+        'no_show_rate' => '0.0" %"',
+        'seat_occupancy' => '0.0" %"',
+        'attainment' => '0.0" %"',
+        'plan_revenue' => '#,##0.00 "€"',
     ];
 
     public function __construct(
@@ -31,6 +38,9 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColum
         private readonly array $columns,
         private readonly array $labels = [],
         private readonly string $title = 'Export',
+        // Zusätzliche/dynamische Formate (Spaltenkey => Excel-Format), z. B. für
+        // die variablen Wertspalten des Budget-Exports; überschreiben die Defaults
+        private readonly array $extraColumnFormats = [],
     ) {
     }
 
@@ -61,10 +71,11 @@ class BiProjectExport implements FromView, ShouldAutoSize, WithStyles, WithColum
     public function columnFormats(): array
     {
         $formats = [];
+        $formatMap = array_merge(self::COLUMN_FORMATS, $this->extraColumnFormats);
 
         foreach (array_values($this->columns) as $index => $column) {
-            if (isset(self::COLUMN_FORMATS[$column])) {
-                $formats[Coordinate::stringFromColumnIndex($index + 1)] = self::COLUMN_FORMATS[$column];
+            if (isset($formatMap[$column])) {
+                $formats[Coordinate::stringFromColumnIndex($index + 1)] = $formatMap[$column];
             }
         }
 

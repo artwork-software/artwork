@@ -2,10 +2,13 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Services;
 
+use Artwork\Modules\BusinessIntelligence\Enums\BiPricingTypeEnum;
 use Artwork\Modules\BusinessIntelligence\Enums\BiVisitorModeEnum;
+use Artwork\Modules\BusinessIntelligence\Models\BiAudienceCategory;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Computes per-project BI key figures (visitors, sold tickets, revenue, capacity,
@@ -15,18 +18,100 @@ use Carbon\Carbon;
 class BiProjectMetricsService
 {
     /**
+     * Datensatz-Scope: 'actual' (Ist, Default) oder 'plan'. Alle Getter lesen
+     * die zum Scope passenden Relationen; forScope() liefert eine Plan-Sicht.
+     */
+    private string $scope = 'actual';
+
+    /**
+     * Alle Kategorien (inkl. deaktivierter/gelöschter — historische Werte zählen
+     * weiter), einmal je Request memoisiert; wichtig für Dashboard-Schleifen.
+     */
+    private ?Collection $categoriesByIdCache = null;
+
+    public function forScope(string $scope): static
+    {
+        $clone = clone $this;
+        $clone->scope = $scope;
+
+        return $clone;
+    }
+
+    private function biDataOf(Project $project): ?BiProjectData
+    {
+        return $this->scope === 'plan' ? $project->planBiData : $project->biData;
+    }
+
+    private function eventDataOf(Project $project): Collection
+    {
+        $data = $this->scope === 'plan' ? $project->planBiEventData : $project->biEventData;
+
+        return Collection::make($data ?? []);
+    }
+
+    /**
+     * Plan-Ist-Gegenüberstellung der Kernkennzahlen. attainment = Ist/Plan in %.
+     *
+     * @return array<string, mixed>
+     */
+    public function planComparison(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $plan = $this->forScope('plan');
+
+        $metrics = [];
+        foreach (['visitors', 'sold_tickets', 'revenue'] as $metric) {
+            $planValue = match ($metric) {
+                'visitors' => $plan->visitors($project, $from, $to),
+                'sold_tickets' => $plan->soldTickets($project, $from, $to),
+                'revenue' => $plan->revenue($project, $from, $to),
+            };
+            $actualValue = match ($metric) {
+                'visitors' => $this->visitors($project, $from, $to),
+                'sold_tickets' => $this->soldTickets($project, $from, $to),
+                'revenue' => $this->revenue($project, $from, $to),
+            };
+
+            $metrics[$metric] = [
+                'plan' => $planValue,
+                'actual' => $actualValue,
+                'diff' => ($planValue !== null && $actualValue !== null)
+                    ? round($actualValue - $planValue, 2)
+                    : null,
+                'attainment' => ($planValue !== null && $planValue > 0 && $actualValue !== null)
+                    ? round($actualValue / $planValue * 100, 1)
+                    : null,
+            ];
+        }
+
+        $hasPlan = collect($metrics)->contains(fn(array $entry): bool => $entry['plan'] !== null);
+
+        return ['has_plan' => $hasPlan, 'metrics' => $metrics];
+    }
+
+    /**
+     * Kategorien vorab setzen (Tests / Aufrufer mit bereits geladener Liste).
+     */
+    public function primeCategories(Collection $categories): void
+    {
+        $this->categoriesByIdCache = $categories->keyBy('id');
+    }
+
+    /**
      * Full per-project KPI set for the project tab header.
      *
      * @return array<string, mixed>
      */
     public function summary(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
     {
-        $biData = $project->biData;
+        $biData = $this->biDataOf($project);
         ['value' => $visitors, 'estimated' => $visitorsEstimated] = $this->visitorsWithEstimate($project, $from, $to);
         $soldTickets = $this->soldTickets($project, $from, $to);
         $revenue = $this->revenue($project, $from, $to);
         $capacity = $this->seatsCapacity($project, $from, $to);
         $performances = $this->performances($project, $from, $to);
+        $eventDays = $this->eventDays($project, $from, $to);
+        $categorySums = $this->categorySums($project, $from, $to);
+        $ticketsIssued = $this->ticketsIssued($project, $from, $to);
 
         return [
             'visitors' => $visitors,
@@ -40,8 +125,149 @@ class BiProjectMetricsService
             'capacity' => $capacity,
             'occupancy' => $this->occupancyRate($soldTickets, $capacity),
             'performances' => $performances,
-            'event_days' => $this->eventDays($project, $from, $to),
+            'event_days' => $eventDays,
+            // Kategorien-Aufschlüsselung (null = für diese Rolle nichts erfasst)
+            'category_sums' => $categorySums,
+            'tickets_issued' => $ticketsIssued,
+            'paid_tickets_from_categories' => $this->paidTicketsFromCategories($project, $from, $to),
+            // Quoten-KPIs (null, wenn die Basis fehlt)
+            'free_tickets_rate' => $this->freeTicketsRate($project, $from, $to),
+            'reduced_tickets_rate' => $this->reducedTicketsRate($project, $from, $to),
+            'paying_rate' => $this->payingRate($project, $from, $to),
+            'no_show_rate' => $this->noShowRate($visitors, $ticketsIssued),
+            // Platzauslastung: ausgegebene Karten inkl. Freikarten / Kapazität
+            'seat_occupancy' => $this->occupancyRate($ticketsIssued, $capacity),
+            'avg_revenue_per_visitor' => ($revenue !== null && $visitors)
+                ? round($revenue / $visitors, 2)
+                : null,
+            'visitors_per_performance' => ($visitors !== null && $performances > 0)
+                ? round($visitors / $performances, 1)
+                : null,
+            'revenue_per_event_day' => ($revenue !== null && $eventDays > 0)
+                ? round($revenue / $eventDays, 2)
+                : null,
         ];
+    }
+
+    /**
+     * Summen je Rechenrolle (full/reduced/free) aus den Kategorie-Werten.
+     * null je Rolle = für diese Rolle wurde nichts erfasst (unterscheidet 0 von "leer").
+     *
+     * @return array{full: ?int, reduced: ?int, free: ?int}
+     */
+    public function categorySums(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $sums = ['full' => null, 'reduced' => null, 'free' => null];
+        $entries = $this->categoryEntries($project, $from, $to);
+
+        if ($entries->isEmpty()) {
+            return $sums;
+        }
+
+        $categories = $this->categoriesById();
+
+        foreach ($entries as $entry) {
+            $category = $categories->get($entry->bi_audience_category_id);
+
+            if (!$category) {
+                continue;
+            }
+
+            $type = $category->pricing_type->value;
+            $sums[$type] = ($sums[$type] ?? 0) + (int) $entry->quantity;
+        }
+
+        return $sums;
+    }
+
+    /**
+     * Ausgegebene Karten = Summe aller Kategorien (zahlend + frei);
+     * null, wenn keinerlei Kategoriewerte erfasst sind.
+     */
+    public function ticketsIssued(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
+    {
+        $sums = $this->categorySums($project, $from, $to);
+        $recorded = array_filter($sums, static fn(?int $value): bool => $value !== null);
+
+        return $recorded === [] ? null : array_sum($recorded);
+    }
+
+    /**
+     * Verkaufte Karten aus den zahlenden Kategorien (full + reduced);
+     * null, wenn keine zahlende Kategorie erfasst ist.
+     */
+    public function paidTicketsFromCategories(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
+    {
+        $sums = $this->categorySums($project, $from, $to);
+
+        if ($sums['full'] === null && $sums['reduced'] === null) {
+            return null;
+        }
+
+        return (int) $sums['full'] + (int) $sums['reduced'];
+    }
+
+    /**
+     * Summe je Kategorie-Id (für Export-Spalten und Aufschlüsselungs-Anzeigen);
+     * enthält nur Kategorien mit erfassten Werten im Modus/Zeitraum.
+     *
+     * @return array<int, int>
+     */
+    public function categoryQuantities(Project $project, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        return $this->categoryEntries($project, $from, $to)
+            ->groupBy('bi_audience_category_id')
+            ->map(static fn(Collection $entries): int => (int) $entries->sum('quantity'))
+            ->all();
+    }
+
+    public function freeTicketsRate(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?float
+    {
+        $sums = $this->categorySums($project, $from, $to);
+        $issued = $this->ticketsIssued($project, $from, $to);
+
+        if ($sums['free'] === null || !$issued) {
+            return null;
+        }
+
+        return round($sums['free'] / $issued * 100, 1);
+    }
+
+    public function reducedTicketsRate(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?float
+    {
+        $sums = $this->categorySums($project, $from, $to);
+        $paid = $this->paidTicketsFromCategories($project, $from, $to);
+
+        if ($sums['reduced'] === null || !$paid) {
+            return null;
+        }
+
+        return round($sums['reduced'] / $paid * 100, 1);
+    }
+
+    public function payingRate(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?float
+    {
+        $paid = $this->paidTicketsFromCategories($project, $from, $to);
+        $issued = $this->ticketsIssued($project, $from, $to);
+
+        if ($paid === null || !$issued) {
+            return null;
+        }
+
+        return round($paid / $issued * 100, 1);
+    }
+
+    /**
+     * No-Show-Quote in Prozent; kann negativ werden (mehr Besucher*innen als
+     * ausgegebene Karten) — Anzeige-Entscheidung liegt beim Frontend.
+     */
+    public function noShowRate(?int $visitors, ?int $ticketsIssued): ?float
+    {
+        if ($visitors === null || !$ticketsIssued) {
+            return null;
+        }
+
+        return round((1 - $visitors / $ticketsIssued) * 100, 1);
     }
 
     /**
@@ -59,10 +285,18 @@ class BiProjectMetricsService
             return ['value' => $visitors, 'estimated' => false];
         }
 
-        $biData = $project->biData;
+        $biData = $this->biDataOf($project);
 
         if (!$biData || $biData->visitors_not_applicable || $biData->sold_tickets_not_applicable) {
             return ['value' => null, 'estimated' => false];
+        }
+
+        // Bevorzugt ausgegebene Karten (inkl. Freikarten — auch deren Gäste sind
+        // Besucher*innen), erst dann verkaufte Karten.
+        $ticketsIssued = $this->ticketsIssued($project, $from, $to);
+
+        if ($ticketsIssued !== null) {
+            return ['value' => $ticketsIssued, 'estimated' => true];
         }
 
         $soldTickets = $this->soldTickets($project, $from, $to);
@@ -103,7 +337,7 @@ class BiProjectMetricsService
 
     public function visitors(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
     {
-        $biData = $project->biData;
+        $biData = $this->biDataOf($project);
 
         if (!$biData || $biData->visitors_not_applicable) {
             return null;
@@ -120,24 +354,36 @@ class BiProjectMetricsService
 
     public function soldTickets(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?int
     {
-        $biData = $project->biData;
+        $biData = $this->biDataOf($project);
 
-        if (!$biData || $biData->sold_tickets_not_applicable) {
+        if ($biData?->sold_tickets_not_applicable) {
             return null;
         }
 
-        if ($biData->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
-            return $biData->sold_tickets_total;
+        $direct = null;
+
+        if ($biData) {
+            if ($biData->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
+                $direct = $biData->sold_tickets_total;
+            } else {
+                $sum = $this->sumEventData($project, 'sold_tickets', $from, $to);
+                $direct = $sum !== null ? (int) $sum : null;
+            }
         }
 
-        $sum = $this->sumEventData($project, 'sold_tickets', $from, $to);
+        if ($direct !== null) {
+            return $direct;
+        }
 
-        return $sum !== null ? (int) $sum : null;
+        // Fallback: Summe der zahlenden Kategorien, wenn kein Direktwert erfasst ist.
+        // Bei erfasstem Direktwert bleibt dieser führend (Abgleich-Warnung macht
+        // Abweichungen zur Kategoriesumme im Frontend sichtbar).
+        return $this->paidTicketsFromCategories($project, $from, $to);
     }
 
     public function revenue(Project $project, ?Carbon $from = null, ?Carbon $to = null): ?float
     {
-        $biData = $project->biData;
+        $biData = $this->biDataOf($project);
 
         if (!$biData || $biData->revenue_not_applicable) {
             return null;
@@ -167,7 +413,7 @@ class BiProjectMetricsService
     {
         $overrides = $project->biRoomCapacities->keyBy('room_id');
 
-        if ($project->biData?->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
+        if ($this->biDataOf($project)?->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
             $from = null;
             $to = null;
         }
@@ -214,6 +460,57 @@ class BiProjectMetricsService
         });
     }
 
+    /**
+     * Kategorien-Werte (Ist-Scope) passend zum Erfassungsmodus der verkauften
+     * Karten: TOTAL → Gesamtwerte (event_id null), PER_EVENT → Terminwerte im
+     * Zeitraum. Erwartet die Relation biAudienceCategoryValues (geladen oder lazy).
+     */
+    private function categoryEntries(Project $project, ?Carbon $from, ?Carbon $to): Collection
+    {
+        $scope = $this->scope;
+        $values = $project->biAudienceCategoryValues
+            ->filter(static fn($value): bool => $value->scope === $scope && $value->quantity !== null);
+
+        $mode = $this->biDataOf($project)?->sold_tickets_mode ?? BiVisitorModeEnum::TOTAL;
+
+        if ($mode === BiVisitorModeEnum::TOTAL) {
+            return $values->filter(static fn($value): bool => $value->event_id === null);
+        }
+
+        $eventsById = $project->events->keyBy('id');
+
+        return $values->filter(function ($value) use ($eventsById, $from, $to): bool {
+            if ($value->event_id === null) {
+                return false;
+            }
+
+            $event = $eventsById->get($value->event_id);
+
+            if (!$event) {
+                return false;
+            }
+
+            if (($from || $to) && !$event->start_time) {
+                return false;
+            }
+
+            if ($from && $event->start_time->lt($from->copy()->startOfDay())) {
+                return false;
+            }
+
+            if ($to && $event->start_time->gt($to->copy()->endOfDay())) {
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+    private function categoriesById(): Collection
+    {
+        return $this->categoriesByIdCache ??= BiAudienceCategory::withTrashed()->get()->keyBy('id');
+    }
+
     private function eventHasTag($event, string $name): bool
     {
         $tags = $event->event_type?->biTags;
@@ -234,7 +531,7 @@ class BiProjectMetricsService
      */
     private function sumEventData(Project $project, string $field, ?Carbon $from, ?Carbon $to): ?float
     {
-        $entries = $project->biEventData
+        $entries = $this->eventDataOf($project)
             ->filter(function ($eventData) use ($from, $to): bool {
                 $event = $eventData->event;
 

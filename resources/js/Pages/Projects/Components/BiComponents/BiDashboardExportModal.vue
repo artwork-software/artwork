@@ -13,6 +13,8 @@
                     by="id"
                     option-label="name"
                     multiple
+                    :search-threshold="0"
+                    :search-placeholder="$t('Search cost bearer')"
                     :label="$t('Filter productions by cost unit')"
                     :placeholder="$t('All cost units')"
                 />
@@ -111,6 +113,10 @@ const props = defineProps({
     options: { type: Object, required: true },
     defaultDateFrom: { type: String, default: null },
     defaultDateTo: { type: String, default: null },
+    // Zustandsübernahme vom Tabellen-Export-Button ("was ich sehe, exportiere ich"):
+    // vorbelegte Spalten und (kategorie-gefilterte) Projekt-Ids
+    initialColumns: { type: Array, default: null },
+    initialProjectIds: { type: Array, default: null },
 });
 
 const emit = defineEmits(['close']);
@@ -132,8 +138,13 @@ const filteredProjects = computed(() => {
     return props.options.projects.filter(project => costCenterIds.includes(project.cost_center_id));
 });
 
-// Dashboard-Flow: standardmäßig alle (gefilterten) Produktionen exportieren
-const selectedProjects = ref([...props.options.projects]);
+// Dashboard-Flow: standardmäßig alle (gefilterten) Produktionen exportieren;
+// mit initialProjectIds übernimmt der Tabellen-Button den sichtbaren Filterzustand
+const selectedProjects = ref(
+    props.initialProjectIds !== null
+        ? props.options.projects.filter(project => props.initialProjectIds.includes(project.id))
+        : [...props.options.projects]
+);
 watch(selectedCostCenters, () => {
     selectedProjects.value = [...filteredProjects.value];
 });
@@ -161,8 +172,13 @@ const availableColumns = [
     ...(props.options.columns ?? []),
     ...(props.options.tagColumns ?? []).map(col => ({ ...col, translate: false })),
     ...(props.options.customFieldColumns ?? []).map(col => ({ ...col, translate: false })),
+    ...(props.options.audienceCategoryColumns ?? []).map(col => ({ ...col, translate: false })),
 ];
-const selectedColumns = ref((props.options.columns ?? []).map(c => c.key));
+const selectedColumns = ref(
+    props.initialColumns !== null
+        ? [...props.initialColumns]
+        : (props.options.columns ?? []).map(c => c.key)
+);
 
 const canExport = computed(() =>
     selectedProjects.value.length > 0 && (!includesProjects.value || selectedColumns.value.length > 0)

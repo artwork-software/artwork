@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\BiAudienceCategoryController;
+use App\Http\Controllers\BiBudgetExportController;
 use App\Http\Controllers\BiComponentSettingsController;
 use App\Http\Controllers\BiDashboardController;
 use App\Http\Controllers\BiExportPresetController;
@@ -3447,36 +3449,47 @@ Route::middleware(['auth', 'can:change event settings'])->prefix('bi/tags')->gro
 });
 
 // BI Project Data
+// Lesen erfordert Projekt-Sichtrecht, Schreiben das Projekt-Schreibrecht (ProjectPolicy::update ist
+// deckungsgleich zum Frontend-"canEditComponent"-Kreis). Schreib-Routen bewusst NICHT zusätzlich mit
+// view gestackt: 'write projects'-Inhaber ohne Projektmitgliedschaft haben nicht zwingend view.
 Route::middleware(['auth'])->prefix('projects/{project}/bi')->group(function () {
-    Route::get('/', [BiProjectDataController::class, 'show'])->name('projects.bi.show');
-    Route::put('/data', [BiProjectDataController::class, 'updateData'])->name('projects.bi.update-data');
-    Route::put('/visitor-mode', [BiProjectDataController::class, 'switchVisitorMode'])
-        ->name('projects.bi.switch-visitor-mode');
-    Route::put('/sold-tickets-mode', [BiProjectDataController::class, 'switchSoldTicketsMode'])
-        ->name('projects.bi.switch-sold-tickets-mode');
-    Route::put('/revenue-mode', [BiProjectDataController::class, 'switchRevenueMode'])
-        ->name('projects.bi.switch-revenue-mode');
-    Route::put('/events/{event}', [BiProjectDataController::class, 'upsertEventData'])
-        ->name('projects.bi.upsert-event-data');
-    Route::get('/room-capacities', [BiProjectDataController::class, 'roomCapacities'])
-        ->name('projects.bi.room-capacities');
-    Route::put('/room-capacities/{room}', [BiProjectDataController::class, 'updateRoomCapacity'])
-        ->name('projects.bi.update-room-capacity');
+    Route::middleware(['can:view,project'])->group(function () {
+        Route::get('/', [BiProjectDataController::class, 'show'])->name('projects.bi.show');
+        Route::get('/room-capacities', [BiProjectDataController::class, 'roomCapacities'])
+            ->name('projects.bi.room-capacities');
+        Route::get('/snapshots', [BiSnapshotController::class, 'index'])->name('projects.bi.snapshots.index');
+        Route::get('/snapshots/{biSnapshot}', [BiSnapshotController::class, 'show'])
+            ->name('projects.bi.snapshots.show');
+        Route::get('/time-efforts', [BiTimeEffortController::class, 'index'])->name('projects.bi.time-efforts.index');
+        Route::get('/metrics-summary', [BiProjectDataController::class, 'metricsSummary'])
+            ->name('projects.bi.metrics-summary');
+    });
 
-    // Snapshots
-    Route::get('/snapshots', [BiSnapshotController::class, 'index'])->name('projects.bi.snapshots.index');
-    Route::post('/snapshots', [BiSnapshotController::class, 'store'])->name('projects.bi.snapshots.store');
-    Route::get('/snapshots/{biSnapshot}', [BiSnapshotController::class, 'show'])->name('projects.bi.snapshots.show');
-    Route::delete('/snapshots/{biSnapshot}', [BiSnapshotController::class, 'destroy'])
-        ->name('projects.bi.snapshots.destroy');
-
-    // Time Efforts
-    Route::get('/time-efforts', [BiTimeEffortController::class, 'index'])->name('projects.bi.time-efforts.index');
-    Route::post('/time-efforts', [BiTimeEffortController::class, 'store'])->name('projects.bi.time-efforts.store');
-    Route::put('/time-efforts/{biTimeEffort}', [BiTimeEffortController::class, 'update'])
-        ->name('projects.bi.time-efforts.update');
-    Route::delete('/time-efforts/{biTimeEffort}', [BiTimeEffortController::class, 'destroy'])
-        ->name('projects.bi.time-efforts.destroy');
+    Route::middleware(['can:update,project'])->group(function () {
+        Route::put('/data', [BiProjectDataController::class, 'updateData'])->name('projects.bi.update-data');
+        Route::put('/visitor-mode', [BiProjectDataController::class, 'switchVisitorMode'])
+            ->name('projects.bi.switch-visitor-mode');
+        Route::put('/sold-tickets-mode', [BiProjectDataController::class, 'switchSoldTicketsMode'])
+            ->name('projects.bi.switch-sold-tickets-mode');
+        Route::put('/revenue-mode', [BiProjectDataController::class, 'switchRevenueMode'])
+            ->name('projects.bi.switch-revenue-mode');
+        Route::put('/events/{event}', [BiProjectDataController::class, 'upsertEventData'])
+            ->name('projects.bi.upsert-event-data');
+        Route::put('/room-capacities/{room}', [BiProjectDataController::class, 'updateRoomCapacity'])
+            ->name('projects.bi.update-room-capacity');
+        Route::put('/category-values', [BiProjectDataController::class, 'upsertCategoryValues'])
+            ->name('projects.bi.upsert-category-values');
+        Route::post('/plan/initialize', [BiProjectDataController::class, 'initializePlan'])
+            ->name('projects.bi.plan.initialize');
+        Route::post('/snapshots', [BiSnapshotController::class, 'store'])->name('projects.bi.snapshots.store');
+        Route::delete('/snapshots/{biSnapshot}', [BiSnapshotController::class, 'destroy'])
+            ->name('projects.bi.snapshots.destroy');
+        Route::post('/time-efforts', [BiTimeEffortController::class, 'store'])->name('projects.bi.time-efforts.store');
+        Route::put('/time-efforts/{biTimeEffort}', [BiTimeEffortController::class, 'update'])
+            ->name('projects.bi.time-efforts.update');
+        Route::delete('/time-efforts/{biTimeEffort}', [BiTimeEffortController::class, 'destroy'])
+            ->name('projects.bi.time-efforts.destroy');
+    });
 });
 
 // BI Export
@@ -3492,6 +3505,19 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function () {
     Route::get('/download/{cacheToken}', [BiExportController::class, 'download'])
         ->middleware('can:can export bi data')->name('bi.export.download');
 
+    // Projektunabhängiger Budget-Export (KTO/KST/Kostenträger, Baustein G)
+    Route::middleware(['can:can export bi data'])->prefix('budget')->group(function () {
+        Route::get('/options', [BiBudgetExportController::class, 'options'])->name('bi.budget-export.options');
+        Route::get('/match-counts', [BiBudgetExportController::class, 'matchCounts'])
+            ->name('bi.budget-export.match-counts');
+        Route::post('/cache', [BiBudgetExportController::class, 'cacheExportConfiguration'])
+            ->name('bi.budget-export.cache');
+        Route::get('/status/{cacheToken}', [BiBudgetExportController::class, 'status'])
+            ->name('bi.budget-export.status');
+        Route::get('/download/{cacheToken}', [BiBudgetExportController::class, 'download'])
+            ->name('bi.budget-export.download');
+    });
+
     Route::get('/presets', [BiExportPresetController::class, 'index'])->name('bi.export.presets.index');
     Route::post('/presets', [BiExportPresetController::class, 'store'])->name('bi.export.presets.store');
     Route::delete('/presets/{biExportPreset}', [BiExportPresetController::class, 'destroy'])
@@ -3499,8 +3525,20 @@ Route::middleware(['auth'])->prefix('bi/export')->group(function () {
 });
 
 // BI Component Settings (Custom Fields)
-Route::middleware(['auth'])->prefix('settings/bi')->group(function () {
+Route::middleware(['auth', 'can:change tool settings'])->prefix('settings/bi')->group(function () {
     Route::get('/', [BiComponentSettingsController::class, 'index'])->name('bi.settings.index');
+
+    // Besucher*innen-Kategorien (Order-Route bewusst vor der {biAudienceCategory}-Route)
+    Route::get('/audience-categories', [BiAudienceCategoryController::class, 'index'])
+        ->name('bi.audience-categories.index');
+    Route::post('/audience-categories/order', [BiAudienceCategoryController::class, 'updateOrder'])
+        ->name('bi.audience-categories.order');
+    Route::post('/audience-categories', [BiAudienceCategoryController::class, 'store'])
+        ->name('bi.audience-categories.store');
+    Route::patch('/audience-categories/{biAudienceCategory}', [BiAudienceCategoryController::class, 'update'])
+        ->name('bi.audience-categories.update');
+    Route::delete('/audience-categories/{biAudienceCategory}', [BiAudienceCategoryController::class, 'destroy'])
+        ->name('bi.audience-categories.destroy');
     Route::post('/fields', [BiComponentSettingsController::class, 'store'])->name('bi.settings.store');
     Route::post('/fields/order', [BiComponentSettingsController::class, 'updateOrder'])->name('bi.settings.update-order');
     Route::patch('/fields/{component}', [BiComponentSettingsController::class, 'update'])->name('bi.settings.update');

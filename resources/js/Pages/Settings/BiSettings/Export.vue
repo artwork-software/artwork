@@ -104,6 +104,7 @@ const props = defineProps({
     columns: { type: Array, default: () => [] },
     tagColumns: { type: Array, default: () => [] },
     customFieldColumns: { type: Array, default: () => [] },
+    audienceCategoryColumns: { type: Array, default: () => [] },
     presets: { type: Array, default: () => [] },
     defaultDateFrom: { type: String, default: null },
     defaultDateTo: { type: String, default: null },
@@ -116,6 +117,7 @@ const availableColumns = [
     ...props.columns,
     ...props.tagColumns.map(col => ({ ...col, translate: false })),
     ...props.customFieldColumns.map(col => ({ ...col, translate: false })),
+    ...props.audienceCategoryColumns.map(col => ({ ...col, translate: false })),
 ];
 
 const selectedProjects = ref([]);

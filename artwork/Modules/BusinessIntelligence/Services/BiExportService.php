@@ -5,6 +5,7 @@ namespace Artwork\Modules\BusinessIntelligence\Services;
 use Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum;
 use Artwork\Modules\BusinessIntelligence\Exports\BiExportWorkbook;
 use Artwork\Modules\BusinessIntelligence\Exports\BiProjectExport;
+use Artwork\Modules\BusinessIntelligence\Models\BiAudienceCategory;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\BusinessIntelligence\Models\BiExportPreset;
 use Artwork\Modules\Event\Models\Event;
@@ -36,7 +37,12 @@ class BiExportService
      */
     public function exportConfigurationOptions(): array
     {
+        // Sage-basierte Spalten nur anbieten, wenn die Schnittstelle aktiv ist
+        $sageColumns = ['booking_count', 'bookings_per_performance'];
+        $sageEnabled = $this->biDerivedValuesService->isSageApiEnabled();
+
         $columns = collect(self::columnLabelMap())
+            ->when(!$sageEnabled, fn ($collection) => $collection->except($sageColumns))
             ->map(fn (string $label, string $key) => ['key' => $key, 'label' => $label])
             ->values();
 
@@ -55,12 +61,20 @@ class BiExportService
                 'label' => $component->name,
             ]);
 
+        $audienceCategoryColumns = BiAudienceCategory::ordered()
+            ->get(['id', 'name'])
+            ->map(fn (BiAudienceCategory $category) => [
+                'key' => 'audience_cat_' . $category->id,
+                'label' => $category->name,
+            ]);
+
         $presets = BiExportPreset::query()->orderBy('name')->get(['id', 'name', 'columns', 'is_shared']);
 
         return [
             'columns' => $columns,
             'tagColumns' => $tagColumns,
             'customFieldColumns' => $customFieldColumns,
+            'audienceCategoryColumns' => $audienceCategoryColumns,
             'presets' => $presets,
         ];
     }
@@ -145,6 +159,9 @@ class BiExportService
                 'biData',
                 'biEventData.event',
                 'biRoomCapacities',
+                'biAudienceCategoryValues',
+                'planBiData',
+                'planBiEventData.event',
                 'biTimeEfforts.user',
                 'categories',
                 'contracts',
@@ -175,18 +192,24 @@ class BiExportService
         }
 
         if ($granularity !== 'projects') {
-            $eventColumns = array_keys(self::eventColumnLabelMap());
-            $eventRows = [];
-            foreach ($projects as $project) {
-                foreach ($this->buildEventRows($project, $from, $to, $tagFilter) as $eventRow) {
-                    $eventRows[] = $eventRow;
-                }
-            }
+            // Kategorien-Spalten hängen dynamisch hinter dem festen Spaltensatz
+            $audienceCategories = BiAudienceCategory::ordered()->get(['id', 'name']);
 
             $eventLabels = array_map(
                 static fn (string $label): string => __($label),
                 self::eventColumnLabelMap()
             );
+            foreach ($audienceCategories as $category) {
+                $eventLabels['audience_cat_' . $category->id] = $category->name;
+            }
+            $eventColumns = array_keys($eventLabels);
+
+            $eventRows = [];
+            foreach ($projects as $project) {
+                foreach ($this->buildEventRows($project, $from, $to, $tagFilter, $audienceCategories) as $eventRow) {
+                    $eventRows[] = $eventRow;
+                }
+            }
 
             $sheets[] = new BiProjectExport($eventRows, $eventColumns, $eventLabels, __('Events'));
         }
@@ -222,12 +245,21 @@ class BiExportService
      * filtered by BI tags ('untagged' matches events whose event type has none).
      *
      * @param array<int, int|string> $tagFilter
+     * @param \Illuminate\Support\Collection|null $audienceCategories
      * @return array<int, array<string, mixed>>
      */
-    private function buildEventRows(Project $project, ?Carbon $from, ?Carbon $to, array $tagFilter): array
-    {
+    private function buildEventRows(
+        Project $project,
+        ?Carbon $from,
+        ?Carbon $to,
+        array $tagFilter,
+        $audienceCategories = null
+    ): array {
         $eventDataByEventId = $project->biEventData->keyBy('event_id');
         $capacityOverrides = $project->biRoomCapacities->keyBy('room_id');
+        $categoryValuesByEvent = $project->biAudienceCategoryValues
+            ->filter(static fn($value): bool => $value->scope === 'actual' && $value->event_id !== null)
+            ->groupBy('event_id');
 
         $tagIds = array_map('intval', array_filter($tagFilter, 'is_numeric'));
         $includeUntagged = in_array('untagged', $tagFilter, true);
@@ -263,7 +295,13 @@ class BiExportService
             })
             ->sortBy('start_time')
             ->values()
-            ->map(function (Event $event) use ($project, $eventDataByEventId, $capacityOverrides): array {
+            ->map(function (Event $event) use (
+                $project,
+                $eventDataByEventId,
+                $capacityOverrides,
+                $categoryValuesByEvent,
+                $audienceCategories
+            ): array {
                 $eventData = $eventDataByEventId->get($event->id);
                 $room = $event->room;
 
@@ -275,7 +313,7 @@ class BiExportService
 
                 $soldTickets = $eventData?->sold_tickets;
 
-                return [
+                $row = [
                     'project_name' => $project->name,
                     'event_date' => $event->start_time?->format('d.m.Y') ?? '',
                     'event_time' => $this->formatEventTime($event),
@@ -294,6 +332,19 @@ class BiExportService
                         (int) ($capacity ?? 0)
                     ) ?? '',
                 ];
+
+                if ($audienceCategories) {
+                    $eventCategoryValues = $categoryValuesByEvent
+                        ->get($event->id)
+                        ?->keyBy('bi_audience_category_id');
+
+                    foreach ($audienceCategories as $category) {
+                        $row['audience_cat_' . $category->id] =
+                            $eventCategoryValues?->get($category->id)?->quantity ?? '';
+                    }
+                }
+
+                return $row;
             })
             ->all();
     }
@@ -338,6 +389,12 @@ class BiExportService
             'avg_price' => 'Average price',
             'seats_capacity' => 'Number of seats',
             'occupancy_rate' => 'Occupancy rate',
+            'tickets_issued' => 'Tickets issued',
+            'free_tickets_rate' => 'Free ticket rate',
+            'reduced_tickets_rate' => 'Reduced ticket rate',
+            'paying_rate' => 'Paying rate',
+            'no_show_rate' => 'No-show rate',
+            'seat_occupancy' => 'Seat occupancy (incl. free tickets)',
             'production_type' => 'Production type',
             'is_new_production' => 'New production',
             'is_co_production' => 'Co-production',
@@ -354,6 +411,14 @@ class BiExportService
             'department_count' => 'Departments involved',
             'user_count' => 'People involved',
             'time_efforts' => 'Time efforts',
+            'effort_score' => 'Effort score',
+            'contracts_per_performance' => 'Contracts / performance',
+            'bookings_per_performance' => 'Bookings / performance',
+            'tasks_docs_per_production' => 'Tasks + documents',
+            'plan_visitors' => 'Plan visitors',
+            'plan_sold_tickets' => 'Plan sold tickets',
+            'plan_revenue' => 'Plan revenue',
+            'attainment' => 'Attainment',
         ];
     }
 
@@ -366,6 +431,7 @@ class BiExportService
         $static = self::columnLabelMap();
         $tags = BiEventTypeTag::all()->keyBy('id');
         $components = Component::isBiField()->pluck('name', 'id');
+        $audienceCategories = BiAudienceCategory::withTrashed()->pluck('name', 'id');
 
         $labels = [];
 
@@ -377,6 +443,9 @@ class BiExportService
                 $labels[$column] = $tag?->name_de ?? $tag?->name ?? $column;
             } elseif (str_starts_with($column, 'custom_field_')) {
                 $labels[$column] = $components->get((int) str_replace('custom_field_', '', $column)) ?? $column;
+            } elseif (str_starts_with($column, 'audience_cat_')) {
+                $labels[$column] = $audienceCategories
+                    ->get((int) str_replace('audience_cat_', '', $column)) ?? $column;
             } else {
                 $labels[$column] = $column;
             }
@@ -420,6 +489,11 @@ class BiExportService
         $capacity = $this->biProjectMetricsService->seatsCapacity($project, $from, $to);
         $avgPrice = $this->biProjectMetricsService->averagePrice($revenue, $soldTickets);
         $occupancy = $this->biProjectMetricsService->occupancyRate($soldTickets, $capacity);
+        $ticketsIssued = $this->biProjectMetricsService->ticketsIssued($project, $from, $to);
+        $categoryQuantities = $this->biProjectMetricsService->categoryQuantities($project, $from, $to);
+        $planMetrics = $this->biProjectMetricsService->forScope('plan');
+        $planComparison = $this->biProjectMetricsService->planComparison($project, $from, $to);
+        $performances = $this->biProjectMetricsService->performances($project, $from, $to);
 
         $row = [];
 
@@ -442,6 +516,14 @@ class BiExportService
                 'avg_price' => $avgPrice ?? '',
                 'seats_capacity' => $capacity,
                 'occupancy_rate' => $occupancy ?? '',
+                'tickets_issued' => $ticketsIssued ?? '',
+                'free_tickets_rate' => $this->biProjectMetricsService->freeTicketsRate($project, $from, $to) ?? '',
+                'reduced_tickets_rate' => $this->biProjectMetricsService
+                    ->reducedTicketsRate($project, $from, $to) ?? '',
+                'paying_rate' => $this->biProjectMetricsService->payingRate($project, $from, $to) ?? '',
+                'no_show_rate' => $this->biProjectMetricsService->noShowRate($visitors, $ticketsIssued) ?? '',
+                'seat_occupancy' => $this->biProjectMetricsService
+                    ->occupancyRate($ticketsIssued, $capacity) ?? '',
                 'production_type' => $this->getProductionType($biData),
                 'is_new_production' => $biData?->is_new_production ? 'Ja' : 'Nein',
                 'is_co_production' => $biData?->is_co_production ? 'Ja' : 'Nein',
@@ -458,7 +540,21 @@ class BiExportService
                 'department_count' => $derived['department_count'],
                 'user_count' => $derived['user_count'],
                 'time_efforts' => $this->formatTimeEfforts($project),
-                default => $this->resolveTagOrCustomColumn($column, $tagCounts, $project),
+                'effort_score' => $this->biDerivedValuesService->getEffortScore($project),
+                'contracts_per_performance' => $performances > 0
+                    ? round($derived['contract_count'] / $performances, 2)
+                    : '',
+                'bookings_per_performance' => $performances > 0
+                    ? round($derived['booking_count'] / $performances, 2)
+                    : '',
+                'tasks_docs_per_production' => $derived['task_total'] + $derived['document_count'],
+                'plan_visitors' => $planMetrics->visitors($project, $from, $to) ?? '',
+                'plan_sold_tickets' => $planMetrics->soldTickets($project, $from, $to) ?? '',
+                'plan_revenue' => $planMetrics->revenue($project, $from, $to) ?? '',
+                'attainment' => $planComparison['metrics']['revenue']['attainment']
+                    ?? $planComparison['metrics']['visitors']['attainment']
+                    ?? '',
+                default => $this->resolveTagOrCustomColumn($column, $tagCounts, $project, $categoryQuantities),
             };
         }
 
@@ -566,9 +662,14 @@ class BiExportService
 
     /**
      * @param array<int, array<string, mixed>> $tagCounts
+     * @param array<int, int> $categoryQuantities
      */
-    private function resolveTagOrCustomColumn(string $column, array $tagCounts, Project $project): string
-    {
+    private function resolveTagOrCustomColumn(
+        string $column,
+        array $tagCounts,
+        Project $project,
+        array $categoryQuantities = []
+    ): string {
         foreach ($tagCounts as $tagCount) {
             if ($column === 'tag_' . $tagCount['tag_id']) {
                 return (string) $tagCount['count'];
@@ -579,6 +680,15 @@ class BiExportService
             $componentId = (int) str_replace('custom_field_', '', $column);
 
             return $this->getCustomFieldValue($project, $componentId);
+        }
+
+        if (str_starts_with($column, 'audience_cat_')) {
+            $categoryId = (int) str_replace('audience_cat_', '', $column);
+
+            // Leerstring = nichts erfasst (unterscheidet sich bewusst von 0)
+            return array_key_exists($categoryId, $categoryQuantities)
+                ? (string) $categoryQuantities[$categoryId]
+                : '';
         }
 
         return '';

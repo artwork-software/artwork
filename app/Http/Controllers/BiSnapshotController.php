@@ -26,7 +26,8 @@ class BiSnapshotController extends Controller
             $project,
             $request->input('name'),
             $request->input('snapshot_date'),
-            $request->user()->id
+            $request->user()->id,
+            $request->input('scope') === 'plan' ? 'plan' : 'actual'
         );
 
         return response()->json($snapshot->load('creator'), 201);

@@ -17,6 +17,7 @@ class UpdateBiEventDataRequest extends FormRequest
             'visitors' => ['nullable', 'integer', 'min:0'],
             'sold_tickets' => ['nullable', 'integer', 'min:0'],
             'revenue' => ['nullable', 'numeric', 'min:0'],
+            'scope' => ['nullable', 'in:actual,plan'],
         ];
     }
 }

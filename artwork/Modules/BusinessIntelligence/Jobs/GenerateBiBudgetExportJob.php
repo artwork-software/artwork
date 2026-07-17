@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\BusinessIntelligence\Jobs;
 
-use Artwork\Modules\BusinessIntelligence\Services\BiExportService;
+use Artwork\Modules\BusinessIntelligence\Services\BiBudgetExportService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -10,14 +10,15 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 
-class GenerateBiExportJob implements ShouldQueue
+class GenerateBiBudgetExportJob implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
 
-    // Exporte über viele Projekte brauchen ggf. länger als die Worker-Default-60s.
+    // Der Export läuft über alle Budget-Zeilen der getroffenen Projekte —
+    // bei großen Häusern deutlich mehr als die Worker-Default-60s.
     public int $timeout = 300;
 
     public int $tries = 1;
@@ -26,15 +27,15 @@ class GenerateBiExportJob implements ShouldQueue
     {
     }
 
-    public function handle(BiExportService $biExportService): void
+    public function handle(BiBudgetExportService $biBudgetExportService): void
     {
-        $biExportService->generateAndStore($this->token);
+        $biBudgetExportService->generateAndStore($this->token);
     }
 
     public function failed(\Throwable $exception): void
     {
         Cache::put(
-            'bi_export_status_' . $this->token,
+            'bi_budget_export_status_' . $this->token,
             ['status' => 'failed', 'message' => $exception->getMessage()],
             now()->addMinutes(30)
         );

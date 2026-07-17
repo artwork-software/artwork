@@ -17,6 +17,7 @@ class BiEventData extends Model
     protected $fillable = [
         'project_id',
         'event_id',
+        'scope',
         'visitors',
         'sold_tickets',
         'revenue',

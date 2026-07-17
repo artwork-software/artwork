@@ -542,6 +542,38 @@
         @single="singleSaveEvent"
     />
 
+    <!-- Confirm: Verschiebung löst Einzeltag-Projektzuordnungen auf -->
+    <ArtworkBaseModal
+        v-if="showAssignmentImpactModal"
+        :title="$t('Dissolve project assignments?')"
+        :description="$t('If you move this event, the following project assignments will be dissolved because they fall outside the new project period.')"
+        modal-size="sm:max-w-lg"
+        @close="showAssignmentImpactModal = false"
+    >
+        <div class="mt-4 space-y-2">
+            <div
+                v-for="(affected, index) in assignmentImpactList"
+                :key="index"
+                class="flex items-start gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+            >
+                <span class="mt-1 inline-flex h-1.5 w-1.5 shrink-0 rounded-full" :class="affected.type === 'wish' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                <span>
+                    <span class="font-medium" :class="affected.type === 'wish' ? 'italic' : ''">{{ affected.worker_name }}</span>
+                    <span v-if="affected.type === 'wish'" class="italic"> ({{ $t('Wish') }})</span>
+                    <span class="text-zinc-500"> &middot; {{ affected.dates.join(', ') }}</span>
+                </span>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+            <button type="button" class="ui-button-cancel" @click="showAssignmentImpactModal = false">
+                {{ $t('Cancel') }}
+            </button>
+            <button type="button" class="ui-button-add" @click="confirmAssignmentImpactAndSave">
+                {{ $t('Move anyway') }}
+            </button>
+        </div>
+    </ArtworkBaseModal>
+
     <!-- Bestätigungsdialog beim Schließen -->
     <ArtworkBaseModal
         v-if="showDiscardConfirmation"
@@ -1185,9 +1217,49 @@ async function updateOrCreateEvent(isOptionParam = false) {
     allSeriesEvents.value = false
     await doSaveEvent()
 }
+// --- Confirm-Dialog: Terminverschiebung löst Einzeltag-Projektzuordnungen auf ---
+const showAssignmentImpactModal = ref(false)
+const assignmentImpactList = ref([])
+let assignmentImpactConfirmed = false
+
+async function checkProjectAssignmentImpact(data) {
+    if (!props.event?.id || assignmentImpactConfirmed) return true
+
+    try {
+        const { data: response } = await axios.get(
+            route('events.project-assignment-impact', { event: props.event.id }),
+            { params: { start_time: data.start, end_time: data.end, project_id: data.projectId } },
+        )
+
+        if ((response.affected ?? []).length) {
+            assignmentImpactList.value = response.affected
+            showAssignmentImpactModal.value = true
+            return false
+        }
+    } catch (e) {
+        // Der Precheck darf das Speichern nie blockieren
+    }
+
+    return true
+}
+
+async function confirmAssignmentImpactAndSave() {
+    assignmentImpactConfirmed = true
+    showAssignmentImpactModal.value = false
+    await doSaveEvent()
+}
+
 async function doSaveEvent() {
     isLoading.value = true
     const data = payload()
+
+    if (!(await checkProjectAssignmentImpact(data))) {
+        isLoading.value = false
+        return
+    }
+    // Bestätigung gilt nur für genau diesen Speichervorgang — sonst überspringt
+    // ein späteres erneutes Verschieben im selben Modal den Precheck stumm
+    assignmentImpactConfirmed = false
 
     if (!props.requiresAxiosRequests &&
         (props.usedInBulkComponent ||

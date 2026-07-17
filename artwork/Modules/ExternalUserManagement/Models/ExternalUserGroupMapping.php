@@ -42,7 +42,7 @@ class ExternalUserGroupMapping extends Model
 
     public function source(): BelongsTo
     {
-        return $this->belongsTo(ExternalUserSource::class, 'source_id', 'id');
+        return $this->belongsTo(ExternalUserSource::class, 'source_id', 'id', 'source');
     }
 }
 

@@ -37,7 +37,8 @@ export function useBiExport() {
     });
 
     /**
-     * @param {{project_ids: number[], columns: string[], date_from: ?string, date_to: ?string}} config
+     * @param {{project_ids: number[], columns: string[], date_from: ?string, date_to: ?string,
+     *          granularity: ?('projects'|'events'|'both'), event_tag_filter: ?Array<number|'untagged'>}} config
      * @returns {Promise<boolean>} true, wenn der Download gestartet wurde
      */
     const runExport = async (config) => {

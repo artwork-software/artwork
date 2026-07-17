@@ -3,6 +3,7 @@
 namespace Artwork\Modules\BusinessIntelligence\Services;
 
 use Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum;
+use Artwork\Modules\BusinessIntelligence\Enums\BiVisitorModeEnum;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventTypeTag;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Project\Models\Project;
@@ -27,6 +28,18 @@ class BiDashboardService
         '25-50' => 37.5,
         '50-100' => 75,
         '100+' => 125,
+    ];
+
+    /**
+     * Weights of the Aufwand-Proxy-Score. Shipped to the frontend so the score
+     * can be explained instead of appearing as a black-box number.
+     */
+    private const SCORE_WEIGHTS = [
+        'contracts' => 2,
+        'bookings' => 1,
+        'open_tasks' => 1.5,
+        'documents' => 0.5,
+        'effort_hours' => 0.1,
     ];
 
     public function __construct(
@@ -54,7 +67,11 @@ class BiDashboardService
             $projects = $this->loadProjects();
 
             $current = $this->aggregate($projects, $rangeFrom, $rangeTo);
-            $previous = $this->aggregate(
+            // Jahresvergleich nur über datumsfilterbare Werte: TOTAL-Modus-Kennzahlen sind
+            // zeitraum-neutral und würden im Vorjahres-Lauf denselben Wert liefern (Delta immer 0).
+            // comparable_kpis ist das aktuelle Pendant mit identischen Ausschlussregeln.
+            $comparable = $this->aggregateComparableKpis($projects, $rangeFrom, $rangeTo);
+            $previous = $this->aggregateComparableKpis(
                 $projects,
                 $rangeFrom?->copy()->subYear(),
                 $rangeTo?->copy()->subYear()
@@ -66,7 +83,10 @@ class BiDashboardService
                     'to' => $rangeTo?->toDateString(),
                 ],
                 'kpis' => $current['kpis'],
-                'previous_kpis' => $previous['kpis'],
+                'comparable_kpis' => $comparable,
+                'previous_kpis' => $previous,
+                'score_weights' => self::SCORE_WEIGHTS,
+                'effort_hours_map' => self::EFFORT_HOURS,
                 'by_category' => $current['by_category'],
                 'projects' => $current['projects'],
                 'monthly' => $this->buildMonthlySeries($projects, $rangeFrom, $rangeTo),
@@ -117,10 +137,13 @@ class BiDashboardService
                 $this->metricsService->visitorsWithEstimate($project, $from, $to);
             $visitors = $visitorsValue ?? 0;
             $anyVisitorsEstimated = $anyVisitorsEstimated || $visitorsEstimated;
-            $tickets = $this->metricsService->soldTickets($project, $from, $to) ?? 0;
+            $ticketsValue = $this->metricsService->soldTickets($project, $from, $to);
+            $tickets = $ticketsValue ?? 0;
             $revenue = $this->metricsService->revenue($project, $from, $to) ?? 0.0;
-            $capacity = $this->metricsService->seatsCapacity($project);
-            $occupancy = $this->metricsService->occupancyRate($tickets, $capacity);
+            $capacity = $this->metricsService->seatsCapacity($project, $from, $to);
+            // null (nicht 0) durchreichen: Projekte ohne erfasste Tickets sollen
+            // "keine Angabe" zeigen statt fälschlich 0 % Auslastung
+            $occupancy = $this->metricsService->occupancyRate($ticketsValue, $capacity);
 
             $performances = $this->metricsService->performances($project, $from, $to);
             $eventDays = $this->metricsService->eventDays($project, $from, $to);
@@ -132,11 +155,11 @@ class BiDashboardService
             $effortHours = $this->effortHours($project);
 
             $score = round(
-                2 * $contracts
-                + 1 * $bookings
-                + 1.5 * $openTasks
-                + 0.5 * $documents
-                + 0.1 * $effortHours,
+                self::SCORE_WEIGHTS['contracts'] * $contracts
+                + self::SCORE_WEIGHTS['bookings'] * $bookings
+                + self::SCORE_WEIGHTS['open_tasks'] * $openTasks
+                + self::SCORE_WEIGHTS['documents'] * $documents
+                + self::SCORE_WEIGHTS['effort_hours'] * $effortHours,
                 1
             );
 
@@ -178,6 +201,68 @@ class BiDashboardService
             ],
             'by_category' => $this->groupByCategory($rows),
             'projects' => $rows,
+        ];
+    }
+
+    /**
+     * KPI-only aggregation for the year-over-year comparison. Metrics whose mode
+     * is TOTAL are skipped per project: totals carry no date, so "previous year"
+     * would return the identical value and the delta would be meaningless.
+     * Deliberately computes none of the effort/booking figures (they are
+     * range-independent), which keeps the second pass cheap.
+     *
+     * @param Collection<int, Project> $projects
+     * @return array<string, mixed>
+     */
+    private function aggregateComparableKpis(Collection $projects, ?Carbon $from, ?Carbon $to): array
+    {
+        $totalVisitors = 0;
+        $totalRevenue = 0.0;
+        $totalTickets = 0;
+        $totalCapacity = 0;
+        $totalEventDays = 0;
+        $totalPerformances = 0;
+        $excludedProjects = 0;
+
+        foreach ($projects as $project) {
+            $biData = $project->biData;
+            $visitorsTimeNeutral = $biData?->visitor_mode === BiVisitorModeEnum::TOTAL;
+            $ticketsTimeNeutral = $biData?->sold_tickets_mode === BiVisitorModeEnum::TOTAL;
+            $revenueTimeNeutral = $biData?->revenue_mode === BiVisitorModeEnum::TOTAL;
+
+            if ($visitorsTimeNeutral || $ticketsTimeNeutral || $revenueTimeNeutral) {
+                $excludedProjects++;
+            }
+
+            if (!$visitorsTimeNeutral) {
+                // Der ≈-Fallback schätzt aus Ticketzahlen — wenn die im TOTAL-Modus
+                // gepflegt werden, wäre auch die Schätzung zeitraum-neutral.
+                $visitorsValue = $ticketsTimeNeutral
+                    ? $this->metricsService->visitors($project, $from, $to)
+                    : $this->metricsService->visitorsWithEstimate($project, $from, $to)['value'];
+                $totalVisitors += $visitorsValue ?? 0;
+            }
+
+            if (!$ticketsTimeNeutral) {
+                $totalTickets += $this->metricsService->soldTickets($project, $from, $to) ?? 0;
+                $totalCapacity += $this->metricsService->seatsCapacity($project, $from, $to);
+            }
+
+            if (!$revenueTimeNeutral) {
+                $totalRevenue += $this->metricsService->revenue($project, $from, $to) ?? 0.0;
+            }
+
+            $totalEventDays += $this->metricsService->eventDays($project, $from, $to);
+            $totalPerformances += $this->metricsService->performances($project, $from, $to);
+        }
+
+        return [
+            'visitors' => $totalVisitors,
+            'revenue' => round($totalRevenue, 2),
+            'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
+            'event_days' => $totalEventDays,
+            'performances' => $totalPerformances,
+            'excluded_total_mode_projects' => $excludedProjects,
         ];
     }
 
@@ -247,8 +332,12 @@ class BiDashboardService
                 'month' => $month,
                 'visitors' => $currentBuckets[$month]['visitors'] ?? 0,
                 'revenue' => round($currentBuckets[$month]['revenue'] ?? 0.0, 2),
-                'prev_visitors' => $previousBuckets[$prevMonth]['visitors'] ?? 0,
-                'prev_revenue' => round($previousBuckets[$prevMonth]['revenue'] ?? 0.0, 2),
+                // null statt 0, wenn es für den Vorjahresmonat keine Daten gibt —
+                // sonst zeichnet das Chart eine irreführende flache 0-Linie
+                'prev_visitors' => $previousBuckets[$prevMonth]['visitors'] ?? null,
+                'prev_revenue' => isset($previousBuckets[$prevMonth])
+                    ? round($previousBuckets[$prevMonth]['revenue'], 2)
+                    : null,
             ];
         }, $months);
     }

@@ -268,17 +268,27 @@ class ShiftPlanRequestService
      * Uses syncWithoutDetaching to avoid duplicate entries.
      *
      * @param ShiftPlanRequest $request
-     * @param array<int> $shiftIds
+     * @param array<int>|Collection<int,Shift> $shifts Shift-IDs oder bereits geladene Modelle
+     *        (erspart den erneuten Load inkl. des automatischen $with von Shift)
      * @param bool $withSnapshot
      * @return void
      */
-    public function attachShiftsToRequest(ShiftPlanRequest $request, array $shiftIds, bool $withSnapshot = true): void
-    {
-        if (empty($shiftIds)) {
-            return;
+    public function attachShiftsToRequest(
+        ShiftPlanRequest $request,
+        array|Collection $shifts,
+        bool $withSnapshot = true
+    ): void {
+        if (is_array($shifts)) {
+            if (empty($shifts)) {
+                return;
+            }
+
+            $shifts = Shift::whereIn('id', $shifts)->get();
         }
 
-        $shifts = Shift::whereIn('id', $shiftIds)->get();
+        if ($shifts->isEmpty()) {
+            return;
+        }
 
         $attachPayload = [];
         foreach ($shifts as $shift) {
@@ -296,11 +306,6 @@ class ShiftPlanRequestService
             }
 
             $attachPayload[$shift->id] = $payload;
-
-            $roomId = $shift->room_id ?? $shift->event?->room_id;
-            if ($roomId !== null) {
-                broadcast(new UpdateShiftInShiftPlan($shift, $roomId));
-            }
         }
 
         // idempotent attach
@@ -353,7 +358,9 @@ class ShiftPlanRequestService
         $shiftsQuery = $this->freeShiftsForRequestQuery($request);
 
         $shifts = $shiftsQuery
-            ->with('currentRequest') // wichtig für History-Log
+            // currentRequest für den History-Log, event:id,room_id für die Raum-Ermittlung
+            // beim Broadcast (spart pro Schicht einen Lazy-Load des kompletten Events).
+            ->with(['currentRequest', 'event:id,room_id'])
             ->get();
 
         $shiftIdsToAttach = [];
@@ -406,8 +413,8 @@ class ShiftPlanRequestService
         }
 
         if (! empty($shiftIdsToAttach)) {
-            // Pivot-Historie (idempotent). attachShiftsToRequest broadcastet bereits selbst.
-            $this->attachShiftsToRequest($request, $shiftIdsToAttach, true);
+            // Pivot-Historie (idempotent) — die bereits geladenen Modelle weiterreichen.
+            $this->attachShiftsToRequest($request, $shifts, true);
 
             $shiftsQuery->update([
                 'current_request_id' => $request->id,
@@ -420,14 +427,28 @@ class ShiftPlanRequestService
                 ->update(['workflow_rejection_reason' => null]);
         }
 
-        if ($broadcast) {
+        if ($broadcast && $shifts->isNotEmpty()) {
+            // Das Bulk-Update oben feuert keine Model-Events — die geladenen Modelle
+            // in-memory angleichen statt pro Schicht fresh() (je 1 Query) zu ziehen.
             foreach ($shifts as $shift) {
-                $freshedShift = $shift->fresh();
-                $roomId = $freshedShift->room_id ?? $freshedShift->event?->room_id;
-                if ($roomId !== null) {
-                    broadcast(new UpdateShiftInShiftPlan($freshedShift, $roomId));
-                }
+                $shift->current_request_id = $request->id;
+                $shift->in_workflow = true;
+                $shift->workflow_rejection_reason = null;
+                $shift->syncOriginal();
             }
+
+            // UpdateShiftInShiftPlan ist ShouldBroadcastNow: jeder broadcast() ist ein
+            // synchroner HTTP-Call an Reverb + Relation-Loads für das DTO. Bei einer
+            // vollen KW blockiert das den Request um Sekunden — deshalb erst nach dem
+            // Response ausführen (läuft im selben Prozess, braucht keinen Queue-Worker).
+            dispatch(function () use ($shifts): void {
+                foreach ($shifts as $shift) {
+                    $roomId = $shift->room_id ?? $shift->event?->room_id;
+                    if ($roomId !== null) {
+                        broadcast(new UpdateShiftInShiftPlan($shift, $roomId));
+                    }
+                }
+            })->afterResponse();
         }
 
         return $shiftIdsToAttach;

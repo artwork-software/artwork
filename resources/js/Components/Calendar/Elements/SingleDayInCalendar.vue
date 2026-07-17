@@ -1,6 +1,7 @@
 <template>
     <div :style="{ height: usePage().props.auth.user.calendar_settings.expand_days ? '' : zoom_factor * 212 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-gray-100' : '']" class=" text-calendarText text-right bg-gray-100">
-        <div :style="textStyle" class="mt-3 mr-2" v-if="day">
+        <!-- Sticky so the date stays visible when scrolling through very tall day rows (expand_days) -->
+        <div :style="[textStyle, stickyTop !== null ? { position: 'sticky', top: stickyTop + 'px' } : {}]" class="mt-3 mr-2" v-if="day">
             <div>
                 {{ zoom_factor >= 0.8 ? day.dayString : '' }}
             </div>
@@ -51,6 +52,11 @@ const props = defineProps({
     },
     hour: {
         type: String,
+        required: false,
+        default: null
+    },
+    stickyTop: {
+        type: Number,
         required: false,
         default: null
     }

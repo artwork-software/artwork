@@ -91,6 +91,11 @@ class ProjectTabService implements ServiceWithArrayCache
         return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::SHIFT_TAB);
     }
 
+    public function findFirstProjectTabWithBusinessIntelligenceComponent(): ProjectTab|null
+    {
+        return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::BUSINESS_INTELLIGENCE);
+    }
+
     private function findFirstProjectTabWithType(ProjectTabComponentEnum $type): ProjectTab|null
     {
         $user = $this->authUser();

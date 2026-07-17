@@ -4,6 +4,7 @@ namespace Artwork\Modules\Freelancer\Services;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -220,8 +221,17 @@ readonly class FreelancerService
                         )
                 )
             )
-            //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
-            //->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
+            // Einsatzplan-Daten (Schichten, Individualzeiten, Tagesdienste, Kommentare, Feiertage)
+            // pro Tag – gleiche Quelle wie beim internen User-Einsatzplan
+            ->setDaysWithData(
+                static fn() => $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
+                    $freelancer->id,
+                    'freelancer',
+                    $startOfWeek,
+                    $endOfWeek
+                )
+            )
+            ->setCrafts(static fn() => Craft::all())
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
             ->setEventTypes(static fn() => EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setProjects(static fn() => $projectService->getAll())

@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\Inventory\Http\Requests;
 
+use App\Rules\InventoryArticleImageDimensions;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,6 +17,7 @@ class UpdateInventoryArticleRequest extends FormRequest
     public function rules(): array
     {
         $articleId = $this->route('inventoryArticle')?->id;
+        $maxImageSizeKb = app(GeneralSettings::class)->inventory_article_image_max_size_mb * 1024;
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -25,9 +28,16 @@ class UpdateInventoryArticleRequest extends FormRequest
             'is_detailed_quantity' => ['required', 'boolean'],
 
             'images' => ['nullable', 'array'],
-            'images.*' => ['nullable', 'image', 'max:10240'], // max 10MB
+            'images.*' => ['nullable', 'image', 'max:' . $maxImageSizeKb, new InventoryArticleImageDimensions()],
             'newImages' => ['nullable', 'array'],
-            'newImages.*' => ['image', 'max:10240'],
+            // Laravel's 'image' rule plus HEIC/HEIF (iPhone photos) — those
+            // get converted to JPEG on upload (InventoryArticleImageService).
+            'newImages.*' => [
+                'bail',
+                'mimes:jpg,jpeg,png,gif,webp,bmp,heic,heif',
+                'max:' . $maxImageSizeKb,
+                new InventoryArticleImageDimensions(),
+            ],
 
             'main_image_index' => ['nullable', 'integer'],
 

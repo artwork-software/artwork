@@ -135,6 +135,62 @@ final class ShiftPlanRequestApprovalFlowTest extends FeatureTestCase
     }
 
     #[Test]
+    public function store_creates_one_request_per_craft_for_multi_selection(): void
+    {
+        $this->actingAsAdmin();
+        [$craftA, , $shiftA] = $this->createCraftEventAndShift();
+
+        $craftB = Craft::factory()->create();
+        $shiftB = Shift::factory()->create([
+            'event_id' => $shiftA->event_id,
+            'craft_id' => $craftB->id,
+            'start_date' => '2026-05-06',
+            'end_date' => '2026-05-06',
+            'start' => '09:00:00',
+            'end' => '17:00:00',
+            'in_workflow' => false,
+            'current_request_id' => null,
+        ]);
+
+        $response = $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_ids' => [$craftA->id, $craftB->id],
+            'week_number' => 19,
+            'year' => 2026,
+        ]);
+
+        $response->assertRedirect();
+
+        // Pro Gewerk EINE eigene pending-Anfrage mit der jeweiligen Schicht
+        foreach ([[$craftA, $shiftA], [$craftB, $shiftB]] as [$craft, $shift]) {
+            $request = ShiftPlanRequest::query()
+                ->where('craft_id', $craft->id)
+                ->where('week_number', 19)
+                ->where('year', 2026)
+                ->first();
+
+            $this->assertNotNull($request);
+            $this->assertSame('pending', $request->status);
+            $this->assertSame($request->id, $shift->fresh()->current_request_id);
+        }
+
+        $this->assertSame(2, ShiftPlanRequest::query()->count());
+    }
+
+    #[Test]
+    public function store_accepts_empty_craft_ids_only_with_craft_id(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->post(route('commit-shift-workflow-request.store'), [
+            'craft_ids' => [],
+            'week_number' => 19,
+            'year' => 2026,
+        ]);
+
+        $response->assertSessionHasErrors(['craft_id', 'craft_ids']);
+    }
+
+    #[Test]
     public function approving_request_commits_attached_shifts(): void
     {
         $this->actingAsAdmin();

@@ -15,6 +15,13 @@
             />
         </div>
 
+        <p
+            v-if="projectAssignmentError"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+        >
+            {{ projectAssignmentError }}
+        </p>
+
         <!-- Zeitraum-Ansicht -->
         <div class="space-y-4">
             <!-- Kopfzeile (Zeitraum + Summen) -->
@@ -119,6 +126,16 @@
                                         <span v-if="hasWorkTime(day)" class="text-[10px] text-zinc-500">
                                             {{ day.totalWorkTime }}
                                         </span>
+                                        <!-- Projektwunsch für diesen Tag eintragen (nur eigener Einsatzplan) -->
+                                        <button
+                                            v-if="isOwnPlan"
+                                            type="button"
+                                            class="p-0.5 rounded hover:bg-zinc-100 transition"
+                                            :title="$t('Enter project wish')"
+                                            @click="openWishModal(day)"
+                                        >
+                                            <PropertyIcon name="IconHeartPlus" class="h-3.5 w-3.5 text-emerald-600" />
+                                        </button>
                                     </div>
                                 </div>
 
@@ -157,6 +174,36 @@
                                             :style="{ color: dayService.hex_color ?? '#3f3f46' }"
                                         />
                                         <span class="break-words min-w-0">{{ dayService.name }}</span>
+                                    </span>
+                                </div>
+
+                                <!-- Projektzuordnungen + Wünsche des Tages -->
+                                <div v-if="assignmentsForDay(day).length" class="px-2 pt-1.5 flex flex-wrap gap-1">
+                                    <span
+                                        v-for="assignment in assignmentsForDay(day)"
+                                        :key="`${day.date}-pda-${assignment.id}`"
+                                        class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px]"
+                                        :class="assignment.type === 'wish'
+                                            ? 'border-dashed border-emerald-300 bg-emerald-50/60 text-emerald-700 italic'
+                                            : 'border-zinc-200 bg-white text-zinc-800'"
+                                        :title="assignmentLabel(assignment, $t('Wish'))"
+                                    >
+                                        <span
+                                            class="inline-block size-2 shrink-0 rounded-full"
+                                            :style="{ backgroundColor: colorForProjectId(assignment.project_id) }"
+                                        />
+                                        <span class="break-words min-w-0">{{ assignment.project_name }}</span>
+                                        <button
+                                            v-if="assignment.type === 'wish' && isOwnPlan"
+                                            type="button"
+                                            class="text-emerald-400 hover:text-red-500 transition"
+                                            :disabled="projectAssignmentActionId === assignment.id"
+                                            :class="projectAssignmentActionId === assignment.id ? 'cursor-wait opacity-50' : ''"
+                                            :title="$t('Remove wish for this day')"
+                                            @click="deleteOwnWish(assignment)"
+                                        >
+                                            <PropertyIcon name="IconX" class="h-3 w-3" />
+                                        </button>
                                     </span>
                                 </div>
 
@@ -267,6 +314,17 @@
         @closed="closeEditIndividualTimeModal"
     />
 
+    <!-- Projektwunsch eintragen (geteiltes Modal, Modus "wish") -->
+    <ProjectAssignmentModal
+        v-if="showWishModal"
+        :worker-type="0"
+        :worker-id="userToEditId"
+        :worker-name="prefillSearchName"
+        mode="wish"
+        :initial-days="wishModalDay ? [wishModalDay] : []"
+        @close="handleWishModalClose"
+    />
+
     <!-- Schichtverlauf – im Einsatzplan eines Users mit dessen Namen vorbelegt.
          Person + Zeitraum stehen hier schon fest → direkt laden (wie bei den
          anderen Shortcuts), statt erst auf "Verlauf laden" zu warten. -->
@@ -297,9 +355,15 @@ import EditIndividualTimeModal from '@/Layouts/Components/ShiftPlanComponents/Ed
 import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
+import axios from 'axios';
+import { colorForProjectId, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js';
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
+})
+
+const ProjectAssignmentModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ProjectAssignmentModal.vue'),
 })
 
 const showEditIndividualTimeModal = ref(false)
@@ -330,6 +394,46 @@ const props = defineProps({
 const page = usePage()
 const daysWithData = computed(() => props.daysWithData ?? (page.props?.daysWithData || {}))
 
+// --- Projektzuordnungen + Wünsche (Map Y-m-d => Einträge, aus dem Page-Payload) ---
+const projectAssignments = computed(() => page.props?.projectAssignments || {})
+const assignmentsForDay = (day) => projectAssignments.value?.[day.date] ?? []
+
+// Wünsche darf nur die Person selbst eintragen (eigener Einsatzplan)
+const isOwnPlan = computed(() => props.type === 'user' && page.props?.auth?.user?.id === props.userToEditId)
+
+const showWishModal = ref(false)
+const wishModalDay = ref(null)
+const projectAssignmentActionId = ref(null)
+const projectAssignmentError = ref('')
+
+const openWishModal = (day) => {
+    wishModalDay.value = day.date
+    showWishModal.value = true
+}
+
+const handleWishModalClose = ({ saved } = { saved: false }) => {
+    showWishModal.value = false
+    if (saved) {
+        router.reload({ only: ['projectAssignments'] })
+    }
+}
+
+const deleteOwnWish = async (assignment) => {
+    if (projectAssignmentActionId.value !== null) return
+    projectAssignmentActionId.value = assignment.id
+    projectAssignmentError.value = ''
+    try {
+        await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
+            params: { whole_group: false },
+        })
+        router.reload({ only: ['projectAssignments'] })
+    } catch (error) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+    } finally {
+        projectAssignmentActionId.value = null
+    }
+}
+
 // Name, mit dem die Schichtverlauf-Suche im Einsatzplan vorbelegt wird: der Name des
 // betrachteten Users (user_to_edit). Fallbacks: zusammengesetzter Name, generischer
 // Name (Dienstleister/Freelancer) oder – zur Sicherheit – der eingeloggte User.
@@ -339,6 +443,7 @@ const prefillSearchName = computed(() => {
         return (
             u.full_name ||
             [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
+            u.provider_name ||
             u.name ||
             ''
         )

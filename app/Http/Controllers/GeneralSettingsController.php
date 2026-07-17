@@ -41,6 +41,8 @@ class GeneralSettingsController extends Controller
                 $generalSettings->inventory_show_inventory_number_as_name,
             'inventoryNumberPrefix' =>
                 $generalSettings->inventory_number_prefix,
+            'inventoryArticleImageMaxSizeMb' =>
+                $generalSettings->inventory_article_image_max_size_mb,
         ]);
     }
 
@@ -54,6 +56,13 @@ class GeneralSettingsController extends Controller
     public function updateInventoryDisplaySettings(Request $request): RedirectResponse
     {
         $this->generalSettingsService->updateInventoryDisplaySettings($request);
+
+        return Redirect::back();
+    }
+
+    public function updateInventoryArticleImageMaxSize(Request $request): RedirectResponse
+    {
+        $this->generalSettingsService->updateInventoryArticleImageMaxSize($request);
 
         return Redirect::back();
     }

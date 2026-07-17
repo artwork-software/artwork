@@ -5,12 +5,38 @@
         @close="$emit('close')"
     >
         <div class="space-y-4">
+            <ArtworkBaseListbox
+                :model-value="granularity"
+                @update:model-value="value => granularity = value"
+                :items="granularityOptions"
+                by="id"
+                option-label="name"
+                :label="$t('Export structure')"
+            />
+
             <BiExportColumnPicker
+                v-if="includesProjects"
                 v-model="selectedColumns"
                 :columns="availableColumns"
                 id-prefix="bi_modal"
                 max-height-class="max-h-64"
             />
+
+            <div v-if="includesEvents">
+                <ArtworkBaseListbox
+                    :model-value="selectedTagFilters"
+                    @update:model-value="value => selectedTagFilters = value"
+                    :items="tagFilterOptions"
+                    by="id"
+                    option-label="name"
+                    multiple
+                    :label="$t('Filter events by BI tags')"
+                    :placeholder="$t('All events')"
+                />
+                <p class="mt-1.5 text-xs text-gray-500">
+                    {{ $t('Without a selection, all events in the period are exported.') }}
+                </p>
+            </div>
 
             <div>
                 <div class="flex items-center gap-4">
@@ -40,7 +66,7 @@
                 <BaseUIButton
                     @click="doExport"
                     :label="$t('Download Excel')"
-                    :disabled="selectedColumns.length === 0 || isExporting"
+                    :disabled="(includesProjects && selectedColumns.length === 0) || isExporting"
                 />
             </div>
         </div>
@@ -48,12 +74,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BiExportColumnPicker from '@/Pages/Projects/Components/BiComponents/BiExportColumnPicker.vue';
 import { useBiExport } from '@/Composeables/BiExport.js';
+import { useTranslation } from '@/Composeables/Translation.js';
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -66,13 +94,31 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const { isExporting, exportError, runExport } = useBiExport();
+const t = useTranslation();
 
 const dateFrom = ref(props.defaultDateFrom ?? '');
 const dateTo = ref(props.defaultDateTo ?? '');
 
+const granularityOptions = [
+    { id: 'both', name: t('Projects and events (2 sheets)') },
+    { id: 'projects', name: t('Project rows only') },
+    { id: 'events', name: t('Event rows only') },
+];
+const granularity = ref(granularityOptions[0]);
+
+const includesProjects = computed(() => granularity.value?.id !== 'events');
+const includesEvents = computed(() => granularity.value?.id !== 'projects');
+
+const tagFilterOptions = [
+    ...props.tagCounts.map(tagCount => ({ id: tagCount.tag_id, name: tagCount.tag_name_de || tagCount.tag_name })),
+    { id: 'untagged', name: t('Events without BI tag') },
+];
+const selectedTagFilters = ref([]);
+
 const staticColumns = [
     { key: 'project_name', label: 'Project name' },
     { key: 'artists', label: 'Artist / Group' },
+    { key: 'cost_center', label: 'Cost bearer' },
     { key: 'rooms', label: 'Room' },
     { key: 'areas', label: 'Area' },
     { key: 'project_state', label: 'Project status' },
@@ -122,9 +168,13 @@ const selectedColumns = ref(availableColumns.map(c => c.key));
 const doExport = async () => {
     const started = await runExport({
         project_ids: [props.project.id],
-        columns: selectedColumns.value,
+        columns: includesProjects.value ? selectedColumns.value : [],
         date_from: dateFrom.value || null,
         date_to: dateTo.value || null,
+        granularity: granularity.value?.id ?? 'both',
+        event_tag_filter: includesEvents.value
+            ? selectedTagFilters.value.map(item => item.id)
+            : [],
     });
     if (started) {
         emit('close');

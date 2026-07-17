@@ -15,7 +15,7 @@
         "tailwindcss": "^4.1.16",
         "unplugin-icons": "^22.4.2",
         "unplugin-vue-components": "^29.0.0",
-        "vite": "7.2.6"
+        "vite": "7.3.6"
     },
     "dependencies": {
         "@headlessui-float/vue": "^0.15.1",
@@ -29,7 +29,7 @@
         "@tailwindcss/vite": "^4.1.16",
         "@tato30/vue-pdf": "^1.11.5",
         "@vuepic/vue-datepicker": "^11.0.3",
-        "axios": "1.12.2",
+        "axios": "1.18.1",
         "chart.js": "^4.5.1",
         "dayjs": "^1.11.18",
         "laravel-permission-to-vuejs": "^3.0.8",

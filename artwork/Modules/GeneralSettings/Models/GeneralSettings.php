@@ -86,6 +86,9 @@ class GeneralSettings extends Settings
 
     public string $inventory_number_prefix = '';
 
+    // Maximum size per inventory article image in MB (frontend check + backend validation).
+    public int $inventory_article_image_max_size_mb = 10;
+
     public static function group(): string
     {
         return 'general';

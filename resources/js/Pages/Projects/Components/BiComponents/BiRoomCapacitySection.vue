@@ -64,6 +64,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { IconExternalLink } from '@tabler/icons-vue';
 import { usePermission } from '@/Composeables/Permission.js';
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     roomCapacities: { type: Array, default: () => [] },
@@ -87,14 +88,16 @@ const getEffectiveCapacity = (room) => {
     return override ?? room.default_capacity;
 };
 
+const biSave = useBiSaveFeedback();
+
 const saveOverride = async (roomId, value) => {
-    try {
-        await axios.put(route('projects.bi.update-room-capacity', [props.projectId, roomId]), {
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-room-capacity', [props.projectId, roomId]), {
             capacity_override: value === '' ? null : Number(value),
-        });
+        })
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error saving room capacity override', error);
     }
 };
 </script>

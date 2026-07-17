@@ -295,6 +295,25 @@ class UserService
                 fn() => $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
+            )
+            // Projektzuordnungen/-wünsche je Tag (Map Y-m-d => Einträge) für die
+            // Anzeige in den Einsatzplan-Tageszellen
+            ->setProjectAssignments(
+                static fn() => app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->getAssignmentsGroupedByDate(User::class, [$user->id], $startOfWeek, $endOfWeek)
+                    ->get($user->id) ?? collect()
+            )
+            // Projektwünsche im angezeigten Kalendermonat (Verfügbarkeitskalender,
+            // dessen Monat vom Einsatzplan-Filter entkoppelt ist)
+            ->setProjectWishes(
+                static fn() => app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)
+                    ->getSerializedAssignmentsForEmployable(
+                        User::class,
+                        $user->id,
+                        $calendarMonth->copy()->startOfMonth(),
+                        $calendarMonth->copy()->endOfMonth(),
+                        \Artwork\Modules\Project\Enum\ProjectDayAssignmentType::WISH
+                    )
             );
     }
 

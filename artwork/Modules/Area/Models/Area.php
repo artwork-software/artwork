@@ -28,7 +28,8 @@ class Area extends Model
     }
 
     protected $fillable = [
-        'name'
+        'name',
+        'color'
     ];
 
     public function rooms(): HasMany

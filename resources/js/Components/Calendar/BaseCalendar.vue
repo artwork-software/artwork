@@ -64,7 +64,7 @@
                                 :data-month="monthKeyFromDay(day)"
                                 :ref="el => registerMonthSentinel(el, day)"
                             >
-                                <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" />
+                                <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" :sticky-top="dayStickyTop" />
 
                                 <!-- Räume -->
                                 <template v-if="!day.isExtraRow">
@@ -484,6 +484,9 @@ const eventsWithoutRoomLen = computed(() =>
 const topbarRef = ref(null);
 const calendarRef = ref(null);
 const topbarHeight = ref(80); // default fallback
+
+// Sticky offset for the date in the day column: topbar + room header (h-16) + spacing
+const dayStickyTop = computed(() => topbarHeight.value + 64 + 8);
 let topbarObserver = null;
 
 // State
@@ -694,6 +697,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
             return {
                 roomId: inc?.roomId,
                 roomName: inc?.roomName ?? '',
+                roomColor: inc?.roomColor ?? null,
                 content: pruned,
             };
         });
@@ -727,7 +731,7 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
 
         let target = targetByRoomId.get(roomId);
         if (!target) {
-            target = { roomId: roomId, roomName: inc?.roomName ?? '', content: {} };
+            target = { roomId: roomId, roomName: inc?.roomName ?? '', roomColor: inc?.roomColor ?? null, content: {} };
             targetRooms.push(target);
             targetByRoomId.set(roomId, target);
         }
@@ -754,6 +758,9 @@ function setCalendarMonthData(monthKey: string, incomingCalendar: any) {
         target.content = pruned;
         if (inc?.roomName && inc.roomName !== target.roomName) {
             target.roomName = inc.roomName;
+        }
+        if ((inc?.roomColor ?? null) !== (target.roomColor ?? null)) {
+            target.roomColor = inc?.roomColor ?? null;
         }
     }
     // Sort rooms to match the order from the rooms prop (position-based from DB)

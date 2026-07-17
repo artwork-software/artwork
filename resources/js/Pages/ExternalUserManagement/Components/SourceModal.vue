@@ -285,7 +285,23 @@
             <!-- Connection Test Result -->
             <div v-if="testResult" class="p-3 rounded"
                  :class="testResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
-                {{ testResult.message }}
+                <p>{{ testResult.message }}</p>
+
+                <!-- First found users (LDAP preview) -->
+                <div v-if="testResult.users && testResult.users.length" class="mt-3">
+                    <p class="text-xs font-semibold uppercase tracking-wide opacity-70">
+                        {{ $t('First found users') }}
+                    </p>
+                    <ul class="mt-1 space-y-1">
+                        <li v-for="(user, index) in testResult.users" :key="user.identifier || index"
+                            class="text-sm">
+                            <span class="font-medium">
+                                {{ user.display_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || user.dn }}
+                            </span>
+                            <span v-if="user.email" class="opacity-70"> · {{ user.email }}</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <!-- Error Messages -->
@@ -550,12 +566,14 @@ export default defineComponent({
 
                 this.testResult = {
                     success: response.data.success,
-                    message: response.data.message
+                    message: response.data.message,
+                    users: response.data.users || []
                 };
             } catch (error) {
                 this.testResult = {
                     success: false,
-                    message: error.response?.data?.message || this.$t('Connection test failed')
+                    message: error.response?.data?.message || this.$t('Connection test failed'),
+                    users: error.response?.data?.users || []
                 };
             } finally {
                 this.testingConnection = false;

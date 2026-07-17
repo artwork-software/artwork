@@ -32,6 +32,7 @@ class AreaController extends Controller
             'areas' => Area::all()->map(fn ($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
+                'color' => $area->color ?? '#000000',
                 // showContent declares if the area should be showing all details when loading the page
                 'showContent' => true,
                 'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('position')->orderBy('id')->get())->resolve(),
@@ -44,12 +45,17 @@ class AreaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // varchar(7)-Spalte: ungültige Werte würden im Strict-Mode einen SQL-Fehler (500) werfen
+        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+
         $this->areaService->createByRequest($request);
         return Redirect::route('areas.management');
     }
 
     public function update(Request $request, Area $area): RedirectResponse
     {
+        $request->validate(['color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+
         $this->areaService->updateByRequest($area, $request);
         return Redirect::route('areas.management');
     }

@@ -61,6 +61,8 @@ readonly class VacationService
             $notificationService
         );
 
+        $seriesDates = [];
+
         if ($request->is_series) {
             $vacationSeries = $vacationSeriesService->create(
                 $request->get('series_repeat'),
@@ -71,7 +73,7 @@ readonly class VacationService
                 'is_series' => true
             ]);
 
-            $this->createSeries(
+            $seriesDates = $this->createSeries(
                 $request->series_repeat,
                 $vacationSeries->id,
                 $request->series_repeat_until,
@@ -89,9 +91,24 @@ readonly class VacationService
 
         $this->invalidateVacationerCache($vacationer);
 
+        // Frei-/Abwesenheits-Einträge lösen Projektzuordnungen bzw. -wünsche auf
+        // (gesammelt über alle Tage der Serie, damit Notifications gebündelt sind).
+        if ($vacationer instanceof User || $vacationer instanceof Freelancer || $vacationer instanceof ServiceProvider) {
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->handleVacationEntry(
+                $vacationer,
+                array_merge([Carbon::parse($request->date)->format('Y-m-d')], $seriesDates),
+                $vacationTypeEnum instanceof \Artwork\Modules\Vacation\Enums\Vacation
+                    ? $vacationTypeEnum->value
+                    : (string) $vacationTypeEnum
+            );
+        }
+
         return $firstVacation;
     }
 
+    /**
+     * @return array<string> die angelegten Serien-Tage (Y-m-d)
+     */
     private function createSeries(
         string $frequency,
         int $seriesId,
@@ -102,7 +119,8 @@ readonly class VacationService
         \Artwork\Modules\Vacation\Enums\Vacation $vacationTypeEnum,
         VacationConflictService $vacationConflictService,
         NotificationService $notificationService
-    ): void {
+    ): array {
+        $createdDates = [];
         $series_until = Carbon::parse($series_repeat_until);
         $series_until->addDay();
         $whileEndDate = Carbon::parse($date)->setTimezone(config('app.timezone'));
@@ -111,6 +129,7 @@ readonly class VacationService
         if ($frequency === 'daily') {
             while ($whileEndDate->addDay() < $series_until) {
                 $date = $whileEndDate->format('Y-m-d');
+                $createdDates[] = $date;
                 $newVacation = $vacationer->vacations()->create([
                     'start_time' => $data->start_time,
                     'end_time' => $data->end_time,
@@ -133,6 +152,7 @@ readonly class VacationService
         if ($frequency === 'weekly') {
             while ($whileEndDate->addWeek() < $series_until) {
                 $date = $whileEndDate->format('Y-m-d');
+                $createdDates[] = $date;
                 $weekly = $vacationer->vacations()->create([
                     'start_time' => $data->start_time,
                     'end_time' => $data->end_time,
@@ -152,6 +172,8 @@ readonly class VacationService
                 );
             }
         }
+
+        return $createdDates;
     }
 
     public function update(
@@ -178,6 +200,20 @@ readonly class VacationService
         );
 
         $this->invalidateVacationCache($vacation);
+
+        // Parität zu create()/updateEntry(): auch der Legacy-Update-Pfad (z. B. Datums-
+        // Verschiebung) löst Projektzuordnungen/-wünsche am neuen Tag auf
+        $vacationer = $vacation->vacationer_type::find($vacation->vacationer_id);
+        if ($vacationer instanceof User
+            || $vacationer instanceof Freelancer
+            || $vacationer instanceof ServiceProvider
+        ) {
+            app(\Artwork\Modules\Project\Services\ProjectDayAssignmentService::class)->handleVacationEntry(
+                $vacationer,
+                [Carbon::parse($vacation->date)->format('Y-m-d')],
+                (string) $vacation->type
+            );
+        }
 
         return $vacation;
     }

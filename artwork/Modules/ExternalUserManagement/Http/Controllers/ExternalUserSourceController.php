@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ExternalUserManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SyncExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Http\Requests\StoreExternalUserSourceRequest;
 use Artwork\Modules\ExternalUserManagement\Http\Requests\UpdateExternalUserSourceRequest;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
@@ -14,6 +15,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 
 class ExternalUserSourceController extends Controller
@@ -99,6 +101,48 @@ class ExternalUserSourceController extends Controller
         return $this->runConnectionTest($tempSource);
     }
 
+    public function sync(ExternalUserSource $externalUserSource): JsonResponse
+    {
+        $this->authorize('view', GeneralSettings::class);
+
+        if ($externalUserSource->type !== 'ldap') {
+            return response()->json([
+                'success' => false,
+                'message' => __('Manual sync is only available for LDAP / Active Directory sources.'),
+            ], 422);
+        }
+
+        if (!$externalUserSource->active) {
+            return response()->json([
+                'success' => false,
+                'message' => __('This source is inactive. Activate it before syncing.'),
+            ], 422);
+        }
+
+        Cache::put(SyncExternalUserSource::statusKey($externalUserSource->id), [
+            'status' => 'queued',
+            'message' => __('LDAP synchronization was queued.'),
+            'result' => null,
+            'updated_at' => now()->toIso8601String(),
+        ], now()->addDay());
+        SyncExternalUserSource::dispatch($externalUserSource);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('LDAP synchronization was queued.'),
+        ], 202);
+    }
+
+    public function syncStatus(ExternalUserSource $externalUserSource): JsonResponse
+    {
+        $this->authorize('view', GeneralSettings::class);
+
+        return response()->json(Cache::get(
+            SyncExternalUserSource::statusKey($externalUserSource->id),
+            ['status' => 'idle', 'message' => __('No synchronization is running.'), 'result' => null]
+        ));
+    }
+
     private function runConnectionTest(ExternalUserSource $source): JsonResponse
     {
         if ($source->type === 'identity_provider') {
@@ -121,19 +165,36 @@ class ExternalUserSourceController extends Controller
 
         try {
             $success = $this->ldapService->testConnection($source);
-
-            return response()->json([
-                'success' => $success,
-                'message' => $success
-                    ? __('LDAP connection successful')
-                    : __('LDAP connection failed. Please check your configuration.')
-            ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => __('LDAP connection failed. Please check your configuration.')
             ], 500);
         }
+
+        if (!$success) {
+            return response()->json([
+                'success' => false,
+                'message' => __('LDAP connection failed. Please check your configuration.')
+            ]);
+        }
+
+        // Verbindung steht – zusätzlich die ersten gefundenen User zur Kontrolle laden.
+        try {
+            $users = $this->ldapService->previewUsers($source, 3);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => __('LDAP connection successful, but the user search failed.'),
+                'users' => [],
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('LDAP connection successful'),
+            'users' => $users,
+        ]);
     }
 }
-

@@ -184,6 +184,78 @@
                 </div>
             </section>
 
+            <!-- Projekt zuordnen -->
+            <section class="space-y-3 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
+                <div>
+                    <h4 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                        {{ $t('Assign project') }}
+                    </h4>
+                    <p class="text-[11px] text-zinc-400 mt-0.5">
+                        {{ $t('Optional: bindingly assign all selected persons to a project on the selected days. Only projects covering all selected days can be chosen.') }}
+                    </p>
+                </div>
+
+                <div v-if="selectedAssignmentProject" class="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: colorForProjectId(selectedAssignmentProject.id) }"></span>
+                        <span class="truncate text-zinc-800">{{ selectedAssignmentProject.name }}</span>
+                        <span v-if="selectedAssignmentProject.period_start" class="text-[11px] text-zinc-400 shrink-0">
+                            {{ formatAssignmentDate(selectedAssignmentProject.period_start) }} - {{ formatAssignmentDate(selectedAssignmentProject.period_end) }}
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        @click="selectAssignmentProject(null)"
+                    >
+                        <PropertyIcon name="IconX" class="h-4 w-4" stroke-width="1.5" />
+                    </button>
+                </div>
+
+                <template v-else>
+                    <BaseInput
+                        id="cell-multi-edit-project-search"
+                        v-model="assignmentProjectSearch"
+                        :label="$t('Search project')"
+                        :show-label="false"
+                        :placeholder="$t('Search project')"
+                        no-margin-top
+                    />
+                    <div class="max-h-44 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-50">
+                        <div v-if="loadingAssignmentProjects" class="px-3 py-2.5 text-xs text-zinc-400">
+                            {{ $t('Loading...') }}
+                        </div>
+                        <div v-else-if="!assignmentProjectOptions.length" class="px-3 py-2.5 text-xs text-zinc-400">
+                            {{ $t('No projects found') }}
+                        </div>
+                        <button
+                            v-for="project in assignmentProjectOptions"
+                            :key="project.id"
+                            type="button"
+                            class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition-colors"
+                            :class="project.covers_all_days ? 'hover:bg-zinc-50' : 'opacity-50 cursor-not-allowed'"
+                            :disabled="!project.covers_all_days"
+                            @click="selectAssignmentProject(project)"
+                        >
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: colorForProjectId(project.id) }"></span>
+                                <span class="truncate text-zinc-800 text-xs">{{ project.name }}</span>
+                            </div>
+                            <span class="shrink-0 text-[10px]" :class="project.covers_all_days ? 'text-zinc-400' : 'text-amber-600'">
+                                <template v-if="project.covers_all_days">
+                                    <template v-if="project.period_start">
+                                        {{ formatAssignmentDate(project.period_start) }} - {{ formatAssignmentDate(project.period_end) }}
+                                    </template>
+                                </template>
+                                <template v-else>
+                                    {{ $t('covers {0} of {1} days', [coveredDayCount(project), selectedDayCount]) }}
+                                </template>
+                            </span>
+                        </button>
+                    </div>
+                </template>
+            </section>
+
             <!-- Kommentar -->
             <section class="space-y-3 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
                 <div>
@@ -217,7 +289,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import {
     Listbox,
     ListboxButton,
@@ -225,6 +297,8 @@ import {
     ListboxOptions,
 } from '@headlessui/vue';
 import { useForm } from '@inertiajs/vue3';
+import axios from 'axios';
+import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
 
 import AlertComponent from '@/Components/Alerts/AlertComponent.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -259,7 +333,77 @@ const multiEditCellForm = useForm({
     },
     entities: props.multiEditCellByDayAndUser,
     individual_times: [],
+    project_id: null,
 });
+
+// --- Projektzuordnung: nur Projekte wählbar, deren Zeitraum ALLE selektierten Tage abdeckt ---
+const selectedDays = computed(() => {
+    const days = Object.values(props.multiEditCellByDayAndUser ?? {}).flatMap(e => e.days ?? []);
+    return [...new Set(days)].sort();
+});
+const selectedDayCount = computed(() => selectedDays.value.length);
+
+const assignmentProjectSearch = ref('');
+const assignmentProjectOptions = ref([]);
+const loadingAssignmentProjects = ref(false);
+const selectedAssignmentProject = ref(null);
+
+let assignmentProjectDebounce = null;
+let assignmentProjectRequest = null;
+let assignmentProjectRequestSequence = 0;
+
+async function loadAssignmentProjects() {
+    if (!selectedDays.value.length) {
+        assignmentProjectOptions.value = [];
+        return;
+    }
+    const requestSequence = ++assignmentProjectRequestSequence;
+    assignmentProjectRequest?.abort();
+    assignmentProjectRequest = new AbortController();
+    loadingAssignmentProjects.value = true;
+    try {
+        const { data } = await axios.get(route('project-day-assignments.projects'), {
+            signal: assignmentProjectRequest.signal,
+            params: {
+                days: selectedDays.value,
+                search: assignmentProjectSearch.value || undefined,
+            },
+        });
+        if (requestSequence === assignmentProjectRequestSequence) {
+            assignmentProjectOptions.value = data.projects ?? [];
+        }
+    } catch (error) {
+        if (error?.code !== 'ERR_CANCELED' && requestSequence === assignmentProjectRequestSequence) {
+            assignmentProjectOptions.value = [];
+        }
+    } finally {
+        if (requestSequence === assignmentProjectRequestSequence) {
+            loadingAssignmentProjects.value = false;
+        }
+    }
+}
+
+watch([assignmentProjectSearch, () => selectedDays.value.join(',')], () => {
+    clearTimeout(assignmentProjectDebounce);
+    assignmentProjectDebounce = setTimeout(loadAssignmentProjects, 300);
+});
+
+onMounted(loadAssignmentProjects);
+onUnmounted(() => {
+    clearTimeout(assignmentProjectDebounce);
+    assignmentProjectRequest?.abort();
+});
+
+function selectAssignmentProject(project) {
+    selectedAssignmentProject.value = project;
+    multiEditCellForm.project_id = project?.id ?? null;
+}
+
+/** Wie viele der selektierten Tage im Projektzeitraum liegen (für den Disabled-Hinweis) */
+function coveredDayCount(project) {
+    if (!project.period_start || !project.period_end) return 0;
+    return selectedDays.value.filter(d => d >= project.period_start && d <= project.period_end).length;
+}
 
 // Farbpunkt für aktuellen Vacation-Typ
 const currentVacationDotClass = computed(() => {

@@ -33,7 +33,8 @@
 </div>
 
 <div class="text-center mb-6">
-    <h2 class="font-bold text-xl">Interne Materialausgabe Nr. {{ $issue->id }}</h2>
+    <h2 class="font-bold text-xl">{{ $issue->name ?: 'Interne Materialausgabe' }}</h2>
+    <div style="font-size: 12px; color: #6b7280;">Interne Materialausgabe Nr. {{ $issue->id }}</div>
 </div>
 
 <div class="mb-4">
@@ -69,7 +70,7 @@
 
 @if($issue->notes)
     <div class="mb-4">
-        <p class="font-bold">Bemerkungen:</p>
+        <p class="font-bold">Beschreibung:</p>
         <p class="text-sm">{!! nl2br(e($issue->notes)) !!}</p>
     </div>
 @endif

@@ -19,4 +19,16 @@ class CreateDayServiceRequest extends FormRequest
             'hex_color' => 'required',
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => __('Name'),
+            'icon' => __('Icon'),
+            'hex_color' => __('Color'),
+        ];
+    }
 }

@@ -53,6 +53,8 @@
                 <UserShiftPlan
                     type="freelancer"
                     :totalPlannedWorkingHours="totalPlannedWorkingHours"
+                    :crafts="crafts"
+                    :days-with-data="daysWithData"
                     :date-value="dateValue"
                     :whole-week-date-period="wholeWeekDatePeriod"
                     :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
@@ -280,6 +282,8 @@ const props = defineProps({
     shiftQualifications: Array,
     freelancer_to_edit_whole_week_date_period_vacations: Array,
     firstProjectShiftTabId: [String, Number],
+    daysWithData: Object,
+    crafts: Array,
 })
 
 const { proxy } = getCurrentInstance()

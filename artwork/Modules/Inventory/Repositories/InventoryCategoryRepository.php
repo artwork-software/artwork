@@ -69,7 +69,8 @@ readonly class InventoryCategoryRepository
                             'subCategory:id,name',
                             'properties',
                             'images' => function ($q): void {
-                                $q->where('is_main_image', true)->select('id', 'inventory_article_id', 'image');
+                                $q->where('is_main_image', true)
+                                    ->select('id', 'inventory_article_id', 'image', 'thumbnail', 'is_main_image');
                             }
                         ])
                         ->withCount('detailedArticleQuantities');

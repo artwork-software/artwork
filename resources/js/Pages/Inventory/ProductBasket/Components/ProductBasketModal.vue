@@ -190,9 +190,8 @@ const currentBasketObj = computed(() =>
 
 const getMainImageInImage = (article) => {
     const images = article.images || [];
-    const mainImage = images.find(image => image.is_main_image);
-    if (mainImage) return { image: '/storage/' + mainImage.image };
-    if (images.length > 0) return { image: '/storage/' + images[0].image };
+    const mainImage = images.find(image => image.is_main_image) ?? images[0];
+    if (mainImage) return { image: '/storage/' + (mainImage.thumbnail || mainImage.image) };
     return { image: usePage().props.big_logo };
 };
 

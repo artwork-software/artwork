@@ -1,15 +1,20 @@
 <template>
-    <ArtworkBaseModal
-        :title="$t('Export Shift Plan')"
-        :description="$t('Export the shift plan for this project as a PDF document.')"
-        @close="emit('close')"
-    >
-        <div class="space-y-5">
+    <div class="mx-auto w-full max-w-4xl">
+        <div class="flex flex-col space-y-6">
+            <!-- What this export does -->
+            <section>
+                <h1 class="text-lg font-semibold text-zinc-900">
+                    {{ $t('PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT') }}
+                </h1>
+                <p class="mt-1 text-sm text-zinc-600">
+                    {{ $t('Export the shift plan for this project as a PDF document.') }}
+                </p>
+            </section>
+
             <!-- Project mini header -->
-            <div class="rounded-2xl border border-zinc-200/70 bg-white px-4 py-3 shadow-sm">
+            <section class="rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="grid size-10 place-items-center rounded-2xl bg-zinc-900 text-white shadow-sm">
-                        <!-- simple icon -->
                         <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M7 7h10M7 12h10M7 17h6" />
                             <path d="M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z" />
@@ -18,7 +23,7 @@
 
                     <div class="min-w-0 flex-1">
                         <div class="truncate text-sm font-semibold text-zinc-900">
-                            {{ props.project?.name ?? $t('Project') }}
+                            {{ project?.name ?? $t('Project') }}
                         </div>
                         <div class="text-xs text-zinc-500">
                             {{ $t('One day per page · Compact timeline layout') }}
@@ -29,13 +34,12 @@
                         PDF
                     </span>
                 </div>
-            </div>
+            </section>
 
             <!-- Privacy mode -->
-            <div class="rounded-2xl border border-zinc-200/70 bg-white px-4 py-4 shadow-sm">
+            <section class="rounded-2xl border border-zinc-200 bg-white px-4 py-4 shadow-sm">
                 <div class="flex items-start gap-4">
                     <div class="grid size-10 place-items-center rounded-2xl bg-zinc-100 text-zinc-700">
-                        <!-- shield icon -->
                         <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 22s8-4 8-10V6l-8-3-8 3v6c0 6 8 10 8 10z" />
                         </svg>
@@ -103,82 +107,52 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Actions -->
-            <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
-                <button
-                    type="button"
-                    class="h-11 w-full sm:w-auto rounded-2xl border border-zinc-200/70 bg-white px-4 text-sm font-semibold text-zinc-800 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/20"
-                    @click="emit('close')"
-                >
-                    {{ $t('Cancel') }}
-                </button>
-
-                <button
-                    type="button"
-                    class="h-11 w-full sm:w-auto rounded-2xl bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/20 disabled:cursor-not-allowed disabled:opacity-60"
-                    :disabled="!props.project?.id || loading"
+            <!-- Export -->
+            <section class="flex items-center justify-end">
+                <BaseUIButton
                     @click="handleExport"
-                >
-                    <span v-if="!loading" class="inline-flex items-center gap-2">
-                        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 3v10" />
-                            <path d="M8 9l4 4 4-4" />
-                            <path d="M4 17v3h16v-3" />
-                        </svg>
-                        {{ $t('Export PDF') }}
-                    </span>
-
-                    <span v-else class="inline-flex items-center gap-2">
-                        <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
-                            <path class="opacity-75" fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-2A8 8 0 0 0 12 4V2z" />
-                        </svg>
-                        {{ $t('Preparing…') }}
-                    </span>
-                </button>
-            </div>
+                    :label="$t('Export PDF')"
+                    icon="IconFileExport"
+                    :disabled="!project?.id || loading"
+                    is-add-button
+                />
+            </section>
         </div>
-    </ArtworkBaseModal>
+    </div>
 </template>
 
 <script setup>
-import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue"
-import { ref } from "vue"
+import { computed, ref } from "vue"
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
+import { useTranslation } from "@/Composeables/Translation.js"
 
+const $t = useTranslation()
 const emit = defineEmits(["close"])
 
 const props = defineProps({
-    project: { type: Object, required: false, default: null },
+    configuration: { type: Object, required: false, default: () => ({}) },
 })
 
+const project = computed(() => props.configuration?.project ?? null)
 const privacyMode = ref(false)
 const loading = ref(false)
 
-const openExportRouteInNewTab = () => {
-    const projectId = props.project?.id ?? null
-    if (!projectId) return
+const handleExport = () => {
+    const projectId = project.value?.id ?? null
+    if (!projectId || loading.value) return
 
-    const url = route("projects.exports.shift-plan", {
-        project: projectId,
-        privacyMode: privacyMode.value ? 1 : 0,
-    })
-    window.open(url, "_blank")
-}
-
-const handleExport = async () => {
-    if (!props.project?.id || loading.value) return
     loading.value = true
     try {
-        openExportRouteInNewTab()
+        const url = route("projects.exports.shift-plan", {
+            project: projectId,
+            privacyMode: privacyMode.value ? 1 : 0,
+        })
+        window.open(url, "_blank")
     } finally {
         // kurzer “Instant feedback” – falls der Tab sofort aufgeht
         window.setTimeout(() => (loading.value = false), 450)
     }
 }
 </script>
-
-<style scoped>
-/* bewusst leer: Tailwind regelt */
-</style>

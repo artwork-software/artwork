@@ -9,7 +9,7 @@
                          class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
                         <component :is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
                         <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Upload Images') }}</span>
-                        <input type="file" accept="image/*" class="sr-only" ref="articleImageInput" multiple
+                        <input type="file" accept="image/*,.heic,.heif" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
                     </div>
                 </div>
@@ -24,11 +24,14 @@
                             <div class="flex flex-col items-center justify-center w-full truncate min-h-16 gap-y-2">
                                 <div v-if="image._origin === 'old'">
                                     <img :src="createImageURL(image)" alt="New image preview"
-                                         class="w-full h-24 object-cover"/>
+                                         class="w-full h-24 object-cover"
+                                         @error="(e) => e.target.src = usePage().props.big_logo"/>
                                 </div>
                                 <div v-else>
+                                    <!-- HEIC-Previews kann der Browser nicht rendern (Konvertierung passiert erst serverseitig) → Fallback-Logo -->
                                     <img :src="createImageURL(image)" alt="New image preview"
-                                         class="w-full h-24 object-cover"/>
+                                         class="w-full h-24 object-cover"
+                                         @error="(e) => e.target.src = usePage().props.big_logo"/>
                                 </div>
                                 <div class="flex w-full justify-center">
                                     <div class="truncate font-medium font-lexend text-xs">
@@ -39,6 +42,12 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div v-if="imageUploadErrors.length" class="px-6 pb-4">
+                <p v-for="(error, idx) in imageUploadErrors" :key="idx" class="text-sm text-red-500 font-lexend">
+                    {{ error }}
+                </p>
             </div>
 
             <div class="px-6 pb-4">
@@ -1140,6 +1149,14 @@
                         {{ error }}
                     </p>
                 </div>
+                <div v-if="serverErrors.length" class="flex flex-col items-center gap-y-1 px-6">
+                    <p class="text-red-500 font-lexend text-sm text-center font-semibold">
+                        {{ $t('The article could not be saved:') }}
+                    </p>
+                    <p v-for="(error, idx) in serverErrors" :key="idx" class="text-red-500 font-lexend text-sm text-center">
+                        {{ error }}
+                    </p>
+                </div>
             </div>
         </form>
 
@@ -1559,6 +1576,10 @@ const addImage = () => articleImageInput.value?.click()
 const capitalizeFirstLetter = (v) => String(v).charAt(0).toUpperCase() + String(v).slice(1)
 
 
+// Backend validation errors (422) — without this they were silently swallowed
+// and the modal just stayed open with no feedback.
+const serverErrors = computed(() => Object.values(articleForm.errors ?? {}))
+
 const submit = () => {
 
     if (!canSaveWithTags.value) {
@@ -1665,8 +1686,41 @@ const copyDetailedArticle = (d) => {
     syncAcrossValuesToDetailedArticles()
 }
 
+// Mirrors backend validation: Store-/UpdateInventoryArticleRequest 'newImages.*' => ['image', 'max:…'].
+// The limit is configurable per house via inventory settings (GeneralSettings).
+const maxImageSizeMb = computed(() => usePage().props.inventoryArticleImageMaxSizeMb ?? 10)
+const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml', 'image/heic', 'image/heif']
+// Windows/Linux browsers often report an empty MIME type for HEIC — match by extension too.
+const HEIC_FILE_NAME = /\.(heic|heif)$/i
+const imageUploadErrors = ref([])
+
 const handleImageInput = (e) => {
-    articleForm.newImages = Array.from(e.target.files)
+    const files = Array.from(e.target.files)
+    const errors = []
+    const validFiles = []
+
+    files.forEach((file) => {
+        if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type) && !HEIC_FILE_NAME.test(file.name)) {
+            errors.push($t(
+                'The image "{0}" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.',
+                [file.name]
+            ))
+            return
+        }
+        if (file.size > maxImageSizeMb.value * 1024 * 1024) {
+            errors.push($t(
+                'The image "{0}" is too large ({1} MB) – each image may be a maximum of {2} MB.',
+                [file.name, (file.size / 1024 / 1024).toFixed(1), maxImageSizeMb.value]
+            ))
+            return
+        }
+        validFiles.push(file)
+    })
+
+    articleForm.newImages = validFiles
+    imageUploadErrors.value = errors
+    // Reset so selecting the same file again re-triggers the input event.
+    e.target.value = ''
 }
 
 const allImages = computed(() => [
@@ -1685,7 +1739,7 @@ const removeImage = (image) => {
     }
 }
 
-const createImageURL = (img) => !img ? '' : (img._origin === 'old' && img.image ? `/storage/${img.image}` : (img._origin === 'new' && img.file instanceof Blob ? URL.createObjectURL(img.file) : ''))
+const createImageURL = (img) => !img ? '' : (img._origin === 'old' && img.image ? `/storage/${img.thumbnail || img.image}` : (img._origin === 'new' && img.file instanceof Blob ? URL.createObjectURL(img.file) : ''))
 
 const updateSelectedSubCategory = (sc) => {
     selectedSubCategory.value = null;

@@ -81,12 +81,22 @@
             <hr class="mt-5"/>
             <h2 class="headline2">{{ $t('Import a specific booking date') }}</h2>
             <div class="xsLight col-span-9">
-                {{ $t('Import individual booking days again. Existing data is overwritten with new data.') }}
+                {{ $t('Import specific bookings by KTR (cost center), date range, or both. Existing data is overwritten with new data.') }}
             </div>
             <div v-if="!sageInterfaceIsConfigured()" class="errorText">
                 {{ $t('Please configure the Sage interface first.') }}
             </div>
             <div class="flex flex-row items-center space-x-4 flex-wrap gap-y-2">
+                <div class="flex flex-row items-center gap-x-2">
+                    <span class="xsLight">{{ $t('KTR') }}</span>
+                    <div class="w-48">
+                        <BaseInput type="text" :label="$t('KTR')" id="specificDayImportKtr"
+                                   v-model="specificDayImportKtr"
+                                   :disabled="!sageInterfaceIsConfigured()"
+                                   :class="[!sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer']"
+                                   :placeholder="$t('e.g. R12364')"/>
+                    </div>
+                </div>
                 <div class="flex flex-row items-center gap-x-2">
                     <span class="xsLight">{{ $t('From') }}</span>
                     <div class="w-48">
@@ -108,7 +118,8 @@
                 <RefreshIcon :class="[
                     !sageInterfaceIsConfigured() ||
                     importProcessing ||
-                    specificDayImportDateFrom === null || specificDayImportDateFrom === ''
+                    ((specificDayImportDateFrom === null || specificDayImportDateFrom === '') &&
+                    (!specificDayImportKtr || specificDayImportKtr.trim() === ''))
                         ? 'bg-gray-600 cursor-not-allowed'
                         : 'bg-artwork-buttons-create cursor-pointer',
                     'w-10 h-10 rounded-full text-white p-2'
@@ -164,6 +175,18 @@
 
         <hr class="my-5"/>
 
+        <div class="flex flex-col space-y-3">
+            <h2 class="headline2">{{ $t('Sage protocol') }}</h2>
+            <div class="xsLight col-span-9">
+                {{ $t('Log of imported and deleted Sage bookings') }}
+            </div>
+            <div>
+                <FormButton :text="$t('Open protocol')" @click="showLogModal = true"/>
+            </div>
+        </div>
+
+        <hr class="my-5"/>
+
         <div class="flex flex-col">
             <div class="headline2">
                 {{ $t('Column Order') }}
@@ -198,6 +221,7 @@
                                 :titel="$t('Delete bookings')"
                                 :description="$t('Are you sure you want to delete the selected booking data?')"
                                 @closed="onDeleteBookingDaysConfirmationClosed" />
+        <SageBookingLogModal v-if="showLogModal" @closed="showLogModal = false"/>
         <success-modal v-if="$page.props.flash.success"
                        :title="$t('Sage interface')"
                        :description="$page.props.flash.success"
@@ -222,6 +246,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import SageBookingLogModal from "@/Pages/Interfaces/Sage/SageBookingLogModal.vue";
 
 export default defineComponent({
     components: {
@@ -230,6 +255,7 @@ export default defineComponent({
         ConfirmationComponent,
         SuccessModal,
         ErrorComponent,
+        SageBookingLogModal,
         InformationCircleIcon,
         RefreshIcon,
         TrashIcon,
@@ -254,6 +280,7 @@ export default defineComponent({
                 enabled: this.sageSettings?.enabled ?? false
             }),
             importProcessing: false,
+            specificDayImportKtr: null,
             specificDayImportDateFrom: null,
             specificDayImportDateTo: null,
             deleteBookingDaysDateFrom: null,
@@ -261,6 +288,7 @@ export default defineComponent({
             deleteBookingDaysKtr: null,
             deleteAssignedData: false,
             showDeleteBookingDaysConfirmation: false,
+            showLogModal: false,
             dragging: false
         }
     },
@@ -282,12 +310,18 @@ export default defineComponent({
             });
         },
         initializeSageImportForSpecificDay() {
-            if (!this.sageInterfaceIsConfigured() || this.importProcessing || !this.specificDayImportDateFrom) return;
+            if (!this.sageInterfaceIsConfigured() || this.importProcessing) return;
+
+            const hasKtr = this.specificDayImportKtr && this.specificDayImportKtr.trim() !== '';
+            const hasDate = this.specificDayImportDateFrom && this.specificDayImportDateFrom !== '';
+            if (!hasKtr && !hasDate) return;
+
             this.importProcessing = true;
             const specificDayTo = this.specificDayImportDateTo || this.specificDayImportDateFrom;
             this.$inertia.post(route('tool.interfaces.sage.initializeSpecificDay'), {
-                specificDayFrom: this.specificDayImportDateFrom,
-                specificDayTo: specificDayTo
+                ktr: hasKtr ? this.specificDayImportKtr.trim() : null,
+                specificDayFrom: this.specificDayImportDateFrom || null,
+                specificDayTo: specificDayTo || null
             }, {
                 preserveScroll: true,
                 preserveState: false,

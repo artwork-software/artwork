@@ -27,9 +27,31 @@
                         <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40" />
                         <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40" />
                         <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon />
+                        <BaseUIButton
+                            v-if="exportOptions"
+                            :label="$t('Excel-Export')"
+                            @click="showExportModal = true"
+                            hide-icon
+                        />
                     </div>
                 </template>
             </ToolbarHeader>
+
+            <BiDashboardExportModal
+                v-if="showExportModal && exportOptions"
+                :options="exportOptions"
+                :default-date-from="dateFrom"
+                :default-date-to="dateTo"
+                @close="showExportModal = false"
+            />
+
+            <!-- Onboarding hint: BI component not placed in any project tab -->
+            <div v-if="!biComponentInTab" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
+                <span>{{ $t('The BI component is not yet included in any project tab. Add it in the project settings under "Tab Settings" so BI figures can be entered on projects.') }}</span>
+                <Link :href="route('tab.index')" class="shrink-0 font-medium text-amber-900 hover:underline">
+                    {{ $t('Open tab settings') }}
+                </Link>
+            </div>
 
             <!-- Onboarding hint: no tag linked to event types -->
             <div v-if="!tagsLinked" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
@@ -76,15 +98,29 @@
             />
 
             <!-- KPI tiles -->
-            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-                <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                    <p class="text-xs text-gray-500">{{ $t(kpi.label) }}</p>
-                    <p class="text-xl font-semibold text-gray-900 mt-1">{{ kpi.value }}</p>
-                    <p v-if="kpi.delta !== null" :class="['text-xs mt-1', kpi.delta >= 0 ? 'text-emerald-600' : 'text-rose-600']">
-                        {{ kpi.delta >= 0 ? '▲' : '▼' }} {{ Math.abs(kpi.delta).toFixed(1) }} % {{ $t('vs. previous year') }}
-                    </p>
-                    <p v-if="kpi.note" class="text-[10px] text-indigo-600 mt-0.5 leading-tight">{{ kpi.note }}</p>
+            <div>
+                <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+                    <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                        <p class="text-xs text-gray-500 inline-flex items-center gap-1">
+                            {{ $t(kpi.label) }}
+                            <ToolTipComponent
+                                v-if="kpi.tooltip"
+                                direction="bottom"
+                                :tooltip-text="kpi.tooltip"
+                                icon="IconInfoCircle"
+                                icon-size="h-3.5 w-3.5"
+                            />
+                        </p>
+                        <p class="text-xl font-semibold text-gray-900 mt-1">{{ kpi.value }}</p>
+                        <p v-if="kpi.delta !== null" :class="['text-xs mt-1', kpi.delta >= 0 ? 'text-emerald-600' : 'text-rose-600']">
+                            {{ kpi.delta >= 0 ? '▲' : '▼' }} {{ kpi.deltaText }} {{ $t('vs. previous year') }}
+                        </p>
+                        <p v-if="kpi.note" class="text-[10px] text-indigo-600 mt-0.5 leading-tight">{{ kpi.note }}</p>
+                    </div>
                 </div>
+                <p v-if="yoyExcludedCount > 0" class="text-xs text-gray-400 mt-1.5">
+                    {{ yoyExcludedCount }} {{ $t('project(s) with time-neutral total figures are not part of the year-over-year comparison.') }}
+                </p>
             </div>
 
             <!-- Monatliche Entwicklung -->
@@ -147,7 +183,7 @@
                                         <span v-if="col.key === 'effort_score'" @click.stop>
                                             <ToolTipComponent
                                                 direction="left"
-                                                :tooltip-text="$t('Weighted proxy for internal effort: 2 × contracts + 1 × bookings + 1.5 × open tasks + 0.5 × documents + 0.1 × effort hours.')"
+                                                :tooltip-text="effortScoreTooltip"
                                                 icon="IconInfoCircle"
                                                 icon-size="h-3.5 w-3.5"
                                             />
@@ -182,7 +218,7 @@
                                                 :style="{ width: Math.min(row.occupancy, 100) + '%' }"
                                             ></div>
                                         </div>
-                                        <span class="text-xs whitespace-nowrap">{{ row.occupancy.toFixed(1) }} %</span>
+                                        <span class="text-xs whitespace-nowrap">{{ formatPercent(row.occupancy) }}</span>
                                     </div>
                                     <span v-else class="text-gray-300">—</span>
                                 </td>
@@ -208,6 +244,7 @@ import { ref, computed, watch } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import { IconChartHistogram, IconX, IconPencil } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
+import BiDashboardExportModal from '@/Pages/Projects/Components/BiComponents/BiDashboardExportModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -221,12 +258,23 @@ const t = useTranslation();
 const props = defineProps({
     dashboard: { type: Object, required: true },
     firstProjectTabId: { type: [Number, String], default: null },
+    biComponentInTab: { type: Boolean, default: true },
+    // null, wenn der User kein Export-Recht hat → Button bleibt verborgen
+    exportOptions: { type: Object, default: null },
 });
+
+const exportOptions = computed(() => props.exportOptions);
+const showExportModal = ref(false);
 
 const firstProjectTabId = computed(() => props.firstProjectTabId);
 
 const kpis = computed(() => props.dashboard.kpis ?? {});
+// Jahresvergleich läuft über comparable_kpis (gleiches Zeitfenster, gleiche
+// Ausschlussregeln wie previous_kpis) — nicht über die Anzeige-KPIs
+const comparableKpis = computed(() => props.dashboard.comparable_kpis ?? props.dashboard.kpis ?? {});
 const previousKpis = computed(() => props.dashboard.previous_kpis ?? {});
+const yoyExcludedCount = computed(() => previousKpis.value.excluded_total_mode_projects ?? 0);
+const scoreWeights = computed(() => props.dashboard.score_weights ?? null);
 const byCategory = computed(() => props.dashboard.by_category ?? []);
 const projects = computed(() => props.dashboard.projects ?? []);
 const monthly = computed(() => props.dashboard.monthly ?? []);
@@ -236,7 +284,9 @@ const tagsLinked = computed(() => props.dashboard.tags_linked !== false);
 const dateFrom = ref(props.dashboard.range?.from ?? '');
 const dateTo = ref(props.dashboard.range?.to ?? '');
 const loading = ref(false);
-const activePreset = ref(null);
+// Ohne explizite URL-Daten gilt serverseitig die Spielzeit → Preset als aktiv markieren
+const initialQuery = new URLSearchParams(window.location.search);
+const activePreset = ref(initialQuery.get('date_from') || initialQuery.get('date_to') ? null : 'playing_time');
 
 // Nach einem Reload die effektiv angewandte Spanne in die Inputs spiegeln
 watch(() => props.dashboard.range, (range) => {
@@ -258,8 +308,10 @@ const onQuickEntrySaved = () => {
 
 const numberFmt = new Intl.NumberFormat('de-DE');
 const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const percentFmt = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const formatInt = (v) => numberFmt.format(v ?? 0);
 const formatCurrency = (v) => currencyFmt.format(v ?? 0);
+const formatPercent = (v) => `${percentFmt.format(v ?? 0)} %`;
 
 // --- Zeitraum-Schnellwahl ---
 
@@ -294,27 +346,87 @@ const applyPreset = (preset) => {
     reload(true);
 };
 
+// Relative Änderung in % (Zähl-/Summen-KPIs), verglichen über comparable_kpis,
+// damit aktuelle und Vorjahres-Basis denselben Ausschlussregeln folgen
 const delta = (key) => {
     const prev = previousKpis.value[key];
-    const cur = kpis.value[key];
+    const cur = comparableKpis.value[key];
     if (!prev || prev === 0 || cur === null || cur === undefined) return null;
     return (cur - prev) / prev * 100;
 };
 
-const kpiTiles = computed(() => [
-    {
-        key: 'visitors',
-        label: 'Visitors',
-        value: (kpis.value.visitors_estimated ? '≈ ' : '') + formatInt(kpis.value.visitors),
-        delta: delta('visitors'),
-        note: kpis.value.visitors_estimated ? t('partly estimated from sold tickets') : null,
-    },
-    { key: 'revenue', label: 'Revenue', value: formatCurrency(kpis.value.revenue), delta: delta('revenue') },
-    { key: 'occupancy', label: 'Occupancy rate', value: kpis.value.occupancy !== null && kpis.value.occupancy !== undefined ? kpis.value.occupancy.toFixed(1) + ' %' : '—', delta: delta('occupancy') },
-    { key: 'event_days', label: 'Event days', value: formatInt(kpis.value.event_days), delta: delta('event_days') },
-    { key: 'performances', label: 'Performances', value: formatInt(kpis.value.performances), delta: delta('performances') },
-    { key: 'project_count', label: 'Productions', value: formatInt(kpis.value.project_count), delta: null },
-]);
+// Differenz in Prozentpunkten — für Raten-KPIs wie die Auslastung, wo eine
+// relative Änderung ("+12,5 %") garantiert falsch gelesen würde
+const deltaPoints = (key) => {
+    const prev = previousKpis.value[key];
+    const cur = comparableKpis.value[key];
+    if (prev === null || prev === undefined || cur === null || cur === undefined) return null;
+    return cur - prev;
+};
+
+const relDeltaText = (d) => (d === null ? null : `${percentFmt.format(Math.abs(d))} %`);
+
+const effortScoreTooltip = computed(() => {
+    const w = scoreWeights.value;
+    if (!w) {
+        return t('Weighted proxy for internal effort: 2 × contracts + 1 × bookings + 1.5 × open tasks + 0.5 × documents + 0.1 × effort hours.');
+    }
+    const fmt = (v) => numberFmt.format(v);
+    return `${t('Weighted proxy for internal effort')}: `
+        + `${fmt(w.contracts)} × ${t('contracts')} + ${fmt(w.bookings)} × ${t('bookings')} + `
+        + `${fmt(w.open_tasks)} × ${t('open tasks')} + ${fmt(w.documents)} × ${t('documents')} + `
+        + `${fmt(w.effort_hours)} × ${t('effort hours')}.`;
+});
+
+const kpiTiles = computed(() => {
+    const visitorsDelta = delta('visitors');
+    const revenueDelta = delta('revenue');
+    const occupancyDelta = deltaPoints('occupancy');
+    const eventDaysDelta = delta('event_days');
+    const performancesDelta = delta('performances');
+
+    return [
+        {
+            key: 'visitors',
+            label: 'Visitors',
+            value: (kpis.value.visitors_estimated ? '≈ ' : '') + formatInt(kpis.value.visitors),
+            delta: visitorsDelta,
+            deltaText: relDeltaText(visitorsDelta),
+            note: kpis.value.visitors_estimated ? t('partly estimated from sold tickets') : null,
+            tooltip: kpis.value.visitors_estimated ? t('Estimated from sold tickets') : null,
+        },
+        {
+            key: 'revenue',
+            label: 'Revenue',
+            value: formatCurrency(kpis.value.revenue),
+            delta: revenueDelta,
+            deltaText: relDeltaText(revenueDelta),
+        },
+        {
+            key: 'occupancy',
+            label: 'Occupancy rate',
+            value: kpis.value.occupancy !== null && kpis.value.occupancy !== undefined ? formatPercent(kpis.value.occupancy) : '—',
+            delta: occupancyDelta,
+            deltaText: occupancyDelta !== null ? `${percentFmt.format(Math.abs(occupancyDelta))} ${t('percentage points')}` : null,
+            tooltip: t('Sold tickets ÷ seat capacity of the rooms played in the selected period.'),
+        },
+        {
+            key: 'event_days',
+            label: 'Event days',
+            value: formatInt(kpis.value.event_days),
+            delta: eventDaysDelta,
+            deltaText: relDeltaText(eventDaysDelta),
+        },
+        {
+            key: 'performances',
+            label: 'Performances',
+            value: formatInt(kpis.value.performances),
+            delta: performancesDelta,
+            deltaText: relDeltaText(performancesDelta),
+        },
+        { key: 'project_count', label: 'Productions', value: formatInt(kpis.value.project_count), delta: null },
+    ];
+});
 
 const palette = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#06b6d4', '#a855f7', '#ef4444', '#14b8a6', '#eab308', '#3b82f6'];
 
@@ -352,6 +464,9 @@ const monthlyChart = computed(() => {
                 tension: 0.3,
                 yAxisID: 'y',
                 order: 2,
+                // Monate ohne Vorjahresdaten kommen als null → Linie aussetzen
+                // statt eine irreführende 0-Linie zu zeichnen
+                spanGaps: false,
             },
             {
                 type: 'line',
@@ -373,9 +488,20 @@ const monthlyOptions = {
     maintainAspectRatio: false,
     plugins: {
         legend: { labels: { font: { family: 'inherit' }, boxWidth: 12 } },
+        tooltip: {
+            callbacks: {
+                label: (ctx) => {
+                    if (ctx.parsed.y === null) return null;
+                    const formatted = ctx.dataset.yAxisID === 'y1'
+                        ? currencyFmt.format(ctx.parsed.y)
+                        : numberFmt.format(ctx.parsed.y);
+                    return `${ctx.dataset.label}: ${formatted}`;
+                },
+            },
+        },
     },
     scales: {
-        y: { beginAtZero: true, position: 'left' },
+        y: { beginAtZero: true, position: 'left', ticks: { callback: (v) => numberFmt.format(v) } },
         y1: {
             beginAtZero: true,
             position: 'right',
@@ -394,6 +520,18 @@ const categoryChartOptions = computed(() => ({
     maintainAspectRatio: false,
     plugins: {
         legend: { labels: { font: { family: 'inherit' } } },
+        tooltip: {
+            callbacks: {
+                label: (ctx) => {
+                    // Umsatz-Doughnut in €, Besucher-Bar mit Tausendertrennung
+                    const value = ctx.parsed?.y ?? ctx.parsed;
+                    const formatted = ctx.chart.config.type === 'doughnut'
+                        ? currencyFmt.format(value)
+                        : numberFmt.format(value);
+                    return `${ctx.dataset.label ? ctx.dataset.label + ': ' : ''}${formatted}`;
+                },
+            },
+        },
     },
     onClick: (event, elements, chart) => {
         if (!elements?.length) return;
@@ -493,7 +631,9 @@ const scatterOptions = computed(() => ({
         y: {
             title: { display: true, text: outputUsesRevenue.value ? t('Revenue') : t('Visitors') },
             beginAtZero: true,
-            ticks: outputUsesRevenue.value ? { callback: (v) => currencyFmt.format(v) } : {},
+            ticks: outputUsesRevenue.value
+                ? { callback: (v) => currencyFmt.format(v) }
+                : { callback: (v) => numberFmt.format(v) },
         },
     },
 }));

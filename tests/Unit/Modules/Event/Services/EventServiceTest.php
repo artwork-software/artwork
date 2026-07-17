@@ -5,6 +5,11 @@ namespace Tests\Unit\Modules\Event\Services;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\EventProperty;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Project\Enum\ProjectDayAssignmentType;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectDayAssignment;
+use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -173,6 +178,40 @@ final class EventServiceTest extends TestCase
         foreach ($events as $event) {
             $this->assertSoftDeleted('events', ['id' => $event->id]);
         }
+    }
+
+    #[Test]
+    public function bulk_delete_event_rematerializes_full_period_project_assignments(): void
+    {
+        $project = Project::factory()->create();
+        Event::factory()->create([
+            'project_id' => $project->id,
+            'start_time' => '2026-08-01 10:00:00',
+            'end_time' => '2026-08-01 18:00:00',
+        ]);
+        $eventToDelete = Event::factory()->create([
+            'project_id' => $project->id,
+            'start_time' => '2026-08-03 10:00:00',
+            'end_time' => '2026-08-03 18:00:00',
+        ]);
+        $worker = User::factory()->create();
+        app(ProjectDayAssignmentService::class)->createFullPeriodAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+        );
+
+        $this->service->bulkDeleteEvent(new SupportCollection([$eventToDelete->id]));
+
+        $this->assertSame(
+            ['2026-08-01'],
+            ProjectDayAssignment::query()
+                ->where('project_id', $project->id)
+                ->pluck('date')
+                ->map(static fn ($date): string => Carbon::parse($date)->toDateString())
+                ->all(),
+        );
     }
 
     #[Test]

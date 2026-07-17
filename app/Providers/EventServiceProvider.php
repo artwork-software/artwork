@@ -68,6 +68,12 @@ class EventServiceProvider extends ServiceProvider
         Currency::observe($staticObserver);
         CollectingSociety::observe($staticObserver);
         MoneySource::observe($staticObserver);
+
+        // Projektzeitraum-Änderungen (Termin-Anlage/-Verschiebung/-Löschung/-Restore)
+        // halten die Projektzuordnungen im Dienstplan synchron
+        \Artwork\Modules\Event\Models\Event::observe(
+            \Artwork\Modules\Project\Observers\ProjectDayAssignmentEventObserver::class
+        );
     }
 
     /**

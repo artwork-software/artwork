@@ -40,6 +40,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();
+        // Explicit prune for Prunable models outside app/Models (auto-discovery only scans app/Models).
+        $schedule->command('model:prune', [
+            '--model' => [\Artwork\Modules\Budget\Models\SageBookingLog::class],
+        ])->daily();
         $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
@@ -84,7 +88,11 @@ class Kernel extends ConsoleKernel
                     ->runInBackground();
             }
         }
-        $schedule->command(SyncExternalUsersCommand::class)->everyThirtyMinutes()->runInBackground();
+        $schedule->command(SyncExternalUsersCommand::class)
+            ->everyThirtyMinutes()
+            ->withoutOverlapping(180)
+            ->onOneServer()
+            ->runInBackground();
     }
 
     /**
@@ -101,6 +109,7 @@ class Kernel extends ConsoleKernel
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Change/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalAccess/Console/Commands', true);
         $this->load(dirname(__DIR__, 2) . '/artwork/Modules/ExternalUserManagement/Console/Commands', true);
+        $this->load(dirname(__DIR__, 2) . '/artwork/Modules/Inventory/Console/Commands', true);
 
         require base_path('routes/console.php');
     }

@@ -335,6 +335,7 @@ class ShiftCalendarService
                 content: $content,
                 eventsById: $eventsById,
                 shiftsById: $shiftsById,
+                roomColor: $room->getEffectiveColor(),
             );
         })->toArray();
 

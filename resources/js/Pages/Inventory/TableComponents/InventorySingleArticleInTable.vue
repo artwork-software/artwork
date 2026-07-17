@@ -24,7 +24,7 @@
         </template>
         <template #thumbnail="slotProps">
             <img
-                :src="'/storage/' + slotProps.item.image"
+                :src="'/storage/' + (slotProps.item.thumbnail || slotProps.item.image)"
                 :alt="slotProps.item.alt"
                 style="display: block"
                 @error="(e) => (e.target.src = usePage().props.big_logo)"
@@ -50,6 +50,8 @@
                 @error="(e) => e.target.src = usePage().props.big_logo"
                 alt=""
                 class="w-12 h-12 object-fill rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                loading="lazy"
+                decoding="async"
                 @click="imageClick(0)"
             >
         </div>
@@ -212,20 +214,15 @@ const hasImage = computed(() => {
 const getMainImageInImage = computed(() => {
     const images = props.item.images || [];
 
-    // 1. Suche nach dem Hauptbild
-    const mainImage = images.find(image => image.is_main_image);
+    // Die Übersicht rendert nur eine kleine Vorschau — Thumbnail serven,
+    // Fallback aufs Original für Bilder ohne Thumbnail (z.B. SVG).
+    const mainImage = images.find(image => image.is_main_image) ?? images[0];
     if (mainImage) return {
-        image: '/storage/' + mainImage.image,
+        image: '/storage/' + (mainImage.thumbnail || mainImage.image),
     };
 
-    // 2. Wenn kein Hauptbild, nimm das erste Bild
-    if (images.length > 0) return {
-        image: '/storage/' + images[0].image,
-    };
-
-    // 3. Wenn keine Bilder vorhanden sind, gib ein leeres Objekt zurück
     return {
-        image: usePage().props.big_logo, // Passe den Pfad zu deinem Standardbild an
+        image: usePage().props.big_logo,
     };
 });
 

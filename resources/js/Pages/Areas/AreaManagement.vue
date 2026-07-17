@@ -226,6 +226,9 @@
                                 </button>
 
                                 <div class="flex min-w-0 items-center gap-3">
+                                    <span class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-zinc-300"
+                                          :style="{ backgroundColor: area.color ?? '#000000' }"
+                                          :title="$t('Color')"></span>
                                     <span class="headline2 truncate">{{ area.name }}</span>
 
                                     <!-- Zähler-Chips (schöner) -->
@@ -330,6 +333,9 @@
                                                             <!-- Titel & Meta -->
                                                             <div class="min-w-0">
                                                                 <div class="flex items-center gap-2">
+                                                                    <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-zinc-300"
+                                                                          :style="{ backgroundColor: element.color ?? area.color ?? '#000000' }"
+                                                                          :title="element.color ? $t('Color') : $t('Inherit color from area')"></span>
                                                                     <Link
                                                                         :href="route('rooms.show', { room: element.id })"
                                                                         class="xsDark block truncate hover:underline decoration-artwork-buttons-hover/50"
@@ -362,7 +368,7 @@
                                                                 <button
                                                                     type="button"
                                                                     class="inline-flex items-center rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 focus-visible:visible focus:outline-none focus:ring-2 focus:ring-zinc-300"
-                                                                    @click="openEditRoomModal(element)"
+                                                                    @click="openEditRoomModal(element, area)"
                                                                     aria-label="Edit"
                                                                 >
                                                                     <PropertyIcon name="IconEdit" class="h-4.5 w-4.5" stroke-width="1.75"/>
@@ -380,7 +386,7 @@
                                                                 <BaseMenu white-menu-background has-no-offset>
                                                                     <BaseMenuItem :icon="IconEdit" title="Edit"
                                                                                   white-menu-background
-                                                                                  @click="openEditRoomModal(element)"/>
+                                                                                  @click="openEditRoomModal(element, area)"/>
                                                                     <BaseMenuItem :icon="IconCopy" title="Duplicate"
                                                                                   white-menu-background
                                                                                   @click="duplicateRoom(element)"/>
@@ -505,7 +511,7 @@
                                                                         <button
                                                                             type="button"
                                                                             class="inline-flex items-center rounded-lg p-1.5 text-amber-700 hover:bg-amber-100 hover:text-amber-900 focus-visible:visible focus:outline-none focus:ring-2 focus:ring-amber-300"
-                                                                            @click="openEditRoomModal(element)"
+                                                                            @click="openEditRoomModal(element, area)"
                                                                             aria-label="Edit"
                                                                         >
                                                                             <PropertyIcon name="IconEdit" class="h-4.5 w-4.5"
@@ -525,7 +531,7 @@
                                                                         <BaseMenu white-menu-background has-no-offset>
                                                                             <BaseMenuItem :icon="IconEdit" title="Edit"
                                                                                           white-menu-background
-                                                                                          @click="openEditRoomModal(element)"/>
+                                                                                          @click="openEditRoomModal(element, area)"/>
                                                                             <BaseMenuItem :icon="IconCopy"
                                                                                           title="Duplicate"
                                                                                           white-menu-background
@@ -588,6 +594,12 @@
                         label="Name of the area"
                     />
                     <jet-input-error :message="editAreaForm.error" class="mt-2"/>
+                </div>
+
+                <div class="mt-4">
+                    <div class="text-sm text-gray-900 mb-1">{{ $t('Color') }}</div>
+                    <div class="text-xs text-secondary mb-2">{{ $t('The color visually separates the rooms of this area in the calendar. Rooms inherit this color unless they have their own.') }}</div>
+                    <ColorPickerComponent @updateColor="(color) => editAreaForm.color = color" :color="editAreaForm.color"/>
                 </div>
 
                 <div class="w-full items-center flex justify-center text-center">
@@ -734,6 +746,20 @@
                         label="Short description"
                         :rows="4"
                     />
+                </div>
+                <div class="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
+                    <div class="text-sm text-gray-900 mb-1">{{ $t('Color') }}</div>
+                    <div class="flex items-center mb-3">
+                        <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
+                        <label for="inheritRoomColor"
+                               :class="[editRoomInheritColor ? 'text-primary font-black' : 'text-secondary']"
+                               class="ml-4 my-auto text-sm cursor-pointer">
+                            {{ $t('Inherit color from area') }}
+                        </label>
+                    </div>
+                    <div v-if="!editRoomInheritColor">
+                        <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
+                    </div>
                 </div>
                 <div class="space-y-6 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
                     <RoomPropertyCheckboxGroup
@@ -919,11 +945,13 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import RoomPropertyCheckboxGroup from "@/Pages/Areas/Components/RoomPropertyCheckboxGroup.vue";
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
         PropertyIcon,
+        ColorPickerComponent,
         BaseFilter,
         RoomPropertyCheckboxGroup,
         ArtworkBaseModal,
@@ -1006,9 +1034,12 @@ export default defineComponent({
                 room_attributes: [],
                 adjoining_rooms: []
             }),
+            editRoomInheritColor: true,
+            editRoomAreaColor: '#000000',
             editRoomForm: useForm({
                 id: null,
                 name: '',
+                color: null,
                 description: '',
                 temporary: false,
                 start_date: null,
@@ -1027,6 +1058,7 @@ export default defineComponent({
             editAreaForm: useForm({
                 id: null,
                 name: '',
+                color: '#000000',
                 rooms: [],
             }),
             showInvalidNameErrorText: false,
@@ -1226,6 +1258,7 @@ export default defineComponent({
         openEditAreaModal(area) {
             this.editAreaForm.id = area.id;
             this.editAreaForm.name = area.name;
+            this.editAreaForm.color = area.color ?? '#000000';
             this.editAreaForm.rooms = area.rooms;
             this.showEditAreaModal = true;
         },
@@ -1233,6 +1266,7 @@ export default defineComponent({
             this.showEditAreaModal = false;
             this.editAreaForm.id = null;
             this.editAreaForm.name = "";
+            this.editAreaForm.color = '#000000';
             this.editAreaForm.rooms = [];
         },
         editArea() {
@@ -1285,9 +1319,12 @@ export default defineComponent({
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
-        openEditRoomModal(room) {
+        openEditRoomModal(room, area = null) {
             this.editRoomForm.id = room.id;
             this.editRoomForm.name = room.name;
+            this.editRoomForm.color = room.color;
+            this.editRoomInheritColor = !room.color;
+            this.editRoomAreaColor = area?.color ?? '#000000';
             this.editRoomForm.description = room.description ?? '';
             this.editRoomForm.start_date = room.start_date;
             this.editRoomForm.end_date = room.end_date;
@@ -1335,6 +1372,14 @@ export default defineComponent({
         editRoom() {
             this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
             this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
+
+            if (this.editRoomInheritColor) {
+                // null = Farbe des Areals erben
+                this.editRoomForm.color = null;
+            } else if (!this.editRoomForm.color) {
+                // Erben abgewählt, aber keine Farbe gewählt → aktuelle Areal-Farbe übernehmen
+                this.editRoomForm.color = this.editRoomAreaColor;
+            }
 
             this.editRoomForm.patch(
                 route('rooms.update', {room: this.editRoomForm.id}),

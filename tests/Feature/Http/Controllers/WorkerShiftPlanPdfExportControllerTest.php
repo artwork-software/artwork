@@ -158,6 +158,45 @@ final class WorkerShiftPlanPdfExportControllerTest extends FeatureTestCase
         $this->assertSame('06:00', $row['cells']['2026-07-16']['shifts'][0]['end']);
     }
 
+    #[Test]
+    public function craft_filter_removes_other_shifts_without_hiding_the_worker(): void
+    {
+        $worker = User::factory()->create(['can_work_shifts' => true]);
+        [$includedCraft, $excludedCraft] = Craft::factory()->count(2)->create()->all();
+        $worker->assignedCrafts()->attach([$includedCraft->id, $excludedCraft->id]);
+        $qualification = ShiftQualification::factory()->create();
+
+        foreach ([$includedCraft, $excludedCraft] as $craft) {
+            $shift = Shift::factory()->create([
+                'event_id' => null,
+                'craft_id' => $craft->id,
+                'start_date' => '2026-07-15',
+                'end_date' => '2026-07-15',
+                'event_start_day' => '2026-07-15',
+                'event_end_day' => '2026-07-15',
+                'start' => '10:00',
+                'end' => '12:00',
+            ]);
+            $worker->shifts()->attach($shift->id, [
+                'shift_qualification_id' => $qualification->id,
+                'start_date' => '2026-07-15',
+                'end_date' => '2026-07-15',
+                'start_time' => '10:00',
+                'end_time' => '12:00',
+            ]);
+        }
+
+        $matrix = app(WorkerShiftPlanPdfBuilder::class)->build(
+            Carbon::parse('2026-07-15'),
+            Carbon::parse('2026-07-16')->endOfDay(),
+            [...$this->validPayload(), 'craft_ids' => [$includedCraft->id]],
+        );
+
+        $shifts = $matrix['pages'][0]['workers'][0]['cells']['2026-07-15']['shifts'];
+        $this->assertCount(1, $shifts);
+        $this->assertSame($includedCraft->abbreviation ?? $includedCraft->name, $shifts[0]['craft']);
+    }
+
     /** @return array<string, mixed> */
     private function validPayload(): array
     {

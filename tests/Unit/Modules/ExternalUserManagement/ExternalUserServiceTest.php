@@ -3,6 +3,7 @@
 namespace Tests\Unit\Modules\ExternalUserManagement;
 
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUser;
+use Artwork\Modules\ExternalUserManagement\Mail\ExternalUserImported;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserGroupMapping;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserGroupMappingService;
@@ -11,6 +12,7 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -167,6 +169,24 @@ final class ExternalUserServiceTest extends TestCase
         $this->assertSame('top-secret', $source->fresh()->config['client_secret']);
         $this->assertArrayNotHasKey('client_secret', $source->toArray()['config']);
         $this->assertArrayNotHasKey('bind_password', $source->toArray()['config']);
+    }
+
+    #[Test]
+    public function failed_import_notification_is_marked_for_retry(): void
+    {
+        $source = $this->source('Mail retry');
+        $user = User::factory()->create();
+        $externalUser = ExternalUser::query()->create([
+            'source_id' => $source->id,
+            'user_id' => $user->id,
+            'identification' => 'mail-retry-user',
+            'import_notification_sent_at' => now(),
+        ]);
+
+        (new ExternalUserImported($user, 'token', $externalUser))
+            ->failed(new RuntimeException('Mail transport failed'));
+
+        $this->assertNull($externalUser->fresh()->import_notification_sent_at);
     }
 
     private function source(string $name): ExternalUserSource

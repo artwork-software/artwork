@@ -55,6 +55,7 @@ class GenerateInventoryArticleImageThumbnailsCommand extends Command
                         if ($newPath === null) {
                             $this->warn("HEIC conversion failed: {$image->image} (image #{$image->id})");
                             $failed++;
+                            continue;
                         } else {
                             $oldPath = $image->image;
                             $image->image = $newPath;
@@ -77,11 +78,14 @@ class GenerateInventoryArticleImageThumbnailsCommand extends Command
                     }
 
                     $thumbnail = $imageService->generateThumbnail($image->image);
-                    if ($thumbnail !== null) {
-                        $image->thumbnail = $thumbnail;
-                        $generated++;
+                    if ($thumbnail === null) {
+                        $this->warn("Thumbnail generation failed: {$image->image} (image #{$image->id})");
+                        $failed++;
+                        continue;
                     }
 
+                    $image->thumbnail = $thumbnail;
+                    $generated++;
                     $image->save();
                 }
             }
@@ -90,14 +94,14 @@ class GenerateInventoryArticleImageThumbnailsCommand extends Command
         $this->info("Thumbnails generated: {$generated}, HEIC converted: {$converted}, " .
             "skipped (missing file): {$skipped}, failed: {$failed}");
 
-        if ($this->option('once')) {
+        if ($this->option('once') && $failed === 0) {
             DB::table('one_time_tasks')->updateOrInsert(
                 ['key' => self::ONCE_KEY],
                 ['executed_at' => now(), 'updated_at' => now(), 'created_at' => now()]
             );
         }
 
-        return self::SUCCESS;
+        return $failed === 0 ? self::SUCCESS : self::FAILURE;
     }
 
     private function ensureOnceTableExists(): void

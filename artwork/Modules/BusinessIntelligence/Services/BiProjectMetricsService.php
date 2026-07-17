@@ -160,22 +160,26 @@ class BiProjectMetricsService
     }
 
     /**
-     * Sum of distinct project-room capacities (per-project override else room default).
-     * With a date range only rooms of events in that range count — otherwise a
-     * season-filtered occupancy would divide range tickets by all-time capacity.
+     * Sum the available capacity per performance. A room used by multiple
+     * performances contributes its capacity once for every performance.
      */
     public function seatsCapacity(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
     {
         $overrides = $project->biRoomCapacities->keyBy('room_id');
 
-        // Ohne Range weiterhin alle Events (auch undatierte), damit Bestandsaufrufer identisch bleiben
-        $events = ($from || $to) ? $this->eventsInRange($project, $from, $to) : $project->events;
+        if ($project->biData?->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
+            $from = null;
+            $to = null;
+        }
 
-        return (int) $events
-            ->pluck('room')
-            ->filter()
-            ->unique('id')
-            ->sum(function ($room) use ($overrides): int {
+        $events = ($from || $to) ? $this->eventsInRange($project, $from, $to) : $project->events;
+        $performances = $events->filter(fn ($event) => $this->eventHasTag($event, 'Vorstellung'));
+        $relevantEvents = $performances->isNotEmpty() ? $performances : $events;
+
+        return (int) $relevantEvents
+            ->filter(static fn ($event): bool => $event->room !== null)
+            ->sum(function ($event) use ($overrides): int {
+                $room = $event->room;
                 $override = $overrides->get($room->id)?->capacity_override;
 
                 return (int) ($override ?? $room->capacity ?? 0);

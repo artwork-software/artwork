@@ -300,6 +300,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.external-user-management.sources.test-connection');
         Route::post('/external-user-management/sources/{externalUserSource}/sync', [ExternalUserSourceController::class, 'sync'])
             ->name('tool.external-user-management.sources.sync');
+        Route::get('/external-user-management/sources/{externalUserSource}/sync-status', [ExternalUserSourceController::class, 'syncStatus'])
+            ->name('tool.external-user-management.sources.sync-status');
 
         Route::post('/external-user-management/sources/test-connection-config', [ExternalUserSourceController::class, 'testConnectionConfig'])
             ->name('tool.external-user-management.sources.test-connection-config');

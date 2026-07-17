@@ -102,7 +102,7 @@ class ExternalUserSyncService
 
                 DB::afterCommit(function () use ($externalUser, $user, $token): void {
                     try {
-                        $this->mailService->sendExternalUserImported($user, $token);
+                        $this->mailService->sendExternalUserImported($user, $token, $externalUser);
                     } catch (\Throwable $e) {
                         // Mail-Fehler (z. B. SMTP down) darf den Sync nicht abbrechen und die
                         // Willkommens-Mail nicht dauerhaft verlieren: Flag zurücksetzen,

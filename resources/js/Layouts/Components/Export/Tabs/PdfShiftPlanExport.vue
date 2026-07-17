@@ -92,10 +92,45 @@
                 </p>
             </section>
 
+            <section class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
+                <h2 class="text-sm font-semibold text-zinc-900">{{ $t('This is how the PDF is structured') }}</h2>
+                <div class="mt-4 overflow-hidden rounded-lg border border-zinc-300 bg-white text-[11px] text-zinc-600 shadow-sm">
+                    <div class="border-b border-zinc-200 bg-zinc-100 px-3 py-2 font-semibold text-zinc-800">
+                        {{ pdf.title || $t('Shift plan') }} · {{ formatDate(pdf.start) }} – {{ formatDate(pdf.end) }}
+                    </div>
+                    <div class="grid grid-cols-[7rem_repeat(3,minmax(0,1fr))]">
+                        <div class="border-r border-zinc-200 bg-zinc-50 p-2 font-semibold">
+                            {{ pdf.exportMode === 'rooms' ? $t('Room / area') : $t('Person') }}
+                        </div>
+                        <div v-for="day in previewDays" :key="day" class="border-r border-zinc-200 p-2 text-center font-semibold last:border-r-0">
+                            {{ day }}
+                        </div>
+                        <template v-for="row in previewRows" :key="row.label">
+                            <div class="border-r border-t border-zinc-200 bg-zinc-50 p-2 font-medium">{{ row.label }}</div>
+                            <div v-for="(cell, cellIndex) in row.cells" :key="cellIndex" class="border-r border-t border-zinc-200 p-2 last:border-r-0">
+                                {{ cell }}
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <ul class="mt-4 space-y-1 text-xs text-zinc-700">
+                    <li><span class="font-semibold">{{ $t('Rows') }}:</span> {{ exportSummary.rows }}</li>
+                    <li><span class="font-semibold">{{ $t('Columns') }}:</span> {{ exportSummary.columns }}</li>
+                    <li><span class="font-semibold">{{ $t('Cells contain') }}:</span> {{ exportSummary.contents }}</li>
+                </ul>
+            </section>
+
             <!-- Craft filter -->
             <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4" v-if="crafts.length > 0">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Crafts') }}</h2>
+                    <div>
+                        <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Which shifts should be included?') }}</h2>
+                        <p class="mt-1 text-xs text-zinc-500">
+                            {{ pdf.exportMode === 'rooms'
+                                ? $t('This filters the shifts shown inside the room rows. Rooms, events and people are not filtered by this selection.')
+                                : $t('This filters the shifts printed for each person. Individual times and day services remain visible when enabled below.') }}
+                        </p>
+                    </div>
                     <button
                         type="button"
                         class="text-sm text-zinc-600 hover:text-zinc-900"
@@ -119,9 +154,6 @@
                         {{ craft.name }}
                     </label>
                 </div>
-                <p class="text-xs text-zinc-500">
-                    {{ $t('Only shifts of the selected crafts are exported. The selected filter is stated in the PDF header.') }}
-                </p>
                 <p v-if="selectedCraftIds.length === 0" class="text-xs text-artwork-messages-error">
                     {{ $t('Please select at least one craft.') }}
                 </p>
@@ -140,6 +172,9 @@
 
                 <div>
                     <div class="mb-2 text-sm font-medium text-zinc-700">{{ $t('Worker types') }}</div>
+                    <p class="mb-3 text-xs text-zinc-500">
+                        {{ $t('This selection filters people: only the selected personnel groups become rows in the PDF.') }}
+                    </p>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
                         <label v-for="workerType in workerTypes" :key="workerType.id" class="flex items-center gap-2 text-sm text-zinc-700">
                             <input v-model="pdf.worker_types" :value="workerType.id" type="checkbox" class="input-checklist" />
@@ -150,6 +185,9 @@
 
                 <div>
                     <div class="mb-2 text-sm font-medium text-zinc-700">{{ $t('Contents') }}</div>
+                    <p class="mb-3 text-xs text-zinc-500">
+                        {{ $t('These options control which kinds of entries are printed in each person/day cell.') }}
+                    </p>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <label class="flex items-center gap-2 text-sm text-zinc-700">
                             <input v-model="pdf.show_shifts" type="checkbox" class="input-checklist" />
@@ -175,7 +213,9 @@
                 <div class="flex items-start gap-x-3">
                     <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-blue-500"/>
                     <p class="text-sm text-blue-500">
-                        {{ $t('Rooms, areas and event types are taken over from the current shift plan view. The PDF states the selected period, calendar weeks and craft filter. Each calendar week is placed on its own page.') }}
+                        {{ pdf.exportMode === 'rooms'
+                            ? $t('Room export uses the rooms, areas and event types from the current shift plan view. The craft selection only controls which shifts appear inside it. Each calendar week is placed on its own page.')
+                            : $t('Personnel export creates one row per selected person. Craft filters affect shifts, worker types affect people, and the content options affect the entries shown in the cells.') }}
                     </p>
                 </div>
             </div>
@@ -434,6 +474,30 @@ const rangeDays = computed(() => {
 })
 const workerMatrixRangeTooLong = computed(
     () => pdf.exportMode === 'worker_matrix' && rangeDays.value > 31
+)
+
+const previewDays = computed(() => [$t('Day 1'), $t('Day 2'), $t('Day 3')])
+const previewRows = computed(() => pdf.exportMode === 'rooms'
+    ? [
+        { label: $t('Main hall'), cells: [$t('Event + shifts'), '—', $t('Event + shifts')] },
+        { label: $t('Studio'), cells: ['—', $t('Event + shifts'), $t('Shifts')] },
+    ]
+    : [
+        { label: $t('Person A'), cells: [$t('Shift · room'), $t('Day service'), '—'] },
+        { label: $t('Person B'), cells: [$t('Individual time'), $t('Shift · room'), $t('Shift · room')] },
+    ]
+)
+const exportSummary = computed(() => pdf.exportMode === 'rooms'
+    ? {
+        rows: $t('Rooms and areas from the current shift plan view'),
+        columns: $t('Days in the selected period'),
+        contents: $t('Events and shifts; the craft selection filters shifts only'),
+    }
+    : {
+        rows: $t('People from the selected worker types'),
+        columns: $t('Days in the selected period (maximum 31)'),
+        contents: $t('Enabled shifts, individual times and day services'),
+    }
 )
 
 const exportDisabled = computed(() =>

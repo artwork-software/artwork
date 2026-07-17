@@ -243,9 +243,14 @@ class CraftDistributionExportService
             return null;
         }
 
-        return (int) max(
-            0,
-            $segmentStart->diffInMinutes($segmentEnd) - (int) ($worker->shift->break_minutes ?? 0),
-        );
+        $totalMinutes = (int) $start->diffInMinutes($end);
+        if ($totalMinutes <= 0) {
+            return null;
+        }
+
+        $segmentMinutes = (int) $segmentStart->diffInMinutes($segmentEnd);
+        $workedMinutes = max(0, $totalMinutes - max(0, (int) ($worker->shift->break_minutes ?? 0)));
+
+        return intdiv($segmentMinutes * $workedMinutes, $totalMinutes);
     }
 }

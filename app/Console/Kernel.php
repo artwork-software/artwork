@@ -90,7 +90,8 @@ class Kernel extends ConsoleKernel
         }
         $schedule->command(SyncExternalUsersCommand::class)
             ->everyThirtyMinutes()
-            ->withoutOverlapping(30)
+            ->withoutOverlapping(180)
+            ->onOneServer()
             ->runInBackground();
     }
 

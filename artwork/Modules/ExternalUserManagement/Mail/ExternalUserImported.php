@@ -3,12 +3,14 @@
 namespace Artwork\Modules\ExternalUserManagement\Mail;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUser;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Config;
+use Throwable;
 
 class ExternalUserImported extends Mailable implements ShouldQueue
 {
@@ -17,7 +19,8 @@ class ExternalUserImported extends Mailable implements ShouldQueue
 
     public function __construct(
         public User $user,
-        public string $token
+        public string $token,
+        public ExternalUser $externalUser,
     ) {
     }
 
@@ -49,5 +52,12 @@ class ExternalUserImported extends Mailable implements ShouldQueue
                     'sender_email' => $senderAddress,
                 ]
             );
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        ExternalUser::query()
+            ->whereKey($this->externalUser->getKey())
+            ->update(['import_notification_sent_at' => null]);
     }
 }

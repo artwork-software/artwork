@@ -192,8 +192,10 @@ final class CraftDistributionExportServiceTest extends TestCase
         $distribution = $this->buildDistribution($universalCraft, '2026-06-08', '2026-06-08', [$craft->id]);
 
         $row = $distribution['rows']->first();
-        $this->assertSame(360, $row['minutes'][$craft->id]);
-        $this->assertSame(360, $row['total_minutes']);
+        // The 60-minute break is distributed proportionally across both
+        // eight-hour shifts, so each four-hour overlap contributes 210 minutes.
+        $this->assertSame(420, $row['minutes'][$craft->id]);
+        $this->assertSame(420, $row['total_minutes']);
     }
 
     #[Test]

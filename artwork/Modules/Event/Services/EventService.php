@@ -46,6 +46,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
@@ -2145,7 +2146,21 @@ readonly class EventService
             return;
         }
 
-        $this->eventRepository->deleteEvents($eventIds);
-    }
+        DB::transaction(function () use ($eventIds): void {
+            $projectIds = Event::query()
+                ->whereIn('id', $eventIds)
+                ->whereNotNull('project_id')
+                ->distinct()
+                ->pluck('project_id');
 
+            $this->eventRepository->deleteEvents($eventIds);
+
+            $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
+
+            Project::query()
+                ->whereIn('id', $projectIds)
+                ->each(fn (Project $project) => $projectDayAssignmentService
+                    ->rematerializeForProjectPeriodChange($project));
+        });
+    }
 }

@@ -3,6 +3,7 @@
 namespace Artwork\Core\Mail;
 
 use Artwork\Modules\ExternalUserManagement\Mail\ExternalUserImported;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUser;
 use Artwork\Modules\Invitation\Mail\InvitationCreated;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\User\Models\User;
@@ -36,11 +37,11 @@ class MailService
         );
     }
 
-    public function sendExternalUserImported(User $user, string $token): void
+    public function sendExternalUserImported(User $user, string $token, ExternalUser $externalUser): void
     {
         $this->mailManager
             ->to($user->email)
-            ->queue((new ExternalUserImported($user, $token))->afterCommit());
+            ->queue((new ExternalUserImported($user, $token, $externalUser))->afterCommit());
     }
 
     final public function mailTo(string $email, Mailable $mailable): void

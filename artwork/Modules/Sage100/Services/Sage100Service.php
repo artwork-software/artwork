@@ -65,7 +65,7 @@ class Sage100Service
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        $ktr = ($ktr !== null && trim($ktr) !== '') ? trim($ktr) : null;
+        $ktr = $this->normalizeKtr($ktr);
 
         // Quelle fürs Protokoll: mit gesetztem Watermark ist der argumentlose Lauf
         // der inkrementelle tägliche Sync, kein Full-Import
@@ -845,6 +845,17 @@ class Sage100Service
         $query['orderBy'] = 'Buchungsdatum asc';
 
         return $query;
+    }
+
+    private function normalizeKtr(?string $ktr): ?string
+    {
+        $ktr = ($ktr !== null && trim($ktr) !== '') ? trim($ktr) : null;
+
+        if ($ktr !== null && preg_match('/\A[A-Za-z0-9._\-\/ ]+\z/u', $ktr) !== 1) {
+            throw new \InvalidArgumentException('The KTR contains unsupported characters.');
+        }
+
+        return $ktr;
     }
 
     private function createSageCellsForSageColumn(Table $table, Column $sageColumn): void

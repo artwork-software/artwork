@@ -150,7 +150,12 @@ readonly class WorkerShiftPlanPdfBuilder
         $cells = [];
 
         if ($options['show_shifts'] ?? true) {
-            foreach ($worker->shifts as $shift) {
+            $craftIds = $options['craft_ids'] ?? [];
+            $shifts = $craftIds === []
+                ? $worker->shifts
+                : $worker->shifts->whereIn('craft_id', $craftIds);
+
+            foreach ($shifts as $shift) {
                 $this->addShiftToCells(
                     $cells,
                     $shift,

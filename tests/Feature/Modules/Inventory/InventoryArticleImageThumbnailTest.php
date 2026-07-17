@@ -15,6 +15,7 @@ use Artwork\Modules\Inventory\Repositories\InventoryArticleRepository;
 use Artwork\Modules\Inventory\Services\InventoryArticleImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -188,5 +189,30 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
         Storage::disk('public')->assertExists($heicImage->image);
         Storage::disk('public')->assertExists($heicImage->thumbnail);
         Storage::disk('public')->assertMissing($heicPath);
+    }
+
+    #[Test]
+    public function failed_thumbnail_generation_returns_failure_and_does_not_write_once_marker(): void
+    {
+        $article = InventoryArticle::factory()->create([
+            'inventory_category_id' => $this->category->id,
+        ]);
+        $imagePath = UploadedFile::fake()->image('broken.jpg')->store('inventory_articles', 'public');
+        $article->images()->create([
+            'image' => $imagePath,
+            'is_main_image' => true,
+            'order' => 0,
+        ]);
+        $imageService = Mockery::mock(InventoryArticleImageService::class);
+        $imageService->shouldReceive('generateThumbnail')->once()->with($imagePath)->andReturnNull();
+
+        $command = new GenerateInventoryArticleImageThumbnailsCommand();
+        $command->setLaravel($this->app);
+        $this->app->instance(InventoryArticleImageService::class, $imageService);
+
+        $this->assertSame(1, $command->run(new ArrayInput(['--once' => true]), new BufferedOutput()));
+        $this->assertDatabaseMissing('one_time_tasks', [
+            'key' => 'inventory-article-images:generate-thumbnails',
+        ]);
     }
 }

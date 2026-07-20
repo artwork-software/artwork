@@ -117,6 +117,7 @@ use App\Http\Controllers\ToolSettingsExternalUserManagementController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserGroupMappingController;
 use Artwork\Modules\ExternalUserManagement\Http\Controllers\ExternalUserSourceController;
+use Artwork\Modules\Mail\Http\Controllers\MailSettingsController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
 use Artwork\Modules\Accommodation\Http\Controllers\AccommodationController;
@@ -364,6 +365,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
             ->name('tool.module-settings.update');
+
+        // MAIL SETTINGS
+        Route::get('/mail', [MailSettingsController::class, 'index'])
+            ->name('tool.mail');
+        Route::patch('/mail', [MailSettingsController::class, 'update'])
+            ->name('tool.mail.update');
+        Route::post('/mail/test', [MailSettingsController::class, 'test'])
+            ->name('tool.mail.test');
         Route::group(['namespace' => 'System', 'prefix' => 'system'], function (): void {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');

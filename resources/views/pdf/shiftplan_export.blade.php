@@ -190,6 +190,9 @@
                         <div class="title">{{ $title }}</div>
                         <div class="meta">
                             <span class="label">{{ __('Period') }}:</span> {{ $startDate }} – {{ $endDate }}
+                            @if(!empty($kwRange))
+                                ({{ $kwRange }})
+                            @endif
                             @if($project)
                                 &nbsp;·&nbsp; <span class="label">{{ __('Project') }}:</span> {{ $project->name }}
                             @endif

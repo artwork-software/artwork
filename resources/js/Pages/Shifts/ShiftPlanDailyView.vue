@@ -88,21 +88,10 @@
 
                         <ToolTipComponent
                             direction="right"
-                            :tooltip-text="$t('Export Shift Plan as PDF')"
+                            :tooltip-text="$t('Export')"
                             :icon="IconFileExport"
                             icon-size="h-5 w-5"
-                            @click="openExportDailyProjectShiftPlanModal = true"
-                            v-if="isInProjectView"
-                            classesButton="ui-button"
-                        />
-
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Export Shift personnel plan as xlsx')"
-                            :icon="IconFileTypeXls"
-                            icon-size="h-5 w-5"
-                            @click="downloadShiftPersonnelPlanXLSX()"
-                            v-if="isInProjectView"
+                            @click="showProjectShiftExportModal = true"
                             classesButton="ui-button"
                         />
 
@@ -119,6 +108,12 @@
                 <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-3">
                     {{ $t('Assigned persons') }}
                 </h3>
+                <p
+                    v-if="projectAssignmentError"
+                    class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+                >
+                    {{ projectAssignmentError }}
+                </p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <h4 class="text-[11px] font-medium text-zinc-400 mb-1.5">{{ $t('Entire project period') }}</h4>
@@ -226,6 +221,8 @@
                                     v-if="can('can plan shifts') || is('artwork admin')"
                                     type="button"
                                     class="shrink-0 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] text-emerald-700 hover:border-emerald-400 transition-colors"
+                                    :disabled="projectAssignmentActionId === group.id"
+                                    :class="projectAssignmentActionId === group.id ? 'cursor-wait opacity-50' : ''"
                                     :title="$t('Accept wish as binding assignment')"
                                     @click="acceptProjectWish(group)"
                                 >
@@ -488,10 +485,11 @@
                 :wanted-date="wantedDate"
             />
 
-            <ExportDailyProjectShiftPlanModal
-                v-if="openExportDailyProjectShiftPlanModal"
-                @close="openExportDailyProjectShiftPlanModal = false"
-                :project="props.project"
+            <ExportModal
+                v-if="showProjectShiftExportModal"
+                @close="showProjectShiftExportModal = false"
+                :enums="projectShiftExportTabs"
+                :configuration="projectShiftExportConfiguration"
             />
         </component>
     </div>
@@ -500,7 +498,7 @@
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
-import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef } from "vue";
+import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -515,7 +513,7 @@ import {
     IconChevronRight,
     IconX, IconFileExport,
     IconCalendarPlus,
-    IconCalendarUser, IconFileTypeXls,
+    IconCalendarUser,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
@@ -527,7 +525,8 @@ import { enrichDays } from "@/Composeables/calendarDateUtils.js";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
-import ExportDailyProjectShiftPlanModal from "@/Pages/Projects/Components/ExportDailyProjectShiftPlanModal.vue";
+import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+const ExportModal = defineAsyncComponent(() => import("@/Layouts/Components/Export/Modals/ExportModal.vue"));
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
@@ -575,6 +574,9 @@ const hasAdminRole = () => is("artwork admin")
 
 // --- Projektzuordnungen (Zugewiesene Personen + Wünsche; nur Projektansicht) ---
 const projectDayAssignments = ref<any[]>([])
+const projectAssignmentActionId = ref<number | null>(null)
+const projectAssignmentError = ref('')
+let projectAssignmentEchoChannel: any = null
 
 const showProjectAssignments = computed(() => {
     if (!props.isInProjectView || !props.project?.id) return false
@@ -592,8 +594,9 @@ const loadProjectDayAssignments = async () => {
     try {
         const { data } = await axios.get(route('projects.day-assignments', { project: props.project.id }))
         projectDayAssignments.value = data.assignments ?? []
-    } catch {
-        projectDayAssignments.value = []
+        projectAssignmentError.value = ''
+    } catch (error: any) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
     }
 }
 
@@ -629,8 +632,17 @@ const assignmentOverviewGroups = computed(() => {
 })
 
 const acceptProjectWish = async (group: any) => {
-    await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: group.id }))
-    await loadProjectDayAssignments()
+    if (projectAssignmentActionId.value !== null) return
+    projectAssignmentActionId.value = group.id
+    projectAssignmentError.value = ''
+    try {
+        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: group.id }))
+        await loadProjectDayAssignments()
+    } catch (error: any) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+    } finally {
+        projectAssignmentActionId.value = null
+    }
 }
 
 
@@ -730,7 +742,54 @@ const shiftToEdit = ref(null)
 const roomForShiftAdd = ref<number | null>(null)
 const dayForShiftAdd = ref<string | null>(null)
 const showAddShiftModal = ref(false)
-const openExportDailyProjectShiftPlanModal = ref(false)
+
+// Gemeinsames Export-Modal: ein Reiter pro Export. Im Projekt-Schichtentab
+// die projektgebundenen Exporte, in der allgemeinen Tagesansicht dieselben
+// Exporte wie in der Schichtplan-Funktionsleiste.
+const exportTabEnums = useExportTabEnums()
+const showProjectShiftExportModal = ref(false)
+const projectShiftExportTabs = computed(() => {
+    if (props.isInProjectView) {
+        return [
+            exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT,
+            exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT,
+        ]
+    }
+    const tabs = [exportTabEnums.PDF_SHIFT_PLAN_EXPORT, exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]
+    // Gewerke-Verteilung enthält namentliche Stunden — Backend-Route verlangt dieselbe Permission
+    if (can('can view shift worker hours') || is('artwork admin')) {
+        tabs.push(exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT)
+    }
+    return tabs
+})
+const projectShiftExportConfiguration = computed(() => {
+    if (props.isInProjectView) {
+        return {
+            [exportTabEnums.PDF_DAILY_PROJECT_SHIFT_PLAN_EXPORT]: { project: props.project },
+            [exportTabEnums.EXCEL_SHIFT_PERSONNEL_PLAN_EXPORT]: { project: props.project },
+        }
+    }
+    const craftList = (craftsResolved.value ?? []) as any[]
+    return {
+        [exportTabEnums.PDF_SHIFT_PLAN_EXPORT]: {
+            startDate: props.dateValue?.[0] ?? null,
+            endDate: props.dateValue?.[1] ?? null,
+            projectId: null,
+            isInProjectView: false,
+            isDailyView: true,
+            projectName: null,
+            highlightProjectId: null,
+            craftIds: (user_filtersResolved.value as any)?.craft_ids ?? [],
+            crafts: craftList.map(({id, name}: any) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
+            crafts: craftList.map(({id, name}: any) => ({id, name})),
+        },
+        [exportTabEnums.EXCEL_CRAFT_DISTRIBUTION_EXPORT]: {
+            crafts: craftList.map(({id, name, universally_applicable}: any) => ({id, name, universally_applicable})),
+        },
+    }
+})
 
 const dayForPreset = ref<any | null>(null)
 const roomForPreset = ref<any | null>(null)
@@ -1569,11 +1628,6 @@ function measureTopBarHeight() {
     if (typeof h === "number" && h > 0 && h !== topBarHeightPx.value) topBarHeightPx.value = h
 }
 
-const downloadShiftPersonnelPlanXLSX = () => {
-    const url = route("projects.exports.shifts-personal-plan", props.project.id)
-    window.open(url, "_blank")
-}
-
 onMounted(async () => {
     setTimeout(() => { showCalendarWarning.value = "" }, 5000)
 
@@ -1595,6 +1649,11 @@ onMounted(async () => {
     })
     ShiftCalendarListener.init()
 
+    if (props.isInProjectView && props.project?.id) {
+        projectAssignmentEchoChannel = Echo.private(`project.${props.project.id}`)
+        projectAssignmentEchoChannel.listen('.project-day-assignments.changed', loadProjectDayAssignments)
+    }
+
     await nextTick()
     measureTopBarHeight()
     checkAllRoomNameTruncations()
@@ -1609,6 +1668,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+    projectAssignmentEchoChannel?.stopListening('.project-day-assignments.changed', loadProjectDayAssignments)
+    projectAssignmentEchoChannel = null
     if (ro && topBarEl.value) ro.unobserve(topBarEl.value)
     ro = null
     window.removeEventListener("resize", measureTopBarHeight)

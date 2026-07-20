@@ -38,6 +38,10 @@ export function useColorHelper() {
         return `rgba(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent / 100})`;
     }
 
+    function getHighContrastPercent(settings) {
+        return settings?.high_contrast ? 75 : 15;
+    }
+
     function getTextColorBasedOnBackground(color) {
         const isDark = isDarkColor(color);
         return isDark ? '#FFFFFF' : '#000000';
@@ -56,6 +60,7 @@ export function useColorHelper() {
     return {
         backgroundColorWithOpacity,
         detectParentBackgroundColor,
+        getHighContrastPercent,
         getTextColorBasedOnBackground,
         isDarkColor,
         parentBackgroundColor,

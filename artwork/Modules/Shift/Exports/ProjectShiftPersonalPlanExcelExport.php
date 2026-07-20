@@ -30,9 +30,13 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
     private int $totalCols = 26;
     private string $lastCol = 'Z';
 
+    /** @var array<int, int> Zeilennummern, an denen ein neuer Tag beginnt (für Trennlinien) */
+    private array $dayBreakRows = [];
+
     public function __construct(
         protected Project $project,
-        public string $language = 'de'
+        public string $language = 'de',
+        protected bool $decimalNumbers = false
     ) {
     }
 
@@ -54,6 +58,8 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
 
         $rows = $shifts->map(fn (Shift $shift) => $this->buildRow($shift, $this->qualColumns));
 
+        $this->dayBreakRows = $this->resolveDayBreakRows($shifts);
+
         [$periodStart, $periodEnd] = $this->computePeriod($shifts);
 
         $totalMinutes = (int) $rows->sum('minutes_total');
@@ -71,11 +77,68 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             'rows'              => $rows,
 
             'totalHeadcount'    => (int) $rows->sum('total_headcount'),
-            'totalMinutesLabel' => $this->formatMinutesLabel($totalMinutes),
+            'totalMinutesLabel' => $this->formatMinutes($totalMinutes),
+
+            'decimalNumbers'    => $this->decimalNumbers,
+            'zeroDuration'      => $this->decimalNumbers
+                ? 0
+                : __('export.shift_plan.defaults.zero_duration', [], $this->language),
+            'hoursTotals'       => $this->decimalNumbers ? $this->buildHoursTotals($rows) : null,
 
             'lastCol'           => $this->lastCol,
             'totalCols'         => $this->totalCols,
         ]);
+    }
+
+    /**
+     * Datenzeilen beginnen in Zeile 6; liefert die Zeilennummern, an denen
+     * ein anderer Tag als in der Vorzeile beginnt.
+     *
+     * @param Collection<int, Shift> $shifts
+     * @return array<int, int>
+     */
+    private function resolveDayBreakRows(Collection $shifts): array
+    {
+        $breaks = [];
+        $previousDate = null;
+
+        foreach ($shifts->values() as $index => $shift) {
+            $date = Carbon::parse($shift->start_date)->toDateString();
+
+            if ($previousDate !== null && $date !== $previousDate) {
+                $breaks[] = 6 + $index;
+            }
+
+            $previousDate = $date;
+        }
+
+        return $breaks;
+    }
+
+    /**
+     * Spaltensummen der Arbeitsstunden für die Summenzeile im Excel-Zahlenformat.
+     *
+     * @param Collection<int, array<string, mixed>> $rows
+     * @return array{int: array<int, float>, int_sum: float, ext: array<int, float>, ext_sum: float, total: float}
+     */
+    private function buildHoursTotals(Collection $rows): array
+    {
+        $int = [];
+        $ext = [];
+
+        foreach ($this->qualColumns as $q) {
+            $qid = (int) $q->id;
+            $int[$qid] = $this->minutesToDecimalHours((int) $rows->sum(fn (array $r) => $r['int_minutes'][$qid] ?? 0));
+            $ext[$qid] = $this->minutesToDecimalHours((int) $rows->sum(fn (array $r) => $r['ext_minutes'][$qid] ?? 0));
+        }
+
+        return [
+            'int'     => $int,
+            'int_sum' => $this->minutesToDecimalHours((int) $rows->sum('int_minutes_sum')),
+            'ext'     => $ext,
+            'ext_sum' => $this->minutesToDecimalHours((int) $rows->sum('ext_minutes_sum')),
+            'total'   => $this->minutesToDecimalHours((int) $rows->sum('minutes_total')),
+        ];
     }
 
     /**
@@ -143,7 +206,9 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
         [$durationMinutes] = $this->duration($shift->start, $shift->end);
 
         $breakMinutes = (int)($shift->break_minutes ?? 0);
-        $breakLabel   = $breakMinutes > 0 ? ($breakMinutes . ' min') : '0 min';
+        $breakLabel   = $this->decimalNumbers
+            ? $this->minutesToDecimalHours($breakMinutes)
+            : ($breakMinutes > 0 ? ($breakMinutes . ' min') : '0 min');
 
         // ------------------------------------------------------------
         // ✅ Intern/Extern-Partition für Users anhand is_freelancer
@@ -182,8 +247,8 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             $intMinutes[$qid] = ($intCounts[$qid] ?? 0) * $intWorkMinutes;
             $extMinutes[$qid] = ($extCounts[$qid] ?? 0) * $extWorkMinutes;
 
-            $intLabels[$qid] = $this->formatMinutesLabel($intMinutes[$qid]);
-            $extLabels[$qid] = $this->formatMinutesLabel($extMinutes[$qid]);
+            $intLabels[$qid] = $this->formatMinutes($intMinutes[$qid]);
+            $extLabels[$qid] = $this->formatMinutes($extMinutes[$qid]);
         }
 
         $intMinutesSum = array_sum($intMinutes);
@@ -197,7 +262,7 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             'start' => $startLabel,
             'end'   => $endLabel,
 
-            'duration_label' => $this->formatMinutesLabel($durationMinutes),
+            'duration_label' => $this->formatMinutes($durationMinutes),
             'break_label'    => $breakLabel,
 
             'int_counts'      => $intCounts,
@@ -215,9 +280,9 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
             'ext_minutes_sum' => $extMinutesSum,
             'minutes_total'   => $minutesTotal,
 
-            'int_sum_label'   => $this->formatMinutesLabel($intMinutesSum),
-            'ext_sum_label'   => $this->formatMinutesLabel($extMinutesSum),
-            'total_label'     => $this->formatMinutesLabel($minutesTotal),
+            'int_sum_label'   => $this->formatMinutes($intMinutesSum),
+            'ext_sum_label'   => $this->formatMinutes($extMinutesSum),
+            'total_label'     => $this->formatMinutes($minutesTotal),
         ];
     }
 
@@ -318,6 +383,18 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
         return [$start, $end];
     }
 
+    private function formatMinutes(int $minutes): string|float
+    {
+        return $this->decimalNumbers
+            ? $this->minutesToDecimalHours($minutes)
+            : $this->formatMinutesLabel($minutes);
+    }
+
+    private function minutesToDecimalHours(int $minutes): float
+    {
+        return round(max(0, $minutes) / 60, 2);
+    }
+
     private function formatMinutesLabel(int $minutes): string
     {
         $minutes = max(0, $minutes);
@@ -382,7 +459,54 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['rgb' => 'D0D0D0'],
+                            'color' => ['rgb' => '9E9E9E'],
+                        ],
+                    ],
+                ]);
+
+                // Kopfzeile deutlich von den Daten abgrenzen
+                $sheet->getStyle("A4:{$lastCol}4")->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => Border::BORDER_MEDIUM,
+                            'color' => ['rgb' => '595959'],
+                        ],
+                    ],
+                ]);
+
+                // Tageswechsel mit dickerer Linie markieren
+                foreach ($this->dayBreakRows as $dayBreakRow) {
+                    $sheet->getStyle("A{$dayBreakRow}:{$lastCol}{$dayBreakRow}")->applyFromArray([
+                        'borders' => [
+                            'top' => [
+                                'borderStyle' => Border::BORDER_MEDIUM,
+                                'color' => ['rgb' => '595959'],
+                            ],
+                        ],
+                    ]);
+                }
+
+                // Summenzeile hervorheben
+                $sheet->getStyle("A{$totalRow}:{$lastCol}{$totalRow}")->applyFromArray([
+                    'font' => ['bold' => true],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'F2F2F2'],
+                    ],
+                    'borders' => [
+                        'top' => [
+                            'borderStyle' => Border::BORDER_MEDIUM,
+                            'color' => ['rgb' => '595959'],
+                        ],
+                    ],
+                ]);
+
+                // Außenrahmen der gesamten Tabelle
+                $sheet->getStyle("A2:{$lastCol}{$totalRow}")->applyFromArray([
+                    'borders' => [
+                        'outline' => [
+                            'borderStyle' => Border::BORDER_MEDIUM,
+                            'color' => ['rgb' => '404040'],
                         ],
                     ],
                 ]);
@@ -424,7 +548,7 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
                         'borders' => [
                             'right' => [
                                 'borderStyle' => Border::BORDER_MEDIUM,
-                                'color' => ['rgb' => 'A6A6A6'],
+                                'color' => ['rgb' => '808080'],
                             ],
                         ],
                     ]);
@@ -483,6 +607,16 @@ class ProjectShiftPersonalPlanExcelExport implements FromView, WithEvents, WithC
                     $sheet, $shiftsExternSum, $shiftsExternSum, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER
                 );
                 $this->setNumberFormatRange($sheet, $headcountCol, $headcountCol, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER);
+
+                if ($this->decimalNumbers) {
+                    // Dauer- und Pausenspalte sowie alle Stunden-Spalten als Dezimalzahl (z. B. 8,5)
+                    $this->setNumberFormatRange(
+                        $sheet, 6, 7, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER_00
+                    );
+                    $this->setNumberFormatRange(
+                        $sheet, $hoursStart, $hoursTotalCol, $dataStart, $totalRow, NumberFormat::FORMAT_NUMBER_00
+                    );
+                }
             },
         ];
     }

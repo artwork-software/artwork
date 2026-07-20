@@ -81,8 +81,17 @@
 
                     <!-- Sync Result -->
                     <div v-if="syncResult[source.id]" class="mb-4 p-3 rounded"
-                         :class="syncResult[source.id].success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'">
-                        {{ syncResult[source.id].message }}
+                         :class="syncResult[source.id].success === false
+                             ? 'bg-red-50 text-red-800'
+                             : syncResult[source.id].complete
+                                 ? 'bg-green-50 text-green-800'
+                                 : 'bg-blue-50 text-blue-800'">
+                        <div>{{ syncResult[source.id].message }}</div>
+                        <div v-if="syncResult[source.id].result" class="mt-1 text-xs">
+                            {{ $t('Processed') }}: {{ syncResult[source.id].result.total }} ·
+                            {{ $t('Synchronized') }}: {{ syncResult[source.id].result.synced }} ·
+                            {{ $t('Skipped') }}: {{ syncResult[source.id].result.skipped }}
+                        </div>
                     </div>
 
                     <!-- Group Mappings -->
@@ -204,19 +213,51 @@ export default defineComponent({
                 );
 
                 this.syncResult[source.id] = {
-                    success: response.data.success,
-                    message: response.data.message
+                    success: true,
+                    complete: false,
+                    message: response.data.message,
                 };
 
-                router.reload({ only: ['sources'] });
+                await this.waitForSyncCompletion(source.id);
             } catch (error) {
                 this.syncResult[source.id] = {
                     success: false,
-                    message: error.response?.data?.message || this.$t('Sync failed')
+                    message: error.response?.data?.message || error.message || this.$t('Sync failed')
                 };
             } finally {
                 this.syncingSource = null;
             }
+        },
+        async waitForSyncCompletion(sourceId) {
+            const terminalStatuses = ['completed', 'failed', 'cancelled'];
+
+            for (let attempt = 0; attempt < 900; attempt += 1) {
+                await new Promise((resolve) => window.setTimeout(resolve, 2000));
+
+                const response = await axios.get(
+                    route('tool.external-user-management.sources.sync-status', {
+                        externalUserSource: sourceId
+                    })
+                );
+                const status = response.data;
+
+                this.syncResult[sourceId] = {
+                    success: status.status !== 'failed' && status.status !== 'cancelled',
+                    complete: terminalStatuses.includes(status.status),
+                    message: status.message,
+                    result: status.result,
+                };
+
+                if (terminalStatuses.includes(status.status)) {
+                    if (status.status === 'completed') {
+                        router.reload({ only: ['sources'] });
+                    }
+
+                    return;
+                }
+            }
+
+            throw new Error(this.$t('The synchronization is still running. You can leave this page and check again later.'));
         },
         async testConnection(source) {
             this.testingConnection = source.id;

@@ -92,8 +92,8 @@ class ProjectDayAssignment extends Model
     public function scopeBetweenDates(Builder $builder, Carbon|string $start, Carbon|string $end): Builder
     {
         return $builder
-            ->whereDate('date', '>=', $start)
-            ->whereDate('date', '<=', $end);
+            ->where('date', '>=', Carbon::parse($start)->toDateString())
+            ->where('date', '<=', Carbon::parse($end)->toDateString());
     }
 
     public function scopeBinding(Builder $builder): Builder

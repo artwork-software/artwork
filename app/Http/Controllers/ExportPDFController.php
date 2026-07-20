@@ -569,6 +569,18 @@ class ExportPDFController extends Controller
             ? optional($this->projectService->findById($highlightProjectId))->name
             : null;
 
+        // Kalenderwochen des Zeitraums für den Kopfbereich, damit ein nach KW
+        // gefilterter Export als solcher erkennbar ist.
+        $kwRange = ($startDate->isoWeek === $endDate->isoWeek && $startDate->isoWeekYear === $endDate->isoWeekYear)
+            ? sprintf('KW %d/%d', $startDate->isoWeek, $startDate->isoWeekYear)
+            : sprintf(
+                'KW %d/%d – KW %d/%d',
+                $startDate->isoWeek,
+                $startDate->isoWeekYear,
+                $endDate->isoWeek,
+                $endDate->isoWeekYear
+            );
+
         $pdf = $this->snappyPdf->loadView(
             'pdf.shiftplan_export',
             [
@@ -582,6 +594,7 @@ class ExportPDFController extends Controller
                 'created_by' => $user->full_name,
                 'startDate' => $startDate->format('d.m.Y'),
                 'endDate' => $endDate->format('d.m.Y'),
+                'kwRange' => $kwRange,
                 'highlightProjectId' => $highlightProjectId,
                 'highlightProjectName' => $highlightProjectName,
                 'hideEmptyRooms' => $hideEmptyRooms,
@@ -829,13 +842,22 @@ class ExportPDFController extends Controller
      */
     public function createUserShiftPlanPDF(
         Request $request,
-        User $user,
+        int $user,
         EventService $eventService
     ): Response {
         $authUser = $this->authManager->guard()->user();
 
         $type = $request->string('type', 'user')->toString();
-        $modelId = (int) ($request->integer('model_id') ?: $user->id);
+        $modelId = (int) ($request->integer('model_id') ?: $user);
+
+        // {user} ist je nach type eine User-, Freelancer- oder Dienstleister-ID –
+        // deshalb bewusst kein Route-Model-Binding auf User (404 bei Freelancer-IDs).
+        $worker = match ($type) {
+            'freelancer' => \Artwork\Modules\Freelancer\Models\Freelancer::query()->findOrFail($modelId),
+            'service_provider', 'serviceProvider' =>
+                \Artwork\Modules\ServiceProvider\Models\ServiceProvider::query()->findOrFail($modelId),
+            default => User::query()->findOrFail($modelId),
+        };
 
         // Monatsliste (je YYYY-MM)
         $startMonth = $request->get('startMonth');
@@ -898,7 +920,7 @@ class ExportPDFController extends Controller
         }
 
         $dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-        $weeklyWorkingHours = $type === 'user' ? (float) ($user->weekly_working_hours ?? 0) : null;
+        $weeklyWorkingHours = $type === 'user' ? (float) ($worker->weekly_working_hours ?? 0) : null;
 
         // Schichtqualifikationen (Funktion) -> [id => name]
         $shiftQualifications = \Artwork\Modules\Shift\Models\ShiftQualification::query()
@@ -1007,7 +1029,7 @@ class ExportPDFController extends Controller
         $pdf = $this->snappyPdf->loadView(
             'pdf.user_shift_plan',
             [
-                'userName' => $user->full_name,
+                'userName' => $worker->getAttribute('full_name') ?? $worker->getAttribute('name'),
                 'showSoll' => $weeklyWorkingHours !== null,
                 'pages' => $pages,
                 'created_by' => $authUser->first_name . ' ' . $authUser->last_name,

@@ -42,6 +42,7 @@ use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\EventVerificationController;
 use App\Http\Controllers\ExportPDFController;
+use App\Http\Controllers\WorkerShiftPlanPdfExportController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
@@ -168,6 +169,7 @@ use Artwork\Modules\Manufacturer\Http\Controllers\ManufacturerController;
 use Artwork\Modules\MaterialSet\Http\Controllers\MaterialSetController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
+use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
@@ -298,6 +300,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.external-user-management.sources.test-connection');
         Route::post('/external-user-management/sources/{externalUserSource}/sync', [ExternalUserSourceController::class, 'sync'])
             ->name('tool.external-user-management.sources.sync');
+        Route::get('/external-user-management/sources/{externalUserSource}/sync-status', [ExternalUserSourceController::class, 'syncStatus'])
+            ->name('tool.external-user-management.sources.sync-status');
 
         Route::post('/external-user-management/sources/test-connection-config', [ExternalUserSourceController::class, 'testConnectionConfig'])
             ->name('tool.external-user-management.sources.test-connection-config');
@@ -551,6 +555,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
+
+    // Matrix über alle Produktionen hinweg — braucht das globale Projekt-Leserecht,
+    // Team-Mitgliedschaft in einzelnen Projekten reicht nicht (Route vor {project}!)
+    Route::get('/projects/export/project-role-matrix', ProjectRoleMatrixExportController::class)
+        ->name('projects.export.project-role-matrix')
+        ->can('view projects');
     Route::get('/projects/{project}/basic', [ProjectController::class, 'showBasic'])->name('projects.show.basic');
     Route::get('/projects/{project}/rooms-with-event-periods', [ProjectController::class, 'roomsWithEventPeriods'])
         ->name('projects.rooms-with-event-periods');
@@ -561,6 +571,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project-day-assignments.projects');
     Route::post('/project-day-assignments', [ProjectDayAssignmentController::class, 'store'])
         ->name('project-day-assignments.store');
+    Route::get('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'fullPeriodForWorker'])
+        ->name('project-day-assignments.full-period.index')
+        ->can('can plan shifts');
+    Route::delete('/project-day-assignments/full-period', [ProjectDayAssignmentController::class, 'destroyFullPeriod'])
+        ->name('project-day-assignments.full-period.destroy')
+        ->can('can plan shifts');
     Route::delete('/project-day-assignments/{projectDayAssignment}', [ProjectDayAssignmentController::class, 'destroy'])
         ->name('project-day-assignments.destroy');
     Route::patch('/project-day-assignments/{projectDayAssignment}/accept-wish', [ProjectDayAssignmentController::class, 'acceptWish'])
@@ -572,7 +588,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.project-assignees')
         ->can('can view shift plan');
     Route::get('/events/{event}/project-assignment-impact', [ProjectDayAssignmentController::class, 'rescheduleImpact'])
-        ->name('events.project-assignment-impact');
+        ->name('events.project-assignment-impact')
+        ->can('can view shift plan');
     Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
@@ -2111,6 +2128,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/calendar/export/monthly-pdf', [ExportPDFController::class, 'createMonthlyPDF'])->name('calendar.export.monthly-pdf');
     Route::post('/shift-plan/export/pdf', [ExportPDFController::class, 'createShiftPlanPDF'])
         ->name('shift.plan.export.pdf');
+    Route::post('/shift-plan/export/worker-matrix-pdf', WorkerShiftPlanPdfExportController::class)
+        ->name('shift.plan.export.worker-matrix.pdf')
+        ->can('can view shift plan');
     Route::post('/users/{user}/shiftplan/export/monthly-pdf', [ExportPDFController::class, 'createUserShiftPlanPDF'])
         ->name('user.shiftplan.export.monthly-pdf');
     Route::get(

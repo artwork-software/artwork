@@ -672,6 +672,9 @@ const exportTabs = computed(() => {
     if (props.createSettings.budget_deadline) {
         tabs.push(exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT);
     }
+    if (can('view projects') || role('artwork admin')) {
+        tabs.push(exportTabEnums.EXCEL_PROJECT_ROLE_MATRIX_EXPORT);
+    }
     return tabs;
 });
 

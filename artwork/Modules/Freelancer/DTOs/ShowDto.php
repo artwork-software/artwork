@@ -48,6 +48,10 @@ class ShowDto extends BaseDto
 
     public int|Closure|null $firstProjectShiftTabId = null;
 
+    public array|Closure|null $daysWithData = null;
+
+    public Collection|Closure|null $crafts = null;
+
     public function setFreelancer(?array $freelancer): self
     {
         $this->freelancer = $freelancer;
@@ -184,6 +188,20 @@ class ShowDto extends BaseDto
         return $this;
     }
 
+    public function setDaysWithData(array|Closure|null $daysWithData): self
+    {
+        $this->daysWithData = $daysWithData;
+
+        return $this;
+    }
+
+    public function setCrafts(Collection|Closure|null $crafts): self
+    {
+        $this->crafts = $crafts;
+
+        return $this;
+    }
+
     /**
      * @return array<string, mixed>|null
      */
@@ -303,6 +321,16 @@ class ShowDto extends BaseDto
         return $this->firstProjectShiftTabId;
     }
 
+    public function getDaysWithData(): array|Closure|null
+    {
+        return $this->daysWithData;
+    }
+
+    public function getCrafts(): Collection|Closure|null
+    {
+        return $this->crafts;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -329,6 +357,8 @@ class ShowDto extends BaseDto
             'availabilities' => $this->getAvailabilities(),
             'shiftQualifications' => $this->getShiftQualifications(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
+            'daysWithData' => $this->getDaysWithData(),
+            'crafts' => $this->getCrafts(),
         ];
     }
 }

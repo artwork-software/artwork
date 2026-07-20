@@ -162,8 +162,10 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from "@/Composeables/Permission.js";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 
-const percentage = usePage().props.high_contrast_percent
-const { backgroundColorWithOpacity, getTextColorBasedOnBackground } = useColorHelper()
+const { backgroundColorWithOpacity, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper()
+const percentage = computed(() => getHighContrastPercent(
+    usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings
+))
 const { can, hasAdminRole } = usePermission(usePage().props)
 
 const props = defineProps({

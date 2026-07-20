@@ -46,6 +46,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
@@ -474,8 +475,28 @@ readonly class EventService
             $totalBreakMinutes = 0;
 
             foreach ($shifts as $shift) {
-                $start = Carbon::parse($shift['start']);
-                $end = Carbon::parse($shift['end']);
+                // start/end sind reine Uhrzeiten — ohne start_date/end_date wäre die
+                // Differenz bei Schichten über Mitternacht negativ und die Schicht
+                // fiele komplett aus der Gesamtstundenanzahl heraus.
+                $startDay = !empty($shift['start_date'])
+                    ? Carbon::parse($shift['start_date'])->toDateString()
+                    : null;
+                $endDay = !empty($shift['end_date'])
+                    ? Carbon::parse($shift['end_date'])->toDateString()
+                    : $startDay;
+
+                $start = $startDay
+                    ? Carbon::parse($startDay . ' ' . $shift['start'])
+                    : Carbon::parse($shift['start']);
+                $end = $endDay
+                    ? Carbon::parse($endDay . ' ' . $shift['end'])
+                    : Carbon::parse($shift['end']);
+
+                // Altbestand ohne end_date am Folgetag: Endzeit vor Startzeit
+                // bedeutet Mitternachtsüberschreitung.
+                if ($end->lt($start)) {
+                    $end->addDay();
+                }
 
                 $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ? $start : $earliestStart;
                 $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ? $end : $latestEnd;
@@ -484,7 +505,7 @@ readonly class EventService
             }
 
             $totalWorkMinutes = ($earliestStart !== null && $latestEnd !== null)
-                ? max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes), 0)
+                ? (int) max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes), 0)
                 : 0;
 
             return [
@@ -611,8 +632,7 @@ readonly class EventService
             }
         }
 
-        // Individualzeiten nur für User im Zeitraum einsammeln.
-        // Hinweis: IndividualTime ist morph (`timeable_type`/`timeable_id`) – es gibt keine `user_id` Spalte.
+        // Schichtregel-Verstöße gibt es nur für User (`shift_rule_violations.user_id`).
         if ($modelType === 'user') {
             $violations = ShiftRuleViolation::query()
                 ->select(['id', 'shift_rule_id', 'violation_date', 'status'])
@@ -628,41 +648,43 @@ readonly class EventService
                     $daysWithData[$dayKey]['violations'] = $dayViolations->values()->all();
                 }
             }
+        }
 
-            $individualTimes = IndividualTime::query()
-                ->where('timeable_type', User::class)
-                ->where('timeable_id', $modelId)
-                ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
-                ->where(function (Builder $query) use ($startDate): void {
-                    $query->whereNull('end_date')
-                        ->orWhereDate('end_date', '>=', $startDate->format('Y-m-d'));
-                })
-                ->with(['series'])
-                ->get();
+        // Individualzeiten sind morph (`timeable_type`/`timeable_id`) und existieren auch für
+        // Freelancer und Dienstleister – deshalb über die Worker-Klasse statt user-only laden.
+        $individualTimes = IndividualTime::query()
+            ->where('timeable_type', $workerClass)
+            ->where('timeable_id', $modelId)
+            ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
+            ->where(function (Builder $query) use ($startDate): void {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', $startDate->format('Y-m-d'));
+            })
+            ->with(['series'])
+            ->get();
 
-            foreach ($individualTimes as $it) {
-                $itStart = Carbon::parse($it->start_date)->startOfDay();
-                $itEnd = Carbon::parse($it->end_date ?? $it->start_date)->endOfDay();
+        foreach ($individualTimes as $it) {
+            $itStart = Carbon::parse($it->start_date)->startOfDay();
+            $itEnd = Carbon::parse($it->end_date ?? $it->start_date)->endOfDay();
 
-                $clampedStart = $itStart->copy()->max($startDate->copy()->startOfDay());
-                $clampedEnd = $itEnd->copy()->min($endDate->copy()->endOfDay());
+            $clampedStart = $itStart->copy()->max($startDate->copy()->startOfDay());
+            $clampedEnd = $itEnd->copy()->min($endDate->copy()->endOfDay());
 
-                $itPeriod = CarbonPeriod::create($clampedStart, $clampedEnd);
-                foreach ($itPeriod as $d) {
-                    $dayKey = $d->format('Y-m-d');
-                    if (!isset($daysWithData[$dayKey])) {
-                        continue;
-                    }
-
-                    $daysWithData[$dayKey]['individualTimes'][] = [
-                        'id' => $it->id,
-                        'start_time' => $it->start_time,
-                        'end_time' => $it->end_time,
-                        'full_day' => (bool)$it->full_day,
-                        'title' => $it->title,
-                        'series' => $it->series,
-                    ];
+            $itPeriod = CarbonPeriod::create($clampedStart, $clampedEnd);
+            foreach ($itPeriod as $d) {
+                $dayKey = $d->format('Y-m-d');
+                if (!isset($daysWithData[$dayKey])) {
+                    continue;
                 }
+
+                $daysWithData[$dayKey]['individualTimes'][] = [
+                    'id' => $it->id,
+                    'start_time' => $it->start_time,
+                    'end_time' => $it->end_time,
+                    'full_day' => (bool)$it->full_day,
+                    'title' => $it->title,
+                    'series' => $it->series,
+                ];
             }
         }
 
@@ -704,8 +726,11 @@ readonly class EventService
                     $builder->whereKey($modelId);
                 }
             )
-            ->whereBetween('start_time', $period)
-            ->whereBetween('end_time', $period)
+            // Überlappung statt vollständiger Enthaltung: Termine, die über
+            // Mitternacht (und damit über das Zeitraum-Ende) hinauslaufen,
+            // dürfen nicht komplett herausfallen.
+            ->where('start_time', '<=', $endDate->copy()->endOfDay())
+            ->where('end_time', '>=', $startDate->copy()->startOfDay())
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();
@@ -715,6 +740,12 @@ readonly class EventService
             /** @var Shift $shift */
             foreach ($event['shifts'] as $shift) {
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
+
+                // Schichten außerhalb des angefragten Zeitraums (möglich durch
+                // Überlappungs-Filter) nicht in nicht-existente Tage schreiben
+                if (!isset($daysWithData[$shiftDate])) {
+                    continue;
+                }
 
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
@@ -771,8 +802,10 @@ readonly class EventService
             ->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                 $builder->whereKey($modelId);
             })
+            // Nur start_date filtern: Die Schicht zählt zum Tag ihres Beginns.
+            // Ein zusätzlicher end_date-Filter würde Mitternachtsschichten am
+            // letzten Tag des Zeitraums (end_date = Folgetag) ausschließen.
             ->whereBetween('start_date', [$startDate, $endDate])
-            ->whereBetween('end_date', [$startDate, $endDate])
             ->orderBy('start')
             ->get();
 
@@ -780,6 +813,10 @@ readonly class EventService
         foreach ($shifts as $shift) {
             if (!$shift->event_id) {
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
+
+                if (!isset($daysWithData[$shiftDate])) {
+                    continue;
+                }
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
                 $daysWithData[$shiftDate]['shifts'][] = [
@@ -2144,7 +2181,21 @@ readonly class EventService
             return;
         }
 
-        $this->eventRepository->deleteEvents($eventIds);
-    }
+        DB::transaction(function () use ($eventIds): void {
+            $projectIds = Event::query()
+                ->whereIn('id', $eventIds)
+                ->whereNotNull('project_id')
+                ->distinct()
+                ->pluck('project_id');
 
+            $this->eventRepository->deleteEvents($eventIds);
+
+            $projectDayAssignmentService = app(ProjectDayAssignmentService::class);
+
+            Project::query()
+                ->whereIn('id', $projectIds)
+                ->each(fn (Project $project) => $projectDayAssignmentService
+                    ->rematerializeForProjectPeriodChange($project));
+        });
+    }
 }

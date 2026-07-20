@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\BusinessIntelligence\Services\BiDashboardService;
+use Artwork\Modules\BusinessIntelligence\Services\BiExportService;
+use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectTabService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +16,7 @@ class BiDashboardController extends Controller
 {
     public function __construct(
         private readonly BiDashboardService $biDashboardService,
+        private readonly BiExportService $biExportService,
         private readonly ProjectTabService $projectTabService
     ) {
     }
@@ -34,9 +38,31 @@ class BiDashboardController extends Controller
             $validated['date_to'] ?? null
         );
 
+        $biTab = $this->projectTabService->findFirstProjectTabWithBusinessIntelligenceComponent();
+
+        $canExport = $request->user()->can(PermissionEnum::BI_EXPORT->value)
+            || $request->user()->hasRole('admin');
+
         return Inertia::render('BusinessIntelligence/Dashboard', [
             'dashboard' => $data,
-            'firstProjectTabId' => $this->projectTabService->getDefaultOrFirstProjectTab()?->getAttribute('id'),
+            'firstProjectTabId' => $biTab?->getAttribute('id')
+                ?? $this->projectTabService->getDefaultOrFirstProjectTab()?->getAttribute('id'),
+            'biComponentInTab' => $biTab !== null,
+            'exportOptions' => $canExport ? $this->buildExportOptions() : null,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildExportOptions(): array
+    {
+        return array_merge($this->biExportService->exportConfigurationOptions(), [
+            'projects' => Project::query()
+                ->where('is_group', false)
+                ->orderBy('name')
+                ->get(['id', 'name', 'cost_center_id']),
+            'costCenters' => CostCenter::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

@@ -11,6 +11,9 @@ use LdapRecord\Query\Collection as LdapCollection;
 
 class LdapApi implements ExternalUserManagementApi
 {
+    /** @var array<string, array<int, string>> */
+    private array $groupParentCache = [];
+
     /**
      * Erstellt eine LDAP-Verbindung aus der Datenbank-Konfiguration
      */
@@ -72,11 +75,9 @@ class LdapApi implements ExternalUserManagementApi
         $filter = trim((string) $filter);
 
         if ($filter === '') {
-            // In AD haben auch Computer-/gMSA-Konten objectClass=user; objectCategory=person
-            // schließt sie aus (ersetzt den früheren RejectComputerObjectClass-Scope des
-            // ActiveDirectory\User-Models). Nicht-AD-Verzeichnisse brauchen ohnehin einen
-            // eigenen user_filter.
-            return '(&(objectCategory=person)(objectClass=user))';
+            // Portable across Active Directory, OpenLDAP and other LDAP servers. AD-specific
+            // installations can still exclude computer accounts via an explicit user_filter.
+            return '(objectClass=person)';
         }
 
         if (!str_starts_with($filter, '(')) {
@@ -105,6 +106,7 @@ class LdapApi implements ExternalUserManagementApi
 
     public function fetchUsers(ExternalUserSource $source): Collection
     {
+        $this->groupParentCache = [];
         $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
@@ -197,8 +199,13 @@ class LdapApi implements ExternalUserManagementApi
             ->all();
     }
 
-    public function fetchUserGroups(ExternalUserSource $source, string $userIdentifier, bool $includeNested = true): array
+    public function fetchUserGroups(
+        ExternalUserSource $source,
+        string $userIdentifier,
+        bool $includeNested = true,
+    ): array
     {
+        $this->groupParentCache = [];
         $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
@@ -243,13 +250,13 @@ class LdapApi implements ExternalUserManagementApi
     {
         $nestedGroups = [];
 
-        $group = LdapUser::on($connectionName)->findByDn($groupDn);
-
-        if (!$group) {
-            return [];
+        $cacheKey = $connectionName . ':' . mb_strtolower($groupDn);
+        if (!array_key_exists($cacheKey, $this->groupParentCache)) {
+            $group = LdapUser::on($connectionName)->findByDn($groupDn);
+            $this->groupParentCache[$cacheKey] = $group?->getAttribute('memberOf') ?? [];
         }
 
-        $memberOf = $group->getAttribute('memberOf') ?? [];
+        $memberOf = $this->groupParentCache[$cacheKey];
 
         foreach ($memberOf as $nestedGroupDn) {
             if (isset($processedGroups[$nestedGroupDn])) {

@@ -118,10 +118,30 @@ class VacationController extends Controller
         }
     }
 
+    /**
+     * Der Verfügbarkeitsstatus (Arbeitsfrei/Frei/Nicht verfügbar) ist Planungssache:
+     * niemand darf ihn für sich selbst setzen — eigene Abwesenheiten laufen über den
+     * Verfügbarkeitskalender (store/updateEntry). Admins passieren via Gate::before.
+     */
+    private function authorizeAvailabilityStatusChange(): void
+    {
+        abort_unless(
+            (bool) auth()->user()?->can(
+                \Artwork\Modules\Permission\Enums\PermissionEnum::SHIFT_PLANNER->value
+            )
+                || (bool) auth()->user()?->can(
+                    \Artwork\Modules\Permission\Enums\PermissionEnum::AVAILABILITY_MANAGEMENT->value
+                ),
+            403
+        );
+    }
+
     public function checkVacation(
         Request $request,
         User $user
     ): void {
+        $this->authorizeAvailabilityStatusChange();
+
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
@@ -208,6 +228,8 @@ class VacationController extends Controller
         Request $request,
         Freelancer $freelancer
     ): void {
+        $this->authorizeAvailabilityStatusChange();
+
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
@@ -276,6 +298,8 @@ class VacationController extends Controller
         Request $request,
         ServiceProvider $serviceProvider
     ): void {
+        $this->authorizeAvailabilityStatusChange();
+
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');

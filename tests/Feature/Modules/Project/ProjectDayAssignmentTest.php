@@ -4,6 +4,7 @@ namespace Tests\Feature\Modules\Project;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectDayAssignmentType;
 use Artwork\Modules\Project\Models\Project;
@@ -643,6 +644,28 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         $this->assertSame(['2026-08-01', '2026-08-02', '2026-08-03'], $remainingDates->all());
     }
 
+    #[Test]
+    public function deleting_the_last_event_dissolves_all_project_assignments(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $worker = User::factory()->create();
+
+        $this->service()->createFullPeriodAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING
+        );
+
+        $project->events()->firstOrFail()->delete();
+
+        $this->assertSame(
+            0,
+            ProjectDayAssignment::query()->where('project_id', $project->id)->count()
+        );
+    }
+
     // ---------- Wunsch annehmen + Löschen ----------
 
     #[Test]
@@ -793,7 +816,10 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
     #[Test]
     public function reschedule_impact_endpoint_lists_out_of_period_single_day_assignments(): void
     {
-        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $this->actingAsUserWith([
+            PermissionEnum::SHIFT_PLANNER->value,
+            PermissionEnum::VIEW_SHIFT_PLAN->value,
+        ]);
         $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
         $worker = User::factory()->create();
 
@@ -819,5 +845,164 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
 
         $this->assertCount(1, $affected);
         $this->assertSame(['05.08.2026'], $affected[0]['dates']);
+    }
+
+    #[Test]
+    public function reschedule_impact_requires_shift_plan_view_permission(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
+
+        $this->getJson(route('events.project-assignment-impact', [
+            'event' => $project->events()->firstOrFail()->id,
+            'start_time' => '2026-08-01 10:00:00',
+            'end_time' => '2026-08-03 18:00:00',
+        ]))->assertForbidden();
+    }
+
+    #[Test]
+    public function shift_multi_edit_validates_full_period_assignments_and_worker(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $worker = User::factory()->create();
+
+        $this->postJson(route('shift.multi.edit.save'), [
+            'userType' => 0,
+            'userTypeId' => $worker->id,
+            'fullPeriodProjectAssignments' => [$project->id],
+        ])->assertSuccessful();
+
+        $this->assertSame(
+            3,
+            ProjectDayAssignment::query()
+                ->where('project_id', $project->id)
+                ->forEmployable(User::class, $worker->id)
+                ->count()
+        );
+
+        $this->postJson(route('shift.multi.edit.save'), [
+            'userType' => 99,
+            'userTypeId' => PHP_INT_MAX,
+            'fullPeriodProjectAssignments' => [PHP_INT_MAX],
+        ])->assertUnprocessable()->assertJsonValidationErrors([
+            'userType',
+            'fullPeriodProjectAssignments.0',
+        ]);
+    }
+
+    #[Test]
+    public function full_period_lookup_and_delete_are_independent_of_the_visible_date_range(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $worker = User::factory()->create();
+
+        $created = $this->service()->createFullPeriodAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING
+        );
+
+        $groupId = $created->firstOrFail()->group_id;
+
+        $this->getJson(route('project-day-assignments.full-period.index', [
+            'worker_type' => 0,
+            'worker_id' => $worker->id,
+        ]))->assertOk()->assertJsonPath('assignments.0', [
+            'project_id' => $project->id,
+            'group_id' => $groupId,
+        ]);
+
+        $this->deleteJson(route('project-day-assignments.full-period.destroy', [
+            'worker_type' => 0,
+            'worker_id' => $worker->id,
+            'project_id' => $project->id,
+            'group_id' => $groupId,
+        ]))->assertOk();
+
+        $this->assertSame(
+            0,
+            ProjectDayAssignment::withTrashed()->where('group_id', $groupId)->count()
+        );
+    }
+
+    #[Test]
+    public function moving_an_event_to_another_project_checks_the_old_project_period(): void
+    {
+        $this->actingAsUserWith([
+            PermissionEnum::SHIFT_PLANNER->value,
+            PermissionEnum::VIEW_SHIFT_PLAN->value,
+        ]);
+        $oldProject = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
+        $newProject = $this->createProjectWithPeriod('2026-09-01', '2026-09-02');
+        $worker = User::factory()->create();
+        $this->service()->createAssignments(
+            $oldProject,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-05'],
+            false
+        );
+
+        $this->getJson(route('events.project-assignment-impact', [
+            'event' => $oldProject->events()->firstOrFail()->id,
+            'start_time' => '2026-09-01 10:00:00',
+            'end_time' => '2026-09-02 18:00:00',
+            'project_id' => $newProject->id,
+        ]))->assertOk()->assertJsonCount(1, 'affected');
+    }
+
+    #[Test]
+    public function accepting_a_wish_force_deletes_rows_absorbed_by_existing_bindings(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $worker = User::factory()->create();
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        );
+        $wish = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::WISH,
+            ['2026-08-02'],
+            false
+        )->firstOrFail();
+
+        $this->service()->acceptWishGroup($wish);
+
+        $this->assertNull(ProjectDayAssignment::withTrashed()->find($wish->id));
+    }
+
+    #[Test]
+    public function project_assignment_response_uses_public_avatar_urls_for_external_workers(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $freelancer = Freelancer::factory()->create(['profile_image' => 'avatars/freelancer.jpg']);
+        $this->service()->createAssignments(
+            $project,
+            Freelancer::class,
+            $freelancer->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        );
+
+        $response = $this->getJson(route('projects.day-assignments', $project))->assertOk();
+
+        $this->assertStringContainsString(
+            '/storage/avatars/freelancer.jpg',
+            $response->json('assignments.0.worker.profile_photo_url')
+        );
     }
 }

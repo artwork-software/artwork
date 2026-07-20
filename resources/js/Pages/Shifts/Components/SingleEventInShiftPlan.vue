@@ -3,7 +3,7 @@
         <div>
             <div class="text-secondary-hover rounded-lg flex flex-col"
                  :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
-                 :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, usePage().props.high_contrast_percent)),
+                 :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage)),
                  borderColor: eventType.hex_code}">
 
                 <!-- Projektgruppen-Balken (wie im FullEventInCalendar) -->
@@ -208,13 +208,14 @@ const AddEditTimelineModal = defineAsyncComponent({
 
 const { resolveEventType, resolveProject } = useShiftPlanLookups();
 
-const percentage = usePage().props.high_contrast_percent;
 const shiftPlanSettings = computed(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings);
 const expandDays = computed(() => shiftPlanSettings.value?.expand_days ?? false);
 const {
     backgroundColorWithOpacity,
+    getHighContrastPercent,
     getTextColorBasedOnBackground,
 } = useColorHelper();
+const percentage = computed(() => getHighContrastPercent(shiftPlanSettings.value));
 
 const props = defineProps({
     event: {

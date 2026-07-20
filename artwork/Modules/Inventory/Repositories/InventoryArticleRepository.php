@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Inventory\Repositories;
 
+use App\Jobs\GenerateInventoryArticleImageThumbnail;
 use Artwork\Modules\Inventory\Models\InventoryArticle;
 use Artwork\Modules\Inventory\Models\InventoryArticleProperties;
 use Artwork\Modules\Inventory\Models\InventoryDetailedQuantityArticle;
@@ -231,6 +232,8 @@ class InventoryArticleRepository
             if ($index === $mainImageIndex) {
                 $created->update(['is_main_image' => true]);
             }
+
+            GenerateInventoryArticleImageThumbnail::dispatch($created)->afterCommit();
         }
     }
 
@@ -303,6 +306,9 @@ class InventoryArticleRepository
         foreach ($images as $image) {
             if ($image->image && Storage::disk('public')->exists($image->image)) {
                 Storage::disk('public')->delete($image->image);
+            }
+            if ($image->thumbnail && Storage::disk('public')->exists($image->thumbnail)) {
+                Storage::disk('public')->delete($image->thumbnail);
             }
             // permanently delete image record
             $image->forceDelete();

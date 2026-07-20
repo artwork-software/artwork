@@ -15,6 +15,13 @@
             />
         </div>
 
+        <p
+            v-if="projectAssignmentError"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+        >
+            {{ projectAssignmentError }}
+        </p>
+
         <!-- Zeitraum-Ansicht -->
         <div class="space-y-4">
             <!-- Kopfzeile (Zeitraum + Summen) -->
@@ -190,6 +197,8 @@
                                             v-if="assignment.type === 'wish' && isOwnPlan"
                                             type="button"
                                             class="text-emerald-400 hover:text-red-500 transition"
+                                            :disabled="projectAssignmentActionId === assignment.id"
+                                            :class="projectAssignmentActionId === assignment.id ? 'cursor-wait opacity-50' : ''"
                                             :title="$t('Remove wish for this day')"
                                             @click="deleteOwnWish(assignment)"
                                         >
@@ -347,11 +356,14 @@ import {is} from "laravel-permission-to-vuejs";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { provideShiftPlanLookups } from '@/Composeables/useShiftPlanLookups.js';
 import axios from 'axios';
-import ProjectAssignmentModal from '@/Pages/Shifts/Components/ProjectAssignmentModal.vue';
 import { colorForProjectId, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js';
 
 const ShiftHistoryModal = defineAsyncComponent({
     loader: () => import('@/Pages/Shifts/Components/ShiftHistoryModal.vue'),
+})
+
+const ProjectAssignmentModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ProjectAssignmentModal.vue'),
 })
 
 const showEditIndividualTimeModal = ref(false)
@@ -391,6 +403,8 @@ const isOwnPlan = computed(() => props.type === 'user' && page.props?.auth?.user
 
 const showWishModal = ref(false)
 const wishModalDay = ref(null)
+const projectAssignmentActionId = ref(null)
+const projectAssignmentError = ref('')
 
 const openWishModal = (day) => {
     wishModalDay.value = day.date
@@ -405,10 +419,19 @@ const handleWishModalClose = ({ saved } = { saved: false }) => {
 }
 
 const deleteOwnWish = async (assignment) => {
-    await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
-        params: { whole_group: false },
-    })
-    router.reload({ only: ['projectAssignments'] })
+    if (projectAssignmentActionId.value !== null) return
+    projectAssignmentActionId.value = assignment.id
+    projectAssignmentError.value = ''
+    try {
+        await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
+            params: { whole_group: false },
+        })
+        router.reload({ only: ['projectAssignments'] })
+    } catch (error) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
+    } finally {
+        projectAssignmentActionId.value = null
+    }
 }
 
 // Name, mit dem die Schichtverlauf-Suche im Einsatzplan vorbelegt wird: der Name des
@@ -420,6 +443,7 @@ const prefillSearchName = computed(() => {
         return (
             u.full_name ||
             [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
+            u.provider_name ||
             u.name ||
             ''
         )

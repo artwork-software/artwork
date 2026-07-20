@@ -214,6 +214,13 @@
                     <button
                         type="button"
                         class="new-button"
+                        @click.stop="printIssue(issue)">
+                        <IconPrinter class="size-4" />
+                        {{ $t('Print')}}
+                    </button>
+                    <button
+                        type="button"
+                        class="new-button"
                         @click.stop="openEditIssue(issue)">
                         <IconEdit class="size-4" />
                         {{ $t('Edit')}}
@@ -569,7 +576,7 @@ import axios from 'axios'
 import {
     IconCirclePlus, IconEdit, IconPackage, IconChevronDown,
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
-    IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash,
+    IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash, IconPrinter,
 } from '@tabler/icons-vue'
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";
@@ -791,6 +798,12 @@ function toLocal(dt:string){ return dt }
 const openEditIssue = (issue:InternalIssue) => {
     materialIssueToEdit.value = issue
     showIssueOfMaterialModal.value = true
+}
+
+const printIssue = (issue:InternalIssue) => {
+    window.open(route('issue-of-material.print', issue.id), '_blank')
+    // Der Druck legt das PDF serverseitig als Datei an der Ausgabe ab → Liste nachladen
+    window.setTimeout(fetchMaterials, 3000)
 }
 
 const openCreateMaterialIssue = () => {

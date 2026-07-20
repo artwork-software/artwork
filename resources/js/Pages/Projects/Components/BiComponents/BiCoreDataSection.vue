@@ -37,7 +37,8 @@
                 v-model="localData.premiere_date"
                 :label="$t('Premiere date')"
                 :disabled="!canEdit"
-                @change="save"
+                @change="onPremiereDateCommit"
+                @focusout="onPremiereDateCommit"
             />
         </div>
     </div>
@@ -47,6 +48,7 @@
 import { ref, watch } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     biData: { type: Object, default: null },
@@ -81,12 +83,31 @@ const onToggle = (key, value) => {
     save();
 };
 
+// Browser feuern bei type=date schon während des Tippens im Jahres-Segment change-Events
+// (z.B. Jahr "0002"). Ein Save dabei triggert fetchData im Parent und der biData-Watcher
+// setzt das Feld mitten in der Eingabe zurück — daher nur vollständige Daten speichern.
+const isCompleteDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number(value.slice(0, 4)) >= 1000;
+
+const onPremiereDateCommit = () => {
+    const value = localData.value.premiere_date || null;
+    if (value && !isCompleteDate(value)) {
+        return;
+    }
+    const serverValue = props.biData?.premiere_date ? props.biData.premiere_date.substring(0, 10) : null;
+    if (value === serverValue) {
+        return;
+    }
+    save();
+};
+
+const biSave = useBiSaveFeedback();
+
 const save = async () => {
-    try {
-        await axios.put(route('projects.bi.update-data', props.projectId), localData.value);
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-data', props.projectId), localData.value)
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error saving core data', error);
     }
 };
 </script>

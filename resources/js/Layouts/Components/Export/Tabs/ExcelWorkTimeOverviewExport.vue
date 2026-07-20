@@ -29,6 +29,9 @@
                     :locale="language"
                     input-class-name="!rounded-lg !border-gray-300 !py-2 !text-sm"
                 />
+                <p v-if="rangeTooLong" class="text-xs text-artwork-messages-error">
+                    {{ $t('The export range must not exceed 36 months.') }}
+                </p>
                 <div class="flex flex-wrap gap-1.5">
                     <button
                         v-for="preset in presetRanges"
@@ -74,11 +77,15 @@
             </section>
 
             <section class="flex items-center justify-end">
+                <p v-if="exportError" class="mr-4 text-sm text-artwork-messages-error" role="alert">
+                    {{ exportError }}
+                </p>
                 <BaseUIButton
                     @click="initializeDownload()"
                     :label="$t('Export')"
                     icon="IconFileExport"
                     :disabled="exportDisabled"
+                    :processing="exporting"
                     is-add-button
                 />
             </section>
@@ -90,6 +97,7 @@
 <script setup>
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
+import axios from "axios";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import "@vuepic/vue-datepicker/dist/main.css";
@@ -132,6 +140,8 @@ const pickerPresets = presetRanges.map((preset) => ({
 }));
 const monthRange = ref(presetRanges[0].value);
 const selectedCraftIds = ref(props.crafts.map((craft) => craft.id));
+const exporting = ref(false);
+const exportError = ref("");
 
 const isActivePreset = (preset) => {
     const [start, end] = monthRange.value ?? [];
@@ -152,6 +162,15 @@ const toMonthString = (entry) => {
 
 const startMonth = computed(() => monthRange.value?.[0] ? toMonthString(monthRange.value[0]) : "");
 const endMonth = computed(() => monthRange.value?.[1] ? toMonthString(monthRange.value[1]) : "");
+const rangeTooLong = computed(() => {
+    if (startMonth.value.length !== 7 || endMonth.value.length !== 7) {
+        return false;
+    }
+
+    const [startYear, startMonthNumber] = startMonth.value.split("-").map(Number);
+    const [endYear, endMonthNumber] = endMonth.value.split("-").map(Number);
+    return ((endYear - startYear) * 12) + endMonthNumber - startMonthNumber + 1 > 36;
+});
 
 const allCraftsSelected = computed(
     () => props.crafts.length > 0 && selectedCraftIds.value.length === props.crafts.length
@@ -165,19 +184,62 @@ const exportDisabled = computed(
     () => startMonth.value.length !== 7 ||
         endMonth.value.length !== 7 ||
         startMonth.value > endMonth.value ||
+        rangeTooLong.value ||
+        exporting.value ||
         selectedCraftIds.value.length === 0
 );
 
-const initializeDownload = () => {
-    window.open(
-        route("shifts.export.work-time-overview", {
-            start_month: startMonth.value,
-            end_month: endMonth.value,
-            crafts: allCraftsSelected.value ? [] : selectedCraftIds.value,
-        }),
-        "_blank",
-        "noopener"
-    );
-    emit("close");
+const responseFilename = (response, fallback) => {
+    const disposition = response.headers["content-disposition"] ?? "";
+    const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (encodedFilename) {
+        return decodeURIComponent(encodedFilename.replace(/^"|"$/g, ""));
+    }
+
+    return disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? fallback;
+};
+
+const downloadResponse = (response, fallbackFilename) => {
+    const blob = response.data instanceof Blob
+        ? response.data
+        : new Blob([response.data], {type: response.headers["content-type"]});
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = responseFilename(response, fallbackFilename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
+};
+
+const initializeDownload = async () => {
+    if (exportDisabled.value) {
+        return;
+    }
+
+    exporting.value = true;
+    exportError.value = "";
+
+    try {
+        const response = await axios.get(route("shifts.export.work-time-overview"), {
+            params: {
+                start_month: startMonth.value,
+                end_month: endMonth.value,
+                crafts: allCraftsSelected.value ? [] : selectedCraftIds.value,
+            },
+            responseType: "blob",
+        });
+        downloadResponse(
+            response,
+            `work_time_overview_${startMonth.value}_${endMonth.value}.xlsx`,
+        );
+        emit("close");
+    } catch (error) {
+        console.error("Work time overview export failed", error);
+        exportError.value = $t("Export could not be created. Please try again.");
+    } finally {
+        exporting.value = false;
+    }
 };
 </script>

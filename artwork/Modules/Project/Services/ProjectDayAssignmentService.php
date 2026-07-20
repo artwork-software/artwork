@@ -8,6 +8,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectDayAssignmentType;
+use Artwork\Modules\Project\Events\ProjectDayAssignmentsChanged;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectDayAssignment;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
@@ -264,8 +265,8 @@ class ProjectDayAssignmentService
                         ->delete();
                 }
 
-                foreach ($datesToCreate as $date) {
-                    $created->push(ProjectDayAssignment::create([
+                $timestamp = now();
+                ProjectDayAssignment::query()->insert($datesToCreate->map(static fn (string $date) => [
                         'project_id' => $project->id,
                         'employable_type' => $employableType,
                         'employable_id' => $employableId,
@@ -274,8 +275,15 @@ class ProjectDayAssignmentService
                         'group_id' => $groupId,
                         'is_full_period' => $isFullPeriod,
                         'created_by' => Auth::id(),
-                    ]));
-                }
+                        'created_at' => $timestamp,
+                        'updated_at' => $timestamp,
+                    ])->all());
+
+                $created->push(...ProjectDayAssignment::query()
+                    ->where('group_id', $groupId)
+                    ->orderBy('date')
+                    ->get()
+                    ->all());
             });
 
             return $datesToCreate;
@@ -311,6 +319,8 @@ class ProjectDayAssignmentService
             ]
         );
 
+        $this->broadcastProjectAssignmentsChanged($project->id);
+
         return $created;
     }
 
@@ -335,7 +345,7 @@ class ProjectDayAssignmentService
         ProjectDayAssignment::onlyTrashed()
             ->where('group_id', $assignment->group_id)
             ->whereNotNull('superseded_by_shift_id')
-            ->when(!$wholeGroup, static fn ($query) => $query->whereDate('date', $assignment->date))
+            ->when(!$wholeGroup, static fn ($query) => $query->where('date', $assignment->date->toDateString()))
             ->update(['superseded_by_shift_id' => null]);
 
         if ($assignment->isBinding() && $assignment->project) {
@@ -361,6 +371,33 @@ class ProjectDayAssignmentService
                 $this->formatDateSpanLabel($firstDate, $lastDate),
             ]
         );
+
+        $this->broadcastProjectAssignmentsChanged($assignment->project_id);
+    }
+
+    public function deleteFullPeriodAssignment(
+        int $projectId,
+        string $employableType,
+        int $employableId,
+        string $groupId
+    ): bool {
+        $rows = ProjectDayAssignment::withTrashed()
+            ->where('project_id', $projectId)
+            ->forEmployable($employableType, $employableId)
+            ->where('group_id', $groupId)
+            ->where('is_full_period', true)
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return false;
+        }
+
+        DB::transaction(static function () use ($rows): void {
+            ProjectDayAssignment::withTrashed()->whereIn('id', $rows->pluck('id'))->forceDelete();
+        });
+        $this->broadcastProjectAssignmentsChanged($projectId);
+
+        return true;
     }
 
     /**
@@ -404,7 +441,7 @@ class ProjectDayAssignmentService
                 $date = $row->date->format('Y-m-d');
 
                 if ($existingBindingDates->contains($date) || $shiftCoveredDates->contains($date)) {
-                    $row->delete();
+                    $row->forceDelete();
 
                     continue;
                 }
@@ -440,6 +477,8 @@ class ProjectDayAssignmentService
                 $this->formatDateSpanLabel($wishRows->min('date'), $wishRows->max('date')),
             ]
         );
+
+        $this->broadcastProjectAssignmentsChanged($assignment->project_id);
     }
 
     /**
@@ -467,6 +506,10 @@ class ProjectDayAssignmentService
                 $assignment->delete();
             }
         });
+
+        if ($assignments->isNotEmpty()) {
+            $this->broadcastProjectAssignmentsChanged($projectId);
+        }
     }
 
     /**
@@ -552,6 +595,8 @@ class ProjectDayAssignmentService
             $row->restore();
             $row->update(['superseded_by_shift_id' => null]);
         }
+
+        $this->broadcastProjectAssignmentsChanged($projectId);
     }
 
     /**
@@ -590,6 +635,10 @@ class ProjectDayAssignmentService
         }
 
         ProjectDayAssignment::query()->whereIn('id', $assignments->pluck('id'))->delete();
+
+        foreach ($assignments->pluck('project_id')->unique() as $projectId) {
+            $this->broadcastProjectAssignmentsChanged((int) $projectId);
+        }
 
         $dissolvedBindings = $assignments->filter(static fn (ProjectDayAssignment $row) => $row->isBinding());
 
@@ -924,6 +973,16 @@ class ProjectDayAssignmentService
         $period = $this->resolveProjectPeriod($project);
 
         if ($period === null) {
+            ProjectDayAssignment::query()
+                ->where('project_id', $project->id)
+                ->delete();
+            ProjectDayAssignment::onlyTrashed()
+                ->where('project_id', $project->id)
+                ->whereNotNull('superseded_by_shift_id')
+                ->update(['superseded_by_shift_id' => null]);
+
+            $this->broadcastProjectAssignmentsChanged($project->id);
+
             return ['dissolved' => [], 'rematerialized' => 0];
         }
 
@@ -936,8 +995,8 @@ class ProjectDayAssignmentService
             ->where('is_full_period', false)
             ->where(static function ($query) use ($period): void {
                 $query
-                    ->whereDate('date', '<', $period['start'])
-                    ->orWhereDate('date', '>', $period['end']);
+                    ->where('date', '<', $period['start']->toDateString())
+                    ->orWhere('date', '>', $period['end']->toDateString());
             })
             ->get();
 
@@ -1034,8 +1093,8 @@ class ProjectDayAssignmentService
                 ->whereNotNull('superseded_by_shift_id')
                 ->where(static function ($query) use ($targetDates): void {
                     $query
-                        ->whereDate('date', '<', $targetDates->first())
-                        ->orWhereDate('date', '>', $targetDates->last());
+                        ->where('date', '<', $targetDates->first())
+                        ->orWhere('date', '>', $targetDates->last());
                 })
                 ->update(['superseded_by_shift_id' => null]);
 
@@ -1048,8 +1107,9 @@ class ProjectDayAssignmentService
                     ProjectDayAssignment::query()->whereIn('id', $obsoleteRows->pluck('id'))->delete();
                 }
 
-                foreach ($missingDates as $date) {
-                    ProjectDayAssignment::create([
+                if ($missingDates->isNotEmpty()) {
+                    $timestamp = now();
+                    ProjectDayAssignment::query()->insert($missingDates->map(static fn (string $date) => [
                         'project_id' => $first->project_id,
                         'employable_type' => $first->employable_type,
                         'employable_id' => $first->employable_id,
@@ -1058,14 +1118,33 @@ class ProjectDayAssignmentService
                         'group_id' => $groupId,
                         'is_full_period' => true,
                         'created_by' => $first->created_by,
-                    ]);
+                        'created_at' => $timestamp,
+                        'updated_at' => $timestamp,
+                    ])->all());
                 }
             });
 
             $rematerialized++;
         }
 
+        if ($dissolvedRows !== [] || $rematerialized > 0) {
+            $this->broadcastProjectAssignmentsChanged($project->id);
+        }
+
         return ['dissolved' => $dissolvedRows, 'rematerialized' => $rematerialized];
+    }
+
+    private function broadcastProjectAssignmentsChanged(int $projectId): void
+    {
+        $broadcast = static fn (): mixed => broadcast(new ProjectDayAssignmentsChanged($projectId));
+
+        if (DB::connection()->transactionLevel() > 0) {
+            DB::afterCommit($broadcast);
+
+            return;
+        }
+
+        $broadcast();
     }
 
     /**
@@ -1129,21 +1208,56 @@ class ProjectDayAssignmentService
     }
 
     /**
+     * @return array{start: Carbon, end: Carbon}|null
+     */
+    public function computePeriodWithoutEvent(
+        Project $project,
+        \Artwork\Modules\Event\Models\Event $event
+    ): ?array {
+        $periodFor = static function (bool $relevantOnly) use ($project, $event): ?array {
+            $query = DB::table('events')
+                ->selectRaw('MIN(events.start_time) as min_start, MAX(events.end_time) as max_end')
+                ->whereNull('events.deleted_at')
+                ->where('events.project_id', $project->id)
+                ->where('events.id', '!=', $event->id);
+
+            if ($relevantOnly) {
+                $query
+                    ->join('event_types', 'events.event_type_id', '=', 'event_types.id')
+                    ->where('event_types.relevant_for_project_period', true);
+            }
+
+            $row = $query->first();
+
+            return $row?->min_start
+                ? [
+                    'start' => Carbon::parse($row->min_start)->startOfDay(),
+                    'end' => Carbon::parse($row->max_end)->startOfDay(),
+                ]
+                : null;
+        };
+
+        return $periodFor(true) ?? $periodFor(false);
+    }
+
+    /**
      * Einzeltag-Zuordnungen, die außerhalb des (hypothetischen) Zeitraums liegen —
      * pro Person gruppiert, für die Anzeige im Confirm-Dialog.
      *
-     * @param array{start: Carbon, end: Carbon} $period
+     * @param array{start: Carbon, end: Carbon}|null $period
      * @return array<int, array{worker_name: string, type: string, dates: array<string>}>
      */
-    public function getOutOfPeriodSingleDayAssignments(Project $project, array $period): array
+    public function getOutOfPeriodSingleDayAssignments(Project $project, ?array $period): array
     {
         $rows = ProjectDayAssignment::query()
             ->where('project_id', $project->id)
             ->where('is_full_period', false)
-            ->where(static function ($query) use ($period): void {
-                $query
-                    ->whereDate('date', '<', $period['start'])
-                    ->orWhereDate('date', '>', $period['end']);
+            ->when($period !== null, static function ($query) use ($period): void {
+                $query->where(static function ($dateQuery) use ($period): void {
+                    $dateQuery
+                        ->where('date', '<', $period['start']->toDateString())
+                        ->orWhere('date', '>', $period['end']->toDateString());
+                });
             })
             ->orderBy('date')
             ->get();

@@ -2,12 +2,13 @@
     <div v-if="fields.length > 0">
         <div class="space-y-3">
             <div v-for="field in fields" :key="field.id">
-                <!-- TextField -->
+                <!-- TextField: lokal puffern, erst bei blur speichern —
+                     sonst feuert jeder Tastendruck einen PATCH -->
                 <div v-if="field.type === 'TextField'">
                     <BaseInput
                         :id="'bi_custom_' + field.id"
                         :model-value="getTextValue(field.id)"
-                        @update:model-value="val => saveTextField(field.id, val)"
+                        @update:model-value="val => localValues[field.id] = { text: val }"
                         @blur="saveTextField(field.id, getTextValue(field.id))"
                         :label="field.name"
                         :disabled="!canEdit"
@@ -62,6 +63,7 @@ import { reactive } from 'vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
+import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const props = defineProps({
     fields: { type: Array, default: () => [] },
@@ -114,18 +116,20 @@ async function saveDropdown(fieldId, item) {
     await saveValue(fieldId, { selected: value });
 }
 
+const biSave = useBiSaveFeedback();
+
 async function saveValue(componentId, data) {
-    try {
-        await axios.patch(
+    const ok = await biSave.run(
+        () => axios.patch(
             route('project.tab.component.update', {
                 project: props.projectId,
                 component: componentId,
             }),
             { data }
-        );
+        )
+    );
+    if (ok) {
         emit('updated');
-    } catch (error) {
-        console.error('Error saving BI custom field:', error);
     }
 }
 </script>

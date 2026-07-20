@@ -3,11 +3,11 @@
 namespace Artwork\Modules\ExternalUserManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SyncExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Http\Requests\StoreExternalUserSourceRequest;
 use Artwork\Modules\ExternalUserManagement\Http\Requests\UpdateExternalUserSourceRequest;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSourceService;
-use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSyncService;
 use Artwork\Modules\ExternalUserManagement\Service\LdapService;
 use Artwork\Modules\ExternalUserManagement\Service\OidcService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
@@ -23,8 +23,7 @@ class ExternalUserSourceController extends Controller
     public function __construct(
         private readonly ExternalUserSourceService $externalUserSourceService,
         private readonly LdapService $ldapService,
-        private readonly OidcService $oidcService,
-        private readonly ExternalUserSyncService $externalUserSyncService
+        private readonly OidcService $oidcService
     ) {
     }
 
@@ -120,37 +119,28 @@ class ExternalUserSourceController extends Controller
             ], 422);
         }
 
-        // Verhindert parallele Läufe (manueller Klick vs. 30-Minuten-Scheduler):
-        // doppelte firstOrCreate-Races und doppelte Willkommens-Mails
-        $lock = Cache::lock('external-user-sync-' . $externalUserSource->id, 600);
-        if (!$lock->get()) {
-            return response()->json([
-                'success' => false,
-                'message' => __('A sync for this source is already running.'),
-            ], 409);
-        }
-
-        try {
-            $result = $this->externalUserSyncService->syncSource($externalUserSource);
-        } catch (\Throwable $e) {
-            report($e);
-            return response()->json([
-                'success' => false,
-                'message' => __('Sync failed. Please check the configuration and the logs.'),
-            ], 500);
-        } finally {
-            $lock->release();
-        }
+        Cache::put(SyncExternalUserSource::statusKey($externalUserSource->id), [
+            'status' => 'queued',
+            'message' => __('LDAP synchronization was queued.'),
+            'result' => null,
+            'updated_at' => now()->toIso8601String(),
+        ], now()->addDay());
+        SyncExternalUserSource::dispatch($externalUserSource);
 
         return response()->json([
             'success' => true,
-            'message' => __(':synced of :total users synced (:skipped skipped).', [
-                'synced' => $result['synced'],
-                'total' => $result['total'],
-                'skipped' => $result['skipped'],
-            ]),
-            'result' => $result,
-        ]);
+            'message' => __('LDAP synchronization was queued.'),
+        ], 202);
+    }
+
+    public function syncStatus(ExternalUserSource $externalUserSource): JsonResponse
+    {
+        $this->authorize('view', GeneralSettings::class);
+
+        return response()->json(Cache::get(
+            SyncExternalUserSource::statusKey($externalUserSource->id),
+            ['status' => 'idle', 'message' => __('No synchronization is running.'), 'result' => null]
+        ));
     }
 
     private function runConnectionTest(ExternalUserSource $source): JsonResponse
@@ -208,4 +198,3 @@ class ExternalUserSourceController extends Controller
         ]);
     }
 }
-

@@ -76,12 +76,25 @@ const emit = defineEmits(['close'])
 
 const page = usePage()
 
-// Name des exportierten Users (Page-Prop der Shiftplan-Seite) – für den Dateinamen.
+// Name der exportierten Person (Page-Prop je nach Seite: User, Freelancer oder
+// Dienstleister) – für den Dateinamen.
 const userName = (() => {
-    const u = page.props?.user_to_edit
-    if (!u) return ''
-    const full = (u.full_name ?? `${u.first_name ?? ''} ${u.last_name ?? ''}`).trim()
-    return full
+    const nameOf = (u) => {
+        if (!u) return ''
+        return (
+            u.full_name ||
+            [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
+            u.provider_name ||
+            u.name ||
+            ''
+        )
+    }
+    return (
+        nameOf(page.props?.user_to_edit) ||
+        nameOf(page.props?.freelancer) ||
+        nameOf(page.props?.serviceProvider) ||
+        ''
+    )
 })()
 
 // "2026-05" -> "Mai 26"

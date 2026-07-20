@@ -299,7 +299,7 @@ import {
 
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router, useForm, Link, usePage} from "@inertiajs/vue3";
+import {router, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
@@ -413,6 +413,9 @@ const shiftPlanExportConfiguration = computed(() => {
                 event_type_ids: props.user_filters?.event_type_ids ?? [],
                 craft_ids: props.user_filters?.craft_ids ?? [],
             },
+            // Flat craft config for the personnel (worker matrix) export mode.
+            craftIds: props.user_filters?.craft_ids ?? [],
+            crafts: props.crafts.map(({id, name}) => ({id, name})),
         },
         [exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT]: {
             crafts: props.crafts.map(({id, name}) => ({id, name})),
@@ -421,15 +424,6 @@ const shiftPlanExportConfiguration = computed(() => {
             crafts: props.crafts.map(({id, name, universally_applicable}) => ({id, name, universally_applicable})),
         },
     };
-});
-
-const userCalendarSettings = useForm({
-    is_daily_view: props.isDailyView,
-    show_qualifications: activeSettings.value ? activeSettings.value.show_qualifications : false,
-    shift_notes: activeSettings.value ? activeSettings.value.shift_notes : false,
-    high_contrast: activeSettings.value ? activeSettings.value.high_contrast : false,
-    expand_days: activeSettings.value ? activeSettings.value.expand_days : false,
-    display_project_groups: activeSettings.value ? activeSettings.value.display_project_groups : false,
 });
 
 const CalendarSettingsModal = defineAsyncComponent({
@@ -486,13 +480,6 @@ const scrollForwardTooltip = computed(() => {
 });
 
 // Methods
-const saveUserCalendarSettings = () => {
-    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.auth.user.id}), {
-        preserveScroll: true
-    });
-    document.getElementById('displaySettings').click();
-};
-
 const getTimePeriodProjectId = () => {
     return activeSettings.value?.time_period_project_id;
 };

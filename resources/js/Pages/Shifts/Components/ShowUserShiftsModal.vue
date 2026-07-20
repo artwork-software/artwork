@@ -130,6 +130,13 @@
                             </button>
                         </div>
 
+                        <p
+                            v-if="projectAssignmentError"
+                            class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+                        >
+                            {{ projectAssignmentError }}
+                        </p>
+
                         <div v-if="assignmentsForDay.length" class="rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2">
                             <div
                                 v-for="assignment in assignmentsForDay"
@@ -165,6 +172,8 @@
                                         v-if="assignment.type === 'wish' && canPlanShifts"
                                         type="button"
                                         class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] text-emerald-700 hover:border-emerald-400 transition-colors"
+                                        :disabled="projectAssignmentActionKey !== null"
+                                        :class="projectAssignmentActionKey === `accept:${assignment.id}` ? 'cursor-wait opacity-50' : ''"
                                         :title="t('Accept wish as binding assignment')"
                                         @click="acceptAssignmentWish(assignment)"
                                     >
@@ -175,6 +184,8 @@
                                         v-if="canDeleteAssignment(assignment)"
                                         type="button"
                                         class="inline-flex items-center justify-center rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                        :disabled="projectAssignmentActionKey !== null"
+                                        :class="projectAssignmentActionKey === `delete-day:${assignment.id}` ? 'cursor-wait opacity-50' : ''"
                                         :title="t('Remove for this day only')"
                                         @click="deleteAssignment(assignment, false)"
                                     >
@@ -184,6 +195,8 @@
                                         v-if="canDeleteAssignment(assignment) && assignment.series_start !== assignment.series_end"
                                         type="button"
                                         class="inline-flex items-center justify-center rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                        :disabled="projectAssignmentActionKey !== null"
+                                        :class="projectAssignmentActionKey === `delete-group:${assignment.id}` ? 'cursor-wait opacity-50' : ''"
                                         :title="t('Remove entire assignment')"
                                         @click="deleteAssignment(assignment, true)"
                                     >
@@ -561,12 +574,26 @@
                                     {{ t('Availability status for this day') }}
                                 </h3>
                                 <p class="text-[11px] text-zinc-400 mt-0.5">
-                                    {{ t('Define whether this person is available, off work or not available.') }}
+                                    {{ canPlanShifts
+                                        ? t('Define whether this person is available, off work or not available.')
+                                        : t('The availability status is set by shift planning. Enter absences via your availability calendar.') }}
                                 </p>
                             </div>
                         </div>
 
-                        <Listbox as="div" v-model="checked" class="relative mt-2 w-full">
+                        <!-- Ohne Planungsrecht (eigene Zelle): Status nur lesend anzeigen -->
+                        <div
+                            v-if="!canPlanShifts"
+                            class="mt-2 flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-700"
+                        >
+                            <span
+                                class="inline-flex h-1.5 w-1.5 rounded-full"
+                                :class="dotClassForChecked"
+                            ></span>
+                            <span class="truncate">{{ checked?.name }}</span>
+                        </div>
+
+                        <Listbox v-else as="div" v-model="checked" class="relative mt-2 w-full">
                             <ListboxButton class="menu-button flex items-center justify-between">
                                 <div class="flex items-center gap-2 truncate">
                                     <span
@@ -617,7 +644,7 @@
                     </section>
 
                     <!-- DP-18: "Frei" als ganzer oder halber freier Tag (Vormittag/Nachmittag) -->
-                    <section v-if="checked && checked.type === 'FREE_WORK'"
+                    <section v-if="canPlanShifts && checked && checked.type === 'FREE_WORK'"
                              class="space-y-2 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
                         <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
                             {{ t('Free day type') }}
@@ -851,7 +878,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, defineAsyncComponent, onMounted, watch } from 'vue';
 import {
     Listbox,
     ListboxButton,
@@ -878,8 +905,11 @@ import { IconCirclePlus, IconTrash } from '@tabler/icons-vue';
 import { useLegalBreak } from '@/Composeables/useLegalBreak';
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import { usePermission } from '@/Composeables/Permission.js';
-import ProjectAssignmentModal from '@/Pages/Shifts/Components/ProjectAssignmentModal.vue';
 import { colorForProjectId, formatAssignmentDate } from '@/Composeables/UseProjectDayAssignments.js';
+
+const ProjectAssignmentModal = defineAsyncComponent({
+    loader: () => import('@/Pages/Shifts/Components/ProjectAssignmentModal.vue'),
+});
 
 defineOptions({
     name: 'ShowUserShiftsModal',
@@ -927,6 +957,8 @@ const vacationTypeBeforeUpdate = ref(null);
 
 // --- Projekte (Zuordnungen + Wünsche) ---
 const showProjectAssignmentModal = ref(false);
+const projectAssignmentActionKey = ref(null);
+const projectAssignmentError = ref('');
 // Lokale Kopie, damit die Liste nach Mutationen ohne Voll-Reload aktuell ist
 const localAssignmentsForDay = ref(
     [...(props.user.project_assignments?.[props.day.withoutFormat] ?? [])],
@@ -949,25 +981,45 @@ const canDeleteAssignment = (assignment) =>
     canPlanShifts.value || (assignment.type === 'wish' && isOwnCell.value);
 
 async function deleteAssignment(assignment, wholeGroup) {
-    await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
-        params: { whole_group: wholeGroup },
-    });
+    if (projectAssignmentActionKey.value !== null) return;
+    projectAssignmentActionKey.value = `${wholeGroup ? 'delete-group' : 'delete-day'}:${assignment.id}`;
+    projectAssignmentError.value = '';
+    try {
+        await axios.delete(route('project-day-assignments.destroy', { projectDayAssignment: assignment.id }), {
+            params: { whole_group: wholeGroup },
+        });
 
-    localAssignmentsForDay.value = wholeGroup
-        ? localAssignmentsForDay.value.filter(a => a.group_id !== assignment.group_id)
-        : localAssignmentsForDay.value.filter(a => a.id !== assignment.id);
+        localAssignmentsForDay.value = wholeGroup
+            ? localAssignmentsForDay.value.filter(a => a.group_id !== assignment.group_id)
+            : localAssignmentsForDay.value.filter(a => a.id !== assignment.id);
 
-    emit('desiresReload');
+        emit('desiresReload');
+    } catch (error) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error);
+        await refreshAssignmentsForDay().catch(() => {});
+    } finally {
+        projectAssignmentActionKey.value = null;
+    }
 }
 
 async function acceptAssignmentWish(assignment) {
-    await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }));
+    if (projectAssignmentActionKey.value !== null) return;
+    projectAssignmentActionKey.value = `accept:${assignment.id}`;
+    projectAssignmentError.value = '';
+    try {
+        await axios.patch(route('project-day-assignments.accept-wish', { projectDayAssignment: assignment.id }));
 
-    localAssignmentsForDay.value = localAssignmentsForDay.value.map(a =>
-        a.group_id === assignment.group_id ? { ...a, type: 'binding' } : a,
-    );
+        localAssignmentsForDay.value = localAssignmentsForDay.value.map(a =>
+            a.group_id === assignment.group_id ? { ...a, type: 'binding' } : a,
+        );
 
-    emit('desiresReload');
+        emit('desiresReload');
+    } catch (error) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error);
+        await refreshAssignmentsForDay().catch(() => {});
+    } finally {
+        projectAssignmentActionKey.value = null;
+    }
 }
 
 async function refreshAssignmentsForDay() {
@@ -1383,6 +1435,13 @@ function revokeCompensationDay(id) {
 }
 
 function sendCheckVacation() {
+    // Ohne Planungsrecht (eigene Zelle) ist der Status nur lesend — nie mitsenden,
+    // sonst würde schon ein Kommentar-Speichern am Backend-Gate (403) scheitern.
+    if (!canPlanShifts.value) {
+        closeModal(true);
+        return;
+    }
+
     if (compensationDayForDate.value.length > 0) {
         closeModal(true);
         return;
@@ -1492,7 +1551,9 @@ function checkVacation() {
 
     // Bei "Frei"/"Nicht Verfügbar" autoritativ im Backend prüfen, ob an dem Tag aktive
     // Schichtzuweisungen oder individuelle Zeiten existieren. Falls ja -> Rückfrage.
-    if (isBlockingAvailabilityStatus()) {
+    // Ohne Planungsrecht ist der Status lesend — die Rückfrage (inkl. Schicht-Entfernung)
+    // darf dann nie erscheinen.
+    if (canPlanShifts.value && isBlockingAvailabilityStatus()) {
         cleanupProcessing.value = true;
         axios
             .get(route('shift.dayAssignments'), {

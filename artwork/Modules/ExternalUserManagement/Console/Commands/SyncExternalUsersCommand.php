@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ExternalUserManagement\Console\Commands;
 
+use App\Jobs\SyncExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSourceService;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSyncService;
@@ -32,7 +33,7 @@ class SyncExternalUsersCommand extends Command
 
         foreach ($sources as $source) {
             // Gleicher Lock wie der manuelle Sync-Endpunkt — verhindert parallele Läufe
-            $lock = Cache::lock('external-user-sync-' . $source->id, 600);
+            $lock = Cache::lock('external-user-sync-' . $source->id, SyncExternalUserSource::LOCK_SECONDS);
             if (!$lock->get()) {
                 $this->warn("Skipping source {$source->name}: a sync is already running.");
                 continue;

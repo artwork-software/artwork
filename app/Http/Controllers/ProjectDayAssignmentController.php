@@ -124,6 +124,56 @@ class ProjectDayAssignmentController extends Controller
         return new JsonResponse(['success' => true]);
     }
 
+    public function fullPeriodForWorker(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'worker_type' => ['required', 'integer', 'in:0,1,2'],
+            'worker_id' => ['required', 'integer'],
+        ]);
+        $employableType = $this->resolveEmployableType((int) $validated['worker_type']);
+        $employableType::query()->findOrFail((int) $validated['worker_id']);
+
+        $groups = ProjectDayAssignment::withTrashed()
+            ->forEmployable($employableType, (int) $validated['worker_id'])
+            ->binding()
+            ->where('is_full_period', true)
+            ->where(static function ($query): void {
+                $query->whereNull('deleted_at')->orWhereNotNull('superseded_by_shift_id');
+            })
+            ->get(['project_id', 'group_id'])
+            ->unique('group_id')
+            ->map(static fn (ProjectDayAssignment $assignment) => [
+                'project_id' => $assignment->project_id,
+                'group_id' => $assignment->group_id,
+            ])
+            ->values();
+
+        return new JsonResponse(['assignments' => $groups]);
+    }
+
+    public function destroyFullPeriod(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'worker_type' => ['required', 'integer', 'in:0,1,2'],
+            'worker_id' => ['required', 'integer'],
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
+            'group_id' => ['required', 'uuid'],
+        ]);
+        $employableType = $this->resolveEmployableType((int) $validated['worker_type']);
+        $employableType::query()->findOrFail((int) $validated['worker_id']);
+
+        $deleted = $this->projectDayAssignmentService->deleteFullPeriodAssignment(
+            (int) $validated['project_id'],
+            $employableType,
+            (int) $validated['worker_id'],
+            $validated['group_id']
+        );
+
+        abort_unless($deleted, 404);
+
+        return new JsonResponse(['success' => true]);
+    }
+
     public function acceptWish(ProjectDayAssignment $projectDayAssignment): JsonResponse
     {
         // Admins passieren via Gate::before
@@ -143,6 +193,7 @@ class ProjectDayAssignmentController extends Controller
     public function forProject(Project $project): JsonResponse
     {
         $rows = ProjectDayAssignment::query()
+            ->with('project:id,name')
             ->where('project_id', $project->id)
             ->orderBy('date')
             ->get();
@@ -184,13 +235,13 @@ class ProjectDayAssignmentController extends Controller
                     'id' => $worker->id,
                     'type' => 1,
                     'name' => $worker->getNameAttribute(),
-                    'profile_photo_url' => $worker->profile_image,
+                    'profile_photo_url' => $worker->profile_photo_url,
                 ] : null,
                 default => $worker ? [
                     'id' => $worker->id,
                     'type' => 2,
                     'name' => $worker->provider_name,
-                    'profile_photo_url' => $worker->profile_image,
+                    'profile_photo_url' => $worker->profile_photo_url,
                 ] : null,
             };
 
@@ -244,6 +295,7 @@ class ProjectDayAssignmentController extends Controller
         $validated = $request->validate([
             'start_time' => 'required|date',
             'end_time' => 'required|date|after_or_equal:start_time',
+            'project_id' => 'nullable|integer|exists:projects,id',
         ]);
 
         $project = $event->project;
@@ -252,16 +304,15 @@ class ProjectDayAssignmentController extends Controller
             return new JsonResponse(['affected' => []]);
         }
 
-        $period = $this->projectDayAssignmentService->computeHypotheticalPeriod(
-            $project,
-            $event,
-            Carbon::parse($validated['start_time']),
-            Carbon::parse($validated['end_time'])
-        );
-
-        if ($period === null) {
-            return new JsonResponse(['affected' => []]);
-        }
+        $targetProjectId = $request->has('project_id') ? ($validated['project_id'] ?? null) : $project->id;
+        $period = (int) $targetProjectId === (int) $project->id
+            ? $this->projectDayAssignmentService->computeHypotheticalPeriod(
+                $project,
+                $event,
+                Carbon::parse($validated['start_time']),
+                Carbon::parse($validated['end_time'])
+            )
+            : $this->projectDayAssignmentService->computePeriodWithoutEvent($project, $event);
 
         return new JsonResponse([
             'affected' => $this->projectDayAssignmentService->getOutOfPeriodSingleDayAssignments($project, $period),

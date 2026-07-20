@@ -42,4 +42,9 @@ const props = defineProps({
 });
 
 const open = ref(props.defaultOpen);
+
+// Erlaubt dem Datenqualitäts-Banner, die Karte gezielt aufzuklappen
+defineExpose({
+    expand: () => { open.value = true; },
+});
 </script>

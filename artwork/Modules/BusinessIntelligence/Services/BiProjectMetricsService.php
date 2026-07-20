@@ -25,7 +25,7 @@ class BiProjectMetricsService
         ['value' => $visitors, 'estimated' => $visitorsEstimated] = $this->visitorsWithEstimate($project, $from, $to);
         $soldTickets = $this->soldTickets($project, $from, $to);
         $revenue = $this->revenue($project, $from, $to);
-        $capacity = $this->seatsCapacity($project);
+        $capacity = $this->seatsCapacity($project, $from, $to);
         $performances = $this->performances($project, $from, $to);
 
         return [
@@ -160,17 +160,26 @@ class BiProjectMetricsService
     }
 
     /**
-     * Sum of distinct project-room capacities (per-project override else room default).
+     * Sum the available capacity per performance. A room used by multiple
+     * performances contributes its capacity once for every performance.
      */
-    public function seatsCapacity(Project $project): int
+    public function seatsCapacity(Project $project, ?Carbon $from = null, ?Carbon $to = null): int
     {
         $overrides = $project->biRoomCapacities->keyBy('room_id');
 
-        return (int) $project->events
-            ->pluck('room')
-            ->filter()
-            ->unique('id')
-            ->sum(function ($room) use ($overrides): int {
+        if ($project->biData?->sold_tickets_mode === BiVisitorModeEnum::TOTAL) {
+            $from = null;
+            $to = null;
+        }
+
+        $events = ($from || $to) ? $this->eventsInRange($project, $from, $to) : $project->events;
+        $performances = $events->filter(fn ($event) => $this->eventHasTag($event, 'Vorstellung'));
+        $relevantEvents = $performances->isNotEmpty() ? $performances : $events;
+
+        return (int) $relevantEvents
+            ->filter(static fn ($event): bool => $event->room !== null)
+            ->sum(function ($event) use ($overrides): int {
+                $room = $event->room;
                 $override = $overrides->get($room->id)?->capacity_override;
 
                 return (int) ($override ?? $room->capacity ?? 0);

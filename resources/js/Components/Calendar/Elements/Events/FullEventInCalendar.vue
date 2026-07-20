@@ -853,7 +853,7 @@ import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 const { t } = useI18n(), $t = t;
 const pageProps = usePage().props;
 const calSettings = computed(() => pageProps.auth.user.calendar_settings);
-const highContrastPercent = computed(() => pageProps.high_contrast_percent);
+const highContrastPercent = computed(() => getHighContrastPercent(calSettings.value));
 const currentUserId = computed(() => pageProps.auth.user.id);
 // Reaktiv aus dem zentralen Zoom-Store — Zoom-Wechsel kommen ohne Page-Reload an.
 const { zoomFactor: zoom_factor } = useCalendarZoom();
@@ -1133,7 +1133,7 @@ const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find((room) => room.id === props.event.roomId).everyone_can_book;
 });
 
-const { backgroundColorWithOpacity, detectParentBackgroundColor, getTextColorBasedOnBackground } = useColorHelper();
+const { backgroundColorWithOpacity, detectParentBackgroundColor, getHighContrastPercent, getTextColorBasedOnBackground } = useColorHelper();
 
 const textColorWithDarken = computed(() => {
     const percent = 75;

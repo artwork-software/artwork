@@ -28,6 +28,9 @@
                     :locale="language"
                     input-class-name="!rounded-lg !border-gray-300 !py-2 !text-sm"
                 />
+                <p v-if="rangeTooLong" class="text-xs text-artwork-messages-error">
+                    {{ $t('The export range must not exceed 36 months.') }}
+                </p>
                 <div class="flex flex-wrap gap-1.5">
                     <button
                         v-for="preset in presetRanges"
@@ -93,11 +96,15 @@
             </section>
 
             <section class="flex items-center justify-end">
+                <p v-if="exportError" class="mr-4 text-sm text-artwork-messages-error" role="alert">
+                    {{ exportError }}
+                </p>
                 <BaseUIButton
                     @click="initializeDownload()"
                     :label="$t('Export')"
                     icon="IconFileExport"
                     :disabled="exportDisabled"
+                    :processing="exporting"
                     is-add-button
                 />
             </section>
@@ -109,6 +116,7 @@
 <script setup>
 import {computed, defineAsyncComponent, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
+import axios from "axios";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
@@ -174,6 +182,8 @@ const pickerPresets = presetRanges.map((preset) => ({
     value: preset.value,
 }));
 const dateRange = ref(presetRanges[0].value);
+const exporting = ref(false);
+const exportError = ref("");
 
 const universalCrafts = computed(() => props.crafts.filter((craft) => !!craft.universally_applicable));
 const universalCraft = ref(universalCrafts.value[0] ?? null);
@@ -187,6 +197,18 @@ const toDateString = (date) => {
 
 const startDate = computed(() => dateRange.value?.[0] ? toDateString(new Date(dateRange.value[0])) : "");
 const endDate = computed(() => dateRange.value?.[1] ? toDateString(new Date(dateRange.value[1])) : "");
+const rangeTooLong = computed(() => {
+    if (!startDate.value || !endDate.value) {
+        return false;
+    }
+
+    const start = new Date(`${startDate.value}T00:00:00`);
+    const maximumEnd = new Date(start);
+    maximumEnd.setMonth(maximumEnd.getMonth() + 36);
+    maximumEnd.setDate(maximumEnd.getDate() - 1);
+
+    return new Date(`${endDate.value}T00:00:00`) > maximumEnd;
+});
 
 const isActivePreset = (preset) => {
     const [start, end] = dateRange.value ?? [];
@@ -207,21 +229,64 @@ const exportDisabled = computed(
     () => startDate.value === "" ||
         endDate.value === "" ||
         startDate.value > endDate.value ||
+        rangeTooLong.value ||
+        exporting.value ||
         !universalCraftId.value ||
         selectedCraftIds.value.length === 0
 );
 
-const initializeDownload = () => {
-    window.open(
-        route("shifts.export.craft-distribution", {
-            start_date: startDate.value,
-            end_date: endDate.value,
-            universal_craft_id: universalCraftId.value,
-            crafts: allCraftsSelected.value ? [] : selectedCraftIds.value,
-        }),
-        "_blank",
-        "noopener"
-    );
-    emit("close");
+const responseFilename = (response, fallback) => {
+    const disposition = response.headers["content-disposition"] ?? "";
+    const encodedFilename = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (encodedFilename) {
+        return decodeURIComponent(encodedFilename.replace(/^"|"$/g, ""));
+    }
+
+    return disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? fallback;
+};
+
+const downloadResponse = (response, fallbackFilename) => {
+    const blob = response.data instanceof Blob
+        ? response.data
+        : new Blob([response.data], {type: response.headers["content-type"]});
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = responseFilename(response, fallbackFilename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
+};
+
+const initializeDownload = async () => {
+    if (exportDisabled.value) {
+        return;
+    }
+
+    exporting.value = true;
+    exportError.value = "";
+
+    try {
+        const response = await axios.get(route("shifts.export.craft-distribution"), {
+            params: {
+                start_date: startDate.value,
+                end_date: endDate.value,
+                universal_craft_id: universalCraftId.value,
+                crafts: allCraftsSelected.value ? [] : selectedCraftIds.value,
+            },
+            responseType: "blob",
+        });
+        downloadResponse(
+            response,
+            `craft_distribution_${startDate.value}_${endDate.value}.xlsx`,
+        );
+        emit("close");
+    } catch (error) {
+        console.error("Craft distribution export failed", error);
+        exportError.value = $t("Export could not be created. Please try again.");
+    } finally {
+        exporting.value = false;
+    }
 };
 </script>

@@ -50,9 +50,27 @@
                     </div>
                 </div>
 
-                <div v-if="periodMode === 'date'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <BaseInput id="shiftPlanExportStart" type="date" v-model="pdf.start" :label="$t('Start date')" />
-                    <BaseInput id="shiftPlanExportEnd" type="date" v-model="pdf.end" :label="$t('End date')" />
+                <div v-if="periodMode === 'date'" class="space-y-3">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <BaseInput id="shiftPlanExportStart" type="date" v-model="pdf.start" :label="$t('Start date')" />
+                        <BaseInput id="shiftPlanExportEnd" type="date" v-model="pdf.end" :label="$t('End date')" />
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button
+                            v-for="preset in datePresets"
+                            :key="preset.label"
+                            type="button"
+                            class="rounded-full border px-3 py-1 text-xs transition-colors"
+                            :class="isActiveDatePreset(preset)
+                                ? 'border-blue-200 bg-blue-50 text-blue-700'
+                                : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                            @click="applyDatePreset(preset)"
+                        >
+                            {{ preset.label }}
+                        </button>
+                    </div>
+                    <p v-if="dateRangeError" class="text-xs text-artwork-messages-error">{{ dateRangeError }}</p>
+                    <p v-else class="text-xs text-zinc-500">{{ $t('A maximum of six months can be exported in one PDF.') }}</p>
                 </div>
 
                 <div v-else class="space-y-2">
@@ -79,14 +97,14 @@
                     <p v-if="kwSelectionInvalid" class="text-xs text-artwork-messages-error">
                         {{ $t('Please select a valid calendar week range.') }} (KW 1–{{ weeksInSelectedYear }})
                     </p>
+                    <p v-else-if="dateRangeError" class="text-xs text-artwork-messages-error">
+                        {{ dateRangeError }}
+                    </p>
                     <p v-else class="text-xs text-zinc-500">
                         {{ $t('Period') }}: {{ formatDate(pdf.start) }} – {{ formatDate(pdf.end) }}
                     </p>
                 </div>
 
-                <p v-if="periodInvalid && periodMode === 'date'" class="text-xs text-artwork-messages-error">
-                    {{ $t('Please select a valid period.') }}
-                </p>
                 <p v-if="workerMatrixRangeTooLong" class="text-xs text-artwork-messages-error">
                     {{ $t('Days are shown as columns and workers as rows. The maximum export period is 31 days.') }}
                 </p>
@@ -120,15 +138,74 @@
                 </ul>
             </section>
 
-            <!-- Craft filter -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4" v-if="crafts.length > 0">
+            <!-- Filters (room export): rooms, areas, event types, crafts -->
+            <section
+                v-if="pdf.exportMode === 'rooms'"
+                class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-5"
+            >
+                <div>
+                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Filter') }}</h2>
+                    <p class="mt-1 text-xs text-zinc-500">
+                        {{ $t('No selection in a group means it is not filtered by it.') }}
+                    </p>
+                </div>
+
+                <div v-for="group in filterGroups" :key="group.key" class="space-y-2">
+                    <div class="flex items-center justify-between border-b border-zinc-100 pb-1">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-zinc-700">
+                            {{ group.label }}
+                            <span v-if="selections[group.key].length > 0" class="ml-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                {{ selections[group.key].length }}
+                            </span>
+                        </span>
+                        <button
+                            v-if="group.options.length > 0"
+                            type="button"
+                            class="text-xs text-zinc-500 hover:text-zinc-900"
+                            @click="toggleGroup(group.key)"
+                        >
+                            {{ selections[group.key].length === group.options.length ? $t('Deselect all') : $t('Select all') }}
+                        </button>
+                    </div>
+                    <div v-if="group.options.length > 0" class="grid max-h-40 grid-cols-1 gap-y-1.5 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+                        <label
+                            v-for="option in group.options"
+                            :key="option.id"
+                            class="flex cursor-pointer items-center gap-2 pr-2 text-xs text-zinc-700"
+                        >
+                            <input
+                                type="checkbox"
+                                :value="option.id"
+                                v-model="selections[group.key]"
+                                class="input-checklist"
+                            />
+                            <span class="truncate">{{ option.name }}</span>
+                        </label>
+                    </div>
+                    <p v-else class="text-xs text-zinc-400">–</p>
+                </div>
+
+                <label class="flex cursor-pointer items-start gap-3 border-t border-zinc-100 pt-4">
+                    <input type="checkbox" v-model="pdf.hideEmptyRooms" class="input-checklist mt-0.5" />
+                    <span>
+                        <span class="block text-sm font-medium text-zinc-800">{{ $t('Hide empty rooms') }}</span>
+                        <span class="block text-xs text-zinc-500">
+                            {{ $t('Rooms without events or shifts in the selected period are omitted from the PDF.') }}
+                        </span>
+                    </span>
+                </label>
+            </section>
+
+            <!-- Craft filter (personnel export) -->
+            <section
+                v-if="pdf.exportMode === 'worker_matrix' && crafts.length > 0"
+                class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4"
+            >
                 <div class="flex items-center justify-between">
                     <div>
                         <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Which shifts should be included?') }}</h2>
                         <p class="mt-1 text-xs text-zinc-500">
-                            {{ pdf.exportMode === 'rooms'
-                                ? $t('This filters the shifts shown inside the room rows. Rooms, events and people are not filtered by this selection.')
-                                : $t('This filters the shifts printed for each person. Individual times and day services remain visible when enabled below.') }}
+                            {{ $t('This filters the shifts printed for each person. Individual times and day services remain visible when enabled below.') }}
                         </p>
                     </div>
                     <button
@@ -214,7 +291,7 @@
                     <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-blue-500"/>
                     <p class="text-sm text-blue-500">
                         {{ pdf.exportMode === 'rooms'
-                            ? $t('Room export uses the rooms, areas and event types from the current shift plan view. The craft selection only controls which shifts appear inside it. Each calendar week is placed on its own page.')
+                            ? $t('The export is prefilled with your current shift plan view. Time period and filters can be adjusted below before exporting. Each calendar week is placed on its own page.')
                             : $t('Personnel export creates one row per selected person. Craft filters affect shifts, worker types affect people, and the content options affect the entries shown in the cells.') }}
                     </p>
                 </div>
@@ -321,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
 import { IconCheck, IconSelector } from '@tabler/icons-vue'
@@ -370,6 +447,35 @@ const workerTypes = [
 const selectedPaperSize = ref(paperSizes[1])
 const selectedPaperOrientation = ref(paperOrientations[0])
 
+// The configuration is provided in two shapes depending on the caller:
+// filterOptions/activeFilters (weekly shift plan) or crafts/craftIds (daily view).
+const crafts = ((config.crafts ?? config.filterOptions?.crafts ?? []) as Array<{ id: number, name: string }>)
+const activeCraftIds = ((config.activeFilters?.craft_ids ?? config.craftIds ?? []) as number[])
+
+// Filter selections for the room export, prefilled with the filters currently
+// active in the shift plan. An empty selection means "do not filter by this dimension".
+const selections = reactive({
+    room_ids: [...(config.activeFilters?.room_ids ?? [])],
+    area_ids: [...(config.activeFilters?.area_ids ?? [])],
+    event_type_ids: [...(config.activeFilters?.event_type_ids ?? [])],
+    craft_ids: [...activeCraftIds],
+})
+
+const filterGroups = computed(() => [
+    { key: 'room_ids', label: $t('Rooms'), options: config.filterOptions?.rooms ?? [] },
+    { key: 'area_ids', label: $t('Areas'), options: config.filterOptions?.areas ?? [] },
+    { key: 'event_type_ids', label: $t('Event types'), options: config.filterOptions?.eventTypes ?? [] },
+    { key: 'craft_ids', label: $t('Crafts'), options: config.filterOptions?.crafts ?? crafts },
+])
+
+const toggleGroup = (key: keyof typeof selections) => {
+    const group = filterGroups.value.find((g) => g.key === key)
+    if (!group) return
+    selections[key] = selections[key].length === group.options.length
+        ? []
+        : group.options.map((option: { id: number }) => option.id)
+}
+
 const pdf = useForm({
     exportMode: 'rooms',
     title: config.projectName || $t('Shift plan'),
@@ -379,8 +485,12 @@ const pdf = useForm({
     isInProjectView: !!config.isInProjectView,
     isDailyView: !!config.isDailyView,
     highlightProjectId: config.highlightProjectId ?? null,
+    hideEmptyRooms: true,
+    room_ids: [] as number[],
+    area_ids: [] as number[],
+    event_type_ids: [] as number[],
+    craft_ids: [] as number[],
     worker_types: ['user', 'freelancer', 'service_provider'],
-    craft_ids: config.craftIds ?? [],
     include_empty_workers: false,
     show_shifts: true,
     show_individual_times: true,
@@ -390,9 +500,8 @@ const pdf = useForm({
     dpi: 96,
 })
 
-// --- Crafts filter -------------------------------------------------------
-const crafts = (config.crafts ?? []) as Array<{ id: number, name: string }>
-const preselectedCraftIds = (config.craftIds ?? []).filter(
+// --- Crafts filter (personnel export) ------------------------------------
+const preselectedCraftIds = activeCraftIds.filter(
     (id: number) => crafts.some((craft) => craft.id === id)
 )
 const selectedCraftIds = ref<number[]>(
@@ -465,9 +574,8 @@ watch([periodMode, kwYear, kwFrom, kwTo], () => {
     pdf.end = toDateString(end)
 })
 
-const periodInvalid = computed(() => !pdf.start || !pdf.end || pdf.start > pdf.end)
 const rangeDays = computed(() => {
-    if (periodInvalid.value) return 0
+    if (!pdf.start || !pdf.end || pdf.start > pdf.end) return 0
     const start = new Date(`${pdf.start}T00:00:00`)
     const end = new Date(`${pdf.end}T00:00:00`)
     return Math.round((end.getTime() - start.getTime()) / (24 * 3600 * 1000)) + 1
@@ -475,6 +583,62 @@ const rangeDays = computed(() => {
 const workerMatrixRangeTooLong = computed(
     () => pdf.exportMode === 'worker_matrix' && rangeDays.value > 31
 )
+
+// Quick presets for the exported period.
+const datePresets = computed(() => {
+    const today = new Date()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+    const presets = [
+        {
+            label: $t('This week'),
+            start: toDateString(monday),
+            end: toDateString(sunday),
+        },
+        {
+            label: $t('This month'),
+            start: toDateString(new Date(today.getFullYear(), today.getMonth(), 1)),
+            end: toDateString(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
+        },
+        {
+            label: $t('Next 4 weeks'),
+            start: toDateString(monday),
+            end: toDateString(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 27)),
+        },
+    ]
+    if (config.startDate && config.endDate) {
+        presets.unshift({
+            label: $t('Current view'),
+            start: config.startDate,
+            end: config.endDate,
+        })
+    }
+    return presets
+})
+const applyDatePreset = (preset: { start: string, end: string }) => {
+    pdf.start = preset.start
+    pdf.end = preset.end
+}
+const isActiveDatePreset = (preset: { start: string, end: string }) =>
+    pdf.start === preset.start && pdf.end === preset.end
+
+const MAX_RANGE_DAYS = 183
+const dateRangeError = computed(() => {
+    if (!pdf.start || !pdf.end) {
+        return $t('Please select a start and end date.')
+    }
+    const start = new Date(pdf.start)
+    const end = new Date(pdf.end)
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+        return $t('The end date must be after the start date.')
+    }
+    if ((end.getTime() - start.getTime()) / 86400000 > MAX_RANGE_DAYS) {
+        return $t('A maximum of six months can be exported in one PDF.')
+    }
+    return null
+})
 
 const previewDays = computed(() => [$t('Day 1'), $t('Day 2'), $t('Day 3')])
 const previewRows = computed(() => pdf.exportMode === 'rooms'
@@ -501,10 +665,10 @@ const exportSummary = computed(() => pdf.exportMode === 'rooms'
 )
 
 const exportDisabled = computed(() =>
-    periodInvalid.value ||
+    !!dateRangeError.value ||
     (periodMode.value === 'calendar_week' && kwSelectionInvalid.value) ||
     workerMatrixRangeTooLong.value ||
-    (crafts.length > 0 && selectedCraftIds.value.length === 0) ||
+    (pdf.exportMode === 'worker_matrix' && crafts.length > 0 && selectedCraftIds.value.length === 0) ||
     (pdf.exportMode === 'worker_matrix' && pdf.worker_types.length === 0) ||
     pdf.processing
 )
@@ -532,8 +696,16 @@ const createPdf = () => {
 
     pdf.paperSize = selectedPaperSize.value.id
     pdf.paperOrientation = selectedPaperOrientation.value.id
-    // Empty array = no craft restriction (all crafts selected).
-    pdf.craft_ids = allCraftsSelected.value ? [] : [...selectedCraftIds.value]
+
+    if (pdf.exportMode === 'worker_matrix') {
+        // Empty array = no craft restriction (all crafts selected).
+        pdf.craft_ids = allCraftsSelected.value ? [] : [...selectedCraftIds.value]
+    } else {
+        pdf.room_ids = [...selections.room_ids]
+        pdf.area_ids = [...selections.area_ids]
+        pdf.event_type_ids = [...selections.event_type_ids]
+        pdf.craft_ids = [...selections.craft_ids]
+    }
 
     const routeName = pdf.exportMode === 'worker_matrix'
         ? 'shift.plan.export.worker-matrix.pdf'

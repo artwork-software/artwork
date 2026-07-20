@@ -1501,6 +1501,12 @@ class UserController extends Controller
 
     public function updateCalendarSettings(User $user, Request $request): void
     {
+        // unsignedSmallInteger-Spalte: ohne Grenzen werfen negative/zu große Werte
+        // oder Strings einen SQL-Fehler (500 statt 422)
+        $request->validate([
+            'calendar_column_width' => 'nullable|integer|between:120,400',
+        ]);
+
         $settingsFields = $request->only([
             'project_status',
             'project_artists',
@@ -1512,6 +1518,10 @@ class UserController extends Controller
             'event_name',
             'high_contrast',
             'expand_days',
+            // Nur vom Kalender-Settings-Modal gesendet (Spalten existieren nur
+            // auf user_calendar_settings, nicht auf den Schichtplan-Tabellen)
+            'calendar_column_width',
+            'show_artist_names_as_title',
             'use_event_status_color',
             'use_main_category_color',
             'show_qualifications',
@@ -1590,12 +1600,34 @@ class UserController extends Controller
 
     public function updateZoomFactor(User $user, Request $request): void
     {
+        // Stufen 0.4–1.4 (Zoom-Dropdown + Legacy-±0.2-Buttons); ohne Validierung
+        // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
+        $request->validate([
+            'zoom_factor' => 'required|numeric|between:0.4,1.4',
+        ]);
+
         $user->update($request->only('zoom_factor'));
     }
 
     public function updateAtAGlance(User $user, Request $request): void
     {
         $user->update($request->only('at_a_glance'));
+    }
+
+    public function updateShiftPlanZoomFactor(User $user, Request $request): void
+    {
+        // Stufen 0.55/0.75/1 des Schichtplan-Spaltenzooms; ohne Validierung
+        // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
+        $request->validate([
+            'zoom_factor' => 'required|numeric|between:0.5,1',
+        ]);
+
+        $settings = $user->shift_plan_settings;
+        if ($settings === null) {
+            $user->shift_plan_settings()->create($request->only('zoom_factor'));
+        } else {
+            $settings->update($request->only('zoom_factor'));
+        }
     }
 
     public function updateBulkSortId(User $user, Request $request): void

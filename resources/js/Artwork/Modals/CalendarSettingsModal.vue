@@ -230,6 +230,32 @@
                         </div>
                     </div>
 
+                    <!-- Künstler:innen statt Termintitel (Kompaktansicht) -->
+                    <div class="flex gap-3" v-if="!inShiftPlan && !isDailyView">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_artist_names_as_title"
+                                    id="show_artist_names_as_title"
+                                    aria-describedby="show_artist_names_as_title-description"
+                                    name="show_artist_names_as_title"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_artist_names_as_title" class="font-medium text-gray-900">{{ $t('Artist names instead of event title') }}</label>
+                            <p id="show_artist_names_as_title-description" class="text-gray-500 text-xs">
+                                {{ $t('In the compact view (zoom below 80%), the artist names of the project are shown instead of the event title.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Use event status colour (falls Modul aktiv & nicht Schichtplan) -->
                     <div class="flex gap-3" v-if="usePage().props.event_status_module && !inShiftPlan">
                         <div class="flex h-6 shrink-0 items-center">
@@ -283,6 +309,23 @@
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Raumspaltenbreite (nur Standard-Kalender; vom Zoom entkoppelt) —
+                     bewusst am Ende der Rubrik, damit das Dropdown das Checkbox-Raster nicht aufbricht -->
+                <div v-if="!inShiftPlan && !isDailyView" class="mt-4 md:max-w-sm">
+                    <ArtworkBaseListbox
+                        :model-value="selectedColumnWidthOption"
+                        @update:model-value="onColumnWidthChange"
+                        :items="columnWidthOptions"
+                        by="id"
+                        option-label="name"
+                        :label="$t('Room column width')"
+                        :enable-search="false"
+                    />
+                    <p class="text-gray-500 text-xs mt-1">
+                        {{ $t('The room column width stays the same at every zoom level. The zoom only controls the row height.') }}
+                    </p>
                 </div>
             </div>
 
@@ -872,6 +915,8 @@ import { router, useForm, usePage } from "@inertiajs/vue3";
 import { can, is } from "laravel-permission-to-vuejs";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import { computed } from "vue";
 
 const props = defineProps({
     isPlanning: { type: Boolean, default: false },
@@ -934,7 +979,33 @@ const userCalendarSettings = props.isListView
         ...(props.inShiftPlan && props.isDailyView
             ? { show_project_assignments: activeSettings ? (activeSettings.show_project_assignments ?? true) : true }
             : {}),
+        // Nur Standard-Kalender: Spalten existieren nur auf user_calendar_settings
+        ...(!props.inShiftPlan && !props.isDailyView
+            ? {
+                calendar_column_width: activeSettings?.calendar_column_width ?? 212,
+                show_artist_names_as_title: activeSettings?.show_artist_names_as_title ?? false,
+            }
+            : {}),
     });
+
+// Raumspaltenbreite: feste Presets, gespeichert als px-Wert
+const columnWidthOptions = [
+    { id: 160, name: 'Schmal (160 px)' },
+    { id: 212, name: 'Standard (212 px)' },
+    { id: 280, name: 'Breit (280 px)' },
+    { id: 320, name: 'Sehr breit (320 px)' },
+];
+
+const selectedColumnWidthOption = computed(() =>
+    columnWidthOptions.find((option) => option.id === userCalendarSettings.calendar_column_width)
+        ?? columnWidthOptions[1]
+);
+
+const onColumnWidthChange = (option) => {
+    if (option?.id) {
+        userCalendarSettings.calendar_column_width = option.id;
+    }
+};
 
 const onStatusColorChange = () => {
     if (userCalendarSettings.use_event_status_color) {

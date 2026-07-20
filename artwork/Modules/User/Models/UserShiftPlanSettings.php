@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $event_name
  * @property boolean $high_contrast
  * @property boolean $expand_days
+ * @property float $zoom_factor
  * @property boolean $use_event_status_color
  * @property boolean $use_main_category_color
  * @property boolean $work_shifts
@@ -60,6 +61,7 @@ class UserShiftPlanSettings extends Model
         'event_name',
         'high_contrast',
         'expand_days',
+        'zoom_factor',
         'use_event_status_color',
         'use_main_category_color',
         'show_qualifications',
@@ -87,6 +89,7 @@ class UserShiftPlanSettings extends Model
         'event_name' => 'boolean',
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
+        'zoom_factor' => 'float',
         'use_event_status_color' => 'boolean',
         'use_main_category_color' => 'boolean',
         'show_qualifications' => 'boolean',

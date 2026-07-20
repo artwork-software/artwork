@@ -32,35 +32,14 @@
                         </div>
 
                         <template v-else>
-                            <div class="flex flex-row items-center">
-                                <ToolTipComponent
-                                    direction="bottom"
-                                    :tooltip-text="$t('Time range back')"
-                                    :icon="IconChevronLeft"
-                                    icon-size="h-5 w-5 text-primary"
-                                    @click="previousTimeRange"
-                                    classesButton="ui-button"
-                                />
-                                <date-picker-component :date-value-array="props.dateValue" :is_shift_plan="true" :is_daily_view="true"/>
-                                <ToolTipComponent
-                                    direction="bottom"
-                                    :tooltip-text="$t('Time range forward')"
-                                    :icon="IconChevronRight"
-                                    icon-size="h-5 w-5 text-primary"
-                                    @click="nextTimeRange"
-                                    classesButton="ui-button"
-                                />
-                            </div>
+                            <DateRangeControl
+                                :date-value-array="props.dateValue"
+                                mode="shift-plan"
+                                :extra-params="{ isDailyView: true }"
+                                :on-today-override="jumpToToday"
+                            />
 
                             <div class="flex gap-x-1 mx-2">
-                                <ToolTipComponent
-                                    direction="right"
-                                    :tooltip-text="$t('Today')"
-                                    :icon="IconCalendar"
-                                    icon-size="h-5 w-5"
-                                    @click="jumpToToday"
-                                    classesButton="ui-button"
-                                />
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Current week')"
@@ -518,7 +497,7 @@
 
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
@@ -1597,54 +1576,6 @@ const jumpToCurrentMonth = () => {
     }
 
     patchDates()
-}
-
-const previousTimeRange = () => {
-    const dateValueCopy = Array.isArray(props.dateValue) ? [...props.dateValue] : []
-    if (!dateValueCopy[0] || !dateValueCopy[1]) return
-
-    const start = new Date(dateValueCopy[0])
-    const end = new Date(dateValueCopy[1])
-    const dayDifference = Math.round((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
-
-    const newEnd = new Date(start)
-    newEnd.setDate(newEnd.getDate() - 1)
-    const newStart = new Date(newEnd)
-    newStart.setDate(newStart.getDate() - dayDifference)
-
-    router.patch(
-        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        {
-            start_date: newStart.toISOString().slice(0, 10),
-            end_date: newEnd.toISOString().slice(0, 10),
-            isDailyView: true,
-        },
-        { preserveScroll: true, preserveState: false }
-    )
-}
-
-const nextTimeRange = () => {
-    const dateValueCopy = Array.isArray(props.dateValue) ? [...props.dateValue] : []
-    if (!dateValueCopy[0] || !dateValueCopy[1]) return
-
-    const start = new Date(dateValueCopy[0])
-    const end = new Date(dateValueCopy[1])
-    const dayDifference = Math.round((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
-
-    const newStart = new Date(end)
-    newStart.setDate(newStart.getDate() + 1)
-    const newEnd = new Date(newStart)
-    newEnd.setDate(newEnd.getDate() + dayDifference)
-
-    router.patch(
-        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        {
-            start_date: newStart.toISOString().slice(0, 10),
-            end_date: newEnd.toISOString().slice(0, 10),
-            isDailyView: true,
-        },
-        { preserveScroll: true, preserveState: false }
-    )
 }
 
 /**

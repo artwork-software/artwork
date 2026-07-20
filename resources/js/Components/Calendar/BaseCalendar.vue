@@ -14,19 +14,27 @@
                 @jump-to-day-of-month="jumpToDayOfMonth"
                 :is-planning="isPlanning"
                 :daily-view="isDaily"
-            />
-            <div
-                v-if="eventsWithoutRoomLen > 0"
-                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
-                @click="showEventsWithoutRoomComponent = true"
             >
-                <div class="flex items-center justify-center w-full h-full gap-x-1">
-                    <IconAlertTriangle class="size-4 text-white" aria-hidden="true" />
-                    <div class="text-white text-sm font-bold">
-                        {{eventsWithoutRoomLen === 1 ? $t('{0} Event without room!', [eventsWithoutRoomLen]) : $t('{0} Events without room!', [eventsWithoutRoomLen]) }}
+                <template #buttonsRight>
+                    <!-- Dezenter Hinweis-Chip statt des früheren vollflächigen roten Banners;
+                         nur Icon + Anzahl, Details im Tooltip. Tooltip öffnet nach rechts,
+                         damit er beim Umbruch der Leiste nicht unter der Mainnav (z-50) liegt -->
+                    <div
+                        v-if="eventsWithoutRoomLen > 0"
+                        class="ui-button !bg-amber-50 !border-amber-300/80 !text-amber-800 text-xs"
+                        @click="showEventsWithoutRoomComponent = true"
+                    >
+                        <ToolTipWithTextComponent
+                            direction="right"
+                            :text="String(eventsWithoutRoomLen)"
+                            :icon="IconAlertTriangle"
+                            icon-size="size-4"
+                            tooltip-width="w-64"
+                            :tooltip-text="eventsWithoutRoomLen + ' ' + $t('without room') + ' – ' + $t('There are events without a room in this period. Click to view and assign them.')"
+                        />
                     </div>
-                </div>
-            </div>
+                </template>
+            </FunctionBarCalendar>
             <div
                 v-if="hasFailedMonths"
                 class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
@@ -53,12 +61,28 @@
                             :class="[isFullscreen ? 'mt-4' : '']"
                             ref="calendarToCalculate"
                         >
-                            <div
-                                v-for="day in days"
+                            <template
+                                v-for="(day, dayIndex) in days"
                                 :key="day.fullDay"
-                                class="flex gap-0.5 day-container"
-                                :class="day.isWeekend ? 'bg-gray-50' : ''"
-                                :style="dayRowStyle"
+                            >
+                            <!-- Monatsgrenze: schwarzer Balken über die ganze Zeile mit Monat + Jahr
+                                 (gleiche Optik wie die dunklen Leisten in anderen Screens);
+                                 auch für den allerersten Tag des Zeitraums, sonst fehlt dem
+                                 obersten Block bei Start mitten im Monat die Orientierung -->
+                            <div
+                                v-if="(day.isFirstDayOfMonth || dayIndex === 0) && !day.isExtraRow"
+                                class="month-separator flex items-center h-7 w-full bg-artwork-navigation-background"
+                            >
+                                <span
+                                    class="month-separator-label text-xs font-semibold text-white whitespace-nowrap px-3"
+                                >
+                                    {{ formatMonthLabel(day.withoutFormat) }}
+                                </span>
+                            </div>
+                            <div
+                                class="flex gap-0.5 day-container border-t"
+                                :class="settings.high_contrast ? 'border-gray-500' : 'border-gray-300'"
+                                :style="[dayRowStyle, dayRowBackgroundStyle(day)]"
                                 :data-day="day.fullDay"
                                 :data-day-to-jump="day.withoutFormat"
                                 :data-month="monthKeyFromDay(day)"
@@ -71,16 +95,14 @@
                                     <template v-for="(room, roomIdx) in newCalendarData" :key="room.id ?? room.roomId ?? roomIdx">
                                         <!-- Eine Cell (Tag × Raum) -->
                                         <section
-                                            :style="cellStyle"
+                                            :style="[cellStyle, cellSeparatorStyle]"
                                             :id="`scroll_container-${day.withoutFormat}`"
                                             :data-room-id="room.roomId ?? room.id"
                                             :ref="el => registerCell(el, day, room)"
                                             :class="[
                     'group/container relative',                 // Basis
-                    'border-dashed',                            // Linienoptik wie zuvor
-                    'border-t border-gray-500',
-
-                    ''
+                    // Tagesgrenze liegt jetzt als durchgezogene Linie auf der Zeile (day-container),
+                    // die Zelle trägt nur noch die vertikale Raumtrennlinie (cellSeparatorStyle)
                   ]"
                                         >
                                             <!-- INNERER WRAPPER: hält Scrollbereich + Floating-Buttons -->
@@ -165,6 +187,7 @@
                                     </template>
                                 </template>
                             </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -197,13 +220,13 @@
             <div class="w-max" v-else>
                 <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
                     <div v-for="room in newCalendarData" :key="room.roomId ?? room.id">
-                        <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
+                        <div :style="{ minWidth: columnWidth + 'px', maxWidth: columnWidth + 'px', width: columnWidth + 'px' }" class="flex items-center h-full truncate">
                             <SingleRoomInHeader :room="room" is-light />
                         </div>
                     </div>
                 </div>
                 <div class="flex gap-0.5">
-                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }">
+                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: columnWidth + 'px', maxWidth: columnWidth + 'px', width: columnWidth + 'px' }">
                         <template v-for="day in days" :key="day.fullDay">
                             <div v-for="item in itemsInCell(day, room)" :key="`${item.type}-${item.data.id}`" class="mb-0.5" :id="'scroll_container-' + day.withoutFormat">
                                 <div v-if="item.type === 'shift'" class="py-0.5">
@@ -221,7 +244,7 @@
                                         :line-height="lineHeightCalc"
                                         :rooms="rooms"
                                         :has-admin-role="isAdmin"
-                                        :width="zoom_factor * 196"
+                                        :width="eventCardWidth"
                                         :first_project_tab_id="first_project_tab_id"
                                         :firstProjectShiftTabId="firstProjectShiftTabId"
                                         @edit-event="showEditEventModel"
@@ -399,7 +422,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
@@ -407,9 +430,12 @@ import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
+import {formatMonthLabel} from "@/Composeables/calendarDateUtils.js";
 import {can} from "laravel-permission-to-vuejs";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -457,14 +483,24 @@ const ShiftInCalendarCell = defineAsyncComponent({
 // User & Settings
 const user = computed(() => page.props.auth.user);
 const settings = computed(() => user.value.calendar_settings);
-const zoom_factor = ref(user.value.zoom_factor ?? 1);
+const {
+    zoomFactor: zoom_factor,
+    columnWidth,
+    rowHeight,
+    eventCardWidth,
+    isCompact,
+    zoomIn,
+    zoomOut,
+    monthViewRequestId,
+} = useCalendarZoom();
 const isDaily = computed(() => !!user.value.calendar_daily_view);
 const atAGlance = computed(() => !!user.value.at_a_glance);
 
-// Maße/Styles
-const cellWidthPx = computed(() => `${zoom_factor.value * 212}px`);
-const cardWidthNum = computed(() => zoom_factor.value * 196);
-const rowHeightPx = computed(() => `${zoom_factor.value * 212}px`);
+// Maße/Styles: Spaltenbreite ist vom Zoom entkoppelt (Anzeigeeinstellung),
+// der Zoom steuert nur noch die Zeilenhöhe/Informationsdichte.
+const cellWidthPx = computed(() => `${columnWidth.value}px`);
+const cardWidthNum = computed(() => eventCardWidth.value);
+const rowHeightPx = computed(() => `${rowHeight.value}px`);
 const dayRowStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
@@ -475,6 +511,39 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
+// Vertikale Trennlinie zwischen den Raumspalten (inline statt Tailwind-Klasse,
+// damit sie unabhängig vom Zeilen-Border-Style bleibt).
+const cellSeparatorStyle = computed(() => ({
+    borderLeft: `1px solid ${settings.value.high_contrast ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.18)'}`
+}));
+
+// Wochenend-/Feiertags-Einfärbung der ganzen Tageszeile (inkl. Datumsspalte).
+// Feiertag schlägt Wochenende; Feiertagston wird aus holiday.color abgeleitet.
+// Eintägige Feiertage färben deutlich, mehrtägige Zeiträume (Ferien) nur sehr
+// dezent — sonst wären ganze Wochen farblich überladen. Liegen beide auf einem
+// Tag, gewinnt der eintägige Feiertag.
+const dayTintColor = (day) => {
+    if (!day || day.isExtraRow) return null;
+    const holidays = day.holidays ?? [];
+    const singleDayHoliday = holidays.find(
+        (holiday) => holiday?.color && (!holiday.end_date || holiday.end_date === holiday.date)
+    );
+    const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
+    if (coloredHoliday) {
+        const alpha = singleDayHoliday
+            ? (settings.value.high_contrast ? '59' : '33')
+            : (settings.value.high_contrast ? '33' : '1A');
+        return `${coloredHoliday.color}${alpha}`;
+    }
+    if (day.isWeekend) {
+        return settings.value.high_contrast ? '#dbeafe' : '#eff6ff';
+    }
+    return null;
+};
+const dayRowBackgroundStyle = (day) => {
+    const tint = dayTintColor(day);
+    return tint ? { backgroundColor: tint } : {};
+};
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>
     Array.isArray(props.eventsWithoutRoom) ? props.eventsWithoutRoom.length : (props.eventsWithoutRoom?.length ?? 0)
@@ -485,8 +554,8 @@ const topbarRef = ref(null);
 const calendarRef = ref(null);
 const topbarHeight = ref(80); // default fallback
 
-// Sticky offset for the date in the day column: topbar + room header (h-16) + spacing
-const dayStickyTop = computed(() => topbarHeight.value + 64 + 8);
+// Sticky offset for the date in the day column: topbar + room header (h-11) + spacing
+const dayStickyTop = computed(() => topbarHeight.value + 44 + 8);
 let topbarObserver = null;
 
 // State
@@ -969,9 +1038,13 @@ onMounted(async () => {
         });
         topbarObserver.observe(topbarRef.value);
     }
+
+    // Strg/Cmd + Scrollrad zoomt durch die Stufen (statt Browser-Zoom)
+    calendarRef.value?.addEventListener('wheel', handleWheelZoom, { passive: false });
 });
 
 onBeforeUnmount(() => {
+    calendarRef.value?.removeEventListener('wheel', handleWheelZoom);
     if (monthObserver) monthObserver.disconnect();
     monthObserver = null;
     monthSentinelSeen.value.clear();
@@ -1403,9 +1476,45 @@ const onEventClick = (evt: any, e?: MouseEvent) => {
     const nextState = !(evt?.considerOnMultiEdit === true);
     handleMultiEditEventCheckboxChange(evt.id, nextState, (evt?.room_id ?? evt?.roomId ?? null));
 };
+
+// ---------- Zoom-Bedienung ----------
+// Strg/Cmd + Scrollrad: stufig zoomen, Browser-Zoom unterdrücken. Kurz
+// gedrosselt, damit ein Radtick nicht mehrere Stufen überspringt.
+let wheelZoomLockedUntil = 0;
+const handleWheelZoom = (e: WheelEvent) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (atAGlance.value) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now < wheelZoomLockedUntil) return;
+    wheelZoomLockedUntil = now + 180;
+    if (e.deltaY > 0) zoomOut();
+    else zoomIn();
+};
+
+// "Monatsansicht" aus dem Zoom-Dropdown: nach dem Sprung auf die kompakteste
+// Stufe zum Anfang des aktuell fokussierten Monats scrollen.
+watch(monthViewRequestId, async () => {
+    const key = focusedMonthKey.value ?? monthList.value[0]?.key;
+    if (!key) return;
+    const firstDayOfMonth = (props.days as any[]).find(
+        (d: any) => (d.withoutFormat || '').startsWith(key) && !d.isExtraRow
+    );
+    if (!firstDayOfMonth) return;
+    await nextTick();
+    await jumpToDayOfMonth(firstDayOfMonth.withoutFormat);
+});
 </script>
 
 <style scoped>
+/* Monatsname mittig zur sichtbaren Bildschirmbreite: sticky hält das Label
+   beim horizontalen Scrollen durch das breite Grid in der Viewport-Mitte. */
+.month-separator-label {
+    position: sticky;
+    left: 50vw;
+    transform: translateX(-50%);
+}
+
 .cell {
     overflow: auto;
     scrollbar-color: rgba(156,163,175,0.5) transparent; /* Firefox */

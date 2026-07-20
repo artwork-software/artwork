@@ -6,10 +6,10 @@
                 <div class="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap">
                     <!-- Datepicker first (top-left), as everywhere else in the app -->
                     <div class="shrink-0">
-                        <DatePickerComponent
+                        <DateRangeControl
                             v-if="dataArray"
-                            :dateValueArray="dataArray"
-                            :is_inventory_article_planning="true"
+                            :date-value-array="dataArray"
+                            mode="article-planning"
                         />
                     </div>
 
@@ -833,8 +833,8 @@ const onBarLeave = () => {
     tooltip.issue = null;
 };
 
-const DatePickerComponent = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
+const DateRangeControl = defineAsyncComponent({
+    loader: () => import('@/Artwork/DateRange/DateRangeControl.vue'),
     delay: 200,
 });
 

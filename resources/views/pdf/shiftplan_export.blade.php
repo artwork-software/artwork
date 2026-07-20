@@ -106,29 +106,27 @@
         }
         td.day-cell.weekend { background: #fafafa; }
 
-        /* EVENTS ---------------------------------------------------- */
+        /* EVENTS (single compact line — period overview, no intra-day detail) */
         .event {
             border-left: 2.5px solid #999;
             background: rgba(120,120,120,0.07);
             border-radius: 2px;
             padding: 1.5px 3px;
             margin-bottom: 2px;
+            font-size: 7px;
+            line-height: 1.25;
         }
-        .event .ev-time { font-size: 6.5px; color: #555; font-weight: 600; }
-        .event .ev-name { font-size: 7.5px; font-weight: 600; color: #18181b; line-height: 1.15; }
-        .event .ev-type { font-size: 6.5px; color: #666; }
+        .event .ev-time { color: #555; font-weight: 600; font-size: 6.5px; }
+        .event .ev-name { font-weight: 600; color: #18181b; }
 
-        /* SHIFTS ---------------------------------------------------- */
+        /* SHIFTS (head line + workers as flowing text) ---------------- */
         .shift {
             border-left: 3px solid #999;
             border-radius: 2px;
             padding: 2px 3px;
             margin-bottom: 2px;
         }
-        .shift .sh-head {
-            display: block;
-            margin-bottom: 1px;
-        }
+        .shift .sh-head { display: block; }
         .shift .sh-craft { font-size: 7.5px; font-weight: 700; color: #18181b; }
         .shift .sh-time { font-size: 6.5px; color: #555; }
         .shift .sh-badge {
@@ -142,18 +140,12 @@
         }
         .shift .sh-badge.full { background: #dcfce7; color: #15803d; }
         .shift .sh-badge.open { background: #fee2e2; color: #b91c1c; }
-        .shift .worker {
+        .shift .sh-workers {
             font-size: 7px;
             line-height: 1.3;
             color: #27272a;
-            padding-left: 1px;
         }
-        .shift .worker .abbr {
-            color: #71717a;
-            font-size: 6px;
-            font-weight: 600;
-        }
-        .shift .worker.open-slot { color: #b91c1c; font-style: italic; }
+        .shift .sh-workers .open-slots { color: #b91c1c; font-style: italic; }
         .shift .sh-desc { font-size: 6.5px; color: #71717a; font-style: italic; }
         .committed-dot {
             display: inline-block;
@@ -209,11 +201,17 @@
                             @if(!empty($activeFilter['rooms']))
                                 <span class="label">{{ __('Rooms') }}:</span> {{ implode(', ', $activeFilter['rooms']) }}&nbsp;&nbsp;
                             @endif
+                            @if(!empty($activeFilter['areas']))
+                                <span class="label">{{ __('Areas') }}:</span> {{ implode(', ', $activeFilter['areas']) }}&nbsp;&nbsp;
+                            @endif
                             @if(!empty($activeFilter['event_types']))
                                 <span class="label">{{ __('Event types') }}:</span> {{ implode(', ', $activeFilter['event_types']) }}&nbsp;&nbsp;
                             @endif
                             @if(!empty($activeFilter['crafts']))
                                 <span class="label">{{ __('Crafts') }}:</span> {{ implode(', ', $activeFilter['crafts']) }}
+                            @endif
+                            @if(!empty($hideEmptyRooms))
+                                <span class="label">{{ __('Hide empty rooms') }}</span>
                             @endif
                         </div>
                         @if($highlightProjectId)
@@ -246,6 +244,13 @@
                 </tr>
             </thead>
             <tbody>
+            @if(count($rooms) === 0)
+                <tr>
+                    <td class="empty-cell" colspan="{{ count($week['days']) + 1 }}" style="padding: 10px;">
+                        {{ __('No rooms with events or shifts in the selected period.') }}
+                    </td>
+                </tr>
+            @endif
             @foreach($rooms as $room)
                 @php $roomBlock = $roomLookup[$room->id] ?? null; @endphp
                 <tr>
@@ -272,17 +277,14 @@
                                     }
                                 @endphp
                                 <div class="event{{ $evProjClass }}" style="border-left-color: rgb({{ $etRgb }}); background: rgba({{ $etRgb }}, 0.08);">
-                                    <div class="ev-time">
+                                    <span class="ev-time">
                                         @if($event['allDay'] ?? false)
                                             {{ __('All day') }}
                                         @else
                                             {{ $time($event['start'] ?? null) }}–{{ $time($event['end'] ?? null) }}
                                         @endif
-                                    </div>
-                                    <div class="ev-name">{{ ($event['eventName'] ?? '') ?: ($et['name'] ?? '–') }}</div>
-                                    @if($et)
-                                        <div class="ev-type">{{ $et['name'] }}</div>
-                                    @endif
+                                    </span>
+                                    <span class="ev-name">{{ ($event['eventName'] ?? '') ?: ($et['name'] ?? '–') }}</span>
                                 </div>
                             @endforeach
 
@@ -313,27 +315,26 @@
                                         @endif
                                         <span class="sh-craft">{{ $craft['abbreviation'] ?? ($craft['name'] ?? __('Shift')) }}</span>
                                         @if($shift['isCommitted'] ?? false)<span class="committed-dot"></span>@endif
-                                        <div class="sh-time">
+                                        <span class="sh-time">
                                             {{ $time($shift['start'] ?? null) }}–{{ $time($shift['end'] ?? null) }}
                                             @if(($shift['break_minutes'] ?? 0) > 0)
-                                                · {{ $shift['break_minutes'] }}′ {{ __('Break') }}
+                                                · {{ $shift['break_minutes'] }}′
                                             @endif
-                                        </div>
+                                        </span>
                                     </div>
                                     @if(!empty($shift['description']))
                                         <div class="sh-desc">{{ $shift['description'] }}</div>
                                     @endif
-                                    @foreach($workers as $worker)
-                                        <div class="worker">
-                                            @if(!empty($worker['pivot']['craft_abbreviation']))
-                                                <span class="abbr">{{ $worker['pivot']['craft_abbreviation'] }}</span>
-                                            @endif
-                                            {{ ($worker['name'] ?? '') ?: '—' }}
-                                        </div>
-                                    @endforeach
-                                    @for($i = 0; $i < $open; $i++)
-                                        <div class="worker open-slot">{{ __('Open') }}</div>
-                                    @endfor
+                                    @php
+                                        $workerNames = [];
+                                        foreach ($workers as $worker) {
+                                            $workerNames[] = ($worker['name'] ?? '') ?: '—';
+                                        }
+                                        $workersLine = implode(', ', $workerNames);
+                                    @endphp
+                                    @if($workersLine !== '' || $open > 0)
+                                        <div class="sh-workers">{{ $workersLine }}{{ $workersLine !== '' && $open > 0 ? ', ' : '' }}@if($open > 0)<span class="open-slots">{{ $open }}× {{ __('Open') }}</span>@endif</div>
+                                    @endif
                                 </div>
                             @endforeach
 

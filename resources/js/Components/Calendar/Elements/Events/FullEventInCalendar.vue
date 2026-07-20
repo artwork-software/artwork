@@ -848,13 +848,15 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EditSeriesEventsModal from "@/Components/Calendar/Elements/Events/EditSeriesEventsModal.vue";
 import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
+import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 
 const { t } = useI18n(), $t = t;
 const pageProps = usePage().props;
 const calSettings = computed(() => pageProps.auth.user.calendar_settings);
 const highContrastPercent = computed(() => getHighContrastPercent(calSettings.value));
 const currentUserId = computed(() => pageProps.auth.user.id);
-const zoom_factor = ref(pageProps.auth.user.zoom_factor ?? 1);
+// Reaktiv aus dem zentralen Zoom-Store — Zoom-Wechsel kommen ohne Page-Reload an.
+const { zoomFactor: zoom_factor } = useCalendarZoom();
 // Über 100 % wächst die Karte per CSS zoom: Inhalt layoutet wie bei 100 % und wird
 // inkl. Schrift/Icons hochskaliert. Interne px-Berechnungen und die zoom-abhängigen
 // Font-Props dürfen dann nicht zusätzlich skalieren (sonst doppelt), daher heightZoom/inner*.

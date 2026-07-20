@@ -420,12 +420,30 @@ class ExportPDFController extends Controller
             ]
         );
 
-        // Gewerke-Override aus dem Export-Dialog: nur in-memory anwenden, der
-        // gespeicherte Schichtplan-Filter des Users bleibt unverändert.
-        // Leeres Array = keine Gewerke-Einschränkung.
-        if ($request->has('craft_ids')) {
-            $craftIdsOverride = array_map('intval', (array) $request->get('craft_ids', []));
-            $userCalendarFilter->setAttribute('craft_ids', $craftIdsOverride !== [] ? $craftIdsOverride : null);
+        // The export dialog may override single filter dimensions (prefilled with the active shift
+        // plan filters, adjustable before export). Overrides are applied in-memory only — the
+        // user's saved shift plan filter must not change. Keys absent from the request keep the
+        // saved filter value, an empty array clears that dimension (= no filter).
+        foreach (
+            [
+                'event_type_ids',
+                'room_ids',
+                'area_ids',
+                'room_attribute_ids',
+                'room_category_ids',
+                'event_property_ids',
+                'craft_ids',
+            ] as $filterKey
+        ) {
+            if ($request->exists($filterKey)) {
+                $values = $request->input($filterKey);
+                $userCalendarFilter->setAttribute(
+                    $filterKey,
+                    is_array($values) && $values !== []
+                        ? array_values(array_map('intval', $values))
+                        : null
+                );
+            }
         }
 
         // Respect the date range currently shown in the shift plan (sent by the frontend).
@@ -440,6 +458,15 @@ class ExportPDFController extends Controller
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+
+        if ($endDate->lessThan($startDate)) {
+            $endDate = $startDate->copy()->endOfDay();
+        }
+
+        // Mirror the six-month cap of the shift plan view so a single export stays renderable.
+        if ($startDate->diffInDays($endDate) > 183) {
+            $endDate = $startDate->copy()->addDays(183)->endOfDay();
         }
 
         $rooms = $this->calendarDataService->getFilteredRooms(
@@ -482,6 +509,20 @@ class ExportPDFController extends Controller
             }
         }
 
+        // Optionally drop rooms without a single event or shift in the exported period —
+        // over long periods this keeps the PDF focused on rooms that actually carry content.
+        $hideEmptyRooms = $request->boolean('hideEmptyRooms');
+        if ($hideEmptyRooms) {
+            $rooms = $rooms->filter(function ($room) use ($roomLookup): bool {
+                foreach (($roomLookup[$room->id]['content'] ?? []) as $cell) {
+                    if (!empty($cell['eventIds']) || !empty($cell['shiftIds'])) {
+                        return true;
+                    }
+                }
+                return false;
+            })->values();
+        }
+
         // Build the list of days and group them by ISO calendar week (one week = one page).
         $weeks = [];
         $cursor = $startDate->copy()->startOfDay();
@@ -509,6 +550,7 @@ class ExportPDFController extends Controller
         // Human-readable summary of the active filters for the header.
         $activeFilter = [
             'rooms' => Room::whereIn('id', $userCalendarFilter->room_ids ?? [])->pluck('name')->toArray(),
+            'areas' => Area::whereIn('id', $userCalendarFilter->area_ids ?? [])->pluck('name')->toArray(),
             'event_types' => EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])->pluck('name')->toArray(),
             'crafts' => Craft::whereIn('id', $userCalendarFilter->craft_ids ?? [])->pluck('name')->toArray(),
         ];
@@ -555,6 +597,7 @@ class ExportPDFController extends Controller
                 'kwRange' => $kwRange,
                 'highlightProjectId' => $highlightProjectId,
                 'highlightProjectName' => $highlightProjectName,
+                'hideEmptyRooms' => $hideEmptyRooms,
             ]
         )
             ->setPaper(

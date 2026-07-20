@@ -10,10 +10,11 @@
                     @click="previousTimeRange"
                     classesButton="ui-button"
                 />
-                <date-picker-component v-if="dateValue"
-                                       :dateValueArray="dateValue"
-                                       :is_shift_plan="false"
-                                       :is_user_shift_plan="true"/>
+                <DateRangeControl v-if="dateValue"
+                                  class="mx-1"
+                                  :date-value-array="dateValue"
+                                  mode="user-shift-plan"
+                                  :show-navigation="false"/>
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Time range forward')"
@@ -75,7 +76,7 @@
 import Button from "@/Jetstream/Button.vue";
 import {CalendarIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
@@ -106,7 +107,7 @@ export default {
         ChevronDownIcon,
         ChevronLeftIcon,
         ChevronRightIcon,
-        DatePickerComponent,
+        DateRangeControl,
     },
     props: [
         'dateValue',

@@ -304,10 +304,12 @@ class EventController extends Controller
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         }
 
-        // Sicherheitskappen für View-Spannen
+        // Sicherheitskappen für View-Spannen: Tagesansicht bis zu einem Monat
+        // (leere Stunden kollabieren clientseitig, ~50k DOM-Knoten bei 31 Tagen gemessen ok)
         $calendarWarningText = '';
-        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
-            $endDate = $startDate->copy()->addDays(7);
+        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+            // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
+            $endDate = $startDate->copy()->addDays(30);
             $calendarWarningText = __('calendar.daily_view_info');
 
             $user->userFilters()->updateOrCreate(
@@ -530,8 +532,10 @@ class EventController extends Controller
 
         $calendarWarningText = '';
 
-        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
-            $endDate = $startDate->copy()->addDays(7);
+        // Tagesansicht bis zu einem Monat (wie im Standard-Kalender)
+        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+            // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
+            $endDate = $startDate->copy()->addDays(30);
             $calendarWarningText = __('calendar.daily_view_info');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $planningFilterType

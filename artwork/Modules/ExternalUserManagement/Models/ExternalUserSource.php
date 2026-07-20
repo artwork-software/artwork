@@ -48,6 +48,47 @@ class ExternalUserSource extends Model
         return $attributes;
     }
 
+    /**
+     * Kanonischer Provider-Schlüssel für das auth_provider-Feld am User.
+     */
+    public function providerKey(): string
+    {
+        return $this->type === 'identity_provider' ? 'oidc' : 'ldap';
+    }
+
+    /**
+     * Stabiler Issuer der Verbindung. Bei OIDC der konfigurierte bzw. aus der
+     * Discovery-URL abgeleitete Issuer, bei LDAP der Host.
+     */
+    public function resolvedIssuer(): ?string
+    {
+        $config = $this->config ?? [];
+
+        if ($this->type === 'ldap') {
+            return $config['host'] ?? null;
+        }
+
+        if (!empty($config['issuer'])) {
+            return $config['issuer'];
+        }
+
+        if (!empty($config['discovery_url'])) {
+            return preg_replace('#/\.well-known/openid-configuration/?$#', '', (string) $config['discovery_url']);
+        }
+
+        return null;
+    }
+
+    /**
+     * Pro Verbindung konfigurierbare Default-Rolle für die Provisionierung.
+     */
+    public function defaultRoleId(): ?int
+    {
+        $roleId = $this->config['default_role_id'] ?? null;
+
+        return $roleId !== null && $roleId !== '' ? (int) $roleId : null;
+    }
+
     public function externalUsers(): HasMany
     {
         return $this->hasMany(ExternalUser::class, 'source_id', 'id');

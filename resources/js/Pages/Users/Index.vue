@@ -14,6 +14,15 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
+                    <button
+                        type="button"
+                        class="ui-button"
+                        :class="authProviderFilter === 'sso' ? '!bg-blue-600 !text-white' : ''"
+                        @click="setAuthProviderFilter('sso')"
+                    >
+                        {{ $t('SSO only') }}
+                    </button>
+
                     <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-zinc-900" menu-width="w-72" classes="ui-button" menu-button-text="Sort">
                         <div class="flex items-center justify-between py-1">
                             <span
@@ -63,7 +72,16 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.first_name }} {{ row.last_name }}</div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-gray-900">{{ row.first_name }} {{ row.last_name }}</span>
+                                <span
+                                    v-if="isSsoUser(row)"
+                                    class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200"
+                                    v-tooltip.top="{ value: ssoTooltip(row), appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
+                                >
+                                    {{ $t('SSO') }}
+                                </span>
+                            </div>
                             <div class="mt-1 text-gray-500">{{ row.email }}</div>
                         </div>
                     </Link>
@@ -330,16 +348,31 @@ const closeAddUserModal = (bool) => {
 }
 
 /* Sorting & Filtering (unchanged behavior) */
+const authProviderFilter = ref<string | null>(null)
+
 const applyFiltersAndSort = () => {
     router.get(
         route().current(),
         {
             query: user_query.value,
             sort: sortBy.value,
+            auth_provider_filter: authProviderFilter.value || undefined,
             saveFilterAndSort: 1,
         },
         { preserveState: true }
     )
+}
+
+const setAuthProviderFilter = (value: string | null) => {
+    authProviderFilter.value = authProviderFilter.value === value ? null : value
+    applyFiltersAndSort()
+}
+
+const isSsoUser = (row: any): boolean => !!row.auth_provider && row.auth_provider !== 'local'
+
+const ssoTooltip = (row: any): string => {
+    const provider = row.auth_provider === 'oidc' ? 'OIDC' : (row.auth_provider === 'ldap' ? 'LDAP' : row.auth_provider)
+    return row.auth_provider_issuer ? `${provider} · ${row.auth_provider_issuer}` : provider
 }
 
 const getUserSortBySetting = () => props.userUserManagementSetting?.sort_by

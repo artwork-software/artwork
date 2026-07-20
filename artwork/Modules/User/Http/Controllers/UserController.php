@@ -177,6 +177,25 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Filtert die Nutzerliste nach Authentifizierungsquelle:
+     * 'sso' → alle IdP-gebundenen, oder ein konkreter Provider (local|oidc|ldap).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     */
+    private function applyAuthProviderFilter($query, ?string $filter): void
+    {
+        if ($filter === 'sso') {
+            $query->where('auth_provider', '!=', 'local');
+
+            return;
+        }
+
+        if (in_array($filter, ['local', 'oidc', 'ldap'], true)) {
+            $query->where('auth_provider', $filter);
+        }
+    }
+
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(
         PermissionPresetService $permissionPresetService,
@@ -196,15 +215,18 @@ class UserController extends Controller
                 null
             );
         $searchQuery = $request->get('query');
+        $authProviderFilter = $request->get('auth_provider_filter');
 
         $users = MinimalUserIndexResource::collection(
             !empty($searchQuery)
                 ? User::search($searchQuery)
-                ->query(function ($query) use ($sortEnum): void {
+                ->query(function ($query) use ($sortEnum, $authProviderFilter): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
                     $query->with('departments');
                     // Exclude the placeholder "Deleted user"
                     $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+
+                    $this->applyAuthProviderFilter($query, $authProviderFilter);
 
                     // Sortierung nur anwenden, wenn $sortEnum vorhanden ist
                     if (!is_null($sortEnum)) {
@@ -229,6 +251,7 @@ class UserController extends Controller
                 ->with('departments')
                 // Exclude the placeholder "Deleted user"
                 ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
+                ->when($authProviderFilter, fn ($query) => $this->applyAuthProviderFilter($query, $authProviderFilter))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:

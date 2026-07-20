@@ -1,4 +1,13 @@
 {
+    "Provider": "Provider",
+    "Tenant ID": "Tenant ID",
+    "Azure AD / Entra tenant ID – it is part of the authority URL.": "Azure AD / Entra tenant ID – it is part of the authority URL.",
+    "Optional comma-separated allowlist. Leave empty to allow any domain.": "Optional comma-separated allowlist. Leave empty to allow any domain.",
+    "Default Role": "Default Role",
+    "No default role": "No default role",
+    "Role assigned to accounts newly provisioned through this connection.": "Role assigned to accounts newly provisioned through this connection.",
+    "SSO only": "SSO only",
+    "Recommended: the bind sends the password in clear text – use SSL (LDAPS) or StartTLS.": "Recommended: the bind sends the password in clear text – use SSL (LDAPS) or StartTLS.",
     "Filter name": "Filter name",
     "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP and SVG.": "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP and SVG.",
     "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.": "The image \"{0}\" has an unsupported format – allowed are JPG, PNG, GIF, WEBP, BMP, SVG and HEIC.",

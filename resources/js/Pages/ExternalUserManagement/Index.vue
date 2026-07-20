@@ -123,6 +123,7 @@
             v-if="showCreateSourceModal || editingSource"
             :show="showCreateSourceModal || !!editingSource"
             :source="editingSource"
+            :roles="roles"
             @close="closeModal"
             @saved="handleSourceSaved"
         />
@@ -160,6 +161,10 @@ export default defineComponent({
     },
     props: {
         sources: {
+            type: Array,
+            default: () => []
+        },
+        roles: {
             type: Array,
             default: () => []
         }

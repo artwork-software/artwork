@@ -109,6 +109,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $compact_mode
  * @property boolean $ad_managed
  * @property string|null $ad_identifier
+ * @property string $auth_provider
+ * @property string|null $auth_provider_id
+ * @property string|null $auth_provider_issuer
  * @property array $show_crafts
  * @property bool $at_a_glance
  * @property Collection<Department> $departments
@@ -286,6 +289,9 @@ class User extends Model implements
         'chat_push_notification',
         'ad_managed',
         'ad_identifier',
+        'auth_provider',
+        'auth_provider_id',
+        'auth_provider_issuer',
         'is_time_preset_open'
     ];
 
@@ -329,6 +335,7 @@ class User extends Model implements
         'use_chat' => 'boolean',
         'chat_push_notification' => 'boolean',
         'is_time_preset_open' => 'boolean',
+        'ad_managed' => 'boolean',
     ];
 
     protected $hidden = [
@@ -356,6 +363,39 @@ class User extends Model implements
     public function getTypeAttribute(): string
     {
         return 'user';
+    }
+
+    /**
+     * Ist der Account an einen externen Identity Provider (OIDC/LDAP) gebunden?
+     * Dann übernimmt der IdP die Credential-Prüfung; lokaler Passwort-Login
+     * und -Reset sind für diesen Account deaktiviert.
+     */
+    public function isIdpBound(): bool
+    {
+        return $this->auth_provider !== null && $this->auth_provider !== 'local';
+    }
+
+    public function isProvider(string $provider): bool
+    {
+        return $this->auth_provider === $provider;
+    }
+
+    /**
+     * IdP-gebundene Accounts haben keinen lokalen Passwort-Reset. Der Versand
+     * wird still unterdrückt (kein User-Enumeration-Leak), Break-Glass setzt den
+     * Account zuvor auf 'local' zurück und aktiviert den Reset damit wieder.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        if ($this->isIdpBound()) {
+            return;
+        }
+
+        // Entspricht dem Standard-Verhalten des CanResetPassword-Traits; die
+        // konkrete Mail wird in FortifyServiceProvider via ResetPassword::toMailUsing
+        // angepasst. parent:: ist hier nicht nutzbar, da das Trait auf dieser
+        // Klasse selbst liegt.
+        $this->notify(new \Illuminate\Auth\Notifications\ResetPassword($token));
     }
 
     public function productBasket(): HasMany

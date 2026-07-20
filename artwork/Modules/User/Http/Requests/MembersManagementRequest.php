@@ -18,7 +18,8 @@ class MembersManagementRequest extends FormRequest
         return [
             'search' => 'nullable|string',
             'sort' => ['sometimes', Rule::enum(MemberSortEnum::class)],
-            'saveFilterAndSort' => ['sometimes', 'boolean']
+            'saveFilterAndSort' => ['sometimes', 'boolean'],
+            'auth_provider_filter' => ['sometimes', 'nullable', 'string', 'in:sso,local,oidc,ldap'],
         ];
     }
 }

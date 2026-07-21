@@ -8,7 +8,7 @@
                         :date-value-array="dateValue"
                         mode="shift-plan"
                         :extra-params="{ isDailyView: isDailyView }"
-                        :on-today-override="jumpToToday"
+                        :show-today="false"
                     />
                     <div class="flex gap-x-1 mx-2">
                         <ToolTipComponent
@@ -570,37 +570,6 @@ const changeDailyViewMode = (newValue) => {
         preserveScroll: false,
         preserveState: false
     });
-};
-
-// Shortcut functions for the three icons (adapted from FunctionBarCalendar)
-const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
-
-    // Switch to daily mode if not already in daily mode
-    if (!dailyViewMode.value) {
-        changeDailyViewMode(true);
-        // Update dates after mode change
-        setTimeout(() => {
-            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-                start_date: today,
-                end_date: today,
-                isDailyView: true,
-            }, {
-                preserveScroll: true,
-                preserveState: false
-            });
-        }, 100);
-    } else {
-        // If already in daily mode, just update the dates
-        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-            start_date: today,
-            end_date: today,
-            isDailyView: props.isDailyView,
-        }, {
-            preserveScroll: true,
-            preserveState: false
-        });
-    }
 };
 
 const jumpToCurrentWeek = () => {

@@ -26,6 +26,11 @@
                         </div>
                     </HolidayToolTip>
                     <span>{{ day.dayString }} {{ day.day }}</span>
+                    <span
+                        v-if="showRemarkIndicator"
+                        class="size-1.5 rounded-full bg-amber-400 shrink-0"
+                        :title="remarkIndicatorTitle"
+                    ></span>
                 </div>
                 <div v-if="day.isMonday" class="text-[9px] font-normal leading-tight">(KW{{ day.weekNumber }})</div>
             </template>
@@ -38,6 +43,13 @@
                     {{ day.day }}<span class="text-[10px] font-normal text-gray-500 ml-0.5">{{ dayYear }}</span>
                 </div>
                 <div v-if="day.isMonday" class="text-[10px] font-normal">(KW{{ day.weekNumber }})</div>
+                <div
+                    v-if="showRemarkIndicator"
+                    class="flex justify-end mt-0.5"
+                    :title="remarkIndicatorTitle"
+                >
+                    <span class="size-1.5 rounded-full bg-amber-400"></span>
+                </div>
             </template>
             <HolidayToolTip v-if="!isCompact && day?.holidays?.length > 0" class="mt-2">
                 <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
@@ -69,6 +81,7 @@ import {computed} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
+import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
 
 const props = defineProps({
     day: {
@@ -96,6 +109,16 @@ const props = defineProps({
 const { zoomFactor, rowHeight, dateColumnWidth, isCompact } = useCalendarZoom();
 
 const calendarSettings = computed(() => usePage().props.auth.user.calendar_settings ?? {});
+
+// QOL: Bemerkungs-Indikator, wenn eine Tagesbemerkung existiert, der User die
+// Spalte aber über die Anzeigeeinstellungen ausgeblendet hat
+const { canView: canViewDayRemarks, columnVisible: dayRemarksColumnVisible, remarkForDay } = useDayRemarks();
+const showRemarkIndicator = computed(() =>
+    canViewDayRemarks.value
+    && !dayRemarksColumnVisible.value
+    && !!remarkForDay(props.day)?.text
+);
+const remarkIndicatorTitle = computed(() => remarkForDay(props.day)?.text ?? null);
 
 const dayYear = computed(() => (props.day?.withoutFormat ?? '').slice(0, 4));
 
@@ -135,7 +158,11 @@ const containerStyle = computed(() => {
         height: calendarSettings.value.expand_days ? '' : rowHeight.value + 'px',
         width: dateColumnWidth + 'px',
         minWidth: dateColumnWidth + 'px',
-        ...(tintColor.value ? { backgroundColor: tintColor.value } : {}),
+        // Tint als Gradient-Layer ÜBER dem deckenden bg-gray-100 statt als
+        // backgroundColor: die Tint-Farben sind teils halbtransparent (Ferien
+        // 10 % Alpha) — als alleiniger Hintergrund würde die sticky Spalte
+        // beim X-Scrollen durchsichtig und die Termine schienen durch.
+        ...(tintColor.value ? { backgroundImage: `linear-gradient(${tintColor.value}, ${tintColor.value})` } : {}),
     };
 });
 

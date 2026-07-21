@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,10 +52,20 @@ class UserCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateDates(Request $request, User $user): void
+    public function updateDates(Request $request, User $user, UserService $userService): void
     {
         $isPlanning = $request->get('isPlanning', false);
         $isDailyView = $request->get('isDailyView', false);
+
+        $startDate = Carbon::parse($request->start_date)->format('Y-m-d');
+        $endDate = Carbon::parse($request->end_date)->format('Y-m-d');
+
+        // Geteilter Zeitraum aktiv: Navigation in einer Ansicht gilt für alle
+        if ($user->share_calendar_date) {
+            $userService->syncSharedCalendarFilterDates($user, $startDate, $endDate);
+
+            return;
+        }
 
         if ($isPlanning) {
             $filterType = $isDailyView
@@ -71,8 +82,8 @@ class UserCalendarFilterController extends Controller
                 'filter_type' => $filterType
             ],
             [
-                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+                'start_date' => $startDate,
+                'end_date' => $endDate
             ]
         );
     }

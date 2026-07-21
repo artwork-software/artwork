@@ -6,9 +6,13 @@
             color: eventTextColor,
             width: width + 'px',
             minWidth: width + 'px',
-            maxWidth: width + 'px'
+            maxWidth: width + 'px',
+            // Auswahl im Multi-Edit: grüner Ring + dunkle Außenlinie, damit die
+            // Markierung auch auf hellen/grünlichen Kachelfarben nicht untergeht
+            boxShadow: event.considerOnMultiEdit
+                ? '0 0 0 2px #22c55e, 0 0 0 3.5px rgba(0,0,0,0.85)'
+                : undefined
         }"
-        :class="event.considerOnMultiEdit ? 'ring-2 ring-green-500' : ''"
         @click="onClick"
         @mouseenter="showTooltip"
         @mouseleave="hideTooltip"
@@ -33,7 +37,7 @@
             <div class="w-64 rounded-lg bg-artwork-navigation-background px-3 py-2 text-white shadow-xl text-xs space-y-0.5">
                 <div v-if="event.isPlanning && !event.hasVerification" class="font-semibold text-blue-300">{{ $t('Planned Event') }}</div>
                 <div v-else-if="event.hasVerification" class="font-semibold text-orange-300">{{ $t('Verification requested') }}</div>
-                <div v-if="event.eventName" class="font-semibold">{{ event.eventName }}</div>
+                <div v-if="effectiveEventName" class="font-semibold">{{ effectiveEventName }}</div>
                 <div v-if="event.project?.artistNames" class="font-semibold">{{ event.project.artistNames }}</div>
                 <div v-if="event.project?.name">{{ $t('Project') }}: {{ event.project.name }}</div>
                 <div v-if="event.eventType?.name" class="opacity-80">{{ event.eventType.name }}</div>
@@ -104,16 +108,35 @@ const timeLabel = computed(() => {
     return match ? match[1] : '';
 });
 
+// Viele Termine tragen schlicht den Terminartnamen als Terminnamen ("Probe") —
+// der wäre neben der Abkürzung doppelt ("P: Probe") und zählt daher nicht als
+// eigener Name.
+const effectiveEventName = computed(() => {
+    const name = props.event.eventName?.trim();
+    if (!name) return null;
+    const typeName = props.event.eventType?.name?.trim();
+    return typeName && name.toLowerCase() === typeName.toLowerCase() ? null : name;
+});
+
 // Dynamischer Titel: Termintitel (bzw. Künstler:innen, wenn eingestellt)
-// → Projekttitel → Termintyp. Titel + Projekt kombiniert, soweit Platz ist.
+// → Projekttitel → Termintyp. Sobald irgendein Name angezeigt wird, steht die
+// Terminart nur als Abkürzung davor; ausgeschrieben erscheint sie erst, wenn
+// weder Termin- noch Projektname existieren. Bei aktiver Künstler:innen-
+// Anzeigeeinstellung werden die Künstler:innen zusätzlich eingereiht.
 const titleLabel = computed(() => {
+    const settings = calSettings.value;
     const projectName = props.event.project?.name;
     const artistNames = props.event.project?.artistNames;
-    const primary = calSettings.value.show_artist_names_as_title && artistNames
+    const primary = settings.show_artist_names_as_title && artistNames
         ? artistNames
-        : props.event.eventName;
-    if (primary && projectName) return `${primary} · ${projectName}`;
-    return primary || projectName || props.event.eventType?.name || '';
+        : effectiveEventName.value;
+    const parts = [];
+    if (primary) parts.push(primary);
+    if (settings.project_artists && artistNames && artistNames !== primary) parts.push(artistNames);
+    if (projectName) parts.push(projectName);
+    if (parts.length === 0) return props.event.eventType?.name || '';
+    const abbreviation = props.event.eventType?.abbreviation;
+    return abbreviation ? `${abbreviation}: ${parts.join(' · ')}` : parts.join(' · ');
 });
 
 const formattedDates = computed(() =>

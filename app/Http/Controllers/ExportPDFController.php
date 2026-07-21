@@ -148,6 +148,21 @@ class ExportPDFController extends Controller
             $cursor->addDay();
         }
 
+        // Tagesbemerkungen (optional, keyed by d.m.Y wie die Tages-Header) —
+        // nur wenn angefordert, Feature aktiv und der User sie sehen darf
+        $dayRemarks = [];
+        if (
+            $request->boolean('includeDayRemarks')
+            && app(\App\Settings\GeneralCalendarSettings::class)->day_remarks_enabled
+            && $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_VIEW->value)
+        ) {
+            $dayRemarks = \Artwork\Modules\Calendar\Models\DayRemark::query()
+                ->betweenDates($startDate, $endDate)
+                ->get()
+                ->mapWithKeys(static fn ($dayRemark) => [$dayRemark->date->format('d.m.Y') => $dayRemark->remark])
+                ->all();
+        }
+
         // Horizontaler Chunk: wie viele Tage pro Seite sichtbar sein sollen
         $DAYS_PER_PAGE = $request->integer('daysPerPage') ?: 7;
         $dayChunks = array_chunk($days, $DAYS_PER_PAGE);
@@ -351,6 +366,7 @@ class ExportPDFController extends Controller
                 'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
                 'colorSource'    => $request->get('colorSource', 'eventType'),
                 'paperSize'      => $request->string('paperSize', 'a4'),
+                'dayRemarks'     => $dayRemarks,   // d.m.Y => Bemerkungstext (leer wenn nicht angefordert)
             ]
         )
             ->setPaper(

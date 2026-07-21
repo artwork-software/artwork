@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\GetShiftPlanWorkersRequest;
+use App\Settings\EventSettings;
 use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
@@ -1059,8 +1060,18 @@ class EventController extends Controller
         ]);
     }
 
-    public function updateShiftListViewSettings(User $user, Request $request): void
+    public function updateShiftListViewSettings(User $user, Request $request, UserService $userService): void
     {
+        // Ansichtsübergreifendes Setting (users-Spalte); beim Einschalten aus der
+        // Listenansicht übernehmen alle Ansichten deren Zeitraum
+        if ($request->has('share_calendar_date')) {
+            $userService->updateShareCalendarDateSetting(
+                $user,
+                $request->boolean('share_calendar_date'),
+                UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value
+            );
+        }
+
         $user->shift_list_view_settings()->updateOrCreate(
             ['user_id' => $user->id],
             $request->only([
@@ -3604,6 +3615,7 @@ class EventController extends Controller
             if ($event === null) {
                 continue;
             }
+            $this->authorize('delete', $event);
 
             $eventService->delete(
                 $event,
@@ -3811,6 +3823,8 @@ class EventController extends Controller
         $desiredDaysOfEvents = [];
         $eventIds = $request->collect('events');
         $duplicatedEvents = [];
+        // Aus dem Planungskalender heraus erzeugte Duplikate sind immer geplante Termine
+        $forcePlanning = $request->boolean('isPlanning');
 
         foreach ($eventIds as $eventId) {
             $originalEvent = $this->eventService->findEventById($eventId);
@@ -3823,6 +3837,9 @@ class EventController extends Controller
             $duplicatedEvent = $originalEvent->replicate();
             $duplicatedEvent->series_id = null;
             $duplicatedEvent->is_series = false;
+            if ($forcePlanning) {
+                $duplicatedEvent->is_planning = true;
+            }
             $duplicatedEvent->save();
 
             $shifts = $originalEvent->shifts;
@@ -4139,6 +4156,129 @@ class EventController extends Controller
                 broadcast(new RemoveEvent($event, $event->room_id));
             }
             broadcast(new BulkEventChanged($event, 'deleted'));
+        }
+    }
+
+    /**
+     * Multi-Edit im Kalender: legt EINEN Termin (gleiche Daten) in mehreren
+     * Tag×Raum-Zellen an — je Zelle ein eigenständiges Event.
+     */
+    public function createEventsInCells(Request $request): void
+    {
+        $this->authorizeBulkEventCreation();
+
+        $validated = $request->validate([
+            'cells' => ['required', 'array', 'min:1'],
+            'cells.*.day' => ['required', 'date_format:Y-m-d'],
+            'cells.*.room_id' => ['required', 'exists:rooms,id'],
+            'event_type_id' => ['required', 'exists:event_types,id'],
+            'event_status_id' => ['nullable', 'exists:event_statuses,id'],
+            'project_id' => ['nullable', 'exists:projects,id'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i'],
+            'is_planning' => ['nullable', 'boolean'],
+        ]);
+
+        $eventStatusId = null;
+        if (app(EventSettings::class)->enable_status) {
+            $eventStatusId = $validated['event_status_id']
+                ?? EventStatus::where('default', true)->first()?->id;
+        }
+
+        foreach ($validated['cells'] as $cell) {
+            [$startTime, $endTime, $allDay] = $this->eventService->processEventTimes(
+                Carbon::parse($cell['day']),
+                $validated['start_time'] ?? null,
+                $validated['end_time'] ?? null
+            );
+
+            $event = Event::create([
+                'name' => $validated['name'] ?? '',
+                'eventName' => $validated['name'] ?? '',
+                'description' => $validated['description'] ?? null,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'allDay' => $allDay,
+                'event_type_id' => $validated['event_type_id'],
+                'event_status_id' => $eventStatusId,
+                'project_id' => $validated['project_id'] ?? null,
+                'room_id' => $cell['room_id'],
+                'user_id' => $this->authManager->id(),
+                'is_planning' => $validated['is_planning'] ?? false,
+            ]);
+
+            broadcast(new EventCreated($event->fresh(), $event->room_id));
+        }
+    }
+
+    /**
+     * Multi-Edit im Kalender: dupliziert die gewählten Termine in jede gewählte
+     * Tag×Raum-Zelle (M×N Kopien). Uhrzeiten und Dauer bleiben erhalten,
+     * Datum und Raum kommen aus der Zelle.
+     */
+    public function duplicateEventsToCells(Request $request): void
+    {
+        $validated = $request->validate([
+            'events' => ['required', 'array', 'min:1'],
+            'events.*' => ['exists:events,id'],
+            'cells' => ['required', 'array', 'min:1'],
+            'cells.*.day' => ['required', 'date_format:Y-m-d'],
+            'cells.*.room_id' => ['required', 'exists:rooms,id'],
+            'is_planning' => ['nullable', 'boolean'],
+        ]);
+
+        // Aus dem Planungskalender heraus erzeugte Duplikate sind immer geplante Termine
+        $forcePlanning = (bool) ($validated['is_planning'] ?? false);
+
+        $originals = Event::whereIn('id', $validated['events'])->get();
+        foreach ($originals as $original) {
+            $this->authorize('update', $original);
+        }
+
+        foreach ($originals as $original) {
+            $originalStart = Carbon::parse($original->getAttribute('start_time'));
+
+            foreach ($validated['cells'] as $cell) {
+                $newStart = Carbon::parse($cell['day'])
+                    ->setTimeFromTimeString($originalStart->toTimeString());
+                // Ganze Tage verschieben, damit mehrtägige Termine ihre Dauer behalten
+                $dayDelta = $originalStart->copy()->startOfDay()
+                    ->diffInDays($newStart->copy()->startOfDay(), false);
+
+                $duplicated = $original->replicate();
+                $duplicated->setAttribute('series_id', null);
+                $duplicated->setAttribute('is_series', false);
+                if ($forcePlanning) {
+                    $duplicated->setAttribute('is_planning', true);
+                }
+                $duplicated->setAttribute('room_id', $cell['room_id']);
+                $duplicated->setAttribute('start_time', $newStart);
+                $duplicated->setAttribute(
+                    'end_time',
+                    Carbon::parse($original->getAttribute('end_time'))->addDays($dayDelta)
+                );
+                $duplicated->save();
+
+                // Termingebundene Schichten mitkopieren (Parität zu updateMultiDuplicate),
+                // Datumsfelder um denselben Tages-Versatz verschieben
+                foreach ($original->shifts as $shift) {
+                    $duplicatedShift = $shift->replicate();
+                    $duplicatedShift->setAttribute('event_id', $duplicated->id);
+                    $duplicatedShift->setAttribute(
+                        'start_date',
+                        Carbon::parse($shift->getAttribute('start_date'))->addDays($dayDelta)
+                    );
+                    $duplicatedShift->setAttribute(
+                        'end_date',
+                        Carbon::parse($shift->getAttribute('end_date'))->addDays($dayDelta)
+                    );
+                    $duplicatedShift->save();
+                }
+
+                broadcast(new EventCreated($duplicated->fresh(), $duplicated->getAttribute('room_id')));
+            }
         }
     }
 

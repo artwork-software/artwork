@@ -5,6 +5,10 @@
             {{ this.$page.props.flash.success }}
         </div>
 
+        <div class="mt-6">
+            <HowItWorksPanel />
+        </div>
+
         <div class="mt-10">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-gray-900">{{ $t('External User Sources') }}</h2>
@@ -148,6 +152,7 @@ import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import SourceModal from "./Components/SourceModal.vue";
+import HowItWorksPanel from "./Components/HowItWorksPanel.vue";
 
 export default defineComponent({
     components: {
@@ -155,6 +160,7 @@ export default defineComponent({
         BaseUIButton,
         ConfirmDeleteModal,
         SourceModal,
+        HowItWorksPanel,
         IconEdit,
         IconTrash,
         IconRefresh,

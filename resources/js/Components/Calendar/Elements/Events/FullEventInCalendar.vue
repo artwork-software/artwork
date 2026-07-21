@@ -5,7 +5,12 @@
       backgroundColor: eventBgColor,
       '--event-contrast-color': eventTextColor,
       zoom: contentZoom,
-      lineHeight: innerLineHeight
+      lineHeight: innerLineHeight,
+      /* Auswahl im Multi-Edit: grüner Ring + dunkle Außenlinie, damit die
+         Markierung auch auf hellen Kachelfarben nicht untergeht */
+      boxShadow: multiEdit && event.considerOnMultiEdit
+          ? '0 0 0 2px #22c55e, 0 0 0 3.5px rgba(0,0,0,0.85)'
+          : undefined
     }"
         class="group/singleEvent rounded-lg border border-black/5 transition-[border,background-color] duration-150"
         :class="[
@@ -17,9 +22,9 @@
     ]"
     >
         <!-- Multi-Edit Overlay -->
+        <!-- Klick bubbelt zum Event-Wrapper in BaseCalendar (onEventClick), der die Auswahl toggelt -->
         <div
             v-if="checkIfMultiEditIsEnabled"
-            @click="clickOnCheckBox"
             class="absolute inset-0 z-10 rounded-lg hidden group-hover/singleEvent:flex items-center justify-center"
             :class="event.considerOnMultiEdit ? '!flex bg-green-200/50' : 'bg-artwork-buttons-create/35'"
         >
@@ -108,6 +113,14 @@
                     </div>
                 </div>
 
+                <!-- Terminart-Abkürzung vor dem Projektnamen, wenn kein Terminname angezeigt wird -->
+                <span
+                    v-if="!displaysEventName && event.eventType?.abbreviation"
+                    class="shrink-0 font-semibold text-xs opacity-80"
+                >
+                    {{ event.eventType.abbreviation }}:
+                </span>
+
                 <!-- Projektname als Link, einzeilig mit Tooltip bei Trunkierung -->
                 <a
                     :href="getEditHref(event.project?.id)"
@@ -183,13 +196,13 @@
 
                             <!-- Eventname -->
                             <div
-                                v-if="calSettings.event_name && event.eventName"
+                                v-if="displaysEventName"
                                 :class="[expandDays ? 'break-words' : 'truncate', 'relative text-xs/4 font-semibold']"
                                 @mouseenter="showEventNameTooltipHandler"
                                 @mouseleave="hideEventNameTooltip"
                             >
                                 <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block w-full']">
-                                    {{ event.eventName }}
+                                    {{ eventNameLabel }}
                                 </span>
                                 <Teleport to="body">
                                     <div
@@ -198,15 +211,19 @@
                                         :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
                                     >
                                         <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
-                                            {{ event.eventName }}
+                                            {{ eventNameLabel }}
                                         </div>
                                     </div>
                                 </Teleport>
                             </div>
 
-                            <!-- Eventtyp + Projekt-State-Indicator rechts -->
-                            <div class="flex items-center justify-between">
+                            <!-- Eventtyp (nur ausgeschrieben, wenn kein Name sichtbar ist) + Projekt-State-Indicator rechts -->
+                            <div
+                                v-if="showFullEventTypeName || (calSettings.project_status && event.projectStateColor)"
+                                class="flex items-center justify-between"
+                            >
                                 <div
+                                    v-if="showFullEventTypeName"
                                     :class="[expandDays ? 'break-words' : 'truncate', 'text-xs/5 opacity-90 min-w-0 flex-1']"
                                     @mouseenter="showEventTypeTooltipHandler"
                                     @mouseleave="hideEventTypeTooltip"
@@ -226,7 +243,7 @@
                                         </div>
                                     </Teleport>
                                 </div>
-                                <div v-if="calSettings.project_status && event.projectStateColor" class="ml-2">
+                                <div v-if="calSettings.project_status && event.projectStateColor" class="ml-auto pl-2">
                                     <div :class="[event.projectStateColor, zoom_factor <= 0.8 ? 'border-2' : 'border-4']" class="rounded-full"></div>
                                 </div>
                             </div>
@@ -308,6 +325,7 @@
                             class="mt-2 -ml-1.5"
                         >
                             <div v-if="event?.project?.leaders && !project && zoom_factor >= 0.8" class="ml-2 flex flex-wrap items-center gap-1">
+                                <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
                                 <UserPopoverTooltip
                                     v-for="user in event?.project?.leaders?.slice(0,3)"
                                     :key="'leader-'+user.id"
@@ -346,6 +364,20 @@
                                     </Menu>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
+                        <div
+                            v-if="calSettings.show_event_creator && event?.created_by && !project && zoom_factor >= 0.8"
+                            class="mt-1 ml-0.5 flex flex-wrap items-center gap-1"
+                        >
+                            <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
+                            <UserPopoverTooltip
+                                :user="event.created_by"
+                                lazy-load
+                                width="5"
+                                height="5"
+                            />
                         </div>
 
                         <!-- Beschreibung -->
@@ -598,6 +630,7 @@
                                             <!-- Projektleiter -->
                                             <div v-if="calSettings.project_management && event?.project?.leaders?.length > 0" class="mt-2 -ml-1.5">
                                                 <div class="ml-2 flex flex-wrap items-center gap-1">
+                                                    <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
                                                     <UserPopoverTooltip
                                                         v-for="user in event?.project?.leaders?.slice(0,3)"
                                                         :key="'tooltip-leader-'+user.id"
@@ -610,6 +643,17 @@
                                                         +{{ event?.project?.leaders.length - 3 }}
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
+                                            <div v-if="calSettings.show_event_creator && event?.created_by" class="mt-1 ml-0.5 flex flex-wrap items-center gap-1">
+                                                <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
+                                                <UserPopoverTooltip
+                                                    :user="event.created_by"
+                                                    lazy-load
+                                                    width="5"
+                                                    height="5"
+                                                />
                                             </div>
 
                                             <!-- Beschreibung -->
@@ -853,6 +897,11 @@ import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 const { t } = useI18n(), $t = t;
 const pageProps = usePage().props;
 const calSettings = computed(() => pageProps.auth.user.calendar_settings);
+// Nur wenn Projektleitung UND Terminersteller*in aktiv sind, brauchen die
+// Avatar-Reihen ein "PL:"/"Erstell:"-Label zur Unterscheidung.
+const showCreatorLeaderLabels = computed(() =>
+    calSettings.value.project_management && calSettings.value.show_event_creator
+);
 const highContrastPercent = computed(() => getHighContrastPercent(calSettings.value));
 const currentUserId = computed(() => pageProps.auth.user.id);
 // Reaktiv aus dem zentralen Zoom-Store — Zoom-Wechsel kommen ohne Page-Reload an.
@@ -932,6 +981,32 @@ const innerLineHeight = computed(() => (contentZoom.value > 1 ? "1.25rem" : prop
 const resolvedFormattedDates = computed(() =>
     props.event.formattedDates ?? computeEventFormattedDates(props.event.start, props.event.end)
 );
+
+// Viele Termine tragen schlicht den Terminartnamen als Terminnamen ("Probe") —
+// der wäre neben der Abkürzung doppelt ("P: Probe") und zählt daher nicht als
+// eigener Name.
+const effectiveEventName = computed(() => {
+    const name = props.event.eventName?.trim();
+    if (!name) return null;
+    const typeName = props.event.eventType?.name?.trim();
+    return typeName && name.toLowerCase() === typeName.toLowerCase() ? null : name;
+});
+
+// Dynamische Terminart-Anzeige: sobald ein Name (Termin- oder Projektname)
+// sichtbar ist, steht die Terminart nur als Abkürzung vor dem Namen;
+// ausgeschrieben erscheint sie erst, wenn gar kein Name existiert.
+const displaysEventName = computed(() =>
+    Boolean(calSettings.value.event_name && effectiveEventName.value)
+);
+
+const showFullEventTypeName = computed(() =>
+    !displaysEventName.value && !props.event.project?.name
+);
+
+const eventNameLabel = computed(() => {
+    const abbreviation = props.event.eventType?.abbreviation;
+    return abbreviation ? `${abbreviation}: ${effectiveEventName.value}` : effectiveEventName.value;
+});
 
 const isSameDay = computed(() => {
     if (!props.event.start || !props.event.end) return false;
@@ -1173,6 +1248,7 @@ const totalHeight = computed(() => {
     if (calSettings.value.project_status) height += 0;
     if (calSettings.value.options) height += 0;
     if (calSettings.value.project_management) height += 17;
+    if (calSettings.value.show_event_creator) height += 17;
     if (calSettings.value.repeating_events) height += 20;
     return height;
 });
@@ -1180,6 +1256,9 @@ const totalHeight = computed(() => {
 const heightSubtraction = (event) => {
     let heightSubtraction = 0;
     if (calSettings.value.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
+        heightSubtraction += 17;
+    }
+    if (calSettings.value.show_event_creator && !event.created_by) {
         heightSubtraction += 17;
     }
     if (calSettings.value.repeating_events && (!event.is_series || event.is_series === false)) {

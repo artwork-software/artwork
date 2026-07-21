@@ -85,6 +85,9 @@ export function enrichDay(slimDay) {
         holidays: slimDay.holidays ?? [],
         hoursOfDay: slimDay.hoursOfDay ?? [],
         isExtraRow: false,
+        // Tagesbemerkung ({ text, updated_by, updated_at } | null) — kommt nur im
+        // Payload an, wenn Feature aktiv & User Sichtrecht hat
+        dayRemark: slimDay.dayRemark ?? null,
     }
 }
 

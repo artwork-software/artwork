@@ -337,6 +337,22 @@
                                 </div>
                             </div>
 
+                            <!-- Tagesbemerkung als Chip im Tageskopf (gleiche Inhalte wie Kalender/Dienstplan) -->
+                            <div
+                                v-if="dayRemarksColumnVisible && (remarkForDay(day)?.text || dayRemarksCanEdit)"
+                                class="flex items-center min-w-0 max-w-md shrink"
+                                :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
+                                :title="remarkForDay(day)?.text"
+                                @click.stop="dayRemarksCanEdit ? (dayRemarkModalDay = day) : null"
+                            >
+                                <span
+                                    class="text-[11px] bg-amber-50/90 text-gray-800 rounded-lg px-2 py-1 truncate"
+                                    :class="{ '!text-gray-400 italic': !remarkForDay(day)?.text }"
+                                >
+                                    {{ remarkForDay(day)?.text || $t('Add remark') }}
+                                </span>
+                            </div>
+
                             <div class="flex items-center justify-end min-w-0 flex-1">
                                 <!-- Verbindlich Zugeordnete: rechts vom Datum -->
                                 <div
@@ -491,6 +507,15 @@
                 :enums="projectShiftExportTabs"
                 :configuration="projectShiftExportConfiguration"
             />
+
+            <DayRemarkEditModal
+                v-if="dayRemarkModalDay"
+                :date="dayRemarkModalDay.withoutFormat"
+                :display-date="dayRemarkModalDay.fullDay"
+                :remark="remarkForDay(dayRemarkModalDay)"
+                is-in-shift-plan
+                @close="dayRemarkModalDay = null"
+            />
         </component>
     </div>
 </template>
@@ -522,6 +547,8 @@ import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
+import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
+import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -727,6 +754,21 @@ const showCalendarWarning = ref(props.calendarWarningText)
 const withoutExtraRows = (days: any[]) => (days ?? []).filter((d: any) => !d?.isExtraRow)
 
 const daysLocal = shallowRef<any[]>(withoutExtraRows(props.days as any[]))
+
+// --- Tagesbemerkungen (gleiche Inhalte/Rechte wie Kalender & Dienstplan-Wochenansicht) ---
+// Anzeige liest über remarkForDay() aus dem reaktiven Live-Store des
+// Composables — daysLocal ist ein shallowRef, Mutationen daran würden die
+// Tagesköpfe nicht neu rendern.
+const {
+    columnVisible: dayRemarksColumnVisible,
+    canEdit: dayRemarksCanEdit,
+    remarkForDay,
+    listenForDayRemarkUpdates,
+} = useDayRemarks()
+const dayRemarkModalDay = ref<any>(null)
+// Live-Updates anderer User → Store
+const stopDayRemarkListener = listenForDayRemarkUpdates()
+onBeforeUnmount(() => stopDayRemarkListener())
 
 // G4: Stable empty array to avoid creating new references
 const EMPTY_ARRAY: readonly any[] = Object.freeze([])

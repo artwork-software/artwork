@@ -245,6 +245,23 @@ const toggleOpen = (mainKey, subKey) => {
 // Filter options loaded from API if not available in page props
 const loadedFilterOptions = ref(null);
 
+// Aktive Kalender-Filter des Users als Vorauswahl übernehmen (im Modal weiterhin anpassbar).
+// Setzt checked für ALLE Einträge (true/false), damit keine veralteten Häkchen aus den
+// geteilten filterOptions-Referenzen (CalendarFilterModal) übrig bleiben.
+const applyActiveUserFilters = () => {
+    const source = props.preselectedFilters ?? usePage().props.user_filters ?? null;
+    if (!source) return;
+    const cats = filteredOptionsByCategories.value;
+    Object.keys(cats).forEach(category => {
+        Object.keys(cats[category]).forEach(subKey => {
+            const activeIds = Array.isArray(source[subKey]) ? source[subKey] : [];
+            cats[category][subKey].forEach((f) => {
+                f.checked = activeIds.includes(f.id);
+            });
+        });
+    });
+};
+
 onMounted(async () => {
     // Load filter options from API if not available in page props
     if (!usePage().props.filterOptions) {
@@ -256,6 +273,7 @@ onMounted(async () => {
             loadedFilterOptions.value = {};
         }
     }
+    applyActiveUserFilters();
 });
 
 
@@ -326,6 +344,11 @@ const removeActiveFilter = (filterToRemove) => {
 
 const props = defineProps({
         projectPreselect: {
+            type: Object,
+            default: null,
+            required: false
+        },
+        preselectedFilters: {
             type: Object,
             default: null,
             required: false

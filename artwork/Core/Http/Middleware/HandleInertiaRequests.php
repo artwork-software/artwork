@@ -185,6 +185,19 @@ class HandleInertiaRequests extends Middleware
             || $user->can(PermissionEnum::BI_DASHBOARD->value)
         );
 
+        // Tagesbemerkungen: Instanz-Setting + Berechtigungen als ein kompakter Prop,
+        // damit Kalender, Planungskalender, Dienstplan und Anzeigeeinstellungen
+        // dieselbe Sichtbarkeitslogik nutzen ($permissionsArray enthält für Admins
+        // bereits alle Permission-Namen).
+        $canEditDayRemarks = in_array(PermissionEnum::DAY_REMARKS_EDIT->value, $permissionsArray, true);
+        $dayRemarksState = [
+            'enabled' => (bool) $generalCalendarSettings->day_remarks_enabled,
+            'mandatory' => (bool) $generalCalendarSettings->day_remarks_mandatory,
+            'can_edit' => $canEditDayRemarks,
+            'can_view' => $canEditDayRemarks
+                || in_array(PermissionEnum::DAY_REMARKS_VIEW->value, $permissionsArray, true),
+        ];
+
         return array_merge(
             parent::share($request),
             [
@@ -254,6 +267,7 @@ class HandleInertiaRequests extends Middleware
                 'canSeeEventVerifications'      => $canSeeEventVerifications,
                 'canSeeIncomingRequests'         => $canSeeIncomingRequests,
                 'canViewBiDashboard'             => $canViewBiDashboard,
+                'day_remarks'                    => $dayRemarksState,
             ]
         );
     }

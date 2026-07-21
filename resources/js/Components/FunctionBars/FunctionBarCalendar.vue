@@ -330,7 +330,7 @@
 
 <script setup>
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
-import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, ref, unref, watch} from "vue";
 import {
     IconChevronLeft,
     IconChevronRight,
@@ -426,23 +426,29 @@ const CalendarSettingsModal = defineAsyncComponent({
 const exportTabEnums = useExportTabEnums();
 const getExportModalConfiguration = () => {
     const cfg = {};
+    // Aktive Kalender-Filter mitgeben, damit sie im Export-Modal vorausgewählt sind
+    const activeUserFilters = unref(user_filters) ?? null;
 
     cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
-        project: props.project
+        project: props.project,
+        user_filters: activeUserFilters
     };
 
     cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
-        project: props.project
+        project: props.project,
+        user_filters: activeUserFilters
     };
 
     cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
         project: props.project,
         show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
             (usePage().props.show_artists ?? false),
+        user_filters: activeUserFilters
     };
 
     cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
-        project: props.project
+        project: props.project,
+        user_filters: activeUserFilters
     };
 
     return cfg;

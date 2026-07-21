@@ -134,8 +134,8 @@
                         <!-- Column Header (Tage) -->
                         <template #colHeader="{ day }">
                             <div
-                                class="relative h-full w-full flex items-center justify-between
-                                   px-2 text-[11px] leading-none text-white
+                                class="relative h-full w-full flex flex-col
+                                   text-[11px] leading-none text-white
                                    bg-artwork-navigation-background/95 backdrop-blur
                                    border-b border-white/10 border-r
                                    hover:bg-artwork-navigation-background transition-colors"
@@ -144,6 +144,7 @@
                                     !day.isExtraRow && day.isFirstDayOfMonth ? 'border-l-2 border-l-white/70' : '',
                                 ]"
                             >
+                              <div class="flex items-center justify-between px-2 h-8 shrink-0 w-full">
                                 <!-- ExtraRow (KW) -->
                                 <div v-if="day.isExtraRow" class="flex items-center gap-1">
                                   <span class="text-[10px] font-semibold tracking-wide opacity-90">
@@ -208,6 +209,28 @@
                                         </HolidayToolTip>
                                     </div>
                                 </div>
+                              </div>
+
+                                <!-- Tagesbemerkungen-Band unter der Datumszeile (gleiche Inhalte wie im Kalender) -->
+                                <div v-if="dayRemarksColumnVisible" class="flex-1 min-h-0 px-1 pb-1 w-full">
+                                    <div
+                                        v-if="!day.isExtraRow"
+                                        class="h-full rounded bg-amber-50/90 text-gray-800 px-1.5 py-0.5 overflow-hidden"
+                                        :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
+                                        :title="remarkForDay(day)?.text"
+                                        @click.stop="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
+                                    >
+                                        <p
+                                            v-if="remarkForDay(day)?.text"
+                                            class="text-[10px] leading-[13px] whitespace-pre-line break-words line-clamp-2"
+                                        >
+                                            {{ remarkForDay(day)?.text }}
+                                        </p>
+                                        <p v-else-if="dayRemarksCanEdit" class="text-[10px] leading-[13px] text-gray-400 italic">
+                                            {{ $t('Add remark') }}
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <!-- Wochenend-/Feiertags-/Heute-Akzent auf dem dunklen Header -->
                                 <div
@@ -222,24 +245,15 @@
                         <template #rowHeader="{ room, rowIndex }">
                             <div
                                 class="xsDark h-full flex items-start"
-                                :class="[rowIndex % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover']"
-                                :style="{ width: shiftLeftWidth + 'px', maxWidth: shiftLeftWidth + 'px' }"
+                                :class="[roomHeaderStyle(room) ? '' : (rowIndex % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover')]"
+                                :style="[{ width: shiftLeftWidth + 'px', maxWidth: shiftLeftWidth + 'px' }, roomHeaderStyle(room) ?? {}]"
                             >
                                 <!-- Sticky so the room name stays visible when scrolling through very tall rows -->
                                 <div
                                     class="sticky flex items-center font-semibold w-full py-1 px-2"
                                     :style="{ top: shiftHeaderHeight + 'px' }"
                                 >
-                                    <!-- Raumfarben-Chip (Raum- bzw. Areal-Farbe) wie im Kalender-Raumheader -->
-                                    <span
-                                        v-if="roomColorChipStyle(room)"
-                                        class="truncate rounded-lg px-2 py-1"
-                                        :style="roomColorChipStyle(room)"
-                                        :title="room.roomName"
-                                    >
-                                        {{ room.roomName }}
-                                    </span>
-                                    <span v-else class="pl-1 truncate" :title="room.roomName">{{ room.roomName }}</span>
+                                    <span class="pl-1 truncate" :title="room.roomName">{{ room.roomName }}</span>
                                 </div>
                             </div>
                         </template>
@@ -920,6 +934,15 @@
         @close="showAddShiftByPresetOrGroupModal = false"
         />
 
+    <DayRemarkEditModal
+        v-if="dayRemarkModalDay"
+        :date="dayRemarkModalDay.withoutFormat"
+        :display-date="dayRemarkModalDay.fullDay"
+        :remark="remarkForDay(dayRemarkModalDay)"
+        is-in-shift-plan
+        @close="dayRemarkModalDay = null"
+    />
+
     <!-- Als letztes Modal im Template: rendert dadurch über den Modals, aus denen
          es per Shortcut geöffnet wird (Tagesmodal, Schicht-bearbeiten-Modal). -->
     <ShiftHistoryModal
@@ -975,7 +998,8 @@ import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShift
 import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
 import CompactShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/CompactShiftInRoom.vue";
 import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
-import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
+import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
@@ -1113,6 +1137,24 @@ type Day = {
 }
 
 const days = shallowRef<any[]>(props.days ?? [])
+
+// --- Tagesbemerkungen (gleiche Inhalte/Rechte wie im Kalender) ---
+// Anzeige liest über remarkForDay() aus dem reaktiven Live-Store des
+// Composables — days ist ein shallowRef, Mutationen daran würden die
+// Header-Slots nicht neu rendern.
+const {
+    columnVisible: dayRemarksColumnVisible,
+    canEdit: dayRemarksCanEdit,
+    remarkForDay,
+    listenForDayRemarkUpdates,
+} = useDayRemarks()
+const dayRemarkModalDay = ref<any>(null)
+const openDayRemarkModal = (day: any) => {
+    dayRemarkModalDay.value = day
+}
+// Live-Updates anderer User → Store
+const stopDayRemarkListener = listenForDayRemarkUpdates()
+onBeforeUnmount(() => stopDayRemarkListener())
 const rooms = shallowRef([])
 const isFullscreen = ref(false)
 const showHistoryModal = ref(false)
@@ -1482,7 +1524,9 @@ const shiftCols = computed(() =>
     }))
 )
 
-const shiftHeaderHeight = 32 // wie dein h-8
+// Basis 32px (wie h-8); mit sichtbarem Tagesbemerkungen-Band wird der Header
+// höher, damit unter der Datumszeile Platz für 2 Bemerkungszeilen ist
+const shiftHeaderHeight = computed(() => (dayRemarksColumnVisible.value ? 32 + 34 : 32))
 // Tagesspaltenbreite kommt aus dem Schichtplan-Zoom (202px bei 100 %) und wird
 // von Haupt-Grid UND Worker-Grid gemeinsam genutzt — die Raster müssen exakt
 // übereinander liegen. KW-Trennspalte und Sticky-Spalte skalieren nicht.
@@ -1507,8 +1551,6 @@ const shiftColWidths = computed(() =>
 const gridColWidths = computed(() =>
     (days.value ?? []).map((d: any) => d.isExtraRow ? kwColWidth : shiftColWidth.value)
 )
-
-const { getTextColorBasedOnBackground } = useColorHelper()
 
 // --- Tages-Einfärbung (Wochenende/Feiertage/Heute) ---
 // Pro Tag EINMAL vorberechnet; die Zellen beider Grids greifen nur per Map-Lookup
@@ -1572,14 +1614,26 @@ const monthBadgeByKey = computed(() => {
 })
 const monthBadge = (day: any) => monthBadgeByKey.value.get(day?.fullDay) ?? null
 
-// Raumfarben-Chip in der linken Sticky-Spalte (analog Kalender-Raumheader)
-const roomColorChipStyle = (room: any) => {
+// Raumfarbe in der linken Sticky-Spalte: ganze Zelle als heller Tint, Schrift als abgedunkelte Raumfarbe.
+// Deckend über Weiß geblendet (statt rgba), damit die Zebra-Streifung der Zeilen nicht durchscheint.
+const roomHeaderStyleByColor = new Map<string, { backgroundColor: string; color: string }>()
+const roomHeaderStyle = (room: any) => {
     const color = room?.roomColor ?? null
     if (!color) return null
-    return {
-        backgroundColor: color,
-        color: getTextColorBasedOnBackground(color),
+    let style = roomHeaderStyleByColor.get(color)
+    if (!style) {
+        const r = parseInt(color.slice(-6, -4), 16)
+        const g = parseInt(color.slice(-4, -2), 16)
+        const b = parseInt(color.slice(-2), 16)
+        const tint = (c: number) => Math.round(255 - (255 - c) * 0.18)
+        const dark = (c: number) => Math.round(c * 0.45)
+        style = {
+            backgroundColor: `rgb(${tint(r)}, ${tint(g)}, ${tint(b)})`,
+            color: `rgb(${dark(r)}, ${dark(g)}, ${dark(b)})`,
+        }
+        roomHeaderStyleByColor.set(color, style)
     }
+    return style
 }
 
 const visibleKW = computed(() => {

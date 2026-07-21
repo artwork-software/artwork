@@ -35,6 +35,7 @@ use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\CraftController;
 use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\DayRemarkController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
@@ -896,6 +897,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/response/shift-plan-rooms', [EventController::class, 'shiftPlanRoomsBatchAPI'])->name('shift.plan.rooms.batch');
     Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
         ->name('events.for-rooms-by-days-and-project');
+    // Tagesbemerkungen: Upsert pro Datum (leerer Text löscht); Feature-Check im Controller
+    Route::put('/day-remarks/{date}', [DayRemarkController::class, 'upsert'])
+        ->middleware('can:can edit day remarks')
+        ->name('day-remarks.upsert');
     Route::get('/events/requests', function () {
         return redirect()->route('event-verifications.index');
     })->name('events.requests');
@@ -918,6 +923,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // events.bulk-multi-edit
     Route::post('/events/bulk/multi/edit', [EventController::class, 'bulkMultiEditEvent'])
         ->name('events.bulk-multi-edit');
+
+    // Kalender-Multi-Edit: Termin in mehreren Tag×Raum-Zellen anlegen / Termine in Zellen duplizieren
+    Route::post('/events/multi-cell/create', [EventController::class, 'createEventsInCells'])
+        ->name('events.multi-cell.create');
+    Route::post('/events/multi-cell/duplicate', [EventController::class, 'duplicateEventsToCells'])
+        ->name('events.multi-cell.duplicate');
 
     // event.bulk.delete
     Route::delete('/events/bulk/delete', [EventController::class, 'bulkDeleteEvent'])

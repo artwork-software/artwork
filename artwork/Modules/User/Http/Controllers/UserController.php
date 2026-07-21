@@ -1522,7 +1522,7 @@ class UserController extends Controller
     }
 
 
-    public function updateCalendarSettings(User $user, Request $request): void
+    public function updateCalendarSettings(User $user, Request $request, UserService $userService): void
     {
         // unsignedSmallInteger-Spalte: ohne Grenzen werfen negative/zu große Werte
         // oder Strings einen SQL-Fehler (500 statt 422)
@@ -1530,11 +1530,14 @@ class UserController extends Controller
             'calendar_column_width' => 'nullable|integer|between:120,400',
         ]);
 
+        $this->updateShareCalendarDate($user, $request, $userService);
+
         $settingsFields = $request->only([
             'project_status',
             'project_artists',
             'options',
             'project_management',
+            'show_event_creator',
             'repeating_events',
             'work_shifts',
             'description',
@@ -1545,6 +1548,7 @@ class UserController extends Controller
             // auf user_calendar_settings, nicht auf den Schichtplan-Tabellen)
             'calendar_column_width',
             'show_artist_names_as_title',
+            'show_day_remarks',
             'use_event_status_color',
             'use_main_category_color',
             'show_qualifications',
@@ -1587,6 +1591,39 @@ class UserController extends Controller
         } else {
             $user->calendar_settings()->update($settingsFields);
         }
+    }
+
+    /**
+     * "Zeitraum in allen Ansichten teilen": users-Spalte statt der vier
+     * Settings-Tabellen, weil das Setting ansichtsübergreifend wirkt. Beim
+     * Einschalten übernehmen alle Ansichten den Zeitraum der Ansicht, aus
+     * deren Anzeigeoptionen das Setting aktiviert wurde.
+     */
+    private function updateShareCalendarDate(User $user, Request $request, UserService $userService): void
+    {
+        if (!$request->has('share_calendar_date')) {
+            return;
+        }
+
+        if ($request->boolean('is_shift_plan')) {
+            $sourceFilterType = $request->boolean('is_daily_view')
+                ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value;
+        } elseif ($request->boolean('is_planning')) {
+            $sourceFilterType = $request->boolean('is_daily_view')
+                ? UserFilterTypes::PLANNING_DAILY_FILTER->value
+                : UserFilterTypes::PLANNING_FILTER->value;
+        } else {
+            $sourceFilterType = $request->boolean('is_daily_view')
+                ? UserFilterTypes::CALENDAR_DAILY_FILTER->value
+                : UserFilterTypes::CALENDAR_FILTER->value;
+        }
+
+        $userService->updateShareCalendarDateSetting(
+            $user,
+            $request->boolean('share_calendar_date'),
+            $sourceFilterType
+        );
     }
 
     public function toggleUserShiftTimePreset(Request $request): void
@@ -1676,7 +1713,9 @@ class UserController extends Controller
         // week-view range so the day view opens where the user currently is
         // ("vom aktuellen Stand übernehmen"). The week filter stays untouched, so
         // switching back returns to exactly where the user left off.
-        if ($dailyView) {
+        // Bei geteiltem Zeitraum sind alle Filter ohnehin synchron — der Seed
+        // würde den gemeinsamen Zeitraum nur auf 7 Tage kürzen, also überspringen.
+        if ($dailyView && !$user->share_calendar_date) {
             $seedMap = $context === 'shift_plan'
                 ? [UserFilterTypes::SHIFT_FILTER->value => UserFilterTypes::SHIFT_DAILY_FILTER->value]
                 : [

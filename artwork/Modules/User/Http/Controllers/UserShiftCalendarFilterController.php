@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,19 @@ class UserShiftCalendarFilterController extends Controller
         ]));
     }
 
-    public function updateDates(Request $request, User $user): void
+    public function updateDates(Request $request, User $user, UserService $userService): void
     {
         $isDailyView = $request->get('isDailyView', false);
+
+        $startDate = Carbon::parse($request->start_date)->format('Y-m-d');
+        $endDate = Carbon::parse($request->end_date)->format('Y-m-d');
+
+        // Geteilter Zeitraum aktiv: Navigation in einer Ansicht gilt für alle
+        if ($user->share_calendar_date) {
+            $userService->syncSharedCalendarFilterDates($user, $startDate, $endDate);
+
+            return;
+        }
 
         $filterType = $isDailyView
             ? UserFilterTypes::SHIFT_DAILY_FILTER->value
@@ -30,8 +41,8 @@ class UserShiftCalendarFilterController extends Controller
         $user->userFilters()->updateOrCreate(
             ['filter_type' => $filterType],
             [
-                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+                'start_date' => $startDate,
+                'end_date' => $endDate
             ]
         );
     }
@@ -73,13 +84,23 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateListViewDates(Request $request, User $user): void
+    public function updateListViewDates(Request $request, User $user, UserService $userService): void
     {
+        $startDate = Carbon::parse($request->start_date)->format('Y-m-d');
+        $endDate = Carbon::parse($request->end_date)->format('Y-m-d');
+
+        // Geteilter Zeitraum aktiv: Navigation in einer Ansicht gilt für alle
+        if ($user->share_calendar_date) {
+            $userService->syncSharedCalendarFilterDates($user, $startDate, $endDate);
+
+            return;
+        }
+
         $user->userFilters()->updateOrCreate(
             ['filter_type' => UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value],
             [
-                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+                'start_date' => $startDate,
+                'end_date' => $endDate
             ]
         );
     }

@@ -346,6 +346,56 @@ class UserService
     }
 
     /**
+     * Schreibt denselben Zeitraum in alle Ansichts-Filter (Kalender, Planung,
+     * Schichtplan, deren Tagesansichten und die Listenansicht). Wird genutzt,
+     * wenn der User "Zeitraum in allen Ansichten teilen" aktiviert hat.
+     * PROJECT_SHIFT_FILTER bleibt außen vor — der Projekt-Schichten-Tab folgt
+     * dem Projektzeitraum und nicht der globalen Navigation.
+     */
+    public function syncSharedCalendarFilterDates(User $user, string $startDate, string $endDate): void
+    {
+        foreach (UserFilterTypes::cases() as $filterType) {
+            if ($filterType === UserFilterTypes::PROJECT_SHIFT_FILTER) {
+                continue;
+            }
+
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => $filterType->value],
+                [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ]
+            );
+        }
+    }
+
+    /**
+     * Speichert das "Zeitraum in allen Ansichten teilen"-Setting. Beim
+     * Einschalten werden alle Ansichten sofort auf den Zeitraum der Ansicht
+     * gesetzt, aus der das Setting geändert wurde ($sourceFilterType).
+     */
+    public function updateShareCalendarDateSetting(User $user, bool $enabled, string $sourceFilterType): void
+    {
+        $wasEnabled = (bool) $user->getAttribute('share_calendar_date');
+        $user->update(['share_calendar_date' => $enabled]);
+
+        if (!$enabled || $wasEnabled) {
+            return;
+        }
+
+        $sourceFilter = $user->userFilters()->where('filter_type', $sourceFilterType)->first();
+        if ($sourceFilter?->start_date === null || $sourceFilter?->end_date === null) {
+            return;
+        }
+
+        $this->syncSharedCalendarFilterDates(
+            $user,
+            Carbon::parse($sourceFilter->start_date)->format('Y-m-d'),
+            Carbon::parse($sourceFilter->end_date)->format('Y-m-d')
+        );
+    }
+
+    /**
      * @return array<int, Carbon>
      */
     public function getUserCalendarFilterDatesOrDefault(UserFilter $userCalendarFilter): array

@@ -36,6 +36,8 @@ class CalendarController extends Controller
         $calendarSettings = app(GeneralCalendarSettings::class);
         $calendarSettings->start = $request->get('start');
         $calendarSettings->end = $request->get('end');
+        $calendarSettings->day_remarks_enabled = $request->boolean('day_remarks_enabled');
+        $calendarSettings->day_remarks_mandatory = $request->boolean('day_remarks_mandatory');
         $calendarSettings->save();
         return redirect()->back();
     }

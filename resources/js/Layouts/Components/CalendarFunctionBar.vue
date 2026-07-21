@@ -384,20 +384,24 @@ export default {
             const cfg = {};
 
             cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
-                project: props.project
+                project: this.project,
+                user_filters: this.user_filters ?? null
             };
 
             cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
-                project: props.project
+                project: this.project,
+                user_filters: this.user_filters ?? null
             };
 
             cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
-                project: props.project,
+                project: this.project,
                 show_artists: this.$page.props.createSettings?.show_artists,
+                user_filters: this.user_filters ?? null
             };
 
             cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
-                project: props.project
+                project: this.project,
+                user_filters: this.user_filters ?? null
             };
 
             return cfg;

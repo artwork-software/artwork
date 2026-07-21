@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Services;
 
+use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -12,6 +13,7 @@ use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -55,6 +57,7 @@ class UserService
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTabService $projectTabService,
+        private readonly ShiftSettings $shiftSettings,
         protected ProductBasketService $productBasketService,
     ) {
     }
@@ -278,7 +281,10 @@ class UserService
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
             ->setProjects(static fn() => $projectService->getAll())
             ->setShiftQualifications(static fn() => $shiftQualificationService->getAllOrderedByCreationDateAscending())
-            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending($user))
+            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending(
+                $user,
+                $this->shouldHideUncommittedShiftsInOwnRoster($user)
+            ))
             ->setVacations(
                 tap(
                     $this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth),
@@ -340,9 +346,19 @@ class UserService
         return $this->userRepository->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $monthDate);
     }
 
-    public function getUserShiftsOrderedByStartAscending(int|User $user): Collection
+    public function getUserShiftsOrderedByStartAscending(int|User $user, bool $committedOnly = false): Collection
     {
-        return $this->userRepository->getShiftsOrderedByStartAscending($user);
+        return $this->userRepository->getShiftsOrderedByStartAscending($user, $committedOnly);
+    }
+
+    private function shouldHideUncommittedShiftsInOwnRoster(User $rosterOwner): bool
+    {
+        $currentUser = $this->statefulGuard->user();
+
+        return $this->shiftSettings->hide_uncommitted_shifts_from_own_roster
+            && $currentUser instanceof User
+            && $currentUser->is($rosterOwner)
+            && !$currentUser->can(PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS->value);
     }
 
     /**

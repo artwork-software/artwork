@@ -14,6 +14,27 @@
             <p v-if="externMaterialIssue.return_remarks" class="text-xs text-gray-500 line-clamp-2 mt-0.5">
                 {{ externMaterialIssue.return_remarks }}
             </p>
+            <div v-if="externMaterialIssue.articles?.length" class="mt-2 flex items-center gap-2">
+                <div class="flex -space-x-2" :aria-label="$t('Issued articles')">
+                    <div
+                        v-for="article in externMaterialIssue.articles.slice(0, 3)"
+                        :key="article.id"
+                        class="grid size-8 place-items-center overflow-hidden rounded-lg border-2 border-white bg-gray-100 text-[10px] font-semibold text-gray-500 shadow-sm"
+                        :title="article.name"
+                    >
+                        <img
+                            v-if="article.images?.[0]?.image"
+                            :src="'/storage/' + article.images[0].image"
+                            :alt="article.images[0].alt || article.name"
+                            class="size-full object-cover"
+                        >
+                        <span v-else aria-hidden="true">{{ article.name?.slice(0, 2).toUpperCase() }}</span>
+                    </div>
+                </div>
+                <span class="text-[11px] text-gray-500">
+                    {{ externMaterialIssue.articles.length }} {{ externMaterialIssue.articles.length === 1 ? $t('article') : $t('articles') }}
+                </span>
+            </div>
         </div>
 
         <!-- Materialwert -->
@@ -53,6 +74,11 @@
 
         <!-- Status + Aktionen -->
         <div class="col-span-1 flex items-center justify-end gap-2">
+      <span v-if="isOverdue"
+            class="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-700">
+        <component :is="IconAlertTriangle" class="size-3.5" />
+        {{ $t('Overdue') }}
+      </span>
       <span v-if="!externMaterialIssue?.special_items_done && externMaterialIssue?.special_items?.length"
             class="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] text-rose-700">
         <component :is="IconAlertTriangle" class="size-3.5" />
@@ -174,6 +200,15 @@ const checkIfStatusOrHasAnySpecialItem = computed(() => {
     const hasSpecialItems = props.externMaterialIssue?.special_items?.length > 0;
     const isIncomplete = !props.externMaterialIssue?.special_items_done;
     return hasSpecialItems && isIncomplete;
+});
+
+const isOverdue = computed(() => {
+    if (props.externMaterialIssue.received_by || !props.externMaterialIssue.return_date) {
+        return false;
+    }
+
+    const returnDate = new Date(`${props.externMaterialIssue.return_date}T23:59:59`);
+    return returnDate.getTime() < Date.now();
 });
 
 const printExternal = () => {

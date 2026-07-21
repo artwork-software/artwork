@@ -65,6 +65,20 @@ enum PermissionEnum : string
     case INVENTORY_DISPOSITION = 'inventory.disposition';
     case MATERIAL_ISSUE_LOG_VIEW = 'can view material issue log';
     case SHIFT_SETTINGS_VIEW_EDIT = 'shift.settings_view_edit';
+    case SHIFT_SETTINGS_GENERAL_VIEW = 'shift.settings.general.view';
+    case SHIFT_SETTINGS_GENERAL_EDIT = 'shift.settings.general.edit';
+    case SHIFT_SETTINGS_DAY_SERVICES_VIEW = 'shift.settings.day_services.view';
+    case SHIFT_SETTINGS_DAY_SERVICES_EDIT = 'shift.settings.day_services.edit';
+    case SHIFT_SETTINGS_WORK_TIME_PATTERNS_VIEW = 'shift.settings.work_time_patterns.view';
+    case SHIFT_SETTINGS_WORK_TIME_PATTERNS_EDIT = 'shift.settings.work_time_patterns.edit';
+    case SHIFT_SETTINGS_USER_CONTRACTS_VIEW = 'shift.settings.user_contracts.view';
+    case SHIFT_SETTINGS_USER_CONTRACTS_EDIT = 'shift.settings.user_contracts.edit';
+    case SHIFT_SETTINGS_SHIFT_GROUPS_VIEW = 'shift.settings.shift_groups.view';
+    case SHIFT_SETTINGS_SHIFT_GROUPS_EDIT = 'shift.settings.shift_groups.edit';
+    case SHIFT_SETTINGS_SHIFT_TEMPLATES_VIEW = 'shift.settings.shift_templates.view';
+    case SHIFT_SETTINGS_SHIFT_TEMPLATES_EDIT = 'shift.settings.shift_templates.edit';
+    case SHIFT_SETTINGS_RULES_VIEW = 'shift.settings.rules.view';
+    case SHIFT_SETTINGS_RULES_EDIT = 'shift.settings.rules.edit';
 
     case DOCUMENT_REQUEST_CREATE = 'can create document requests';
     case DOCUMENT_REQUEST_EDIT = 'can edit document requests';
@@ -79,6 +93,7 @@ enum PermissionEnum : string
     case INVITE_EXTERNAL = 'can invite externals';
 
     case CAN_VIEW_OWN_ROSTER = 'can view own roster';
+    case CAN_VIEW_OWN_UNCOMMITTED_SHIFTS = 'can view own uncommitted shifts';
     case CAN_SUBSCRIBE_SHIFT_CALENDAR = 'can subscribe shift calendar';
 
     case CAN_VIEW_SHIFT_USER_KPIS = 'can view shift user kpis';

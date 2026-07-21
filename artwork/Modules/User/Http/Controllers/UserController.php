@@ -60,6 +60,7 @@ use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
@@ -97,6 +98,7 @@ class UserController extends Controller
         protected AuthManager $auth,
         protected GlobalQualificationService $qualificationService,
         private readonly ShiftRuleService $shiftRuleService,
+        private readonly ThreeMonthAverageTargetService $threeMonthAverageTargetService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -744,16 +746,23 @@ class UserController extends Controller
                 $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
             }
 
+            $hasRecordedWork = (isset($bookings[$dateKey]) && $bookings[$dateKey]->sum('worked_hours') > 0)
+                || (int) $individualTimes->get($dateKey, 0) > 0;
+
             $compensationInfo = null;
             if (isset($compensationDayOffs[$dateKey])) {
                 $dayCompDays = $compensationDayOffs[$dateKey];
                 // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
                 // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> Minus-Delta = Überstundenabbau.
                 $holidayCompValue = (float) $dayCompDays->where('for_holiday', true)->sum('value');
-                if ($holidayCompValue >= 1.0) {
-                    $dailyTargetMinutes = 0;
-                } elseif ($holidayCompValue > 0) {
-                    $dailyTargetMinutes = (int) round($dailyTargetMinutes * (1 - $holidayCompValue));
+                if ($holidayCompValue > 0 && !$hasRecordedWork) {
+                    $dailyTargetMinutes = max(0, $dailyTargetMinutes - $this->threeMonthAverageTargetService
+                        ->reductionMinutesFor(
+                            $user,
+                            $current,
+                            min(1.0, $holidayCompValue),
+                            $dailyTargetMinutes
+                        ));
                 }
                 $compensationInfo = $dayCompDays->map(fn ($d) => [
                     'value' => (float) $d->value,

@@ -67,6 +67,7 @@ class ExternalIssueController extends Controller
         $dateTo   = request()?->input('date_to');
         $issuedBy    = request()?->filled('issued_by_id')    ? (int) request()->input('issued_by_id')    : null;
         $receivedBy  = request()?->filled('received_by_id')  ? (int) request()->input('received_by_id')  : null;
+        $overdueOnly = request()?->boolean('overdue_only');
 
         $q        = trim((string) request()?->input('q', ''));
 
@@ -90,7 +91,10 @@ class ExternalIssueController extends Controller
         // User-Filter
         $issuesQuery
             ->when($issuedBy !== null,   fn($q) => $q->where('issued_by_id',   $issuedBy))
-            ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy));
+            ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy))
+            ->when($overdueOnly, fn($q) => $q
+                ->whereNull('received_by_id')
+                ->whereDate('return_date', '<', now()->toDateString()));
 
         // Name/Extern/Remarks Suche
         if ($q !== '') {
@@ -126,7 +130,7 @@ class ExternalIssueController extends Controller
             ),
             // optional, falls du urlParameters nutzt:
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','issued_by_id','received_by_id','q'
+                'article_ids','date_from','date_to','issued_by_id','received_by_id','overdue_only','q'
             ]),
         ]);
     }

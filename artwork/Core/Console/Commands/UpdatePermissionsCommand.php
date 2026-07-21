@@ -4,6 +4,7 @@ namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;
 use Illuminate\Console\Command;
 
 class UpdatePermissionsCommand extends Command
@@ -322,6 +323,8 @@ class UpdatePermissionsCommand extends Command
             ],
         ];
 
+        $permissions = array_merge($permissions, ShiftSettingsPermissionService::definitions());
+
         foreach ($permissions as $permission) {
             $checkPermission = Permission::where('name', $permission['name'])->first();
             if (!$checkPermission) {
@@ -330,8 +333,12 @@ class UpdatePermissionsCommand extends Command
             } else {
                 // Update existing permission with new tooltip texts
                 $checkPermission->update([
+                    'name_de' => $permission['name_de'],
+                    'translation_key' => $permission['translation_key'],
+                    'group' => $permission['group'],
                     'tooltipText' => $permission['tooltipText'],
-                    'tooltipKey' => $permission['tooltipKey']
+                    'tooltipKey' => $permission['tooltipKey'],
+                    'checked' => $permission['checked'],
                 ]);
                 $this->info('Permission "' . $permission['name'] . '" updated.');
             }

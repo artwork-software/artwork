@@ -71,6 +71,23 @@
                     <p v-if="userContractForm.errors.compensation_period" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
 
+                <div class="rounded-xl border border-blue-200 bg-blue-50/60 p-4">
+                    <label class="flex cursor-pointer items-start gap-3" for="use_three_month_average_for_target_reduction">
+                        <input
+                            id="use_three_month_average_for_target_reduction"
+                            v-model="userContractForm.use_three_month_average_for_target_reduction"
+                            type="checkbox"
+                            class="input-checklist mt-0.5"
+                        >
+                        <span>
+                            <span class="block text-sm font-semibold text-gray-900">{{ $t('Use three-month average for target-hour reductions') }}</span>
+                            <span class="mt-1 block text-xs leading-5 text-gray-600">
+                                {{ $t('For weekly holidays and holiday-related compensation days without work, the target is reduced by the average actual daily working time from the three completed calendar months before the affected day. Only days with recorded work are counted; sickness, non-worked holidays and days off are excluded. Confirmed individual working times are included through the daily working-time booking. If no eligible working day exists, the contractual daily target is used.') }}
+                            </span>
+                        </span>
+                    </label>
+                </div>
+
                 <!-- Spielzeitbezogene Infodaten (DP-18) -->
                 <div class="mt-6 border-t border-gray-200 pt-4">
                     <h3 class="text-sm font-semibold text-gray-900">{{ $t('Season-related info data') }}</h3>
@@ -181,6 +198,7 @@ const props = defineProps({
             free_half_days_per_week: 0,
             special_day_rule_active: false,
             compensation_period: 0,
+            use_three_month_average_for_target_reduction: false,
             free_sundays_per_season: 0,
             days_off_first_26_weeks: 0.00,
             free_sundays_per_season_active: false,
@@ -210,6 +228,7 @@ const userContractForm = useForm({
     free_half_days_per_week: props.userContract.free_half_days_per_week,
     special_day_rule_active: props.userContract.special_day_rule_active,
     compensation_period: props.userContract.compensation_period,
+    use_three_month_average_for_target_reduction: props.userContract.use_three_month_average_for_target_reduction ?? false,
     free_sundays_per_season: props.userContract.free_sundays_per_season,
     days_off_first_26_weeks: props.userContract.days_off_first_26_weeks,
     // Spielzeitbezogene Infodaten (DP-18)

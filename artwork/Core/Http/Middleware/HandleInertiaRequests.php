@@ -260,6 +260,12 @@ class HandleInertiaRequests extends Middleware
                 'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,
                 'allow_shift_overbooking'      => (bool) app(\App\Settings\ShiftSettings::class)
                     ->allow_shift_overbooking,
+                'shift_settings_access'        => [
+                    'granular_permissions_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
+                        ->granular_permissions_enabled,
+                    'hide_uncommitted_shifts_from_own_roster' => (bool) app(\App\Settings\ShiftSettings::class)
+                        ->hide_uncommitted_shifts_from_own_roster,
+                ],
                 'isUserWorkFlowUser'           => $isUserWorkFlowUser,
                 'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
                 'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,

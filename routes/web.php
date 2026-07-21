@@ -240,23 +240,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     // Shift Rules routes - New shift rules management system
-    Route::group(['prefix' => 'shift-rules', 'middleware' => 'can:can plan shifts'], function (): void {
+    Route::group(['prefix' => 'shift-rules', 'middleware' => ['can:can plan shifts', 'shift-settings-area:rules,view']], function (): void {
         Route::get('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'index'])->name('shift-rules.index');
-        Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->name('shift-rules.store');
+        Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
 
         // Specific routes must come before parameterized routes
         Route::get('/active', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'activeRules'])->name('shift-rules.active');
         Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
-        Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->name('shift-rules.contracts.assignments.update');
-        Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->name('shift-rules.validate');
+        Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
+        Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
         Route::get('/pending', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'getPendingViolations'])->name('shift-rules.pending');
 
         // Parameterized routes come last
         Route::get('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'show'])->name('shift-rules.show');
-        Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->name('shift-rules.update');
-        Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->name('shift-rules.destroy');
-        Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->name('shift-rules.contracts.assign');
-        Route::post('/{shiftRule}/users', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignUsers'])->name('shift-rules.users.assign');
+        Route::put('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'update'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.update');
+        Route::delete('/{shiftRule}', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'destroy'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.destroy');
+        Route::post('/{shiftRule}/contracts', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignContracts'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assign');
+        Route::post('/{shiftRule}/users', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'assignUsers'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.users.assign');
     });
 
     // Shift Rule Violations routes
@@ -324,11 +324,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.communication-and-legal.update');
 
         Route::patch('/shift/workflow/update', [ShiftController::class, 'updateWorkflowSettings'])
+            ->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.shift-commit-workflow');
 
         Route::patch('/shift/workflow/add/user', [ShiftCommitWorkflowUserController::class, 'store'])
+            ->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.update.shift-commit-workflow-users');
         Route::delete('/shift/workflow/{shiftCommitWorkflowUser}/remove', [ShiftCommitWorkflowUserController::class, 'destroy'])
+            ->middleware('shift-settings-area:general,edit')
             ->name('shift.settings.remove.shift-commit-workflow-user');
 
         Route::get('/interfaces', [ToolSettingsInterfacesController::class, 'index'])
@@ -2005,7 +2008,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'settings'], function (): void {
 
-        Route::group(['prefix' => 'global-qualifications'], function (): void {
+        Route::group(['prefix' => 'global-qualifications', 'middleware' => 'shift-settings-area:general,edit'], function (): void {
             // global-qualification.update
             Route::patch(
                 '/{globalQualification}/update',
@@ -2026,14 +2029,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         });
 
 
-        Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
+        Route::get('shift', [ShiftSettingsController::class, 'index'])
+            ->middleware('shift-settings-area:general,view')
+            ->name('shift.settings');
         Route::patch(
             'shift-settings/updateShiftSettingsUseFirstNameForSort',
             [
                 ShiftSettingsController::class,
                 'updateShiftSettingsUseFirstNameForSort'
             ]
-        )->name('shift.settings.update.shift-settings.use-first-name-for-sort');
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.shift-settings.use-first-name-for-sort');
 
         Route::patch(
             'shift-settings/updateCalendarAboShowAllShifts',
@@ -2041,7 +2047,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ShiftSettingsController::class,
                 'updateCalendarAboShowAllShifts'
             ]
-        )->name('shift.settings.update.calendar-abo-show-all-shifts');
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.calendar-abo-show-all-shifts');
 
         Route::patch(
             'shift-settings/updateAllowShiftOverbooking',
@@ -2049,16 +2056,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ShiftSettingsController::class,
                 'updateAllowShiftOverbooking'
             ]
-        )->name('shift.settings.update.allow-shift-overbooking');
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.allow-shift-overbooking');
 
-        Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
-        Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
-        Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');
-        Route::post('/crafts/reorder', [CraftController::class, 'reorder'])->name('craft.reorder');
+        Route::patch(
+            'shift-settings/updateGranularPermissions',
+            [ShiftSettingsController::class, 'updateGranularPermissions']
+        )->middleware(['role:artwork admin', 'shift-settings-area:general,edit'])
+            ->name('shift.settings.update.granular-permissions');
+
+        Route::patch(
+            'shift-settings/updateOwnRosterUncommittedShiftVisibility',
+            [ShiftSettingsController::class, 'updateOwnRosterUncommittedShiftVisibility']
+        )->middleware('shift-settings-area:general,edit')
+            ->name('shift.settings.update.own-roster-uncommitted-visibility');
+
+        Route::post('shift/add/craft', [CraftController::class, 'store'])->middleware('shift-settings-area:general,edit')->name('craft.store');
+        Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->middleware('shift-settings-area:general,edit')->name('craft.update');
+        Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->middleware('shift-settings-area:general,edit')->name('craft.delete');
+        Route::post('/crafts/reorder', [CraftController::class, 'reorder'])->middleware('shift-settings-area:general,edit')->name('craft.reorder');
         Route::patch(
             'shift/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevant']
-        )->name('event-type.update.relevant');
+        )->middleware('shift-settings-area:general,edit')->name('event-type.update.relevant');
         Route::patch(
             'inventory/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevantForInventory']
@@ -2099,31 +2119,41 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         });
     });
 
-    Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
+    Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->middleware('shift-settings-area:shift-templates,edit')->name('empty.presets.store');
     Route::delete('/preset/{presetShift}/shift/delete', [PresetShiftController::class, 'destroy'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.shift.destroy');
     Route::patch('/preset/{presetShift}/shift/update', [PresetShiftController::class, 'update'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('shift.preset.update');
     Route::delete('/shift/preset/{shiftPreset}/destroy', [ShiftPresetController::class, 'destroy'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('destroy.shift.preset');
     Route::post('/shift/preset/{shiftPreset}/duplicate', [ShiftPresetController::class, 'duplicate'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('duplicate.shift.preset');
     Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('update.shift.preset');
-    Route::get('/shift/template/search', [ShiftPresetController::class, 'search'])->name('shift.template.search');
+    Route::get('/shift/template/search', [ShiftPresetController::class, 'search'])->middleware('shift-settings-area:shift-templates,view')->name('shift.template.search');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.add.timeline.row');
 
     Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.timeline.update');
     Route::delete(
         '/preset/timeline/{presetTimeLine}/delete',
         [PresetTimeLineController::class, 'destroy']
     )
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('preset.add.timeline.row');
 
     Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
@@ -2178,7 +2208,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'update',
             'destroy'
         ]
-    );
+    )->middleware('shift-settings-area:general,edit');
 
     Route::get('/shift-history', [ShiftHistoryController::class, 'index'])
         ->name('shift.history.index')
@@ -2190,12 +2220,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/event/standard-values/update', [EventController::class, 'saveStandardEventValues'])
         ->name('event.standard.values.update');
 
-    Route::group(['prefix' => 'day-service'], function (): void {
+    Route::group(['prefix' => 'day-service', 'middleware' => 'shift-settings-area:day-services,view'], function (): void {
         Route::get('index', [DayServiceController::class, 'index'])->name('day-service.index');
-        Route::post('store', [DayServiceController::class, 'store'])->name('day-service.store');
+        Route::post('store', [DayServiceController::class, 'store'])->middleware('shift-settings-area:day-services,edit')->name('day-service.store');
         Route::patch('update/{dayService}', [DayServiceController::class, 'update'])
+            ->middleware('shift-settings-area:day-services,edit')
             ->name('day-service.update');
         Route::delete('destroy/{dayService}', [DayServiceController::class, 'destroy'])
+            ->middleware('shift-settings-area:day-services,edit')
             ->name('day-service.destroy');
     });
 
@@ -2422,17 +2454,22 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {
         Route::resource('shift-time-preset', ShiftTimePresetController::class)
+            ->middleware('shift-settings-area:general,edit')
             ->only(['store', 'update', 'destroy']);
     });
 
     // SingleShiftPreset Routes
     Route::get('/single-shift-presets', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'index'])
+        ->middleware('shift-settings-area:shift-templates,view')
         ->name('single-shift-presets.index');
     Route::post('/single-shift-presets', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'store'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('single-shift-presets.store');
     Route::put('/single-shift-presets/{singleShiftPreset}', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'update'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('single-shift-presets.update');
     Route::delete('/single-shift-presets/{singleShiftPreset}', [\Artwork\Modules\Shift\Http\Controllers\SingleShiftPresetController::class, 'destroy'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('single-shift-presets.destroy');
 
     // attach DayService to entity
@@ -3167,53 +3204,55 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get(
             '/work-time-pattern/',
             [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'index']
-        )->name('shift.work-time-pattern');
+        )->middleware('shift-settings-area:work-time-patterns,view')->name('shift.work-time-pattern');
 
         // shift.work-time-pattern.store
         Route::post(
             '/work-time-pattern/store',
             [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'store']
-        )->name('shift.work-time-pattern.store');
+        )->middleware('shift-settings-area:work-time-patterns,edit')->name('shift.work-time-pattern.store');
 
         // shift.work-time-pattern.update
         Route::patch(
             '/work-time-pattern/{userWorkTimePattern}/update',
             [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'update']
-        )->name('shift.work-time-pattern.update');
+        )->middleware('shift-settings-area:work-time-patterns,edit')->name('shift.work-time-pattern.update');
 
         // work-time-patterns.destroy
         Route::delete(
             '/work-time-pattern/{userWorkTimePattern}/destroy',
             [\Artwork\Modules\User\Http\Controllers\UserWorkTimePatternController::class, 'destroy']
-        )->name('shift.work-time-pattern.destroy');
+        )->middleware('shift-settings-area:work-time-patterns,edit')->name('shift.work-time-pattern.destroy');
 
         // user.work-time-pattern.update
         Route::patch(
             '/work-time-pattern/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
-        )->name('shift.work-time-pattern.update-user');
+        )->middleware('shift-settings-area:work-time-patterns,edit')->name('shift.work-time-pattern.update-user');
     });
 
     // group user contracts
     Route::group(['prefix' => 'user-contracts'], function (): void {
         // user-contract-settings.index
-        Route::get('/', [UserContractController::class, 'index'])->name('user-contract-settings.index');
+        Route::get('/', [UserContractController::class, 'index'])->middleware('shift-settings-area:user-contracts,view')->name('user-contract-settings.index');
 
         // user-contract-settings.store
-        Route::post('/store', [UserContractController::class, 'store'])->name('user-contract-settings.store');
+        Route::post('/store', [UserContractController::class, 'store'])->middleware('shift-settings-area:user-contracts,edit')->name('user-contract-settings.store');
 
         // user-contract-settings.update
         Route::patch('/{userContract}/update', [UserContractController::class, 'update'])
+            ->middleware('shift-settings-area:user-contracts,edit')
             ->name('user-contract-settings.update');
 
         // user-contract-settings.destroy
         Route::delete('/{userContract}/destroy', [UserContractController::class, 'destroy'])
+            ->middleware('shift-settings-area:user-contracts,edit')
             ->name('user-contract-settings.destroy');
 
         Route::patch(
             '/contract/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
-        )->name('user-contract-settings.update-user');
+        )->middleware('shift-settings-area:user-contracts,edit')->name('user-contract-settings.update-user');
     });
 
     // users.worktimes.store
@@ -3286,18 +3325,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ServiceProviderController::class, 'updateCraftShiftQualification']
     )->name('service_provider.update.craft-shift-qualification');
 
-    Route::group(['prefix' => 'shift-groups'], function (): void {
+    Route::group(['prefix' => 'shift-groups', 'middleware' => 'shift-settings-area:shift-groups,view'], function (): void {
         Route::get('/', [ShiftGroupController::class, 'index'])->name('shift-groups.index');
-        Route::post('/', [ShiftGroupController::class, 'store'])->name('shift-groups.store');
-        Route::patch('/{shiftGroup}/update', [ShiftGroupController::class, 'update'])->name('shift-groups.update');
-        Route::delete('/{shiftGroup}/destroy', [ShiftGroupController::class, 'destroy'])->name('shift-groups.destroy');
+        Route::post('/', [ShiftGroupController::class, 'store'])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.store');
+        Route::patch('/{shiftGroup}/update', [ShiftGroupController::class, 'update'])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.update');
+        Route::delete('/{shiftGroup}/destroy', [ShiftGroupController::class, 'destroy'])->middleware('shift-settings-area:shift-groups,edit')->name('shift-groups.destroy');
     });
 
     // patch shift-settings.update-warn-multiple-assignments
     Route::patch(
         '/shift-settings/update-warn-multiple-assignments',
         [ShiftSettingsController::class, 'saveWarningMultipleAssignments']
-    )->name('shift-settings.update-warn-multiple-assignments');
+    )->middleware('shift-settings-area:general,edit')->name('shift-settings.update-warn-multiple-assignments');
 
     Route::prefix('shifts/approvals')->name('shifts.approvals.')->group(function (): void {
         Route::get('/review', [\App\Http\Controllers\ShiftPlanRequestController::class, 'index'])
@@ -3416,12 +3455,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::get('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'index'])
+        ->middleware('shift-settings-area:shift-templates,view')
         ->name('shift-preset-groups.index');
     Route::post('/shift-preset-groups', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'store'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('shift-preset-groups.store');
     Route::patch('/shift-preset-groups/{shiftPresetGroup}', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'update'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('shift-preset-groups.update');
     Route::delete('/shift-preset-groups/{shiftPresetGroup}', [\Artwork\Modules\Shift\Http\Controllers\ShiftPresetGroupController::class, 'destroy'])
+        ->middleware('shift-settings-area:shift-templates,edit')
         ->name('shift-preset-groups.destroy');
 
     // shifts.createFromPresets

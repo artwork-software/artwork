@@ -4,6 +4,7 @@ namespace Artwork\Modules\Setup\DataProvider;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;
 
 class BaseDataProvider implements RoleAndPermissionDataProvider
 {
@@ -633,6 +634,7 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                     'and shift plan.',
                 'checked' => false
             ],
+            ...ShiftSettingsPermissionService::definitions(),
         ];
     }
 

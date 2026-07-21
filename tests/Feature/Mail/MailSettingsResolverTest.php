@@ -22,7 +22,7 @@ final class MailSettingsResolverTest extends TestCase
     #[Test]
     public function host_uses_db_override_when_set(): void
     {
-        config(['mail.mailers.smtp.host' => 'env-host.example.com']);
+        config(['mail.fallback.host' => 'env-host.example.com']);
 
         $settings = $this->settings();
         $settings->host = 'db-host.example.com';
@@ -34,7 +34,7 @@ final class MailSettingsResolverTest extends TestCase
     #[Test]
     public function host_falls_back_to_env_when_db_empty(): void
     {
-        config(['mail.mailers.smtp.host' => 'env-host.example.com']);
+        config(['mail.fallback.host' => 'env-host.example.com']);
 
         $settings = $this->settings();
         $settings->host = null;
@@ -46,7 +46,7 @@ final class MailSettingsResolverTest extends TestCase
     #[Test]
     public function empty_string_is_treated_as_not_set_and_falls_back(): void
     {
-        config(['mail.mailers.smtp.host' => 'env-host.example.com']);
+        config(['mail.fallback.host' => 'env-host.example.com']);
 
         $settings = $this->settings();
         $settings->host = '';
@@ -58,7 +58,7 @@ final class MailSettingsResolverTest extends TestCase
     #[Test]
     public function password_is_stored_and_returned_verbatim(): void
     {
-        config(['mail.mailers.smtp.password' => 'env-fallback-pw']);
+        config(['mail.fallback.password' => 'env-fallback-pw']);
 
         $settings = $this->settings();
         $settings->password = '  s3cret with spaces  ';
@@ -71,7 +71,7 @@ final class MailSettingsResolverTest extends TestCase
     #[Test]
     public function password_falls_back_to_env_when_db_empty(): void
     {
-        config(['mail.mailers.smtp.password' => 'env-fallback-pw']);
+        config(['mail.fallback.password' => 'env-fallback-pw']);
 
         $settings = $this->settings();
         $settings->password = null;
@@ -84,8 +84,8 @@ final class MailSettingsResolverTest extends TestCase
     public function from_address_and_name_override_env(): void
     {
         config([
-            'mail.from.address' => 'env@example.com',
-            'mail.from.name' => 'Env Name',
+            'mail.fallback.from_address' => 'env@example.com',
+            'mail.fallback.from_name' => 'Env Name',
         ]);
 
         $settings = $this->settings();
@@ -101,9 +101,9 @@ final class MailSettingsResolverTest extends TestCase
     public function effective_config_array_merges_db_and_env(): void
     {
         config([
-            'mail.mailers.smtp.host' => 'env-host.example.com',
-            'mail.mailers.smtp.port' => 587,
-            'mail.from.name' => 'Env Name',
+            'mail.fallback.host' => 'env-host.example.com',
+            'mail.fallback.port' => 587,
+            'mail.fallback.from_name' => 'Env Name',
         ]);
 
         $settings = $this->settings();

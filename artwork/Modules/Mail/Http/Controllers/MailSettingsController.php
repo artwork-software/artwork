@@ -74,6 +74,8 @@ class MailSettingsController extends Controller
         $this->settings->save();
 
         Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
+        app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
+        Mail::purge('smtp');
 
         activity('mail_settings')
             ->causedBy($request->user())

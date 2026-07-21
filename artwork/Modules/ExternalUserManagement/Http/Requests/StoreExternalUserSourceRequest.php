@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ExternalUserManagement\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreExternalUserSourceRequest extends FormRequest
 {
@@ -62,6 +63,21 @@ class StoreExternalUserSourceRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $isActiveIdentityProvider = $this->input('type') === 'identity_provider'
+                && $this->boolean('active', true);
+
+            if ($isActiveIdentityProvider && empty($this->input('config.allowed_domains', []))) {
+                $validator->errors()->add(
+                    'config.allowed_domains',
+                    __('An active identity provider requires at least one allowed email domain.')
+                );
+            }
+        });
     }
 
     /**

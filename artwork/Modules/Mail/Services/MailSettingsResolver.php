@@ -22,7 +22,7 @@ class MailSettingsResolver
 
     public function hostFallback(): ?string
     {
-        return config('mail.mailers.smtp.host');
+        return config('mail.fallback.host');
     }
 
     public function port(): ?int
@@ -32,7 +32,7 @@ class MailSettingsResolver
 
     public function portFallback(): ?int
     {
-        $port = config('mail.mailers.smtp.port');
+        $port = config('mail.fallback.port');
 
         return $port !== null ? (int) $port : null;
     }
@@ -44,7 +44,7 @@ class MailSettingsResolver
 
     public function encryptionFallback(): ?string
     {
-        return config('mail.mailers.smtp.encryption');
+        return config('mail.fallback.encryption');
     }
 
     public function username(): ?string
@@ -54,12 +54,12 @@ class MailSettingsResolver
 
     public function usernameFallback(): ?string
     {
-        return config('mail.mailers.smtp.username');
+        return config('mail.fallback.username');
     }
 
     public function password(): ?string
     {
-        return $this->override($this->settings->password) ?? config('mail.mailers.smtp.password');
+        return $this->override($this->settings->password) ?? config('mail.fallback.password');
     }
 
     public function fromAddress(): ?string
@@ -69,7 +69,7 @@ class MailSettingsResolver
 
     public function fromAddressFallback(): ?string
     {
-        return config('mail.from.address');
+        return config('mail.fallback.from_address');
     }
 
     public function fromName(): ?string
@@ -79,7 +79,7 @@ class MailSettingsResolver
 
     public function fromNameFallback(): ?string
     {
-        return config('mail.from.name');
+        return config('mail.fallback.from_name');
     }
 
     /**
@@ -98,6 +98,11 @@ class MailSettingsResolver
             'from_address' => $this->fromAddress(),
             'from_name' => $this->fromName(),
         ];
+    }
+
+    public function refreshSettings(): void
+    {
+        $this->settings->refresh();
     }
 
     /**

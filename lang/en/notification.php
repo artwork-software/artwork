@@ -39,6 +39,13 @@ return [
             'Project assignment of :workerName for :projectName dissolved by a free day entry',
         'dissolved_by_reschedule' =>
             'Project assignment of :workerName for :projectName dissolved because the project was rescheduled',
+        'person_assigned' => 'New project assignment: :projectName',
+        'person_assigned_bundled' => ':count new project assignments',
+        'person_removed' => 'Project assignment removed: :projectName',
+        'person_removed_bundled' => ':count project assignments removed',
+        'person_wish_accepted' => 'Project wish accepted: :projectName',
+        'person_wish_accepted_bundled' => ':count project wishes accepted',
+        'removed_reason_reschedule' => 'Rescheduling',
     ],
     'shift' => [
         'without_event' => 'Shift without event',

@@ -43,10 +43,9 @@ final class OidcAuthControllerDomainTest extends TestCase
     }
 
     #[Test]
-    public function it_allows_any_domain_when_the_allowlist_is_empty(): void
+    public function it_denies_every_domain_when_the_allowlist_is_empty(): void
     {
-        // Die Allowlist ist optional; ist keine konfiguriert, ist jede Domain zugelassen.
-        $this->assertTrue($this->isAllowed([], 'user@example.com'));
+        $this->assertFalse($this->isAllowed([], 'user@example.com'));
     }
 
     #[Test]

@@ -8,6 +8,7 @@ use Artwork\Modules\Calendar\Models\DayRemark;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 
 class DayRemarkController extends Controller
@@ -23,8 +24,12 @@ class DayRemarkController extends Controller
         }
 
         try {
-            $parsedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
+            $parsedDate = Carbon::createFromFormat('!Y-m-d', $date)->startOfDay();
         } catch (\Throwable) {
+            abort(422, 'Invalid date format, expected Y-m-d.');
+        }
+
+        if ($parsedDate->toDateString() !== $date) {
             abort(422, 'Invalid date format, expected Y-m-d.');
         }
 
@@ -47,13 +52,31 @@ class DayRemarkController extends Controller
 
         $userId = Auth::id();
 
-        $dayRemark = DayRemark::query()->firstOrNew(['date' => $parsedDate->toDateString()]);
-        if (!$dayRemark->exists) {
-            $dayRemark->created_by = $userId;
+        $dayRemark = DayRemark::query()->whereDate('date', $parsedDate->toDateString())->first();
+
+        if ($dayRemark !== null) {
+            $dayRemark->update([
+                'remark' => $text,
+                'updated_by' => $userId,
+            ]);
+        } else {
+            try {
+                $dayRemark = DayRemark::query()->create([
+                    'date' => $parsedDate->toDateString(),
+                    'remark' => $text,
+                    'created_by' => $userId,
+                    'updated_by' => $userId,
+                ]);
+            } catch (UniqueConstraintViolationException) {
+                // A concurrent request inserted this date after our lookup.
+                DayRemark::query()->whereDate('date', $parsedDate->toDateString())->update([
+                    'remark' => $text,
+                    'updated_by' => $userId,
+                    'updated_at' => now(),
+                ]);
+                $dayRemark = DayRemark::query()->whereDate('date', $parsedDate->toDateString())->firstOrFail();
+            }
         }
-        $dayRemark->remark = $text;
-        $dayRemark->updated_by = $userId;
-        $dayRemark->save();
 
         $dayRemarkPayload = [
             'text' => $dayRemark->remark,

@@ -317,7 +317,7 @@
                     </div>
                 </template>
 
-                <!-- Allowed Domains (optional) -->
+                <!-- Allowed Domains -->
                 <div>
                     <BaseInput
                         id="allowed_domains"
@@ -327,7 +327,7 @@
                         placeholder="example.com, partner.org"
                     />
                     <p class="mt-1 text-xs text-gray-500">
-                        {{ $t('Optional comma-separated allowlist. Leave empty to allow any domain.') }}
+                        {{ $t('Enter the permitted user email domains, for example company.com — not the Artwork domain. Only identities with an email address from these domains may sign in.') }}
                     </p>
                 </div>
 
@@ -351,7 +351,7 @@
 
                 <!-- Redirect URI hint -->
                 <div v-if="source" class="rounded bg-gray-50 border border-gray-200 p-3">
-                    <p class="text-xs font-medium text-gray-700">{{ $t('Redirect URI (register this at your IdP)') }}</p>
+                    <p class="text-xs font-medium text-gray-700">{{ $t('Redirect URI (register this exact URL in the allowlist at your IdP)') }}</p>
                     <code class="mt-1 block break-all text-xs text-gray-600">{{ redirectUri }}</code>
                 </div>
                 <p v-else class="text-xs text-gray-500">

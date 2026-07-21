@@ -111,15 +111,15 @@ class OidcAuthController extends Controller
     }
 
     /**
-     * Erzwingt die optionale, pro-Quelle konfigurierte E-Mail-Domain-Allowlist.
-     * Ist keine Allowlist konfiguriert, ist jede Domain zugelassen.
+     * Erzwingt die pro-Quelle konfigurierte E-Mail-Domain-Allowlist.
+     * Eine leere Allowlist verweigert den Zugriff sicherheitshalber vollständig.
      */
     private function emailDomainAllowed(ExternalUserSource $source, string $email): bool
     {
         $allowed = $source->config['allowed_domains'] ?? [];
 
         if (empty($allowed)) {
-            return true;
+            return false;
         }
 
         $domain = strtolower(substr(strrchr($email, '@') ?: '@', 1));

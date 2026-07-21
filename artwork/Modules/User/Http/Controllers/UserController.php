@@ -90,7 +90,6 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
-use App\Models\User as LaravelUser;
 
 class UserController extends Controller
 {
@@ -1474,7 +1473,7 @@ class UserController extends Controller
             // so we only need to fix `causer_id` here.
             Activity::query()
                 ->where('causer_id', $user->id)
-                ->whereIn('causer_type', [User::class, LaravelUser::class])
+                ->whereIn('causer_type', [User::class, 'App\\Models\\User'])
                 ->update(['causer_id' => $reassignUserId]);
             SubEvent::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
             // Now delete the user
@@ -1524,6 +1523,8 @@ class UserController extends Controller
 
     public function updateCalendarSettings(User $user, Request $request, UserService $userService): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         // unsignedSmallInteger-Spalte: ohne Grenzen werfen negative/zu große Werte
         // oder Strings einen SQL-Fehler (500 statt 422)
         $request->validate([
@@ -1660,6 +1661,8 @@ class UserController extends Controller
 
     public function updateZoomFactor(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         // Stufen 0.4–1.4 (Zoom-Dropdown + Legacy-±0.2-Buttons); ohne Validierung
         // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
         $request->validate([
@@ -1671,11 +1674,15 @@ class UserController extends Controller
 
     public function updateAtAGlance(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('at_a_glance'));
     }
 
     public function updateShiftPlanZoomFactor(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         // Stufen 0.55/0.75/1 des Schichtplan-Spaltenzooms; ohne Validierung
         // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
         $request->validate([
@@ -1692,11 +1699,15 @@ class UserController extends Controller
 
     public function updateBulkSortId(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('bulk_sort_id'));
     }
 
     public function updateDailyView(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $dailyView = $request->boolean('daily_view');
         // Calendar and shift plan keep their view mode independently. The legacy
         // "daily_view" column is kept in sync as a fallback for un-migrated readers.
@@ -1744,6 +1755,8 @@ class UserController extends Controller
 
     public function updateBulkColumnSize(User $user, Request $request): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('bulk_column_size'));
 
         // Redirect zurückgeben, damit Inertia eine gültige Antwort erhält und die
@@ -1754,6 +1767,8 @@ class UserController extends Controller
 
     public function updateShowDescriptionInBulk(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('show_description_in_bulk'));
     }
 

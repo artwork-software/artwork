@@ -346,9 +346,17 @@ class UserService
     }
 
     /**
+     * Quelle für das Einschalt-Seeding, wenn das Setting aus den
+     * Anzeigeeinstellungen der Inventar-Artikelplanung aktiviert wird
+     * (die Artikelplanung hat keinen user_filters-Eintrag).
+     */
+    public const SHARE_DATE_SOURCE_INVENTORY_ARTICLE_PLAN = 'inventory_article_plan';
+
+    /**
      * Schreibt denselben Zeitraum in alle Ansichts-Filter (Kalender, Planung,
-     * Schichtplan, deren Tagesansichten und die Listenansicht). Wird genutzt,
-     * wenn der User "Zeitraum in allen Ansichten teilen" aktiviert hat.
+     * Schichtplan, deren Tagesansichten, die Listenansicht und die
+     * Inventar-Artikelplanung). Wird genutzt, wenn der User "Zeitraum in
+     * allen Ansichten teilen" aktiviert hat.
      * PROJECT_SHIFT_FILTER bleibt außen vor — der Projekt-Schichten-Tab folgt
      * dem Projektzeitraum und nicht der globalen Navigation.
      */
@@ -367,6 +375,14 @@ class UserService
                 ]
             );
         }
+
+        $user->inventoryArticlePlanFilter()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]
+        );
     }
 
     /**
@@ -383,7 +399,9 @@ class UserService
             return;
         }
 
-        $sourceFilter = $user->userFilters()->where('filter_type', $sourceFilterType)->first();
+        $sourceFilter = $sourceFilterType === self::SHARE_DATE_SOURCE_INVENTORY_ARTICLE_PLAN
+            ? $user->inventoryArticlePlanFilter()->first()
+            : $user->userFilters()->where('filter_type', $sourceFilterType)->first();
         if ($sourceFilter?->start_date === null || $sourceFilter?->end_date === null) {
             return;
         }

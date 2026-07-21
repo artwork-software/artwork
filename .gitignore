@@ -2,6 +2,8 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/bi_events*
+/storage/smoke_*.php
 /public/css/*
 /public/js/*
 /vendor

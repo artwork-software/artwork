@@ -34,6 +34,8 @@ class UserCalendarFilterController extends Controller
 
     public function update(Request $request, User $user): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
         $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
         $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;
@@ -54,6 +56,8 @@ class UserCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user, UserService $userService): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $isPlanning = $request->get('isPlanning', false);
         $isDailyView = $request->get('isDailyView', false);
 
@@ -90,6 +94,8 @@ class UserCalendarFilterController extends Controller
 
     public function singleValueUpdate(User $user, Request $request): RedirectResponse
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->calendar_filter()->update([
             $request->key => $request->value
         ]);
@@ -103,6 +109,8 @@ class UserCalendarFilterController extends Controller
 
     public function reset(User $user): RedirectResponse
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->calendar_filter()->update([
             'adjoining_not_loud' => false,
             'adjoining_no_audience' => false,

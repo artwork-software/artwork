@@ -4,6 +4,7 @@ namespace Artwork\Modules\ExternalUserManagement\Http\Requests;
 
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class UpdateExternalUserSourceRequest extends FormRequest
 {
@@ -67,7 +68,7 @@ class UpdateExternalUserSourceRequest extends FormRequest
             'config.scopes.*' => ['string', 'max:100'],
             'config.identifier_attribute' => ['nullable', 'string', 'max:100'],
             'config.groups_claim' => ['nullable', 'string', 'max:100'],
-            'config.allowed_domains' => ['nullable', 'array'],
+            'config.allowed_domains' => ['sometimes', 'nullable', 'array'],
             'config.allowed_domains.*' => ['string', 'max:255'],
             'config.default_role_id' => ['nullable', 'integer', 'exists:roles,id'],
         ];
@@ -79,6 +80,25 @@ class UpdateExternalUserSourceRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            /** @var ExternalUserSource|null $source */
+            $source = $this->route('externalUserSource');
+            $active = $this->has('active') ? $this->boolean('active') : (bool) $source?->active;
+            $config = $this->has('config') ? $this->input('config', []) : ($source?->config ?? []);
+
+            if ($this->resolvedType() === 'identity_provider'
+                && $active
+                && empty($config['allowed_domains'] ?? [])) {
+                $validator->errors()->add(
+                    'config.allowed_domains',
+                    __('An active identity provider requires at least one allowed email domain.')
+                );
+            }
+        });
     }
 
     /**

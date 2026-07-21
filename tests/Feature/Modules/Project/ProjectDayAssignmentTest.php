@@ -11,8 +11,12 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectDayAssignment;
 use Artwork\Modules\Project\Services\ProjectDayAssignmentService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -981,6 +985,325 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
         $this->service()->acceptWishGroup($wish);
 
         $this->assertNull(ProjectDayAssignment::withTrashed()->find($wish->id));
+    }
+
+    // ---------- Personen-Benachrichtigung (gebündelt) ----------
+
+    #[Test]
+    public function person_is_notified_when_bindingly_assigned(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02', '2026-08-03'],
+            false
+        );
+
+        Notification::assertSentTo(
+            $worker,
+            ShiftNotification::class,
+            static function (ShiftNotification $notification) use ($project, $worker): bool {
+                $data = $notification->toArray();
+
+                return $data->notificationKey === sprintf(
+                        'project-assignment-assigned-%d-%s',
+                        $worker->id,
+                        Carbon::now()->format('Y-m-d')
+                    )
+                    && str_contains($data->title, $project->name);
+            }
+        );
+    }
+
+    #[Test]
+    public function same_day_person_notifications_are_bundled_into_one(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        // Bereits vorhandene ungelesene Benachrichtigung desselben Tages simulieren
+        // (Notification::fake() im FeatureTestCase schreibt selbst keine DB-Zeilen)
+        $notificationKey = sprintf(
+            'project-assignment-assigned-%d-%s',
+            $worker->id,
+            Carbon::now()->format('Y-m-d')
+        );
+        DatabaseNotification::query()->create([
+            'id' => (string) Str::uuid(),
+            'type' => ShiftNotification::class,
+            'notifiable_type' => User::class,
+            'notifiable_id' => $worker->id,
+            'data' => [
+                'title' => 'Neue Projektzuordnung: Erstes Projekt',
+                'description' => [['type' => 'string', 'title' => 'Erstes Projekt · 01.08.2026', 'href' => null]],
+                'notificationKey' => $notificationKey,
+            ],
+            'read_at' => null,
+        ]);
+
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        );
+
+        // Bestehende Benachrichtigung wurde gebündelt statt eine zweite zu erzeugen
+        Notification::assertNotSentTo($worker, ShiftNotification::class);
+
+        $data = DatabaseNotification::query()
+            ->where('notifiable_id', $worker->id)
+            ->firstOrFail()
+            ->data;
+
+        $this->assertSame(2, $data['bundleCount']);
+        $this->assertSame(
+            __('notification.project_assignment.person_assigned_bundled', ['count' => 2], $worker->refresh()->language),
+            $data['title']
+        );
+        $this->assertCount(2, $data['description']);
+        $this->assertStringContainsString($project->name, $data['description'][1]['title']);
+    }
+
+    #[Test]
+    public function no_person_notification_for_wishes_or_self_assignments(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::WISH,
+            ['2026-08-02'],
+            false
+        );
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $admin->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02'],
+            false
+        );
+
+        Notification::assertNotSentTo($worker, ShiftNotification::class);
+        Notification::assertNotSentTo($admin, ShiftNotification::class);
+    }
+
+    #[Test]
+    public function person_is_notified_when_binding_assignment_is_removed(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+
+        $assignment = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-02', '2026-08-03'],
+            false
+        )->first();
+
+        $this->service()->deleteAssignment($assignment->fresh(), true);
+
+        Notification::assertSentTo(
+            $worker,
+            ShiftNotification::class,
+            static fn (ShiftNotification $notification): bool => str_starts_with(
+                $notification->toArray()->notificationKey,
+                'project-assignment-removed-'
+            )
+        );
+    }
+
+    #[Test]
+    public function person_is_notified_when_wish_is_accepted(): void
+    {
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-10');
+        $worker = User::factory()->create();
+        $this->actingAs($worker);
+
+        $wish = $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::WISH,
+            ['2026-08-02', '2026-08-03'],
+            false
+        )->first();
+
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $this->service()->acceptWishGroup($wish->fresh());
+
+        Notification::assertSentTo(
+            $worker,
+            ShiftNotification::class,
+            static fn (ShiftNotification $notification): bool => str_starts_with(
+                $notification->toArray()->notificationKey,
+                'project-assignment-wish_accepted-'
+            )
+        );
+    }
+
+    #[Test]
+    public function person_is_notified_when_reschedule_dissolves_binding_single_days(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
+        $worker = User::factory()->create();
+
+        $this->service()->createAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING,
+            ['2026-08-05'],
+            false
+        );
+
+        // Termin schrumpft auf 01.-03.08. — die Zuordnung am 05.08. wird aufgelöst
+        $project->events()->firstOrFail()->update([
+            'start_time' => '2026-08-01 10:00:00',
+            'end_time' => '2026-08-03 18:00:00',
+        ]);
+
+        Notification::assertSentTo(
+            $worker,
+            ShiftNotification::class,
+            static fn (ShiftNotification $notification): bool => str_starts_with(
+                $notification->toArray()->notificationKey,
+                'project-assignment-removed-'
+            )
+        );
+    }
+
+    // ---------- Re-Materialisierung respektiert Frei-/Abwesenheits-Einträge ----------
+
+    #[Test]
+    public function rematerialization_keeps_days_dissolved_by_existing_free_entry(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $worker = User::factory()->create();
+
+        $this->service()->createFullPeriodAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING
+        );
+
+        // Person trägt am 02.08. "Frei" ein — Zuordnung an dem Tag wird aufgelöst
+        $worker->vacations()->create([
+            'date' => '2026-08-02',
+            'full_day' => true,
+            'type' => 'FREE_WORK',
+            'comment' => 'FREE_WORK',
+            'is_series' => false,
+            'created_by' => $worker->id,
+        ]);
+        $this->service()->handleVacationEntry($worker, ['2026-08-02'], 'FREE_WORK');
+
+        // Projektzeitraum verlängert sich bis 05.08. — der Frei-Tag darf dabei
+        // NICHT wieder materialisiert werden, solange der Frei-Eintrag existiert
+        Event::factory()->create([
+            'project_id' => $project->id,
+            'event_type_id' => $project->events()->first()->event_type_id,
+            'start_time' => '2026-08-04 10:00:00',
+            'end_time' => '2026-08-05 18:00:00',
+        ]);
+
+        $activeDates = static fn () => ProjectDayAssignment::query()
+            ->where('project_id', $project->id)
+            ->forEmployable(User::class, $worker->id)
+            ->orderBy('date')
+            ->pluck('date')
+            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->all();
+
+        $this->assertSame(['2026-08-01', '2026-08-03', '2026-08-04', '2026-08-05'], $activeDates());
+
+        // Wird der Frei-Eintrag gelöscht, kommt der Tag beim nächsten Zeitraum-Sync zurück
+        $worker->vacations()->where('date', '2026-08-02')->delete();
+        $this->service()->rematerializeForProjectPeriodChange($project->fresh());
+
+        $this->assertSame(
+            ['2026-08-01', '2026-08-02', '2026-08-03', '2026-08-04', '2026-08-05'],
+            $activeDates()
+        );
+    }
+
+    #[Test]
+    public function rematerialization_respects_absence_for_wishes_but_not_bindings(): void
+    {
+        $this->actingAsAdmin();
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+        $worker = User::factory()->create();
+
+        // Verbindliche Zuordnung zuerst (danach angelegte Wünsche bleiben parallel bestehen)
+        $this->service()->createFullPeriodAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::BINDING
+        );
+        $this->service()->createFullPeriodAssignments(
+            $project,
+            User::class,
+            $worker->id,
+            ProjectDayAssignmentType::WISH
+        );
+
+        // Abwesenheit am 02.08. löst nur den Wunsch auf, nicht die verbindliche Zuordnung
+        $worker->vacations()->create([
+            'date' => '2026-08-02',
+            'full_day' => true,
+            'type' => 'OFF_WORK',
+            'comment' => 'OFF_WORK',
+            'is_series' => false,
+            'created_by' => $worker->id,
+        ]);
+        $this->service()->handleVacationEntry($worker, ['2026-08-02'], 'OFF_WORK');
+
+        Event::factory()->create([
+            'project_id' => $project->id,
+            'event_type_id' => $project->events()->first()->event_type_id,
+            'start_time' => '2026-08-04 10:00:00',
+            'end_time' => '2026-08-05 18:00:00',
+        ]);
+
+        $datesOfType = static fn (string $type) => ProjectDayAssignment::query()
+            ->where('project_id', $project->id)
+            ->forEmployable(User::class, $worker->id)
+            ->where('type', $type)
+            ->orderBy('date')
+            ->pluck('date')
+            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->all();
+
+        // Abwesenheit blockiert nur die Wunsch-Re-Materialisierung
+        $this->assertSame(
+            ['2026-08-01', '2026-08-02', '2026-08-03', '2026-08-04', '2026-08-05'],
+            $datesOfType('binding')
+        );
+        $this->assertSame(
+            ['2026-08-01', '2026-08-03', '2026-08-04', '2026-08-05'],
+            $datesOfType('wish')
+        );
     }
 
     #[Test]

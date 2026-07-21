@@ -2,8 +2,13 @@
 
 namespace Tests\Feature\Mail;
 
+use Artwork\Modules\Mail\Providers\MailSettingsServiceProvider;
 use Artwork\Modules\Mail\Settings\MailSettings;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Contracts\Queue\Job;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Facades\Cache;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
@@ -103,6 +108,42 @@ final class MailSettingsControllerTest extends TestCase
         $this->patch(route('tool.mail.update'), $this->validPayload([
             'encryption' => 'starttls',
         ]))->assertSessionHasErrors('encryption');
+    }
+
+    #[Test]
+    public function removing_an_override_restores_the_immutable_environment_fallback(): void
+    {
+        config(['mail.fallback.host' => 'smtp.fallback.example']);
+        $settings = app(MailSettings::class);
+        $settings->host = 'smtp.override.example';
+        $settings->save();
+
+        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
+        app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
+        $this->assertSame('smtp.override.example', config('mail.mailers.smtp.host'));
+
+        $settings->host = null;
+        $settings->save();
+        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
+        app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
+
+        $this->assertSame('smtp.fallback.example', config('mail.mailers.smtp.host'));
+    }
+
+    #[Test]
+    public function a_long_lived_worker_refreshes_mail_config_before_each_job(): void
+    {
+        $settings = app(MailSettings::class);
+        $settings->host = 'smtp.worker.example';
+        $settings->save();
+        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
+        config(['mail.mailers.smtp.host' => 'smtp.stale.example']);
+        $job = Mockery::mock(Job::class);
+        $job->shouldReceive('payload')->andReturn([]);
+
+        event(new JobProcessing('sync', $job));
+
+        $this->assertSame('smtp.worker.example', config('mail.mailers.smtp.host'));
     }
 
     #[Test]

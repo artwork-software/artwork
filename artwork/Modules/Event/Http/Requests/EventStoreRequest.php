@@ -32,13 +32,13 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'event_name_mandatory' => $this->get('eventNameMandatory'),
             'creating_project' => $this->get('creatingProject'),
             'user_id' => Auth::id(),
-            'occupancy_option' => $this->get('isOption'),
+            'occupancy_option' => $this->booleanValue('isOption'),
             'is_series' => $this->get('is_series'),
             'frequency' => $this->get('seriesFrequency'),
             'seriesEnd' => $this->get('seriesEndDate'),
             'allDay' => $this->get('allDay'),
             'event_properties' => $this->get('event_properties'),
-            'is_planning' => $this->get('isPlanning'),
+            'is_planning' => $this->booleanValue('isPlanning'),
         ];
 
         if ($key === null) {

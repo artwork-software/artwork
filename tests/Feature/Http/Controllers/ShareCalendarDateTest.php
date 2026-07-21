@@ -32,6 +32,12 @@ final class ShareCalendarDateTest extends FeatureTestCase
             $this->assertSame($start, $filter->start_date?->format('Y-m-d') ?? $filter->start_date, $filterType);
             $this->assertSame($end, $filter->end_date?->format('Y-m-d') ?? $filter->end_date, $filterType);
         }
+
+        // Inventar-Artikelplanung nimmt ebenfalls am geteilten Zeitraum teil
+        $inventoryFilter = $user->inventoryArticlePlanFilter()->first();
+        $this->assertNotNull($inventoryFilter, 'Inventar-Artikelplan-Filter fehlt');
+        $this->assertSame($start, $inventoryFilter->start_date?->format('Y-m-d'), 'inventory_article_plan');
+        $this->assertSame($end, $inventoryFilter->end_date?->format('Y-m-d'), 'inventory_article_plan');
     }
 
     #[Test]
@@ -101,6 +107,62 @@ final class ShareCalendarDateTest extends FeatureTestCase
         ]);
 
         $this->assertAllSharedFiltersHaveDates($user, '2026-10-05', '2026-10-11');
+    }
+
+    #[Test]
+    public function article_plan_date_update_only_touches_own_filter_when_sharing_is_off(): void
+    {
+        $user = User::factory()->create(['share_calendar_date' => false]);
+        $this->actingAs($user);
+
+        $this->patch(route('update.user.inventory.article-plan.filters.update', $user), [
+            'start_date' => '2026-08-03',
+            'end_date' => '2026-08-16',
+        ]);
+
+        $inventoryFilter = $user->inventoryArticlePlanFilter()->first();
+        $this->assertSame('2026-08-03', $inventoryFilter->start_date?->format('Y-m-d'));
+
+        $this->assertNull(
+            $user->userFilters()->where('filter_type', UserFilterTypes::CALENDAR_FILTER->value)
+                ->whereDate('start_date', '2026-08-03')->first()
+        );
+    }
+
+    #[Test]
+    public function article_plan_date_update_syncs_all_views_when_sharing_is_on(): void
+    {
+        $user = User::factory()->create(['share_calendar_date' => true]);
+        $this->actingAs($user);
+
+        $this->patch(route('update.user.inventory.article-plan.filters.update', $user), [
+            'start_date' => '2026-09-14',
+            'end_date' => '2026-09-27',
+        ]);
+
+        $this->assertAllSharedFiltersHaveDates($user, '2026-09-14', '2026-09-27');
+    }
+
+    #[Test]
+    public function enabling_from_article_plan_view_settings_seeds_from_inventory_filter(): void
+    {
+        $user = User::factory()->create(['share_calendar_date' => false]);
+        $this->actingAs($user);
+
+        $user->inventoryArticlePlanFilter()->updateOrCreate([], [
+            'start_date' => '2026-10-12',
+            'end_date' => '2026-10-25',
+        ]);
+
+        $this->patchJson(route('update.user.inventory.article-plan.view-settings.update', $user), [
+            'share_calendar_date' => true,
+            'only_planned' => false,
+            'open_categories' => [],
+            'open_subcategories' => [],
+        ])->assertSuccessful();
+
+        $this->assertTrue($user->fresh()->share_calendar_date);
+        $this->assertAllSharedFiltersHaveDates($user, '2026-10-12', '2026-10-25');
     }
 
     #[Test]
@@ -181,6 +243,10 @@ final class ShareCalendarDateTest extends FeatureTestCase
                 ['start_date' => '2026-08-03', 'end_date' => '2026-08-31']
             );
         }
+        $user->inventoryArticlePlanFilter()->updateOrCreate([], [
+            'start_date' => '2026-08-03',
+            'end_date' => '2026-08-31',
+        ]);
 
         $this->patch(route('user.update.daily_view', $user), [
             'daily_view' => true,
@@ -190,5 +256,25 @@ final class ShareCalendarDateTest extends FeatureTestCase
         // Ohne Sharing würde der Seed die Tagesansicht auf start+7 kürzen —
         // mit geteiltem Zeitraum bleibt der gemeinsame Zeitraum unangetastet.
         $this->assertAllSharedFiltersHaveDates($user, '2026-08-03', '2026-08-31');
+    }
+
+    #[Test]
+    public function user_cannot_change_another_users_shared_calendar_dates_or_view(): void
+    {
+        $attacker = User::factory()->create();
+        $target = User::factory()->create(['share_calendar_date' => true]);
+        $this->actingAs($attacker);
+
+        $this->patch(route('update.user.calendar.filter.dates', $target), [
+            'start_date' => '2026-08-03',
+            'end_date' => '2026-08-16',
+            'isPlanning' => false,
+            'isDailyView' => false,
+        ])->assertForbidden();
+
+        $this->patch(route('user.update.daily_view', $target), [
+            'daily_view' => true,
+            'context' => 'calendar',
+        ])->assertForbidden();
     }
 }

@@ -108,6 +108,9 @@ final class DayRemarkTest extends FeatureTestCase
 
         $this->putJson(route('day-remarks.upsert', ['date' => '03.08.2026']), ['remark' => 'Test'])
             ->assertUnprocessable();
+
+        $this->putJson(route('day-remarks.upsert', ['date' => '2026-02-30']), ['remark' => 'Test'])
+            ->assertUnprocessable();
     }
 
     #[Test]

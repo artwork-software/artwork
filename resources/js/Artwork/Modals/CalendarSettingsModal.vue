@@ -34,7 +34,7 @@
                         <div class="text-sm/6">
                             <label for="share_calendar_date" class="font-medium text-gray-900">{{ $t('Share time period across views') }}</label>
                             <p id="share_calendar_date-description" class="text-gray-500 text-xs">
-                                {{ $t('Calendar, planning calendar, shift plan and list view always show the same time period. Changing the date in one view applies it everywhere.') }}
+                                {{ $t('Calendar, planning calendar, shift plan, list view and article planning always show the same time period. Changing the date in one view applies it everywhere.') }}
                             </p>
                         </div>
                     </div>

@@ -49,6 +49,20 @@ class EventPolicy
             $event->creator?->id === $user->id;
     }
 
+    public function answerRoomRequest(User $user, Event $event): bool
+    {
+        if (!$event->occupancy_option || $event->room_id === null) {
+            return false;
+        }
+
+        return $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
+            $event->room?->users()
+                ->wherePivot('is_admin', true)
+                ->where('user_id', $user->id)
+                ->exists() ||
+            ($event->room?->user_id === $user->id && !$event->room->admins()->exists());
+    }
+
     public function delete(User $user, Event $event): bool
     {
         return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||

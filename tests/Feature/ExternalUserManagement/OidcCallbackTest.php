@@ -27,7 +27,7 @@ final class OidcCallbackTest extends FeatureTestCase
                 'discovery_url' => 'https://idp.example.com/.well-known/openid-configuration',
                 'client_id' => 'artwork',
                 'client_secret' => 'secret',
-                'allowed_domains' => [],
+                'allowed_domains' => ['example.com'],
             ], $config),
         ]);
     }
@@ -83,6 +83,43 @@ final class OidcCallbackTest extends FeatureTestCase
         $response->assertRedirect(route('login'));
         $this->assertFalse(Auth::check());
         $this->assertNull(User::query()->where('email', 'intruder@evil.com')->first());
+    }
+
+    #[Test]
+    public function an_empty_domain_allowlist_rejects_the_callback(): void
+    {
+        $source = $this->source(['allowed_domains' => []]);
+
+        $this->mock(OidcService::class, function ($mock): void {
+            $mock->shouldReceive('userFromCallback')->andReturn($this->fakeClaims());
+        });
+
+        $this->get(route('auth.oidc.callback', ['externalUserSource' => $source->id]))
+            ->assertRedirect(route('login'));
+
+        $this->assertFalse(Auth::check());
+        $this->assertNull(User::query()->where('email', 'oidc.user@example.com')->first());
+    }
+
+    #[Test]
+    public function an_active_identity_provider_cannot_be_saved_without_allowed_domains(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson(route('tool.external-user-management.sources.store'), [
+            'name' => 'Unsafe IdP',
+            'active' => true,
+            'type' => 'identity_provider',
+            'config' => [
+                'provider_preset' => 'custom',
+                'discovery_url' => 'https://idp.example.com/.well-known/openid-configuration',
+                'client_id' => 'artwork',
+                'client_secret' => 'secret',
+                'allowed_domains' => [],
+            ],
+        ])->assertUnprocessable()->assertJsonValidationErrors('config.allowed_domains');
+
+        $this->assertDatabaseMissing('external_user_sources', ['name' => 'Unsafe IdP']);
     }
 
     #[Test]

@@ -1083,7 +1083,12 @@ class ExportPDFController extends Controller
         $craft = data_get($shift, 'craft.name');
         $room = data_get($shift, 'room.name') ?? data_get($shift, 'event.room.name');
         $project = data_get($shift, 'project.name') ?? data_get($shift, 'event.project.name');
-        $eventName = data_get($shift, 'event.name');
+        // Anzeigename des Termins ist `eventName` (wie in der UI), `name` nur Altbestand-Fallback;
+        // identisch zum Projektnamen wäre er im PDF eine doppelte Zeile.
+        $eventName = data_get($shift, 'event.eventName') ?: data_get($shift, 'event.name');
+        if ($eventName !== null && $eventName === $project) {
+            $eventName = null;
+        }
 
         $colleagues = [];
         $note = null;

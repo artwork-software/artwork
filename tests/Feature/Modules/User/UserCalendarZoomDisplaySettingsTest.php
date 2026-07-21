@@ -105,4 +105,23 @@ final class UserCalendarZoomDisplaySettingsTest extends FeatureTestCase
             ])
             ->assertSessionHasErrors('zoom_factor');
     }
+
+    #[Test]
+    public function user_cannot_change_another_users_calendar_preferences(): void
+    {
+        $attacker = User::factory()->create();
+        $target = $this->makeUserWithCalendarSettings();
+
+        $this->actingAs($attacker)
+            ->patch(route('user.update.zoom_factor', $target), ['zoom_factor' => 0.4])
+            ->assertForbidden();
+
+        $this->actingAs($attacker)
+            ->patch(route('user.calendar_settings.update', $target), [
+                'is_daily_view' => false,
+                'is_shift_plan' => false,
+                'calendar_column_width' => 280,
+            ])
+            ->assertForbidden();
+    }
 }

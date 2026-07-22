@@ -5,15 +5,16 @@ namespace Database\Seeders;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Project\Models\Project;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UpdateOrCreateProjectRelevantColumn extends Seeder
 {
     public function __construct(
         private readonly ColumnService $columnService,
+        private readonly ColumnRelevanceService $columnRelevanceService,
     ) {
     }
 
@@ -24,11 +25,15 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
     {
         $projects = Project::all();
         foreach ($projects as $project) {
-            if ($project->is_group) {
-                $table = $project?->table;
-                $column = $table?->columns()->where('type', 'subprojects_column_for_group')->first();
+            $table = $project?->table;
+            if (!$table) {
+                continue;
+            }
 
-                if (!$column && $table) {
+            if ($project->is_group) {
+                $column = $table->columns()->where('type', 'subprojects_column_for_group')->first();
+
+                if (!$column) {
                     $newColumn = $this->columnService->createColumnInTable(
                         $table,
                         'Unterprojekte',
@@ -37,23 +42,32 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
                         $table->columns()->count() + 1
                     );
 
-                    $table->mainPositions->each(function (MainPosition $mainPosition) use ($newColumn): void {
-                        $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($newColumn): void {
-                            $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($newColumn): void {
-                                $subPositionRow->cells()->create([
-                                    'column_id' => $newColumn->id,
-                                    'value' => '0,00',
-                                    'verified_value' => null,
-                                    'linked_money_source_id' => null,
-                                    'commented' => $subPositionRow->commented,
-                                ]);
-                            });
+                    $createRowCell = static function (SubPositionRow $subPositionRow) use ($newColumn): void {
+                        $subPositionRow->cells()->create([
+                            'column_id' => $newColumn->id,
+                            'value' => '0,00',
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                            'commented' => $subPositionRow->commented,
+                        ]);
+                    };
 
-                            $newColumn->subPositionSumDetails()->create(['sub_position_id' => $subPosition->id]);
-                        });
+                    $handleSubPosition = static function (SubPosition $subPosition) use (
+                        $newColumn,
+                        $createRowCell
+                    ): void {
+                        $subPosition->subPositionRows->each($createRowCell);
 
-                        $newColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
-                    });
+                        $newColumn->subPositionSumDetails()->create(['sub_position_id' => $subPosition->id]);
+                    };
+
+                    $table->mainPositions->each(
+                        static function (MainPosition $mainPosition) use ($newColumn, $handleSubPosition): void {
+                            $mainPosition->subPositions->each($handleSubPosition);
+
+                            $newColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
+                        }
+                    );
 
                     $newColumn->budgetSumDetails()->create([
                         'type' => 'COST',
@@ -65,32 +79,19 @@ class UpdateOrCreateProjectRelevantColumn extends Seeder
 
                     $this->command->info('Project Group ' . $project->name . ' has been updated');
                 }
-            } else {
-                // set last column to relevant_for_project_groups if no column is relevant_for_project_groups
-                $table = $project?->table;
-                $columns = $table?->columns()->get();
-                $lastColumn = $columns?->last();
+            }
 
-                // if any column is relevant_for_project_groups return false
-                if ($columns?->where('relevant_for_project_groups', true)->isEmpty()) {
-                    $lastColumn->update([
-                        'relevant_for_project_groups' => true
-                    ]);
+            // Invariante reparieren: genau eine budgetrelevante Wertspalte pro Tabelle
+            // (behebt Mehrfach-Flags aus Spalten-Kopien sowie Gruppen/Projekte ohne Flag).
+            $hadRelevantColumn = $table->columns()
+                ->where('relevant_for_project_groups', true)
+                ->count() === 1;
 
-                    // send console message
-                    $this->command->info('Project ' . $project->name . ' has been updated');
-                }
+            $this->columnRelevanceService->ensureSingleRelevantColumn($table);
 
-                /*if (!$lastColumn?->relevant_for_project_groups && $lastColumn) {
-                    $lastColumn->update([
-                        'relevant_for_project_groups' => true
-                    ]);
-
-                    // send console message
-                    $this->command->info('Project ' . $project->name . ' has been updated');
-                }*/
+            if (!$hadRelevantColumn) {
+                $this->command->info('Project ' . $project->name . ' has been updated');
             }
         }
-
     }
 }

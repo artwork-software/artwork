@@ -9,9 +9,12 @@ use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Room\Services\RoomAttributeService;
 use Artwork\Modules\Room\Services\RoomCategoryService;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class CalendarController extends Controller
 {
@@ -25,18 +28,35 @@ class CalendarController extends Controller
     }
 
 
-    public function settingIndex(){
+    public function settingIndex(): Response
+    {
+        $this->authorize('view', GeneralSettings::class);
+
         $calendarSettings = app(GeneralCalendarSettings::class);
+
         return Inertia::render('Settings/Calendar/Index', [
             'calendarSettings' => $calendarSettings,
         ]);
     }
 
-    public function storeSettings(Request $request){
+    public function storeSettings(Request $request): RedirectResponse
+    {
+        $this->authorize('view', GeneralSettings::class);
+
+        $validated = $request->validate([
+            'start' => ['required', 'date_format:H:i'],
+            'end' => ['required', 'date_format:H:i'],
+            'day_remarks_enabled' => ['sometimes', 'boolean'],
+            'day_remarks_mandatory' => ['sometimes', 'boolean'],
+        ]);
+
         $calendarSettings = app(GeneralCalendarSettings::class);
-        $calendarSettings->start = $request->get('start');
-        $calendarSettings->end = $request->get('end');
+        $calendarSettings->start = $validated['start'];
+        $calendarSettings->end = $validated['end'];
+        $calendarSettings->day_remarks_enabled = $request->boolean('day_remarks_enabled');
+        $calendarSettings->day_remarks_mandatory = $request->boolean('day_remarks_mandatory');
         $calendarSettings->save();
+
         return redirect()->back();
     }
 }

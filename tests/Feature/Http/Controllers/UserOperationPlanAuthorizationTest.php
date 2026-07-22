@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Settings\ShiftSettings;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftQualification;
 use Artwork\Modules\Shift\Models\ShiftRule;
 use Artwork\Modules\Shift\Models\ShiftRuleViolation;
 use Artwork\Modules\User\Models\User;
@@ -45,6 +48,76 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->actingAs($user);
 
         $this->get(route('user.operationPlan', $user))->assertOk();
+    }
+
+    #[Test]
+    public function own_plan_hides_uncommitted_shifts_when_the_instance_setting_is_enabled(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_ROSTER);
+        $this->actingAs($user);
+
+        $shiftAttributes = [
+            'event_id' => null,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '12:00',
+            'break_minutes' => 0,
+        ];
+        $committedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => true]);
+        $uncommittedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => false]);
+        $qualification = ShiftQualification::factory()->create();
+        $user->shifts()->attach([
+            $committedShift->id => ['shift_qualification_id' => $qualification->id],
+            $uncommittedShift->id => ['shift_qualification_id' => $qualification->id],
+        ]);
+
+        $settings = app(ShiftSettings::class);
+        $settings->hide_uncommitted_shifts_from_own_roster = true;
+        $settings->save();
+
+        $response = $this->get(route('user.operationPlan', $user));
+
+        $response->assertOk();
+        $this->assertSame([$committedShift->id], collect($response->inertiaProps('shifts'))->pluck('id')->all());
+
+        // daysWithData ist die tatsächliche Datenquelle des Renderings — auch dort
+        // darf die nicht festgeschriebene Schicht nicht auftauchen.
+        $daysWithDataShiftIds = collect($response->inertiaProps('daysWithData'))
+            ->flatMap(static fn(array $day) => collect($day['shifts'])->pluck('id'))
+            ->all();
+        $this->assertContains($committedShift->id, $daysWithDataShiftIds);
+        $this->assertNotContains($uncommittedShift->id, $daysWithDataShiftIds);
+    }
+
+    #[Test]
+    public function personal_exception_keeps_uncommitted_shifts_visible_in_the_own_plan(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_ROSTER);
+        $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS);
+        $this->actingAs($user);
+
+        $committedShift = Shift::factory()->create(['is_committed' => true]);
+        $uncommittedShift = Shift::factory()->create(['is_committed' => false]);
+        $qualification = ShiftQualification::factory()->create();
+        $user->shifts()->attach([
+            $committedShift->id => ['shift_qualification_id' => $qualification->id],
+            $uncommittedShift->id => ['shift_qualification_id' => $qualification->id],
+        ]);
+
+        $settings = app(ShiftSettings::class);
+        $settings->hide_uncommitted_shifts_from_own_roster = true;
+        $settings->save();
+
+        $response = $this->get(route('user.operationPlan', $user));
+
+        $response->assertOk();
+        $this->assertEqualsCanonicalizing(
+            [$committedShift->id, $uncommittedShift->id],
+            collect($response->inertiaProps('shifts'))->pluck('id')->all()
+        );
     }
 
     #[Test]

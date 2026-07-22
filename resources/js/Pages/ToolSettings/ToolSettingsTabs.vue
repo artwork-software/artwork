@@ -60,6 +60,12 @@ export default defineComponent({
                     current: route().current('tool.file-settings.index'),
                     hasPermission: this.$can('change tool settings') || this.hasAdminRole()
                 },
+                {
+                    name: this.$t('Mail'),
+                    href: route('tool.mail'),
+                    current: route().current('tool.mail'),
+                    hasPermission: this.$can('change tool settings') || this.hasAdminRole()
+                },
             ]
         }
     }

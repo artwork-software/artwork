@@ -31,7 +31,6 @@ import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import {computeShiftFormattedDates} from "@/Composeables/calendarDateUtils.js";
 
 const { resolveCraft } = useShiftPlanLookups();
-const percentage = usePage().props.high_contrast_percent;
 const {
     backgroundColorWithOpacity,
     getTextColorBasedOnBackground,

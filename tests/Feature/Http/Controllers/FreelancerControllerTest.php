@@ -7,7 +7,9 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftQualification;
+use Barryvdh\Snappy\PdfWrapper;
 use Inertia\Testing\AssertableInertia;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -62,6 +64,7 @@ final class FreelancerControllerTest extends FeatureTestCase
     public function shift_plan_pdf_export_works_for_freelancer_id_without_matching_user(): void
     {
         $this->actingAsAdmin();
+        $this->mockPdfGenerator();
 
         // ID erzwingen, zu der garantiert kein User existiert – vorher lief die
         // Export-Route über User-Route-Model-Binding und antwortete hier mit 404.
@@ -78,6 +81,17 @@ final class FreelancerControllerTest extends FeatureTestCase
         ]);
 
         $response->assertRedirect();
+    }
+
+    private function mockPdfGenerator(): void
+    {
+        $pdf = Mockery::mock(PdfWrapper::class);
+        $pdf->shouldReceive('loadView')->once()->andReturnSelf();
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('setOption')->once()->andReturnSelf();
+        $pdf->shouldReceive('save')->once()->andReturnSelf();
+
+        $this->app->instance(PdfWrapper::class, $pdf);
     }
 
     #[Test]

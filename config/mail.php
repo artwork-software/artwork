@@ -95,6 +95,17 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    // Immutable .env-backed values used when database overrides are removed at runtime.
+    'fallback' => [
+        'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
+        'port' => env('MAIL_PORT', 587),
+        'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+        'username' => env('MAIL_USERNAME'),
+        'password' => env('MAIL_PASSWORD'),
+        'from_address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'from_name' => env('MAIL_FROM_NAME', 'Example'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Markdown Mail Settings

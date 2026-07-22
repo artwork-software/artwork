@@ -101,26 +101,79 @@
             </div>
             <div v-if="this.$can('view edit add money_sources') || this.hasAdminRole() || this.hasBudgetAccess()">
                 <hr class="my-10 border-darkGray">
-                <div class="w-full flex items-center mb-4">
-                    <div class="text-secondary text-md">{{$t('Linked sources of funding')}}</div>
-                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
-                                     @click="showMoneySources = !showMoneySources"/>
-                </div>
-                <div v-if="showMoneySources">
-                    <div v-if="this.effectiveBudgetInformation?.project_money_sources?.length > 0">
-                        <div class="w-full flex items-center mb-2 text-secondary"
-                             v-for="moneySource in this.effectiveBudgetInformation.project_money_sources">
-                            <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
-                                  class="cursor-pointer hover:text-secondaryHover text-linkOnDarkColor  underline" :href="route('money_sources.show', {moneySource: moneySource.id})">
-                                {{moneySource.name}}
-                            </Link>
-                            <div v-else>{{moneySource.name}}</div>
+                <section class="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+                        :aria-expanded="showMoneySources"
+                        aria-controls="linked-money-sources"
+                        @click="showMoneySources = !showMoneySources"
+                    >
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-semibold text-secondary">{{ $t('Linked sources of funding') }}</span>
+                            <span class="mt-0.5 block text-xs text-secondary/70">
+                                {{ filteredMoneySources.length }} {{ filteredMoneySources.length === 1 ? $t('source') : $t('sources') }}
+                            </span>
+                        </span>
+                        <ChevronDownIcon
+                            class="h-5 w-5 shrink-0 text-secondary transition-transform"
+                            :class="showMoneySources ? 'rotate-180' : ''"
+                            aria-hidden="true"
+                        />
+                    </button>
+
+                    <div v-if="showMoneySources" id="linked-money-sources" class="border-t border-white/10 px-4 py-4">
+                        <label v-if="moneySources.length > 5" class="relative mb-4 block">
+                            <span class="sr-only">{{ $t('Search funding sources') }}</span>
+                            <input
+                                v-model.trim="moneySourceSearch"
+                                type="search"
+                                class="w-full rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm text-secondary placeholder:text-secondary/50 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                :placeholder="$t('Search funding sources')"
+                            >
+                        </label>
+
+                        <div v-if="filteredMoneySources.length" class="space-y-2">
+                            <article
+                                v-for="moneySource in filteredMoneySources"
+                                :key="moneySource.id"
+                                class="rounded-xl border border-white/10 bg-white/5 px-3 py-3 transition hover:border-white/20 hover:bg-white/10"
+                            >
+                                <div class="flex items-start gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <Link
+                                                v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
+                                                class="truncate text-sm font-semibold text-linkOnDarkColor underline-offset-2 hover:underline"
+                                                :href="route('money_sources.show', {moneySource: moneySource.id})"
+                                            >
+                                                {{ moneySource.name }}
+                                            </Link>
+                                            <span v-else class="truncate text-sm font-semibold text-secondary">{{ moneySource.name }}</span>
+                                            <span class="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-secondary/80">
+                                                {{ moneySource.is_group ? $t('Group') : $t('Funding source') }}
+                                            </span>
+                                        </div>
+                                        <p v-if="moneySource.source_name" class="mt-1 truncate text-xs text-secondary/70">
+                                            {{ moneySource.source_name }}
+                                        </p>
+                                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-secondary/70">
+                                            <span v-if="moneySource.amount !== null && moneySource.amount !== undefined">
+                                                {{ $t('Amount') }}: {{ formatMoneySourceAmount(moneySource.amount) }}
+                                            </span>
+                                            <span v-if="moneySource.start_date || moneySource.end_date">
+                                                {{ formatMoneySourcePeriod(moneySource) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        <div v-else class="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-secondary/70">
+                            {{ moneySourceSearch ? $t('No matching funding sources found') : $t('No sources of funding available') }}
                         </div>
                     </div>
-                    <div v-else>
-                        <div class="text-secondary text-sm mt-2">{{$t('No sources of funding available')}}</div>
-                    </div>
-                </div>
+                </section>
             </div>
         </div>
     </div>
@@ -182,6 +235,7 @@ export default {
             showCopyrightModal: false,
             projectFileToEdit: null,
             projectFileToDelete: null,
+            moneySourceSearch: '',
             isLoadingBudgetInfo: false,
             loadBudgetInfoError: '',
             localBudgetInformation: this.loadedProjectInformation?.['BudgetInformation'] || null
@@ -190,6 +244,21 @@ export default {
     computed: {
         effectiveBudgetInformation() {
             return this.localBudgetInformation || this.loadedProjectInformation?.['BudgetInformation'] || {};
+        },
+        moneySources() {
+            return this.effectiveBudgetInformation?.project_money_sources || [];
+        },
+        filteredMoneySources() {
+            const search = this.moneySourceSearch.toLocaleLowerCase().trim();
+            if (!search) {
+                return this.moneySources;
+            }
+
+            return this.moneySources.filter((moneySource) =>
+                [moneySource.name, moneySource.source_name, moneySource.description]
+                    .filter(Boolean)
+                    .some((value) => String(value).toLocaleLowerCase().includes(search))
+            );
         }
     },
     mounted() {
@@ -229,6 +298,19 @@ export default {
             return budgetInfo.access_budget.filter(
                 (user) => user.id === this.$page.props.auth.user.id
             ).length > 0;
+        },
+        formatMoneySourceAmount(amount) {
+            return new Intl.NumberFormat(this.$page.props.locale || 'de-DE', {
+                style: 'currency',
+                currency: this.$page.props.currency || 'EUR'
+            }).format(Number(amount || 0));
+        },
+        formatMoneySourcePeriod(moneySource) {
+            const format = (date) => date
+                ? new Intl.DateTimeFormat(this.$page.props.locale || 'de-DE').format(new Date(date))
+                : '…';
+
+            return `${format(moneySource.start_date)} – ${format(moneySource.end_date)}`;
         },
         downloadContract(contract) {
             let link = document.createElement('a');

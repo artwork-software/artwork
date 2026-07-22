@@ -144,7 +144,7 @@ class UserRepository extends BaseRepository
             ->get();
     }
 
-    public function getShiftsOrderedByStartAscending(int|User $user): Collection
+    public function getShiftsOrderedByStartAscending(int|User $user, bool $committedOnly = false): Collection
     {
         if (!$user instanceof User) {
             $user = $this->findUser($user);
@@ -152,6 +152,7 @@ class UserRepository extends BaseRepository
         return $user
             ->shifts()
             ->with('project')
+            ->when($committedOnly, fn (Builder $query) => $query->where('is_committed', true))
             ->orderedByStart()
             ->get();
     }

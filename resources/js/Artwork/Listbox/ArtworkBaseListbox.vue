@@ -313,6 +313,12 @@ const i18n = getCurrentInstance()
 const capi = (() => { try { return useI18n?.() } catch { return null } })()
 const tFn = (key: string) => {
     if (!props.useTranslations) return key
+    return translate(key)
+}
+
+// Der Platzhalter ist UI-Text (keine Options-Daten) und wird deshalb
+// unabhängig von useTranslations immer übersetzt.
+const translate = (key: string) => {
     if (capi?.t) return capi.t(key)
     // @ts-ignore - globaler $t Fallback
     return i18n?.proxy?.$t ? i18n.proxy.$t(key) : key
@@ -321,12 +327,12 @@ const tFn = (key: string) => {
 const displayText = computed(() => {
     if (!props.multiple) {
         const val = internalValue.value as Option | null
-        const label = val ? getLabel(val) : props.placeholder
-        return tFn(String(label))
+        if (!val) return translate(String(props.placeholder))
+        return tFn(String(getLabel(val)))
     }
 
     const arr = Array.isArray(internalValue.value) ? internalValue.value : []
-    if (arr.length === 0) return tFn(String(props.placeholder))
+    if (arr.length === 0) return translate(String(props.placeholder))
 
     if (props.selectedFormatter) return props.selectedFormatter(arr)
 

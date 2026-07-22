@@ -1,16 +1,17 @@
 <template>
-    <Link :style="[textStyle, colorStyle]" class="flex font-semibold items-center px-8" :class="isLight ? 'text-white' : 'xsDark'" :href="route('rooms.show', { room: room?.id ?? room.roomId })">
-        {{ room?.name ?? room.roomName }}
+    <Link :style="colorStyle" class="flex font-semibold items-center px-3 min-w-0" :class="isLight ? 'text-white' : 'xsDark'" :href="route('rooms.show', { room: room?.id ?? room.roomId })">
+        <!-- Fixe Schriftgröße (unabhängig vom Zoom); zu lange Namen werden abgekürzt -->
+        <span class="truncate text-sm" :title="room?.name ?? room.roomName">
+            {{ room?.name ?? room.roomName }}
+        </span>
     </Link>
 </template>
 
 <script setup>
 
-import {Link, usePage} from "@inertiajs/vue3";
-import {computed, ref} from "vue";
+import {Link} from "@inertiajs/vue3";
+import {computed} from "vue";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
-
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
 
 const props = defineProps({
     room: {
@@ -29,7 +30,9 @@ const {getTextColorBasedOnBackground} = useColorHelper();
 const roomColor = computed(() => props.room?.roomColor ?? props.room?.color ?? null);
 
 const colorStyle = computed(() => {
-    if (!roomColor.value) {
+    // '#000000' ist der Migrations-Default für "keine Farbe gepflegt" — dann
+    // keinen (schwarzen) Farbchip rendern.
+    if (!roomColor.value || roomColor.value.toLowerCase() === '#000000') {
         return {};
     }
     const r = parseInt(roomColor.value.slice(-6, -4), 16);
@@ -39,19 +42,10 @@ const colorStyle = computed(() => {
         backgroundColor: roomColor.value,
         color: getTextColorBasedOnBackground(`rgb(${r}, ${g}, ${b})`),
         borderRadius: '0.5rem',
-        paddingTop: '0.375rem',
-        paddingBottom: '0.375rem',
+        paddingTop: '0.25rem',
+        paddingBottom: '0.25rem',
     };
 });
-
-const textStyle = computed(() => {
-    const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
-    const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
-    return {
-        fontSize,
-        lineHeight,
-    };
-})
 </script>
 
 <style scoped>

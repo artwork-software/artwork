@@ -148,6 +148,26 @@ class ExportPDFController extends Controller
             $cursor->addDay();
         }
 
+        // Tagesbemerkungen (optional, keyed by d.m.Y wie die Tages-Header) —
+        // nur wenn angefordert, Feature aktiv und der User sie sehen darf
+        $dayRemarks = [];
+        if (
+            $request->boolean('includeDayRemarks')
+            && app(\App\Settings\GeneralCalendarSettings::class)->day_remarks_enabled
+            && (
+                // Gleiche Sichtbarkeitsregel wie im Kalender (CalendarDataService):
+                // EDIT impliziert Sehen-Dürfen.
+                $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_VIEW->value)
+                || $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_EDIT->value)
+            )
+        ) {
+            $dayRemarks = \Artwork\Modules\Calendar\Models\DayRemark::query()
+                ->betweenDates($startDate, $endDate)
+                ->get()
+                ->mapWithKeys(static fn ($dayRemark) => [$dayRemark->date->format('d.m.Y') => $dayRemark->remark])
+                ->all();
+        }
+
         // Horizontaler Chunk: wie viele Tage pro Seite sichtbar sein sollen
         $DAYS_PER_PAGE = $request->integer('daysPerPage') ?: 7;
         $dayChunks = array_chunk($days, $DAYS_PER_PAGE);
@@ -351,6 +371,7 @@ class ExportPDFController extends Controller
                 'rowHeights'     => $rowHeights,   // Einheitliche Mindesthöhen pro Raum+Slot
                 'colorSource'    => $request->get('colorSource', 'eventType'),
                 'paperSize'      => $request->string('paperSize', 'a4'),
+                'dayRemarks'     => $dayRemarks,   // d.m.Y => Bemerkungstext (leer wenn nicht angefordert)
             ]
         )
             ->setPaper(
@@ -420,12 +441,30 @@ class ExportPDFController extends Controller
             ]
         );
 
-        // Gewerke-Override aus dem Export-Dialog: nur in-memory anwenden, der
-        // gespeicherte Schichtplan-Filter des Users bleibt unverändert.
-        // Leeres Array = keine Gewerke-Einschränkung.
-        if ($request->has('craft_ids')) {
-            $craftIdsOverride = array_map('intval', (array) $request->get('craft_ids', []));
-            $userCalendarFilter->setAttribute('craft_ids', $craftIdsOverride !== [] ? $craftIdsOverride : null);
+        // The export dialog may override single filter dimensions (prefilled with the active shift
+        // plan filters, adjustable before export). Overrides are applied in-memory only — the
+        // user's saved shift plan filter must not change. Keys absent from the request keep the
+        // saved filter value, an empty array clears that dimension (= no filter).
+        foreach (
+            [
+                'event_type_ids',
+                'room_ids',
+                'area_ids',
+                'room_attribute_ids',
+                'room_category_ids',
+                'event_property_ids',
+                'craft_ids',
+            ] as $filterKey
+        ) {
+            if ($request->exists($filterKey)) {
+                $values = $request->input($filterKey);
+                $userCalendarFilter->setAttribute(
+                    $filterKey,
+                    is_array($values) && $values !== []
+                        ? array_values(array_map('intval', $values))
+                        : null
+                );
+            }
         }
 
         // Respect the date range currently shown in the shift plan (sent by the frontend).
@@ -440,6 +479,15 @@ class ExportPDFController extends Controller
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+
+        if ($endDate->lessThan($startDate)) {
+            $endDate = $startDate->copy()->endOfDay();
+        }
+
+        // Mirror the six-month cap of the shift plan view so a single export stays renderable.
+        if ($startDate->diffInDays($endDate) > 183) {
+            $endDate = $startDate->copy()->addDays(183)->endOfDay();
         }
 
         $rooms = $this->calendarDataService->getFilteredRooms(
@@ -482,6 +530,20 @@ class ExportPDFController extends Controller
             }
         }
 
+        // Optionally drop rooms without a single event or shift in the exported period —
+        // over long periods this keeps the PDF focused on rooms that actually carry content.
+        $hideEmptyRooms = $request->boolean('hideEmptyRooms');
+        if ($hideEmptyRooms) {
+            $rooms = $rooms->filter(function ($room) use ($roomLookup): bool {
+                foreach (($roomLookup[$room->id]['content'] ?? []) as $cell) {
+                    if (!empty($cell['eventIds']) || !empty($cell['shiftIds'])) {
+                        return true;
+                    }
+                }
+                return false;
+            })->values();
+        }
+
         // Build the list of days and group them by ISO calendar week (one week = one page).
         $weeks = [];
         $cursor = $startDate->copy()->startOfDay();
@@ -509,6 +571,7 @@ class ExportPDFController extends Controller
         // Human-readable summary of the active filters for the header.
         $activeFilter = [
             'rooms' => Room::whereIn('id', $userCalendarFilter->room_ids ?? [])->pluck('name')->toArray(),
+            'areas' => Area::whereIn('id', $userCalendarFilter->area_ids ?? [])->pluck('name')->toArray(),
             'event_types' => EventType::whereIn('id', $userCalendarFilter->event_type_ids ?? [])->pluck('name')->toArray(),
             'crafts' => Craft::whereIn('id', $userCalendarFilter->craft_ids ?? [])->pluck('name')->toArray(),
         ];
@@ -555,6 +618,7 @@ class ExportPDFController extends Controller
                 'kwRange' => $kwRange,
                 'highlightProjectId' => $highlightProjectId,
                 'highlightProjectName' => $highlightProjectName,
+                'hideEmptyRooms' => $hideEmptyRooms,
             ]
         )
             ->setPaper(
@@ -845,11 +909,19 @@ class ExportPDFController extends Controller
         $gridStart = $months[0]['start']->copy()->startOfWeek(Carbon::MONDAY);
         $gridEnd = end($months)['end']->copy()->endOfWeek(Carbon::SUNDAY);
 
+        // Eigener Export unterliegt derselben Regel wie der eigene Einsatzplan:
+        // nicht festgeschriebene Schichten ggf. ausblenden (Instanz-Setting).
+        $hideUncommitted = $type === 'user'
+            && $worker instanceof User
+            && app(\Artwork\Modules\User\Services\UserService::class)
+                ->shouldHideUncommittedShiftsInOwnRoster($worker);
+
         $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
             $modelId,
             $type,
             $gridStart->copy(),
-            $gridEnd->copy()
+            $gridEnd->copy(),
+            $hideUncommitted
         );
 
         // Verbindliche Projektzuordnungen je Tag (Wünsche bewusst nicht im PDF)
@@ -1024,7 +1096,12 @@ class ExportPDFController extends Controller
         $craft = data_get($shift, 'craft.name');
         $room = data_get($shift, 'room.name') ?? data_get($shift, 'event.room.name');
         $project = data_get($shift, 'project.name') ?? data_get($shift, 'event.project.name');
-        $eventName = data_get($shift, 'event.name');
+        // Anzeigename des Termins ist `eventName` (wie in der UI), `name` nur Altbestand-Fallback;
+        // identisch zum Projektnamen wäre er im PDF eine doppelte Zeile.
+        $eventName = data_get($shift, 'event.eventName') ?: data_get($shift, 'event.name');
+        if ($eventName !== null && $eventName === $project) {
+            $eventName = null;
+        }
 
         $colleagues = [];
         $note = null;

@@ -6,6 +6,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class EventStoreOrUpdateRequest extends FormRequest
 {
+    public function booleanValue(string $key, bool $default = false): bool
+    {
+        return filter_var($this->input($key, $default), FILTER_VALIDATE_BOOLEAN);
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -24,7 +28,8 @@ class EventStoreOrUpdateRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'audience' => ['sometimes', 'nullable', 'boolean'],
             'isLoud' => ['sometimes', 'nullable', 'boolean'],
-            'occupancyOption' => ['sometimes','nullable','boolean'],
+            'isOption' => ['sometimes', 'boolean'],
+            'isPlanning' => ['sometimes', 'boolean'],
             'projectIdMandatory' => 'required|boolean',
             'creatingProject' => 'required|boolean',
             'eventNameMandatory' => 'required|boolean',

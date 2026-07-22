@@ -26,6 +26,7 @@ class UpdateExternalIssueRequest extends FormRequest
             'name' => 'required|string|max:255',
             'issued_by_id' => 'nullable|exists:users,id',
             'received_by_id' => 'nullable|exists:users,id',
+            'project_id' => 'nullable|exists:projects,id',
             'issue_date' => 'required|date',
             'return_date' => 'required|date|after_or_equal:issue_date',
             'return_remarks' => 'nullable|string',

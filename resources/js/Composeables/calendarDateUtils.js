@@ -85,6 +85,9 @@ export function enrichDay(slimDay) {
         holidays: slimDay.holidays ?? [],
         hoursOfDay: slimDay.hoursOfDay ?? [],
         isExtraRow: false,
+        // Tagesbemerkung ({ text, updated_by, updated_at } | null) — kommt nur im
+        // Payload an, wenn Feature aktiv & User Sichtrecht hat
+        dayRemark: slimDay.dayRemark ?? null,
     }
 }
 
@@ -122,6 +125,15 @@ export function getDaysInRange(startDate, endDate) {
  */
 export function formatDate(dateStr) {
     return dayjs(dateStr).format('DD.MM.YYYY')
+}
+
+/**
+ * German month label for the calendar month separator row, e.g. "Juli 2026".
+ * @param {string} isoDate
+ * @returns {string}
+ */
+export function formatMonthLabel(isoDate) {
+    return dayjs(isoDate).locale('de').format('MMMM YYYY')
 }
 
 /**

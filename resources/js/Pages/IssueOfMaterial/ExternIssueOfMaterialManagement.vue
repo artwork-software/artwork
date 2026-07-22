@@ -166,6 +166,19 @@
                             </div>
                         </div>
                     </div>
+                    <div v-if="!filtersCollapsed" class="glassy card px-4 py-3 mb-2">
+                        <label class="flex cursor-pointer items-start gap-3">
+                            <input
+                                v-model="filters.overdue_only"
+                                type="checkbox"
+                                class="mt-0.5 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            >
+                            <span>
+                                <span class="block text-sm font-medium text-gray-900">{{ $t('Only overdue returns') }}</span>
+                                <span class="block text-xs text-gray-500">{{ $t('Shows issues whose return date has passed and for which no return has been entered.') }}</span>
+                            </span>
+                        </label>
+                    </div>
                     <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
                         <div class="pt-2 pb-1 text-sm font-medium text-gray-900">
                             {{ $t('Received by') }}
@@ -255,6 +268,11 @@
                       {{ $t('Search') }}: <span class="mx-1 font-medium">"{{ filters.q }}"</span>
                       <button class="ml-1 text-violet-500 hover:text-violet-700"
                               @click="filters.q = ''">&times;</button>
+                    </span>
+                    <span v-if="filters.overdue_only"
+                          class="inline-flex items-center rounded-full border border-rose-200 bg-rose-50/70 px-2.5 py-0.5 text-xs text-rose-700 shrink-0">
+                      {{ $t('Overdue returns') }}
+                      <button class="ml-1 text-rose-500 hover:text-rose-700" @click="filters.overdue_only = false">&times;</button>
                     </span>
                     <button
                         v-if="hasAnyFilter"
@@ -369,6 +387,7 @@ const filters = ref({
     date_to: initial.date_to ?? "",
     issued_by_id: initial.issued_by_id ?? "",
     received_by_id: initial.received_by_id ?? "",
+    overdue_only: initial.overdue_only === true || initial.overdue_only === '1' || initial.overdue_only === 1,
     q: initial.q ?? ""
 });
 
@@ -381,6 +400,7 @@ const applyFilters = () => {
             date_to: filters.value.date_to || undefined,
             issued_by_id: filters.value.issued_by_id || undefined,
             received_by_id: filters.value.received_by_id || undefined,
+            overdue_only: filters.value.overdue_only ? 1 : undefined,
             q: filters.value.q || undefined
         },
         replace: true,
@@ -396,12 +416,12 @@ watch(filters, () => {
 }, { deep: true });
 
 const resetFilters = () => {
-    filters.value = { date_from: "", date_to: "", issued_by_id: "", received_by_id: "", q: "" };
+    filters.value = { date_from: "", date_to: "", issued_by_id: "", received_by_id: "", overdue_only: false, q: "" };
     applyFilters();
 };
 
 const hasAnyFilter = computed(() =>
-    !!(filters.value.date_from || filters.value.date_to || filters.value.issued_by_id || filters.value.received_by_id || filters.value.q)
+    !!(filters.value.date_from || filters.value.date_to || filters.value.issued_by_id || filters.value.received_by_id || filters.value.overdue_only || filters.value.q)
 );
 
 // Filter card collapse/expand

@@ -62,8 +62,6 @@
             <div class="bg-white grow">
 
                 <ShiftPlanFunctionBar
-                    @previousTimeRange="previousTimeRange"
-                    @next-time-range="nextTimeRange"
                     :date-value="dateValue"
                     :all-shifts-committed="true"
                     :filter-options="filterOptions"
@@ -136,13 +134,17 @@
                         <!-- Column Header (Tage) -->
                         <template #colHeader="{ day }">
                             <div
-                                class="h-full w-full flex items-center justify-between
-                                   px-2 text-[11px] leading-none text-white
+                                class="relative h-full w-full flex flex-col
+                                   text-[11px] leading-none text-white
                                    bg-artwork-navigation-background/95 backdrop-blur
                                    border-b border-white/10 border-r
                                    hover:bg-artwork-navigation-background transition-colors"
-                                :class="day.isExtraRow ? 'border-l-2 border-l-white/40' : ''"
+                                :class="[
+                                    day.isExtraRow ? 'border-l-2 border-l-white/40' : '',
+                                    !day.isExtraRow && day.isFirstDayOfMonth ? 'border-l-2 border-l-white/70' : '',
+                                ]"
                             >
+                              <div class="flex items-center justify-between px-2 h-8 shrink-0 w-full">
                                 <!-- ExtraRow (KW) -->
                                 <div v-if="day.isExtraRow" class="flex items-center gap-1">
                                   <span class="text-[10px] font-semibold tracking-wide opacity-90">
@@ -155,12 +157,20 @@
                                 <div v-else class="flex items-center justify-between w-full gap-2 min-w-0">
                                     <div class="min-w-0">
                                         <div class="flex items-center gap-1 min-w-0">
-                                      <span class="font-semibold truncate">
+                                            <!-- Monatsgrenze: Monatsname am Monatsersten -->
+                                            <span
+                                                v-if="monthBadge(day)"
+                                                class="rounded bg-white/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide shrink-0"
+                                            >
+                                                {{ monthBadge(day) }}
+                                            </span>
+                                      <span class="font-semibold truncate" :class="isTodayColumn(day) ? 'text-indigo-300' : ''">
                                         {{ day.dayString }}
                                       </span>
                                             <span class="opacity-70">·</span>
+                                            <!-- Kompakt: Datum ohne Jahr, damit es in schmale Spalten passt -->
                                             <span class="opacity-90 tabular-nums truncate">
-                                        {{ day.fullDay }}
+                                        {{ isCompactShiftZoom ? day.day : day.fullDay }}
                                       </span>
                                         </div>
                                     </div>
@@ -199,6 +209,35 @@
                                         </HolidayToolTip>
                                     </div>
                                 </div>
+                              </div>
+
+                                <!-- Tagesbemerkungen-Band unter der Datumszeile (gleiche Inhalte wie im Kalender) -->
+                                <div v-if="dayRemarksColumnVisible" class="flex-1 min-h-0 px-1 pb-1 w-full">
+                                    <div
+                                        v-if="!day.isExtraRow"
+                                        class="h-full rounded bg-amber-50/90 text-gray-800 px-1.5 py-0.5 overflow-hidden"
+                                        :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
+                                        :title="remarkForDay(day)?.text"
+                                        @click.stop="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
+                                    >
+                                        <p
+                                            v-if="remarkForDay(day)?.text"
+                                            class="text-[10px] leading-[13px] whitespace-pre-line break-words line-clamp-2"
+                                        >
+                                            {{ remarkForDay(day)?.text }}
+                                        </p>
+                                        <p v-else-if="dayRemarksCanEdit" class="text-[10px] leading-[13px] text-gray-400 italic">
+                                            {{ $t('Add remark') }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Wochenend-/Feiertags-/Heute-Akzent auf dem dunklen Header -->
+                                <div
+                                    v-if="!day.isExtraRow && dayHeaderAccent(day)"
+                                    class="absolute inset-x-0 bottom-0 h-0.5"
+                                    :style="{ backgroundColor: dayHeaderAccent(day) }"
+                                ></div>
                             </div>
                         </template>
 
@@ -206,15 +245,15 @@
                         <template #rowHeader="{ room, rowIndex }">
                             <div
                                 class="xsDark h-full flex items-start"
-                                :class="[rowIndex % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover']"
-                                :style="{ width: shiftLeftWidth + 'px', maxWidth: shiftLeftWidth + 'px' }"
+                                :class="[roomHeaderStyle(room) ? '' : (rowIndex % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover')]"
+                                :style="[{ width: shiftLeftWidth + 'px', maxWidth: shiftLeftWidth + 'px' }, roomHeaderStyle(room) ?? {}]"
                             >
                                 <!-- Sticky so the room name stays visible when scrolling through very tall rows -->
                                 <div
-                                    class="sticky flex items-center font-semibold w-full py-1"
+                                    class="sticky flex items-center font-semibold w-full py-1 px-2"
                                     :style="{ top: shiftHeaderHeight + 'px' }"
                                 >
-                                    <span class="pl-3">{{ room.roomName }}</span>
+                                    <span class="pl-1 truncate" :title="room.roomName">{{ room.roomName }}</span>
                                 </div>
                             </div>
                         </template>
@@ -222,11 +261,14 @@
                         <!-- Cell -->
                         <template #cell="{ room, day, rowIndex }">
                             <div
-                                class="day-container relative h-full w-full align-top px-[1px] border-gray-400"
-                                :class="[
-        day.isWeekend ? 'bg-backgroundGray' : 'bg-white',
-        expandDays ? '' : 'h-full',
-      ]"
+                                class="day-container relative h-full w-full align-top px-[1px]"
+                                :class="[expandDays ? '' : 'h-full']"
+                                :style="{
+                                    backgroundColor: day.isExtraRow ? undefined : (dayTintLight(day) ?? '#ffffff'),
+                                    borderLeft: day.isExtraRow
+                                        ? undefined
+                                        : (day.isFirstDayOfMonth ? '2px solid rgba(0,0,0,0.4)' : '1px solid rgba(0,0,0,0.18)'),
+                                }"
                             >
                                 <!-- MultiEditCalendar Overlay -->
                                 <div
@@ -332,8 +374,18 @@
                                                             class="rounded-lg duration-200 ease-in-out"
                                                             :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'"
                                                         >
+                                                            <!-- Kompaktkarte < 100 % Zoom: Zeit · Gewerk · Besetzung; Klick öffnet das
+                                                                 Schicht-Modal. Bei Multi-Edit/Highlight bleibt die volle Karte aktiv
+                                                                 (Checkboxen/Drag&Drop/Markierung brauchen sie). -->
+                                                            <CompactShiftInRoom
+                                                                v-if="isCompactShiftZoom && !multiEditMode && !highlightMode"
+                                                                v-memo="[shift, room.__v, isCompactShiftZoom]"
+                                                                :shift="shift"
+                                                                @click-on-edit="openEditShiftModal"
+                                                            />
                                                             <SingleShiftInRoom
-                                                                v-memo="[shift, room.__v, multiEditMode, userForMultiEdit, highlightMode, idToHighlight, typeToHighlight, highlightedShiftId]"
+                                                                v-else
+                                                                v-memo="[shift, room.__v, multiEditMode, userForMultiEdit, highlightMode, idToHighlight, typeToHighlight, highlightedShiftId, isCompactShiftZoom]"
                                                                 :multiEditMode="multiEditMode"
                                                                 :user-for-multi-edit="userForMultiEdit"
                                                                 :highlightMode="highlightMode"
@@ -609,9 +661,9 @@
                             :rows="gridRows"
                             :cols="gridCols"
                             :row-height="rowHeight"
-                            :col-width="202"
+                            :col-width="dayColWidth"
                             :col-widths="gridColWidths"
-                            :sticky-col-width="191.5"
+                            :sticky-col-width="shiftLeftWidth"
                             class="h-full"
                             :top-padding="10"
                             :header-height="22"
@@ -762,6 +814,7 @@
                                         v-else
                                         class="relative h-full w-full"
                                         :class="cellWrapperClass(row, day)"
+                                        :style="dayTintDark(day) ? { backgroundColor: dayTintDark(day) } : undefined"
                                         @click="handleCellClick(row.worker, day)"
                                     >
                                         <ShiftPlanCell
@@ -881,6 +934,15 @@
         @close="showAddShiftByPresetOrGroupModal = false"
         />
 
+    <DayRemarkEditModal
+        v-if="dayRemarkModalDay"
+        :date="dayRemarkModalDay.withoutFormat"
+        :display-date="dayRemarkModalDay.fullDay"
+        :remark="remarkForDay(dayRemarkModalDay)"
+        is-in-shift-plan
+        @close="dayRemarkModalDay = null"
+    />
+
     <!-- Als letztes Modal im Template: rendert dadurch über den Modals, aus denen
          es per Shortcut geöffnet wird (Tagesmodal, Schicht-bearbeiten-Modal). -->
     <ShiftHistoryModal
@@ -934,6 +996,10 @@ import {useSyncedHorizontalScroll} from '@/Pages/Shifts/Composables/useSyncedHor
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import SingleShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/SingleShiftInRoom.vue";
+import CompactShiftInRoom from "@/Pages/Shifts/Components/ShiftWithoutEventComponents/CompactShiftInRoom.vue";
+import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
+import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
+import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
@@ -1071,6 +1137,24 @@ type Day = {
 }
 
 const days = shallowRef<any[]>(props.days ?? [])
+
+// --- Tagesbemerkungen (gleiche Inhalte/Rechte wie im Kalender) ---
+// Anzeige liest über remarkForDay() aus dem reaktiven Live-Store des
+// Composables — days ist ein shallowRef, Mutationen daran würden die
+// Header-Slots nicht neu rendern.
+const {
+    columnVisible: dayRemarksColumnVisible,
+    canEdit: dayRemarksCanEdit,
+    remarkForDay,
+    listenForDayRemarkUpdates,
+} = useDayRemarks()
+const dayRemarkModalDay = ref<any>(null)
+const openDayRemarkModal = (day: any) => {
+    dayRemarkModalDay.value = day
+}
+// Live-Updates anderer User → Store
+const stopDayRemarkListener = listenForDayRemarkUpdates()
+onBeforeUnmount(() => stopDayRemarkListener())
 const rooms = shallowRef([])
 const isFullscreen = ref(false)
 const showHistoryModal = ref(false)
@@ -1440,18 +1524,120 @@ const shiftCols = computed(() =>
     }))
 )
 
-const shiftHeaderHeight = 32 // wie dein h-8
-const shiftColWidth = 202
+// Basis 32px (wie h-8); mit sichtbarem Tagesbemerkungen-Band wird der Header
+// höher, damit unter der Datumszeile Platz für 2 Bemerkungszeilen ist
+const shiftHeaderHeight = computed(() => (dayRemarksColumnVisible.value ? 32 + 34 : 32))
+// Tagesspaltenbreite kommt aus dem Schichtplan-Zoom (202px bei 100 %) und wird
+// von Haupt-Grid UND Worker-Grid gemeinsam genutzt — die Raster müssen exakt
+// übereinander liegen. KW-Trennspalte und Sticky-Spalte skalieren nicht.
+const {
+    zoomFactor: shiftZoomFactor,
+    zoomPercent: shiftZoomPercent,
+    zoomSteps: shiftZoomSteps,
+    setZoomFactor: setShiftZoomFactor,
+    zoomIn: shiftZoomIn,
+    zoomOut: shiftZoomOut,
+    isCompact: isCompactShiftZoom,
+    dayColWidth,
+} = useShiftPlanZoom()
+const shiftColWidth = computed(() => dayColWidth.value)
 const kwColWidth = 130
 const shiftLeftWidth = 191.5
 
 const shiftColWidths = computed(() =>
-    shiftCols.value.map((col: any) => col.data?.isExtraRow ? kwColWidth : shiftColWidth)
+    shiftCols.value.map((col: any) => col.data?.isExtraRow ? kwColWidth : shiftColWidth.value)
 )
 
 const gridColWidths = computed(() =>
-    (days.value ?? []).map((d: any) => d.isExtraRow ? kwColWidth : shiftColWidth)
+    (days.value ?? []).map((d: any) => d.isExtraRow ? kwColWidth : shiftColWidth.value)
 )
+
+// --- Tages-Einfärbung (Wochenende/Feiertage/Heute) ---
+// Pro Tag EINMAL vorberechnet; die Zellen beider Grids greifen nur per Map-Lookup
+// zu — kein holidays.find() im Render-Pfad (Schichtplan: Performance zuerst).
+// "light" für die weißen Haupt-Grid-Zellen, "dark" für den dunklen Userbereich,
+// "accent" als kräftiger Unterstrich im dunklen Tagesheader.
+const todayKey = (() => {
+    const now = new Date()
+    return `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`
+})()
+
+const dayTintByKey = computed(() => {
+    const map = new Map<string, { light: string | null, dark: string | null, accent: string | null }>()
+    const highContrast = !!calendarSettings.value?.high_contrast
+    for (const d of (days.value ?? [])) {
+        if (!d || d.isExtraRow || !d.fullDay) continue
+        const holidays = d.holidays ?? []
+        const singleDayHoliday = holidays.find(
+            (h: any) => h?.color && (!h.end_date || h.end_date === h.date)
+        )
+        const coloredHoliday = singleDayHoliday ?? holidays.find((h: any) => h?.color)
+        let light: string | null = null
+        let dark: string | null = null
+        let accent: string | null = null
+        if (coloredHoliday) {
+            // Eintägige Feiertage deutlich, Ferienzeiträume dezent (wie im Kalender)
+            const lightAlpha = singleDayHoliday ? (highContrast ? '59' : '33') : (highContrast ? '33' : '1A')
+            const darkAlpha = singleDayHoliday ? '4D' : '26'
+            light = `${coloredHoliday.color}${lightAlpha}`
+            dark = `${coloredHoliday.color}${darkAlpha}`
+            accent = coloredHoliday.color
+        } else if (d.fullDay === todayKey) {
+            light = highContrast ? '#e0e7ff' : '#eef2ff'
+            dark = 'rgba(129,140,248,0.18)'
+            accent = '#818cf8'
+        } else if (d.isWeekend) {
+            light = highContrast ? '#dbeafe' : '#eff6ff'
+            dark = 'rgba(96,165,250,0.14)'
+            accent = '#60a5fa'
+        }
+        if (d.fullDay === todayKey && !accent) accent = '#818cf8'
+        if (light || dark || accent) map.set(d.fullDay, { light, dark, accent })
+    }
+    return map
+})
+
+const dayTintLight = (day: any) => dayTintByKey.value.get(day?.fullDay)?.light ?? null
+const dayTintDark = (day: any) => dayTintByKey.value.get(day?.fullDay)?.dark ?? null
+const dayHeaderAccent = (day: any) => dayTintByKey.value.get(day?.fullDay)?.accent ?? null
+const isTodayColumn = (day: any) => day?.fullDay === todayKey
+
+// Monatsbadge im Tagesheader (nur am Monatsersten), einmal vorberechnet
+const monthBadgeByKey = computed(() => {
+    const map = new Map<string, string>()
+    for (const d of (days.value ?? [])) {
+        if (!d || d.isExtraRow || !d.isFirstDayOfMonth || !d.fullDay || !d.withoutFormat) continue
+        // Kurzform ("Aug."), damit der Badge auch in schmalen Zoom-Spalten neben das Datum passt
+        map.set(d.fullDay, new Date(d.withoutFormat).toLocaleDateString('de-DE', { month: 'short' }))
+    }
+    return map
+})
+const monthBadge = (day: any) => monthBadgeByKey.value.get(day?.fullDay) ?? null
+
+// Raumfarbe in der linken Sticky-Spalte: ganze Zelle als heller Tint, Schrift als abgedunkelte Raumfarbe.
+// Deckend über Weiß geblendet (statt rgba), damit die Zebra-Streifung der Zeilen nicht durchscheint.
+const roomHeaderStyleByColor = new Map<string, { backgroundColor: string; color: string }>()
+const roomHeaderStyle = (room: any) => {
+    const color = room?.roomColor ?? null
+    // '#000000' ist der Migrations-Default für "keine Farbe gepflegt" (Areale) —
+    // ohne diesen Guard bekämen alle Räume den grauen Tint und die
+    // Zebra-Streifung wäre auf Bestandsinstallationen tot.
+    if (!color || color.toLowerCase() === '#000000') return null
+    let style = roomHeaderStyleByColor.get(color)
+    if (!style) {
+        const r = parseInt(color.slice(-6, -4), 16)
+        const g = parseInt(color.slice(-4, -2), 16)
+        const b = parseInt(color.slice(-2), 16)
+        const tint = (c: number) => Math.round(255 - (255 - c) * 0.18)
+        const dark = (c: number) => Math.round(c * 0.45)
+        style = {
+            backgroundColor: `rgb(${tint(r)}, ${tint(g)}, ${tint(b)})`,
+            color: `rgb(${dark(r)}, ${dark(g)}, ${dark(b)})`,
+        }
+        roomHeaderStyleByColor.set(color, style)
+    }
+    return style
+}
 
 const visibleKW = computed(() => {
     const idx = shiftGridRef.value?.firstVisibleColIndex ?? 0
@@ -1550,10 +1736,11 @@ async function measureBaselineMetrics() {
 // schmaler) — eine Heuristik schneidet daher entweder ab oder erzeugt Weißraum.
 const AVG_CHAR_WIDTH = 7 // nur noch Fallback, falls kein Canvas verfügbar
 
-// Available text widths derived from shiftColWidth (202) and CSS padding/gaps
-const cellInnerWidth = shiftColWidth - 2                 // px-[1px]*2 des day-containers
-const pgBarTextWidth = cellInnerWidth - 16 - 4 - 16      // Projektgruppen-Link: px-2, gap-x-1, Icon size-4
-const eventBarTextWidth = cellInnerWidth - 16            // Projekt-/Gruppenbalken im Event: px-2
+// Available text widths derived from the zoomed day column width and CSS padding/gaps.
+// Reaktiv, damit die Canvas-Textmessung bei Zoom-Wechsel mit der echten Breite rechnet.
+const cellInnerWidth = computed(() => shiftColWidth.value - 2)          // px-[1px]*2 des day-containers
+const pgBarTextWidth = computed(() => cellInnerWidth.value - 16 - 4 - 16) // Projektgruppen-Link: px-2, gap-x-1, Icon size-4
+const eventBarTextWidth = computed(() => cellInnerWidth.value - 16)     // Projekt-/Gruppenbalken im Event: px-2
 
 let _measureCtx: CanvasRenderingContext2D | null | undefined
 function getMeasureCtx(): CanvasRenderingContext2D | null {
@@ -1679,7 +1866,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     if (showProjectGroups && events.length) {
         const groups = getProjectGroupsForCell(room, dayKey)
         for (const group of groups) {
-            const lines = expanded ? measureTextLines(group.name, pgBarTextWidth, 700) : 1
+            const lines = expanded ? measureTextLines(group.name, pgBarTextWidth.value, 700) : 1
             // py-1 (8px) + lines * 16px (text-xs line-height) + mb-0.5 (2px)
             pgTotalHeight += 8 + lines * 16 + 2
         }
@@ -1690,7 +1877,7 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
     // settings-abhängigen Zeilen (Künstler*innen, Notizen, Projektleitung, Icons)
     const settings = calendarSettings.value ?? {}
     // Content-Breite: px-2 (16) + optional Farbstreifen (8px + gap-x-2) + optional Timeline-Icon (16px + gap-x-2)
-    let contentWidth = cellInnerWidth - 16
+    let contentWidth = cellInnerWidth.value - 16
     if (!settings.high_contrast) contentWidth -= 16
     if (settings.show_timeline) contentWidth -= 24
 
@@ -1742,14 +1929,14 @@ function summarizeCell(room: any, dayKey: string): CellSummary {
 
             // Project name bar: py-1 (8px) + text + border-b (1px); Status-Punkt (size-3.5 + gap-1.5) schmälert
             if (evtProject?.id) {
-                const barWidth = eventBarTextWidth - (settings.project_status && evtProject?.status ? 20 : 0)
+                const barWidth = eventBarTextWidth.value - (settings.project_status && evtProject?.status ? 20 : 0)
                 const projLines = expanded ? measureTextLines(evtProject?.name, barWidth) : 1
                 h += 8 + projLines * 16 + 1
             }
 
             // Group bar inside event: py-1 (8px) + text + border-b (1px)
             if (showProjectGroups && evtProject?.isInGroup && evtProject?.group?.length > 0 && !evtProject?.isGroup) {
-                const grpLines = expanded ? measureTextLines(evtProject.group[0]?.name, eventBarTextWidth) : 1
+                const grpLines = expanded ? measureTextLines(evtProject.group[0]?.name, eventBarTextWidth.value) : 1
                 h += 8 + grpLines * 16 + 1
             }
 
@@ -1894,6 +2081,27 @@ watch(
     { immediate: true },
 )
 
+// Strg/Cmd + Scrollrad zoomt die Tagesspaltenbreite (wie im Kalender), gedrosselt
+let _wheelZoomLockedUntil = 0
+watch(
+    () => shiftPlanEl.value,
+    (el, _prev, onCleanup) => {
+        if (!el) return
+        const onWheelZoom = (e: WheelEvent) => {
+            if (!(e.ctrlKey || e.metaKey)) return
+            e.preventDefault()
+            const now = Date.now()
+            if (now < _wheelZoomLockedUntil) return
+            _wheelZoomLockedUntil = now + 180
+            if (e.deltaY > 0) shiftZoomOut()
+            else shiftZoomIn()
+        }
+        el.addEventListener('wheel', onWheelZoom, { passive: false })
+        onCleanup(() => el.removeEventListener('wheel', onWheelZoom))
+    },
+    { immediate: true },
+)
+
 // Trigger recompute + measurement on relevant changes
 // calendarSettings gehört dazu: die Zellhöhe hängt von Anzeigeeinstellungen wie
 // Künstler*innen/Notizen/Projektleitung/Timeline ab (siehe summarizeCell)
@@ -1904,6 +2112,9 @@ watch(
         calendarSettings.value,
         shiftPlanArrayRef.value,
         days.value,
+        // Spaltenzoom ändert die verfügbaren Textbreiten UND die Kartenhöhen
+        // (Kompaktkarte) — Summaries verwerfen und Baseline neu messen
+        shiftZoomFactor.value,
     ],
     () => {
         cellSummaryCache.clear()
@@ -2253,6 +2464,7 @@ async function initializeShiftPlan() {
         newShiftPlanData.value = metaRooms.map((r: any) => ({
             roomId: r.roomId,
             roomName: r.roomName,
+            roomColor: r.roomColor ?? null,
             content: {},
         }))
         rooms.value = normalizeShiftPlan(newShiftPlanData.value)
@@ -3277,35 +3489,6 @@ function openFullscreen() {
     }
 }
 
-function previousTimeRange() {
-    const dateDifference = calculateDateDifference()
-    const newStart = dayjs(props.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    const newEnd = dayjs(props.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes(newStart, newEnd)
-}
-
-function nextTimeRange() {
-    const dateDifference = calculateDateDifference()
-    const newStart = dayjs(props.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    const newEnd = dayjs(props.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD')
-    updateTimes(newStart, newEnd)
-}
-
-function calculateDateDifference() {
-    const date1 = new Date(props.dateValue[0])
-    const date2 = new Date(props.dateValue[1])
-    const timeDifference = date2.getTime() - date1.getTime()
-    return timeDifference / (1000 * 3600 * 24)
-}
-
-function updateTimes(startDate: string, endDate: string) {
-    router.patch(
-        route('update.user.shift.calendar.filter.dates', authUser.value.id),
-        {start_date: startDate, end_date: endDate},
-        {preserveScroll: true, preserveState: false},
-    )
-}
-
 function openHistoryModal(config: HistoryModalConfig = {}) {
     historyModalConfig.value = config
     showHistoryModal.value = true
@@ -3358,7 +3541,7 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
     let acc = 0
     for (let i = 0; i < daysArr.length; i++) {
         offsets[i] = acc
-        acc += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth
+        acc += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth.value
     }
 
     // Zielspalten je Modus: Tag → Tagesspalte, Woche → KW-Spalte, Monat → Monatserster

@@ -3,6 +3,8 @@
         <Switch
             v-model="model"
             :disabled="disabled"
+            :aria-label="tooltipText"
+            v-tooltip.bottom="tooltipBinding"
             :class="[
         model ? 'bg-blue-600 hover:bg-blue-600/95' : 'bg-gray-200',
         sizeClasses.track,
@@ -11,7 +13,7 @@
         disabled ? 'opacity-60 cursor-not-allowed' : ''
       ]"
         >
-            <span class="sr-only">Toggle</span>
+            <span class="sr-only">{{ tooltipText }}</span>
 
             <!-- Knopf -->
             <span
@@ -22,13 +24,11 @@
           'inline-flex transform items-center justify-center rounded-full bg-white ring-1 ring-black/5 shadow transition duration-300 ease-out'
         ]"
             >
-        <!-- Tooltip bleibt erhalten -->
-        <ToolTipComponent
-            :icon="icon"
-            :tooltip-text="tooltipText"
-            :icon-size="sizeClasses.icon"
-            direction="bottom"
-            :stroke="1.5"
+        <PropertyIcon
+            :name="icon"
+            :class="sizeClasses.icon"
+            :stroke-width="1.5"
+            aria-hidden="true"
         />
       </span>
         </Switch>
@@ -51,7 +51,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Switch } from '@headlessui/vue'
-import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import {IconList} from "@tabler/icons-vue";
 
 defineOptions({ name: 'SwitchIconTooltip' })
@@ -70,6 +70,13 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
+
+const tooltipBinding = computed(() => ({
+    value: props.tooltipText,
+    appendTo: 'body',
+    useTranslation: false,
+    class: 'aw-tooltip'
+}))
 
 /**
  * v-model Proxy

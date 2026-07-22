@@ -1,60 +1,16 @@
 <template>
-    <div class="py-4 px-7 bg-white border-b border-zinc-200 shadow-sm">
+    <div class="py-4 px-5 bg-white border-b border-zinc-200 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-y-2">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
-                    <!-- Date Shortcuts - 3 vertical icons -->
-                    <div class="flex items-center ">
-                        <ToolTipComponent
-                            v-if="!dailyView"
-                            direction="bottom"
-                            :tooltip-text="$t('Time range back')"
-                            :icon="IconChevronLeft"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="previousTimeRange"
-                            classesButton="ui-button"
-                        />
-                        <ToolTipComponent
-                            v-else
-                            direction="bottom"
-                            :tooltip-text="$t('Time range back')"
-                            :icon="IconChevronLeft"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="previousDay"
-                            classesButton="ui-button"
-                        />
-                    </div>
-                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false" :is_planning="isPlanning" :is_daily_view="dailyView"/>
-                    <div class="flex items-center">
-                        <ToolTipComponent
-                            v-if="!dailyView"
-                            direction="bottom"
-                            :tooltip-text="$t('Time range forward')"
-                            :icon="IconChevronRight"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="nextTimeRange"
-                            classesButton="ui-button"
-                        />
-                        <ToolTipComponent
-                            v-else
-                            direction="bottom"
-                            :tooltip-text="$t('Time range forward')"
-                            :icon="IconChevronRight"
-                            icon-size="h-5 w-5 text-primary"
-                            @click="nextDay"
-                            classesButton="ui-button"
-                        />
-
-                    </div>
-                    <div class="flex gap-x-1 mx-2">
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Today')"
-                            :icon="IconCalendar"
-                            icon-size="h-5 w-5"
-                            @click="jumpToToday"
-                            classesButton="ui-button"
-                        />
+                    <DateRangeControl
+                        v-if="dateValue"
+                        :date-value-array="dateValue"
+                        mode="calendar"
+                        :extra-params="{ isPlanning: isPlanning, isDailyView: dailyView }"
+                        :show-today="false"
+                    />
+                    <div class="flex gap-x-1 mx-1">
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current week')"
@@ -73,11 +29,12 @@
                         />
                     </div>
 
-                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance && startAndEndDateInDifferentMonths" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu tooltip-direction="bottom" show-custom-icon :icon="IconReorder" v-if="!atAGlance && startAndEndDateInDifferentMonths" class="mx-1" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem :icon="IconCalendarRepeat" white-menu-background without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
-                <div v-else-if="!project" class="relative">
+                <!-- w-72, damit das Label "Projekt oder Künstler*in suchen" nicht abgeschnitten wird -->
+                <div v-else-if="!project" class="relative w-72">
                     <BaseInput
                         id="calendarProjectSearch"
                         v-model="projectSearch"
@@ -103,7 +60,7 @@
                     </div>
                 </div>
                 <div v-if="!project && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class=" text-sm">
-                    {{ $t('Project period')}}:
+                    {{ $t('Project')}}:
                     <Link :href="route('projects.tab', {projectTab: first_project_tab_id, project: getTimePeriodProjectId()})"
                           class="font-bold">
                         {{ projectNameUsedForProjectTimePeriod }}
@@ -155,30 +112,60 @@
                 </div>
                 <div class="hidden 2xl:flex items-center gap-x-2">
 
-                    <ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Zoom in')"
-                        :icon="IconZoomIn"
-                        icon-size="h-5 w-5"
-                        :disabled="zoom_factor >= 1.4"
-                        @click="incrementZoomFactor"
-                        v-if="!atAGlance"
-                        classesButton="ui-button"
-                    />
-                    <p class="xsDark ui-button !bg-gray-50 text-xs">
-                        {{ zoom_factor * 100 }}%
-                    </p>
+                    <!-- Kompaktmodus-Hinweis: bei < 80 % öffnen Termine ihr Modal per Klick,
+                         das Drei-Punkte-Menü auf der Kachel entfällt -->
+                    <div
+                        v-if="isCompactZoom && !atAGlance"
+                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                    >
+                        <ToolTipWithTextComponent
+                            direction="bottom"
+                            :text="$t('Compact')"
+                            :icon="IconInfoCircle"
+                            icon-size="size-4"
+                            tooltip-width="w-72"
+                            :tooltip-text="$t('Below 80% zoom the compact mode is active: clicking an event opens its editing or detail view directly. The menu for further actions is not available in compact mode.')"
+                        />
+                    </div>
 
-                    <ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Zoom out')"
-                        :icon="IconZoomOut"
-                        icon-size="h-5 w-5"
-                        :disabled="zoom_factor <= 0.2"
-                        @click="decrementZoomFactor"
-                        v-if="!atAGlance"
-                        classesButton="ui-button"
-                    />
+                    <!-- Zoom-Schnellauswahl: Klick auf die %-Anzeige öffnet die Stufenliste -->
+                    <Menu as="div" class="relative" v-if="!atAGlance">
+                        <MenuButton class="ui-button text-xs" :title="$t('Zoom')">
+                            {{ zoomPercent }}%
+                            <component :is="IconChevronDown" class="size-3.5" />
+                        </MenuButton>
+                        <transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="opacity-0 scale-95"
+                            enter-to-class="opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="opacity-100 scale-100"
+                            leave-to-class="opacity-0 scale-95"
+                        >
+                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
+                                <!-- Panel-Optik identisch zu BaseMenu -->
+                                <div class="w-52 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                    <BaseMenuItem
+                                        white-menu-background
+                                        without-translation
+                                        :icon="IconCalendarMonth"
+                                        :title="$t('Month view') + ' (40%)'"
+                                        @click="selectMonthView"
+                                    />
+                                    <div class="my-1 border-t border-gray-100"></div>
+                                    <BaseMenuItem
+                                        v-for="step in zoomSteps"
+                                        :key="step"
+                                        white-menu-background
+                                        without-translation
+                                        :icon="step === zoomFactor ? IconCheck : IconPercentage"
+                                        :title="Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : '')"
+                                        @click="setZoomFactor(step)"
+                                    />
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
 
                     <ToolTipComponent
                         direction="bottom"
@@ -279,25 +266,22 @@
                     <BaseMenu class="pt-2" tooltip-direction="bottom" show-custom-icon :icon="IconList" translation-key="More options" has-no-offset>
                         <BaseMenuItem
                             v-if="!atAGlance"
-                            :icon="IconZoomIn"
-                            white-menu-background
-                            :title="$t('Zoom in')"
-                            :disabled="zoom_factor >= 1.4"
-                            @click="incrementZoomFactor"
-                        />
-                        <BaseMenuItem
+                            :icon="IconCalendarMonth"
                             white-menu-background
                             without-translation
-                            :title="zoom_factor * 100 + '%'"
+                            :title="$t('Month view') + ' (40%)'"
+                            @click="selectMonthView"
                         />
-                        <BaseMenuItem
-                            v-if="!atAGlance"
-                            :icon="IconZoomOut"
-                            white-menu-background
-                            :title="$t('Zoom out')"
-                            :disabled="zoom_factor <= 0.2"
-                            @click="decrementZoomFactor"
-                        />
+                        <template v-if="!atAGlance">
+                            <BaseMenuItem
+                                v-for="step in zoomSteps"
+                                :key="step"
+                                white-menu-background
+                                without-translation
+                                :title="Math.round(step * 100) + '%' + (step === zoomFactor ? ' ✓' : '')"
+                                @click="setZoomFactor(step)"
+                            />
+                        </template>
                         <BaseMenuItem
                             v-if="!atAGlance && !isFullscreen"
                             :icon="IconArrowsDiagonal"
@@ -345,25 +329,31 @@
 </template>
 
 <script setup>
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {computed, defineAsyncComponent, inject, nextTick, ref, watch} from "vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
+import {computed, defineAsyncComponent, inject, nextTick, ref, unref, watch} from "vue";
 import {
     IconChevronLeft,
     IconChevronRight,
+    IconChevronDown,
+    IconCheck,
+    IconPercentage,
+    IconInfoCircle,
     IconCalendar,
     IconCalendarWeek,
     IconCalendarMonth,
-    IconGeometry, IconCalendarRepeat, IconList, IconZoomIn, IconZoomOut, IconArrowsDiagonal, IconCalendarStar,
+    IconGeometry, IconCalendarRepeat, IconList, IconArrowsDiagonal, IconCalendarStar,
     IconFileExport, IconCirclePlus, IconReorder
 } from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
-import {Switch} from "@headlessui/vue";
+import {Switch, Menu, MenuButton, MenuItems} from "@headlessui/vue";
+import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
@@ -386,14 +376,21 @@ const emits = defineEmits([
     'updateMultiEdit',
     'openFullscreenMode',
     'wantsToAddNewEvent',
-    'previousDay',
-    'nextDay',
     'searchingForProject',
     'jumpToDayOfMonth',
 ]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.auth.user.at_a_glance ?? false);
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+// Zentraler reaktiver Zoom (debounced persistiert, kein Full-Reload mehr)
+const {
+    zoomFactor,
+    zoomPercent,
+    zoomSteps,
+    setZoomFactor,
+    requestMonthView,
+    isCompact: isCompactZoom,
+} = useCalendarZoom();
+const selectMonthView = () => requestMonthView();
 const dateValueCopy = ref(dateValue ?? []);
 const showExportModal = ref(false);
 const roomCollisions = ref([]);
@@ -429,23 +426,29 @@ const CalendarSettingsModal = defineAsyncComponent({
 const exportTabEnums = useExportTabEnums();
 const getExportModalConfiguration = () => {
     const cfg = {};
+    // Aktive Kalender-Filter mitgeben, damit sie im Export-Modal vorausgewählt sind
+    const activeUserFilters = unref(user_filters) ?? null;
 
     cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
-        project: props.project
+        project: props.project,
+        user_filters: activeUserFilters
     };
 
     cfg[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT] = {
-        project: props.project
+        project: props.project,
+        user_filters: activeUserFilters
     };
 
     cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
         project: props.project,
         show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
             (usePage().props.show_artists ?? false),
+        user_filters: activeUserFilters
     };
 
     cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
-        project: props.project
+        project: props.project,
+        user_filters: activeUserFilters
     };
 
     return cfg;
@@ -561,87 +564,6 @@ const changeAtAGlance = () => {
         preserveScroll: true
     })
 }
-const incrementZoomFactor = () => {
-    if (zoom_factor.value < 1.4) {
-        zoom_factor.value = Math.round((zoom_factor.value + 0.2) * 10) / 10;
-        updateZoomFactorInUser();
-    }
-}
-const decrementZoomFactor = () => {
-    if (zoom_factor.value > 0.4) {
-        zoom_factor.value = Math.round((zoom_factor.value - 0.2) * 10) / 10;
-        updateZoomFactorInUser();
-    }
-}
-const updateZoomFactorInUser = () => {
-    router.patch(route('user.update.zoom_factor', {user: usePage().props.auth.user.id}), {
-        zoom_factor: zoom_factor.value
-    }, {
-        preserveScroll: true,
-        preserveState: false
-    })
-}
-const calculateDateDifference = () => {
-    const date1 = new Date(dateValueCopy.value[0]);
-    const date2 = new Date(dateValueCopy.value[1]);
-    const timeDifference = date2.getTime() - date1.getTime();
-    return timeDifference / (1000 * 3600 * 24);
-}
-const previousTimeRange = () => {
-    const dayDifference = calculateDateDifference();
-    dateValueCopy.value[1] = getPreviousDay(dateValueCopy.value[0]);
-    const newDate = new Date(dateValueCopy.value[1]);
-    newDate.setDate(newDate.getDate() - dayDifference);
-    dateValueCopy.value[0] = newDate.toISOString().slice(0, 10);
-    updateTimes();
-}
-const nextTimeRange = () => {
-    const dayDifference = calculateDateDifference();
-    dateValueCopy.value[0] = getNextDay(dateValueCopy.value[1]);
-    const newDate = new Date(dateValueCopy.value[1]);
-    newDate.setDate(newDate.getDate() + dayDifference + 1);
-    dateValueCopy.value[1] = newDate.toISOString().slice(0, 10);
-    updateTimes();
-}
-const getNextDay = (dateString) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() + 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-const previousDay = () => {
-    const dayDifference = calculateDateDifference();
-    const newStart = new Date(dateValueCopy.value[0]);
-    newStart.setDate(newStart.getDate() - (dayDifference + 1));
-    const newEnd = new Date(dateValueCopy.value[0]);
-    newEnd.setDate(newEnd.getDate() - 1);
-    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
-    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
-    updateTimes();
-}
-
-const nextDay = () => {
-    const dayDifference = calculateDateDifference();
-    const newStart = new Date(dateValueCopy.value[1]);
-    newStart.setDate(newStart.getDate() + 1);
-    const newEnd = new Date(dateValueCopy.value[1]);
-    newEnd.setDate(newEnd.getDate() + dayDifference + 1);
-    dateValueCopy.value[0] = newStart.toISOString().slice(0, 10);
-    dateValueCopy.value[1] = newEnd.toISOString().slice(0, 10);
-    updateTimes();
-}
-
-const getPreviousDay = (dateString) => {
-    const date = new Date(dateString);
-    date.setDate(date.getDate() - 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
 const updateTimes = () => {
     router.patch(route('update.user.calendar.filter.dates', usePage().props.auth.user.id), {
         start_date: dateValueCopy.value[0],
@@ -660,34 +582,7 @@ const jumpToDayOfMonth = (day) => {
     emits('jumpToDayOfMonth', day);
 }
 
-// Shortcut functions for the three icons
-const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
-
-    // Switch to daily mode if not already in daily mode
-    if (!dailyViewMode.value) {
-        dailyViewMode.value = true;
-        router.patch(route('user.update.daily_view', usePage().props.auth.user.id), {
-            daily_view: true,
-            context: 'calendar'
-        }, {
-            preserveScroll: false,
-            preserveState: false,
-            onSuccess: () => {
-                // Set dates and update only after the mode change is completed
-                dateValueCopy.value[0] = today;
-                dateValueCopy.value[1] = today;
-                updateTimes();
-            }
-        });
-    } else {
-        // If already in daily mode, set dates and update
-        dateValueCopy.value[0] = today;
-        dateValueCopy.value[1] = today;
-        updateTimes();
-    }
-}
-
+// Shortcut functions for the two icons
 const jumpToCurrentWeek = () => {
     const today = new Date();
     const currentWeekStart = new Date(today);

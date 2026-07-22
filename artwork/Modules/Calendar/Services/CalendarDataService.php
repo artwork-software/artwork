@@ -2,10 +2,14 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
+use App\Settings\GeneralCalendarSettings;
 use Artwork\Modules\Calendar\DTO\CalendarFrontendDataDTO;
 use Illuminate\Support\Facades\Auth;
 use Artwork\Modules\Calendar\DTO\CalendarHolidayDTO;
 use Artwork\Modules\Calendar\DTO\CalendarPeriodDTO;
+use Artwork\Modules\Calendar\Models\DayRemark;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Calendar\DTO\RoomDTO;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Services\EventCollectionService;
@@ -145,6 +149,8 @@ readonly class CalendarDataService
             ? array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23))
             : [];
 
+        $dayRemarksByDate = $this->getVisibleDayRemarks($startDate, $endDate, $user);
+
         $periodArray = [];
         foreach ($calendarPeriod as $period) {
             if ($extraRow && $period->isMonday()) {
@@ -161,10 +167,45 @@ readonly class CalendarDataService
                 holidays: $holidaysByDate->get($period->toDateString(), collect())->values(),
                 hoursOfDay: $hoursOfDay,
                 isExtraRow: false,
+                dayRemark: $dayRemarksByDate->get($period->toDateString()),
             );
         }
 
         return $periodArray;
+    }
+
+    /**
+     * Tagesbemerkungen des Zeitraums, keyed by Y-m-d — nur wenn das Feature
+     * instanzweit aktiv ist und der User sie sehen darf, sonst leer (die
+     * Bemerkungen tauchen dann in keinem Payload auf).
+     *
+     * @return SupportCollection<string, array<string, mixed>>
+     */
+    private function getVisibleDayRemarks($startDate, $endDate, User $user): SupportCollection
+    {
+        if (!app(GeneralCalendarSettings::class)->day_remarks_enabled) {
+            return collect();
+        }
+
+        $mayView = $user->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || $user->can(PermissionEnum::DAY_REMARKS_VIEW->value)
+            || $user->can(PermissionEnum::DAY_REMARKS_EDIT->value);
+
+        if (!$mayView) {
+            return collect();
+        }
+
+        return DayRemark::query()
+            ->betweenDates($startDate, $endDate)
+            ->with('updatedBy:id,first_name,last_name')
+            ->get()
+            ->mapWithKeys(static fn (DayRemark $dayRemark) => [
+                $dayRemark->date->toDateString() => [
+                    'text' => $dayRemark->remark,
+                    'updated_by' => $dayRemark->updatedBy?->full_name,
+                    'updated_at' => $dayRemark->updated_at?->format('d.m.Y H:i'),
+                ],
+            ]);
     }
 
     /**

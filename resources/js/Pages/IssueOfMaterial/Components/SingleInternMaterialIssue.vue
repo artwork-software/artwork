@@ -15,6 +15,28 @@
             <p v-if="issueOfMaterial.notes" class="text-xs text-gray-500 line-clamp-2 mt-0.5">
                 {{ issueOfMaterial.notes }}
             </p>
+            <div v-if="issueOfMaterial.articles?.length" class="mt-2 flex items-center gap-2">
+                <div class="flex -space-x-2" :aria-label="$t('Issued articles')">
+                    <div
+                        v-for="article in issueOfMaterial.articles.slice(0, 3)"
+                        :key="article.id"
+                        class="grid size-8 place-items-center overflow-hidden rounded-lg border-2 border-white bg-gray-100 text-[10px] font-semibold text-gray-500 shadow-sm"
+                        :title="article.name"
+                    >
+                        <img
+                            v-if="article.images?.[0]?.image"
+                            :src="'/storage/' + (article.images[0].thumbnail || article.images[0].image)"
+                            :alt="article.images[0].alt || article.name"
+                            loading="lazy"
+                            class="size-full object-cover"
+                        >
+                        <span v-else aria-hidden="true">{{ article.name?.slice(0, 2).toUpperCase() }}</span>
+                    </div>
+                </div>
+                <span class="text-[11px] text-gray-500">
+                    {{ issueOfMaterial.articles.length }} {{ issueOfMaterial.articles.length === 1 ? $t('article') : $t('articles') }}
+                </span>
+            </div>
         </div>
 
         <!-- Zeitraum -->

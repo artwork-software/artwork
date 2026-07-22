@@ -120,6 +120,7 @@ class Kernel extends HttpKernel
         'role' => RoleMiddleware::class,
         'permission' => PermissionMiddleware::class,
         'role_or_permission' => RoleOrPermissionMiddleware::class,
+        'shift-settings-area' => \App\Http\Middleware\EnsureShiftSettingsAreaPermission::class,
         'external.scoped' => \Artwork\Modules\ExternalAccess\Http\Middleware\EnsureScopedAccess::class,
     ];
 }

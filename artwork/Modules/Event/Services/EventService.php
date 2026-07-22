@@ -467,6 +467,7 @@ readonly class EventService
         string $modelType,
         Carbon $startDate,
         Carbon $endDate,
+        bool $committedShiftsOnly = false,
     ): array {
         $daysWithData = [];
         $calculatePlannedWorkingHours = function ($shifts): array {
@@ -475,8 +476,28 @@ readonly class EventService
             $totalBreakMinutes = 0;
 
             foreach ($shifts as $shift) {
-                $start = Carbon::parse($shift['start']);
-                $end = Carbon::parse($shift['end']);
+                // start/end sind reine Uhrzeiten — ohne start_date/end_date wäre die
+                // Differenz bei Schichten über Mitternacht negativ und die Schicht
+                // fiele komplett aus der Gesamtstundenanzahl heraus.
+                $startDay = !empty($shift['start_date'])
+                    ? Carbon::parse($shift['start_date'])->toDateString()
+                    : null;
+                $endDay = !empty($shift['end_date'])
+                    ? Carbon::parse($shift['end_date'])->toDateString()
+                    : $startDay;
+
+                $start = $startDay
+                    ? Carbon::parse($startDay . ' ' . $shift['start'])
+                    : Carbon::parse($shift['start']);
+                $end = $endDay
+                    ? Carbon::parse($endDay . ' ' . $shift['end'])
+                    : Carbon::parse($shift['end']);
+
+                // Altbestand ohne end_date am Folgetag: Endzeit vor Startzeit
+                // bedeutet Mitternachtsüberschreitung.
+                if ($end->lt($start)) {
+                    $end->addDay();
+                }
 
                 $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ? $start : $earliestStart;
                 $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ? $end : $latestEnd;
@@ -485,7 +506,7 @@ readonly class EventService
             }
 
             $totalWorkMinutes = ($earliestStart !== null && $latestEnd !== null)
-                ? max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes), 0)
+                ? (int) max(($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes), 0)
                 : 0;
 
             return [
@@ -706,8 +727,11 @@ readonly class EventService
                     $builder->whereKey($modelId);
                 }
             )
-            ->whereBetween('start_time', $period)
-            ->whereBetween('end_time', $period)
+            // Überlappung statt vollständiger Enthaltung: Termine, die über
+            // Mitternacht (und damit über das Zeitraum-Ende) hinauslaufen,
+            // dürfen nicht komplett herausfallen.
+            ->where('start_time', '<=', $endDate->copy()->endOfDay())
+            ->where('end_time', '>=', $startDate->copy()->startOfDay())
             ->orderBy('start_time')
             ->orderBy('end_time')
             ->get();
@@ -716,7 +740,20 @@ readonly class EventService
         foreach ($events as $event) {
             /** @var Shift $shift */
             foreach ($event['shifts'] as $shift) {
+                // Setting "nicht festgeschriebene Schichten im eigenen Einsatzplan
+                // ausblenden": daysWithData ist die Datenquelle des Renderings —
+                // die Filterung nur der shifts-Prop würde hier nicht greifen.
+                if ($committedShiftsOnly && !$shift->is_committed) {
+                    continue;
+                }
+
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
+
+                // Schichten außerhalb des angefragten Zeitraums (möglich durch
+                // Überlappungs-Filter) nicht in nicht-existente Tage schreiben
+                if (!isset($daysWithData[$shiftDate])) {
+                    continue;
+                }
 
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
@@ -773,15 +810,25 @@ readonly class EventService
             ->whereHas($relationToFind, function (Builder $builder) use ($modelId): void {
                 $builder->whereKey($modelId);
             })
+            // Nur start_date filtern: Die Schicht zählt zum Tag ihres Beginns.
+            // Ein zusätzlicher end_date-Filter würde Mitternachtsschichten am
+            // letzten Tag des Zeitraums (end_date = Folgetag) ausschließen.
             ->whereBetween('start_date', [$startDate, $endDate])
-            ->whereBetween('end_date', [$startDate, $endDate])
             ->orderBy('start')
             ->get();
 
         /** @var Shift $shift */
         foreach ($shifts as $shift) {
+            if ($committedShiftsOnly && !$shift->is_committed) {
+                continue;
+            }
+
             if (!$shift->event_id) {
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
+
+                if (!isset($daysWithData[$shiftDate])) {
+                    continue;
+                }
                 $plannedData = $calculatePlannedWorkingHours([$shift]);
 
                 $daysWithData[$shiftDate]['shifts'][] = [

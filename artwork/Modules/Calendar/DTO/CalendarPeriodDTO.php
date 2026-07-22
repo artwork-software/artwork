@@ -12,6 +12,7 @@ class CalendarPeriodDTO extends Data
         public ?Collection $holidays,
         public ?array $hoursOfDay,
         public bool $isExtraRow,
+        public ?array $dayRemark = null,
     ) {
     }
 }

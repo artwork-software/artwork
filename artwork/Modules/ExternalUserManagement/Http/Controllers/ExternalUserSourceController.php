@@ -96,7 +96,15 @@ class ExternalUserSourceController extends Controller
         // Create a temporary ExternalUserSource instance for testing
         $tempSource = new ExternalUserSource();
         $tempSource->type = $request->input('type', 'ldap');
-        $tempSource->config = $request->input('config');
+        $config = $request->input('config');
+
+        // Presets (Google/Microsoft) auf dieselbe Struktur wie Custom normalisieren,
+        // damit der Discovery-Test dieselbe URL wie der spätere Login verwendet.
+        if ($tempSource->type === 'identity_provider') {
+            $config = \Artwork\Modules\ExternalUserManagement\Support\OidcProviderPreset::normalize($config);
+        }
+
+        $tempSource->config = $config;
 
         return $this->runConnectionTest($tempSource);
     }

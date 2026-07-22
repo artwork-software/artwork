@@ -185,6 +185,19 @@ class HandleInertiaRequests extends Middleware
             || $user->can(PermissionEnum::BI_DASHBOARD->value)
         );
 
+        // Tagesbemerkungen: Instanz-Setting + Berechtigungen als ein kompakter Prop,
+        // damit Kalender, Planungskalender, Dienstplan und Anzeigeeinstellungen
+        // dieselbe Sichtbarkeitslogik nutzen ($permissionsArray enthält für Admins
+        // bereits alle Permission-Namen).
+        $canEditDayRemarks = in_array(PermissionEnum::DAY_REMARKS_EDIT->value, $permissionsArray, true);
+        $dayRemarksState = [
+            'enabled' => (bool) $generalCalendarSettings->day_remarks_enabled,
+            'mandatory' => (bool) $generalCalendarSettings->day_remarks_mandatory,
+            'can_edit' => $canEditDayRemarks,
+            'can_view' => $canEditDayRemarks
+                || in_array(PermissionEnum::DAY_REMARKS_VIEW->value, $permissionsArray, true),
+        ];
+
         return array_merge(
             parent::share($request),
             [
@@ -235,7 +248,6 @@ class HandleInertiaRequests extends Middleware
                 'shift_plan_settings' => $shiftPlanSettings,
                 'shift_plan_daily_settings' => $shiftPlanDailySettings,
                 'module_settings' => $this->moduleSettingsService->getModuleSettings(),
-                'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
                 'isNotionKeySet' => config('app.notion_api_token') !== null && config('app.notion_api_token') !== '',
                 'calendarHours' => $hours,
                 // Gleiche Struktur wie vormals jsPermissions() ({roles, permissions}), aber ohne die
@@ -248,6 +260,12 @@ class HandleInertiaRequests extends Middleware
                 'shiftCommitWorkflow'          => $shiftCommitWorkflowEnabled,
                 'allow_shift_overbooking'      => (bool) app(\App\Settings\ShiftSettings::class)
                     ->allow_shift_overbooking,
+                'shift_settings_access'        => [
+                    'granular_permissions_enabled' => (bool) app(\App\Settings\ShiftSettings::class)
+                        ->granular_permissions_enabled,
+                    'hide_uncommitted_shifts_from_own_roster' => (bool) app(\App\Settings\ShiftSettings::class)
+                        ->hide_uncommitted_shifts_from_own_roster,
+                ],
                 'isUserWorkFlowUser'           => $isUserWorkFlowUser,
                 'canSeeShiftPlanReview'        => $canSeeShiftPlanReview,
                 'canSeeShiftPlanChangeList'    => $canSeeShiftPlanChangeList,
@@ -255,6 +273,7 @@ class HandleInertiaRequests extends Middleware
                 'canSeeEventVerifications'      => $canSeeEventVerifications,
                 'canSeeIncomingRequests'         => $canSeeIncomingRequests,
                 'canViewBiDashboard'             => $canViewBiDashboard,
+                'day_remarks'                    => $dayRemarksState,
             ]
         );
     }

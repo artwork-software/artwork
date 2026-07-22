@@ -144,6 +144,9 @@
                             {{ $t('Use StartTLS') }}
                         </label>
                     </div>
+                    <p class="text-xs text-amber-600">
+                        {{ $t('Recommended: the bind sends the password in clear text – use SSL (LDAPS) or StartTLS.') }}
+                    </p>
                 </div>
 
                 <!-- User Filter -->
@@ -174,12 +177,66 @@
                         {{ $t('LDAP attribute used as unique identifier (default: objectGUID)') }}
                     </p>
                 </div>
+
+                <!-- Default Role -->
+                <div>
+                    <label for="ldap_default_role" class="block text-sm font-medium text-gray-900 mb-1">
+                        {{ $t('Default Role') }}
+                    </label>
+                    <select
+                        id="ldap_default_role"
+                        v-model="form.config.default_role_id"
+                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                        <option :value="null">{{ $t('No default role') }}</option>
+                        <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        {{ $t('Role assigned to accounts newly provisioned through this connection.') }}
+                    </p>
+                </div>
             </template>
 
             <!-- ==================== OIDC / Identity Provider ==================== -->
             <template v-else>
-                <!-- Discovery URL -->
+                <!-- Provider preset selection -->
                 <div>
+                    <label class="block text-sm font-medium text-gray-900 mb-2">
+                        {{ $t('Provider') }}
+                    </label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button
+                            v-for="preset in providerPresets"
+                            :key="preset.value"
+                            type="button"
+                            @click="form.config.provider_preset = preset.value"
+                            class="rounded-lg border px-3 py-3 text-sm font-medium transition"
+                            :class="form.config.provider_preset === preset.value
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'"
+                        >
+                            {{ preset.label }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Microsoft Tenant ID -->
+                <div v-if="form.config.provider_preset === 'microsoft'">
+                    <BaseInput
+                        id="tenant_id"
+                        :label="$t('Tenant ID')"
+                        v-model="form.config.tenant_id"
+                        :error="form.errors['config.tenant_id']"
+                        placeholder="00000000-0000-0000-0000-000000000000"
+                        required
+                    />
+                    <p class="mt-1 text-xs text-gray-500">
+                        {{ $t('Azure AD / Entra tenant ID – it is part of the authority URL.') }}
+                    </p>
+                </div>
+
+                <!-- Discovery URL (Custom only) -->
+                <div v-if="form.config.provider_preset === 'custom'">
                     <BaseInput
                         id="discovery_url"
                         :label="$t('Discovery URL')"
@@ -216,46 +273,49 @@
                     />
                 </div>
 
-                <!-- Scopes -->
-                <div>
-                    <BaseInput
-                        id="scopes"
-                        :label="$t('Scopes')"
-                        v-model="scopesText"
-                        placeholder="openid, profile, email"
-                    />
-                    <p class="mt-1 text-xs text-gray-500">
-                        {{ $t('Comma-separated list of requested scopes (default: openid, profile, email)') }}
-                    </p>
-                </div>
+                <!-- Advanced OIDC fields (Custom only – presets prefill these) -->
+                <template v-if="form.config.provider_preset === 'custom'">
+                    <!-- Scopes -->
+                    <div>
+                        <BaseInput
+                            id="scopes"
+                            :label="$t('Scopes')"
+                            v-model="scopesText"
+                            placeholder="openid, profile, email"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ $t('Comma-separated list of requested scopes (default: openid, profile, email)') }}
+                        </p>
+                    </div>
 
-                <!-- Identifier Claim -->
-                <div>
-                    <BaseInput
-                        id="oidc_identifier_attribute"
-                        :label="$t('Identifier Claim')"
-                        v-model="form.config.identifier_attribute"
-                        :error="form.errors['config.identifier_attribute']"
-                        placeholder="sub"
-                    />
-                    <p class="mt-1 text-xs text-gray-500">
-                        {{ $t('OIDC claim used as unique identifier (default: sub)') }}
-                    </p>
-                </div>
+                    <!-- Identifier Claim -->
+                    <div>
+                        <BaseInput
+                            id="oidc_identifier_attribute"
+                            :label="$t('Identifier Claim')"
+                            v-model="form.config.identifier_attribute"
+                            :error="form.errors['config.identifier_attribute']"
+                            placeholder="sub"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ $t('OIDC claim used as unique identifier (default: sub)') }}
+                        </p>
+                    </div>
 
-                <!-- Groups Claim -->
-                <div>
-                    <BaseInput
-                        id="groups_claim"
-                        :label="$t('Groups Claim')"
-                        v-model="form.config.groups_claim"
-                        :error="form.errors['config.groups_claim']"
-                        placeholder="groups"
-                    />
-                    <p class="mt-1 text-xs text-gray-500">
-                        {{ $t('OIDC claim containing the user\'s groups for role mapping (default: groups)') }}
-                    </p>
-                </div>
+                    <!-- Groups Claim -->
+                    <div>
+                        <BaseInput
+                            id="groups_claim"
+                            :label="$t('Groups Claim')"
+                            v-model="form.config.groups_claim"
+                            :error="form.errors['config.groups_claim']"
+                            placeholder="groups"
+                        />
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ $t('OIDC claim containing the user\'s groups for role mapping (default: groups)') }}
+                        </p>
+                    </div>
+                </template>
 
                 <!-- Allowed Domains -->
                 <div>
@@ -265,16 +325,33 @@
                         v-model="allowedDomainsText"
                         :error="form.errors['config.allowed_domains']"
                         placeholder="example.com, partner.org"
-                        required
                     />
                     <p class="mt-1 text-xs text-gray-500">
-                        {{ $t('Comma-separated allowlist. Only users whose email domain matches may sign in / be created.') }}
+                        {{ $t('Enter the permitted user email domains, for example company.com — not the Artwork domain. Only identities with an email address from these domains may sign in.') }}
+                    </p>
+                </div>
+
+                <!-- Default Role -->
+                <div>
+                    <label for="oidc_default_role" class="block text-sm font-medium text-gray-900 mb-1">
+                        {{ $t('Default Role') }}
+                    </label>
+                    <select
+                        id="oidc_default_role"
+                        v-model="form.config.default_role_id"
+                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                        <option :value="null">{{ $t('No default role') }}</option>
+                        <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        {{ $t('Role assigned to accounts newly provisioned through this connection.') }}
                     </p>
                 </div>
 
                 <!-- Redirect URI hint -->
                 <div v-if="source" class="rounded bg-gray-50 border border-gray-200 p-3">
-                    <p class="text-xs font-medium text-gray-700">{{ $t('Redirect URI (register this at your IdP)') }}</p>
+                    <p class="text-xs font-medium text-gray-700">{{ $t('Redirect URI (register this exact URL in the allowlist at your IdP)') }}</p>
                     <code class="mt-1 block break-all text-xs text-gray-600">{{ redirectUri }}</code>
                 </div>
                 <p v-else class="text-xs text-gray-500">
@@ -367,12 +444,16 @@ function defaultConfig() {
         user_filter: '(objectClass=user)',
         identifier_attribute: 'objectGUID',
         // OIDC
+        provider_preset: 'custom',
+        tenant_id: '',
         discovery_url: '',
         client_id: '',
         client_secret: '',
         scopes: ['openid', 'profile', 'email'],
         groups_claim: 'groups',
         allowed_domains: [],
+        // Shared
+        default_role_id: null,
     };
 }
 
@@ -391,6 +472,10 @@ export default defineComponent({
         source: {
             type: Object,
             default: null
+        },
+        roles: {
+            type: Array,
+            default: () => []
         }
     },
     emits: ['close', 'saved'],
@@ -409,6 +494,13 @@ export default defineComponent({
     computed: {
         isOidc() {
             return this.form.type === 'identity_provider';
+        },
+        providerPresets() {
+            return [
+                { value: 'google', label: this.$t('Google') },
+                { value: 'microsoft', label: this.$t('Microsoft') },
+                { value: 'custom', label: this.$t('Custom') },
+            ];
         },
         modalTitle() {
             if (this.isOidc) {
@@ -445,6 +537,13 @@ export default defineComponent({
         },
         canTestConnection() {
             if (this.isOidc) {
+                const preset = this.form.config.provider_preset;
+                if (preset === 'google') {
+                    return !!this.form.config.client_id;
+                }
+                if (preset === 'microsoft') {
+                    return !!(this.form.config.tenant_id && this.form.config.client_id);
+                }
                 return !!(this.form.config.discovery_url && this.form.config.client_id);
             }
             return this.form.config.host &&
@@ -501,6 +600,8 @@ export default defineComponent({
             const c = this.form.config;
             if (this.isOidc) {
                 return {
+                    provider_preset: c.provider_preset,
+                    tenant_id: c.tenant_id,
                     discovery_url: c.discovery_url,
                     client_id: c.client_id,
                     client_secret: c.client_secret,
@@ -508,6 +609,7 @@ export default defineComponent({
                     identifier_attribute: c.identifier_attribute,
                     groups_claim: c.groups_claim,
                     allowed_domains: c.allowed_domains,
+                    default_role_id: c.default_role_id,
                 };
             }
             return {
@@ -520,6 +622,7 @@ export default defineComponent({
                 use_tls: c.use_tls,
                 user_filter: c.user_filter,
                 identifier_attribute: c.identifier_attribute,
+                default_role_id: c.default_role_id,
             };
         },
         saveSource() {

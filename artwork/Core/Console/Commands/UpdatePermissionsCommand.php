@@ -4,6 +4,7 @@ namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;
 use Illuminate\Console\Command;
 
 class UpdatePermissionsCommand extends Command
@@ -298,7 +299,31 @@ class UpdatePermissionsCommand extends Command
                     'shift plan views. Without this permission only their own values are visible.',
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::DAY_REMARKS_VIEW->value,
+                'name_de' => "Tagesbemerkungen sehen",
+                'translation_key' => "View day remarks",
+                'group' => 'Event management',
+                'tooltipText' => 'Darf die Tagesbemerkungs-Spalte im Kalender, Planungskalender und Dienstplan ' .
+                    'sehen, sofern sie in den Systemeinstellungen aktiviert ist.',
+                'tooltipKey' => 'User can see the day remarks column in the calendar, planning calendar and shift ' .
+                    'plan if it is enabled in the system settings.',
+                'checked' => true
+            ],
+            [
+                'name' => PermissionEnum::DAY_REMARKS_EDIT->value,
+                'name_de' => "Tagesbemerkungen bearbeiten",
+                'translation_key' => "Edit day remarks",
+                'group' => 'Event management',
+                'tooltipText' => 'Darf Tagesbemerkungen im Kalender, Planungskalender und Dienstplan anlegen, ' .
+                    'bearbeiten und löschen.',
+                'tooltipKey' => 'User can create, edit and delete day remarks in the calendar, planning calendar ' .
+                    'and shift plan.',
+                'checked' => false
+            ],
         ];
+
+        $permissions = array_merge($permissions, ShiftSettingsPermissionService::definitions());
 
         foreach ($permissions as $permission) {
             $checkPermission = Permission::where('name', $permission['name'])->first();
@@ -308,8 +333,12 @@ class UpdatePermissionsCommand extends Command
             } else {
                 // Update existing permission with new tooltip texts
                 $checkPermission->update([
+                    'name_de' => $permission['name_de'],
+                    'translation_key' => $permission['translation_key'],
+                    'group' => $permission['group'],
                     'tooltipText' => $permission['tooltipText'],
-                    'tooltipKey' => $permission['tooltipKey']
+                    'tooltipKey' => $permission['tooltipKey'],
+                    'checked' => $permission['checked'],
                 ]);
                 $this->info('Permission "' . $permission['name'] . '" updated.');
             }

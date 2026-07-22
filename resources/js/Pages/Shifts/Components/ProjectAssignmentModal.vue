@@ -178,6 +178,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { usePage } from '@inertiajs/vue3';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
@@ -218,6 +219,38 @@ let searchDebounce = null;
 let projectRequest = null;
 let projectRequestSequence = 0;
 
+// Zuletzt verwendetes Projekt (pro Modus und User) vorauswählen — aber nur, wenn es
+// in den Vorschlägen für die gewählten Tage auftaucht, und nur beim ersten Laden:
+// wählt die Person es aktiv ab, wird nicht erneut vorausgewählt.
+const lastProjectStorageKey = `artwork.projectAssignment.lastProject.${props.mode}.${usePage().props.auth?.user?.id ?? 'anon'}`;
+let lastProjectPreselectDone = false;
+
+function preselectLastUsedProject() {
+    if (lastProjectPreselectDone || selectedProject.value || searchQuery.value) return;
+    lastProjectPreselectDone = true;
+
+    let lastProjectId = null;
+    try {
+        lastProjectId = Number(localStorage.getItem(lastProjectStorageKey));
+    } catch (e) {
+        return;
+    }
+    if (!lastProjectId) return;
+
+    const match = projectOptions.value.find((project) => project.id === lastProjectId);
+    if (match) {
+        selectProject(match);
+    }
+}
+
+function rememberLastUsedProject() {
+    try {
+        localStorage.setItem(lastProjectStorageKey, String(selectedProject.value.id));
+    } catch (e) {
+        // localStorage nicht verfügbar (z. B. Private Mode) — Vorauswahl ist optional
+    }
+}
+
 async function loadProjects() {
     const requestSequence = ++projectRequestSequence;
     projectRequest?.abort();
@@ -233,6 +266,7 @@ async function loadProjects() {
         });
         if (requestSequence === projectRequestSequence) {
             projectOptions.value = data.projects ?? [];
+            preselectLastUsedProject();
         }
     } catch (error) {
         if (error?.code !== 'ERR_CANCELED' && requestSequence === projectRequestSequence) {
@@ -287,6 +321,7 @@ async function submit() {
             full_period: periodMode.value === 'full_period',
             days: periodMode.value === 'days' ? selectedDays.value : [],
         });
+        rememberLastUsedProject();
         emit('close', { saved: true });
     } catch (error) {
         // 422 mit verständlicher Meldung (z. B. Wunsch auf Abwesenheitstag) als

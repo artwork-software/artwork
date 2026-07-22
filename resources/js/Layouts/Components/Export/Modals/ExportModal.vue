@@ -17,12 +17,14 @@
                 <template v-if="tab === exportTabEnums.PDF_CALENDAR_EXPORT">
                     <PdfCalendarExport v-if="activeTab === exportTabEnums.PDF_CALENDAR_EXPORT"
                                        @close="close()"
-                                       :project="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.project"/>
+                                       :project="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.project"
+                                       :preselected-filters="configuration[exportTabEnums.PDF_CALENDAR_EXPORT]?.user_filters ?? null"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT">
                     <PdfMonthlyCalendarExport v-if="activeTab === exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT"
                                               @close="close()"
-                                              :project="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.project"/>
+                                              :project="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.project"
+                                              :preselected-filters="configuration[exportTabEnums.PDF_MONTHLY_CALENDAR_EXPORT]?.user_filters ?? null"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.PDF_SHIFT_PLAN_EXPORT">
                     <PdfShiftPlanExport v-if="activeTab === exportTabEnums.PDF_SHIFT_PLAN_EXPORT"
@@ -37,12 +39,14 @@
                                                     :export-tab-enum="exportTabEnums.EXCEL_EVENT_LIST_EXPORT"
                                                     :show-artists="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT].show_artists"
                                                     :project-preselect="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.project ?? null"
+                                                    :preselected-filters="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.user_filters ?? null"
                                                     @close="close()"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_CALENDAR_EXPORT">
                     <ExcelEventListOrCalendarExport v-if="activeTab === exportTabEnums.EXCEL_CALENDAR_EXPORT"
                                                     :export-tab-enum="exportTabEnums.EXCEL_CALENDAR_EXPORT"
                                                     :project-preselect="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.project ?? null"
+                                                    :preselected-filters="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.user_filters ?? null"
                                                     @close="close()"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_WORK_TIME_OVERVIEW_EXPORT">

@@ -1,243 +1,313 @@
 <template>
-    <BaseModal @closed="closeModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
-        <div class="mx-4">
-            <!--   Heading   -->
-            <ModalHeader
-                :title="$t('Move events')"
-                :description="$t('Would you like to move all selected appointments to another room or by a certain period of time?')"
-            />
-            <div class="w-full">
-                <div class="mb-2">
-                    <Listbox as="div" class="sm:col-span-3" v-model="selectedRoom">
-                        <div class="relative">
-                            <ListboxButton class="menu-button">
-                                <span v-if="selectedRoom === null">{{ $t('No room displacement')}}</span>
-                                <div v-else> {{ selectedRoom?.name }}</div>
-                                <div class="mr-3">
-                                    <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                </div>
-                            </ListboxButton>
-                            <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
-                                <ListboxOption as="template" class="p-2 text-sm"
-                                               :value="null"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
-                                            {{ $t('No room displacement')}}
-                                        </div>
-                                        <div v-if="selected">
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </div>
-                                    </li>
-                                </ListboxOption>
-                                <ListboxOption as="template" class="p-2 text-sm"
-                                               v-for="room in rooms"
-                                               :key="room.id"
-                                               :value="room"
-                                               v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
-                                            {{ room.name }}
-                                        </div>
-                                        <div v-if="selected">
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </div>
-                                    </li>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </div>
-                    </Listbox>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-8 mb-2 gap-x-2">
-                    <div class="mb-2 col-span-1">
-                        <Listbox as="div" class="" v-model="selectedCalculationType">
-                            <div class="relative">
-                                <ListboxButton class="menu-button">
-                                    <div> {{ selectedCalculationType.type }}</div>
-                                    <div class="mr-3">
-                                        <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </div>
-                                </ListboxButton>
-                                <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none  z-10">
-                                    <ListboxOption as="template" class="p-2 text-sm"
-                                                   v-for="calculation in calculationTypes"
-                                                   :key="calculation.id"
-                                                   :value="calculation"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                            <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
-                                                {{ calculation.type }}
-                                            </div>
-                                            <div v-if="selected">
-                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                            </div>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </div>
-                        </Listbox>
-                    </div>
-                    <div class="mb-2 col-span-3">
-                        <input type="number"
-                               v-model="editEvents.value"
-                               id="eventTitle"
-                               min="0" max="999"
-                               class="input h-12"/>
-                    </div>
-                    <div class="mb-2 col-span-4">
-                        <Listbox as="div" v-model="selectedTimeType">
-                            <div class="relative">
-                                <ListboxButton class="menu-button">
-                                    <div> {{ selectedTimeType.value }}</div>
-                                    <div class="mr-3">
-                                        <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </div>
-                                </ListboxButton>
-                                <ListboxOptions class="absolute bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
-                                    <ListboxOption as="template" class="p-2 text-sm"
-                                                   v-for="time in timeTypes"
-                                                   :key="time.id"
-                                                   :value="time"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                            <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
-                                                {{ time.value }}
-                                            </div>
-                                            <div v-if="selected">
-                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                            </div>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </div>
-                        </Listbox>
-                    </div>
-                </div>
-                <div class="pt-2 pb-4">
-                    <DateInputComponent
-                        v-model="editEvents.date"
-                        :label="editEvents.date === null ? $t('No postponement to date') : '' "
-                        id="eventTitle"
+    <ArtworkBaseModal
+        title="Move events"
+        description="Choose a target room, a time offset or a fixed date - the change applies to all selected events."
+        modal-size="max-w-2xl"
+        @close="$emit('closed', false)"
+    >
+        <div class="space-y-4">
+
+            <div class="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                {{ $t('{0} event(s) selected. The events themselves are moved - nothing is copied.', [checkedEvents.length]) }}
+            </div>
+
+            <!-- Raum -->
+            <section class="ui-card">
+                <header class="ui-card-header">
+                    <span class="ui-dot bg-rose-400"></span>
+                    <h3 class="ui-card-title">{{ $t('Room') }}</h3>
+                </header>
+
+                <span class="ui-hint">
+                    {{ $t('All selected events are moved into the chosen room. Without a selection, each event stays in its current room.') }}
+                </span>
+
+                <div class="mt-2">
+                    <ArtworkBaseListbox
+                        v-model="selectedRoom"
+                        :items="roomItems"
+                        by="id"
+                        option-label="name"
+                        option-key="id"
+                        :label="$t('Target room')"
+                        :use-translations="false"
                     />
                 </div>
-                <div class="w-full flex justify-center">
-                    <FormButton :text="$t('Save')"  @click="saveMultiEdit"/>
+            </section>
+
+            <!-- Datum & Uhrzeit -->
+            <section class="ui-card">
+                <header class="ui-card-header">
+                    <span class="ui-dot bg-sky-400"></span>
+                    <h3 class="ui-card-title">{{ $t('Date & time') }}</h3>
+                </header>
+
+                <!-- Modus -->
+                <div class="flex flex-wrap gap-2" role="radiogroup" :aria-label="$t('Date & time')">
+                    <button
+                        v-for="mode in timeModes"
+                        :key="mode.key"
+                        type="button"
+                        role="radio"
+                        :aria-checked="timeMode === mode.key"
+                        class="px-2.5 py-1.5 text-xs rounded-md border"
+                        :class="timeMode === mode.key
+                            ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                            : 'border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700'"
+                        @click="timeMode = mode.key"
+                    >
+                        {{ $t(mode.label) }}
+                    </button>
+                </div>
+
+                <!-- Versatz -->
+                <div v-if="timeMode === 'offset'" class="mt-3 space-y-2">
+                    <span class="ui-hint">
+                        {{ $t('Each event is shifted relative to its current date - e.g. "2 days later" moves every event two days into the future.') }}
+                    </span>
+
+                    <div class="flex flex-wrap items-end gap-2">
+                        <!-- Richtung -->
+                        <div class="inline-flex rounded-md border border-zinc-200 overflow-hidden" role="radiogroup" :aria-label="$t('Direction')">
+                            <button
+                                type="button"
+                                role="radio"
+                                :aria-checked="direction === 'later'"
+                                class="px-3 py-2.5 text-xs font-medium"
+                                :class="direction === 'later' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-zinc-600 hover:bg-zinc-50'"
+                                @click="direction = 'later'"
+                            >
+                                + {{ $t('later') }}
+                            </button>
+                            <button
+                                type="button"
+                                role="radio"
+                                :aria-checked="direction === 'earlier'"
+                                class="px-3 py-2.5 text-xs font-medium border-l border-zinc-200"
+                                :class="direction === 'earlier' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-zinc-600 hover:bg-zinc-50'"
+                                @click="direction = 'earlier'"
+                            >
+                                &minus; {{ $t('earlier') }}
+                            </button>
+                        </div>
+
+                        <div class="w-24">
+                            <BaseInput
+                                type="number"
+                                id="multiEditOffsetValue"
+                                v-model="offsetValue"
+                                :label="$t('Value')"
+                            />
+                        </div>
+                        <div class="w-40">
+                            <ArtworkBaseListbox
+                                v-model="selectedUnit"
+                                :items="units"
+                                by="id"
+                                option-label="label"
+                                option-key="id"
+                                :label="$t('Unit')"
+                                :use-translations="false"
+                                :enable-search="false"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Schnellauswahl -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="ui-hint">{{ $t('Quick select:') }}</span>
+                        <button
+                            v-for="preset in offsetPresets"
+                            :key="preset.label"
+                            type="button"
+                            class="px-2.5 py-1.5 text-xs rounded-md border border-zinc-200 bg-white hover:bg-zinc-50"
+                            @click="applyPreset(preset)"
+                        >
+                            {{ $t(preset.label) }}
+                        </button>
+                    </div>
+
+                    <p class="ui-error" v-if="offsetInvalid">{{ $t('Please enter an offset greater than 0.') }}</p>
+                </div>
+
+                <!-- Festes Datum -->
+                <div v-if="timeMode === 'date'" class="mt-3 space-y-2">
+                    <span class="ui-hint">
+                        {{ $t('All selected events are placed on this date, keeping their start time. Multi-day events will end on the chosen day.') }}
+                    </span>
+                    <BaseInput
+                        type="date"
+                        id="multiEditFixedDate"
+                        v-model="fixedDate"
+                        :label="$t('Date')"
+                        class="ui-input"
+                    />
+                    <p class="ui-error" v-if="timeMode === 'date' && !fixedDate">{{ $t('Please choose a date.') }}</p>
+                </div>
+            </section>
+
+            <!-- Zusammenfassung -->
+            <section class="ui-card">
+                <header class="ui-card-header">
+                    <span class="ui-dot bg-emerald-400"></span>
+                    <h3 class="ui-card-title">{{ $t('Summary') }}</h3>
+                </header>
+
+                <ul class="space-y-1 text-[13px] text-zinc-800">
+                    <li class="flex items-start gap-2">
+                        <IconDoorEnter class="size-4 shrink-0 mt-0.5 text-zinc-400" />
+                        <span v-if="selectedRoom?.id">{{ $t('All events are moved to room "{0}".', [selectedRoom.name]) }}</span>
+                        <span v-else>{{ $t('Rooms remain unchanged.') }}</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <IconCalendarTime class="size-4 shrink-0 mt-0.5 text-zinc-400" />
+                        <span>{{ timeSummary }}</span>
+                    </li>
+                </ul>
+
+                <p class="ui-error mt-2" v-if="!hasChange">
+                    {{ $t('Select at least a target room, a time offset or a date - otherwise there is nothing to move.') }}
+                </p>
+            </section>
+
+            <div v-if="requestError" class="ui-error">{{ requestError }}</div>
+
+            <div class="ui-footer">
+                <div class="flex items-center justify-end gap-2">
+                    <button type="button" class="ui-btn-secondary" @click="$emit('closed', false)">
+                        {{ $t('Cancel') }}
+                    </button>
+                    <FormButton
+                        :disabled="!isValid || submitting"
+                        @click="save"
+                        :text="$t('Move {0} event(s)', [checkedEvents.length])"
+                    />
                 </div>
             </div>
         </div>
-    </BaseModal>
+    </ArtworkBaseModal>
 </template>
 
-<script>
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import Input from "@/Jetstream/Input.vue";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {router, useForm} from "@inertiajs/vue3";
-import Permissions from "@/Mixins/Permissions.vue";
+<script setup>
+import { computed, ref } from "vue";
+import axios from "axios";
+import { useI18n } from "vue-i18n";
+import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
-import axios from 'axios';
+import { IconCalendarTime, IconDoorEnter } from "@tabler/icons-vue";
 
-export default {
-    name: 'MultiEditModal',
-    mixins: [Permissions],
-    components: {
-        ModalHeader,
-        DateInputComponent,
-        BaseModal,
-        FormButton,
-        Input,
-        JetDialogModal,
-        XIcon,
-        XCircleIcon,
-        Listbox,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        SvgCollection,
-        CheckIcon,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
-        ConfirmationComponent,
-        TagComponent,
-        InputComponent
-    },
-    data() {
-        return {
-            calculationTypes: [
-                {id: 1, type: '+'},
-                {id: 2, type: '-'},
-            ],
-            timeTypes: [
-                {id: 1, value: this.$t('Hour(s)')},
-                {id: 2, value: this.$t('Day(s)')},
-                {id: 3, value: this.$t('Week(s)')},
-                {id: 4, value: this.$t('Month(s)')},
-                {id: 5, value: this.$t('Year(s)')},
-            ],
-            editEvents: useForm({
-                events: this.checkedEvents,
-                newRoomId: null,
-                calculationType: null,
-                value: 0,
-                type:  null,
-                date: null
-            }),
-            selectedCalculationType: {id: 1, type: '+'},
-            selectedTimeType: {id: 1, value: this.$t('Hour(s)')},
-            selectedRoom: null,
-        }
-    },
-    props: ['checkedEvents', 'rooms'],
-    emits: ['closed'],
-    methods: {
-        closeModal(bool, desiredRoomIds = null, desiredDays = null) {
-            this.$emit('closed', bool, desiredRoomIds, desiredDays);
-        },
-        saveMultiEdit() {
-            this.editEvents.type = this.selectedTimeType.id;
-            this.editEvents.calculationType = this.selectedCalculationType.id;
-            this.editEvents.newRoomId = this.selectedRoom?.id ?? null;
+const { t } = useI18n(), $t = t;
 
-            axios.patch(route('multi-edit.save'), {
-                events: this.editEvents.events,
-                newRoomId: this.editEvents.newRoomId,
-                calculationType: this.editEvents.calculationType,
-                value: this.editEvents.value,
-                type: this.editEvents.type,
-                date: this.editEvents.date
-            })
-            .then(() => {
-                this.closeModal(true);
-            })
-            .catch((error) => {
-                console.error('Multi-edit save failed:', error);
-            });
-        }
-    },
-}
+const props = defineProps({
+    checkedEvents: { type: Array, required: true },
+    rooms: { type: [Array, Object], default: () => [] },
+});
+
+const emit = defineEmits(["closed"]);
+
+// --- Raum (id 0 = Sentinel für "Räume beibehalten")
+const roomsList = computed(() => (Array.isArray(props.rooms) ? props.rooms : Object.values(props.rooms || {})));
+const roomItems = computed(() => [
+    { id: 0, name: $t("Keep current rooms") },
+    ...roomsList.value.map((room) => ({ id: room.roomId ?? room.id, name: room.name })),
+]);
+const selectedRoom = ref(null);
+
+// --- Zeit-Modus
+const timeModes = [
+    { key: "none", label: "No time change" },
+    { key: "offset", label: "Shift by offset" },
+    { key: "date", label: "Move to fixed date" },
+];
+const timeMode = ref("none");
+
+// --- Versatz (Payload-Werte wie im Backend: calculationType 1=+/2=−, type 1..5)
+const direction = ref("later");
+const offsetValue = ref("1");
+const units = [
+    { id: 1, label: $t("Hour(s)") },
+    { id: 2, label: $t("Day(s)") },
+    { id: 3, label: $t("Week(s)") },
+    { id: 4, label: $t("Month(s)") },
+    { id: 5, label: $t("Year(s)") },
+];
+const selectedUnit = ref(units[1]);
+const offsetPresets = [
+    { label: "1 day", value: 1, unitId: 2 },
+    { label: "1 week", value: 1, unitId: 3 },
+    { label: "2 weeks", value: 2, unitId: 3 },
+    { label: "4 weeks", value: 4, unitId: 3 },
+];
+const applyPreset = (preset) => {
+    offsetValue.value = String(preset.value);
+    selectedUnit.value = units.find((unit) => unit.id === preset.unitId);
+};
+const offsetNumber = computed(() => {
+    const parsed = Number.parseInt(offsetValue.value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+});
+const offsetInvalid = computed(() => offsetNumber.value <= 0);
+
+// --- Festes Datum
+const fixedDate = ref(null);
+
+const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.${date.getFullYear()}`;
+};
+
+const timeSummary = computed(() => {
+    if (timeMode.value === "offset") {
+        if (offsetInvalid.value) return $t("Please enter an offset greater than 0.");
+        const unitLabel = selectedUnit.value?.label ?? "";
+        return direction.value === "later"
+            ? $t('All events are moved {0} {1} later.', [offsetNumber.value, unitLabel])
+            : $t('All events are moved {0} {1} earlier.', [offsetNumber.value, unitLabel]);
+    }
+    if (timeMode.value === "date") {
+        return fixedDate.value
+            ? $t('All events are placed on {0}.', [formatDate(fixedDate.value)])
+            : $t("Please choose a date.");
+    }
+    return $t("Date and time remain unchanged.");
+});
+
+// --- Validierung & Speichern
+const hasChange = computed(() =>
+    Boolean(selectedRoom.value?.id) ||
+    (timeMode.value === "offset" && offsetNumber.value > 0) ||
+    (timeMode.value === "date" && Boolean(fixedDate.value))
+);
+const isValid = computed(() => {
+    if (!hasChange.value) return false;
+    if (timeMode.value === "offset" && offsetInvalid.value) return false;
+    if (timeMode.value === "date" && !fixedDate.value) return false;
+    return true;
+});
+
+const requestError = ref("");
+const submitting = ref(false);
+
+const save = () => {
+    requestError.value = "";
+    submitting.value = true;
+    axios.patch(route("multi-edit.save"), {
+        events: props.checkedEvents,
+        newRoomId: selectedRoom.value?.id ? selectedRoom.value.id : null,
+        calculationType: direction.value === "later" ? 1 : 2,
+        value: timeMode.value === "offset" ? offsetNumber.value : 0,
+        type: selectedUnit.value?.id ?? 2,
+        date: timeMode.value === "date" ? fixedDate.value : null,
+    }).then(() => {
+        emit("closed", true);
+    }).catch((error) => {
+        requestError.value = error.response?.data?.message ?? $t("An error has occurred");
+    }).finally(() => {
+        submitting.value = false;
+    });
+};
 </script>

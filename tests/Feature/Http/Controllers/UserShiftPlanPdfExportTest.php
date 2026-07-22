@@ -4,11 +4,26 @@ namespace Tests\Feature\Http\Controllers;
 
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Models\User;
+use Barryvdh\Snappy\PdfWrapper;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
 final class UserShiftPlanPdfExportTest extends FeatureTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $pdf = Mockery::mock(PdfWrapper::class);
+        $pdf->shouldReceive('loadView')->once()->andReturnSelf();
+        $pdf->shouldReceive('setPaper')->once()->andReturnSelf();
+        $pdf->shouldReceive('setOption')->once()->andReturnSelf();
+        $pdf->shouldReceive('save')->once()->andReturnSelf();
+
+        $this->app->instance(PdfWrapper::class, $pdf);
+    }
+
     #[Test]
     public function export_works_for_internal_user(): void
     {

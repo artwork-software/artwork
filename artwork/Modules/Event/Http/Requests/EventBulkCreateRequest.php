@@ -14,16 +14,17 @@ class EventBulkCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'events' => 'required|array',
+            'events' => 'required|array|min:1|max:500',
             'events.*.name' => 'nullable|string',
             'events.*.day' => 'nullable|string',
             'events.*.start_time' => 'nullable',
             'events.*.end_time' => 'nullable',
             'events.*.end_day' => 'nullable',
-            'events.*.room' => 'array',
-            'events.*.room.id' => 'integer|exists:rooms,id',
-            'events.*.type' => 'array',
-            'events.*.type.id' => 'integer|exists:event_types,id',
+            'events.*.room' => 'required|array',
+            'events.*.room.id' => 'required|integer|exists:rooms,id',
+            'events.*.type' => 'required|array',
+            'events.*.type.id' => 'required|integer|exists:event_types,id',
+            'events.*.is_planning' => 'sometimes|boolean',
         ];
     }
 }

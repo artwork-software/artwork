@@ -49,21 +49,24 @@
                     </div>
                     <div>
                         <BaseInput id="mail_username" v-model="form.username" :label="$t('Username')" :error="form.errors.username"/>
-                        <p v-if="mailSettings.fallback.username" class="text-xs text-secondary mt-1">
-                            {{ $t('Fallback: :value', { value: mailSettings.fallback.username }) }}
-                        </p>
                     </div>
                 </div>
 
                 <div>
                     <BaseInput id="mail_password" v-model="form.password" type="password"
                                :label="$t('Password')" :error="form.errors.password"
+                               :disabled="form.clear_password"
                                :placeholder="mailSettings.has_password ? '••••••••' : ''"/>
                     <p class="text-xs text-secondary mt-1">
                         {{ mailSettings.has_password
                             ? $t('A password is stored. Leave blank to keep it, or enter a new one to replace it.')
                             : $t('Leave blank to use the server configuration (.env).') }}
                     </p>
+                    <label v-if="mailSettings.has_password" class="mt-2 flex items-center gap-2 text-xs text-secondary">
+                        <input type="checkbox" v-model="form.clear_password"
+                               class="rounded border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
+                        {{ $t('Remove stored password (fall back to the server configuration)') }}
+                    </label>
                 </div>
 
                 <h3 class="text-sm font-semibold text-gray-900 mt-4">{{ $t('Sender (From)') }}</h3>
@@ -147,6 +150,7 @@ export default defineComponent({
                 encryption: this.mailSettings.encryption ?? '',
                 username: this.mailSettings.username ?? '',
                 password: '',
+                clear_password: false,
                 from_address: this.mailSettings.from_address ?? '',
                 from_name: this.mailSettings.from_name ?? '',
             }),
@@ -161,6 +165,7 @@ export default defineComponent({
                 preserveScroll: true,
                 onSuccess: () => {
                     this.form.password = '';
+                    this.form.clear_password = false;
                 },
             });
         },

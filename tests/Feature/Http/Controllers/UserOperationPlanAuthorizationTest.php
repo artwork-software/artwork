@@ -57,8 +57,16 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
         $this->givePermission($user, PermissionEnum::CAN_VIEW_OWN_ROSTER);
         $this->actingAs($user);
 
-        $committedShift = Shift::factory()->create(['is_committed' => true]);
-        $uncommittedShift = Shift::factory()->create(['is_committed' => false]);
+        $shiftAttributes = [
+            'event_id' => null,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+            'start' => '10:00',
+            'end' => '12:00',
+            'break_minutes' => 0,
+        ];
+        $committedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => true]);
+        $uncommittedShift = Shift::factory()->create($shiftAttributes + ['is_committed' => false]);
         $qualification = ShiftQualification::factory()->create();
         $user->shifts()->attach([
             $committedShift->id => ['shift_qualification_id' => $qualification->id],
@@ -73,6 +81,14 @@ final class UserOperationPlanAuthorizationTest extends FeatureTestCase
 
         $response->assertOk();
         $this->assertSame([$committedShift->id], collect($response->inertiaProps('shifts'))->pluck('id')->all());
+
+        // daysWithData ist die tatsächliche Datenquelle des Renderings — auch dort
+        // darf die nicht festgeschriebene Schicht nicht auftauchen.
+        $daysWithDataShiftIds = collect($response->inertiaProps('daysWithData'))
+            ->flatMap(static fn(array $day) => collect($day['shifts'])->pluck('id'))
+            ->all();
+        $this->assertContains($committedShift->id, $daysWithDataShiftIds);
+        $this->assertNotContains($uncommittedShift->id, $daysWithDataShiftIds);
     }
 
     #[Test]

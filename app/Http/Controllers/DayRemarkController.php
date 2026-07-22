@@ -40,7 +40,12 @@ class DayRemarkController extends Controller
         $text = trim($validated['remark'] ?? '');
 
         if ($text === '') {
-            DayRemark::query()->where('date', $parsedDate->toDateString())->delete();
+            // Über das Model löschen, damit das Activity-Log (LogsActivity)
+            // die Löschung erfasst — Query-Builder-Deletes umgehen Model-Events.
+            DayRemark::query()
+                ->where('date', $parsedDate->toDateString())
+                ->get()
+                ->each(static fn (DayRemark $remark) => $remark->delete());
 
             $this->broadcastDayRemarkUpdate($parsedDate->toDateString(), null);
 
@@ -69,12 +74,12 @@ class DayRemarkController extends Controller
                 ]);
             } catch (UniqueConstraintViolationException) {
                 // A concurrent request inserted this date after our lookup.
-                DayRemark::query()->whereDate('date', $parsedDate->toDateString())->update([
+                // Update über das Model, damit auch dieser Pfad im Activity-Log landet.
+                $dayRemark = DayRemark::query()->whereDate('date', $parsedDate->toDateString())->firstOrFail();
+                $dayRemark->update([
                     'remark' => $text,
                     'updated_by' => $userId,
-                    'updated_at' => now(),
                 ]);
-                $dayRemark = DayRemark::query()->whereDate('date', $parsedDate->toDateString())->firstOrFail();
             }
         }
 

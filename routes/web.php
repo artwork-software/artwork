@@ -245,7 +245,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'store'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.store');
 
         // Specific routes must come before parameterized routes
-        Route::get('/active', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'activeRules'])->name('shift-rules.active');
+        // Wird auch vom Schichtplaner-Workflow (ShowUserShiftsModal) genutzt — nur "can plan shifts" nötig
+        Route::get('/active', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'activeRules'])
+            ->withoutMiddleware('shift-settings-area:rules,view')
+            ->name('shift-rules.active');
         Route::get('/contracts/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'contractAssignments'])->name('shift-rules.contracts.index');
         Route::put('/contracts/{contract}/assignments', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'updateContractAssignments'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.contracts.assignments.update');
         Route::post('/validate', [\Artwork\Modules\Shift\Http\Controllers\ShiftRuleController::class, 'validateRules'])->middleware('shift-settings-area:rules,edit')->name('shift-rules.validate');
@@ -3225,10 +3228,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->middleware('shift-settings-area:work-time-patterns,edit')->name('shift.work-time-pattern.destroy');
 
         // user.work-time-pattern.update
+        // Speichern-Endpunkt des Userprofil-Tabs "Arbeitszeitmuster" — gleiche Gate wie die GET-Route
+        // (user.edit.work-time-pattern, "can manage workers"), NICHT die Schicht-Settings-Permission
         Route::patch(
             '/work-time-pattern/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
-        )->middleware('shift-settings-area:work-time-patterns,edit')->name('shift.work-time-pattern.update-user');
+        )->middleware('can:can manage workers')->name('shift.work-time-pattern.update-user');
     });
 
     // group user contracts
@@ -3249,10 +3254,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->middleware('shift-settings-area:user-contracts,edit')
             ->name('user-contract-settings.destroy');
 
+        // Speichern-Endpunkt des Userprofil-Tabs "Arbeitsvertrag" — gleiche Gate wie die GET-Route
+        // (user.edit.contract, "can manage workers"), NICHT die Schicht-Settings-Permission
         Route::patch(
             '/contract/{user}/update-user',
             [\Artwork\Modules\User\Http\Controllers\UserContractAssignController::class, 'store']
-        )->middleware('shift-settings-area:user-contracts,edit')->name('user-contract-settings.update-user');
+        )->middleware('can:can manage workers')->name('user-contract-settings.update-user');
     });
 
     // users.worktimes.store

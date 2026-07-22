@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Mail\Providers;
 
 use Artwork\Modules\Mail\Services\MailSettingsResolver;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -12,9 +11,6 @@ use Throwable;
 
 class MailSettingsServiceProvider extends ServiceProvider
 {
-    public const CACHE_KEY = 'mail_settings_effective';
-    private const CACHE_TTL_HOURS = 6;
-
     public function boot(): void
     {
         $this->applyMailConfig();
@@ -27,8 +23,9 @@ class MailSettingsServiceProvider extends ServiceProvider
 
     /**
      * Push the effective (admin-maintained, otherwise .env) mail configuration into
-     * config('mail.*') so it applies to every outgoing mail. Cached because the mail
-     * account is persistent; the cache is invalidated whenever the settings are saved.
+     * config('mail.*') so it applies to every outgoing mail. Deliberately NOT cached:
+     * the settings read is a single cheap query per request, and caching would put
+     * the decrypted SMTP password in plain text into the shared cache store.
      */
     public function applyMailConfig(bool $refreshSettings = false): void
     {
@@ -38,11 +35,7 @@ class MailSettingsServiceProvider extends ServiceProvider
                 $resolver->refreshSettings();
             }
 
-            $config = Cache::remember(
-                self::CACHE_KEY,
-                now()->addHours(self::CACHE_TTL_HOURS),
-                fn (): array => $resolver->effectiveConfigArray()
-            );
+            $config = $resolver->effectiveConfigArray();
         } catch (Throwable) {
             // Settings table may not exist yet (early boot / migrations) — keep .env config.
             return;

@@ -24,8 +24,9 @@
                     >
                         <img
                             v-if="article.images?.[0]?.image"
-                            :src="'/storage/' + article.images[0].image"
+                            :src="'/storage/' + (article.images[0].thumbnail || article.images[0].image)"
                             :alt="article.images[0].alt || article.name"
+                            loading="lazy"
                             class="size-full object-cover"
                         >
                         <span v-else aria-hidden="true">{{ article.name?.slice(0, 2).toUpperCase() }}</span>
@@ -207,7 +208,10 @@ const isOverdue = computed(() => {
         return false;
     }
 
-    const returnDate = new Date(`${props.externMaterialIssue.return_date}T23:59:59`);
+    // return_date kommt als ISO-Instant ("2026-07-30T00:00:00.000000Z") — erst auf
+    // das reine Datum kürzen, sonst entsteht "…ZT23:59:59" = Invalid Date.
+    const returnDay = String(props.externMaterialIssue.return_date).slice(0, 10);
+    const returnDate = new Date(`${returnDay}T23:59:59`);
     return returnDate.getTime() < Date.now();
 });
 

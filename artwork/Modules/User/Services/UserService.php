@@ -268,7 +268,8 @@ class UserService
                     $user->id,
                     'user',
                     $startOfWeek,
-                    $endOfWeek
+                    $endOfWeek,
+                    $this->shouldHideUncommittedShiftsInOwnRoster($user)
                 )
             )
             //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
@@ -351,7 +352,7 @@ class UserService
         return $this->userRepository->getShiftsOrderedByStartAscending($user, $committedOnly);
     }
 
-    private function shouldHideUncommittedShiftsInOwnRoster(User $rosterOwner): bool
+    public function shouldHideUncommittedShiftsInOwnRoster(User $rosterOwner): bool
     {
         $currentUser = $this->statefulGuard->user();
 

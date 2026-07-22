@@ -41,11 +41,12 @@ class MailSettingsController extends Controller
                 'from_name' => $this->settings->from_name,
                 'has_password' => ($this->settings->password ?? '') !== '',
                 // Effective fallback values (from .env) to show as UI placeholders.
+                // Deliberately without username: the .env account name is itself a
+                // sensitive credential detail and must not be shown in the UI.
                 'fallback' => [
                     'host' => $this->resolver->hostFallback(),
                     'port' => $this->resolver->portFallback(),
                     'encryption' => $this->resolver->encryptionFallback(),
-                    'username' => $this->resolver->usernameFallback(),
                     'from_address' => $this->resolver->fromAddressFallback(),
                     'from_name' => $this->resolver->fromNameFallback(),
                 ],
@@ -57,23 +58,26 @@ class MailSettingsController extends Controller
     {
         $validated = $request->validated();
 
+        $port = $validated['port'] ?? null;
         $this->settings->host = $this->nullableTrim($validated['host'] ?? null);
-        $this->settings->port = $validated['port'] !== null && $validated['port'] !== ''
-            ? (int) $validated['port']
+        $this->settings->port = $port !== null && $port !== ''
+            ? (int) $port
             : null;
         $this->settings->encryption = $this->nullableTrim($validated['encryption'] ?? null);
         $this->settings->username = $this->nullableTrim($validated['username'] ?? null);
         $this->settings->from_address = $this->nullableTrim($validated['from_address'] ?? null);
         $this->settings->from_name = $this->nullableTrim($validated['from_name'] ?? null);
 
-        // Only overwrite the password when a new value is provided; blank keeps the stored one.
-        if (($validated['password'] ?? '') !== '') {
+        if ($request->boolean('clear_password')) {
+            // Explizites Entfernen: zurück auf den .env-Fallback.
+            $this->settings->password = null;
+        } elseif (($validated['password'] ?? '') !== '') {
+            // Only overwrite the password when a new value is provided; blank keeps the stored one.
             $this->settings->password = $validated['password'];
         }
 
         $this->settings->save();
 
-        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
         app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
         Mail::purge('smtp');
 
@@ -89,7 +93,6 @@ class MailSettingsController extends Controller
         $this->authorize('view', GeneralSettings::class);
 
         // Rebuild the effective config from the stored settings and force a fresh transport.
-        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
         $config = $this->resolver->effectiveConfigArray();
 
         Config::set('mail.mailers.smtp.host', $config['host']);
@@ -116,9 +119,13 @@ class MailSettingsController extends Controller
                 }
             );
         } catch (Throwable $e) {
+            // Generische Meldung: Die rohe Transport-Exception würde Host/Port-
+            // Erreichbarkeit ausplaudern (Port-Scan-Oracle); Details ins Log.
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => __('Test email could not be sent. Please check the mail configuration and the log.'),
             ], 500);
         }
 

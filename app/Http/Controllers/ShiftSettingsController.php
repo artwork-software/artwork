@@ -119,8 +119,11 @@ class ShiftSettingsController extends Controller
     ): RedirectResponse {
         $enabled = $request->boolean('granular_permissions_enabled');
 
-        if ($enabled && !$shiftSettings->granular_permissions_enabled) {
+        // Defaults nur EINMALIG verteilen. Sonst würde ein erneutes Off→On
+        // individuell entzogene granulare Rechte wieder zurückbringen.
+        if ($enabled && !$shiftSettings->granular_defaults_granted) {
             $permissionService->grantGranularDefaultsToMasterPermissionHolders();
+            $shiftSettings->granular_defaults_granted = true;
         }
 
         $shiftSettings->granular_permissions_enabled = $enabled;

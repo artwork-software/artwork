@@ -154,7 +154,12 @@ class ExportPDFController extends Controller
         if (
             $request->boolean('includeDayRemarks')
             && app(\App\Settings\GeneralCalendarSettings::class)->day_remarks_enabled
-            && $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_VIEW->value)
+            && (
+                // Gleiche Sichtbarkeitsregel wie im Kalender (CalendarDataService):
+                // EDIT impliziert Sehen-Dürfen.
+                $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_VIEW->value)
+                || $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_EDIT->value)
+            )
         ) {
             $dayRemarks = \Artwork\Modules\Calendar\Models\DayRemark::query()
                 ->betweenDates($startDate, $endDate)
@@ -904,11 +909,19 @@ class ExportPDFController extends Controller
         $gridStart = $months[0]['start']->copy()->startOfWeek(Carbon::MONDAY);
         $gridEnd = end($months)['end']->copy()->endOfWeek(Carbon::SUNDAY);
 
+        // Eigener Export unterliegt derselben Regel wie der eigene Einsatzplan:
+        // nicht festgeschriebene Schichten ggf. ausblenden (Instanz-Setting).
+        $hideUncommitted = $type === 'user'
+            && $worker instanceof User
+            && app(\Artwork\Modules\User\Services\UserService::class)
+                ->shouldHideUncommittedShiftsInOwnRoster($worker);
+
         $daysWithData = $eventService->getDaysWithEventsAndTotalPlannedWorkingHours(
             $modelId,
             $type,
             $gridStart->copy(),
-            $gridEnd->copy()
+            $gridEnd->copy(),
+            $hideUncommitted
         );
 
         // Verbindliche Projektzuordnungen je Tag (Wünsche bewusst nicht im PDF)

@@ -48,7 +48,9 @@ class WorkTimeBookingService
 
             $workedTimes = $this->calculateShiftMinutes($today, $user);
 
-            if ($this->repository->isHoliday($today)) {
+            $isHoliday = $this->repository->isHoliday($today);
+
+            if ($isHoliday) {
                 if ($workedTimes['total'] > 0) {
                     // Gearbeitete Feiertage reduzieren das Soll nicht.
                 } elseif ($user->activeWorkContract()?->use_three_month_average_for_target_reduction) {
@@ -62,7 +64,9 @@ class WorkTimeBookingService
             // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
             // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> der freie Tag erzeugt ein
             // Minus-Delta = Überstundenabbau.
-            $holidayCompValue = (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
+            // Nicht an einem Feiertag: dort hat der Feiertagszweig oben das Soll
+            // bereits gesenkt — eine zweite Reduktion wäre doppelt.
+            $holidayCompValue = $isHoliday ? 0.0 : (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
                 ->where('user_id', $user->id)
                 ->where('for_holiday', true)
                 ->whereNotNull('granted_date')

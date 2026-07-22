@@ -68,7 +68,6 @@ import { computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js"
 const { t } = useI18n(), $t = t;
 const pageProps = usePage().props;
 const calSettings = computed(() => pageProps.auth.user.calendar_settings);
-const highContrastPercent = computed(() => pageProps.high_contrast_percent);
 
 const props = defineProps({
     event: { type: Object, required: true },
@@ -78,7 +77,11 @@ const props = defineProps({
 
 const emit = defineEmits(["editEvent"]);
 
-const { backgroundColorWithOpacity, getTextColorBasedOnBackground } = useColorHelper();
+const { backgroundColorWithOpacity, getTextColorBasedOnBackground, getHighContrastPercent } = useColorHelper();
+
+// Wie FullEventInCalendar aus den Kalender-Settings ableiten — die frühere
+// Page-Prop high_contrast_percent existiert nicht mehr.
+const highContrastPercent = computed(() => getHighContrastPercent(calSettings.value));
 
 // Farb-Logik identisch zu FullEventInCalendar (Termintyp-, Status- oder
 // Hauptkategorie-Farbe je nach Anzeigeeinstellung)

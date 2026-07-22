@@ -9,4 +9,10 @@ return new class extends SettingsMigration
         $this->migrator->add('shift-settings.granular_permissions_enabled', false);
         $this->migrator->add('shift-settings.hide_uncommitted_shifts_from_own_roster', false);
     }
+
+    public function down(): void
+    {
+        $this->migrator->delete('shift-settings.granular_permissions_enabled');
+        $this->migrator->delete('shift-settings.hide_uncommitted_shifts_from_own_roster');
+    }
 };

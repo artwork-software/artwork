@@ -1619,7 +1619,10 @@ const monthBadge = (day: any) => monthBadgeByKey.value.get(day?.fullDay) ?? null
 const roomHeaderStyleByColor = new Map<string, { backgroundColor: string; color: string }>()
 const roomHeaderStyle = (room: any) => {
     const color = room?.roomColor ?? null
-    if (!color) return null
+    // '#000000' ist der Migrations-Default für "keine Farbe gepflegt" (Areale) —
+    // ohne diesen Guard bekämen alle Räume den grauen Tint und die
+    // Zebra-Streifung wäre auf Bestandsinstallationen tot.
+    if (!color || color.toLowerCase() === '#000000') return null
     let style = roomHeaderStyleByColor.get(color)
     if (!style) {
         const r = parseInt(color.slice(-6, -4), 16)
@@ -3538,7 +3541,7 @@ const scrollToPeriod = (period: 'day' | 'week' | 'month', direction: 'next' | 'p
     let acc = 0
     for (let i = 0; i < daysArr.length; i++) {
         offsets[i] = acc
-        acc += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth
+        acc += daysArr[i]?.isExtraRow ? kwColWidth : shiftColWidth.value
     }
 
     // Zielspalten je Modus: Tag → Tagesspalte, Woche → KW-Spalte, Monat → Monatserster

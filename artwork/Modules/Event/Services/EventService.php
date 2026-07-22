@@ -467,6 +467,7 @@ readonly class EventService
         string $modelType,
         Carbon $startDate,
         Carbon $endDate,
+        bool $committedShiftsOnly = false,
     ): array {
         $daysWithData = [];
         $calculatePlannedWorkingHours = function ($shifts): array {
@@ -739,6 +740,13 @@ readonly class EventService
         foreach ($events as $event) {
             /** @var Shift $shift */
             foreach ($event['shifts'] as $shift) {
+                // Setting "nicht festgeschriebene Schichten im eigenen Einsatzplan
+                // ausblenden": daysWithData ist die Datenquelle des Renderings —
+                // die Filterung nur der shifts-Prop würde hier nicht greifen.
+                if ($committedShiftsOnly && !$shift->is_committed) {
+                    continue;
+                }
+
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
 
                 // Schichten außerhalb des angefragten Zeitraums (möglich durch
@@ -811,6 +819,10 @@ readonly class EventService
 
         /** @var Shift $shift */
         foreach ($shifts as $shift) {
+            if ($committedShiftsOnly && !$shift->is_committed) {
+                continue;
+            }
+
             if (!$shift->event_id) {
                 $shiftDate = Carbon::parse($shift->start_date)->format('Y-m-d');
 

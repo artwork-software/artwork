@@ -30,7 +30,11 @@ class StoreExternalUserSourceRequest extends FormRequest
         ];
 
         if ($this->input('type') === 'identity_provider') {
-            return $rules + $this->identityProviderRules($this->input('config.provider_preset', 'custom'));
+            // ?? 'custom': input() liefert bei explizit gesendetem null den null-Wert
+            // trotz Default — ohne Fallback gäbe das einen TypeError (500).
+            return $rules + $this->identityProviderRules(
+                $this->input('config.provider_preset', 'custom') ?? 'custom'
+            );
         }
 
         return $rules + $this->ldapRules();

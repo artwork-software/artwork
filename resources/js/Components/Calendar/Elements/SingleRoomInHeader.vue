@@ -30,7 +30,9 @@ const {getTextColorBasedOnBackground} = useColorHelper();
 const roomColor = computed(() => props.room?.roomColor ?? props.room?.color ?? null);
 
 const colorStyle = computed(() => {
-    if (!roomColor.value) {
+    // '#000000' ist der Migrations-Default für "keine Farbe gepflegt" — dann
+    // keinen (schwarzen) Farbchip rendern.
+    if (!roomColor.value || roomColor.value.toLowerCase() === '#000000') {
         return {};
     }
     const r = parseInt(roomColor.value.slice(-6, -4), 16);

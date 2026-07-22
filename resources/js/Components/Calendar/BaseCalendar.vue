@@ -170,7 +170,7 @@
                                                                     @click="onEventClick(item.data, $event)"
                                                                 >
                                                                     <AsyncSingleEventInCalendar
-                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, item.data.considerOnMultiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
                                                                         :event="item.data"
                                                                         :multi-edit="multiEdit"
                                                                         :font-size="fontSizeCalc"

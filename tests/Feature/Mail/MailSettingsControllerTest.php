@@ -7,7 +7,6 @@ use Artwork\Modules\Mail\Settings\MailSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Events\JobProcessing;
-use Illuminate\Support\Facades\Cache;
 use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Activitylog\Models\Activity;
@@ -76,6 +75,20 @@ final class MailSettingsControllerTest extends TestCase
     }
 
     #[Test]
+    public function clear_password_flag_removes_the_stored_password(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->patch(route('tool.mail.update'), $this->validPayload(['password' => 'first-pw']));
+        $this->patch(route('tool.mail.update'), $this->validPayload([
+            'password' => '',
+            'clear_password' => true,
+        ]));
+
+        $this->assertNull(app(MailSettings::class)->password);
+    }
+
+    #[Test]
     public function empty_fields_are_stored_as_null_to_fall_back_to_env(): void
     {
         $this->actingAsAdmin();
@@ -118,13 +131,11 @@ final class MailSettingsControllerTest extends TestCase
         $settings->host = 'smtp.override.example';
         $settings->save();
 
-        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
         app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
         $this->assertSame('smtp.override.example', config('mail.mailers.smtp.host'));
 
         $settings->host = null;
         $settings->save();
-        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
         app()->getProvider(MailSettingsServiceProvider::class)?->applyMailConfig(true);
 
         $this->assertSame('smtp.fallback.example', config('mail.mailers.smtp.host'));
@@ -136,7 +147,6 @@ final class MailSettingsControllerTest extends TestCase
         $settings = app(MailSettings::class);
         $settings->host = 'smtp.worker.example';
         $settings->save();
-        Cache::forget(MailSettingsServiceProvider::CACHE_KEY);
         config(['mail.mailers.smtp.host' => 'smtp.stale.example']);
         $job = Mockery::mock(Job::class);
         $job->shouldReceive('payload')->andReturn([]);
@@ -181,7 +191,7 @@ final class MailSettingsControllerTest extends TestCase
     }
 
     #[Test]
-    public function test_mail_returns_the_real_error_message_on_failure(): void
+    public function test_mail_returns_a_generic_error_message_on_failure(): void
     {
         $this->actingAsAdmin();
 
@@ -197,8 +207,11 @@ final class MailSettingsControllerTest extends TestCase
             ->assertStatus(500)
             ->assertJson(['success' => false]);
 
+        // Bewusst generisch: Die rohe Transport-Exception wäre ein
+        // Port-Scan-Oracle (Host/Port frei wählbar, Fehlermeldung verrät
+        // Erreichbarkeit). Details landen nur im Log.
         $this->assertNotEmpty($response->json('message'));
-        $this->assertStringContainsString('smtp.this-host-does-not-exist.invalid', $response->json('message'));
+        $this->assertStringNotContainsString('smtp.this-host-does-not-exist.invalid', $response->json('message'));
     }
 
     #[Test]

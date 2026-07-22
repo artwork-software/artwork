@@ -118,4 +118,32 @@ final class MailSettingsResolverTest extends TestCase
         $this->assertSame(587, $config['port']);
         $this->assertSame('DB Name', $config['from_name']);
     }
+
+    #[Test]
+    public function env_credentials_are_never_combined_with_an_overridden_host(): void
+    {
+        config([
+            'mail.fallback.host' => 'env-host.example.com',
+            'mail.fallback.username' => 'env-user',
+            'mail.fallback.password' => 'env-secret',
+        ]);
+
+        $settings = $this->settings();
+        $settings->host = 'attacker-controlled.example.com';
+        $settings->username = null;
+        $settings->password = null;
+        $settings->save();
+
+        // Kein Credential-Mixing: Die .env-Zugangsdaten dürfen nie an einen
+        // admin-konfigurierten Fremd-Host gesendet werden.
+        $this->assertNull($this->resolver()->username());
+        $this->assertNull($this->resolver()->password());
+
+        // Ohne Host-Override greift der .env-Fallback weiterhin.
+        $settings->host = null;
+        $settings->save();
+
+        $this->assertSame('env-user', $this->resolver()->username());
+        $this->assertSame('env-secret', $this->resolver()->password());
+    }
 }

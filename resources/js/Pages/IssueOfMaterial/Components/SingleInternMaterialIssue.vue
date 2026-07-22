@@ -25,8 +25,9 @@
                     >
                         <img
                             v-if="article.images?.[0]?.image"
-                            :src="'/storage/' + article.images[0].image"
+                            :src="'/storage/' + (article.images[0].thumbnail || article.images[0].image)"
                             :alt="article.images[0].alt || article.name"
+                            loading="lazy"
                             class="size-full object-cover"
                         >
                         <span v-else aria-hidden="true">{{ article.name?.slice(0, 2).toUpperCase() }}</span>

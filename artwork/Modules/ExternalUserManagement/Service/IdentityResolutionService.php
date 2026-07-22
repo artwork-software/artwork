@@ -195,7 +195,16 @@ class IdentityResolutionService
             $user->last_name = $lastName;
         }
 
-        if ($email !== null && $email !== '') {
+        // E-Mail nur übernehmen, wenn kein anderes Konto sie bereits nutzt —
+        // sonst stirbt der Save an users_email_unique und der Login mit 500.
+        if (
+            $email !== null
+            && $email !== ''
+            && !$this->userRepository->getNewModelQuery()
+                ->where('email', $email)
+                ->whereKeyNot($user->getKey())
+                ->exists()
+        ) {
             $user->email = $email;
         }
 

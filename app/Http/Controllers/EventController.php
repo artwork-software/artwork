@@ -116,6 +116,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class EventController extends Controller
@@ -4126,17 +4128,32 @@ class EventController extends Controller
         EventBulkCreateRequest $request,
         Project $project
     ): RedirectResponse {
+        $this->authorize('view', $project);
+
         $events = $request->input('events', []);
 
+        // Erst ALLE Zeilen autorisieren, dann anlegen — sonst stehen bei einem 403
+        // mitten in der Liste die ersten Termine bereits in der DB (Teil-Erstellung).
         foreach ($events as $event) {
             $room = Room::query()->findOrFail($event['room']['id']);
             $this->authorizeBulkEventCreation((bool) ($event['is_planning'] ?? false), $room);
+        }
 
-            $storedEvent = $this->eventService->createBulkEvent(
-                $event,
-                $project,
-                $this->authManager->id()
-            );
+        $storedEvents = DB::transaction(function () use ($events, $project): array {
+            $stored = [];
+
+            foreach ($events as $event) {
+                $stored[] = $this->eventService->createBulkEvent(
+                    $event,
+                    $project,
+                    $this->authManager->id()
+                );
+            }
+
+            return $stored;
+        });
+
+        foreach ($storedEvents as $storedEvent) {
             $freshEvent = $storedEvent->fresh();
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
                 $freshEvent,
@@ -4172,6 +4189,8 @@ class EventController extends Controller
         Request $request,
         Project $project
     ): void {
+        $this->authorize('view', $project);
+
         $validated = $request->validate([
             'event' => ['required', 'array'],
             'event.room.id' => ['required', 'integer', 'exists:rooms,id'],
@@ -4274,6 +4293,12 @@ class EventController extends Controller
             'end_time' => ['nullable', 'date_format:H:i'],
             'is_planning' => ['nullable', 'boolean'],
         ]);
+
+        // Gleiche Härtung wie in storeEvent: Termine dürfen nur in Projekte gelegt
+        // werden, die der User auch sehen darf (IDOR-Schutz).
+        if (!empty($validated['project_id'])) {
+            $this->authorize('view', Project::query()->findOrFail($validated['project_id']));
+        }
 
         $cells = $this->uniqueMultiCells($validated['cells']);
         $isPlanning = (bool) ($validated['is_planning'] ?? false);
@@ -4462,7 +4487,15 @@ class EventController extends Controller
             $this->authorize('answerRoomRequest', $event);
         }
         foreach ($events as $event) {
-            $this->acceptEvent($request, $event);
+            try {
+                $this->acceptEvent($request, $event);
+            } catch (HttpException $e) {
+                // 409 = Anfrage wurde parallel bereits beantwortet → überspringen,
+                // statt die Bulk-Verarbeitung mitten in der Liste abzubrechen.
+                if ($e->getStatusCode() !== SymfonyResponse::HTTP_CONFLICT) {
+                    throw $e;
+                }
+            }
         }
 
         return redirect()->back();
@@ -4481,7 +4514,15 @@ class EventController extends Controller
             $this->authorize('answerRoomRequest', $event);
         }
         foreach ($events as $event) {
-            $this->declineEvent($request, $event);
+            try {
+                $this->declineEvent($request, $event);
+            } catch (HttpException $e) {
+                // 409 = Anfrage wurde parallel bereits beantwortet → überspringen,
+                // statt die Bulk-Verarbeitung mitten in der Liste abzubrechen.
+                if ($e->getStatusCode() !== SymfonyResponse::HTTP_CONFLICT) {
+                    throw $e;
+                }
+            }
         }
 
         return redirect()->back();

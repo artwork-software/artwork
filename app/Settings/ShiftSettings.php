@@ -21,6 +21,11 @@ class ShiftSettings extends Settings
 
     public bool $granular_permissions_enabled;
 
+    // Einmal-Flag: granulare Default-Rechte wurden bereits an die Inhaber der
+    // Master-Permission verteilt — verhindert, dass jedes erneute Aktivieren
+    // individuell entzogene Rechte wieder zurückbringt.
+    public bool $granular_defaults_granted;
+
     public bool $hide_uncommitted_shifts_from_own_roster;
 
     public static function group(): string

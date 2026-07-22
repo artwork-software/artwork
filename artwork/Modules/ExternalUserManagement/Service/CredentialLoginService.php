@@ -2,6 +2,8 @@
 
 namespace Artwork\Modules\ExternalUserManagement\Service;
 
+use Artwork\Modules\ExternalUserManagement\Exceptions\AdminLockoutException;
+use Artwork\Modules\ExternalUserManagement\Exceptions\IdentityLinkConflictException;
 use Artwork\Modules\ExternalUserManagement\Exceptions\LdapAuthenticationFailedException;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserSourceRepository;
@@ -111,16 +113,38 @@ class CredentialLoginService
                 return null;
             }
 
-            return $this->identityResolutionService->resolveAndLink(
-                $source,
-                (string) $profile['identifier'],
-                $resolvedEmail,
-                true,
-                [
-                    'first_name' => $profile['first_name'] ?? '',
-                    'last_name' => $profile['last_name'] ?? '',
-                ]
-            );
+            try {
+                return $this->identityResolutionService->resolveAndLink(
+                    $source,
+                    (string) $profile['identifier'],
+                    $resolvedEmail,
+                    true,
+                    [
+                        'first_name' => $profile['first_name'] ?? '',
+                        'last_name' => $profile['last_name'] ?? '',
+                    ]
+                );
+            } catch (AdminLockoutException $e) {
+                // Der letzte lokale Admin darf nicht ans Directory gebunden werden.
+                // Das Konto muss lokal bleiben → lokalen Passwort-Fallback zulassen,
+                // sonst wäre genau dieser Account komplett ausgesperrt.
+                report($e);
+                $existsInIdp = false;
+
+                return null;
+            } catch (IdentityLinkConflictException $e) {
+                // E-Mail gehört zu einem Konto, das an eine andere Quelle gebunden
+                // ist → Login ablehnen statt 500.
+                report($e);
+
+                return null;
+            } catch (\Throwable $e) {
+                // Verknüpfung/Sync fehlgeschlagen (z. B. E-Mail-Unique-Kollision)
+                // → Login ablehnen statt 500.
+                report($e);
+
+                return null;
+            }
         }
 
         return null;

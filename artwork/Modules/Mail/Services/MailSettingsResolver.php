@@ -49,6 +49,13 @@ class MailSettingsResolver
 
     public function username(): ?string
     {
+        // Kein Credential-Mixing: Bei überschriebenem Host niemals die
+        // .env-Zugangsdaten verwenden — sonst würden die Server-Credentials
+        // an einen frei konfigurierbaren Fremd-Host gesendet.
+        if ($this->hasHostOverride()) {
+            return $this->override($this->settings->username);
+        }
+
         return $this->override($this->settings->username) ?? $this->usernameFallback();
     }
 
@@ -59,7 +66,16 @@ class MailSettingsResolver
 
     public function password(): ?string
     {
+        if ($this->hasHostOverride()) {
+            return $this->override($this->settings->password);
+        }
+
         return $this->override($this->settings->password) ?? config('mail.fallback.password');
+    }
+
+    public function hasHostOverride(): bool
+    {
+        return $this->override($this->settings->host) !== null;
     }
 
     public function fromAddress(): ?string

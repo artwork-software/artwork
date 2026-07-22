@@ -22,7 +22,7 @@
                        type="date"
                        class="drc-date-input w-[5.9rem] border-0 bg-transparent p-0 text-sm font-semibold tabular-nums cursor-text focus:ring-0 focus:outline-none rounded"
                        :aria-label="$t('Start date')"
-                       @focusout="commitInline"
+                       @focusout="onInlineFocusOut"
                        @keydown.enter.prevent="$event.target.blur()"/>
                 <span class="text-secondary shrink-0">–</span>
                 <span class="text-xs text-secondary shrink-0">{{ weekdayShort(appliedEnd) }}</span>
@@ -30,7 +30,7 @@
                        type="date"
                        class="drc-date-input w-[5.9rem] border-0 bg-transparent p-0 text-sm font-semibold tabular-nums cursor-text focus:ring-0 focus:outline-none rounded"
                        :aria-label="$t('End date')"
-                       @focusout="commitInline"
+                       @focusout="onInlineFocusOut"
                        @keydown.enter.prevent="$event.target.blur()"/>
                 <button type="button"
                         class="flex items-center gap-x-1 px-1 py-1.5 rounded-lg hover:bg-zinc-100 transition duration-150 shrink-0"
@@ -341,6 +341,17 @@ const draftDayCount = computed(() => {
 function syncInline() {
     inlineStart.value = toIso(appliedStart.value);
     inlineEnd.value = toIso(appliedEnd.value);
+}
+
+function onInlineFocusOut(event) {
+    // Fokuswechsel zwischen Start- und Endfeld darf noch nicht committen —
+    // sonst wird eine halb editierte Range sofort submittet (und bei
+    // preserveState:false remountet die Seite mitten in der Eingabe).
+    const next = event?.relatedTarget;
+    if (next instanceof HTMLElement && next.classList.contains('drc-date-input')) {
+        return;
+    }
+    commitInline();
 }
 
 function commitInline() {

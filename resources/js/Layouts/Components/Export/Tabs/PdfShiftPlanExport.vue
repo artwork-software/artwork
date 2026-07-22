@@ -711,6 +711,18 @@ const createPdf = () => {
         ? 'shift.plan.export.worker-matrix.pdf'
         : 'shift.plan.export.pdf'
 
+    pdf.transform((data: Record<string, unknown>) => {
+        // Tagesansicht liefert keine Raum-/Areal-/Terminart-Optionen: Diese Keys
+        // dann gar nicht mitsenden — der Controller interpretiert vorhandene
+        // leere Arrays als "Dimension löschen" und würde den gespeicherten
+        // Daily-Filter des Users für den Export nullen.
+        if (data.exportMode !== 'worker_matrix' && !config.filterOptions) {
+            const { room_ids, area_ids, event_type_ids, ...rest } = data
+            return rest
+        }
+        return data
+    })
+
     pdf.post(route(routeName), { preserveScroll: true })
     emits('close')
 }

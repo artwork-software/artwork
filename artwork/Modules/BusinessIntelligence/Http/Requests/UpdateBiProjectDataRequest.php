@@ -25,6 +25,9 @@ class UpdateBiProjectDataRequest extends FormRequest
             'is_own_production' => ['boolean'],
             'is_germany_premiere' => ['boolean'],
             'premiere_date' => ['nullable', 'date'],
+            'scope' => ['nullable', 'in:actual,plan'],
+            // Herkunft eines per Vorschlags-Button übernommenen Umsatzwerts
+            'revenue_source' => ['nullable', 'in:budget_income,sage'],
         ];
     }
 }

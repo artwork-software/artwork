@@ -16,6 +16,7 @@ class BiSnapshot extends Model
 
     protected $fillable = [
         'project_id',
+        'scope',
         'name',
         'snapshot_date',
         'data',

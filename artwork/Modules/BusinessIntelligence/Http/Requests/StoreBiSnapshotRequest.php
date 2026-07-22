@@ -16,6 +16,7 @@ class StoreBiSnapshotRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'snapshot_date' => ['required', 'date'],
+            'scope' => ['nullable', 'in:actual,plan'],
         ];
     }
 }

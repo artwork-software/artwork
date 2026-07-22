@@ -82,11 +82,13 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BiExportColumnPicker from '@/Pages/Projects/Components/BiComponents/BiExportColumnPicker.vue';
 import { useBiExport } from '@/Composeables/BiExport.js';
 import { useTranslation } from '@/Composeables/Translation.js';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     project: { type: Object, required: true },
     tagCounts: { type: Array, default: () => [] },
     biCustomFields: { type: Array, default: () => [] },
+    audienceCategories: { type: Array, default: () => [] },
     defaultDateFrom: { type: String, default: null },
     defaultDateTo: { type: String, default: null },
 });
@@ -130,6 +132,12 @@ const staticColumns = [
     { key: 'avg_price', label: 'Average price' },
     { key: 'revenue', label: 'Revenue' },
     { key: 'occupancy_rate', label: 'Occupancy rate' },
+    { key: 'tickets_issued', label: 'Tickets issued' },
+    { key: 'free_tickets_rate', label: 'Free ticket rate' },
+    { key: 'reduced_tickets_rate', label: 'Reduced ticket rate' },
+    { key: 'paying_rate', label: 'Paying rate' },
+    { key: 'no_show_rate', label: 'No-show rate' },
+    { key: 'seat_occupancy', label: 'Seat occupancy (incl. free tickets)' },
     { key: 'premiere_date', label: 'Premiere date' },
     { key: 'production_type', label: 'Production type' },
     { key: 'season_year', label: 'Year' },
@@ -139,7 +147,6 @@ const staticColumns = [
     { key: 'is_germany_premiere', label: 'Germany premiere' },
     { key: 'contract_count', label: 'Contracts' },
     { key: 'event_count', label: 'Events' },
-    { key: 'booking_count', label: 'Bookings' },
     { key: 'task_total', label: 'Tasks total' },
     { key: 'task_open', label: 'Tasks open' },
     { key: 'task_done', label: 'Tasks done' },
@@ -147,6 +154,13 @@ const staticColumns = [
     { key: 'department_count', label: 'Departments involved' },
     { key: 'user_count', label: 'People involved' },
     { key: 'time_efforts', label: 'Time efforts' },
+    { key: 'effort_score', label: 'Effort score' },
+    { key: 'contracts_per_performance', label: 'Contracts / performance' },
+    { key: 'tasks_docs_per_production', label: 'Tasks + documents' },
+    { key: 'plan_visitors', label: 'Plan visitors' },
+    { key: 'plan_sold_tickets', label: 'Plan sold tickets' },
+    { key: 'plan_revenue', label: 'Plan revenue' },
+    { key: 'attainment', label: 'Attainment' },
 ];
 
 const tagColumns = props.tagCounts.map(t => ({
@@ -161,7 +175,21 @@ const customFieldColumns = props.biCustomFields.map(f => ({
     translate: false,
 }));
 
-const availableColumns = [...staticColumns, ...tagColumns, ...customFieldColumns];
+// Sage-basierte Spalten nur mit aktiver Schnittstelle anbieten
+const sageColumns = usePage().props.sageApiEnabled
+    ? [
+        { key: 'booking_count', label: 'Bookings' },
+        { key: 'bookings_per_performance', label: 'Bookings / performance' },
+    ]
+    : [];
+
+const audienceCategoryColumns = (props.audienceCategories ?? []).map(category => ({
+    key: 'audience_cat_' + category.id,
+    label: category.name,
+    translate: false,
+}));
+
+const availableColumns = [...staticColumns, ...sageColumns, ...tagColumns, ...customFieldColumns, ...audienceCategoryColumns];
 
 const selectedColumns = ref(availableColumns.map(c => c.key));
 

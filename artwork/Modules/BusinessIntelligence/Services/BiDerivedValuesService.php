@@ -16,9 +16,77 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BiDerivedValuesService
 {
+    /**
+     * Gewichte des Aufwand-Proxy-Scores und Stunden-Repräsentanten der
+     * Effort-Buckets — geteilte Wahrheit für Dashboard UND Export.
+     */
+    public const SCORE_WEIGHTS = [
+        'contracts' => 2,
+        'bookings' => 1,
+        'open_tasks' => 1.5,
+        'documents' => 0.5,
+        'effort_hours' => 0.1,
+    ];
+
+    public const EFFORT_HOURS = [
+        '0-10' => 5,
+        '10-25' => 17.5,
+        '25-50' => 37.5,
+        '50-100' => 75,
+        '100+' => 125,
+    ];
+
     public function __construct(
         private readonly BiEventTypeTagRepository $biEventTypeTagRepository
     ) {
+    }
+
+    /**
+     * Sage-Bezug nur anbieten, wenn die Schnittstelle wirklich aktiv ist
+     * (gleiche Logik wie HandleInertiaRequests → sageApiEnabled-Prop).
+     */
+    public function isSageApiEnabled(): bool
+    {
+        if (!env('SAGE_API_ENABLED', false)) {
+            return false;
+        }
+
+        $settings = app(\Artwork\Modules\SageApiSettings\Services\SageApiSettingsService::class)->getFirst();
+
+        return $settings !== null && $settings->enabled;
+    }
+
+    /**
+     * Gewichteter Aufwand-Proxy-Score eines Projekts (identische Formel wie im
+     * Dashboard — eine gemeinsame Methode, kein Nachbau im Export).
+     */
+    public function getEffortScore(Project $project): float
+    {
+        $contracts = $project->contracts->count();
+        $bookings = $this->getBookingCount($project);
+        $taskCounts = $this->getTaskCounts($project);
+        $documents = $project->project_files->count();
+        $effortHours = $this->getEffortHours($project);
+
+        return round(
+            self::SCORE_WEIGHTS['contracts'] * $contracts
+            + self::SCORE_WEIGHTS['bookings'] * $bookings
+            + self::SCORE_WEIGHTS['open_tasks'] * $taskCounts['open']
+            + self::SCORE_WEIGHTS['documents'] * $documents
+            + self::SCORE_WEIGHTS['effort_hours'] * $effortHours,
+            1
+        );
+    }
+
+    public function getEffortHours(Project $project): float
+    {
+        return (float) $project->biTimeEfforts->sum(function ($effort): float {
+            $bucket = $effort->effort_bucket instanceof \Artwork\Modules\BusinessIntelligence\Enums\BiEffortBucketEnum
+                ? $effort->effort_bucket->value
+                : (string) $effort->effort_bucket;
+
+            return self::EFFORT_HOURS[$bucket] ?? 0;
+        });
     }
 
     /**
@@ -146,6 +214,57 @@ class BiDerivedValuesService
         )->select('id');
 
         return SageAssignedData::whereIn('column_cell_id', $cellIds)->count();
+    }
+
+    /**
+     * Umsatz-Vorschläge aus dem Budget-Modul für die Plan/Ist-Erfassung:
+     * plan = Einnahmen-Summe der letzten Kalkulationsspalte (Muster
+     * BudgetsByBudgetDeadlineExport), actual = Erlös-Summe der Sage-Buchungen
+     * (negative buchungsbetrag-Werte sind Erlöse). null = keine Quelle vorhanden.
+     *
+     * @return array{plan: ?float, actual: ?float}
+     */
+    public function getRevenueSuggestions(Project $project): array
+    {
+        $table = $project->table;
+
+        if (!$table) {
+            return ['plan' => null, 'actual' => null];
+        }
+
+        $table->loadMissing('columns');
+
+        $plan = null;
+        $lastEmptyColumn = $table->columns->filter(fn($column) => $column->type === 'empty')->last();
+        if ($lastEmptyColumn) {
+            $earnings = (float) ($table->earningSums[$lastEmptyColumn->id] ?? 0);
+            // 0 heißt praktisch "keine Einnahmen kalkuliert" — kein sinnvoller Vorschlag
+            $plan = $earnings > 0 ? round($earnings, 2) : null;
+        }
+
+        $actual = null;
+        // Ist-Vorschlag nur mit aktiver Sage-Schnittstelle — sonst gäbe es
+        // einen "Erlöse aus Sage"-Chip, obwohl das Haus gar kein Sage nutzt
+        $sageColumn = $this->isSageApiEnabled()
+            ? $table->columns->first(fn($column) => $column->type === 'sage')
+            : null;
+        if ($sageColumn) {
+            $sageColumn->loadMissing('cells.sageAssignedData');
+            $revenue = 0.0;
+            $hasBookings = false;
+            foreach ($sageColumn->cells as $cell) {
+                foreach ($cell->sageAssignedData as $booking) {
+                    $hasBookings = true;
+                    $value = (float) $booking->buchungsbetrag;
+                    if ($value < 0) {
+                        $revenue -= $value;
+                    }
+                }
+            }
+            $actual = ($hasBookings && $revenue > 0) ? round($revenue, 2) : null;
+        }
+
+        return ['plan' => $plan, 'actual' => $actual];
     }
 
     /**

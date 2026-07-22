@@ -10,7 +10,9 @@
             </button>
         </template>
 
-        <div class="mt-4">
+        <div class="mt-4 space-y-6">
+            <BiAudienceCategoryManager />
+
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <div v-if="biFields.length === 0" class="text-center text-sm text-gray-500 py-8">
                     {{ $t('No BI fields created yet.') }}
@@ -87,6 +89,7 @@ import { router } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
 import { IconCirclePlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
+import BiAudienceCategoryManager from '@/Pages/Settings/BiSettings/Components/BiAudienceCategoryManager.vue';
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue';
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';

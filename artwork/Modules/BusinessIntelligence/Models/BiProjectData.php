@@ -16,6 +16,7 @@ class BiProjectData extends Model
 
     protected $fillable = [
         'project_id',
+        'scope',
         'visitor_mode',
         'visitors_total',
         'visitors_not_applicable',
@@ -30,6 +31,8 @@ class BiProjectData extends Model
         'is_own_production',
         'is_germany_premiere',
         'premiere_date',
+        'revenue_source',
+        'revenue_source_synced_at',
     ];
 
     protected function casts(): array

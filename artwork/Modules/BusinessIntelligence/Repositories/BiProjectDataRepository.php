@@ -28,13 +28,16 @@ class BiProjectDataRepository extends BaseRepository
         return $this->biProjectData->newModelQuery();
     }
 
-    public function findByProjectId(int $projectId): ?BiProjectData
+    public function findByProjectId(int $projectId, string $scope = 'actual'): ?BiProjectData
     {
-        return $this->getNewModelQuery()->where('project_id', $projectId)->first();
+        return $this->getNewModelQuery()
+            ->where('project_id', $projectId)
+            ->where('scope', $scope)
+            ->first();
     }
 
-    public function firstOrCreateForProject(int $projectId): BiProjectData
+    public function firstOrCreateForProject(int $projectId, string $scope = 'actual'): BiProjectData
     {
-        return BiProjectData::firstOrCreate(['project_id' => $projectId]);
+        return BiProjectData::firstOrCreate(['project_id' => $projectId, 'scope' => $scope]);
     }
 }

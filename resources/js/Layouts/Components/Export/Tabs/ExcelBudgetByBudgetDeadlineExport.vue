@@ -47,6 +47,49 @@
                 </p>
             </section>
 
+            <!-- Spaltenauswahl -->
+            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Columns') }}</h2>
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        @click="showColumns = !showColumns"
+                    >
+                        <span v-if="!showColumns">{{ $t('Show') }}</span>
+                        <span v-else>{{ $t('Hide') }}</span>
+                        <ChevronDownIcon v-if="!showColumns" class="h-5 w-5" />
+                        <ChevronUpIcon v-else class="h-5 w-5" />
+                    </button>
+                </div>
+
+                <div v-if="showColumns" class="grid grid-cols-1 sm:grid-cols-2 gap-y-2">
+                    <div
+                        v-for="(translationKey, columnKey) in availableColumns"
+                        :key="columnKey"
+                        class="flex items-center gap-2"
+                    >
+                        <input
+                            :id="`budget-export-cb-${columnKey}`"
+                            v-model="currentDesiredColumns"
+                            :value="columnKey"
+                            type="checkbox"
+                            class="input-checklist"
+                        />
+                        <label
+                            :for="`budget-export-cb-${columnKey}`"
+                            class="text-xs text-zinc-700 cursor-pointer hover:text-green-600"
+                        >
+                            {{ $t(translationKey) }}
+                        </label>
+                    </div>
+                </div>
+
+                <p v-if="showNoColumnsErrorText" class="text-xs text-red-600 text-center">
+                    {{ $t('Please select at least one column for the export.') }}
+                </p>
+            </section>
+
             <!-- Aktion -->
             <section class="flex items-center justify-end">
                 <BaseUIButton
@@ -62,41 +105,96 @@
 </template>
 
 <script setup>
-import { DocumentReportIcon } from "@heroicons/vue/outline";
-import { Switch, SwitchGroup } from "@headlessui/vue";
-import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import { ref } from "vue";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/outline";
+import { computed, ref } from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
 
-const emits = defineEmits(['close']),
-    startBudgetDeadline = ref(null),
-    endBudgetDeadline = ref(null),
-    showMandatoryFieldsErrorText = ref(false),
-    generateDetailedExport = ref(false),
-    downloadExportProjectBudgetsByBudgetDeadline = () => {
-        if (startBudgetDeadline.value === null || endBudgetDeadline.value === null) {
-            showMandatoryFieldsErrorText.value = true;
+const emits = defineEmits(['close']);
+
+const startBudgetDeadline = ref(null);
+const endBudgetDeadline = ref(null);
+const showMandatoryFieldsErrorText = ref(false);
+const showNoColumnsErrorText = ref(false);
+const generateDetailedExport = ref(false);
+const showColumns = ref(false);
+
+// Spalten-Keys müssen den availableColumns()/availableColumnKeys() der
+// Exportklassen (BudgetsByBudgetDeadlineExport/DetailedBudgetsByBudgetDeadlineExport) entsprechen.
+const aggregatedColumns = {
+    premiere: 'Premiere',
+    project_name: 'Project name original language',
+    artist_or_group: 'Artists',
+    cost_center: 'KTR',
+    project_state: 'Project status',
+    forecast_costs: 'Preview costs',
+    forecast_earnings: 'Preview earnings',
+    forecast_outcome: 'Preview result',
+    sage: 'Sage',
+    sage_revenue: 'Sage earnings',
+    sage_result: 'Sage result',
+};
+
+const detailedColumns = {
+    premiere: 'Premiere',
+    project_name: 'Project name original language',
+    artist_or_group: 'Artists',
+    project_state: 'Project status',
+    cost_center: 'KTR',
+    kst: 'Kst',
+    kst_name: 'Kst name',
+    real_account: 'General ledger account',
+    kto_name: 'General ledger account name',
+    position: 'Position',
+    forecast_costs: 'Preview costs',
+    forecast_earnings: 'Preview earnings',
+    forecast_outcome: 'Preview result',
+    sage: 'Actual - Sage',
+    sage_revenue: 'Actual earnings',
+    sage_result: 'Actual result',
+    source: 'Source (column name in budget)',
+};
+
+// getrennte Auswahl je Variante, damit beim Umschalten nichts verloren geht
+const desiredColumnsAggregated = ref(Object.keys(aggregatedColumns));
+const desiredColumnsDetailed = ref(Object.keys(detailedColumns));
+
+const availableColumns = computed(() => generateDetailedExport.value ? detailedColumns : aggregatedColumns);
+
+const currentDesiredColumns = computed({
+    get: () => generateDetailedExport.value ? desiredColumnsDetailed.value : desiredColumnsAggregated.value,
+    set: (value) => {
+        if (generateDetailedExport.value) {
+            desiredColumnsDetailed.value = value;
         } else {
-            if (showMandatoryFieldsErrorText.value) {
-                showMandatoryFieldsErrorText.value = false;
-            }
-
-            window.open(
-                route(
-                    'projects.export.budgetByBudgetDeadline',
-                    {
-                        startBudgetDeadline: startBudgetDeadline.value,
-                        endBudgetDeadline: endBudgetDeadline.value,
-                        type: generateDetailedExport.value
-                    }
-                ),
-                '_blank',
-                'noopener'
-            );
-
-            emits.call(this, 'close');
+            desiredColumnsAggregated.value = value;
         }
     }
+});
+
+const downloadExportProjectBudgetsByBudgetDeadline = () => {
+    showMandatoryFieldsErrorText.value = startBudgetDeadline.value === null || endBudgetDeadline.value === null;
+    showNoColumnsErrorText.value = currentDesiredColumns.value.length === 0;
+
+    if (showMandatoryFieldsErrorText.value || showNoColumnsErrorText.value) {
+        return;
+    }
+
+    window.open(
+        route(
+            'projects.export.budgetByBudgetDeadline',
+            {
+                startBudgetDeadline: startBudgetDeadline.value,
+                endBudgetDeadline: endBudgetDeadline.value,
+                type: generateDetailedExport.value ? 1 : 0,
+                desiredColumns: currentDesiredColumns.value
+            }
+        ),
+        '_blank',
+        'noopener'
+    );
+
+    emits.call(this, 'close');
+};
 </script>

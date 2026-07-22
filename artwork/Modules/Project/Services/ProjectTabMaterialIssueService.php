@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\ExternalIssue\Models\ExternalIssue;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\MaterialSet\Models\MaterialSet;
 use Artwork\Modules\Project\Models\Project;
@@ -26,8 +27,23 @@ class ProjectTabMaterialIssueService
             ])
             ->get();
 
+        $externalMaterials = ExternalIssue::where('project_id', $project->id)
+            ->with([
+                'project',
+                'articles.images',
+                'articles.tags',
+                'articles.tags.allowedUsers',
+                'articles.tags.allowedDepartments',
+                'specialItems',
+                'files',
+                'issuedBy',
+                'receivedBy',
+            ])
+            ->get();
+
         return [
             'materials' => $materials,
+            'externalMaterials' => $externalMaterials,
             'first_event' => $project->events()->orderBy('start_time', 'ASC')->first(),
             'last_event' => $project->events()->orderBy('end_time', 'DESC')->first(),
             'materialSets' => MaterialSet::with('items.article', 'items.article.category', 'items.article.subCategory')->get(),

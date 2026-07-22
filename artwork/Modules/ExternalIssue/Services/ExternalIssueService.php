@@ -65,7 +65,7 @@ class ExternalIssueService
         // Capture old state (cast to strings for reliable comparison)
         $trackedFields = [
             'name', 'external_name', 'external_address', 'external_email', 'external_phone',
-            'issue_date', 'return_date', 'material_value', 'return_remarks',
+            'issue_date', 'return_date', 'material_value', 'return_remarks', 'project_id',
         ];
         $oldAttributes = $this->normalizeAttributes($issue->only($trackedFields));
         $oldArticles = $issue->articles->map(fn($a) => [

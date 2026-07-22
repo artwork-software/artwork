@@ -13,7 +13,7 @@
             class="peer block w-full shadow-sm border border-gray-200 rounded-md px-4 pt-6 pb-2 text-sm placeholder-transparent font-lexend focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create resize-none"
             :class="disabled ? 'bg-gray-100 cursor-not-allowed' : bgColor"
         />
-        <label v-if="hasLabel" :for="id" class="absolute left-4 top-1.5 text-gray-500 text-xs transition-all duration-300 peer-placeholder-shown:top-[18px] font-lexend peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500 peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-artwork-buttons-create">
+        <label v-if="hasLabel" :for="id" class="absolute left-4 top-1.5 text-gray-700 font-semibold text-xs transition-all duration-300 peer-placeholder-shown:top-[18px] font-lexend peer-placeholder-shown:text-xs peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-500 peer-focus:top-1.5 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-artwork-buttons-create">
             {{ $t(label) }}
         </label>
     </div>

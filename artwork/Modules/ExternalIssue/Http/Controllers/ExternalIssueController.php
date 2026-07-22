@@ -67,6 +67,7 @@ class ExternalIssueController extends Controller
         $dateTo   = request()?->input('date_to');
         $issuedBy    = request()?->filled('issued_by_id')    ? (int) request()->input('issued_by_id')    : null;
         $receivedBy  = request()?->filled('received_by_id')  ? (int) request()->input('received_by_id')  : null;
+        $projectId   = request()?->filled('project_id')      ? (int) request()->input('project_id')      : null;
         $overdueOnly = request()?->boolean('overdue_only');
 
         $q        = trim((string) request()?->input('q', ''));
@@ -77,6 +78,7 @@ class ExternalIssueController extends Controller
             'specialItems',
             'issuedBy',
             'receivedBy',
+            'project',
         ]);
 
         if (!empty($articleIds)) {
@@ -92,6 +94,7 @@ class ExternalIssueController extends Controller
         $issuesQuery
             ->when($issuedBy !== null,   fn($q) => $q->where('issued_by_id',   $issuedBy))
             ->when($receivedBy !== null, fn($q) => $q->where('received_by_id', $receivedBy))
+            ->when($projectId !== null,  fn($q) => $q->where('project_id',     $projectId))
             ->when($overdueOnly, fn($q) => $q
                 ->whereNull('received_by_id')
                 ->whereDate('return_date', '<', now()->toDateString()));
@@ -130,7 +133,7 @@ class ExternalIssueController extends Controller
             ),
             // optional, falls du urlParameters nutzt:
             'urlParameters' => request()->only([
-                'article_ids','date_from','date_to','issued_by_id','received_by_id','overdue_only','q'
+                'article_ids','date_from','date_to','issued_by_id','received_by_id','project_id','overdue_only','q'
             ]),
         ]);
     }

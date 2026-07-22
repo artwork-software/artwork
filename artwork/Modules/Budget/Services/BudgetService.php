@@ -79,13 +79,14 @@ class BudgetService
                 position: 2
             );
 
+            // Auch Projektgruppen erhalten eine budgetrelevante Spalte (Vorschau-Spalte für Exporte).
             $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
                 name: date('Y') . ' €',
                 subName: 'A',
                 type: 'empty',
                 position: 3,
-                relevant_for_project_groups: !$project->is_group,
+                relevant_for_project_groups: true,
             );
 
             if ($project->is_group){

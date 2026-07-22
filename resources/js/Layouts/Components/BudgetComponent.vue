@@ -145,7 +145,7 @@
                                         <div class="text-xs text-white text-right flex items-center gap-x-1">
                                             <ToolTipComponent
                                                 :icon="IconFlagUp"
-                                                :tooltip-text="$t('This Column is relevant for project groups')"
+                                                :tooltip-text="$t('Budget-relevant column tooltip')"
                                                 icon-size="size-4"
                                                 white-icon
                                                 stroke="2"
@@ -322,24 +322,12 @@
                                     @click="duplicateColumn(column.id)"
                                 />
 
-                                <!-- Relevant for project-group toggle -->
+                                <!-- Budgetrelevante Spalte: Flag kann nur auf eine andere
+                                     Wertspalte verschoben, nicht entfernt werden -->
                                 <BaseMenuItem
-                                    v-if="!column.relevant_for_project_groups
-                                            && column.type !== 'subprojects_column_for_group'
-                                            && !project?.is_group"
+                                    v-if="!column.relevant_for_project_groups && column.type === 'empty'"
                                     v-show="index > 2"
-                                    :title="$t('Relevant for project-group')"
-                                    icon="IconFlagUp"
-                                    white-menu-background
-                                    @click="setRelevantForProjectGroup(column.id)"
-                                />
-
-                                <BaseMenuItem
-                                    v-if="column.relevant_for_project_groups
-                                            && column.type !== 'subprojects_column_for_group'
-                                            && !project?.is_group"
-                                    v-show="index > 2"
-                                    :title="$t('Not Relevant for project-group')"
+                                    :title="$t('Mark as budget-relevant')"
                                     icon="IconFlagUp"
                                     white-menu-background
                                     @click="setRelevantForProjectGroup(column.id)"

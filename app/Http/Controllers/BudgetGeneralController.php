@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Budget\Events\BudgetUpdated;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Http\Requests\UpdateBudgetColumnSettingRequest;
 use Artwork\Modules\Budget\Models\BudgetColumnSetting;
@@ -89,18 +89,13 @@ class BudgetGeneralController extends Controller
         }
     }
 
-    public function updateColumnRelevant(Column $column, Request $request): void
+    public function updateColumnRelevant(Column $column, ColumnRelevanceService $columnRelevanceService): void
     {
-        $column->update(['relevant_for_project_groups' => !$column->relevant_for_project_groups]);
+        // Nur echte Wertspalten dürfen budgetrelevant sein; das Flag kann nur
+        // verschoben werden (eine Tabelle darf nie ohne budgetrelevante Spalte sein).
+        abort_unless($columnRelevanceService->isFlaggable($column), 422);
 
-        if ($column->relevant_for_project_groups) {
-            $column->table->columns()->where('id', '!=', $column->id)->update(['relevant_for_project_groups' => false]);
-
-            $projectId = $column->table->project_id;
-            if ($projectId) {
-                BudgetUpdated::dispatch($projectId);
-            }
-        }
+        $columnRelevanceService->assignExclusive($column);
     }
 
     public function getTrashed(): Response|ResponseFactory
@@ -159,5 +154,4 @@ class BudgetGeneralController extends Controller
             ],
         ]);
     }
-
 }

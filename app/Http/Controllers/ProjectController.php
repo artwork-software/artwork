@@ -24,6 +24,7 @@ use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\CellCalculationService;
 use Artwork\Modules\Budget\Services\CellCommentService;
 use Artwork\Modules\Budget\Services\ColumnCellService;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionDetailsService;
 use Artwork\Modules\Budget\Services\MainPositionService;
@@ -163,6 +164,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -696,14 +698,7 @@ class ProjectController extends Controller
         if (!$request->boolean('isGroup') && !empty($request->selectedGroup)) {
             $table = $project->table()->first();
             if ($table) {
-                $columns = $table->columns()->get();
-                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                    // Mark the last column as relevant for project groups
-                    $lastColumn = $columns->sortBy('position')->last();
-                    if ($lastColumn) {
-                        $lastColumn->update(['relevant_for_project_groups' => true]);
-                    }
-                }
+                app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
             }
         }
 
@@ -1768,6 +1763,7 @@ class ProjectController extends Controller
     public function columnDelete(
         Column $column,
         ColumnService $columnService,
+        ColumnRelevanceService $columnRelevanceService,
         SumCommentService $sumCommentService,
         SumMoneySourceService $sumMoneySourceService,
         MainPositionDetailsService $mainPositionDetailsService,
@@ -1779,6 +1775,23 @@ class ProjectController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
+        $table = $column->table;
+
+        // Eine Tabelle braucht immer mindestens eine Wertspalte: die letzte wird
+        // nicht gelöscht, sondern geleert und bleibt budgetrelevant.
+        if ($columnRelevanceService->isLastValueColumn($column)) {
+            $column->cells()->update(['value' => '0', 'verified_value' => null]);
+            $columnRelevanceService->assignExclusive($column);
+            broadcast(new UpdateBudget($table->project_id));
+
+            return Redirect::back()->with(
+                'success',
+                __('The last value column cannot be deleted and was emptied instead.')
+            );
+        }
+
+        $hadRelevantFlag = $column->relevant_for_project_groups;
+
         $columnService->forceDelete(
             $column,
             $sumCommentService,
@@ -1792,6 +1805,10 @@ class ProjectController extends Controller
             $sageNotAssignedDataService,
             $sageAssignedDataService
         );
+
+        if ($hadRelevantFlag) {
+            $columnRelevanceService->ensureSingleRelevantColumn($table);
+        }
 
         return Redirect::back();
     }
@@ -1855,7 +1872,7 @@ class ProjectController extends Controller
 
 
 
-    public function addColumn(Request $request): void
+    public function addColumn(Request $request, ColumnRelevanceService $columnRelevanceService): void
     {
         $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
@@ -1916,6 +1933,9 @@ class ProjectController extends Controller
             $column->budgetSumDetails()->create([
                 'type' => 'EARNING'
             ]);
+
+            // Die neueste Wertspalte gilt als aktueller Planungsstand und wird budgetrelevant.
+            $columnRelevanceService->assignExclusive($column);
         }
         if ($request->column_type === 'sum') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
@@ -3274,17 +3294,10 @@ class ProjectController extends Controller
                 }
             }
 
-            // Ensure the project has at least one column marked as relevant for project groups
+            // Ensure the project has exactly one budget-relevant column
             $table = $project->table()->first();
             if ($table) {
-                $columns = $table->columns()->get();
-                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                    // Mark the last column as relevant for project groups
-                    $lastColumn = $columns->sortBy('position')->last();
-                    if ($lastColumn) {
-                        $lastColumn->update(['relevant_for_project_groups' => true]);
-                    }
-                }
+                app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
             }
         }
 
@@ -3335,13 +3348,7 @@ class ProjectController extends Controller
                 if ($childProject) {
                     $table = $childProject->table()->first();
                     if ($table) {
-                        $columns = $table->columns()->get();
-                        if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                            $lastColumn = $columns->sortBy('position')->last();
-                            if ($lastColumn) {
-                                $lastColumn->update(['relevant_for_project_groups' => true]);
-                            }
-                        }
+                        app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
                     }
                 }
             }
@@ -3560,20 +3567,13 @@ class ProjectController extends Controller
             $projectGroup->save();
         }
 
-        // Ensure all projects being added to the group have at least one column marked as relevant for project groups
+        // Ensure all projects being added to the group have exactly one budget-relevant column
         foreach ($projectIdsToAdd as $projectId) {
             $project = Project::find($projectId);
             if ($project) {
                 $table = $project->table()->first();
                 if ($table) {
-                    $columns = $table->columns()->get();
-                    if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                        // Mark the last column as relevant for project groups
-                        $lastColumn = $columns->sortBy('position')->last();
-                        if ($lastColumn) {
-                            $lastColumn->update(['relevant_for_project_groups' => true]);
-                        }
-                    }
+                    app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
                 }
             }
         }
@@ -4631,13 +4631,19 @@ class ProjectController extends Controller
         $timelineService->forceDelete($timeline);
     }
 
-    public function duplicateColumn(Column $column): void
+    public function duplicateColumn(Column $column, ColumnRelevanceService $columnRelevanceService): void
     {
         $newColumn = $column->replicate();
+        $newColumn->relevant_for_project_groups = false;
         $newColumn->save();
         $newColumn->update(['name' => $column->name . ' (Kopie)']);
         $newColumn->cells()->forceDelete();
         $newColumn->cells()->createMany($column->cells()->get()->toArray());
+
+        // Die neueste Wertspalte gilt als aktueller Planungsstand und wird budgetrelevant.
+        if ($columnRelevanceService->isFlaggable($newColumn)) {
+            $columnRelevanceService->assignExclusive($newColumn);
+        }
 
         broadcast(new UpdateBudget($column->project_id));
     }
@@ -4725,7 +4731,19 @@ class ProjectController extends Controller
         Request $request
     ): BinaryFileResponse|null {
         if ($request->integer('type') === 0) {
-            return (new BudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+            $request->validate([
+                'desiredColumns' => ['nullable', 'array', 'min:1'],
+                'desiredColumns.*' => [
+                    'string',
+                    Rule::in(array_keys(BudgetsByBudgetDeadlineExport::availableColumns())),
+                ],
+            ]);
+
+            return (new BudgetsByBudgetDeadlineExport(
+                $startBudgetDeadline,
+                $endBudgetDeadline,
+                $request->filled('desiredColumns') ? $request->input('desiredColumns') : null,
+            ))
                 ->download(
                     sprintf(
                         'budgets_export_%s-%s_stand_%s.xlsx',
@@ -4738,6 +4756,14 @@ class ProjectController extends Controller
         }
 
         if ($request->integer('type') === 1) {
+            $request->validate([
+                'desiredColumns' => ['nullable', 'array', 'min:1'],
+                'desiredColumns.*' => [
+                    'string',
+                    Rule::in(DetailedBudgetsByBudgetDeadlineExport::availableColumnKeys()),
+                ],
+            ]);
+
             $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
             $budgetColumnSettings = \Artwork\Modules\Budget\Models\BudgetColumnSetting::all();
             return (new DetailedBudgetsByBudgetDeadlineExport(
@@ -4745,6 +4771,7 @@ class ProjectController extends Controller
                 $endBudgetDeadline,
                 $generalSettings->budget_account_management_global,
                 $budgetColumnSettings,
+                $request->filled('desiredColumns') ? $request->input('desiredColumns') : null,
             ))
                 ->download(
                     sprintf(

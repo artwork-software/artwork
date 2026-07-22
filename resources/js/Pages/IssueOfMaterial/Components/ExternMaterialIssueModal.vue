@@ -76,6 +76,19 @@
                     </h2>
                     <p class="text-xs text-zinc-500">{{ $t('Capture name, value, period and contact.') }}</p>
                 </div>
+                <!-- Project -->
+                <div class="px-6 pt-2">
+                    <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" show-recent-projects :label="$t('Project assignment (optional)')" />
+                    <div v-else class="mt-1">
+                        <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
+                        <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
+                            <div class="text-sm font-semibold text-blue-800">{{ selectedProject.name }}</div>
+                            <button type="button" class="text-xs font-medium text-blue-700 underline" @click="removeProject">
+                                {{ $t('Remove assignment') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-4">
                     <div class="md:col-span-2">
                         <BaseInput id="name" type="text" v-model="externMaterialIssueForm.name" :label="$t('Name') + ' *'" />
@@ -519,7 +532,9 @@ const props = defineProps({
             articles: [],
             special_items: [],
             special_items_done: false,
-            issued_by_id: null
+            issued_by_id: null,
+            project_id: null,
+            project: null
         })
     },
     loadArticleFormBasket: {
@@ -529,6 +544,21 @@ const props = defineProps({
     },
     planningDate: {
         type: String,
+        required: false,
+        default: null,
+    },
+    project: {
+        type: Object,
+        required: false,
+        default: null,
+    },
+    firstEvent: {
+        type: Object,
+        required: false,
+        default: null,
+    },
+    lastEvent: {
+        type: Object,
         required: false,
         default: null,
     },
@@ -564,8 +594,56 @@ const externMaterialIssueForm = useForm({
     articles: mapArticlesWithQuantity(props.externMaterialIssue?.articles || []),
     special_items: props.externMaterialIssue?.special_items || [],
     special_items_done: props.externMaterialIssue?.special_items_done || false,
-    issued_by_id: props.externMaterialIssue?.issued_by_id || null
+    issued_by_id: props.externMaterialIssue?.issued_by_id || null,
+    project_id: props.externMaterialIssue?.project_id || null
 })
+
+const selectedProject = ref(
+    props.externMaterialIssue?.project
+    ?? (!props.externMaterialIssue?.id && props.project?.id ? props.project : null)
+)
+
+// Projektkontext (z. B. Projekt-Tab): Projekt und Zeitraum bei Neuanlage vorbelegen
+if (!props.externMaterialIssue?.id && selectedProject.value) {
+    externMaterialIssueForm.project_id = selectedProject.value.id ?? null
+    if (!externMaterialIssueForm.name && selectedProject.value.name) {
+        externMaterialIssueForm.name = selectedProject.value.name
+    }
+    const contextStart = props.firstEvent?.formatted_dates?.start_without_time ?? null
+    const contextEnd = props.lastEvent?.formatted_dates?.end_without_time ?? null
+    if (!externMaterialIssueForm.issue_date && contextStart) {
+        externMaterialIssueForm.issue_date = contextStart
+    }
+    if (!externMaterialIssueForm.return_date && contextEnd) {
+        externMaterialIssueForm.return_date = contextEnd
+    }
+}
+
+const addProject = (project) => {
+    selectedProject.value = project ?? null
+    if (!project) return
+    externMaterialIssueForm.project_id = project.id ?? null
+
+    // Name nur setzen, wenn leer
+    if (!externMaterialIssueForm.name && project.name) {
+        externMaterialIssueForm.name = project.name
+    }
+
+    // Zeitraum aus erstem/letztem Termin vorbelegen — nur, wenn die Felder leer sind
+    const startDate = project.first_event?.formatted_dates?.start_without_time ?? null
+    const endDate = project.last_event?.formatted_dates?.end_without_time ?? null
+    if (!externMaterialIssueForm.issue_date && startDate) {
+        externMaterialIssueForm.issue_date = startDate
+    }
+    if (!externMaterialIssueForm.return_date && endDate) {
+        externMaterialIssueForm.return_date = endDate
+    }
+}
+
+const removeProject = () => {
+    selectedProject.value = null
+    externMaterialIssueForm.project_id = null
+}
 
 const showArticleFilterModal = ref(false)
 const showSelectMaterialSetModal = ref(false)
@@ -903,7 +981,7 @@ const getArticleDataForUsage = async (article) => {
 const removeArticle = (index) => {
     externMaterialIssueForm.articles.splice(index, 1)
 }
-const emits = defineEmits(['close'])
+const emits = defineEmits(['close', 'saved'])
 
 // Verhindert, dass Enter in einem Eingabefeld das Formular (und damit Speichern) auslöst.
 // Textareas bleiben ausgenommen, damit Zeilenumbrüche weiterhin möglich sind.
@@ -932,6 +1010,7 @@ const submit = () => {
         externMaterialIssueForm.post(route('extern-issue-of-material.update', props.externMaterialIssue.id), {
             onSuccess: () => {
                 clearConsumedBasket()
+                emits('saved')
                 emits('close')
             }
         })
@@ -939,6 +1018,7 @@ const submit = () => {
         externMaterialIssueForm.post(route('extern-issue-of-material.store'), {
             onSuccess: () => {
                 clearConsumedBasket()
+                emits('saved')
                 emits('close')
             }
         })

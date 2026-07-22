@@ -35,7 +35,7 @@
                 <template v-if="!localTaskDone">
                     <IconCalendar class="h-6 w-6 mr-2" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
                     <span
-                        class="text-[14px] rounded-md px-1.5 py-0.5"
+                        class="text-[14px] font-semibold rounded-md px-1.5 py-0.5"
                         :class="isOverdue ? 'bg-rose-500 text-white' : 'bg-zinc-100 text-zinc-700'"
                     >
             {{ task.formatted_dates?.deadline }}

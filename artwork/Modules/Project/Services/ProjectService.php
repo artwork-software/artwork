@@ -843,17 +843,10 @@ class ProjectService
             $projectGroup->save();
         }
 
-        // Ensure the project has at least one column marked as relevant for project groups
+        // Ensure the project has exactly one budget-relevant column
         $table = $project->table()->first();
         if ($table) {
-            $columns = $table->columns()->get();
-            if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                // Mark the last column as relevant for project groups
-                $lastColumn = $columns->sortBy('position')->last();
-                if ($lastColumn) {
-                    $lastColumn->update(['relevant_for_project_groups' => true]);
-                }
-            }
+            app(\Artwork\Modules\Budget\Services\ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
         }
     }
 

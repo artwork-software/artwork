@@ -1,171 +1,92 @@
 <template>
-    <ArtworkBaseModal @close="closeModal(false)" v-if="true" :title="$t('New column')" :description="$t('Create a new, empty column. Alternatively, you can also create a function column (sum/difference).')">
-            <div class="mx-4">
-                <!--   Heading   -->
-                <div>
-                    <radio-group v-model="selectedType" class="mt-4">
-                        <legend class="sr-only">{{ $t('Column type') }}</legend>
-                        <div class="space-y-3">
-                            <radio-group-option :value="columnType.type" v-for="columnType in columnTypes"
-                                                :key="columnType.type" class="flex items-center">
-                                <input :id="columnType.type" name="notification-method" type="radio"
-                                       :checked="columnType.type === 'empty'"
-                                       class="h-5 w-5 border-gray-300 text-success focus:ring-success"/>
-                                <label :for="columnType.type"
-                                       :class="[selectedType === columnType.type ? 'xsDark' : 'xsLight']"
-                                       class="ml-3 block">{{ columnType.title }}</label>
-                            </radio-group-option>
-                        </div>
-                    </radio-group>
-                    <div v-if="selectedType !== 'empty'" class="bg-backgroundGray -mx-10 pb-8">
-                        <h2 v-if="selectedType === 'sum'" class="xsLight ml-12 mb-4 pt-4 mt-6">
-                            {{ $t('What amount would you like to receive?') }}
-                        </h2>
-                        <h2 v-if="selectedType === 'difference'" class="xsLight ml-12 mb-4 pt-4 mt-6">
-                            {{ $t('What difference do you want to get?') }}
-                        </h2>
-                        <div class="flex ml-12 w-full pr-24">
-                            <Listbox as="div" class="flex h-12 mr-2 w-1/2 relative" v-model="selectedFirstColumn" id="firstColumn">
-                                <ListboxButton
-                                    class="menu-button">
-                                    <div class="flex items-center my-auto">
-                                        <span class="block truncate items-center ml-3 flex" v-if="selectedFirstColumn">
-                                            <span>{{ selectedFirstColumn?.name }}</span>
-                                        </span>
-                                        <span class="block truncate items-center ml-3 flex" v-else>
-                                            <span>{{ $t('Select column') }}</span>
-                                        </span>
-                                        <span
-                                            class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                        </span>
-                                    </div>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-full z-10 mt-12 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="column in table.columns.slice(3)"
-                                                       :key="column.id"
-                                                       :value="column"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                <div class="flex">
-                                                    <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ column.name }}
-                                                    </span>
-                                                </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                    <IconCheck stroke-width="1.5" v-if="selected"
-                                                               class="h-5 w-5 flex text-success"
-                                                               aria-hidden="true"
-                                                    />
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
-                            <div class="ml-2 mr-4 xsDark my-auto" v-if="selectedType === 'sum'">+</div>
-                            <div class="ml-2 mr-4 xsDark my-auto" v-if="selectedType === 'difference'">-</div>
-                            <Listbox as="div" class="flex h-12 mr-2 w-1/2 relative" v-model="selectedSecondColumn"
-                                     v-if="selectedType !== 'empty'"
-                                     id="secondColumn">
-                                <ListboxButton class="menu-button">
-                                    <div class="flex items-center my-auto">
-                                        <span class="block truncate items-center ml-3 flex" v-if="selectedSecondColumn">
-                                            <span>{{ selectedSecondColumn?.name }}</span>
-                                        </span>
-                                        <span class="block truncate items-center ml-3 flex" v-else>
-                                            <span>{{ $t('Select column') }}</span>
-                                        </span>
-                                        <span
-                                            class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
-                                    </div>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-full rounded-lg z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="column in table.columns.slice(3)"
-                                                       :key="column.id"
-                                                       :value="column"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                <div class="flex">
-                                                    <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ column.name }}
-                                                    </span>
-                                                </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected"
-                                                                 class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"
-                                                      />
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
-                        </div>
-                    </div>
-                    <div class="flex justify-center mt-8">
-                        <FormButton
-                            @click="addColumn"
-                            :disabled="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn))"
-                            :text="$t('Create column')"
+    <ArtworkBaseModal
+        @close="closeModal(false)"
+        :title="$t('New column')"
+        :description="$t('Create a new, empty column. Alternatively, you can also create a function column (sum/difference).')"
+    >
+        <div class="mx-4">
+            <RadioGroup v-model="selectedType" class="mt-4">
+                <legend class="sr-only">{{ $t('Column type') }}</legend>
+                <div class="space-y-3">
+                    <RadioGroupOption
+                        :value="columnType.type"
+                        v-for="columnType in columnTypes"
+                        :key="columnType.type"
+                        class="flex items-center cursor-pointer"
+                        v-slot="{ checked }"
+                    >
+                        <input
+                            :id="columnType.type"
+                            name="column-type"
+                            type="radio"
+                            :checked="checked"
+                            class="h-5 w-5 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create pointer-events-none"
+                            tabindex="-1"
+                            readonly
                         />
-                    </div>
+                        <label
+                            :for="columnType.type"
+                            :class="[checked ? 'xsDark' : 'xsLight']"
+                            class="ml-3 block cursor-pointer pointer-events-none"
+                        >
+                            {{ columnType.title }}
+                        </label>
+                    </RadioGroupOption>
+                </div>
+            </RadioGroup>
+
+            <div v-if="selectedType !== 'empty'" class="mt-6 rounded-lg bg-gray-50 border border-gray-200 p-4">
+                <h2 class="xsLight mb-4">
+                    {{ selectedType === 'sum' ? $t('What amount would you like to receive?') : $t('What difference do you want to get?') }}
+                </h2>
+                <div class="flex items-center gap-x-3">
+                    <ArtworkBaseListbox
+                        v-model="selectedFirstColumn"
+                        :items="selectableColumns"
+                        :placeholder="$t('Select column')"
+                        class="w-1/2"
+                        is-small
+                    />
+                    <div class="xsDark shrink-0">{{ selectedType === 'sum' ? '+' : '-' }}</div>
+                    <ArtworkBaseListbox
+                        v-model="selectedSecondColumn"
+                        :items="selectableColumns"
+                        :placeholder="$t('Select column')"
+                        class="w-1/2"
+                        is-small
+                    />
                 </div>
             </div>
+
+            <div class="flex justify-center mt-8">
+                <ArtworkBaseModalButton
+                    variant="primary"
+                    :disabled="isSubmitDisabled"
+                    @click="addColumn"
+                >
+                    {{ $t('Create column') }}
+                </ArtworkBaseModalButton>
+            </div>
+        </div>
     </ArtworkBaseModal>
 </template>
 
 <script>
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    RadioGroup,
-    RadioGroupOption
-} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    XIcon,
-    CheckIcon,
-    ChevronDownIcon
-} from '@heroicons/vue/outline';
+import {RadioGroup, RadioGroupOption} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 
 export default {
     name: 'AddColumnComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions],
     components: {
         ArtworkBaseModal,
-        BaseModal,
-        FormButton,
-        ListboxOptions,
-        ListboxOption,
-        ListboxButton,
-        Listbox,
+        ArtworkBaseListbox,
+        ArtworkBaseModalButton,
         RadioGroupOption,
         RadioGroup,
-        JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon
     },
     data() {
         return {
@@ -177,6 +98,7 @@ export default {
             selectedType: 'empty',
             selectedFirstColumn: null,
             selectedSecondColumn: null,
+            isSubmitting: false,
         }
     },
     props: [
@@ -184,40 +106,49 @@ export default {
         'table'
     ],
     emits: ['closed'],
+    computed: {
+        selectableColumns() {
+            return (this.table?.columns ?? []).slice(3);
+        },
+        isSubmitDisabled() {
+            if (this.isSubmitting) {
+                return true;
+            }
+            if (this.selectedType === 'empty') {
+                return false;
+            }
+            return this.selectedFirstColumn === null
+                || this.selectedSecondColumn === null
+                || this.selectedFirstColumn === this.selectedSecondColumn;
+        },
+    },
     methods: {
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-        addColumn(){
-            if (this.selectedType === 'empty') {
-                this.$inertia.post(
-                    route('project.budget.column.add'),
-                    {
-                        column_type: this.selectedType,
-                        table_id: this.table.id
-                    },
-                    {
-                        onSuccess: () => {
-                            this.closeModal(true);
-                        }
-                    }
-                );
-            } else {
-                this.$inertia.post(
-                    route('project.budget.column.add'),
-                    {
-                        first_column_id: this.selectedFirstColumn.id,
-                        second_column_id: this.selectedSecondColumn.id,
-                        column_type: this.selectedType,
-                        table_id: this.table.id
-                    },
-                    {
-                        onSuccess: () => {
-                            this.closeModal(true);
-                        }
-                    }
-                );
-            }
+        addColumn() {
+            const payload = this.selectedType === 'empty'
+                ? {
+                    column_type: this.selectedType,
+                    table_id: this.table.id
+                }
+                : {
+                    first_column_id: this.selectedFirstColumn.id,
+                    second_column_id: this.selectedSecondColumn.id,
+                    column_type: this.selectedType,
+                    table_id: this.table.id
+                };
+
+            this.isSubmitting = true;
+            this.$inertia.post(route('project.budget.column.add'), payload, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.closeModal(true);
+                },
+                onFinish: () => {
+                    this.isSubmitting = false;
+                }
+            });
         }
     },
 }

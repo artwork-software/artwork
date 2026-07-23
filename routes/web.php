@@ -175,6 +175,7 @@ use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Controllers\ProjectRoleMatrixExportController;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
+use Artwork\Modules\Budget\Http\Middleware\EnsureUserCanAccessProjectBudget;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Artwork\Modules\Shift\Http\Controllers\ProjectShiftPersonalPlanExportController;
@@ -1453,7 +1454,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/removeWorkerFromDay', [ShiftController::class, 'removeWorkerFromDay'])
             ->name('shift.removeWorkerFromDay');
 
-        Route::group(['prefix' => 'budget'], function (): void {
+        Route::group(['prefix' => 'budget', 'middleware' => EnsureUserCanAccessProjectBudget::class], function (): void {
             // GET
             Route::get('/cell/comments', [CellCommentsController::class, 'get'])
                 ->name('project.budget.cell.comment.get');
@@ -1592,6 +1593,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.row.comment.delete');
             Route::delete('/column/{column}/delete', [ProjectController::class, 'columnDelete'])
                 ->name('project.budget.column.delete');
+            Route::get('/table/{table}/trashed-columns', [ProjectController::class, 'getTrashedColumns'])
+                ->name('project.budget.column.trashed');
+            Route::patch('/column/{column}/restore', [ProjectController::class, 'columnRestore'])
+                ->name('project.budget.column.restore')->withTrashed();
             Route::delete('/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])
                 ->name('project.budget.main-position.delete');
             Route::delete('/sub-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])
@@ -1650,7 +1655,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::patch('/project/{project}/budget/reset', [ProjectController::class, 'resetTable'])
-        ->name('project.budget.reset.table');
+        ->name('project.budget.reset.table')
+        ->middleware(EnsureUserCanAccessProjectBudget::class);
 
     // Budget Settings
     Route::group(['prefix' => 'budget-settings'], function (): void {

@@ -83,27 +83,11 @@
             </div>
 
             <div class="flex items-center gap-x-2" v-if="!table.is_template && this.$page.props.budgetAccountManagementGlobal">
-                <SwitchGroup as="div" class="flex items-center">
-                    <SwitchLabel as="span" class="mr-2 text-sm" :class="userShowAccountNumber ? 'font-bold' : 'xsLight'">
-                        {{ $t('Show number') }}
-                    </SwitchLabel>
-                    <Switch v-model="userShowAccountName"
-                            :class="[
-                                userShowAccountName ? 'bg-indigo-600' : 'bg-gray-200',
-                                'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2'
-                            ]"
-                    >
-                        <span aria-hidden="true"
-                              :class="[
-                                  userShowAccountName ? 'translate-x-5' : 'translate-x-0',
-                                  'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
-                              ]"
-                        />
-                    </Switch>
-                    <SwitchLabel as="span" class="ml-2 text-sm" :class="userShowAccountName ? 'font-bold' : 'xsLight'">
-                        {{ $t('Show name') }}
-                    </SwitchLabel>
-                </SwitchGroup>
+                <SwitchDualLabel
+                    v-model="userShowAccountName"
+                    :left-label="$t('Show number')"
+                    :right-label="$t('Show name')"
+                />
                 <ToolTipComponent
                     icon="IconInfoCircle"
                     icon-size="w-5 h-5"
@@ -118,6 +102,7 @@
                 <thead>
                 <tr class="relative">
                     <th v-for="(column,index) in computedSortedColumns"
+                        :key="column.id"
                         v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                         :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id"
@@ -127,12 +112,7 @@
                                     <div v-if="column.subName" class="flex items-center justify-end">
                                         <div class="flex items-center mr-2" v-if="column.is_locked">
                                             <div>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686"
-                                                     class="" viewBox="0 0 11.975 13.686">
-                                                    <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                                                          d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                                                          fill="#27233C"/>
-                                                </svg>
+                                                <PropertyIcon name="IconLock" class="h-4 w-4 text-primary" stroke-width="2"/>
                                             </div>
                                             <div class="-ml-0.5">
                                                 <UserPopoverTooltip :user="column.locked_by"
@@ -274,8 +254,12 @@
                                 <div v-else>
                                     <input
                                         :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="xsDark h-5  pr-1 mr-1 flex " type="text"
+                                        class="xsDark h-5 pr-1 mr-1 flex rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                                        type="text"
                                         v-model="column.name"
+                                        @keyup.enter="$event.target.blur()"
+                                        @keyup.esc="column.name = editedColumnNameOriginalValue ?? column.name; column.clicked = false"
+                                        @focus="editedColumnNameOriginalValue = column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
@@ -359,7 +343,7 @@
                                     :title="$t('Delete')"
                                     icon="IconTrash"
                                     white-menu-background
-                                    @click="deleteColumn(column.id)"
+                                    @click="openDeleteColumnModal(column)"
                                 />
                             </BaseMenu>
 
@@ -421,6 +405,14 @@
                                 />
 
                                 <BaseMenuItem
+                                    v-show="!table.is_template"
+                                    :title="$t('Restore deleted columns')"
+                                    icon="IconColumnInsertRight"
+                                    white-menu-background
+                                    @click="showRestoreColumnsModal = true"
+                                />
+
+                                <BaseMenuItem
                                     v-show="table.is_template"
                                     :title="$t('Delete')"
                                     icon="IconTrash"
@@ -460,6 +452,7 @@
                                                                @openDeleteModal="openDeleteModal"
                                                                @open-error-modal="openErrorModal"
                                                                @budget-updated="handleBudgetUpdated"
+                                                               @budget-patched="applyBudgetPatch"
                                                                :table="table"
                                                                :project="project"
                                                                :main-position="mainPosition"
@@ -477,12 +470,13 @@
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
-                                <td class="w-72 my-2">SUM</td>
+                                <td class="w-72 my-2">{{ $t('SUM') }}</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns?.slice(3)"
+                                    v-for="column in valueColumns"
+                                    :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+                                         :class="(summaryTotals.costSums[column.id] ?? 0) < 0 ? 'text-red-500' : ''">
                                         <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
                                              v-if="table.costSumDetails?.[column.id]?.hasComments && table.costSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
@@ -497,15 +491,13 @@
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
                                             v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">{{
-                                                this.toCurrencyString(this.getSumOfTable(0, column.id))
+                                                toCurrencyString(summaryTotals.costSums[column.id] ?? 0)
                                             }}</span>
                                         <span v-if="column.type === 'sage'">{{
-                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0))
+                                                toCurrencyString(summaryTotals.sageCost)
                                             }}</span>
                                         <span v-if="column.type === 'subprojects_column_for_group'">
-                                            {{
-                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST'))
-                                            }}
+                                            {{ toCurrencyString(summaryTotals.groupCost) }}
                                         </span>
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
@@ -521,22 +513,19 @@
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)"
+                                    v-for="column in valueColumns"
+                                    :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         <span
                                             v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                            {{ this.toCurrencyString(table.commentedCostSums?.[column.id]) }}
+                                            {{ toCurrencyString(table.commentedCostSums?.[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
-                                                {{
-                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0))
-                                            }}
+                                            {{ toCurrencyString(summaryTotals.sageCostCommented) }}
                                         </span>
                                         <span v-if="column.type === 'subprojects_column_for_group'">
-                                            {{
-                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_COST'))
-                                            }}
+                                            {{ toCurrencyString(summaryTotals.groupCostCommented) }}
                                         </span>
                                     </div>
                                 </td>
@@ -589,6 +578,7 @@
                                                                @openDeleteModal="openDeleteModal"
                                                                @open-error-modal="openErrorModal"
                                                                @budget-updated="handleBudgetUpdated"
+                                                               @budget-patched="applyBudgetPatch"
                                                                :table="table"
                                                                :project="project"
                                                                :main-position="mainPosition"
@@ -606,12 +596,13 @@
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
-                                <td class="w-72 my-2">SUM</td>
+                                <td class="w-72 my-2">{{ $t('SUM') }}</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)"
+                                    v-for="column in valueColumns"
+                                    :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
+                                         :class="(summaryTotals.earningSums[column.id] ?? 0) < 0 ? 'text-red-500' : ''">
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
                                              v-if="table.earningSumDetails?.[column.id]?.hasComments && table.earningSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
@@ -626,20 +617,18 @@
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span
                                             v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">{{
-                                                this.toCurrencyString(this.getSumOfTable(1, column.id))
+                                                toCurrencyString(summaryTotals.earningSums[column.id] ?? 0)
                                             }}</span>
                                         <span v-if="column.type === 'sage'">{{
-                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1))
+                                                toCurrencyString(summaryTotals.sageEarning)
                                             }}</span>
                                         <span v-if="column.type === 'subprojects_column_for_group'">
-                                            {{
-                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING'))
-                                            }}
+                                            {{ toCurrencyString(summaryTotals.groupEarning) }}
                                         </span>
                                         <div v-if="this.hasBudgetAccess()"
                                              class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
-                                            <PlusCircleIcon
+                                            <PropertyIcon name="IconCirclePlus"
                                                 class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                                         </div>
                                     </div>
@@ -651,22 +640,19 @@
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)"
+                                    v-for="column in valueColumns"
+                                    :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                          <span
                                              v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                            {{ this.toCurrencyString(table.commentedEarningSums?.[column.id]) }}
+                                            {{ toCurrencyString(table.commentedEarningSums?.[column.id]) }}
                                         </span>
                                         <span v-if="column.type === 'sage'">
-                                                {{
-                                                this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(1))
-                                            }}
+                                            {{ toCurrencyString(summaryTotals.sageEarningCommented) }}
                                         </span>
                                         <span v-if="column.type === 'subprojects_column_for_group'">
-                                            {{
-                                                this.toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented('BUDGET_TYPE_EARNING'))
-                                            }}
+                                            {{ toCurrencyString(summaryTotals.groupEarningCommented) }}
                                         </span>
                                     </div>
                                 </td>
@@ -697,29 +683,13 @@
                         <td class="w-48"></td>
                         <td class="w-72 my-2">{{ $t('Revenue') }} - {{ $t('Expenses') }}</td>
                         <td class="flex items-center w-48"
-                            v-for="column in table.columns.slice(3)"
+                            v-for="column in valueColumns"
+                            :key="column.id"
                             v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
-                            <div class="w-48 my-2 p-1 flex justify-end items-center" :class="[
-                            this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '',
-                             this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '',
-                            calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST') < 0 ? 'text-red-500' : ''
-                         ]">
-                            <span v-if="column.type !== 'sage' && column.type !== 'subprojects_column_for_group'">
-                                {{
-                                    this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)))
-                                }}
-                            </span>
-                            <span v-if="column.type === 'sage'">
-                                {{
-                                    this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)))
-                                }}
-                            </span>
-                            <span v-if="column.type === 'subprojects_column_for_group'">
-                                {{
-                                    this.toCurrencyString((calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_EARNING') - calculateRelevantBudgetDataSumFormProjectsInGroupNormal('BUDGET_TYPE_COST')))
-                                }}
-                            </span>
-                        </div>
+                            <div class="w-48 my-2 p-1 flex justify-end items-center"
+                                 :class="differenceForColumn(column) < 0 ? 'text-red-500' : ''">
+                                <span>{{ toCurrencyString(differenceForColumn(column)) }}</span>
+                            </div>
                         </td>
                     </tr>
                     </tbody>
@@ -735,12 +705,10 @@
             <div class="successText">
                 {{ successDescription }}
             </div>
-            <div class="mt-6">
-                <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
-                        @click="closeSuccessModal">
-                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
-                </button>
+            <div class="mt-6 flex justify-center">
+                <ArtworkBaseModalButton variant="success" @click="closeSuccessModal">
+                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5"/>
+                </ArtworkBaseModalButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -754,16 +722,10 @@
     />
     <ArtworkBaseModal @close="closeBudgetAccessModal" v-if="showBudgetAccessModal" :title="$t('Grant budget access')" :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')">
         <div class="mx-4">
-            <ModalHeader
-                :title="$t('Grant budget access')"
-                :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')"
-            />
-            <div class="mt-6">
-                <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
-                        @click="submitVerifiedModalWithBudgetAccess">
+            <div class="mt-6 flex justify-center">
+                <ArtworkBaseModalButton variant="primary" @click="submitVerifiedModalWithBudgetAccess">
                     {{ $t('Issue requests & budget access') }}
-                </button>
+                </ArtworkBaseModalButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -771,7 +733,13 @@
         v-if="showAddColumnModal"
         :project="project"
         :table="table"
-        @closed="closeAddColumnModal()"
+        @closed="closeAddColumnModal($event)"
+    />
+    <restore-trashed-columns-modal
+        v-if="showRestoreColumnsModal"
+        :table="table"
+        @closed="showRestoreColumnsModal = false"
+        @restored="$emit('budget-updated')"
     />
     <cell-detail-modal
         v-if="showCellDetailModal && tempCellData"
@@ -849,115 +817,73 @@
 </template>
 
 <script>
-import {
-    DocumentReportIcon,
-    PencilAltIcon,
-    PlusCircleIcon,
-    TrashIcon,
-    XCircleIcon,
-    XIcon,
-    ZoomInIcon,
-    ZoomOutIcon
-} from '@heroicons/vue/outline';
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, PlusIcon} from "@heroicons/vue/solid";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
+import RestoreTrashedColumnsModal from "@/Layouts/Components/RestoreTrashedColumnsModal.vue";
 import CellDetailModal from "@/Layouts/Components/CellDetailModal.vue";
 import {
     Listbox,
-    ListboxButton,
     ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
+    ListboxOptions
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
-import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
 import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue";
 import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
-import Button from "@/Jetstream/Button.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
-import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import {IconCalendarCog, IconEyeX, IconFlagUp} from "@tabler/icons-vue";
+import {IconEyeX, IconFlagUp} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import axios from "axios";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import VerifiedRequestModal from "@/Layouts/Components/VerifiedRequestModal.vue";
 import draggable from 'vuedraggable';
 
 export default {
     name: 'BudgetComponent',
-    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
+    mixins: [Permissions, CurrencyFloatToStringFormatter],
     components: {
         draggable,
         BaseMenuItem,
         PropertyIcon,
         ArtworkBaseModal,
+        ArtworkBaseModalButton,
         BaseUIButton,
         SwitchIconTooltip,
+        SwitchDualLabel,
         ToolTipComponent,
         UserPopoverTooltip,
         UserSearch,
-        ModalHeader,
-        BaseModal,
         BaseMenu,
         SageNotAssignedData,
-        ZoomInIcon, ZoomOutIcon,
-        SwitchGroup,
-        SwitchLabel,
-        Switch,
         SumDetailComponent,
-        Button,
         UseTemplateFromProjectBudgetComponent,
         MainPositionComponent,
         ConfirmationComponent,
         CellDetailModal,
         AddColumnComponent,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        PlusCircleIcon,
-        XCircleIcon,
-        DotsVerticalIcon,
-        Menu,
-        MenuItem,
-        MenuItems,
-        MenuButton,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        CheckIcon,
+        RestoreTrashedColumnsModal,
         Listbox,
-        ListboxButton,
         ListboxOption,
         ListboxOptions,
-        RowDetailComponent,
         UseTemplateComponent,
         AddBudgetTemplateComponent,
-        PlusIcon,
         RenameTableComponent,
         ErrorComponent,
-        DocumentReportIcon,
-        IconFlagUp,
         VerifiedRequestModal
     },
     data() {
@@ -981,6 +907,8 @@ export default {
             mainPositionToDelete: null,
             subPositionToDelete: null,
             rowToDelete: null,
+            columnToDelete: null,
+            showRestoreColumnsModal: false,
             confirmationTitle: '',
             confirmationDescription: '',
             errorTitle: '',
@@ -1045,7 +973,8 @@ export default {
             showDeleteSageNotAssignedDataConfirmationModal: false,
             sageNotAssignedDataToDelete: null,
             localCostMainPositions: [],
-            localEarningMainPositions: []
+            localEarningMainPositions: [],
+            editedColumnNameOriginalValue: null
         }
     },
     props: [
@@ -1072,19 +1001,88 @@ export default {
             return !this.userShowAccountName;
         },
         computedSortedColumns: function () {
-            return this.sortColumns();
+            // Kopie statt in-place-sort: das computed darf die Prop nicht mutieren
+            return [...(this.table.columns ?? [])].sort((a, b) => {
+                if (a.type === 'sage') return 1;
+                if (b.type === 'sage') return -1;
+                return 0;
+            });
         },
-        tablesToShow: function () {
-            let costTableArray = [];
-            let earningTableArray = [];
-            this.table.main_positions.forEach((mainPosition) => {
-                if (mainPosition.type === 'BUDGET_TYPE_COST') {
-                    costTableArray.push(mainPosition);
-                } else {
-                    earningTableArray.push(mainPosition);
+        valueColumns: function () {
+            return this.computedSortedColumns.slice(3);
+        },
+        /**
+         * Alle Summen der Fusszeilen in EINEM Durchlauf ueber den Baum.
+         * Ersetzt die frueheren Template-Methodenaufrufe, die pro Spalte und
+         * Render mehrfach ueber die komplette Tabelle iteriert haben.
+         */
+        summaryTotals: function () {
+            const costSums = {};
+            const earningSums = {};
+            let sageCost = 0;
+            let sageEarning = 0;
+            let sageCostCommented = 0;
+            let sageEarningCommented = 0;
+
+            for (const mainPosition of this.table.main_positions ?? []) {
+                const isCost = mainPosition.type === 'BUDGET_TYPE_COST';
+                const sums = isCost ? costSums : earningSums;
+
+                for (const [columnId, data] of Object.entries(mainPosition.columnSums ?? {})) {
+                    sums[columnId] = (sums[columnId] ?? 0) + (parseFloat(data?.sum) || 0);
                 }
-            })
-            return [costTableArray, earningTableArray]
+
+                for (const subPosition of mainPosition.sub_positions ?? []) {
+                    for (const row of subPosition.sub_position_rows ?? []) {
+                        for (const cell of row.cells ?? []) {
+                            if (cell.column?.type !== 'sage') {
+                                continue;
+                            }
+                            const amount = (cell.sage_assigned_data ?? []).reduce(
+                                (acc, data) => acc + (Number(data.buchungsbetrag) || 0),
+                                0
+                            );
+                            if (cell.commented || cell.column.commented) {
+                                if (isCost) {
+                                    sageCostCommented += amount;
+                                } else {
+                                    sageEarningCommented += amount;
+                                }
+                            } else if (isCost) {
+                                sageCost += amount;
+                            } else {
+                                sageEarning += amount;
+                            }
+                        }
+                    }
+                }
+            }
+
+            const groupData = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
+            const groupSum = (type, commented) => {
+                if (!groupData || !Array.isArray(groupData[type])) {
+                    return 0;
+                }
+                return groupData[type]
+                    .filter(item => item?.type === type && Boolean(item?.commented) === commented)
+                    .reduce((acc, item) => {
+                        const value = parseFloat(item.value?.replace(',', '.') || '0');
+                        return acc + (isNaN(value) ? 0 : value);
+                    }, 0);
+            };
+
+            return {
+                costSums,
+                earningSums,
+                sageCost,
+                sageEarning,
+                sageCostCommented,
+                sageEarningCommented,
+                groupCost: groupSum('BUDGET_TYPE_COST', false),
+                groupEarning: groupSum('BUDGET_TYPE_EARNING', false),
+                groupCostCommented: groupSum('BUDGET_TYPE_COST', true),
+                groupEarningCommented: groupSum('BUDGET_TYPE_EARNING', true),
+            };
         },
         tableIsEmpty: function () {
             return this.table.main_positions.length === 2 &&
@@ -1104,6 +1102,9 @@ export default {
         }
     },
     watch: {
+        // Bewusst NICHT deep: strukturelle Aenderungen kommen als neue Objekte
+        // aus dem Refetch; Zell-Patches mutieren in-place und sollen die
+        // Draggable-Listen nicht neu aufbauen.
         'table.main_positions': {
             handler(positions) {
                 if (!positions) return;
@@ -1111,19 +1112,15 @@ export default {
                 this.localEarningMainPositions = positions.filter(mp => mp.type === 'BUDGET_TYPE_EARNING');
             },
             immediate: true,
-            deep: true
         },
-        // Watcher für selectedSumDetail - öffnet Modal automatisch wenn vom Backend populated
+        // oeffnet das Modal automatisch, wenn das Backend ein selectedSumDetail liefert
         selectedSumDetail: {
             handler(newVal) {
-                console.log('selectedSumDetail watcher triggered:', newVal);
                 if (newVal && (newVal.id || Object.keys(newVal).length > 0)) {
-                    console.log('Opening SumDetailModal');
                     this.showSumDetailModal = true;
                 }
             },
             immediate: true,
-            deep: true
         },
         userExcludeCommentedBudgetItems: {
             handler(excludeHiddenItems) {
@@ -1223,27 +1220,44 @@ export default {
             );
         },
         IconEyeX,
-        IconCalendarCog,
         IconFlagUp,
-        calculateRelevantBudgetDataSumFormProjectsInGroupWhereCommented(type) {
-            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
-            if (!data || !Array.isArray(data[type])) return 0;
-            const relevantData = data[type].filter(item => item?.type === type && item?.commented);
-            if (!relevantData.length) return 0;
-            return relevantData.reduce((acc, item) => {
-                const value = parseFloat(item.value?.replace(',', '.') || '0');
-                return acc + (isNaN(value) ? 0 : value);
-            }, 0);
+        differenceForColumn(column) {
+            const totals = this.summaryTotals;
+            if (column.type === 'sage') {
+                return totals.sageEarning - totals.sageCost;
+            }
+            if (column.type === 'subprojects_column_for_group') {
+                return totals.groupEarning - totals.groupCost;
+            }
+            return (totals.earningSums[column.id] ?? 0) - (totals.costSums[column.id] ?? 0);
         },
-        calculateRelevantBudgetDataSumFormProjectsInGroupNormal(type) {
-            const data = this.$page.props.loadedProjectInformation?.BudgetTab?.projectGroupRelevantBudgetData;
-            if (!data || !Array.isArray(data[type])) return 0;
-            const relevantData = data[type].filter(item => item?.type === type && !item?.commented);
-            if (!relevantData.length) return 0;
-            return relevantData.reduce((acc, item) => {
-                const value = parseFloat(item.value?.replace(',', '.') || '0');
-                return acc + (isNaN(value) ? 0 : value);
-            }, 0);
+        /**
+         * Wendet den schlanken Zell-Update-Patch des Backends an, statt den
+         * kompletten Budget-Payload neu zu laden: Haupt-/Tabellensummen werden
+         * in-place aktualisiert, alles andere ergibt sich reaktiv.
+         */
+        applyBudgetPatch(patch) {
+            if (!patch) {
+                return;
+            }
+
+            for (const [mainPositionId, sums] of Object.entries(patch.mainPositionSums ?? {})) {
+                const mainPosition = (this.table.main_positions ?? [])
+                    .find(mp => mp.id === Number(mainPositionId));
+                if (mainPosition) {
+                    mainPosition.columnSums = sums.columnSums;
+                    mainPosition.columnVerifiedChanges = sums.columnVerifiedChanges;
+                }
+            }
+
+            if (patch.tableSums) {
+                this.table.costSums = patch.tableSums.costSums;
+                this.table.earningSums = patch.tableSums.earningSums;
+                this.table.commentedCostSums = patch.tableSums.commentedCostSums;
+                this.table.commentedEarningSums = patch.tableSums.commentedEarningSums;
+                this.table.costSumDetails = patch.tableSums.costSumDetails;
+                this.table.earningSumDetails = patch.tableSums.earningSumDetails;
+            }
         },
         hasBudgetAccess() {
             return this.hasAdminRole() ||
@@ -1268,7 +1282,8 @@ export default {
                 {},
                 {
                     preserveScroll: true,
-                    preserveState: true
+                    preserveState: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 }
             );
         },
@@ -1285,115 +1300,17 @@ export default {
                 },
                 {
                     preserveScroll: true,
-                    preserveState: true
+                    preserveState: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 }
             );
-        },
-        sortColumns() {
-            this.table.columns.sort((a, b) => {
-                if (a.type === 'sage') return 1; // Verschiebe 'sage' ans Ende
-                if (b.type === 'sage') return -1; // Behalte 'sage' am Ende
-                return 0; // Ändere die Reihenfolge von a und b nicht
-            });
-
-            return this.table.columns;
         },
         duplicateColumn(columnId) {
             router.post(route('project.budget.column.duplicate', columnId), {}, {
                 preserveState: true,
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => this.$emit('budget-updated')
             });
-        },
-        checkCellColor(cell, mainPosition, subPosition) {
-            let cssString = '';
-            if (cell.column.color === 'whiteColumn') {
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' xsWhiteBold ';
-                } else {
-                    cssString += ' xsDark ';
-                }
-            } else {
-                cssString += ' xsWhiteBold ';
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' bg-red-300 '
-                } else {
-                    cssString += cell.column.color;
-                }
-            }
-
-            if (cell.value !== cell.verified_value) {
-                if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED') {
-                    cssString += ' bg-red-300 '
-                    if (cell.column.color !== 'whiteColumn') {
-                        cssString += ' xsWhiteBold '
-                    }
-                } else {
-                    cssString += cell.column.color;
-                }
-            }
-
-            return cssString
-        },
-        getSumOfTable(tableType, columnId) {
-            let sum = 0;
-            this.tablesToShow[tableType].forEach((mainPosition) => {
-                sum += parseFloat(mainPosition.columnSums?.[columnId]?.sum) || 0;
-            })
-            return sum;
-        },
-        calculateSageColumnWithCellSageDataCommented(tableType) {
-            if (tableType === 0) {
-                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
-                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
-                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
-                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
-                                    return accumulator + sageAssignedData.buchungsbetrag;
-                                }, 0);
-                            }, 0);
-                        }, 0);
-                    }, 0);
-                }, 0);
-            } else {
-                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
-                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
-                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
-                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
-                                    return accumulator + sageAssignedData.buchungsbetrag;
-                                }, 0);
-                            }, 0);
-                        }, 0);
-                    }, 0);
-                }, 0);
-            }
-        },
-        calculateSageColumnWithCellSageDataValue(tableType) {
-            if (tableType === 0) {
-                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
-                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
-                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
-                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
-                                    return accumulator + sageAssignedData.buchungsbetrag;
-                                }, 0);
-                            }, 0);
-                        }, 0);
-                    }, 0);
-                }, 0);
-            } else {
-                return (this.table.main_positions ?? []).filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
-                    return accumulator + (mainPosition.sub_positions ?? []).reduce((accumulator, subPosition) => {
-                        return accumulator + (subPosition.sub_position_rows ?? []).reduce((accumulator, subPositionRow) => {
-                            return accumulator + (subPositionRow.cells ?? []).filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
-                                return accumulator + (cell.sage_assigned_data ?? []).reduce((accumulator, sageAssignedData) => {
-                                    return accumulator + sageAssignedData.buchungsbetrag;
-                                }, 0);
-                            }, 0);
-                        }, 0);
-                    }, 0);
-                }, 0);
-            }
         },
         handleVerifiedUserSubmit(user) {
             this.submitVerifiedModalData.user = user.id;
@@ -1404,26 +1321,31 @@ export default {
             router.patch(route('project.budget.column-color.change'), {
                 color: color,
                 columnId: columnId
-            })
-        },
-        deleteColumn(column) {
-            router.delete(route('project.budget.column.delete', column))
-        },
-        addRowToSubPosition(subPosition, row) {
-            router.post(route('project.budget.sub-position-row.add'), {
-                table_id: this.table.id,
-                sub_position_id: subPosition.id,
-                positionBefore: row ? row.position : -1
             }, {
                 preserveState: true,
-                preserveScroll: true
-            });
+                preserveScroll: true,
+                onSuccess: () => this.$emit('budget-updated')
+            })
+        },
+        openDeleteColumnModal(column) {
+            // Löschen ist folgenreich (Spalte samt Zellen/Kommentaren) - wie bei
+            // Positionen/Zeilen erst bestätigen lassen.
+            this.confirmationTitle = this.$t('Delete column');
+            this.confirmationDescription = this.$t(
+                'Are you sure you want to delete the column? The last remaining value column is emptied instead.',
+                [column.name]
+            );
+            this.columnToDelete = column;
+            this.showDeleteModal = true;
         },
         openAddColumnModal() {
             this.showAddColumnModal = true;
         },
-        closeAddColumnModal() {
+        closeAddColumnModal(columnAdded = false) {
             this.showAddColumnModal = false;
+            if (columnAdded) {
+                this.$emit('budget-updated');
+            }
         },
         openUseTemplateModal() {
             router.reload({
@@ -1463,40 +1385,6 @@ export default {
         closeRenameBudgetTemplateModal() {
             this.showRenameTableModal = false;
         },
-        updateCellValue(cell, mainPositionVerified, subPositionVerified) {
-            cell.clicked = !cell.clicked;
-            if (cell.value === null || cell.value === '') {
-                cell.value = 0;
-            }
-
-            router.patch(route('project.budget.cell.update'), {
-                column_id: cell.column.id,
-                value: cell.value,
-                sub_position_row_id: cell.sub_position_row_id,
-                is_verified: mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
-            }, {
-                preserveState: true,
-                preserveScroll: true
-            });
-        },
-        addSubPosition(mainPositionId, subPosition = null) {
-            let subPositionBefore = subPosition
-
-            if (!subPositionBefore) {
-                subPositionBefore = {
-                    position: 0
-                }
-            }
-
-            router.post(route('project.budget.sub-position.add'), {
-                table_id: this.table.id,
-                main_position_id: mainPositionId,
-                positionBefore: subPositionBefore.position
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
-        },
         addMainPosition(type, mainPosition) {
             router.post(route('project.budget.main-position.add'), {
                 table_id: this.table.id,
@@ -1504,7 +1392,8 @@ export default {
                 positionBefore: mainPosition.position
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         updateColumnName(column) {
@@ -1513,41 +1402,22 @@ export default {
                 columnName: column.name
             }, {
                 preserveScroll: true,
-                preserveState: true
-            });
-        },
-        updateMainPositionName(mainPosition) {
-            router.patch(route('project.budget.main-position.update-name'), {
-                mainPosition_id: mainPosition.id,
-                mainPositionName: mainPosition.name
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
-        },
-        updateSubPositionName(subPosition) {
-            router.patch(route('project.budget.sub-position.update-name'), {
-                subPosition_id: subPosition.id,
-                subPositionName: subPosition.name
-            }, {
-                preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         async openCellDetailModal(cell, type) {
-            console.log('openCellDetailModal called with cell:', cell, 'type:', type);
             this.cellDetailOpenTab = type;
 
-            // 1. Finde die vollständige Cell in der Tabelle
             const result = this.findCellInTable(cell.id);
 
             if (!result) {
-                console.error('Cell not found in table:', cell.id);
-                alert(this.$t('Cell not found. Please refresh the page.'));
+                this.openErrorModal(
+                    this.$t('An error has occurred'),
+                    this.$t('Cell not found. Please refresh the page.')
+                );
                 return;
             }
-
-            console.log('Full cell found:', result.cell, 'budgetType:', result.budgetType);
 
             // 2. Öffne Modal SOFORT mit vorhandenen Daten
             this.tempCellData = result.cell;
@@ -1567,18 +1437,15 @@ export default {
                         if (cellIndex !== -1) {
                             const cell = row.cells[cellIndex];
 
-                            // Wenn es eine Funktion ist, rufe sie mit der Cell auf
                             if (typeof updatesOrCallback === 'function') {
                                 updatesOrCallback(cell);
                             } else {
-                                // Sonst: Reaktive Aktualisierung mit Object
                                 row.cells[cellIndex] = {
                                     ...cell,
                                     ...updatesOrCallback
                                 };
                             }
 
-                            console.log('Cell updated in table:', cellId);
                             return true;
                         }
                     }
@@ -1709,101 +1576,66 @@ export default {
         },
 
         handleCommentSaved(data) {
-            console.log('Comment saved event received:', data);
-
-            // Aktualisiere tempCellData (Modal-Daten) sofort
+            // Kommentare aendern keine Summen - lokal patchen statt Refetch
             if (this.tempCellData && this.tempCellData.id === data.cellId) {
                 if (!this.tempCellData.comments) {
                     this.tempCellData.comments = [];
                 }
-                // Prüfe, ob Kommentar bereits existiert (verhindert Duplikate)
-                const exists = this.tempCellData.comments.some(c => c.id === data.comment.id);
-                if (!exists) {
+                if (!this.tempCellData.comments.some(c => c.id === data.comment.id)) {
                     this.tempCellData.comments.unshift(data.comment);
-                    console.log('Comment added to modal tempCellData, total:', this.tempCellData.comments.length);
-                } else {
-                    console.log('Comment already exists in tempCellData, skipping duplicate');
                 }
             }
 
-            // Aktualisiere auch die Cell in der Tabelle für zukünftige Öffnungen
-            const success = this.updateCellInTable(data.cellId, (cell) => {
+            this.updateCellInTable(data.cellId, (cell) => {
                 if (!cell.comments) {
                     cell.comments = [];
                 }
-                // Prüfe, ob Kommentar bereits existiert (verhindert Duplikate)
-                const exists = cell.comments.some(c => c.id === data.comment.id);
-                if (!exists) {
+                if (!cell.comments.some(c => c.id === data.comment.id)) {
                     cell.comments.unshift(data.comment);
-                    console.log('Comment added to table cell, total:', cell.comments.length);
-                } else {
-                    console.log('Comment already exists in table cell, skipping duplicate');
+                    cell.comments_count = (cell.comments_count ?? 0) + 1;
                 }
             });
-
-            if (success) {
-                console.log('Table updated with new comment');
-            }
         },
 
         handleCommentDeleted(data) {
-            console.log('Comment deleted event received:', data);
-
-            // Aktualisiere tempCellData (Modal-Daten) sofort
+            // Kommentare aendern keine Summen - lokal patchen statt Refetch
             if (this.tempCellData && this.tempCellData.id === data.cellId) {
                 if (this.tempCellData.comments) {
                     const index = this.tempCellData.comments.findIndex(c => c.id === data.commentId);
                     if (index !== -1) {
                         this.tempCellData.comments.splice(index, 1);
-                        console.log('Comment removed from modal tempCellData, remaining:', this.tempCellData.comments.length);
                     }
                 }
             }
 
-            // Aktualisiere auch die Cell in der Tabelle
-            const success = this.updateCellInTable(data.cellId, (cell) => {
+            this.updateCellInTable(data.cellId, (cell) => {
                 if (cell.comments) {
                     const index = cell.comments.findIndex(c => c.id === data.commentId);
                     if (index !== -1) {
                         cell.comments.splice(index, 1);
-                        console.log('Comment removed from table cell, remaining:', cell.comments.length);
+                        cell.comments_count = Math.max((cell.comments_count ?? 1) - 1, 0);
                     }
                 }
             });
-
-            if (success) {
-                console.log('Table updated - comment removed');
-            }
         },
 
         handleCalculationsSaved(data) {
-            console.log('Calculations saved event received:', data);
-
-            // Aktualisiere tempCellData mit den neuen Kalkulationen
             if (this.tempCellData && this.tempCellData.id === data.cellId) {
                 this.tempCellData.calculations = data.calculations;
                 this.tempCellData.value = data.cellValue;
-                console.log('Calculations updated in modal tempCellData, total:', data.calculations.length);
             }
 
-            // Aktualisiere auch die Cell in der Tabelle
-            const success = this.updateCellInTable(data.cellId, (cell) => {
+            this.updateCellInTable(data.cellId, (cell) => {
                 cell.calculations = data.calculations;
                 cell.value = data.cellValue;
-                console.log('Calculations updated in table cell, total:', data.calculations.length);
+                cell.calculations_count = (data.calculations ?? []).filter(c => Number(c.value) !== 0).length;
             });
 
-            if (success) {
-                console.log('Table updated with new calculations');
-            }
+            // Kalkulationen aendern den Zellwert -> Summen muessen neu berechnet
+            // werden, daher hier weiterhin ein Refetch.
+            this.$emit('budget-updated');
         },
 
-        openDeleteRowModal(row) {
-            this.confirmationTitle = this.$t('Delete row');
-            this.confirmationDescription = this.$t('Are you sure you want to delete this line? All links etc. will also be deleted.');
-            this.rowToDelete = row;
-            this.showDeleteModal = true;
-        },
         openDeleteModal(title, description, position, type) {
             this.confirmationTitle = title;
             this.confirmationDescription = description
@@ -1817,15 +1649,14 @@ export default {
             }
             this.showDeleteModal = true;
         },
-        openDeleteSubPositionModal(subPosition) {
-            this.confirmationTitle = this.$t('Delete sub-item');
-            this.confirmationDescription = this.$t('Are you sure you want to delete the sub-item', [subPosition.name]);
-            this.subPositionToDelete = subPosition;
-            this.showDeleteModal = true;
-        },
         afterConfirm(bool) {
             if (!bool) {
                 this.resetWanted = false;
+                // Ziele zurücksetzen, sonst löscht die nächste Bestätigung das falsche Objekt
+                this.columnToDelete = null;
+                this.mainPositionToDelete = null;
+                this.subPositionToDelete = null;
+                this.rowToDelete = null;
                 return this.showDeleteModal = false;
             }
             if (this.resetWanted === true) {
@@ -1838,24 +1669,35 @@ export default {
             this.showErrorModal = false;
         },
         deletePosition() {
-            if (this.mainPositionToDelete !== null) {
+            if (this.columnToDelete !== null) {
+                router.delete(route('project.budget.column.delete', this.columnToDelete.id), {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('budget-updated')
+                });
+                this.successHeading = this.$t('Column deleted');
+                this.successDescription = this.$t('Column successfully deleted', [this.columnToDelete.name]);
+            } else if (this.mainPositionToDelete !== null) {
                 router.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id), {
                     preserveState: true,
-                    preserveScroll: true
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 })
                 this.successHeading = this.$t('Main position deleted');
                 this.successDescription = this.$t('Main position successfully deleted', [this.mainPositionToDelete.name]);
             } else if (this.subPositionToDelete !== null) {
                 router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id), {
-                    preserveState: false,
-                    preserveScroll: true
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 })
                 this.successHeading = this.$t('Sub-item deleted');
                 this.successDescription = this.$t('Sub-item successfully deleted', [this.subPositionToDelete.name]);
             } else {
                 router.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
                     preserveScroll: true,
-                    preserveState: false
+                    preserveState: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 });
                 this.successHeading = this.$t('Row deleted');
                 this.successDescription = this.$t('Line successfully deleted');
@@ -1868,6 +1710,7 @@ export default {
         closeSuccessModal() {
             this.mainPositionToDelete = null;
             this.subPositionToDelete = null;
+            this.columnToDelete = null;
             this.showSuccessModal = false;
             this.successHeading = "";
             this.successDescription = "";
@@ -1926,46 +1769,15 @@ export default {
             this.submitVerifiedModalData.position = position
             this.showVerifiedModal = true
         },
-        openVerifiedModalSub(subPosition) {
-            this.verifiedTexts.positionTitle = subPosition.name
-            this.submitVerifiedModalData.is_sub = true
-            this.submitVerifiedModalData.id = subPosition.id
-            this.submitVerifiedModalData.position = subPosition
-            this.showVerifiedModal = true
-        },
-        verifiedMainPosition(mainPositionId) {
-            router.patch(this.route('project.budget.verified.main-position'), {
-                mainPositionId: mainPositionId,
-                table_id: this.table.id,
-            }, {preserveState: true, preserveScroll: true})
-        },
-        verifiedSubPosition(subPositionId) {
-            router.patch(this.route('project.budget.verified.sub-position'), {
-                subPositionId: subPositionId,
-                table_id: this.table.id,
-            }, {preserveState: true, preserveScroll: true})
-        },
-        requestRemove(position, type) {
-            router.post(this.route('project.budget.take-back.verification'), {
-                position: position,
-                type: type
-            }, {preserveState: true, preserveScroll: true})
-        },
-        removeVerification(position, type) {
-            router.post(this.route('project.budget.remove.verification'), {
-                position: position,
-                type: type
-            }, {preserveState: true, preserveScroll: true})
-        },
         lockColumn(columnId) {
             router.patch(this.route('project.budget.lock.column'), {
                 columnId: columnId
-            }, {preserveState: true, preserveScroll: true});
+            }, {preserveState: true, preserveScroll: true, onSuccess: () => this.$emit('budget-updated')});
         },
         unlockColumn(columnId) {
             router.patch(this.route('project.budget.unlock.column'), {
                 columnId: columnId
-            }, {preserveState: true, preserveScroll: true});
+            }, {preserveState: true, preserveScroll: true, onSuccess: () => this.$emit('budget-updated')});
         },
         openResetConfirmation() {
             this.confirmationTitle = this.$t('Reset budget tables');
@@ -1976,7 +1788,8 @@ export default {
         resetBudgetTable() {
             router.patch(this.route('project.budget.reset.table', this.project.id), {}, {
                 preserveState: true,
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
             this.resetWanted = false;
             this.showDeleteModal = false;

@@ -11,7 +11,12 @@
                 </button>
             </div>
             <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 xsDark bg-white" type="text" v-model="mainPosition.name" @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
+                <input class="my-2 ml-1 xsDark bg-white rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                       type="text" v-model="mainPosition.name"
+                       @keyup.enter="$event.target.blur()"
+                       @keyup.esc="mainPosition.name = editedNameOriginalValue ?? mainPosition.name; mainPosition.clicked = false"
+                       @focus="editedNameOriginalValue = mainPosition.name"
+                       @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="mainPosition.closed = !mainPosition.closed">
                     <PropertyIcon name="IconChevronUp" v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
                     <PropertyIcon name="IconChevronDown" v-else class="h-6 w-6 text-white my-auto" stroke-width="1.5" />
@@ -145,6 +150,7 @@
                                                   @openDeleteModal="openDeleteModal"
                                                   @openSageAssignedDataModal="openSageAssignedDataModal"
                                                   @budget-updated="handleBudgetUpdated"
+                                                  @budget-patched="$emit('budget-patched', $event)"
                                                   :main-position="mainPosition"
                                                   :all-main-positions="table.main_positions"
                                                   :sub-position="subPosition"
@@ -164,8 +170,8 @@
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
-                <td class="w-72">SUM</td>
-                <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
+                <td class="w-72">{{ $t('SUM') }}</td>
+                <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in valueColumns" :key="column.id" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
                         mainPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : '',
                         column.color !== 'whiteColumn' ? column.color : ''
@@ -177,7 +183,7 @@
                             {{ this.toCurrencyString(mainPosition.columnSums?.[column.id]?.sum) }}
                         </span>
                         <span v-if="column.type === 'sage'">
-                            {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
+                            {{ toCurrencyString(calculateSageColumnWithCellSageDataValue) }}
                         </span>
                         <span v-if="column.type === 'subprojects_column_for_group'">
                             {{ calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() }}
@@ -207,15 +213,11 @@
 </template>
 
 <script>
-import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SageAssignedDataModal from "@/Layouts/Components/SageAssignedDataModal.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -225,7 +227,7 @@ import {nextTick} from 'vue';
 
 
 export default {
-    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
+    mixins: [Permissions, CurrencyFloatToStringFormatter],
     name: "MainPositionComponent",
     components: {
         draggable,
@@ -234,19 +236,6 @@ export default {
         BaseMenu,
         SageAssignedDataModal,
         SubPositionComponent,
-        PlusCircleIcon,
-        ChevronUpIcon,
-        ChevronDownIcon,
-        PencilAltIcon,
-        TrashIcon,
-        XCircleIcon,
-        XIcon,
-        DotsVerticalIcon,
-        CheckIcon,
-        Menu,
-        MenuItem,
-        MenuItems,
-        MenuButton,
         ConfirmationComponent,
     },
     props: [
@@ -266,6 +255,7 @@ export default {
         'openCellDetailModal',
         'openVerifiedModal',
         'budget-updated',
+        'budget-patched',
     ],
     data(){
         return{
@@ -307,30 +297,32 @@ export default {
               lightGreenColumn: 'lightGreenColumn'
             },
             localSubPositions: [],
+            editedNameOriginalValue: null,
         }
     },
     watch: {
+        // Bewusst NICHT deep: strukturelle Aenderungen kommen als neue Objekte
+        // aus dem Refetch; Zell-Patches mutieren in-place und duerfen die
+        // Draggable-Liste nicht neu aufbauen.
         'mainPosition.sub_positions': {
             handler(positions) {
                 if (!positions) return;
                 this.localSubPositions = [...positions];
             },
             immediate: true,
-            deep: true
         },
     },
     mounted() {
-        // check if main Position in localStorage in "closedMainPositions"
         this.checkIfMainPositionClosed()
-    },
-    updated() {
-        this.checkIfMainPositionClosed()
-    },
-    beforeUnmount() {
-        // remove localeStorage key "closedMainPositions"
-        localStorage.removeItem('closedMainPositions')
     },
     computed: {
+        valueColumns() {
+            return (this.table?.columns ?? []).slice(3);
+        },
+        closedMainPositionsStorageKey() {
+            // pro Tabelle getrennt, sonst kollidieren die Zustaende zwischen Projekten
+            return `closedMainPositions:${this.table?.id}`;
+        },
         calculateSageColumnWithCellSageDataValue() {
             // Returniert die Summe aller buchungsbetrag in den sage_assigned_data Arrays.
             return this.mainPosition?.sub_positions?.reduce((acc, subPosition) => {
@@ -376,6 +368,7 @@ export default {
                         {
                             preserveScroll: true,
                             preserveState: true,
+                            onSuccess: () => this.$emit('budget-updated'),
                         }
                     );
                 });
@@ -394,48 +387,40 @@ export default {
             }, 0);
             return this.toCurrencyString(sum);
         },
+        readClosedMainPositions() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(this.closedMainPositionsStorageKey));
+                return Array.isArray(stored) ? stored : [];
+            } catch (e) {
+                return [];
+            }
+        },
         checkIfMainPositionClosed(){
-            if(localStorage.getItem('closedMainPositions') !== null){
-                let closedMainPositions = JSON.parse(localStorage.getItem('closedMainPositions'))
-                // add fail over if closedMainPositions is not an array
-                if(!Array.isArray(closedMainPositions)){
-                    closedMainPositions = []
-                }
-                let index = closedMainPositions.findIndex((mainPosition) => mainPosition.id === this.mainPosition.id)
-                if (index !== -1) {
-                    this.mainPosition.closed = closedMainPositions[index].closed
-                }
+            const closedMainPositions = this.readClosedMainPositions();
+            const entry = closedMainPositions.find((mainPosition) => mainPosition.id === this.mainPosition.id);
+            if (entry) {
+                this.mainPosition.closed = entry.closed;
             }
         },
         openCloseMainPosition(){
-            this.mainPosition.closed = !this.mainPosition.closed
-            if(localStorage.getItem('closedMainPositions') === null){
-                localStorage.setItem('closedMainPositions', JSON.stringify([{
+            this.mainPosition.closed = !this.mainPosition.closed;
+            const closedMainPositions = this.readClosedMainPositions();
+            const entry = closedMainPositions.find((mainPosition) => mainPosition.id === this.mainPosition.id);
+            if (entry) {
+                entry.closed = this.mainPosition.closed;
+            } else {
+                closedMainPositions.push({
                     id: this.mainPosition.id,
                     closed: this.mainPosition.closed
-                }]))
-            } else {
-                let closedMainPositions = JSON.parse(localStorage.getItem('closedMainPositions'))
-                // add fail over if closedMainPositions is not an array
-                if(!Array.isArray(closedMainPositions)){
-                    closedMainPositions = []
-                }
-                let index = closedMainPositions.findIndex((mainPosition) => mainPosition.id === this.mainPosition.id)
-                if(index === -1){
-                    closedMainPositions.push({
-                        id: this.mainPosition.id,
-                        closed: this.mainPosition.closed
-                    })
-                } else {
-                    closedMainPositions[index].closed = this.mainPosition.closed
-                }
-                localStorage.setItem('closedMainPositions', JSON.stringify(closedMainPositions))
+                });
             }
+            localStorage.setItem(this.closedMainPositionsStorageKey, JSON.stringify(closedMainPositions));
         },
         duplicateMainPosition(mainPositionId){
             this.$inertia.post(this.route('project.budget.main-position.duplicate', mainPositionId), { }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         openDeleteModal(title, description, position, type) {
@@ -453,7 +438,8 @@ export default {
                 mainPositionName: mainPosition.name
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         verifiedMainPosition(mainPositionId) {
@@ -463,7 +449,8 @@ export default {
                 table_id: this.table.id,
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         openVerifiedModal(is_main,is_sub,id,position) {
@@ -487,7 +474,8 @@ export default {
                 type: type
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         requestRemove(position, type){
@@ -496,7 +484,8 @@ export default {
                 type: type
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         openDeleteMainPositionModal(mainPosition) {
@@ -524,7 +513,8 @@ export default {
                 positionBefore: subPositionBefore.position
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: false,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         addMainPosition(mainPosition) {
@@ -534,7 +524,8 @@ export default {
                 positionBefore: mainPosition.position
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: false,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         openSubPositionSumDetailModal(subPosition, column, type) {
@@ -552,7 +543,8 @@ export default {
                 project_id: this.project?.id
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         unfixMainPosition(mainPositionId){
@@ -561,7 +553,8 @@ export default {
                 project_id: this.project?.id
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         openErrorModal(title, description) {

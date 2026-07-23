@@ -38,7 +38,7 @@
                             <span
                                 v-if="row.attainment !== null"
                                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                                :class="attainmentClass(row.attainmentRaw)"
+                                :class="attainmentClass(row.attainmentRaw, row.key === 'costs')"
                             >
                                 {{ row.attainment }}
                             </span>
@@ -82,26 +82,40 @@ const percentFmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
 const metricOptions = [
     { key: 'visitors', label: 'Visitors' },
     { key: 'sold_tickets', label: 'Sold tickets' },
-    { key: 'revenue', label: 'Revenue' },
+    { key: 'revenue', label: 'Revenue', currency: true },
+];
+
+// Kosten/Ergebnis nur in der Delta-Tabelle - für den Verlauf gibt es keine
+// per-Event-Daten. invertDiff: bei Kosten ist ein Ist ÜBER Plan negativ zu werten.
+const tableMetricOptions = [
+    ...metricOptions,
+    { key: 'costs', label: 'Costs', currency: true, invertDiff: true },
+    { key: 'result', label: 'Result', currency: true },
 ];
 
 const chartMetric = ref('visitors');
 
 const formatValue = (key, value) => {
     if (value === null || value === undefined) return null;
-    return key === 'revenue' ? currencyFmt.format(value) : numberFmt.format(value);
+    return ['revenue', 'costs', 'result'].includes(key) ? currencyFmt.format(value) : numberFmt.format(value);
 };
 
-const attainmentClass = (value) => {
+const attainmentClass = (value, inverted = false) => {
     if (value === null || value === undefined) return 'bg-gray-100 text-gray-500';
+    if (inverted) {
+        if (value <= 100) return 'bg-emerald-100 text-emerald-700';
+        if (value <= 120) return 'bg-amber-100 text-amber-700';
+        return 'bg-rose-100 text-rose-700';
+    }
     if (value >= 100) return 'bg-emerald-100 text-emerald-700';
     if (value >= 80) return 'bg-amber-100 text-amber-700';
     return 'bg-rose-100 text-rose-700';
 };
 
-const comparisonRows = computed(() => metricOptions.map((option) => {
+const comparisonRows = computed(() => tableMetricOptions.map((option) => {
     const entry = props.planComparison?.metrics?.[option.key] ?? {};
     const diff = entry.diff;
+    const diffIsPositive = option.invertDiff ? diff <= 0 : diff >= 0;
 
     return {
         key: option.key,
@@ -113,7 +127,7 @@ const comparisonRows = computed(() => metricOptions.map((option) => {
             : null,
         diffClass: diff === null || diff === undefined
             ? 'text-gray-300'
-            : (diff >= 0 ? 'text-emerald-600' : 'text-rose-600'),
+            : (diffIsPositive ? 'text-emerald-600' : 'text-rose-600'),
         attainment: entry.attainment !== null && entry.attainment !== undefined
             ? `${percentFmt.format(entry.attainment)} %`
             : null,

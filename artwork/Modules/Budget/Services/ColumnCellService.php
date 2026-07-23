@@ -84,24 +84,24 @@ readonly class ColumnCellService
 
     public function recalculateAutomaticColumns(int $subPositionRowId): void
     {
-        $cells = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
+        // Zellen + Spalten der Zeile einmal laden statt pro automatischer
+        // Spalte einzeln (frueher: 4+ Queries pro Spalte, jede Speicherung
+        // feuerte zudem den Cache-Invalidierungs-Observer).
+        $cells = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get()->keyBy('column_id');
+        $columns = Column::whereIn('id', $cells->keys())->get()->keyBy('id');
 
         foreach ($cells as $cell) {
-            $column = Column::find($cell->column_id);
+            $column = $columns->get($cell->column_id);
 
-            if ($column->type === 'empty' || $column->type === 'sage') {
+            if (!$column || $column->type === 'empty' || $column->type === 'sage') {
                 continue;
             }
 
-            $firstLinkedColumn = Column::find($column->linked_first_column);
-            $secondLinkedColumn = Column::find($column->linked_second_column);
+            $firstLinkedColumn = $columns->get($column->linked_first_column);
+            $secondLinkedColumn = $columns->get($column->linked_second_column);
 
-            $firstCell = ColumnCell::where('column_id', $column->linked_first_column)
-                ->where('sub_position_row_id', $subPositionRowId)
-                ->first();
-            $secondCell = ColumnCell::where('column_id', $column->linked_second_column)
-                ->where('sub_position_row_id', $subPositionRowId)
-                ->first();
+            $firstCell = $cells->get($column->linked_first_column);
+            $secondCell = $cells->get($column->linked_second_column);
 
             $firstRowValue = $firstLinkedColumn?->type === 'sage'
                 ? $firstCell?->sage_value
@@ -119,7 +119,11 @@ readonly class ColumnCellService
                 $result = bcsub($firstDecimal, $secondDecimal, 2);
             }
 
-            $cell->update(['value' => $result]);
+            // Nur bei tatsaechlicher Aenderung speichern - save() feuert sonst
+            // trotzdem den saved-Observer und damit die Cache-Invalidierung.
+            if ($cell->value !== $result) {
+                $cell->update(['value' => $result]);
+            }
         }
     }
 

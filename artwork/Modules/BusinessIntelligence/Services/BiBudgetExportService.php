@@ -162,7 +162,7 @@ class BiBudgetExportService
             ->with([
                 'cells.column',
                 'cells.sageAssignedData',
-                'subPosition.mainPosition.table',
+                'subPosition.mainPosition.table.columns',
             ])
             ->get();
 
@@ -210,6 +210,11 @@ class BiBudgetExportService
             $rowLabels[$key] = $name;
             $rowFormats[$key] = '#,##0.00 "€"';
         }
+        // Der Wert der budgetrelevanten Spalte je Zeile - projektübergreifend
+        // vergleichbar, auch wenn die Wertspalten unterschiedlich benannt sind.
+        $rowColumns[] = 'relevant_value';
+        $rowLabels['relevant_value'] = __('Preview (budget-relevant)');
+        $rowFormats['relevant_value'] = '#,##0.00 "€"';
         if ($sageEnabled) {
             $rowColumns[] = 'sage_actual';
             $rowLabels['sage_actual'] = __('Sage actual');
@@ -333,10 +338,20 @@ class BiBudgetExportService
 
         $sheetRows = [];
         $bookingRows = [];
+        $forecastColumnIds = [];
 
         foreach ($rows as $row) {
             $table = $row->subPosition?->mainPosition?->table;
             $project = $table ? $projectsById->get($table->project_id) : null;
+
+            // budgetrelevante Spalte je Tabelle (Fallback Altbestand: letzte Wertspalte)
+            if ($table && !array_key_exists($table->id, $forecastColumnIds)) {
+                $forecastColumnIds[$table->id] = (
+                    $table->columns->first(fn($column) => $column->relevant_for_project_groups)
+                        ?? $table->columns->filter(fn($column) => $column->type === 'empty')->last()
+                )?->id;
+            }
+            $forecastColumnId = $table ? $forecastColumnIds[$table->id] : null;
 
             $kto = $this->cellValueAtPosition($row, 0) ?? '';
             $kst = $this->cellValueAtPosition($row, 1) ?? '';
@@ -354,6 +369,7 @@ class BiBudgetExportService
             foreach ($valueColumnNames as $index => $name) {
                 $sheetRow['value_col_' . $index] = '';
             }
+            $sheetRow['relevant_value'] = '';
 
             $sageSum = 0.0;
             $hasBookings = false;
@@ -363,6 +379,10 @@ class BiBudgetExportService
 
                 if ($column?->type === 'empty' && $valueColumnIndex->has($column->name)) {
                     $sheetRow['value_col_' . $valueColumnIndex->get($column->name)] = $cell->value ?? '';
+                }
+
+                if ($forecastColumnId !== null && $cell->column_id === $forecastColumnId) {
+                    $sheetRow['relevant_value'] = $cell->value ?? '';
                 }
 
                 if (!$sageEnabled) {

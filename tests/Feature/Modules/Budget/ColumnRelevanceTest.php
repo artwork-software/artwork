@@ -227,6 +227,30 @@ final class ColumnRelevanceTest extends FeatureTestCase
     }
 
     #[Test]
+    public function restoring_a_column_does_not_steal_the_budget_relevant_flag(): void
+    {
+        $this->actingAsAdmin();
+        $table = $this->createTableWithColumns();
+        $otherValueColumn = Column::factory()->create(['table_id' => $table->id, 'position' => 4]);
+        $flagged = Column::factory()->create([
+            'table_id' => $table->id,
+            'position' => 5,
+            'relevant_for_project_groups' => true,
+        ]);
+        app(ColumnRelevanceService::class)->assignExclusive($flagged);
+
+        // Löschen verschiebt das Flag auf die hinterste verbleibende Wertspalte
+        $this->delete(route('project.budget.column.delete', ['column' => $flagged->id]));
+        $this->assertSame([$otherValueColumn->id], $this->relevantColumnIds($table));
+
+        // Wiederherstellen darf das Flag nicht zurückholen
+        $this->patch(route('project.budget.column.restore', ['column' => $flagged->id]));
+
+        $this->assertNull($flagged->refresh()->deleted_at);
+        $this->assertSame([$otherValueColumn->id], $this->relevantColumnIds($table));
+    }
+
+    #[Test]
     public function project_groups_get_a_budget_relevant_column_on_creation(): void
     {
         $project = Project::factory()->create(['is_group' => true]);

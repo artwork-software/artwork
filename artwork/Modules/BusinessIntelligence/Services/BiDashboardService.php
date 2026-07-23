@@ -140,14 +140,38 @@ class BiDashboardService
     }
 
     /**
+     * Nur Projekte, die im Zeitraum stattfinden (mind. ein Termin überlappt
+     * den Zeitraum) — ohne Zeitraum bleibt die volle Liste erhalten. Projekte
+     * ganz ohne Termine fallen bei aktivem Filter bewusst raus, auch wenn sie
+     * BI-Werte im TOTAL-Modus tragen: die sind keinem Datum zuordenbar.
+     *
+     * @param Collection<int, Project> $projects
+     * @return Collection<int, Project>
+     */
+    private function projectsInRange(Collection $projects, ?Carbon $from, ?Carbon $to): Collection
+    {
+        if (!$from && !$to) {
+            return $projects;
+        }
+
+        return $projects
+            ->filter(fn(Project $project): bool => $this->eventsInRangeCount($project, $from, $to) > 0)
+            ->values();
+    }
+
+    /**
      * @param Collection<int, Project> $projects
      * @return array<string, mixed>
      */
     private function aggregate(Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
+        $projects = $this->projectsInRange($projects, $from, $to);
+
         $rows = [];
         $totalVisitors = 0;
         $totalRevenue = 0.0;
+        $totalCosts = 0.0;
+        $anyCostsRecorded = false;
         $totalTickets = 0;
         $totalCapacity = 0;
         $totalEventDays = 0;
@@ -164,8 +188,10 @@ class BiDashboardService
         $planMetrics = $this->metricsService->forScope('plan');
         $planVisitorsTotal = 0;
         $planRevenueTotal = 0.0;
+        $planCostsTotal = 0.0;
         $actualVisitorsAgainstPlan = 0;
         $actualRevenueAgainstPlan = 0.0;
+        $actualCostsAgainstPlan = 0.0;
         $projectsWithPlan = 0;
 
         foreach ($projects as $project) {
@@ -187,7 +213,9 @@ class BiDashboardService
             // Plan-Werte je Projekt (Zeilen-Spalten + Haus-Erreichung)
             $planVisitors = $planMetrics->visitors($project, $from, $to);
             $planRevenue = $planMetrics->revenue($project, $from, $to);
-            if ($planVisitors !== null || $planRevenue !== null) {
+            $planCosts = $planMetrics->costs($project);
+            $actualCosts = $this->metricsService->costs($project);
+            if ($planVisitors !== null || $planRevenue !== null || $planCosts !== null) {
                 $projectsWithPlan++;
                 if ($planVisitors !== null) {
                     $planVisitorsTotal += $planVisitors;
@@ -196,6 +224,10 @@ class BiDashboardService
                 if ($planRevenue !== null) {
                     $planRevenueTotal += $planRevenue;
                     $actualRevenueAgainstPlan += $revenue;
+                }
+                if ($planCosts !== null) {
+                    $planCostsTotal += $planCosts;
+                    $actualCostsAgainstPlan += $actualCosts ?? 0.0;
                 }
             }
 
@@ -246,6 +278,11 @@ class BiDashboardService
                 'free_tickets_rate' => $this->metricsService->freeTicketsRate($project, $from, $to),
                 'plan_visitors' => $planVisitors,
                 'plan_revenue' => $planRevenue,
+                'costs' => $actualCosts !== null ? round($actualCosts, 2) : null,
+                'plan_costs' => $planCosts,
+                'costs_attainment' => ($planCosts !== null && $planCosts > 0 && $actualCosts !== null)
+                    ? round($actualCosts / $planCosts * 100, 1)
+                    : null,
                 // Erreichung bevorzugt Umsatz (Steuerungsgröße), sonst Besucher*innen
                 'attainment' => match (true) {
                     $planRevenue !== null && $planRevenue > 0 => round($revenue / $planRevenue * 100, 1),
@@ -256,6 +293,10 @@ class BiDashboardService
 
             $totalVisitors += $visitors;
             $totalRevenue += $revenue;
+            if ($actualCosts !== null) {
+                $totalCosts += $actualCosts;
+                $anyCostsRecorded = true;
+            }
             $totalTickets += $tickets;
             $totalCapacity += $capacity;
             $totalEventDays += $eventDays;
@@ -267,6 +308,8 @@ class BiDashboardService
                 'visitors' => $totalVisitors,
                 'visitors_estimated' => $anyVisitorsEstimated,
                 'revenue' => round($totalRevenue, 2),
+                // null = kein Projekt hat Kosten erfasst (Kachel wird dann nicht angezeigt)
+                'costs' => $anyCostsRecorded ? round($totalCosts, 2) : null,
                 'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
                 'event_days' => $totalEventDays,
                 'performances' => $totalPerformances,
@@ -282,11 +325,15 @@ class BiDashboardService
                     'projects_with_plan' => $projectsWithPlan,
                     'plan_visitors' => $planVisitorsTotal,
                     'plan_revenue' => round($planRevenueTotal, 2),
+                    'plan_costs' => round($planCostsTotal, 2),
                     'visitors_attainment' => $planVisitorsTotal > 0
                         ? round($actualVisitorsAgainstPlan / $planVisitorsTotal * 100, 1)
                         : null,
                     'revenue_attainment' => $planRevenueTotal > 0
                         ? round($actualRevenueAgainstPlan / $planRevenueTotal * 100, 1)
+                        : null,
+                    'costs_attainment' => $planCostsTotal > 0
+                        ? round($actualCostsAgainstPlan / $planCostsTotal * 100, 1)
                         : null,
                 ]
                 : null,
@@ -340,6 +387,11 @@ class BiDashboardService
      */
     private function aggregateComparableKpis(Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
+        // Auch der Vergleichslauf zählt nur Projekte, die im jeweiligen
+        // Zeitraum stattfinden — sonst verwässern TOTAL-Modus-Werte von
+        // Projekten außerhalb des Vergleichszeitraums das Vorjahres-Delta.
+        $projects = $this->projectsInRange($projects, $from, $to);
+
         $totalVisitors = 0;
         $totalRevenue = 0.0;
         $totalTickets = 0;

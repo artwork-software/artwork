@@ -45,17 +45,22 @@ readonly class ColumnService
     public function setColumnSubName(int $table_id): void
     {
         $table = Table::find($table_id);
-        $columns = $table->columns()->get();
+        if (!$table) {
+            return;
+        }
+
+        // Nur Spalten nach den ersten 3 (KTO/KST/Position) bekommen einen subName;
+        // die Unterprojekte-Spalte (Position 100) erhält immer den letzten Buchstaben.
+        $filteredColumns = $table->columns()->orderBy('position')->get()->skip(3)->values();
+        $totalColumns = $filteredColumns->count();
 
         $count = 1;
+        foreach ($filteredColumns as $column) {
+            $subName = ($column->position == 100)
+                ? $this->getNameFromNumber($totalColumns)
+                : $this->getNameFromNumber($count);
 
-        foreach ($columns as $column) {
-            if (empty($column->subName)) {
-                continue;
-            }
-            $column->update([
-                'subName' => $this->getNameFromNumber($count)
-            ]);
+            $column->update(['subName' => $subName]);
             $count++;
         }
     }
@@ -148,7 +153,6 @@ readonly class ColumnService
 
         $this->columnRepository->forceDelete($column);
         broadcast(new UpdateBudget($columnProjectId));
-
     }
 
     public function softDelete(
@@ -227,7 +231,6 @@ readonly class ColumnService
 
         $this->columnRepository->delete($column);
         broadcast(new UpdateBudget($columnProjectId));
-
     }
 
     public function restore(

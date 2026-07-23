@@ -121,7 +121,10 @@ class BiProjectDataController extends Controller
                 ? $this->biProjectMetricsService->forScope('plan')->summary($project)
                 : null,
             'plan_comparison' => $planComparison,
-            'budget_suggestions' => $this->biDerivedValuesService->getRevenueSuggestions($project),
+            'budget_suggestions' => array_merge(
+                $this->biDerivedValuesService->getRevenueSuggestions($project),
+                $this->biDerivedValuesService->getCostSuggestions($project)
+            ),
             'audience_categories' => BiAudienceCategory::ordered()->get(),
             'audience_category_values' => $this->biProjectDataService->getCategoryValues($project->id),
             'plan_audience_category_values' => $this->biProjectDataService->getCategoryValues($project->id, 'plan'),
@@ -143,12 +146,19 @@ class BiProjectDataController extends Controller
         $data = collect($request->validated())->except('scope')->all();
 
         // Herkunfts-Stempel: gesetzte Quelle bekommt einen Zeitpunkt, manuelles
-        // Überschreiben des Umsatzes löscht die Herkunft wieder.
+        // Überschreiben des Umsatzes/der Kosten löscht die Herkunft wieder.
         if (array_key_exists('revenue_source', $data)) {
             $data['revenue_source_synced_at'] = $data['revenue_source'] !== null ? now() : null;
         } elseif (array_key_exists('revenue_total', $data)) {
             $data['revenue_source'] = null;
             $data['revenue_source_synced_at'] = null;
+        }
+
+        if (array_key_exists('costs_source', $data)) {
+            $data['costs_source_synced_at'] = $data['costs_source'] !== null ? now() : null;
+        } elseif (array_key_exists('costs_total', $data)) {
+            $data['costs_source'] = null;
+            $data['costs_source_synced_at'] = null;
         }
 
         $biData = $this->biProjectDataService->updateData(

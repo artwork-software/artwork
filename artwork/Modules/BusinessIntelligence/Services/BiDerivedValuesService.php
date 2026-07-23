@@ -218,9 +218,10 @@ class BiDerivedValuesService
 
     /**
      * Umsatz-Vorschläge aus dem Budget-Modul für die Plan/Ist-Erfassung:
-     * plan = Einnahmen-Summe der letzten Kalkulationsspalte (Muster
-     * BudgetsByBudgetDeadlineExport), actual = Erlös-Summe der Sage-Buchungen
-     * (negative buchungsbetrag-Werte sind Erlöse). null = keine Quelle vorhanden.
+     * plan = Einnahmen-Summe der budgetrelevanten Spalte (identisch zu den
+     * Stichtag-Exporten; Fallback Altbestand: letzte Wertspalte), actual =
+     * Erlös-Summe der Sage-Buchungen (negative buchungsbetrag-Werte sind
+     * Erlöse). null = keine Quelle vorhanden.
      *
      * @return array{plan: ?float, actual: ?float}
      */
@@ -235,9 +236,10 @@ class BiDerivedValuesService
         $table->loadMissing('columns');
 
         $plan = null;
-        $lastEmptyColumn = $table->columns->filter(fn($column) => $column->type === 'empty')->last();
-        if ($lastEmptyColumn) {
-            $earnings = (float) ($table->earningSums[$lastEmptyColumn->id] ?? 0);
+        $forecastColumn = $table->columns->first(fn($column) => $column->relevant_for_project_groups)
+            ?? $table->columns->filter(fn($column) => $column->type === 'empty')->last();
+        if ($forecastColumn) {
+            $earnings = (float) ($table->earningSums[$forecastColumn->id] ?? 0);
             // 0 heißt praktisch "keine Einnahmen kalkuliert" — kein sinnvoller Vorschlag
             $plan = $earnings > 0 ? round($earnings, 2) : null;
         }
@@ -265,6 +267,55 @@ class BiDerivedValuesService
         }
 
         return ['plan' => $plan, 'actual' => $actual];
+    }
+
+    /**
+     * Kosten-Vorschläge aus dem Budget-Modul, spiegelbildlich zu
+     * getRevenueSuggestions(): costs_plan = Kosten-Summe der budgetrelevanten
+     * Spalte, costs_actual = Kosten-Summe der Sage-Buchungen (positive
+     * buchungsbetrag-Werte sind Kosten). null = keine Quelle vorhanden.
+     *
+     * @return array{costs_plan: ?float, costs_actual: ?float}
+     */
+    public function getCostSuggestions(Project $project): array
+    {
+        $table = $project->table;
+
+        if (!$table) {
+            return ['costs_plan' => null, 'costs_actual' => null];
+        }
+
+        $table->loadMissing('columns');
+
+        $plan = null;
+        $forecastColumn = $table->columns->first(fn($column) => $column->relevant_for_project_groups)
+            ?? $table->columns->filter(fn($column) => $column->type === 'empty')->last();
+        if ($forecastColumn) {
+            $costs = (float) ($table->costSums[$forecastColumn->id] ?? 0);
+            $plan = $costs > 0 ? round($costs, 2) : null;
+        }
+
+        $actual = null;
+        $sageColumn = $this->isSageApiEnabled()
+            ? $table->columns->first(fn($column) => $column->type === 'sage')
+            : null;
+        if ($sageColumn) {
+            $sageColumn->loadMissing('cells.sageAssignedData');
+            $costsSum = 0.0;
+            $hasBookings = false;
+            foreach ($sageColumn->cells as $cell) {
+                foreach ($cell->sageAssignedData as $booking) {
+                    $hasBookings = true;
+                    $value = (float) $booking->buchungsbetrag;
+                    if ($value > 0) {
+                        $costsSum += $value;
+                    }
+                }
+            }
+            $actual = ($hasBookings && $costsSum > 0) ? round($costsSum, 2) : null;
+        }
+
+        return ['costs_plan' => $plan, 'costs_actual' => $actual];
     }
 
     /**

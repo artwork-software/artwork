@@ -303,6 +303,15 @@
                                 <template v-if="planSummary">
                                     <td class="px-3 py-2 text-gray-600">{{ row.plan_visitors !== null ? formatInt(row.plan_visitors) : '—' }}</td>
                                     <td class="px-3 py-2 text-gray-600">{{ row.plan_revenue !== null ? formatCurrency(row.plan_revenue) : '—' }}</td>
+                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_costs !== null ? formatCurrency(row.plan_costs) : '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        <span
+                                            v-if="row.costs_attainment !== null"
+                                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                                            :class="row.costs_attainment <= 100 ? 'bg-emerald-100 text-emerald-700' : (row.costs_attainment <= 120 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')"
+                                        >{{ formatPercent(row.costs_attainment) }}</span>
+                                        <span v-else class="text-gray-300">—</span>
+                                    </td>
                                     <td class="px-3 py-2">
                                         <span
                                             v-if="row.attainment !== null"
@@ -588,6 +597,16 @@ const kpiTiles = computed(() => {
                 ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_revenue)} · ${formatPercent(planSummary.value.revenue_attainment)}`
                 : null,
         },
+        // Kosten-Kachel nur, wenn mindestens ein Projekt Kosten erfasst hat
+        ...(kpis.value.costs !== null && kpis.value.costs !== undefined ? [{
+            key: 'costs',
+            label: 'Costs',
+            value: formatCurrency(kpis.value.costs),
+            delta: null,
+            planLine: planSummary.value?.costs_attainment !== null && planSummary.value?.costs_attainment !== undefined
+                ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_costs)} · ${formatPercent(planSummary.value.costs_attainment)}`
+                : null,
+        }] : []),
         {
             key: 'occupancy',
             label: 'Occupancy rate',
@@ -869,6 +888,8 @@ const columns = computed(() => [
     ...(planSummary.value ? [
         { key: 'plan_visitors', label: 'Plan visitors' },
         { key: 'plan_revenue', label: 'Plan revenue' },
+        { key: 'plan_costs', label: 'Plan costs' },
+        { key: 'costs_attainment', label: 'Costs attainment' },
         { key: 'attainment', label: 'Attainment' },
     ] : []),
 ]);

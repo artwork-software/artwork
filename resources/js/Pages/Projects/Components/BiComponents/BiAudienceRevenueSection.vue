@@ -1,7 +1,7 @@
 <template>
     <div>
         <!-- Modus + Gesamtwert je Kennzahl -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
             <div
                 v-for="metric in metrics"
                 :key="metric.key"
@@ -11,14 +11,14 @@
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <span class="text-sm font-medium text-gray-900">{{ $t(metric.label) }}</span>
                     <SwitchDualLabel
-                        v-if="canEdit && !notApplicable[metric.key]"
+                        v-if="canEdit && !notApplicable[metric.key] && metric.switchRoute"
                         :model-value="modes[metric.key] === 'per_event'"
                         :left-label="$t('Total')"
                         :right-label="$t('Per event')"
                         size="sm"
                         @change="isPerEvent => onToggleChange(metric, isPerEvent)"
                     />
-                    <span v-else-if="!notApplicable[metric.key]" class="text-xs text-gray-400">
+                    <span v-else-if="!notApplicable[metric.key] && metric.switchRoute" class="text-xs text-gray-400">
                         {{ modes[metric.key] === 'per_event' ? $t('Per event') : $t('Total') }}
                     </span>
                 </div>
@@ -37,7 +37,7 @@
                         :label="$t(metric.totalLabel)"
                         :disabled="!canEdit"
                         :min="0"
-                        :step="metric.key === 'revenue' ? 0.01 : 1"
+                        :step="metric.key === 'revenue' || metric.key === 'costs' ? 0.01 : 1"
                         @change="saveTotal(metric)"
                     />
                     <p v-else class="text-xs text-gray-500">
@@ -69,6 +69,28 @@
                             {{ $t('Adopt value') }}
                         </button>
                         <span v-else-if="biData?.revenue_source" class="text-emerald-600">
+                            ✓ {{ $t('adopted') }}
+                        </span>
+                    </div>
+
+                    <!-- Kosten-Vorschlag aus dem Budget-Modul (Quelle je Scope) -->
+                    <div
+                        v-if="metric.key === 'costs' && costSuggestion !== null"
+                        class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs print:hidden"
+                    >
+                        <span class="text-gray-400">
+                            {{ scope === 'plan' ? $t('Expense side of the project budget') : $t('Costs from Sage bookings') }}:
+                            <span class="font-medium text-gray-600">{{ currencyFmt.format(costSuggestion) }}</span>
+                        </span>
+                        <button
+                            v-if="canEdit && Number(totals.costs ?? NaN) !== costSuggestion"
+                            type="button"
+                            class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                            @click="adoptCostSuggestion"
+                        >
+                            {{ $t('Adopt value') }}
+                        </button>
+                        <span v-else-if="biData?.costs_source" class="text-emerald-600">
                             ✓ {{ $t('adopted') }}
                         </span>
                     </div>
@@ -250,11 +272,21 @@ const metrics = [
         naField: 'revenue_not_applicable',
         switchRoute: 'projects.bi.switch-revenue-mode',
     },
+    {
+        // Kosten werden nur als Projekt-Gesamtwert erfasst (kein per-Event-Modus)
+        key: 'costs',
+        label: 'Costs',
+        totalLabel: 'Total costs',
+        modeField: null,
+        totalField: 'costs_total',
+        naField: 'costs_not_applicable',
+        switchRoute: null,
+    },
 ];
 
-const modes = reactive({ visitors: 'total', sold_tickets: 'total', revenue: 'total' });
-const totals = reactive({ visitors: null, sold_tickets: null, revenue: null });
-const notApplicable = reactive({ visitors: false, sold_tickets: false, revenue: false });
+const modes = reactive({ visitors: 'total', sold_tickets: 'total', revenue: 'total', costs: 'total' });
+const totals = reactive({ visitors: null, sold_tickets: null, revenue: null, costs: null });
+const notApplicable = reactive({ visitors: false, sold_tickets: false, revenue: false, costs: false });
 
 const showModeModal = ref(false);
 const pendingSwitch = ref(null);
@@ -262,7 +294,7 @@ const pendingSwitch = ref(null);
 watch(() => props.biData, (val) => {
     if (!val) return;
     metrics.forEach((metric) => {
-        modes[metric.key] = val[metric.modeField] ?? 'total';
+        modes[metric.key] = metric.modeField ? (val[metric.modeField] ?? 'total') : 'total';
         // Fokussierte Eingabe nicht überschreiben: der Refetch nach einem Save
         // (auch aus anderen Sektionen) darf laufendes Tippen nicht zurücksetzen
         const input = document.getElementById('bi_total_' + props.scope + '_' + metric.key);
@@ -371,6 +403,29 @@ const revenueSuggestion = computed(() => {
         : props.budgetSuggestions?.actual;
     return suggestion ?? null;
 });
+
+// --- Kosten-Vorschlag aus dem Budget-Modul ---
+
+const costSuggestion = computed(() => {
+    const suggestion = props.scope === 'plan'
+        ? props.budgetSuggestions?.costs_plan
+        : props.budgetSuggestions?.costs_actual;
+    return suggestion ?? null;
+});
+
+const adoptCostSuggestion = async () => {
+    totals.costs = costSuggestion.value;
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-data', props.projectId), {
+            costs_total: costSuggestion.value,
+            costs_source: props.scope === 'plan' ? 'budget_expense' : 'sage',
+            scope: props.scope,
+        })
+    );
+    if (ok) {
+        emit('updated');
+    }
+};
 
 const adoptRevenueSuggestion = async () => {
     totals.revenue = revenueSuggestion.value;

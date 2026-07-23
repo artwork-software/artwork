@@ -59,16 +59,18 @@ class BiProjectMetricsService
         $plan = $this->forScope('plan');
 
         $metrics = [];
-        foreach (['visitors', 'sold_tickets', 'revenue'] as $metric) {
+        foreach (['visitors', 'sold_tickets', 'revenue', 'costs'] as $metric) {
             $planValue = match ($metric) {
                 'visitors' => $plan->visitors($project, $from, $to),
                 'sold_tickets' => $plan->soldTickets($project, $from, $to),
                 'revenue' => $plan->revenue($project, $from, $to),
+                'costs' => $plan->costs($project),
             };
             $actualValue = match ($metric) {
                 'visitors' => $this->visitors($project, $from, $to),
                 'sold_tickets' => $this->soldTickets($project, $from, $to),
                 'revenue' => $this->revenue($project, $from, $to),
+                'costs' => $this->costs($project),
             };
 
             $metrics[$metric] = [
@@ -83,9 +85,42 @@ class BiProjectMetricsService
             ];
         }
 
+        // Ergebnis = Umsatz - Kosten, je Scope abgeleitet (nur wenn beide Werte da sind)
+        $resultPlan = ($metrics['revenue']['plan'] !== null && $metrics['costs']['plan'] !== null)
+            ? round($metrics['revenue']['plan'] - $metrics['costs']['plan'], 2)
+            : null;
+        $resultActual = ($metrics['revenue']['actual'] !== null && $metrics['costs']['actual'] !== null)
+            ? round($metrics['revenue']['actual'] - $metrics['costs']['actual'], 2)
+            : null;
+        $metrics['result'] = [
+            'plan' => $resultPlan,
+            'actual' => $resultActual,
+            'diff' => ($resultPlan !== null && $resultActual !== null)
+                ? round($resultActual - $resultPlan, 2)
+                : null,
+            'attainment' => ($resultPlan !== null && $resultPlan > 0 && $resultActual !== null)
+                ? round($resultActual / $resultPlan * 100, 1)
+                : null,
+        ];
+
         $hasPlan = collect($metrics)->contains(fn(array $entry): bool => $entry['plan'] !== null);
 
         return ['has_plan' => $hasPlan, 'metrics' => $metrics];
+    }
+
+    /**
+     * Kosten des Projekts im aktuellen Scope. Nur als Projekt-Gesamtwert erfasst
+     * (kein per-Event-Modus); null = nicht erfasst oder als nicht relevant markiert.
+     */
+    public function costs(Project $project): ?float
+    {
+        $biData = $this->biDataOf($project);
+
+        if (!$biData || $biData->costs_not_applicable) {
+            return null;
+        }
+
+        return $biData->costs_total !== null ? (float) $biData->costs_total : null;
     }
 
     /**

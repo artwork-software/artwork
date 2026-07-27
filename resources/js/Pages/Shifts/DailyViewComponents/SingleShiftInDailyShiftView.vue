@@ -1069,8 +1069,12 @@ const checkAllShiftCollisions = (forceRefresh = false) => {
 // Kein onMounted-Check mehr — bei vielen Schichten verursachte das N parallele API-Requests.
 
 
-// Resolve shiftGroup from lookup
-const shiftGroupResolved = computed(() => props.shift.shiftGroup ?? resolveShiftGroup(props.shift.shiftGroupId));
+// Resolve shiftGroup from lookup — Payloads liefern je nach Ansicht camelCase (ShiftDTO)
+// oder snake_case (ShiftListViewSerializer)
+const shiftGroupResolved = computed(() =>
+    props.shift.shiftGroup
+    ?? props.shift.shift_group
+    ?? resolveShiftGroup(props.shift.shiftGroupId ?? props.shift.shift_group_id));
 
 // Computed property to get full craft data with color from props.crafts
 const fullCraft = computed(() => {

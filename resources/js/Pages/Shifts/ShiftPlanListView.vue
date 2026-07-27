@@ -556,6 +556,7 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue';
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue';
 import HolidayToolTip from '@/Components/ToolTips/HolidayToolTip.vue';
+import {provideShiftPlanLookups} from '@/Composeables/useShiftPlanLookups.js';
 
 const AddShiftModal = defineAsyncComponent({
     loader: () => import('@/Pages/Projects/Components/AddShiftModal.vue'),
@@ -603,6 +604,22 @@ const props = defineProps({
     globalQualifications: [Array, Object],
     currentUserCrafts: Array,
 });
+
+// Lookups für die Kind-Komponenten (SingleEntityInShift/SingleShiftInDailyShiftView):
+// craftsById liefert u.a. craft_shift_planer für die Planer-Erkennung,
+// shiftGroupsById die Gruppennamen — ohne Provider laufen die Kinder im No-op-Fallback.
+const {setLookups} = provideShiftPlanLookups();
+const buildLookups = () => {
+    const craftsById = {};
+    (Array.isArray(props.crafts) ? props.crafts : Object.values(props.crafts || {}))
+        .forEach((c) => { craftsById[c.id] = c; });
+    const shiftGroupsById = {};
+    (Array.isArray(props.shiftGroups) ? props.shiftGroups : Object.values(props.shiftGroups || {}))
+        .forEach((g) => { shiftGroupsById[g.id] = g; });
+    setLookups({craftsById, shiftGroupsById});
+};
+buildLookups();
+watch(() => [props.crafts, props.shiftGroups], buildLookups);
 
 // --- L3: Local reactive copy of groupedShifts + WebSocket listeners ---
 const localGroupedShifts = shallowRef(props.groupedShifts || []);

@@ -42,7 +42,7 @@
                 </div>
 
                 <!-- Empty -->
-                <div v-else-if="filtered.length === 0" class="px-3 py-2 text-[13px] text-zinc-500">
+                <div v-else-if="displayList.length === 0" class="px-3 py-2 text-[13px] text-zinc-500">
                     <BaseAlertComponent
                         v-if="query.trim() !== ''"
                         :message="$t ? $t('No Projects or Groups found') : 'No Projects or Groups found'"
@@ -53,9 +53,13 @@
                 </div>
 
                 <!-- Results -->
-                <ul v-else class="py-1">
+                <div v-else>
+                <div v-if="isShowingRecent" class="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                    {{ $t ? $t('Recently used projects') : 'Recently used projects' }}
+                </div>
+                <ul class="py-1">
                     <li
-                        v-for="(proj, idx) in filtered"
+                        v-for="(proj, idx) in displayList"
                         :key="proj.id ?? idx"
                         :id="`project-option-${idx}`"
                         role="option"
@@ -86,6 +90,7 @@
                     </div>
                     </li>
                 </ul>
+                </div>
             </div>
         </transition>
     </div>
@@ -115,6 +120,8 @@ const props = defineProps<{
     minChars?: number
     /** debounce in ms */
     delay?: number
+    /** zeigt bei leerem Suchfeld die zuletzt geöffneten Projekte (localStorage) als Schnellauswahl */
+    showRecentProjects?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -148,6 +155,45 @@ function mustList(p: Project): boolean {
     return true
 }
 const filtered = computed(() => projects.value.filter(mustList))
+
+// Zuletzt geöffnete Projekte (gleiche Quelle wie LastedProjects.vue: localStorage "lastedProjects")
+const RECENT_STORAGE_KEY = 'lastedProjects'
+const RECENT_LIMIT = 5
+const recentProjects = ref<Project[]>([])
+
+const isShowingRecent = computed(
+    () => !!props.showRecentProjects && query.value.trim().length < minChars && recentProjects.value.length > 0
+)
+
+const displayList = computed<Project[]>(() =>
+    query.value.trim().length >= minChars ? filtered.value : (isShowingRecent.value ? recentProjects.value : [])
+)
+
+async function loadRecentProjects() {
+    if (!props.showRecentProjects) return
+    let items: Project[] = []
+    try {
+        const raw = localStorage.getItem(RECENT_STORAGE_KEY)
+        const parsed = raw ? JSON.parse(raw) : []
+        items = (Array.isArray(parsed) ? parsed : []).filter(mustList)
+    } catch {
+        items = []
+    }
+    recentProjects.value = items.slice(0, RECENT_LIMIT)
+
+    // Inzwischen gelöschte Projekte entfernen (Liste liegt rein clientseitig im localStorage)
+    const ids = recentProjects.value
+        .map((p) => Number(p.id))
+        .filter((id) => Number.isInteger(id) && id > 0)
+    if (ids.length === 0) return
+    try {
+        const { data } = await axios.post(route('project.filterExistingIds'), { ids })
+        const existing = new Set((Array.isArray(data) ? data : []).map((id: any) => Number(id)))
+        recentProjects.value = recentProjects.value.filter((p) => existing.has(Number(p.id)))
+    } catch {
+        /* best effort — bei Fehler ungefiltert anzeigen */
+    }
+}
 
 // API
 async function fetchProjects(q: string) {
@@ -197,6 +243,9 @@ watch(query, (q) => {
 // Focus / Keyboard
 function onFocus() {
     open.value = true
+    if (props.showRecentProjects && query.value.trim().length < minChars) {
+        loadRecentProjects()
+    }
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -209,21 +258,21 @@ function onKeydown(e: KeyboardEvent) {
         return
     }
 
-    if (!filtered.value.length) return
+    if (!displayList.value.length) return
 
     if (e.key === 'ArrowDown') {
         e.preventDefault()
-        activeIndex.value = (activeIndex.value + 1) % filtered.value.length
+        activeIndex.value = (activeIndex.value + 1) % displayList.value.length
         scrollActiveIntoView()
     } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         activeIndex.value =
-            activeIndex.value <= 0 ? filtered.value.length - 1 : activeIndex.value - 1
+            activeIndex.value <= 0 ? displayList.value.length - 1 : activeIndex.value - 1
         scrollActiveIntoView()
     } else if (e.key === 'Enter') {
-        if (activeIndex.value >= 0 && activeIndex.value < filtered.value.length) {
+        if (activeIndex.value >= 0 && activeIndex.value < displayList.value.length) {
             e.preventDefault()
-            selectProject(filtered.value[activeIndex.value])
+            selectProject(displayList.value[activeIndex.value])
         }
     }
 }
@@ -237,8 +286,28 @@ function scrollActiveIntoView() {
 }
 
 // Select
-function selectProject(project: Project) {
-    emit('project-selected', project)
+async function selectProject(project: Project) {
+    let toEmit = project
+    // Einträge aus der Schnellauswahl haben keine first/last-event-Daten aus der Suche —
+    // bei Bedarf über die reguläre Projektsuche nachladen, damit z. B. die
+    // Zeitraum-Vorbelegung identisch zur normalen Auswahl funktioniert.
+    const cameFromRecent = isShowingRecent.value
+    if (cameFromRecent && props.getFirstLastEvent && project.name) {
+        try {
+            const { data } = await axios.post(route('project.scoutSearch'), {
+                project_search: project.name,
+                get_first_last_event: true,
+                wantsJson: true,
+            })
+            const match = Array.isArray(data)
+                ? data.find((p: any) => Number(p.id) === Number(project.id))
+                : null
+            if (match) toEmit = match
+        } catch {
+            /* Fallback: Rohdaten aus der Schnellauswahl emittieren */
+        }
+    }
+    emit('project-selected', toEmit)
     // UX: Input resetten, Dropdown schließen
     query.value = ''
     projects.value = []

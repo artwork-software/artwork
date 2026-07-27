@@ -54,6 +54,7 @@
                                             autocomplete="current-password"
                                             required
                                             :label="$t('Password') + '*'"
+                                            @keydown.enter.prevent="submit"
                                         />
                                     </div>
                                 </div>

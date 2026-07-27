@@ -11,7 +11,11 @@
                 </button>
             </div>
             <div v-else class="flex w-full">
-                <input class="my-2 ml-1 xxsDark" type="text" v-model="subPosition.name"
+                <input class="my-2 ml-1 xxsDark rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                       type="text" v-model="subPosition.name"
+                       @keyup.enter="$event.target.blur()"
+                       @keyup.esc="subPosition.name = editedNameOriginalValue ?? subPosition.name; subPosition.clicked = false"
+                       @focus="editedNameOriginalValue = subPosition.name"
                        @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
                     <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
@@ -87,6 +91,7 @@
                             class="bg-secondary-hover flex justify-between items-center border border-gray-200 group">
                             <div class="flex items-center">
                                 <td v-for="(cell,index) in row.cells"
+                                    :key="cell.id"
                                     v-show="!(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                                     :class="[index <= 1 ? 'w-48' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                                     <div
@@ -307,15 +312,16 @@
                                      v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                     <input :ref="`cell-${cell.id}`"
                                            :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                           class="my-2 xsDark  appearance-none z-10 " type="text"
+                                           class="my-2 xsDark appearance-none z-10 rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                                           type="text"
                                            :disabled="!this.$can('edit budget templates') && table.is_template"
                                            v-model="cell.value"
-                                           @keyup="isNumber($event, index)"
+                                           @keydown="handleCellKeydown($event, cell, row, index)"
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
 
                                 </div>
                                 <div
-                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
+                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '', savingCellIds[cell.id] ? 'opacity-50 animate-pulse' : '']"
                                     class="my-4 h-6 flex items-center justify-end group"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
@@ -406,9 +412,10 @@
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
-                <td class="w-72 my-2">SUM</td>
+                <td class="w-72 my-2">{{ $t('SUM') }}</td>
                 <td v-if="subPosition.sub_position_rows?.length > 0" class="flex items-center w-48"
-                    v-for="column in columns.slice(3)"
+                    v-for="column in valueColumns"
+                    :key="column.id"
                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1"
                          :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : ''">
@@ -427,7 +434,7 @@
                                 {{ this.toCurrencyString(subPosition.columnSums?.[column.id]?.sum) }}
                             </span>
                             <span v-if="column.type === 'sage'">
-                                {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
+                                {{ toCurrencyString(calculateSageColumnWithCellSageDataValue) }}
                             </span>
                             <span v-if="column.type === 'subprojects_column_for_group'">
                                 {{ calculateRelevantBudgetDataSumFormProjectsInGroupSubPosition() }}
@@ -470,15 +477,11 @@
     />
 </template>
 <script>
-import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Link, useForm, usePage} from "@inertiajs/vue3";
+import {useForm, usePage} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement.vue";
-import IconLib from "@/Mixins/IconLib.vue";
 import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement.vue";
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
@@ -488,9 +491,11 @@ import {IconList} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import draggable from 'vuedraggable';
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import {budgetCellFocus} from "@/Layouts/Components/Budget/budgetCellFocus.js";
+import axios from "axios";
 
 export default {
-    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
+    mixins: [Permissions, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
         BaseMenuItem,
@@ -501,21 +506,7 @@ export default {
         SageDragCellElement,
         SageDropCellElement,
         SageDataDropElement,
-        PlusCircleIcon,
-        ChevronUpIcon,
-        ChevronDownIcon,
-        PencilAltIcon,
-        TrashIcon,
-        XCircleIcon,
-        XIcon,
-        DotsVerticalIcon,
-        CheckIcon,
-        Menu,
-        MenuItem,
-        MenuItems,
-        MenuButton,
         ConfirmationComponent,
-        Link
     },
     props: ['subPosition', 'mainPosition', 'allMainPositions', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess', 'userShowAccountName'],
     emits: [
@@ -525,12 +516,12 @@ export default {
         'openCellDetailModal',
         'openSubPositionSumDetailModal',
         'openSageAssignedDataModal',
-        'budget-updated'
+        'budget-updated',
+        'budget-patched'
     ],
     data() {
         return {
             editedCellOriginalValue: null,
-            alreadyCellClicked: false,
             showMenu: null,
             hoveredRow: null,
             showDeleteModal: false,
@@ -571,15 +562,10 @@ export default {
                 redColumn: 'redColumn',
                 pinkColumn: 'pinkColumn'
             },
-            updateCellForm: useForm({
-                column_id: null,
-                value: null,
-                sub_position_row_id: null,
-                is_verified: false
-            }),
             dataToDisplayInRelevantDataModal: null,
             showRelevantBudgetDataSumModal: false,
-            nextCellId: localStorage.getItem('nextCellId') ?? null,
+            savingCellIds: {},
+            editedNameOriginalValue: null,
             truncEls: {},
             isTruncated: {},
         }
@@ -610,8 +596,14 @@ export default {
                 && (!this.table?.is_template || this.$can('edit budget templates'));
         },
 
-        // usePage().props.loadedProjectInformation.BudgetTab.projectGroupRelevantBudgetData
+        valueColumns() {
+            return (this.columns ?? []).slice(3);
+        },
 
+        closedSubPositionsStorageKey() {
+            // pro Tabelle getrennt, sonst kollidieren die Zustaende zwischen Projekten
+            return `closedSubPositions:${this.table?.id}`;
+        },
     },
     mounted() {
         this.checkIfSubPositionClosed();
@@ -622,13 +614,12 @@ export default {
         window.addEventListener("resize", this._onResize);
     },
     beforeUnmount() {
-        localStorage.removeItem('nextCellId');
-        localStorage.removeItem('closedSubPositions');
-
         window.removeEventListener("resize", this._onResize);
     },
-    updated() {
-        this.checkIfSubPositionClosed();
+    watch: {
+        'subPosition.id'() {
+            this.checkIfSubPositionClosed();
+        },
     },
     methods: {
         setTruncEl(id, el) {
@@ -722,6 +713,7 @@ export default {
                     {
                         preserveScroll: true,
                         preserveState: true,
+                        onSuccess: () => this.$emit('budget-updated'),
                     }
                 );
                 });
@@ -777,7 +769,8 @@ export default {
                     commented: bool
                 },
                 {
-                    preserveScroll: true
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 }
             );
         },
@@ -805,58 +798,46 @@ export default {
                 ),
                 null,
                 {
-                    preserveScroll: true
+                    preserveScroll: true,
+                    onSuccess: () => this.$emit('budget-updated')
                 }
             )
         },
+        readClosedSubPositions() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(this.closedSubPositionsStorageKey));
+                return Array.isArray(stored) ? stored : [];
+            } catch (e) {
+                return [];
+            }
+        },
         checkIfSubPositionClosed() {
-            if (localStorage.getItem('closedSubPositions') !== null) {
-                let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
-                // add fail over if closedMainPositions is not an array
-                if (!Array.isArray(closedSubPositions)) {
-                    closedSubPositions = []
-                }
-                let index = closedSubPositions.findIndex((subPosition) => subPosition.id === this.subPosition.id)
-                if (index !== -1) {
-                    this.subPosition.closed = closedSubPositions[index].closed
-                }
+            const closedSubPositions = this.readClosedSubPositions();
+            const entry = closedSubPositions.find((subPosition) => subPosition.id === this.subPosition.id);
+            if (entry) {
+                this.subPosition.closed = entry.closed;
             }
         },
         openCloseMainPosition() {
-            this.subPosition.closed = !this.subPosition.closed
-            if (localStorage.getItem('closedSubPositions') === null) {
-                localStorage.setItem('closedSubPositions', JSON.stringify([{
+            this.subPosition.closed = !this.subPosition.closed;
+            const closedSubPositions = this.readClosedSubPositions();
+            const entry = closedSubPositions.find((subPosition) => subPosition.id === this.subPosition.id);
+            if (entry) {
+                entry.closed = this.subPosition.closed;
+            } else {
+                closedSubPositions.push({
                     id: this.subPosition.id,
                     closed: this.subPosition.closed
-                }]))
-            } else {
-                let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
-                // add fail over if closedMainPositions is not an array
-                if (!Array.isArray(closedSubPositions)) {
-                    closedSubPositions = []
-                }
-                let index = closedSubPositions.findIndex((subPosition) => subPosition.id === this.subPosition.id)
-                if (index === -1) {
-                    closedSubPositions.push({
-                        id: this.subPosition.id,
-                        closed: this.subPosition.closed
-                    })
-                } else {
-                    closedSubPositions[index].closed = this.subPosition.closed
-                }
-                localStorage.setItem('closedSubPositions', JSON.stringify(closedSubPositions))
+                });
             }
+            localStorage.setItem(this.closedSubPositionsStorageKey, JSON.stringify(closedSubPositions));
         },
         duplicateSubpostion(subPositionId) {
             this.$inertia.post(route('project.budget.sub-position.duplicate', subPositionId), {}, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
-        },
-        isNumber(event, index) {
-            if (index > 2 && !(new RegExp('^([0-9,])$')).test(event.key)) {
-                event.preventDefault();
-            }
         },
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
@@ -868,7 +849,8 @@ export default {
                 subPositionName: subPosition.name
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         verifiedSubPosition(subPositionId) {
@@ -878,7 +860,8 @@ export default {
                 table_id: this.table.id,
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         openVerifiedModalSub(subPosition) {
@@ -895,7 +878,8 @@ export default {
                 type: type
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         removeVerification(position, type) {
@@ -904,7 +888,8 @@ export default {
                 type: type
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         checkColumnsLocked() {
@@ -923,61 +908,177 @@ export default {
                 positionBefore: row ? row.position : -1
             }, {
                 preserveState: false,
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
+            const originalValue = this.editedCellOriginalValue;
 
-
-            let onFinish = () => {
+            const openNextCell = () => {
                 cell.clicked = false;
-                if (this.nextCellId) {
-                    let nextCell = this.subPosition.sub_position_rows.find(row => row.cells.find(cell => cell.id === this.nextCellId))?.cells.find(cell => cell.id === this.nextCellId);
+                const nextCellId = budgetCellFocus.nextCellId;
+                if (nextCellId && nextCellId !== cell.id) {
+                    const nextCell = this.subPosition.sub_position_rows
+                        .find(row => row.cells.some(c => c.id === nextCellId))
+                        ?.cells.find(c => c.id === nextCellId);
                     if (nextCell) {
-                        if (cell.id !== nextCell.id) {
-                            nextCell.clicked = !nextCell.clicked
-                            if (nextCell.clicked) {
-                                nextTick(() => {
-                                    this.$refs[`cell-${nextCell.id}`][0].select();
-                                    localStorage.removeItem('nextCellId');
-                                })
-                            }
-                        }
-                        {
-                            localStorage.removeItem('nextCellId');
-                        }
+                        budgetCellFocus.nextCellId = null;
+                        this.editedCellOriginalValue = nextCell.value;
+                        nextCell.clicked = true;
+                        nextTick(() => {
+                            this.$refs[`cell-${nextCell.id}`]?.[0]?.select();
+                        });
                     }
                 }
             };
 
-            if (cell.value === this.editedCellOriginalValue) {
-                onFinish();
+            if (cell.value === originalValue) {
+                openNextCell();
                 return;
             }
-
-            /*if (cell.value === this.editedCellOriginalValue) {
-                onFinish();
-                return;
-            }*/
 
             if ((cell.value === null || cell.value === '') && cell.column.type !== 'empty') {
                 cell.value = 0;
             }
 
-            this.updateCellForm.column_id = cell.column.id;
-            this.updateCellForm.value = cell.value;
-            this.updateCellForm.sub_position_row_id = cell.sub_position_row_id;
-            this.updateCellForm.is_verified = mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
+            // Optimistisch: Wert bleibt sofort sichtbar, waehrenddessen dezenter
+            // Saving-Indikator. Die Antwort ist ein schlanker Patch (Zellen der
+            // Zeile + neu berechnete Summen) statt eines Full-Refetches.
+            this.savingCellIds[cell.id] = true;
+            openNextCell();
 
-            this.updateCellForm.patch(route('project.budget.cell.update'), {
-                preserveState: true,
-                preserveScroll: true,
-                onFinish: onFinish
+            axios.patch(route('project.budget.cell.update'), {
+                column_id: cell.column.id,
+                value: cell.value,
+                sub_position_row_id: cell.sub_position_row_id,
+                is_verified: mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
+                    || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
+            }).then(({data}) => {
+                this.applyCellPatch(data);
+            }).catch(() => {
+                cell.value = originalValue;
+                this.$emit(
+                    'openErrorModal',
+                    this.$t('An error has occurred'),
+                    this.$t('The value could not be saved. Please try again.')
+                );
+            }).finally(() => {
+                delete this.savingCellIds[cell.id];
             });
         },
+        applyCellPatch(patch) {
+            if (!patch || !Array.isArray(patch.rowCells)) {
+                return;
+            }
+
+            const freshCellsById = new Map(patch.rowCells.map(c => [c.id, c]));
+
+            for (const row of this.subPosition.sub_position_rows ?? []) {
+                for (const cell of row.cells ?? []) {
+                    const fresh = freshCellsById.get(cell.id);
+                    if (!fresh) {
+                        continue;
+                    }
+                    // Zellen, die der Nutzer inzwischen selbst editiert, nicht
+                    // ueberschreiben - sonst verliert er seine Eingabe.
+                    if (!cell.clicked) {
+                        cell.value = fresh.value;
+                        cell.display_value = fresh.display_value ?? cell.display_value;
+                    }
+                    cell.verified_value = fresh.verified_value;
+                    cell.commented = fresh.commented;
+                    cell.sage_value = fresh.sage_value;
+                    cell.current_value = fresh.current_value;
+                }
+            }
+
+            const subPositionSums = patch.subPositionSums?.[this.subPosition.id];
+            if (subPositionSums) {
+                this.subPosition.columnSums = subPositionSums;
+            }
+
+            // Haupt-/Tabellensummen wendet die BudgetComponent an
+            this.$emit('budget-patched', patch);
+        },
+        handleCellKeydown(event, cell, row, index) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                cell.value = this.editedCellOriginalValue;
+                budgetCellFocus.nextCellId = null;
+                event.target.blur();
+                return;
+            }
+
+            if (event.key === 'Enter' || event.key === 'Tab') {
+                event.preventDefault();
+                const target = event.key === 'Enter'
+                    ? this.findEditableCellBelow(cell, row)
+                    : this.findEditableCellSideways(cell, row, event.shiftKey ? -1 : 1);
+                budgetCellFocus.nextCellId = target?.id ?? null;
+                event.target.blur();
+                return;
+            }
+
+            // Wertspalten: nur Zahlen-Eingaben zulassen (Steuertasten bleiben frei)
+            if (
+                index > 2
+                && event.key.length === 1
+                && !event.ctrlKey && !event.metaKey
+                && !/^[0-9,.\-]$/.test(event.key)
+            ) {
+                event.preventDefault();
+            }
+        },
+        isKeyboardEditableCell(cell, index) {
+            return index > 2
+                && cell.column.type === 'empty'
+                && !cell.column.is_locked
+                && !(cell.column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1);
+        },
+        findEditableCellSideways(cell, row, direction) {
+            const cells = row.cells ?? [];
+            const start = cells.findIndex(c => c.id === cell.id);
+            if (start === -1) {
+                return null;
+            }
+            for (let i = start + direction; i >= 0 && i < cells.length; i += direction) {
+                if (this.isKeyboardEditableCell(cells[i], i)) {
+                    return cells[i];
+                }
+            }
+            // Zeilenende: in der naechsten/vorherigen Zeile weitermachen
+            const rows = this.subPosition.sub_position_rows ?? [];
+            const rowIndex = rows.findIndex(r => r.id === row.id);
+            const nextRow = rows[rowIndex + direction];
+            if (!nextRow) {
+                return null;
+            }
+            const nextCells = nextRow.cells ?? [];
+            const range = direction === 1
+                ? nextCells.map((c, i) => [c, i])
+                : nextCells.map((c, i) => [c, i]).reverse();
+            for (const [c, i] of range) {
+                if (this.isKeyboardEditableCell(c, i)) {
+                    return c;
+                }
+            }
+            return null;
+        },
+        findEditableCellBelow(cell, row) {
+            const rows = this.subPosition.sub_position_rows ?? [];
+            const rowIndex = rows.findIndex(r => r.id === row.id);
+            for (let i = rowIndex + 1; i < rows.length; i++) {
+                const belowCells = rows[i].cells ?? [];
+                const belowIndex = belowCells.findIndex(c => c.column_id === cell.column_id);
+                if (belowIndex !== -1 && this.isKeyboardEditableCell(belowCells[belowIndex], belowIndex)) {
+                    return belowCells[belowIndex];
+                }
+            }
+            return null;
+        },
         storeFocus(cellId) {
-            this.nextCellId = cellId;
-            localStorage.setItem('nextCellId', cellId);
+            budgetCellFocus.nextCellId = cellId;
         },
         openCellDetailModal(cell) {
             this.$emit('openCellDetailModal', cell)
@@ -1021,22 +1122,16 @@ export default {
                 this.$emit('openSageAssignedDataModal', cell);
             } else if (cell.calculations_count > 0) {
                 this.$emit('openCellDetailModal', cell, 'calculation')
-            } else {
-                //if already a cell is clicked and another one is also clicked do nothing
-                /*if (this.alreadyCellClicked && cell.clicked !== true) {
-                    return;
-                }*/
+            } else if (!cell.clicked) {
+                // Nur oeffnen, nie togglen: beim Zellwechsel per Klick oeffnet
+                // bereits die Fokus-Kette (storeFocus -> focusout -> openNextCell)
+                // die Zielzelle - ein Toggle wuerde sie sofort wieder schliessen.
+                cell.clicked = true;
+                this.editedCellOriginalValue = cell.value;
 
-                cell.clicked = !cell.clicked
+                await nextTick()
 
-                if (cell.clicked) {
-                    //this.alreadyCellClicked = true;
-                    this.editedCellOriginalValue = cell.value;
-
-                    await nextTick()
-
-                    this.$refs[`cell-${cell.id}`][0].select();
-                }
+                this.$refs[`cell-${cell.id}`]?.[0]?.select();
             }
         },
         addSubPosition(mainPositionId, subPosition = null) {
@@ -1054,7 +1149,8 @@ export default {
                 positionBefore: subPositionBefore.position
             }, {
                 preserveScroll: true,
-                preserveState: false
+                preserveState: false,
+                onSuccess: () => this.$emit('budget-updated')
             });
         },
         checkCellColor(cell, mainPosition, subPosition) {
@@ -1095,7 +1191,8 @@ export default {
                 project_id: this.project?.id
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         unfixSubPosition(subPositionId) {
@@ -1104,7 +1201,8 @@ export default {
                 project_id: this.project?.id
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => this.$emit('budget-updated')
             })
         },
         handleBudgetManagementSearchBlur(cell) {
@@ -1162,7 +1260,6 @@ export default {
             cell.searchValue = '';
             cell.accountSearchResults = null;
             cell.costUnitSearchResults = null;
-            this.alreadyCellClicked = false;
             this.editedCellOriginalValue = null;
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\GetShiftPlanWorkersRequest;
+use App\Settings\EventSettings;
 use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
@@ -110,14 +111,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Carbon as IlluminateCarbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class EventController extends Controller
 {
+    private const MAX_MULTI_CELL_TARGETS = 250;
+    private const MAX_MULTI_CELL_SOURCE_EVENTS = 50;
+    private const MAX_MULTI_CELL_DUPLICATES = 500;
+
     public function __construct(
         private readonly EventCollisionService $collisionService,
         private readonly NotificationService $notificationService,
@@ -304,10 +312,12 @@ class EventController extends Controller
                 ->getCalendarDateRange($userCalendarSettings, $userCalendarFilter, $project);
         }
 
-        // Sicherheitskappen für View-Spannen
+        // Sicherheitskappen für View-Spannen: Tagesansicht bis zu einem Monat
+        // (leere Stunden kollabieren clientseitig, ~50k DOM-Knoten bei 31 Tagen gemessen ok)
         $calendarWarningText = '';
-        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
-            $endDate = $startDate->copy()->addDays(7);
+        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+            // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
+            $endDate = $startDate->copy()->addDays(30);
             $calendarWarningText = __('calendar.daily_view_info');
 
             $user->userFilters()->updateOrCreate(
@@ -530,8 +540,10 @@ class EventController extends Controller
 
         $calendarWarningText = '';
 
-        if ($isDailyView && $startDate->diffInDays($endDate) > 7) {
-            $endDate = $startDate->copy()->addDays(7);
+        // Tagesansicht bis zu einem Monat (wie im Standard-Kalender)
+        if ($isDailyView && $startDate->diffInDays($endDate) > 30) {
+            // 30 Tage Differenz = 31 Kalendertage inklusive — passend zur Meldung "31 Tage"
+            $endDate = $startDate->copy()->addDays(30);
             $calendarWarningText = __('calendar.daily_view_info');
             $user->userFilters()->updateOrCreate([
                 'filter_type' => $planningFilterType
@@ -1055,8 +1067,20 @@ class EventController extends Controller
         ]);
     }
 
-    public function updateShiftListViewSettings(User $user, Request $request): void
+    public function updateShiftListViewSettings(User $user, Request $request, UserService $userService): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
+        // Ansichtsübergreifendes Setting (users-Spalte); beim Einschalten aus der
+        // Listenansicht übernehmen alle Ansichten deren Zeitraum
+        if ($request->has('share_calendar_date')) {
+            $userService->updateShareCalendarDateSetting(
+                $user,
+                $request->boolean('share_calendar_date'),
+                UserFilterTypes::SHIFT_LIST_VIEW_FILTER->value
+            );
+        }
+
         $user->shift_list_view_settings()->updateOrCreate(
             ['user_id' => $user->id],
             $request->only([
@@ -1286,10 +1310,33 @@ class EventController extends Controller
     ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
 
+        if ($request->filled('projectId')) {
+            $this->authorize('view', Project::query()->findOrFail($request->integer('projectId')));
+        }
+        if ($request->filled('projectName')) {
+            $this->authorize('create', Project::class);
+        }
+
         // Server-side enforcement: verify the user can actually book or request for this room
         $user = auth()->user();
         $roomId = $request->get('roomId');
-        $isOption = $request->get('isOption');
+        $isOption = $request->booleanValue('isOption');
+
+        if (!$roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
+            $canCreateWithoutRoom = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) ||
+                ($request->booleanValue('isPlanning') &&
+                    $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value));
+
+            if (!$canCreateWithoutRoom) {
+                if ($user->can(PermissionEnum::EVENT_REQUEST->value)) {
+                    throw ValidationException::withMessages([
+                        'roomId' => __('A room is required for a room request.'),
+                    ]);
+                }
+
+                abort(403);
+            }
+        }
 
         if ($roomId && !$user->hasRole(RoleEnum::ARTWORK_ADMIN->value)) {
             $room = Room::find($roomId);
@@ -1298,16 +1345,27 @@ class EventController extends Controller
                 $canRequestForRoom = $room->requestableBy()->where('user_id', $user->id)->exists();
                 $hasGlobalCreate = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
                 $hasGlobalRequest = $user->can(PermissionEnum::EVENT_REQUEST->value);
-                $isPlanning = $request->get('isPlanning');
+                $isPlanning = $request->booleanValue('isPlanning');
                 $canPlanFixed = $isPlanning && $user->can(PermissionEnum::CAN_PLAN_FIXED_IN_PLANNING_CALENDAR->value);
+                $canBookDirectly = $hasGlobalCreate || $canPlanFixed || $isRoomAdmin || $room->everyone_can_book;
+                $canRequest = $hasGlobalCreate ||
+                    $hasGlobalRequest ||
+                    $isRoomAdmin ||
+                    $canRequestForRoom ||
+                    $room->everyone_can_book;
 
-                // Direct booking (isOption=false): must be admin, room admin, everyone_can_book, global permission, or planning calendar fixed permission
-                if (!$isOption && !$hasGlobalCreate && !$canPlanFixed && !$isRoomAdmin && !$room->everyone_can_book) {
-                    abort(403);
+                // A stale or manipulated client must never turn request-only access into a direct booking.
+                if (!$isOption && !$canBookDirectly) {
+                    if (!$canRequest) {
+                        abort(403);
+                    }
+
+                    $isOption = true;
+                    $request->merge(['isOption' => true]);
                 }
 
                 // Request booking (isOption=true): must have global request permission or room-specific can_request
-                if ($isOption && !$hasGlobalCreate && !$hasGlobalRequest && !$isRoomAdmin && !$canRequestForRoom && !$room->everyone_can_book) {
+                if ($isOption && !$canRequest) {
                     abort(403);
                 }
             }
@@ -1419,7 +1477,7 @@ class EventController extends Controller
 
         broadcast(new OccupancyUpdated())->toOthers();
 
-        if ($request->boolean('showProjectPeriodInCalendar')) {
+        if ($request->booleanValue('showProjectPeriodInCalendar')) {
             return $this->redirector->back();
         }
 
@@ -1438,7 +1496,7 @@ class EventController extends Controller
         $series,
         $projectId,
         ?Event $sourceEvent = null
-    ): void {
+    ): Event {
         $event = Event::create([
             'name' => $sourceEvent?->name ?? $request->title,
             'eventName' => $sourceEvent?->eventName ?? $request->eventName,
@@ -1461,10 +1519,16 @@ class EventController extends Controller
         $event->eventProperties()
             ->sync($request->input('event_properties', []));
 
+        if ($event->occupancy_option && !$event->is_planning) {
+            $this->roomRequestNotificationService->notifyRoomAdmins($event);
+        }
+
         broadcast(new EventCreated(
             $event->fresh(),
             $event->room_id
         ));
+
+        return $event;
     }
 
     public function commitShifts(Request $request): void
@@ -1746,6 +1810,17 @@ class EventController extends Controller
         ProjectController $projectController
     ): void {
         $this->authorize('update', $event);
+
+        $shouldAcceptRoomRequest = $event->occupancy_option &&
+            $request->has('isOption') &&
+            !$request->booleanValue('isOption');
+
+        if ($shouldAcceptRoomRequest) {
+            $this->authorize('answerRoomRequest', $event);
+        }
+        if ($request->filled('projectId') && $request->integer('projectId') !== $event->project_id) {
+            $this->authorize('view', Project::query()->findOrFail($request->integer('projectId')));
+        }
         if (!$request->noNotifications) {
             $projectManagers = [];
             $this->notificationService->setNotificationKey(Str::random(15));
@@ -2014,9 +2089,16 @@ class EventController extends Controller
 
         // remove is_series and series_id from data to prevent overwriting
         unset($data['is_series'], $data['series_id']);
+        if (!$request->has('isOption') || $shouldAcceptRoomRequest) {
+            unset($data['occupancy_option']);
+        }
         $event->fill($data);
         $event->eventProperties()->sync(($newEventPropertyIds = $request->input('event_properties', [])));
         $this->eventService->save($event);
+
+        if ($shouldAcceptRoomRequest) {
+            $this->acceptEvent($request, $event);
+        }
 
         // Projekt ggf. anlegen & zuordnen (dein Original)
         if ($request->get('projectName')) {
@@ -2328,9 +2410,16 @@ class EventController extends Controller
      */
     public function acceptEvent(Request $request, Event $event): RedirectResponse
     {
-        $this->authorize('update', $event);
+        $this->authorize('answerRoomRequest', $event);
 
-        $event->occupancy_option = false;
+        $updated = Event::query()
+            ->whereKey($event->id)
+            ->where('occupancy_option', true)
+            ->whereNotNull('room_id')
+            ->update(['occupancy_option' => false]);
+
+        abort_if($updated === 0, 409, 'This room request has already been answered.');
+        $event->refresh();
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -2340,7 +2429,6 @@ class EventController extends Controller
                 ->setTranslationKey('Room confirmed')
         );
 
-        $event->save();
         $room = Room::find($event->room_id);
         $project = Project::find($event->project_id);
         $projectManagers = collect();
@@ -2473,7 +2561,7 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function declineEvent(Request $request, Event $event): RedirectResponse
     {
-        $this->authorize('update', $event);
+        $this->authorize('answerRoomRequest', $event);
 
         $projectManagers = [];
         $roomId = $event->room_id;
@@ -2482,7 +2570,19 @@ class EventController extends Controller
         if (!empty($project)) {
             $projectManagers = $project->managerUsers()->get();
         }
-        $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
+        $updated = Event::query()
+            ->whereKey($event->id)
+            ->where('occupancy_option', true)
+            ->where('room_id', $roomId)
+            ->update([
+                'accepted' => false,
+                'occupancy_option' => false,
+                'declined_room_id' => $roomId,
+                'room_id' => null,
+            ]);
+
+        abort_if($updated === 0, 409, 'This room request has already been answered.');
+        $event->refresh();
 
         if (!empty($request->comment)) {
             $event->comments()->create([
@@ -3600,6 +3700,7 @@ class EventController extends Controller
             if ($event === null) {
                 continue;
             }
+            $this->authorize('delete', $event);
 
             $eventService->delete(
                 $event,
@@ -3807,6 +3908,8 @@ class EventController extends Controller
         $desiredDaysOfEvents = [];
         $eventIds = $request->collect('events');
         $duplicatedEvents = [];
+        // Aus dem Planungskalender heraus erzeugte Duplikate sind immer geplante Termine
+        $forcePlanning = $request->boolean('isPlanning');
 
         foreach ($eventIds as $eventId) {
             $originalEvent = $this->eventService->findEventById($eventId);
@@ -3819,6 +3922,9 @@ class EventController extends Controller
             $duplicatedEvent = $originalEvent->replicate();
             $duplicatedEvent->series_id = null;
             $duplicatedEvent->is_series = false;
+            if ($forcePlanning) {
+                $duplicatedEvent->is_planning = true;
+            }
             $duplicatedEvent->save();
 
             $shifts = $originalEvent->shifts;
@@ -4001,31 +4107,53 @@ class EventController extends Controller
      * Spiegelt das Frontend-Gating in BulkBody.vue (hasCreateEventsPermission);
      * Admins passieren über Gate::before.
      */
-    private function authorizeBulkEventCreation(): void
+    private function authorizeBulkEventCreation(bool $isPlanning, Room $room): void
     {
         $user = $this->authManager->user();
-        if (
-            !$user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value) &&
-            !$user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value)
-        ) {
-            abort(403);
+
+        if ($isPlanning) {
+            abort_unless($user->can(PermissionEnum::CAN_EDIT_PLANNING_CALENDAR->value), 403);
+
+            return;
         }
+
+        $mayCreateRegularEvent = $user->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value)
+            || $room->everyone_can_book
+            || $room->admins()->where('user_id', $user->id)->exists();
+
+        abort_unless($mayCreateRegularEvent, 403);
     }
 
     public function bulkProjectEventStore(
         EventBulkCreateRequest $request,
         Project $project
     ): RedirectResponse {
-        $this->authorizeBulkEventCreation();
+        $this->authorize('view', $project);
 
         $events = $request->input('events', []);
 
+        // Erst ALLE Zeilen autorisieren, dann anlegen — sonst stehen bei einem 403
+        // mitten in der Liste die ersten Termine bereits in der DB (Teil-Erstellung).
         foreach ($events as $event) {
-            $storedEvent = $this->eventService->createBulkEvent(
-                $event,
-                $project,
-                $this->authManager->id()
-            );
+            $room = Room::query()->findOrFail($event['room']['id']);
+            $this->authorizeBulkEventCreation((bool) ($event['is_planning'] ?? false), $room);
+        }
+
+        $storedEvents = DB::transaction(function () use ($events, $project): array {
+            $stored = [];
+
+            foreach ($events as $event) {
+                $stored[] = $this->eventService->createBulkEvent(
+                    $event,
+                    $project,
+                    $this->authManager->id()
+                );
+            }
+
+            return $stored;
+        });
+
+        foreach ($storedEvents as $storedEvent) {
             $freshEvent = $storedEvent->fresh();
             broadcast(new \Artwork\Modules\Event\Events\BulkEventChanged(
                 $freshEvent,
@@ -4061,9 +4189,17 @@ class EventController extends Controller
         Request $request,
         Project $project
     ): void {
-        $this->authorizeBulkEventCreation();
+        $this->authorize('view', $project);
 
-        $data =  $request->input('event', []);
+        $validated = $request->validate([
+            'event' => ['required', 'array'],
+            'event.room.id' => ['required', 'integer', 'exists:rooms,id'],
+            'event.type.id' => ['required', 'integer', 'exists:event_types,id'],
+            'event.is_planning' => ['sometimes', 'boolean'],
+        ]);
+        $data = $validated['event'];
+        $room = Room::query()->findOrFail($data['room']['id']);
+        $this->authorizeBulkEventCreation((bool) ($data['is_planning'] ?? false), $room);
 
         $event = $this->eventService->createBulkEvent(
             $data,
@@ -4138,46 +4274,228 @@ class EventController extends Controller
         }
     }
 
-    public function bulkAcceptEvents(Request $request): \Illuminate\Http\RedirectResponse
+    /**
+     * Multi-Edit im Kalender: legt EINEN Termin (gleiche Daten) in mehreren
+     * Tag×Raum-Zellen an — je Zelle ein eigenständiges Event.
+     */
+    public function createEventsInCells(Request $request): void
     {
-        $eventIds = $request->collect('eventIds', []);
-        /** @var User $currentUser */
-        $currentUser = $this->authManager->user();
-        $isAdmin = $currentUser->hasRole(RoleEnum::ARTWORK_ADMIN->value);
-        $hasGlobalCreate = $currentUser->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+        $validated = $request->validate([
+            'cells' => ['required', 'array', 'min:1', 'max:' . self::MAX_MULTI_CELL_TARGETS],
+            'cells.*.day' => ['required', 'date_format:Y-m-d'],
+            'cells.*.room_id' => ['required', 'exists:rooms,id'],
+            'event_type_id' => ['required', 'exists:event_types,id'],
+            'event_status_id' => ['nullable', 'exists:event_statuses,id'],
+            'project_id' => ['nullable', 'exists:projects,id'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i'],
+            'is_planning' => ['nullable', 'boolean'],
+        ]);
 
-        foreach ($eventIds as $eventId) {
-            $event = Event::find($eventId);
-            if (!$event || !$event->occupancy_option) {
-                continue;
+        // Gleiche Härtung wie in storeEvent: Termine dürfen nur in Projekte gelegt
+        // werden, die der User auch sehen darf (IDOR-Schutz).
+        if (!empty($validated['project_id'])) {
+            $this->authorize('view', Project::query()->findOrFail($validated['project_id']));
+        }
+
+        $cells = $this->uniqueMultiCells($validated['cells']);
+        $isPlanning = (bool) ($validated['is_planning'] ?? false);
+        $rooms = Room::query()
+            ->whereIn('id', collect($cells)->pluck('room_id')->unique())
+            ->get()
+            ->keyBy('id');
+
+        foreach ($rooms as $room) {
+            $this->authorizeBulkEventCreation($isPlanning, $room);
+        }
+
+        $eventStatusId = null;
+        if (app(EventSettings::class)->enable_status) {
+            $eventStatusId = $validated['event_status_id']
+                ?? EventStatus::where('default', true)->first()?->id;
+        }
+
+        $createdEvents = DB::transaction(function () use ($cells, $validated, $eventStatusId, $isPlanning): array {
+            $events = [];
+
+            foreach ($cells as $cell) {
+                [$startTime, $endTime, $allDay] = $this->eventService->processEventTimes(
+                    Carbon::parse($cell['day']),
+                    $validated['start_time'] ?? null,
+                    $validated['end_time'] ?? null
+                );
+
+                $events[] = Event::create([
+                    'name' => $validated['name'] ?? '',
+                    'eventName' => $validated['name'] ?? '',
+                    'description' => $validated['description'] ?? null,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'allDay' => $allDay,
+                    'event_type_id' => $validated['event_type_id'],
+                    'event_status_id' => $eventStatusId,
+                    'project_id' => $validated['project_id'] ?? null,
+                    'room_id' => $cell['room_id'],
+                    'user_id' => $this->authManager->id(),
+                    'is_planning' => $isPlanning,
+                ]);
             }
 
-            if (!$isAdmin && !$hasGlobalCreate) {
-                $isRoomAdmin = $event->room?->admins()->where('user_id', $currentUser->id)->exists();
-                if (!$isRoomAdmin) {
-                    continue;
+            return $events;
+        }, attempts: 3);
+
+        $this->broadcastCreatedEventsAfterResponse($createdEvents);
+    }
+
+    /**
+     * Multi-Edit im Kalender: dupliziert die gewählten Termine in jede gewählte
+     * Tag×Raum-Zelle (M×N Kopien). Uhrzeiten und Dauer bleiben erhalten,
+     * Datum und Raum kommen aus der Zelle.
+     */
+    public function duplicateEventsToCells(Request $request): void
+    {
+        $validated = $request->validate([
+            'events' => ['required', 'array', 'min:1', 'max:' . self::MAX_MULTI_CELL_SOURCE_EVENTS],
+            'events.*' => ['distinct', 'exists:events,id'],
+            'cells' => ['required', 'array', 'min:1', 'max:' . self::MAX_MULTI_CELL_TARGETS],
+            'cells.*.day' => ['required', 'date_format:Y-m-d'],
+            'cells.*.room_id' => ['required', 'exists:rooms,id'],
+            'is_planning' => ['nullable', 'boolean'],
+        ]);
+
+        $cells = $this->uniqueMultiCells($validated['cells']);
+        $duplicateCount = count($validated['events']) * count($cells);
+        if ($duplicateCount > self::MAX_MULTI_CELL_DUPLICATES) {
+            throw ValidationException::withMessages([
+                'cells' => __('The selected events and cells would create too many duplicates.'),
+            ]);
+        }
+
+        $forcePlanning = (bool) ($validated['is_planning'] ?? false);
+        $originals = Event::query()->with('shifts')->whereIn('id', $validated['events'])->get();
+        $rooms = Room::query()
+            ->whereIn('id', collect($cells)->pluck('room_id')->unique())
+            ->get();
+
+        foreach ($originals as $original) {
+            $this->authorize('update', $original);
+
+            $isPlanning = $forcePlanning || (bool) $original->is_planning;
+            foreach ($rooms as $room) {
+                $this->authorizeBulkEventCreation($isPlanning, $room);
+            }
+        }
+
+        $duplicatedEvents = DB::transaction(function () use ($originals, $cells, $forcePlanning): array {
+            $duplicates = [];
+
+            foreach ($originals as $original) {
+                $originalStart = Carbon::parse($original->getAttribute('start_time'));
+
+                foreach ($cells as $cell) {
+                    $newStart = Carbon::parse($cell['day'])
+                        ->setTimeFromTimeString($originalStart->toTimeString());
+                    $dayDelta = $originalStart->copy()->startOfDay()
+                        ->diffInDays($newStart->copy()->startOfDay(), false);
+
+                    $duplicated = $original->replicate();
+                    $duplicated->setAttribute('series_id', null);
+                    $duplicated->setAttribute('is_series', false);
+                    if ($forcePlanning) {
+                        $duplicated->setAttribute('is_planning', true);
+                    }
+                    $duplicated->setAttribute('room_id', $cell['room_id']);
+                    $duplicated->setAttribute('start_time', $newStart);
+                    $duplicated->setAttribute(
+                        'end_time',
+                        Carbon::parse($original->getAttribute('end_time'))->addDays($dayDelta)
+                    );
+                    $duplicated->save();
+
+                    foreach ($original->shifts as $shift) {
+                        $duplicatedShift = $shift->replicate();
+                        $duplicatedShift->setAttribute('event_id', $duplicated->id);
+                        $duplicatedShift->setAttribute(
+                            'start_date',
+                            Carbon::parse($shift->getAttribute('start_date'))->addDays($dayDelta)
+                        );
+                        $duplicatedShift->setAttribute(
+                            'end_date',
+                            Carbon::parse($shift->getAttribute('end_date'))->addDays($dayDelta)
+                        );
+                        $duplicatedShift->save();
+                    }
+
+                    $duplicates[] = $duplicated;
                 }
             }
 
-            $event->occupancy_option = false;
+            return $duplicates;
+        }, attempts: 3);
 
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setModelClass(Event::class)
-                    ->setModelId($event->id)
-                    ->setTranslationKey('Room confirmed')
+        $this->broadcastCreatedEventsAfterResponse($duplicatedEvents);
+    }
+
+    /**
+     * Reverb failures must not turn a successfully committed bulk write into an HTTP 500.
+     *
+     * @param array<int, Event> $events
+     */
+    private function broadcastCreatedEventsAfterResponse(array $events): void
+    {
+        $eventIds = collect($events)->pluck('id')->all();
+
+        dispatch(static function () use ($eventIds): void {
+            Event::query()->whereIn('id', $eventIds)->each(
+                static fn (Event $event) => broadcast(new EventCreated($event, $event->room_id))
             );
+        })->afterResponse();
+    }
 
-            $event->save();
+    /**
+     * @param array<int, array{day: string, room_id: int}> $cells
+     * @return array<int, array{day: string, room_id: int}>
+     */
+    private function uniqueMultiCells(array $cells): array
+    {
+        $uniqueCells = collect($cells)
+            ->unique(static fn (array $cell): string => $cell['day'] . ':' . $cell['room_id'])
+            ->values();
 
-            $this->notificationService->updateRoomRequestNotificationStatus(
-                $event->id,
-                'accepted',
-                $currentUser
-            );
+        if ($uniqueCells->count() !== count($cells)) {
+            throw ValidationException::withMessages([
+                'cells' => __('The selected cells must be unique.'),
+            ]);
+        }
 
-            broadcast(new EventCreated($event->fresh(), $event->fresh()->room_id));
+        return $uniqueCells->all();
+    }
+
+    public function bulkAcceptEvents(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'eventIds' => ['required', 'array', 'min:1', 'max:100'],
+            'eventIds.*' => ['integer', 'distinct', 'exists:events,id'],
+            'comment' => ['sometimes', 'nullable', 'string', 'max:5000'],
+        ]);
+        $events = Event::query()->whereIn('id', $validated['eventIds'])->get();
+        $request->merge(['adminComment' => $validated['comment'] ?? null]);
+
+        foreach ($events as $event) {
+            $this->authorize('answerRoomRequest', $event);
+        }
+        foreach ($events as $event) {
+            try {
+                $this->acceptEvent($request, $event);
+            } catch (HttpException $e) {
+                // 409 = Anfrage wurde parallel bereits beantwortet → überspringen,
+                // statt die Bulk-Verarbeitung mitten in der Liste abzubrechen.
+                if ($e->getStatusCode() !== SymfonyResponse::HTTP_CONFLICT) {
+                    throw $e;
+                }
+            }
         }
 
         return redirect()->back();
@@ -4185,52 +4503,26 @@ class EventController extends Controller
 
     public function bulkDeclineEvents(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $eventIds = $request->collect('eventIds', []);
-        $comment = $request->get('comment', '');
-        /** @var User $currentUser */
-        $currentUser = $this->authManager->user();
-        $isAdmin = $currentUser->hasRole(RoleEnum::ARTWORK_ADMIN->value);
-        $hasGlobalCreate = $currentUser->can(PermissionEnum::CREATE_EVENTS_WITHOUT_REQUEST->value);
+        $validated = $request->validate([
+            'eventIds' => ['required', 'array', 'min:1', 'max:100'],
+            'eventIds.*' => ['integer', 'distinct', 'exists:events,id'],
+            'comment' => ['sometimes', 'nullable', 'string', 'max:5000'],
+        ]);
+        $events = Event::query()->whereIn('id', $validated['eventIds'])->get();
 
-        foreach ($eventIds as $eventId) {
-            $event = Event::find($eventId);
-            if (!$event || !$event->occupancy_option) {
-                continue;
-            }
-
-            if (!$isAdmin && !$hasGlobalCreate) {
-                $isRoomAdmin = $event->room?->admins()->where('user_id', $currentUser->id)->exists();
-                if (!$isRoomAdmin) {
-                    continue;
+        foreach ($events as $event) {
+            $this->authorize('answerRoomRequest', $event);
+        }
+        foreach ($events as $event) {
+            try {
+                $this->declineEvent($request, $event);
+            } catch (HttpException $e) {
+                // 409 = Anfrage wurde parallel bereits beantwortet → überspringen,
+                // statt die Bulk-Verarbeitung mitten in der Liste abzubrechen.
+                if ($e->getStatusCode() !== SymfonyResponse::HTTP_CONFLICT) {
+                    throw $e;
                 }
             }
-
-            $roomId = $event->room_id;
-            $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
-
-            if (!empty($comment)) {
-                $event->comments()->create([
-                    'user_id' => $currentUser->id,
-                    'comment' => $comment,
-                    'is_admin_comment' => true
-                ]);
-            }
-
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setModelClass(Event::class)
-                    ->setModelId($event->id)
-                    ->setTranslationKey('Room declined')
-            );
-
-            $this->notificationService->updateRoomRequestNotificationStatus(
-                $event->id,
-                'declined',
-                $currentUser
-            );
-
-            broadcast(new EventCreated($event, $roomId));
         }
 
         return redirect()->back();

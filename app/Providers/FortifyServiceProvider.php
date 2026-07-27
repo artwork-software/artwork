@@ -7,6 +7,7 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserSourceRepository;
+use Artwork\Modules\ExternalUserManagement\Service\CredentialLoginService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -35,6 +36,15 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+
+        // Einziger Credential-Pfad des Passwortformulars: lokaler Hash für lokale
+        // Accounts, Bind gegen das Directory für LDAP, Sperre für OIDC (nur SSO).
+        Fortify::authenticateUsing(function (Request $request) {
+            return app(CredentialLoginService::class)->attempt(
+                (string) $request->input(Fortify::username()),
+                (string) $request->input('password')
+            );
+        });
 
         // Login-View mit aktiven Identity-Provider-Quellen für die OIDC/SSO-Buttons anreichern.
         Fortify::loginView(function () {

@@ -36,25 +36,13 @@
 </template>
 
 <script>
-import JetInputError from "@/Jetstream/InputError.vue";
-import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
-import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
 import {usePage} from "@inertiajs/vue3";
 import axios from 'axios';
 
 export default{
     components: {
-        ProjectBudgetDeadlineComponent,
         BudgetComponent,
-        PencilAltIcon,
-        XCircleIcon,
-        DocumentTextIcon,
-        SvgCollection,
-        XIcon,
-        JetInputError
     },
     props: [
         'project',
@@ -162,7 +150,7 @@ export default{
                 }
             } catch (error) {
                 console.error(error);
-                this.loadBudgetError = "Unable to load budget data.";
+                this.loadBudgetError = this.$t('Unable to load budget data.');
             } finally {
                 this.isLoadingBudget = false;
             }

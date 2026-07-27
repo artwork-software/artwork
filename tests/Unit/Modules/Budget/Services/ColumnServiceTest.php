@@ -73,19 +73,34 @@ final class ColumnServiceTest extends TestCase
     }
 
     #[Test]
-    public function set_column_sub_name_renumbers_columns_with_subname(): void
+    public function set_column_sub_name_renumbers_value_columns_after_the_first_three(): void
     {
         $table = Table::factory()->create();
-        Column::factory()->create(['table_id' => $table->id, 'subName' => 'x', 'position' => 0, 'type' => 'empty']);
-        Column::factory()->create(['table_id' => $table->id, 'subName' => 'y', 'position' => 1, 'type' => 'empty']);
-        Column::factory()->create(['table_id' => $table->id, 'subName' => '', 'position' => 2, 'type' => 'empty']);
+        // die ersten drei Spalten (KTO/KST/Position) bekommen keinen subName
+        foreach ([0, 1, 2] as $position) {
+            Column::factory()->create([
+                'table_id' => $table->id, 'subName' => '', 'position' => $position, 'type' => 'empty',
+            ]);
+        }
+        Column::factory()->create(['table_id' => $table->id, 'subName' => 'x', 'position' => 3, 'type' => 'empty']);
+        Column::factory()->create(['table_id' => $table->id, 'subName' => 'y', 'position' => 4, 'type' => 'empty']);
+        // die Unterprojekte-Spalte (Position 100) erhält immer den letzten Buchstaben
+        Column::factory()->create([
+            'table_id' => $table->id,
+            'subName' => '-',
+            'position' => 100,
+            'type' => 'subprojects_column_for_group',
+        ]);
 
         $this->service->setColumnSubName($table->id);
 
         $columns = $table->columns()->orderBy('position')->get();
-        $this->assertSame('A', $columns[0]->subName);
-        $this->assertSame('B', $columns[1]->subName);
+        $this->assertSame('', $columns[0]->subName);
+        $this->assertSame('', $columns[1]->subName);
         $this->assertSame('', $columns[2]->subName);
+        $this->assertSame('A', $columns[3]->subName);
+        $this->assertSame('B', $columns[4]->subName);
+        $this->assertSame('C', $columns[5]->subName);
     }
 
     #[Test]

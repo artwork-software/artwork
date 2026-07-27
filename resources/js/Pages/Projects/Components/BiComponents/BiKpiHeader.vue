@@ -24,6 +24,21 @@
             </div>
         </div>
 
+        <!-- Quoten-Reihe: erscheint nur, wenn Kategoriewerte erfasst sind -->
+        <div v-if="quotaTiles.length > 0" class="mt-3 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div
+                v-for="kpi in quotaTiles"
+                :key="kpi.key"
+                class="rounded-xl border border-gray-100 bg-gray-50/60 p-3"
+                v-tooltip.top="kpi.tooltip ? { value: kpi.tooltip, appendTo: 'body', class: 'aw-tooltip' } : undefined"
+            >
+                <span class="text-xs text-gray-500 truncate block">{{ $t(kpi.label) }}</span>
+                <p class="text-base font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-800'">
+                    {{ kpi.value ?? '–' }}
+                </p>
+            </div>
+        </div>
+
         <div v-if="chartData" class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm print:hidden">
             <h4 class="text-xs font-medium text-gray-500 mb-2">{{ $t('Per-event trend') }}</h4>
             <BiChart type="bar" :data="chartData" :options="chartOptions" height="220px" />
@@ -95,6 +110,32 @@ const kpiTiles = computed(() => {
             key: 'performances', label: 'Performances', icon: IconMasksTheater,
             value: formatInt(s.performances),
         },
+    ];
+});
+
+// Zweite Kachel-Reihe mit Quoten/abgeleiteten Kennzahlen — nur wenn
+// Kategoriewerte erfasst sind (tickets_issued) bleibt sie nicht leer
+const quotaTiles = computed(() => {
+    const s = props.summary;
+    if (s.tickets_issued === null || s.tickets_issued === undefined) return [];
+
+    const noShow = s.no_show_rate;
+
+    return [
+        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(s.tickets_issued) },
+        { key: 'free_tickets_rate', label: 'Free ticket rate', value: formatPercent(s.free_tickets_rate) },
+        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: formatPercent(s.reduced_tickets_rate) },
+        { key: 'paying_rate', label: 'Paying rate', value: formatPercent(s.paying_rate) },
+        {
+            key: 'no_show_rate',
+            label: 'No-show rate',
+            // Negative Quote = mehr Besucher*innen als Karten (Überbesetzung) → "–" mit Erklärung
+            value: (noShow !== null && noShow !== undefined && noShow < 0) ? null : formatPercent(noShow),
+            tooltip: (noShow !== null && noShow !== undefined && noShow < 0)
+                ? t('More visitors than issued tickets recorded — no-show rate not meaningful.')
+                : null,
+        },
+        { key: 'seat_occupancy', label: 'Seat occupancy (incl. free tickets)', value: formatPercent(s.seat_occupancy) },
     ];
 });
 

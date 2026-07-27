@@ -112,7 +112,7 @@ class OidcAuthController extends Controller
 
     /**
      * Erzwingt die pro-Quelle konfigurierte E-Mail-Domain-Allowlist.
-     * Eine leere Allowlist verweigert den Zugriff bewusst.
+     * Eine leere Allowlist verweigert den Zugriff sicherheitshalber vollständig.
      */
     private function emailDomainAllowed(ExternalUserSource $source, string $email): bool
     {

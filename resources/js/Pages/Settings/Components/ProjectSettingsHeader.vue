@@ -29,6 +29,8 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import {IconSettings} from '@tabler/icons-vue';
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
 
 export default defineComponent({
     props: ['title', 'description'],
@@ -38,6 +40,7 @@ export default defineComponent({
         BaseTabs
     },
     data() {
+        const {can, role} = usePermission(usePage().props);
         return {
             IconSettings,
             tabs: [
@@ -87,13 +90,13 @@ export default defineComponent({
                     name: this.$t('BI Field Settings'),
                     href: route('bi.settings.index'),
                     current: route().current('bi.settings.index'),
-                    permission: true
+                    permission: role('artwork admin') || can('change tool settings')
                 },
                 {
                     name: this.$t('BI Export'),
                     href: route('bi.export.index'),
                     current: route().current('bi.export.index'),
-                    permission: true
+                    permission: role('artwork admin') || can('can export bi data')
                 },
             ]
         }

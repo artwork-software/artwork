@@ -452,7 +452,7 @@ import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
-const props = defineProps<{ pdfTitle?: string; project?: any }>()
+const props = defineProps<{ pdfTitle?: string; project?: any; preselectedFilters?: Record<string, number[] | null> | null }>()
 
 const showModalInformation = ref(true)
 
@@ -520,8 +520,26 @@ const loadFilterPresets = async () => {
     }
 }
 
+// Aktive Kalender-Filter des Users als Vorauswahl übernehmen (im Modal weiterhin anpassbar).
+// Setzt checked für ALLE Einträge (true/false), damit keine veralteten Häkchen aus den
+// geteilten filterOptions-Referenzen (CalendarFilterModal) übrig bleiben.
+const applyActiveUserFilters = () => {
+    const source = props.preselectedFilters ?? (usePage().props.user_filters as Record<string, any> | undefined) ?? null
+    if (!source) return
+    const cats = filteredOptionsByCategories.value
+    Object.keys(cats).forEach(category => {
+        Object.keys(cats[category]).forEach(subKey => {
+            const activeIds = Array.isArray(source[subKey]) ? source[subKey] : []
+            cats[category][subKey].forEach((f: any) => {
+                f.checked = activeIds.includes(f.id)
+            })
+        })
+    })
+}
+
 onMounted(() => {
     loadFilterPresets()
+    applyActiveUserFilters()
 })
 
 const getCurrentFilterData = () => {

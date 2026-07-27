@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserContract;
 use Carbon\Carbon;
@@ -10,11 +12,19 @@ use Tests\Feature\FeatureTestCase;
 
 final class UserContractAssignSeasonInfoTest extends FeatureTestCase
 {
+    private function actingAsWorkerManager(): User
+    {
+        $user = User::factory()->create(['email_verified_at' => Carbon::now()]);
+        $user->givePermissionTo(Permission::findOrCreate(PermissionEnum::MA_MANAGER->value, 'web'));
+        $this->actingAs($user);
+
+        return $user;
+    }
+
     #[Test]
     public function assigning_a_contract_copies_the_season_info_fields_to_the_user(): void
     {
-        $user = User::factory()->create(['email_verified_at' => Carbon::now()]);
-        $this->actingAs($user);
+        $user = $this->actingAsWorkerManager();
 
         $contract = UserContract::create([
             'name' => 'DP-18 Vertrag',
@@ -80,8 +90,7 @@ final class UserContractAssignSeasonInfoTest extends FeatureTestCase
     #[Test]
     public function removing_the_contract_resets_the_season_info_fields(): void
     {
-        $user = User::factory()->create(['email_verified_at' => Carbon::now()]);
-        $this->actingAs($user);
+        $user = $this->actingAsWorkerManager();
 
         $user->contract()->create([
             'user_contract_id' => null,

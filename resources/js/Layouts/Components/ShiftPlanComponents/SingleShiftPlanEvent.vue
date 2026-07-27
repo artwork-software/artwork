@@ -2,7 +2,7 @@
     <div :class="[usePage().props.auth.user.calendar_settings?.time_period_project_id === resolvedProject?.id ? 'border-[3px] border-dashed !border-pink-500' : '']">
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
-                 :style="{backgroundColor: backgroundColorWithOpacity(resolvedEventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(resolvedEventType.hex_code, usePage().props.high_contrast_percent))}">
+                 :style="{backgroundColor: backgroundColorWithOpacity(resolvedEventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(resolvedEventType.hex_code, percentage))}">
                 <a v-if="resolvedProject?.id" :href="route('projects.tab', {project: resolvedProject.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
                     {{ resolvedEventType.abbreviation }}: {{ resolvedProject.name }}
                 </a>
@@ -43,11 +43,14 @@ import {usePage} from "@inertiajs/vue3";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import {useShiftPlanLookups} from "@/Composeables/useShiftPlanLookups.js";
 import {computeShiftFormattedDates} from "@/Composeables/calendarDateUtils.js";
-const percentage = usePage().props.high_contrast_percent;
 const {
     backgroundColorWithOpacity,
+    getHighContrastPercent,
     getTextColorBasedOnBackground,
 } = useColorHelper();
+const percentage = computed(() => getHighContrastPercent(
+    usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings
+));
 const { resolveEventType, resolveProject, resolveCraft } = useShiftPlanLookups();
 
 // Define emits

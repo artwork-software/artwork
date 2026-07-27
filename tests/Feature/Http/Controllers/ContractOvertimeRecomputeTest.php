@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\WorkTime\Models\UserOvertime;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
@@ -14,6 +16,7 @@ final class ContractOvertimeRecomputeTest extends FeatureTestCase
     private function userWithOvertimeBooking(): User
     {
         $user = User::factory()->create(['email_verified_at' => Carbon::now()]);
+        $user->givePermissionTo(Permission::findOrCreate(PermissionEnum::MA_MANAGER->value, 'web'));
 
         $day = Carbon::now()->startOfDay()->subDays(3);
         WorkTimeBooking::create([

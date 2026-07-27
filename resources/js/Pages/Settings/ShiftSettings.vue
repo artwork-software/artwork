@@ -1,5 +1,58 @@
 <template>
     <ShiftSettingsHeader :title="$t('Shift Settings')">
+        <div class="my-10 grid gap-5 xl:grid-cols-2">
+            <div v-if="hasAdminRole()" class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
+                <div class="flex items-start justify-between gap-5">
+                    <BasePageTitle
+                        :title="$t('Permission model')"
+                        :description="$t('In simple mode, the existing general shift-settings permission continues to grant access to all areas. In granular mode, separate read and edit permissions are evaluated for each settings area.')"
+                    />
+                    <SwitchIconTooltip
+                        v-model="shiftSettings.granular_permissions_enabled"
+                        :tooltip-text="$t('Enable granular shift-setting permissions')"
+                        size="md"
+                        icon="IconKey"
+                        @change="updateGranularPermissions"
+                    />
+                </div>
+                <div class="mt-4 rounded-xl border border-blue-200 bg-white/80 px-4 py-3 text-xs leading-5 text-blue-900">
+                    <strong>{{ shiftSettings.granular_permissions_enabled ? $t('Granular mode active') : $t('Simple mode active') }}</strong>
+                    <p class="mt-1">
+                        {{ shiftSettings.granular_permissions_enabled
+                            ? $t('The general permission remains the module access. The subordinate permissions now determine which areas may be read or edited. Edit permission also includes read access.')
+                            : $t('Existing houses retain the current behavior. Subordinate permissions are stored but are not evaluated.') }}
+                    </p>
+                    <p class="mt-1">{{ $t('When granular mode is enabled for the first time, all subordinate permissions are initially granted to existing holders of the general permission and can then be removed individually.') }}</p>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-violet-200 bg-violet-50/60 p-5">
+                <div class="flex items-start justify-between gap-5">
+                    <BasePageTitle
+                        :title="$t('Uncommitted shifts in own roster')"
+                        :description="$t('Controls whether people can see shifts in their own roster before those shifts have been committed.')"
+                    />
+                    <SwitchIconTooltip
+                        v-model="shiftSettings.hide_uncommitted_shifts_from_own_roster"
+                        :tooltip-text="canEditGeneralSettings
+                            ? $t('Hide uncommitted shifts from own roster')
+                            : $t('You have read access only')"
+                        :disabled="!canEditGeneralSettings"
+                        size="md"
+                        icon="IconEyeOff"
+                        @change="updateOwnRosterUncommittedShiftVisibility"
+                    />
+                </div>
+                <div class="mt-4 rounded-xl border border-violet-200 bg-white/80 px-4 py-3 text-xs leading-5 text-violet-900">
+                    <p v-if="shiftSettings.hide_uncommitted_shifts_from_own_roster">
+                        {{ $t('Active: uncommitted shifts are hidden from a person in their own roster. The individual permission “View own uncommitted shifts” can be granted as an exception.') }}
+                    </p>
+                    <p v-else>
+                        {{ $t('Inactive: current production behavior is preserved and people continue to see their own uncommitted shifts.') }}
+                    </p>
+                </div>
+            </div>
+        </div>
         <div class="my-10">
                 <div class="card white p-5">
 
@@ -552,6 +605,7 @@ import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import GlobalQualificationsSettingsCard from "@/Pages/Settings/ShiftSettingsComponents/GlobalQualificationsSettingsCard.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {can, is} from 'laravel-permission-to-vuejs';
 
 export default defineComponent({
     name: "ShiftSettings",
@@ -684,6 +738,11 @@ export default defineComponent({
         }
     },
     computed: {
+        canEditGeneralSettings() {
+            return !usePage().props.shift_settings_access?.granular_permissions_enabled
+                || is('artwork admin')
+                || can('shift.settings.general.edit');
+        },
         relevantEventTypes(){
             const types = [];
             this.eventTypes.forEach((type) => {
@@ -704,6 +763,9 @@ export default defineComponent({
         }
     },
     methods: {
+        hasAdminRole() {
+            return is('artwork admin');
+        },
         IconCheck,
         IconEdit,
         IconTrash,
@@ -907,6 +969,16 @@ export default defineComponent({
                     preserveScroll: true
                 }
             )
+        },
+        updateGranularPermissions(granularPermissionsEnabled) {
+            router.patch(route('shift.settings.update.granular-permissions'), {
+                granular_permissions_enabled: granularPermissionsEnabled
+            }, { preserveScroll: true })
+        },
+        updateOwnRosterUncommittedShiftVisibility(hideUncommittedShifts) {
+            router.patch(route('shift.settings.update.own-roster-uncommitted-visibility'), {
+                hide_uncommitted_shifts_from_own_roster: hideUncommittedShifts
+            }, { preserveScroll: true })
         }
     }
 })

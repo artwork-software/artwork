@@ -8,71 +8,38 @@ use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserRepository;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class ExternalUserService
 {
     public function __construct(
         private readonly ExternalUserRepository $externalUserRepository,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly IdentityResolutionService $identityResolutionService
     ) {
     }
 
+    /**
+     * Löst die extern authentifizierte Identität über den zentralen
+     * {@see IdentityResolutionService} auf (Subject+Issuer → E-Mail-Erstverknüpfung
+     * → Provisionierung). Wird sowohl vom interaktiven OIDC-Login als auch vom
+     * LDAP-Batch-Sync genutzt.
+     */
     public function findOrCreateUser(
         ExternalUserSource $source,
         array $externalUserData,
         string $identifier
-    ): User
-    {
-        $email = $externalUserData['email'] ?? null;
-        $firstName = $externalUserData['first_name'] ?? '';
-        $lastName = $externalUserData['last_name'] ?? '';
-
-        $user = $this->externalUserRepository
-            ->findBySourceAndIdentification($source->id, $identifier)
-            ?->user;
-
-        if (!$user && $email) {
-            $user = $this->userRepository->getNewModelQuery()
-                ->where('email', $email)
-                ->where('ad_managed', true)
-                ->first();
-        }
-
-        if (!$user) {
-            if (!$email) {
-                throw new \InvalidArgumentException('Cannot create user without email address');
-            }
-
-            if ($this->userRepository->getNewModelQuery()->where('email', $email)->exists()) {
-                throw new \InvalidArgumentException('Cannot link an externally managed identity to a local user');
-            }
-
-            /** @var User $user */
-            $user = $this->userRepository->getNewModelInstance();
-            $user->fill([
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $email,
-                'password' => Hash::make(uniqid('', true)),
-                'opened_checklists' => [],
-                'opened_areas' => [],
-                'ad_managed' => true,
-                'ad_identifier' => $identifier,
-            ]);
-            $this->userRepository->save($user);
-        } elseif ($user->ad_managed) {
-            $user->fill([
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $email,
-                'ad_identifier' => $identifier,
-            ]);
-            $this->userRepository->save($user);
-        }
-
-        return $user;
+    ): User {
+        return $this->identityResolutionService->resolveAndLink(
+            $source,
+            $identifier,
+            $externalUserData['email'] ?? null,
+            (bool) ($externalUserData['email_verified'] ?? false),
+            [
+                'first_name' => $externalUserData['first_name'] ?? '',
+                'last_name' => $externalUserData['last_name'] ?? '',
+            ]
+        );
     }
 
     public function syncUserGroups(

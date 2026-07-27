@@ -2,9 +2,11 @@
 
 namespace Tests\Unit\Modules\WorkTime\Services;
 
+use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\WorkTime\Services\WorkTimeBookingService;
+use Carbon\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -67,5 +69,81 @@ final class WorkTimeBookingServiceTest extends TestCase
             'user_id' => $user->id,
             'is_active' => false,
         ]);
+    }
+
+    /**
+     * DP-19: Sonntagsbedingte Ersatzruhe (for_holiday = false) darf das Tagessoll
+     * nicht reduzieren — nur feiertagsbedingte Ausgleichstage tun das.
+     */
+    #[Test]
+    public function sunday_based_compensation_day_off_does_not_reduce_the_daily_target(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag, kein Feiertag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        CompensationDayOff::create([
+            'user_id' => $user->id,
+            'value' => 1.0,
+            'deadline' => '2026-08-31',
+            'granted_date' => '2026-07-21',
+            'granted_at' => now(),
+            'reason' => 'Ersatzruhe für Sonntagsarbeit',
+            'for_holiday' => false,
+        ]);
+
+        $this->service->calculateDailyWorkingHours();
+
+        $this->assertDatabaseHas('work_time_bookings', [
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-21',
+            'wanted_working_hours' => 480,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    #[Test]
+    public function holiday_based_compensation_day_off_reduces_the_daily_target(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag, kein Feiertag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        CompensationDayOff::create([
+            'user_id' => $user->id,
+            'value' => 1.0,
+            'deadline' => '2026-08-31',
+            'granted_date' => '2026-07-21',
+            'granted_at' => now(),
+            'reason' => 'Ausgleichstag für Feiertagsarbeit',
+            'for_holiday' => true,
+        ]);
+
+        $this->service->calculateDailyWorkingHours();
+
+        // Ohne Arbeitshistorie fällt der Dreimonatsdurchschnitt auf das Tagessoll
+        // zurück -> volle Reduktion auf 0.
+        $this->assertDatabaseHas('work_time_bookings', [
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-21',
+            'wanted_working_hours' => 0,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    private function workShiftUserWithDailyTarget(string $tuesdayTime): User
+    {
+        $user = User::factory()->create(['can_work_shifts' => true]);
+        UserWorkTime::query()->insert([
+            'user_id' => $user->id,
+            'tuesday' => $tuesdayTime,
+            'valid_from' => '2026-01-01',
+            'valid_until' => null,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $user;
     }
 }

@@ -35,6 +35,7 @@ class StoreUserContractRequest extends FormRequest
             'free_half_days_per_week' => 'required|integer|min:0',
             'special_day_rule_active' => 'boolean',
             'compensation_period' => 'required|integer|min:0',
+            'use_three_month_average_for_target_reduction' => 'boolean',
             'description' => 'nullable|string|max:1000',
             'free_sundays_per_season' => 'required|integer|min:0',
             'days_off_first_26_weeks' => 'required|numeric|min:0',

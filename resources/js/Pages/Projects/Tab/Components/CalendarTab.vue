@@ -162,7 +162,8 @@ provide('eventTypes', props.eventTypes ?? effectiveCalendarData.value.eventTypes
 provide('dateValue', props.dateValue ?? effectiveCalendarData.value.dateValue);
 provide('first_project_tab_id', props.first_project_tab_id ?? effectiveCalendarData.value.first_project_tab_id);
 provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id ?? effectiveCalendarData.value.first_project_calendar_tab_id);
-provide('user_filters', props.user_filters ?? effectiveCalendarData.value.user_filters);
+// Computed, damit die asynchron nachgeladenen Kalenderdaten (fetchCalendarData) ankommen
+provide('user_filters', computed(() => props.user_filters ?? effectiveCalendarData.value.user_filters));
 provide('personalFilters', props.personalFilters ?? effectiveCalendarData.value.personalFilters);
 provide('filterOptions', props.filterOptions ?? effectiveCalendarData.value.filterOptions);
 provide('eventStatuses', props.eventStatuses ?? effectiveCalendarData.value.eventStatuses);

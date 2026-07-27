@@ -17,6 +17,11 @@ class GenerateBiExportJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    // Exporte über viele Projekte brauchen ggf. länger als die Worker-Default-60s.
+    public int $timeout = 300;
+
+    public int $tries = 1;
+
     public function __construct(private readonly string $token)
     {
     }

@@ -1,6 +1,15 @@
 <template>
     <div :class="isHeightFull ? 'h-full' : ''">
+        <!-- Kompaktkachel unterhalb 80 % Zoom: eine Zeile (Zeit + Titel), Klick öffnet das Termin-Modal -->
+        <CompactEventInCalendar
+            v-if="!event.isMinimal && isCompact && !isInDailyView"
+            :event="event"
+            :width="typeof width === 'number' ? width : parseInt(width, 10) || 196"
+            :multi-edit="multiEdit"
+            @editEvent="e => emit('editEvent', e)"
+        />
         <component
+            v-else
             :is="event.isMinimal ? MinimalEventInCalendar : FullEventInCalendar"
             :event="event"
             :multi-edit="multiEdit"
@@ -27,13 +36,17 @@
 </template>
 
 <script setup>
-import { defineComponent } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { computed, defineComponent } from 'vue'
 
 // Synchron importieren – der äußere defineAsyncComponent in BaseCalendar
 // sorgt bereits für Code-Splitting. Ein zweiter Async-Layer erzeugt eine
 // Waterfall (2–3 Frames Verzögerung pro Event → Events "poppen" einzeln auf).
 import FullEventInCalendar from "@/Components/Calendar/Elements/Events/FullEventInCalendar.vue"
+import CompactEventInCalendar from "@/Components/Calendar/Elements/Events/CompactEventInCalendar.vue"
+import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js"
+
+// Kompaktmodus reagiert live auf Zoom-Wechsel (kein Page-Reload mehr)
+const { isCompact } = useCalendarZoom()
 
 // Minimale Inline-Variante, falls event.isMinimal true ist
 const MinimalEventInCalendar = defineComponent({
@@ -43,9 +56,10 @@ const MinimalEventInCalendar = defineComponent({
         width: { type: String, default: '248px' }
     },
     setup() {
-        // Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (wie FullEventInCalendar)
-        const zoomFactor = usePage().props.auth.user.zoom_factor ?? 1
-        return { contentZoom: zoomFactor > 1 ? zoomFactor : 1 }
+        // Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (wie FullEventInCalendar).
+        // Reaktiv aus dem Zoom-Store — Zoom-Wechsel laufen ohne Reload (kein stale Mount-Wert)
+        const { zoomFactor } = useCalendarZoom()
+        return { contentZoom: computed(() => (zoomFactor.value > 1 ? zoomFactor.value : 1)) }
     },
     template: `
     <div class="rounded-lg border border-gray-200 bg-white px-2 py-1 overflow-hidden"

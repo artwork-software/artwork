@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserSourceService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Role\Models\Role;
 use Illuminate\Auth\Access\AuthorizationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,6 +27,7 @@ class ToolSettingsExternalUserManagementController extends Controller
 
         return Inertia::render('ExternalUserManagement/Index', [
             'sources' => $sources,
+            'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

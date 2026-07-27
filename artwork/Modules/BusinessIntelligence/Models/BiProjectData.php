@@ -16,6 +16,7 @@ class BiProjectData extends Model
 
     protected $fillable = [
         'project_id',
+        'scope',
         'visitor_mode',
         'visitors_total',
         'visitors_not_applicable',
@@ -25,11 +26,17 @@ class BiProjectData extends Model
         'revenue_mode',
         'revenue_total',
         'revenue_not_applicable',
+        'costs_total',
+        'costs_not_applicable',
+        'costs_source',
+        'costs_source_synced_at',
         'is_new_production',
         'is_co_production',
         'is_own_production',
         'is_germany_premiere',
         'premiere_date',
+        'revenue_source',
+        'revenue_source_synced_at',
     ];
 
     protected function casts(): array
@@ -49,6 +56,8 @@ class BiProjectData extends Model
             // Datum bei Europe/Berlin im Frontend einen Tag früher erscheinen
             'premiere_date' => 'date:Y-m-d',
             'revenue_total' => 'decimal:2',
+            'costs_total' => 'decimal:2',
+            'costs_not_applicable' => 'boolean',
         ];
     }
 

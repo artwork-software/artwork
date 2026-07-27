@@ -42,6 +42,7 @@
 
 <script>
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import {formatBookingDataDate} from "@/Layouts/Components/Budget/bookingDate.js";
 
 export default {
     name: "BookingModalContents",
@@ -53,11 +54,7 @@ export default {
         }
     },
     methods: {
-        formatBookingDataDate(dateString) {
-            const [date] = dateString.split('T');
-            const [year, month, day] = date.split('-');
-            return `${day}.${month}.${year}`;
-        }
+        formatBookingDataDate
     }
 };
 </script>

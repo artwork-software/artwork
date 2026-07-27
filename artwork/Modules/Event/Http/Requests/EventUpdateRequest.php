@@ -31,7 +31,7 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'project_id' => $this->get('projectId'),
             'event_type_id' => $this->get('eventTypeId'),
             'event_status_id' => $this->get('eventStatusId'),
-            'occupancy_option' => $this->get('isOption'),
+            'occupancy_option' => $this->booleanValue('isOption'),
             'is_series' => $this->get('is_series'),
             'frequency' => $this->get('seriesFrequency'),
             'seriesEnd' => $this->get('seriesEndDate'),

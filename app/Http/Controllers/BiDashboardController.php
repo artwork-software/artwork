@@ -31,11 +31,17 @@ class BiDashboardController extends Controller
         $validated = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'compare_from' => ['nullable', 'date'],
+            'compare_to' => ['nullable', 'date', 'after_or_equal:compare_from'],
+            'compare' => ['nullable', 'in:none'],
         ]);
 
         $data = $this->biDashboardService->getDashboardData(
             $validated['date_from'] ?? null,
-            $validated['date_to'] ?? null
+            $validated['date_to'] ?? null,
+            $validated['compare_from'] ?? null,
+            $validated['compare_to'] ?? null,
+            ($validated['compare'] ?? null) === 'none'
         );
 
         $biTab = $this->projectTabService->findFirstProjectTabWithBusinessIntelligenceComponent();

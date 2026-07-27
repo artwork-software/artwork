@@ -48,6 +48,7 @@
                     v-if="displaySettings?.project_management && project?.leaders?.length"
                     class="flex items-center gap-1 shrink-0"
                 >
+                    <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
                     <UserPopoverTooltip
                         v-for="user in project.leaders.slice(0, 3)"
                         :key="'leader-' + user.id"
@@ -62,6 +63,19 @@
                     >
                         +{{ project.leaders.length - 3 }}
                     </div>
+                </div>
+                <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
+                <div
+                    v-if="displaySettings?.show_event_creator && event.created_by"
+                    class="flex items-center gap-1 shrink-0"
+                >
+                    <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
+                    <UserPopoverTooltip
+                        :user="event.created_by"
+                        lazy-load
+                        width="5"
+                        height="5"
+                    />
                 </div>
                 <!-- Termineigenschaften als Icons (wie im FullEventInCalendar) -->
                 <div v-if="event.eventProperties?.length" class="flex items-center gap-x-1 shrink-0">
@@ -241,6 +255,12 @@ const displaySettings = computed(() => {
 
 // Anzeigeeinstellung "Notizen einblenden"
 const showNotes = computed(() => !!displaySettings.value?.shift_notes)
+
+// Nur wenn Projektleitung UND Terminersteller*in aktiv sind, brauchen die
+// Avatar-Reihen ein "PL:"/"Erstell:"-Label zur Unterscheidung.
+const showCreatorLeaderLabels = computed(() =>
+    displaySettings.value?.project_management && displaySettings.value?.show_event_creator
+)
 
 // Angezeigte Zeiten anpassen wenn Event über Tagesgrenze geht
 const displayStartTime = computed(() => {

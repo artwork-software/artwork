@@ -4,6 +4,7 @@ namespace Artwork\Modules\Setup\DataProvider;
 
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;
 
 class BaseDataProvider implements RoleAndPermissionDataProvider
 {
@@ -611,6 +612,29 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                     'shift plan views. Without this permission only their own values are visible.',
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::DAY_REMARKS_VIEW->value,
+                'name_de' => "Tagesbemerkungen sehen",
+                'translation_key' => "View day remarks",
+                'group' => 'Event management',
+                'tooltipText' => 'Darf die Tagesbemerkungs-Spalte im Kalender, Planungskalender und Dienstplan ' .
+                    'sehen, sofern sie in den Systemeinstellungen aktiviert ist.',
+                'tooltipKey' => 'User can see the day remarks column in the calendar, planning calendar and shift ' .
+                    'plan if it is enabled in the system settings.',
+                'checked' => true
+            ],
+            [
+                'name' => PermissionEnum::DAY_REMARKS_EDIT->value,
+                'name_de' => "Tagesbemerkungen bearbeiten",
+                'translation_key' => "Edit day remarks",
+                'group' => 'Event management',
+                'tooltipText' => 'Darf Tagesbemerkungen im Kalender, Planungskalender und Dienstplan anlegen, ' .
+                    'bearbeiten und löschen.',
+                'tooltipKey' => 'User can create, edit and delete day remarks in the calendar, planning calendar ' .
+                    'and shift plan.',
+                'checked' => false
+            ],
+            ...ShiftSettingsPermissionService::definitions(),
         ];
     }
 

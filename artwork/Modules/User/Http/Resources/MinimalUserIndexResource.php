@@ -29,6 +29,8 @@ class MinimalUserIndexResource extends JsonResource
             'phone_number' => $this->getAttribute('phone_number'),
             'display_name' => $this->getDisplayNameAttribute(),
             'type' => $this->getTypeAttribute(),
+            'auth_provider' => $this->getAttribute('auth_provider'),
+            'auth_provider_issuer' => $this->getAttribute('auth_provider_issuer'),
         ];
     }
 }

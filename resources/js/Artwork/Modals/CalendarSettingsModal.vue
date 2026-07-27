@@ -7,6 +7,42 @@
     >
         <div class="p-5 space-y-6">
 
+            <!-- Abschnitt: Navigation (in allen Ansichten sichtbar) -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">
+                    {{ $t('Navigation') }}
+                </h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Zeitraum in allen Ansichten teilen (users-Spalte, ansichtsübergreifend) -->
+                    <div class="flex gap-3">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.share_calendar_date"
+                                    id="share_calendar_date"
+                                    aria-describedby="share_calendar_date-description"
+                                    name="share_calendar_date"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="share_calendar_date" class="font-medium text-gray-900">{{ $t('Share time period across views') }}</label>
+                            <p id="share_calendar_date-description" class="text-gray-500 text-xs">
+                                {{ $t('Calendar, planning calendar, shift plan, list view and article planning always show the same time period. Changing the date in one view applies it everywhere.') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-200">
+
             <!-- List-View: nur die zwei relevanten Einstellungen -->
             <template v-if="isListView">
                 <div>
@@ -230,6 +266,64 @@
                         </div>
                     </div>
 
+                    <!-- Künstler:innen statt Termintitel (Kompaktansicht) -->
+                    <div class="flex gap-3" v-if="!inShiftPlan && !isDailyView">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_artist_names_as_title"
+                                    id="show_artist_names_as_title"
+                                    aria-describedby="show_artist_names_as_title-description"
+                                    name="show_artist_names_as_title"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_artist_names_as_title" class="font-medium text-gray-900">{{ $t('Artist names instead of event title') }}</label>
+                            <p id="show_artist_names_as_title-description" class="text-gray-500 text-xs">
+                                {{ $t('In the compact view (zoom below 80%), the artist names of the project are shown instead of the event title.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Tagesbemerkungen (nur bei aktivem Instanz-Setting & Sichtrecht; bei Pflicht disabled mit Tooltip) -->
+                    <div class="flex gap-3"
+                         v-if="!inShiftPlan && !isDailyView && dayRemarksState.enabled && dayRemarksState.can_view"
+                         :class="{ 'opacity-50': dayRemarksState.mandatory }"
+                         :title="dayRemarksState.mandatory ? $t('In your artwork the day remarks column is set as mandatory.') : null">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_day_remarks"
+                                    :disabled="dayRemarksState.mandatory"
+                                    id="show_day_remarks"
+                                    aria-describedby="show_day_remarks-description"
+                                    name="show_day_remarks"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_day_remarks" class="font-medium text-gray-900">{{ $t('Day remarks') }}</label>
+                            <p id="show_day_remarks-description" class="text-gray-500 text-xs">
+                                {{ dayRemarksState.mandatory
+                                    ? $t('In your artwork the day remarks column is set as mandatory.')
+                                    : $t('Shows the day remarks column next to the date column in the calendar.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Use event status colour (falls Modul aktiv & nicht Schichtplan) -->
                     <div class="flex gap-3" v-if="usePage().props.event_status_module && !inShiftPlan">
                         <div class="flex h-6 shrink-0 items-center">
@@ -283,6 +377,23 @@
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Raumspaltenbreite (nur Standard-Kalender; vom Zoom entkoppelt) —
+                     bewusst am Ende der Rubrik, damit das Dropdown das Checkbox-Raster nicht aufbricht -->
+                <div v-if="!inShiftPlan && !isDailyView" class="mt-4 md:max-w-sm">
+                    <ArtworkBaseListbox
+                        :model-value="selectedColumnWidthOption"
+                        @update:model-value="onColumnWidthChange"
+                        :items="columnWidthOptions"
+                        by="id"
+                        option-label="name"
+                        :label="$t('Room column width')"
+                        :enable-search="false"
+                    />
+                    <p class="text-gray-500 text-xs mt-1">
+                        {{ $t('The room column width stays the same at every zoom level. The zoom only controls the row height.') }}
+                    </p>
                 </div>
             </div>
 
@@ -671,6 +782,32 @@
                         </div>
                     </div>
 
+                    <!-- Event creator -->
+                    <div class="flex gap-3">
+                        <div class="flex h-6 shrink-0 items-center">
+                            <div class="group grid size-4 grid-cols-1">
+                                <input
+                                    v-model="userCalendarSettings.show_event_creator"
+                                    id="show_event_creator"
+                                    aria-describedby="show_event_creator-description"
+                                    name="show_event_creator"
+                                    type="checkbox"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                />
+                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                    <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-sm/6">
+                            <label for="show_event_creator" class="font-medium text-gray-900">{{ $t('Event creator') }}</label>
+                            <p id="show_event_creator-description" class="text-gray-500 text-xs">
+                                {{ $t('Shows the profile picture of the person who created the event, helpful to know who to contact with questions.') }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Artists -->
                     <div class="flex gap-3">
                         <div class="flex h-6 shrink-0 items-center">
@@ -872,6 +1009,8 @@ import { router, useForm, usePage } from "@inertiajs/vue3";
 import { can, is } from "laravel-permission-to-vuejs";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
+import { computed } from "vue";
 
 const props = defineProps({
     isPlanning: { type: Boolean, default: false },
@@ -883,6 +1022,10 @@ const props = defineProps({
 const emit = defineEmits(["close"]);
 
 const listViewSettings = props.isListView ? usePage().props.listViewSettings : null;
+
+// Tagesbemerkungen: Instanz-Setting + Rechte (global geteilt via HandleInertiaRequests)
+const dayRemarksState = usePage().props.day_remarks
+    ?? { enabled: false, mandatory: false, can_view: false, can_edit: false };
 
 const activeSettings = props.isListView
     ? listViewSettings
@@ -896,6 +1039,8 @@ const activeSettings = props.isListView
 
 const userCalendarSettings = props.isListView
     ? useForm({
+        // Ansichtsübergreifend (users-Spalte), daher aus auth.user statt den Settings
+        share_calendar_date: usePage().props.auth.user.share_calendar_date ?? false,
         show_qualifications: activeSettings ? activeSettings.show_qualifications : false,
         shift_notes: activeSettings ? activeSettings.shift_notes : false,
         show_shift_group_tag: activeSettings ? activeSettings.show_shift_group_tag : false,
@@ -908,10 +1053,14 @@ const userCalendarSettings = props.isListView
     : useForm({
         is_daily_view: props.isDailyView,
         is_shift_plan: props.inShiftPlan,
+        is_planning: props.isPlanning,
+        // Ansichtsübergreifend (users-Spalte), daher aus auth.user statt den Settings
+        share_calendar_date: usePage().props.auth.user.share_calendar_date ?? false,
         project_status: activeSettings ? activeSettings.project_status : false,
         project_artists: activeSettings ? activeSettings.project_artists : false,
         options: activeSettings ? activeSettings.options : false,
         project_management: activeSettings ? activeSettings.project_management : false,
+        show_event_creator: activeSettings ? activeSettings.show_event_creator : false,
         repeating_events: activeSettings ? activeSettings.repeating_events : false,
         work_shifts: activeSettings ? activeSettings.work_shifts : false,
         description: activeSettings ? activeSettings.description : false,
@@ -934,7 +1083,37 @@ const userCalendarSettings = props.isListView
         ...(props.inShiftPlan && props.isDailyView
             ? { show_project_assignments: activeSettings ? (activeSettings.show_project_assignments ?? true) : true }
             : {}),
+        // Nur Standard-Kalender: Spalten existieren nur auf user_calendar_settings
+        ...(!props.inShiftPlan && !props.isDailyView
+            ? {
+                calendar_column_width: activeSettings?.calendar_column_width ?? 212,
+                show_artist_names_as_title: activeSettings?.show_artist_names_as_title ?? false,
+                // Default AN; bei Pflicht-Einstellung immer als aktiviert angezeigt/gespeichert
+                show_day_remarks: dayRemarksState.mandatory
+                    ? true
+                    : (activeSettings?.show_day_remarks ?? true),
+            }
+            : {}),
     });
+
+// Raumspaltenbreite: feste Presets, gespeichert als px-Wert
+const columnWidthOptions = [
+    { id: 160, name: 'Schmal (160 px)' },
+    { id: 212, name: 'Standard (212 px)' },
+    { id: 280, name: 'Breit (280 px)' },
+    { id: 320, name: 'Sehr breit (320 px)' },
+];
+
+const selectedColumnWidthOption = computed(() =>
+    columnWidthOptions.find((option) => option.id === userCalendarSettings.calendar_column_width)
+        ?? columnWidthOptions[1]
+);
+
+const onColumnWidthChange = (option) => {
+    if (option?.id) {
+        userCalendarSettings.calendar_column_width = option.id;
+    }
+};
 
 const onStatusColorChange = () => {
     if (userCalendarSettings.use_event_status_color) {

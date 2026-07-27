@@ -7,10 +7,10 @@ use Artwork\Modules\ExternalUserManagement\Mail\ExternalUserImported;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserGroupMapping;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserGroupMappingService;
+use Artwork\Modules\ExternalUserManagement\Exceptions\IdentityLinkConflictException;
 use Artwork\Modules\ExternalUserManagement\Service\ExternalUserService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Spatie\Permission\Models\Role;
@@ -50,15 +50,17 @@ final class ExternalUserServiceTest extends TestCase
     }
 
     #[Test]
-    public function an_external_identity_cannot_take_over_a_local_user_by_email(): void
+    public function an_unverified_external_identity_cannot_take_over_a_local_user_by_email(): void
     {
         $source = $this->source('Identity Provider');
         User::factory()->create([
             'email' => 'local@example.com',
-            'ad_managed' => false,
+            'auth_provider' => 'local',
         ]);
 
-        $this->expectException(InvalidArgumentException::class);
+        // Ohne verifizierten email_verified-Claim darf ein OIDC-Login keinen
+        // bestehenden Account übernehmen.
+        $this->expectException(IdentityLinkConflictException::class);
 
         app(ExternalUserService::class)->findOrCreateUser(
             $source,
@@ -66,9 +68,66 @@ final class ExternalUserServiceTest extends TestCase
                 'email' => 'local@example.com',
                 'first_name' => 'External',
                 'last_name' => 'Identity',
+                'email_verified' => false,
             ],
             'external-subject'
         );
+    }
+
+    #[Test]
+    public function a_verified_external_identity_links_an_existing_local_account_by_email(): void
+    {
+        $source = $this->source('Identity Provider');
+        $local = User::factory()->create([
+            'email' => 'local@example.com',
+            'auth_provider' => 'local',
+        ]);
+
+        $resolved = app(ExternalUserService::class)->findOrCreateUser(
+            $source,
+            [
+                'email' => 'local@example.com',
+                'first_name' => 'External',
+                'last_name' => 'Identity',
+                'email_verified' => true,
+            ],
+            'external-subject'
+        );
+
+        $this->assertTrue($local->is($resolved));
+        $this->assertSame('oidc', $resolved->fresh()->auth_provider);
+        $this->assertSame('external-subject', $resolved->fresh()->auth_provider_id);
+    }
+
+    #[Test]
+    public function a_provisioned_user_receives_the_connection_default_role(): void
+    {
+        $role = Role::query()->create(['name' => 'default sso role', 'guard_name' => 'web']);
+        $source = ExternalUserSource::query()->create([
+            'name' => 'Default role IdP',
+            'active' => true,
+            'type' => 'identity_provider',
+            'config' => [
+                'discovery_url' => 'https://idp.example.com/.well-known/openid-configuration',
+                'client_id' => 'artwork',
+                'client_secret' => 'secret',
+                'default_role_id' => $role->id,
+            ],
+        ]);
+
+        $user = app(ExternalUserService::class)->findOrCreateUser(
+            $source,
+            [
+                'email' => 'fresh@example.com',
+                'first_name' => 'Fresh',
+                'last_name' => 'User',
+                'email_verified' => true,
+            ],
+            'fresh-subject'
+        );
+
+        $this->assertSame('oidc', $user->auth_provider);
+        $this->assertTrue($user->fresh()->hasRole($role));
     }
 
     #[Test]

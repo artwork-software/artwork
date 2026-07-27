@@ -15,12 +15,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $description
  * @property boolean $options
  * @property boolean $project_management
+ * @property boolean $show_event_creator
  * @property boolean $repeating_events
  * @property boolean $use_project_time_period
  * @property int $time_period_project_id
  * @property boolean $event_name
  * @property boolean $high_contrast
  * @property boolean $expand_days
+ * @property int $calendar_column_width
+ * @property boolean $show_artist_names_as_title
  * @property boolean $use_event_status_color
  * @property boolean $use_main_category_color
  * @property boolean $work_shifts
@@ -35,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $show_timeline
  * @property boolean $show_only_not_fully_staffed_shifts
  * @property boolean $show_user_overview
+ * @property boolean $show_day_remarks
  */
 class UserCalendarSettings extends Model
 {
@@ -52,6 +56,7 @@ class UserCalendarSettings extends Model
         'project_status',
         'options',
         'project_management',
+        'show_event_creator',
         'repeating_events',
         'work_shifts',
         'description',
@@ -60,6 +65,8 @@ class UserCalendarSettings extends Model
         'event_name',
         'high_contrast',
         'expand_days',
+        'calendar_column_width',
+        'show_artist_names_as_title',
         'use_event_status_color',
         'use_main_category_color',
         'show_qualifications',
@@ -72,7 +79,8 @@ class UserCalendarSettings extends Model
         'show_shift_group_tag',
         'show_timeline',
         'show_only_not_fully_staffed_shifts',
-        'show_user_overview'
+        'show_user_overview',
+        'show_day_remarks'
     ];
 
     protected $casts = [
@@ -80,6 +88,7 @@ class UserCalendarSettings extends Model
         'project_status' => 'boolean',
         'options' => 'boolean',
         'project_management' => 'boolean',
+        'show_event_creator' => 'boolean',
         'repeating_events' => 'boolean',
         'work_shifts' => 'boolean',
         'description' => 'boolean',
@@ -87,6 +96,8 @@ class UserCalendarSettings extends Model
         'event_name' => 'boolean',
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
+        'calendar_column_width' => 'integer',
+        'show_artist_names_as_title' => 'boolean',
         'use_event_status_color' => 'boolean',
         'use_main_category_color' => 'boolean',
         'show_qualifications' => 'boolean',
@@ -100,6 +111,7 @@ class UserCalendarSettings extends Model
         'show_timeline' => 'boolean',
         'show_only_not_fully_staffed_shifts' => 'boolean',
         'show_user_overview' => 'boolean',
+        'show_day_remarks' => 'boolean',
     ];
 
     public function user(): BelongsTo

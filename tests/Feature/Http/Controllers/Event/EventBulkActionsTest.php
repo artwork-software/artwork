@@ -7,6 +7,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -17,6 +18,49 @@ final class EventBulkActionsTest extends FeatureTestCase
     {
         $this->deleteJson(route('event.bulk.multi-edit.delete'), [])
             ->assertUnauthorized();
+    }
+
+    #[Test]
+    public function requester_cannot_bulk_accept_own_room_request(): void
+    {
+        $requester = $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
+        $event = Event::factory()->create([
+            'user_id' => $requester->id,
+            'occupancy_option' => true,
+        ]);
+
+        $this->putJson(route('events.bulk-accept'), ['eventIds' => [$event->id]])
+            ->assertForbidden();
+
+        $this->assertTrue($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function room_admin_can_bulk_accept_pending_room_request(): void
+    {
+        $roomAdmin = User::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $room->users()->attach($roomAdmin->id, ['is_admin' => true, 'can_request' => false]);
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => true,
+        ]);
+        $this->actingAs($roomAdmin);
+
+        $this->put(route('events.bulk-accept'), ['eventIds' => [$event->id]])
+            ->assertRedirect();
+
+        $this->assertFalse($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function bulk_room_request_decision_requires_at_least_one_event(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->putJson(route('events.bulk-accept'), ['eventIds' => []])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('eventIds');
     }
 
     #[Test]
@@ -207,8 +251,15 @@ final class EventBulkActionsTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
         $project = Project::factory()->create();
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
 
-        $this->postJson(route('event.store.bulk.single', $project), ['event' => []])
+        $this->postJson(route('event.store.bulk.single', $project), [
+            'event' => [
+                'type' => ['id' => $eventType->id],
+                'room' => ['id' => $room->id],
+            ],
+        ])
             ->assertForbidden();
     }
 
@@ -217,8 +268,15 @@ final class EventBulkActionsTest extends FeatureTestCase
     {
         $this->actingAsUserWith(PermissionEnum::EVENT_REQUEST->value);
         $project = Project::factory()->create();
+        $eventType = EventType::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
 
-        $this->postJson(route('events.bulk.store', $project), ['events' => [[]]])
+        $this->postJson(route('events.bulk.store', $project), [
+            'events' => [[
+                'type' => ['id' => $eventType->id],
+                'room' => ['id' => $room->id],
+            ]],
+        ])
             ->assertForbidden();
     }
 

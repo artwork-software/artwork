@@ -30,16 +30,56 @@
                         <BaseUIButton
                             v-if="exportOptions"
                             :label="$t('Excel-Export')"
-                            @click="showExportModal = true"
+                            @click="openHeaderExport"
                             hide-icon
                         />
+                        <BaseUIButton
+                            v-if="exportOptions"
+                            :label="$t('Budget export')"
+                            @click="showBudgetExportModal = true"
+                            hide-icon
+                            white
+                        />
+                        <!-- Vergleichszeitraum -->
+                        <div class="w-full flex flex-wrap items-end gap-2 pt-1">
+                            <span class="pb-2 text-xs text-gray-500">{{ $t('Comparison') }}:</span>
+                            <div class="flex items-center gap-1.5 pb-1.5">
+                                <button
+                                    v-for="preset in comparePresets"
+                                    :key="preset.key"
+                                    type="button"
+                                    class="rounded-full border px-3 py-1 text-xs font-medium transition"
+                                    :class="comparePreset === preset.key
+                                        ? 'border-gray-700 bg-gray-700 text-white'
+                                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                                    @click="applyComparePreset(preset.key)"
+                                >
+                                    {{ $t(preset.label) }}
+                                </button>
+                            </div>
+                            <template v-if="comparePreset === 'free'">
+                                <BaseInput type="date" id="bi_dash_cmp_from" v-model="compareFrom" :label="$t('From')" class="w-40" />
+                                <BaseInput type="date" id="bi_dash_cmp_to" v-model="compareTo" :label="$t('To')" class="w-40" />
+                                <BaseUIButton :label="$t('Apply')" @click="reload(true)" :disabled="loading" hide-icon />
+                            </template>
+                            <span v-if="comparisonLabel" class="pb-2 text-xs text-gray-400">{{ comparisonLabel }}</span>
+                        </div>
                     </div>
                 </template>
             </ToolbarHeader>
 
+            <BiBudgetExportModal
+                v-if="showBudgetExportModal"
+                :default-date-from="dateFrom"
+                :default-date-to="dateTo"
+                @close="showBudgetExportModal = false"
+            />
+
             <BiDashboardExportModal
                 v-if="showExportModal && exportOptions"
                 :options="exportOptions"
+                :initial-columns="steeringExportPreset?.columns ?? null"
+                :initial-project-ids="steeringExportPreset?.projectIds ?? null"
                 :default-date-from="dateFrom"
                 :default-date-to="dateTo"
                 @close="showExportModal = false"
@@ -113,14 +153,35 @@
                         </p>
                         <p class="text-xl font-semibold text-gray-900 mt-1">{{ kpi.value }}</p>
                         <p v-if="kpi.delta !== null" :class="['text-xs mt-1', kpi.delta >= 0 ? 'text-emerald-600' : 'text-rose-600']">
-                            {{ kpi.delta >= 0 ? '▲' : '▼' }} {{ kpi.deltaText }} {{ $t('vs. previous year') }}
+                            {{ kpi.delta >= 0 ? '▲' : '▼' }} {{ kpi.deltaText }} {{ compareShortLabel }}
                         </p>
                         <p v-if="kpi.note" class="text-[10px] text-indigo-600 mt-0.5 leading-tight">{{ kpi.note }}</p>
+                        <p v-if="kpi.planLine" class="text-[10px] text-gray-500 mt-0.5 leading-tight">{{ kpi.planLine }}</p>
                     </div>
                 </div>
                 <p v-if="yoyExcludedCount > 0" class="text-xs text-gray-400 mt-1.5">
-                    {{ yoyExcludedCount }} {{ $t('project(s) with time-neutral total figures are not part of the year-over-year comparison.') }}
+                    {{ yoyExcludedCount }} {{ $t('project(s) with time-neutral total figures are not part of the period comparison.') }}
                 </p>
+
+                <!-- Quoten aus Besucher*innen-Kategorien (nur mit erfassten Kategoriewerten) -->
+                <div v-if="quotaTiles.length > 0" class="mt-3">
+                    <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+                        <div
+                            v-for="kpi in quotaTiles"
+                            :key="kpi.key"
+                            class="rounded-2xl border border-gray-100 bg-gray-50/70 p-4"
+                        >
+                            <p class="text-xs text-gray-500">{{ $t(kpi.label) }}</p>
+                            <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-800'">
+                                {{ kpi.value ?? '–' }}
+                            </p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1.5">
+                        {{ audienceQuotas.projects_with_categories }}
+                        {{ $t('project(s) with category breakdown in this period.') }}
+                    </p>
+                </div>
             </div>
 
             <!-- Monatliche Entwicklung -->
@@ -162,15 +223,27 @@
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <h4 class="text-sm font-medium text-gray-700">{{ $t('Internal steering (effort vs. output)') }}</h4>
-                    <button
-                        v-if="categoryFilter"
-                        type="button"
-                        class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
-                        @click="categoryFilter = null"
-                    >
-                        {{ $t('Category (Sector)') }}: {{ categoryFilter }}
-                        <IconX class="size-3.5" />
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button
+                            v-if="categoryFilter"
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                            @click="categoryFilter = null"
+                        >
+                            {{ $t('Category (Sector)') }}: {{ categoryFilter }}
+                            <IconX class="size-3.5" />
+                        </button>
+                        <!-- Zustandsübernahme: exportiert genau die sichtbare Tabelle -->
+                        <button
+                            v-if="exportOptions"
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+                            @click="openSteeringExport"
+                        >
+                            <IconFileExport class="size-3.5" />
+                            {{ $t('Export table') }}
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto max-h-[32rem] overflow-y-auto">
                     <table class="min-w-full text-sm">
@@ -224,9 +297,30 @@
                                 </td>
                                 <td class="px-3 py-2">{{ row.performances }}</td>
                                 <td class="px-3 py-2">{{ row.contracts_per_performance ?? '—' }}</td>
-                                <td class="px-3 py-2">{{ row.bookings_per_performance ?? '—' }}</td>
+                                <td v-if="sageApiEnabled" class="px-3 py-2">{{ row.bookings_per_performance ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ row.tasks_docs_per_production }}</td>
                                 <td class="px-3 py-2 font-medium">{{ row.effort_score }}</td>
+                                <template v-if="planSummary">
+                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_visitors !== null ? formatInt(row.plan_visitors) : '—' }}</td>
+                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_revenue !== null ? formatCurrency(row.plan_revenue) : '—' }}</td>
+                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_costs !== null ? formatCurrency(row.plan_costs) : '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        <span
+                                            v-if="row.costs_attainment !== null"
+                                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                                            :class="row.costs_attainment <= 100 ? 'bg-emerald-100 text-emerald-700' : (row.costs_attainment <= 120 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')"
+                                        >{{ formatPercent(row.costs_attainment) }}</span>
+                                        <span v-else class="text-gray-300">—</span>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <span
+                                            v-if="row.attainment !== null"
+                                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                                            :class="row.attainment >= 100 ? 'bg-emerald-100 text-emerald-700' : (row.attainment >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')"
+                                        >{{ formatPercent(row.attainment) }}</span>
+                                        <span v-else class="text-gray-300">—</span>
+                                    </td>
+                                </template>
                             </tr>
                             <tr v-if="sortedProjects.length === 0">
                                 <td :colspan="columns.length" class="px-3 py-8 text-center text-gray-400">{{ $t('No data available.') }}</td>
@@ -241,10 +335,11 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
-import { IconChartHistogram, IconX, IconPencil } from '@tabler/icons-vue';
+import { router, Link, usePage } from '@inertiajs/vue3';
+import { IconChartHistogram, IconX, IconPencil, IconFileExport } from '@tabler/icons-vue';
 import BiQuickEntryModal from '@/Pages/Projects/Components/BiComponents/BiQuickEntryModal.vue';
 import BiDashboardExportModal from '@/Pages/Projects/Components/BiComponents/BiDashboardExportModal.vue';
+import BiBudgetExportModal from '@/Pages/Projects/Components/BiComponents/BiBudgetExportModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
@@ -265,6 +360,7 @@ const props = defineProps({
 
 const exportOptions = computed(() => props.exportOptions);
 const showExportModal = ref(false);
+const showBudgetExportModal = ref(false);
 
 const firstProjectTabId = computed(() => props.firstProjectTabId);
 
@@ -288,6 +384,68 @@ const loading = ref(false);
 const initialQuery = new URLSearchParams(window.location.search);
 const activePreset = ref(initialQuery.get('date_from') || initialQuery.get('date_to') ? null : 'playing_time');
 
+// --- Vergleichszeitraum (Default: Vorjahr, serverseitig) ---
+
+const comparePresets = [
+    { key: 'previous_year', label: 'Previous year' },
+    { key: 'previous_period', label: 'Previous period' },
+    { key: 'free', label: 'Free choice' },
+    { key: 'none', label: 'No comparison' },
+];
+
+const comparePreset = ref(
+    initialQuery.get('compare') === 'none'
+        ? 'none'
+        : (initialQuery.get('compare_from') || initialQuery.get('compare_to') ? 'free' : 'previous_year')
+);
+const compareFrom = ref(initialQuery.get('compare_from') ?? '');
+const compareTo = ref(initialQuery.get('compare_to') ?? '');
+
+const applyComparePreset = (key) => {
+    comparePreset.value = key;
+    if (key === 'previous_period') {
+        // Gleiche Länge direkt vor dem aktuellen Zeitraum
+        const from = new Date((dateFrom.value || props.dashboard.range?.from) + 'T00:00:00');
+        const to = new Date((dateTo.value || props.dashboard.range?.to) + 'T00:00:00');
+        if (!isNaN(from) && !isNaN(to)) {
+            const lengthMs = to - from;
+            const cmpTo = new Date(from);
+            cmpTo.setDate(cmpTo.getDate() - 1);
+            const cmpFrom = new Date(cmpTo.getTime() - lengthMs);
+            compareFrom.value = isoDate(cmpFrom);
+            compareTo.value = isoDate(cmpTo);
+        }
+    }
+    if (key !== 'free') {
+        reload(true);
+    }
+};
+
+const compareParams = () => {
+    if (comparePreset.value === 'none') return { compare: 'none' };
+    if (comparePreset.value === 'previous_year') return {};
+    return {
+        compare_from: compareFrom.value || null,
+        compare_to: compareTo.value || null,
+    };
+};
+
+const formatRangeDate = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+};
+
+const comparisonRange = computed(() => props.dashboard.comparison_range ?? null);
+
+const comparisonLabel = computed(() => {
+    if (!comparisonRange.value) return null;
+    return `${t('vs.')} ${formatRangeDate(comparisonRange.value.from)} – ${formatRangeDate(comparisonRange.value.to)}`;
+});
+
+// Kurzform an den Delta-Chips: konkreter Zeitraum statt pauschal "Vorjahr"
+const compareShortLabel = computed(() => comparisonLabel.value ?? '');
+
 // Nach einem Reload die effektiv angewandte Spanne in die Inputs spiegeln
 watch(() => props.dashboard.range, (range) => {
     dateFrom.value = range?.from ?? '';
@@ -299,6 +457,37 @@ const showAllGaps = ref(false);
 const visibleGaps = computed(() => showAllGaps.value ? dataGaps.value : dataGaps.value.slice(0, gapLimit));
 
 const quickEntryGap = ref(null);
+
+// --- Export der Steuerungstabelle (sichtbarer Zustand → Modal-Vorbelegung) ---
+
+const steeringExportPreset = ref(null);
+
+const openHeaderExport = () => {
+    // Header-Button: Standard-Vorbelegung (kein Tabellen-Preset)
+    steeringExportPreset.value = null;
+    showExportModal.value = true;
+};
+
+const openSteeringExport = () => {
+    // Sichtbare Tabellenspalten auf Export-Spalten abgebildet
+    const exportColumns = [
+        'project_name',
+        'main_category',
+        'visitors',
+        'revenue',
+        'occupancy_rate',
+        'contracts_per_performance',
+        'bookings_per_performance',
+        'tasks_docs_per_production',
+        'effort_score',
+        ...(planSummary.value ? ['plan_visitors', 'plan_revenue', 'attainment'] : []),
+    ];
+    steeringExportPreset.value = {
+        columns: exportColumns,
+        projectIds: sortedProjects.value.map(row => row.project_id),
+    };
+    showExportModal.value = true;
+};
 
 const onQuickEntrySaved = () => {
     quickEntryGap.value = null;
@@ -394,6 +583,9 @@ const kpiTiles = computed(() => {
             deltaText: relDeltaText(visitorsDelta),
             note: kpis.value.visitors_estimated ? t('partly estimated from sold tickets') : null,
             tooltip: kpis.value.visitors_estimated ? t('Estimated from sold tickets') : null,
+            planLine: planSummary.value?.visitors_attainment !== null && planSummary.value?.visitors_attainment !== undefined
+                ? `${t('Plan')}: ${formatInt(planSummary.value.plan_visitors)} · ${formatPercent(planSummary.value.visitors_attainment)}`
+                : null,
         },
         {
             key: 'revenue',
@@ -401,7 +593,20 @@ const kpiTiles = computed(() => {
             value: formatCurrency(kpis.value.revenue),
             delta: revenueDelta,
             deltaText: relDeltaText(revenueDelta),
+            planLine: planSummary.value?.revenue_attainment !== null && planSummary.value?.revenue_attainment !== undefined
+                ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_revenue)} · ${formatPercent(planSummary.value.revenue_attainment)}`
+                : null,
         },
+        // Kosten-Kachel nur, wenn mindestens ein Projekt Kosten erfasst hat
+        ...(kpis.value.costs !== null && kpis.value.costs !== undefined ? [{
+            key: 'costs',
+            label: 'Costs',
+            value: formatCurrency(kpis.value.costs),
+            delta: null,
+            planLine: planSummary.value?.costs_attainment !== null && planSummary.value?.costs_attainment !== undefined
+                ? `${t('Plan')}: ${formatCurrency(planSummary.value.plan_costs)} · ${formatPercent(planSummary.value.costs_attainment)}`
+                : null,
+        }] : []),
         {
             key: 'occupancy',
             label: 'Occupancy rate',
@@ -425,6 +630,24 @@ const kpiTiles = computed(() => {
             deltaText: relDeltaText(performancesDelta),
         },
         { key: 'project_count', label: 'Productions', value: formatInt(kpis.value.project_count), delta: null },
+    ];
+});
+
+const audienceQuotas = computed(() => props.dashboard.audience_quotas ?? null);
+
+const quotaTiles = computed(() => {
+    const q = audienceQuotas.value;
+    if (!q) return [];
+
+    const pct = (v) => (v === null || v === undefined) ? null : formatPercent(v);
+
+    return [
+        { key: 'tickets_issued', label: 'Tickets issued', value: formatInt(q.tickets_issued) },
+        { key: 'free', label: 'Free tickets', value: q.free !== null ? formatInt(q.free) : null },
+        { key: 'free_tickets_rate', label: 'Free ticket rate', value: pct(q.free_tickets_rate) },
+        { key: 'reduced_tickets_rate', label: 'Reduced ticket rate', value: pct(q.reduced_tickets_rate) },
+        { key: 'paying_rate', label: 'Paying rate', value: pct(q.paying_rate) },
+        { key: 'reduced', label: 'Reduced tickets', value: q.reduced !== null ? formatInt(q.reduced) : null },
     ];
 });
 
@@ -455,7 +678,7 @@ const monthlyChart = computed(() => {
             },
             {
                 type: 'line',
-                label: `${t('Visitors')} (${t('previous year')})`,
+                label: `${t('Visitors')} (${t('comparison period')})`,
                 data: rows.map(r => r.prev_visitors),
                 borderColor: '#9ca3af',
                 backgroundColor: '#9ca3af',
@@ -646,7 +869,12 @@ const occupancyBarClass = (value) => {
     return 'bg-amber-500';
 };
 
-const columns = [
+const planSummary = computed(() => props.dashboard.plan_summary ?? null);
+
+// Sage-Bezug (Buchungs-Spalten) nur mit aktiver Schnittstelle zeigen
+const sageApiEnabled = !!usePage().props.sageApiEnabled;
+
+const columns = computed(() => [
     { key: 'project_name', label: 'Production' },
     { key: 'category', label: 'Category (Sector)' },
     { key: 'visitors', label: 'Visitors' },
@@ -654,10 +882,17 @@ const columns = [
     { key: 'occupancy', label: 'Occupancy rate' },
     { key: 'performances', label: 'Performances' },
     { key: 'contracts_per_performance', label: 'Contracts / performance' },
-    { key: 'bookings_per_performance', label: 'Bookings / performance' },
+    ...(sageApiEnabled ? [{ key: 'bookings_per_performance', label: 'Bookings / performance' }] : []),
     { key: 'tasks_docs_per_production', label: 'Tasks + documents' },
     { key: 'effort_score', label: 'Effort score' },
-];
+    ...(planSummary.value ? [
+        { key: 'plan_visitors', label: 'Plan visitors' },
+        { key: 'plan_revenue', label: 'Plan revenue' },
+        { key: 'plan_costs', label: 'Plan costs' },
+        { key: 'costs_attainment', label: 'Costs attainment' },
+        { key: 'attainment', label: 'Attainment' },
+    ] : []),
+]);
 
 const sortKey = ref('effort_score');
 const sortAsc = ref(false);
@@ -692,7 +927,11 @@ const reload = (fromPreset = false) => {
         activePreset.value = null;
     }
     loading.value = true;
-    router.get(route('bi.dashboard'), { date_from: dateFrom.value || null, date_to: dateTo.value || null }, {
+    router.get(route('bi.dashboard'), {
+        date_from: dateFrom.value || null,
+        date_to: dateTo.value || null,
+        ...compareParams(),
+    }, {
         preserveState: true,
         preserveScroll: true,
         onFinish: () => { loading.value = false; },

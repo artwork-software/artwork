@@ -39,6 +39,15 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
+// Tagesbemerkungen: nur User mit Sichtrecht (Admins via Gate::before)
+Broadcast::channel('day-remarks', function ($user) {
+    return $user instanceof \Artwork\Modules\User\Models\User
+        && (
+            $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_VIEW->value)
+            || $user->can(\Artwork\Modules\Permission\Enums\PermissionEnum::DAY_REMARKS_EDIT->value)
+        );
+});
+
 
 Broadcast::channel('room.{roomId}.day.{dayString}', function ($user, $roomId, $dayString): void {
 });

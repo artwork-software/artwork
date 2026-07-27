@@ -22,6 +22,7 @@ class WorkingHourService
     public function __construct(
         private UserRepository $userRepository,
         private WorkingHourCacheService $workingHourCacheService,
+        private ThreeMonthAverageTargetService $threeMonthAverageTargetService,
     ) {
     }
 
@@ -644,17 +645,16 @@ class WorkingHourService
                         $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
                     }
 
-                    // Compensation day off: reduce daily target
+                    // Holiday-related compensation day: reduce the target. In the optional
+                    // contract mode the reduction uses the previous three completed months.
                     $compValue = $compensationDays->get($dateStr, 0);
-                    if ($compValue >= 1.0) {
-                        // Full compensation day off: suppress entire daily target
-                        $offWorkNegativeAdjustment += ($dailyTargetMinutes - $dailyPlanned);
-                    } elseif ($compValue > 0) {
-                        // Half compensation day off: suppress proportional target
-                        $compReduction = (int) round($dailyTargetMinutes * $compValue);
-                        if ($dailyPlanned < $compReduction) {
-                            $offWorkNegativeAdjustment += ($compReduction - $dailyPlanned);
-                        }
+                    if ($compValue > 0 && $dailyPlanned === 0 && $user instanceof User) {
+                        $offWorkNegativeAdjustment += $this->threeMonthAverageTargetService->reductionMinutesFor(
+                            $user,
+                            $current,
+                            min(1.0, (float) $compValue),
+                            (int) $dailyTargetMinutes
+                        );
                     }
 
                     $current->addDay();

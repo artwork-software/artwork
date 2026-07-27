@@ -3,42 +3,12 @@
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div class="flex">
-                    <DatePickerComponent v-if="dateValue" :dateValueArray="dateValue"
-                                         :is_list_view="true" :is_daily_view="false"></DatePickerComponent>
-                    <div class="flex gap-x-1 mx-2">
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Today')"
-                            icon="IconCalendar"
-                            icon-size="h-5 w-5"
-                            @click="jumpToToday"
-                            classesButton="ui-button"
-                        />
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Current week')"
-                            icon="IconCalendarWeek"
-                            icon-size="h-5 w-5"
-                            @click="jumpToCurrentWeek"
-                            classesButton="ui-button"
-                        />
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Current month')"
-                            icon="IconCalendarMonth"
-                            icon-size="h-5 w-5"
-                            @click="jumpToCurrentMonth"
-                            classesButton="ui-button"
-                        />
-                    </div>
+                    <DateRangeControl
+                        v-if="dateValue"
+                        :date-value-array="dateValue"
+                        mode="shift-list"
+                    />
                     <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="$t('Previous time range')"
-                            icon="IconChevronLeftPipe"
-                            icon-size="h-7 w-7"
-                            @click="previousTimeRange"
-                        />
                         <ToolTipComponent
                             direction="bottom"
                             :tooltip-text="scrollBackTooltip"
@@ -95,13 +65,6 @@
                             icon-size="h-7 w-7"
                             @click="scrollToNextDay"
                         />
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="$t('Next time range')"
-                            icon="IconChevronRightPipe"
-                            icon-size="h-7 w-7"
-                            @click="nextTimeRange"
-                        />
                     </div>
                 </div>
             </div>
@@ -144,12 +107,7 @@ const {t: $t} = useI18n();
 import axios from 'axios';
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
-
-const DatePickerComponent = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
-    delay: 200,
-    timeout: 3000,
-})
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 
 const props = defineProps({
     dateValue: Array,
@@ -200,32 +158,6 @@ const updateDates = (startDate, endDate) => {
     });
 };
 
-const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    updateDates(today, today);
-};
-
-const jumpToCurrentWeek = () => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - daysToMonday);
-    const weekEnd = new Date(today);
-    weekEnd.setDate(today.getDate() + daysToSunday);
-
-    updateDates(weekStart.toISOString().slice(0, 10), weekEnd.toISOString().slice(0, 10));
-};
-
-const jumpToCurrentMonth = () => {
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    updateDates(monthStart.toISOString().slice(0, 10), monthEnd.toISOString().slice(0, 10));
-};
-
 const getDateRange = () => {
     if (!props.dateValue || !props.dateValue[0] || !props.dateValue[1]) return null;
     return {
@@ -251,18 +183,4 @@ const getStepSize = () => {
 
 const scrollToNextDay = () => addDaysToRange(getStepSize());
 const scrollToPreviousDay = () => addDaysToRange(-getStepSize());
-
-const previousTimeRange = () => {
-    const range = getDateRange();
-    if (!range) return;
-    const diff = Math.ceil((range.end - range.start) / (1000 * 60 * 60 * 24)) + 1;
-    addDaysToRange(-diff);
-};
-
-const nextTimeRange = () => {
-    const range = getDateRange();
-    if (!range) return;
-    const diff = Math.ceil((range.end - range.start) / (1000 * 60 * 60 * 24)) + 1;
-    addDaysToRange(diff);
-};
 </script>

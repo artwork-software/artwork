@@ -1,7 +1,7 @@
 <template>
     <div>
         <!-- Modus + Gesamtwert je Kennzahl -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
             <div
                 v-for="metric in metrics"
                 :key="metric.key"
@@ -11,14 +11,14 @@
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <span class="text-sm font-medium text-gray-900">{{ $t(metric.label) }}</span>
                     <SwitchDualLabel
-                        v-if="canEdit && !notApplicable[metric.key]"
+                        v-if="canEdit && !notApplicable[metric.key] && metric.switchRoute"
                         :model-value="modes[metric.key] === 'per_event'"
                         :left-label="$t('Total')"
                         :right-label="$t('Per event')"
                         size="sm"
                         @change="isPerEvent => onToggleChange(metric, isPerEvent)"
                     />
-                    <span v-else-if="!notApplicable[metric.key]" class="text-xs text-gray-400">
+                    <span v-else-if="!notApplicable[metric.key] && metric.switchRoute" class="text-xs text-gray-400">
                         {{ modes[metric.key] === 'per_event' ? $t('Per event') : $t('Total') }}
                     </span>
                 </div>
@@ -32,12 +32,12 @@
                     <BaseInput
                         v-if="modes[metric.key] === 'total'"
                         type="number"
-                        :id="'bi_total_' + metric.key"
+                        :id="'bi_total_' + scope + '_' + metric.key"
                         v-model.number="totals[metric.key]"
                         :label="$t(metric.totalLabel)"
                         :disabled="!canEdit"
                         :min="0"
-                        :step="metric.key === 'revenue' ? 0.01 : 1"
+                        :step="metric.key === 'revenue' || metric.key === 'costs' ? 0.01 : 1"
                         @change="saveTotal(metric)"
                     />
                     <p v-else class="text-xs text-gray-500">
@@ -50,6 +50,50 @@
                     >
                         ≈ {{ $t('Currently estimated from sold tickets') }}: {{ formatInt(metricsSummary.visitors) }}
                     </p>
+
+                    <!-- Umsatz-Vorschlag aus dem Budget-Modul (Quelle je Scope) -->
+                    <div
+                        v-if="metric.key === 'revenue' && revenueSuggestion !== null && modes.revenue === 'total'"
+                        class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs print:hidden"
+                    >
+                        <span class="text-gray-400">
+                            {{ scope === 'plan' ? $t('Income side of the project budget') : $t('Revenue from Sage bookings') }}:
+                            <span class="font-medium text-gray-600">{{ currencyFmt.format(revenueSuggestion) }}</span>
+                        </span>
+                        <button
+                            v-if="canEdit && Number(totals.revenue ?? NaN) !== revenueSuggestion"
+                            type="button"
+                            class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                            @click="adoptRevenueSuggestion"
+                        >
+                            {{ $t('Adopt value') }}
+                        </button>
+                        <span v-else-if="biData?.revenue_source" class="text-emerald-600">
+                            ✓ {{ $t('adopted') }}
+                        </span>
+                    </div>
+
+                    <!-- Kosten-Vorschlag aus dem Budget-Modul (Quelle je Scope) -->
+                    <div
+                        v-if="metric.key === 'costs' && costSuggestion !== null"
+                        class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs print:hidden"
+                    >
+                        <span class="text-gray-400">
+                            {{ scope === 'plan' ? $t('Expense side of the project budget') : $t('Costs from Sage bookings') }}:
+                            <span class="font-medium text-gray-600">{{ currencyFmt.format(costSuggestion) }}</span>
+                        </span>
+                        <button
+                            v-if="canEdit && Number(totals.costs ?? NaN) !== costSuggestion"
+                            type="button"
+                            class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                            @click="adoptCostSuggestion"
+                        >
+                            {{ $t('Adopt value') }}
+                        </button>
+                        <span v-else-if="biData?.costs_source" class="text-emerald-600">
+                            ✓ {{ $t('adopted') }}
+                        </span>
+                    </div>
                 </template>
 
                 <label
@@ -67,14 +111,92 @@
             </div>
         </div>
 
+        <!-- Optionale Aufschlüsselung nach Besucher*innen-Kategorien -->
+        <div
+            v-if="visibleCategories.length > 0 && !notApplicable.sold_tickets"
+            class="mb-4 rounded-lg border border-gray-200"
+        >
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-2 p-3 text-left"
+                @click="showCategories = !showCategories"
+            >
+                <span class="flex items-center gap-2 text-sm font-medium text-gray-900">
+                    <IconChevronDown class="size-4 transition-transform" :class="{ '-rotate-90': !showCategories }" />
+                    {{ $t('Break down by category') }}
+                    <span class="text-xs font-normal text-gray-400">({{ $t('optional') }})</span>
+                </span>
+                <span v-if="categoryTotalSum !== null" class="text-xs text-gray-500">
+                    {{ $t('Tickets issued') }}: {{ formatInt(categoryTotalSum) }}
+                </span>
+            </button>
+
+            <div v-show="showCategories" class="px-3 pb-3">
+                <template v-if="modes.sold_tickets === 'total'">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div v-for="category in visibleCategories" :key="category.id">
+                            <BaseInput
+                                type="number"
+                                :id="'bi_cat_' + scope + '_' + category.id"
+                                v-model.number="categoryTotals[category.id]"
+                                :label="category.name"
+                                :disabled="!canEdit || !category.is_active"
+                                :min="0"
+                                :step="1"
+                                @change="saveCategoryTotal(category)"
+                            />
+                            <p class="mt-0.5 text-[11px] text-gray-400">
+                                {{ pricingTypeLabel(category.pricing_type) }}
+                                <span v-if="!category.is_active"> · {{ $t('deactivated') }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Abgleich: Direktwert vs. Summe der zahlenden Kategorien -->
+                    <div
+                        v-if="soldTicketsMismatch"
+                        class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 print:hidden"
+                    >
+                        <span>
+                            {{ $t('Sum of paying categories') }} ({{ formatInt(paidCategorySum) }})
+                            ≠ {{ $t('Total sold tickets') }} ({{ formatInt(totals.sold_tickets) }})
+                        </span>
+                        <button
+                            v-if="canEdit"
+                            type="button"
+                            class="rounded-md border border-amber-300 bg-white px-2 py-0.5 font-medium text-amber-800 hover:bg-amber-100 transition"
+                            @click="adoptPaidCategorySum"
+                        >
+                            {{ $t('Adopt sum') }}
+                        </button>
+                    </div>
+                </template>
+                <template v-else>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none print:hidden">
+                        <input
+                            type="checkbox"
+                            class="input-checklist !h-3.5 !w-3.5"
+                            v-model="showCategoryColumns"
+                        />
+                        {{ $t('Show category columns in the events table') }}
+                    </label>
+                    <p class="mt-1 text-xs text-gray-400">
+                        {{ $t('Categories follow the per-event mode of sold tickets and are recorded in the table below.') }}
+                    </p>
+                </template>
+            </div>
+        </div>
+
         <!-- Eine Tabelle für alle Pro-Termin-Kennzahlen -->
         <BiEventMetricsTable
-            v-if="perEventFields.length > 0"
+            v-if="tableFields.length > 0"
             :event-data="eventData"
             :project-events="projectEvents"
             :can-edit="canEdit"
             :project-id="projectId"
-            :fields="perEventFields"
+            :fields="tableFields"
+            :category-values="audienceCategoryValues"
+            :scope="scope"
             :show-occupancy="showOccupancy"
             :effective-capacities="effectiveCapacities"
             @updated="$emit('updated')"
@@ -92,6 +214,7 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
+import { IconChevronDown } from '@tabler/icons-vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import SwitchDualLabel from '@/Artwork/Toggles/SwitchDualLabel.vue';
 import BiEventMetricsTable from '@/Pages/Projects/Components/BiComponents/BiEventMetricsTable.vue';
@@ -111,6 +234,12 @@ const props = defineProps({
     projectRooms: { type: Array, default: () => [] },
     canEdit: { type: Boolean, default: false },
     projectId: { type: Number, required: true },
+    audienceCategories: { type: Array, default: () => [] },
+    audienceCategoryValues: { type: Array, default: () => [] },
+    // Plan/Ist-Dimension: bestimmt Datensatz für Anzeige und Speichern
+    scope: { type: String, default: 'actual' },
+    // Umsatz-Vorschläge aus dem Budget-Modul ({plan, actual})
+    budgetSuggestions: { type: Object, default: null },
 });
 
 const emit = defineEmits(['updated']);
@@ -143,11 +272,21 @@ const metrics = [
         naField: 'revenue_not_applicable',
         switchRoute: 'projects.bi.switch-revenue-mode',
     },
+    {
+        // Kosten werden nur als Projekt-Gesamtwert erfasst (kein per-Event-Modus)
+        key: 'costs',
+        label: 'Costs',
+        totalLabel: 'Total costs',
+        modeField: null,
+        totalField: 'costs_total',
+        naField: 'costs_not_applicable',
+        switchRoute: null,
+    },
 ];
 
-const modes = reactive({ visitors: 'total', sold_tickets: 'total', revenue: 'total' });
-const totals = reactive({ visitors: null, sold_tickets: null, revenue: null });
-const notApplicable = reactive({ visitors: false, sold_tickets: false, revenue: false });
+const modes = reactive({ visitors: 'total', sold_tickets: 'total', revenue: 'total', costs: 'total' });
+const totals = reactive({ visitors: null, sold_tickets: null, revenue: null, costs: null });
+const notApplicable = reactive({ visitors: false, sold_tickets: false, revenue: false, costs: false });
 
 const showModeModal = ref(false);
 const pendingSwitch = ref(null);
@@ -155,10 +294,10 @@ const pendingSwitch = ref(null);
 watch(() => props.biData, (val) => {
     if (!val) return;
     metrics.forEach((metric) => {
-        modes[metric.key] = val[metric.modeField] ?? 'total';
+        modes[metric.key] = metric.modeField ? (val[metric.modeField] ?? 'total') : 'total';
         // Fokussierte Eingabe nicht überschreiben: der Refetch nach einem Save
         // (auch aus anderen Sektionen) darf laufendes Tippen nicht zurücksetzen
-        const input = document.getElementById('bi_total_' + metric.key);
+        const input = document.getElementById('bi_total_' + props.scope + '_' + metric.key);
         if (!input || document.activeElement !== input) {
             totals[metric.key] = val[metric.totalField];
         }
@@ -171,6 +310,151 @@ const visitorsEstimated = computed(() => !!props.metricsSummary?.visitors_estima
 const perEventFields = computed(() => metrics
     .filter(metric => modes[metric.key] === 'per_event' && !notApplicable[metric.key])
     .map(metric => ({ key: metric.key, label: metric.label })));
+
+// --- Besucher*innen-Kategorien (optionale Aufschlüsselung) ---
+
+// Aktive Kategorien plus deaktivierte, für die noch Werte existieren (read-only)
+const visibleCategories = computed(() => props.audienceCategories.filter((category) => {
+    if (category.is_active) return true;
+    return props.audienceCategoryValues.some(
+        v => v.bi_audience_category_id === category.id && v.quantity !== null
+    );
+}));
+
+const showCategories = ref(false);
+const showCategoryColumns = ref(localStorage.getItem('bi_show_category_columns') === '1');
+watch(showCategoryColumns, v => localStorage.setItem('bi_show_category_columns', v ? '1' : '0'));
+
+// Gesamtwerte je Kategorie (event_id null) — gleiche Fokus-Schutz-Mechanik wie totals
+const categoryTotals = reactive({});
+watch(() => props.audienceCategoryValues, (values) => {
+    const totalsFromServer = new Map(
+        (values ?? [])
+            .filter(v => v.event_id === null || v.event_id === undefined)
+            .map(v => [v.bi_audience_category_id, v.quantity])
+    );
+    props.audienceCategories.forEach((category) => {
+        const input = document.getElementById('bi_cat_' + props.scope + '_' + category.id);
+        if (!input || document.activeElement !== input) {
+            categoryTotals[category.id] = totalsFromServer.get(category.id) ?? null;
+        }
+    });
+    // Aufschlüsselung initial aufklappen, wenn bereits Werte erfasst sind
+    if (totalsFromServer.size > 0 || (values ?? []).length > 0) {
+        showCategories.value = true;
+    }
+}, { immediate: true });
+
+const recordedCategoryTotals = computed(() => props.audienceCategories
+    .map(category => ({ category, value: categoryTotals[category.id] }))
+    .filter(({ value }) => value !== null && value !== undefined && value !== ''));
+
+const categoryTotalSum = computed(() => {
+    if (modes.sold_tickets !== 'total' || recordedCategoryTotals.value.length === 0) return null;
+    return recordedCategoryTotals.value.reduce((sum, { value }) => sum + Number(value), 0);
+});
+
+const paidCategorySum = computed(() => {
+    const paid = recordedCategoryTotals.value.filter(({ category }) => category.pricing_type !== 'free');
+    if (paid.length === 0) return null;
+    return paid.reduce((sum, { value }) => sum + Number(value), 0);
+});
+
+const soldTicketsMismatch = computed(() =>
+    modes.sold_tickets === 'total'
+    && paidCategorySum.value !== null
+    && totals.sold_tickets !== null && totals.sold_tickets !== undefined && totals.sold_tickets !== ''
+    && Number(totals.sold_tickets) !== paidCategorySum.value
+);
+
+const pricingTypeLabel = (type) => ({
+    full: t('Full price'),
+    reduced: t('Reduced'),
+    free: t('Free'),
+}[type] ?? type);
+
+const saveCategoryTotal = async (category) => {
+    const raw = categoryTotals[category.id];
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.upsert-category-values', props.projectId), {
+            scope: props.scope,
+            values: [{
+                bi_audience_category_id: category.id,
+                event_id: null,
+                quantity: raw === '' || raw === null || raw === undefined ? null : Number(raw),
+            }],
+        })
+    );
+    if (ok) {
+        emit('updated');
+    }
+};
+
+const adoptPaidCategorySum = async () => {
+    totals.sold_tickets = paidCategorySum.value;
+    await saveTotal(metrics.find(m => m.key === 'sold_tickets'));
+};
+
+// --- Umsatz-Vorschlag aus dem Budget-Modul ---
+
+const revenueSuggestion = computed(() => {
+    const suggestion = props.scope === 'plan'
+        ? props.budgetSuggestions?.plan
+        : props.budgetSuggestions?.actual;
+    return suggestion ?? null;
+});
+
+// --- Kosten-Vorschlag aus dem Budget-Modul ---
+
+const costSuggestion = computed(() => {
+    const suggestion = props.scope === 'plan'
+        ? props.budgetSuggestions?.costs_plan
+        : props.budgetSuggestions?.costs_actual;
+    return suggestion ?? null;
+});
+
+const adoptCostSuggestion = async () => {
+    totals.costs = costSuggestion.value;
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-data', props.projectId), {
+            costs_total: costSuggestion.value,
+            costs_source: props.scope === 'plan' ? 'budget_expense' : 'sage',
+            scope: props.scope,
+        })
+    );
+    if (ok) {
+        emit('updated');
+    }
+};
+
+const adoptRevenueSuggestion = async () => {
+    totals.revenue = revenueSuggestion.value;
+    const ok = await biSave.run(
+        () => axios.put(route('projects.bi.update-data', props.projectId), {
+            revenue_total: revenueSuggestion.value,
+            revenue_source: props.scope === 'plan' ? 'budget_income' : 'sage',
+            scope: props.scope,
+        })
+    );
+    if (ok) {
+        emit('updated');
+    }
+};
+
+// Kategorie-Spalten in der Termin-Tabelle (nur im Pro-Termin-Modus der Tickets)
+const categoryFields = computed(() => {
+    if (modes.sold_tickets !== 'per_event' || !showCategoryColumns.value) return [];
+    return props.audienceCategories
+        .filter(category => category.is_active)
+        .map(category => ({
+            key: 'cat_' + category.id,
+            label: category.name,
+            translate: false,
+            categoryId: category.id,
+        }));
+});
+
+const tableFields = computed(() => [...perEventFields.value, ...categoryFields.value]);
 
 const showOccupancy = computed(() => modes.sold_tickets === 'per_event' && !notApplicable.sold_tickets);
 
@@ -226,7 +510,7 @@ const confirmModeSwitch = async () => {
     const previousMode = modes[metric.key];
     modes[metric.key] = mode;
     const ok = await biSave.run(
-        () => axios.put(route(metric.switchRoute, props.projectId), { mode })
+        () => axios.put(route(metric.switchRoute, props.projectId), { mode, scope: props.scope })
     );
     if (ok) {
         emit('updated');
@@ -241,6 +525,7 @@ const toggleNotApplicable = async (metric, value) => {
     const ok = await biSave.run(
         () => axios.put(route('projects.bi.update-data', props.projectId), {
             [metric.naField]: value,
+            scope: props.scope,
         })
     );
     if (ok) {
@@ -254,6 +539,7 @@ const saveTotal = async (metric) => {
     const ok = await biSave.run(
         () => axios.put(route('projects.bi.update-data', props.projectId), {
             [metric.totalField]: totals[metric.key] === '' ? null : totals[metric.key],
+            scope: props.scope,
         })
     );
     if (ok) {

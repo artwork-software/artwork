@@ -39,6 +39,13 @@ return [
             'Projektzuordnung von :workerName für :projectName durch Frei-Eintrag aufgehoben',
         'dissolved_by_reschedule' =>
             'Projektzuordnung von :workerName für :projectName durch Terminverschiebung aufgehoben',
+        'person_assigned' => 'Neue Projektzuordnung: :projectName',
+        'person_assigned_bundled' => ':count neue Projektzuordnungen',
+        'person_removed' => 'Projektzuordnung entfernt: :projectName',
+        'person_removed_bundled' => ':count Projektzuordnungen entfernt',
+        'person_wish_accepted' => 'Projektwunsch übernommen: :projectName',
+        'person_wish_accepted_bundled' => ':count Projektwünsche übernommen',
+        'removed_reason_reschedule' => 'Terminverschiebung',
     ],
     'shift' => [
         'without_event' => 'Schicht ohne Termin',

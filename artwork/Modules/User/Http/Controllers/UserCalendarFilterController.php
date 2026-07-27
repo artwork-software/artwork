@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\User\Enums\UserFilterTypes;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,8 @@ class UserCalendarFilterController extends Controller
 
     public function update(Request $request, User $user): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $roomIds = $request->collect('rooms')->isNotEmpty() ? $request->collect('rooms') : null;
         $areaIds = $request->collect('areas')->isNotEmpty() ? $request->collect('areas') : null;
         $eventTypes = $request->collect('event_types')->isNotEmpty() ? $request->collect('event_types') : null;
@@ -51,10 +54,22 @@ class UserCalendarFilterController extends Controller
         ]);
     }
 
-    public function updateDates(Request $request, User $user): void
+    public function updateDates(Request $request, User $user, UserService $userService): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $isPlanning = $request->get('isPlanning', false);
         $isDailyView = $request->get('isDailyView', false);
+
+        $startDate = Carbon::parse($request->start_date)->format('Y-m-d');
+        $endDate = Carbon::parse($request->end_date)->format('Y-m-d');
+
+        // Geteilter Zeitraum aktiv: Navigation in einer Ansicht gilt für alle
+        if ($user->share_calendar_date) {
+            $userService->syncSharedCalendarFilterDates($user, $startDate, $endDate);
+
+            return;
+        }
 
         if ($isPlanning) {
             $filterType = $isDailyView
@@ -71,14 +86,16 @@ class UserCalendarFilterController extends Controller
                 'filter_type' => $filterType
             ],
             [
-                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+                'start_date' => $startDate,
+                'end_date' => $endDate
             ]
         );
     }
 
     public function singleValueUpdate(User $user, Request $request): RedirectResponse
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->calendar_filter()->update([
             $request->key => $request->value
         ]);
@@ -92,6 +109,8 @@ class UserCalendarFilterController extends Controller
 
     public function reset(User $user): RedirectResponse
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->calendar_filter()->update([
             'adjoining_not_loud' => false,
             'adjoining_no_audience' => false,

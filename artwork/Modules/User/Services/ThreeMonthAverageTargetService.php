@@ -7,7 +7,13 @@ use Carbon\Carbon;
 
 class ThreeMonthAverageTargetService
 {
-    /** @var array<string, int> */
+    /**
+     * null = keine gearbeiteten Tage im Referenzfenster. Der Fallback (das
+     * Tagessoll des jeweils angefragten Wochentags) darf NICHT unter dem
+     * Zeitraum-Key gecacht werden — er unterscheidet sich pro Aufruf.
+     *
+     * @var array<string, int|null>
+     */
     private array $averageCache = [];
 
     public function averageMinutesFor(User $user, Carbon $targetDate, int $fallbackMinutes): int
@@ -17,7 +23,7 @@ class ThreeMonthAverageTargetService
         $cacheKey = implode(':', [$user->id, $referenceStart->toDateString(), $referenceEnd->toDateString()]);
 
         if (array_key_exists($cacheKey, $this->averageCache)) {
-            return $this->averageCache[$cacheKey];
+            return $this->averageCache[$cacheKey] ?? max(0, $fallbackMinutes);
         }
 
         $excludedDates = $user->vacations()
@@ -74,11 +80,11 @@ class ThreeMonthAverageTargetService
 
         $workedDays = $workedDays->filter(static fn (int $minutes): bool => $minutes > 0);
 
-        $average = $workedDays->isEmpty()
-            ? $fallbackMinutes
-            : (int) round($workedDays->average());
+        $this->averageCache[$cacheKey] = $workedDays->isEmpty()
+            ? null
+            : max(0, (int) round($workedDays->average()));
 
-        return $this->averageCache[$cacheKey] = max(0, $average);
+        return $this->averageCache[$cacheKey] ?? max(0, $fallbackMinutes);
     }
 
     public function reductionMinutesFor(

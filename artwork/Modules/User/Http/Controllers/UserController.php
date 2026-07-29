@@ -746,16 +746,14 @@ class UserController extends Controller
                 $dailyTargetMinutes = $patternTime->hour * 60 + $patternTime->minute;
             }
 
-            $hasRecordedWork = (isset($bookings[$dateKey]) && $bookings[$dateKey]->sum('worked_hours') > 0)
-                || (int) $individualTimes->get($dateKey, 0) > 0;
-
             $compensationInfo = null;
             if (isset($compensationDayOffs[$dateKey])) {
                 $dayCompDays = $compensationDayOffs[$dateKey];
                 // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
                 // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> Minus-Delta = Überstundenabbau.
+                // Die Senkung gilt unabhängig von geleisteter Arbeit (Arbeit = Plus-Stunden).
                 $holidayCompValue = (float) $dayCompDays->where('for_holiday', true)->sum('value');
-                if ($holidayCompValue > 0 && !$hasRecordedWork) {
+                if ($holidayCompValue > 0) {
                     $dailyTargetMinutes = max(0, $dailyTargetMinutes - $this->threeMonthAverageTargetService
                         ->reductionMinutesFor(
                             $user,

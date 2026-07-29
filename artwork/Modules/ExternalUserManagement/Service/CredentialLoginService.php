@@ -26,7 +26,9 @@ class CredentialLoginService
     public function __construct(
         private readonly ExternalUserSourceRepository $sourceRepository,
         private readonly LdapService $ldapService,
-        private readonly IdentityResolutionService $identityResolutionService
+        private readonly IdentityResolutionService $identityResolutionService,
+        private readonly ExternalUserService $externalUserService,
+        private readonly ExternalUserGroupMappingService $groupMappingService
     ) {
     }
 
@@ -114,7 +116,7 @@ class CredentialLoginService
             }
 
             try {
-                return $this->identityResolutionService->resolveAndLink(
+                $user = $this->identityResolutionService->resolveAndLink(
                     $source,
                     (string) $profile['identifier'],
                     $resolvedEmail,
@@ -124,6 +126,10 @@ class CredentialLoginService
                         'last_name' => $profile['last_name'] ?? '',
                     ]
                 );
+
+                $this->syncGroupsAfterLogin($source, $user, $profile);
+
+                return $user;
             } catch (AdminLockoutException $e) {
                 // Der letzte lokale Admin darf nicht ans Directory gebunden werden.
                 // Das Konto muss lokal bleiben → lokalen Passwort-Fallback zulassen,
@@ -148,6 +154,34 @@ class CredentialLoginService
         }
 
         return null;
+    }
+
+    /**
+     * Wendet die Gruppen-Mappings direkt beim interaktiven Login an, statt auf den
+     * nächsten 30-Minuten-Sync zu warten – die Gruppen liegen im Bind-Profil bereits
+     * vor. Ein Fehler hier darf den bereits authentifizierten Login nicht abbrechen.
+     *
+     * @param array<string, mixed> $profile
+     */
+    private function syncGroupsAfterLogin(ExternalUserSource $source, User $user, array $profile): void
+    {
+        try {
+            $this->externalUserService->findOrCreateExternalUser(
+                $source,
+                (string) $profile['identifier'],
+                $profile['meta_data'] ?? [],
+                $user
+            );
+
+            $this->externalUserService->syncUserGroups(
+                $source,
+                $user,
+                $profile['groups'] ?? [],
+                $this->groupMappingService
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

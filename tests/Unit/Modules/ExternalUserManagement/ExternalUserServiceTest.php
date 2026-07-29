@@ -242,7 +242,7 @@ final class ExternalUserServiceTest extends TestCase
             'import_notification_sent_at' => now(),
         ]);
 
-        (new ExternalUserImported($user, 'token', $externalUser))
+        (new ExternalUserImported($user, $externalUser))
             ->failed(new RuntimeException('Mail transport failed'));
 
         $this->assertNull($externalUser->fresh()->import_notification_sent_at);

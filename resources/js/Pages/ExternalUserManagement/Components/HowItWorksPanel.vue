@@ -101,6 +101,12 @@
                     <li>
                         {{ $t('OIDC: after saving a connection artwork shows the redirect URI in the dialog – it has to be registered with the provider exactly as shown, otherwise the provider rejects the login.') }}
                     </li>
+                    <li>
+                        {{ $t('Deactivating or deleting a connection: linked accounts have no local password, so these users cannot sign in anymore until the connection is reactivated. The accounts themselves are kept. In an emergency, the break-glass command restores local password login for individual accounts.') }}
+                    </li>
+                    <li>
+                        {{ $t('Stored passwords and client secrets are never displayed again for security reasons – every edit of a connection requires re-entering them.') }}
+                    </li>
                 </ul>
             </div>
         </div>

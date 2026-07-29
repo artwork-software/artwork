@@ -37,11 +37,11 @@ class MailService
         );
     }
 
-    public function sendExternalUserImported(User $user, string $token, ExternalUser $externalUser): void
+    public function sendExternalUserImported(User $user, ExternalUser $externalUser): void
     {
         $this->mailManager
             ->to($user->email)
-            ->queue((new ExternalUserImported($user, $token, $externalUser))->afterCommit());
+            ->queue((new ExternalUserImported($user, $externalUser))->afterCommit());
     }
 
     final public function mailTo(string $email, Mailable $mailable): void

@@ -5638,5 +5638,17 @@
     "Unable to load budget data.": "Unable to load budget data.",
     "Cell not found. Please refresh the page.": "Cell not found. Please refresh the page.",
     "The value could not be saved. Please try again.": "The value could not be saved. Please try again.",
-    "Delete comment": "Delete comment"
+    "Delete comment": "Delete comment",
+    "LDAP synchronization was queued.": "LDAP synchronization was queued.",
+    "LDAP synchronization is running.": "LDAP synchronization is running.",
+    "LDAP synchronization completed.": "LDAP synchronization completed.",
+    "LDAP synchronization failed. Please check the logs.": "LDAP synchronization failed. Please check the logs.",
+    "LDAP synchronization was cancelled because the source is no longer active.": "LDAP synchronization was cancelled because the source is no longer active.",
+    "Another sync is still running. The queued sync will retry.": "Another sync is still running. The queued sync will retry.",
+    "No synchronization is running.": "No synchronization is running.",
+    "An active identity provider requires at least one allowed email domain.": "An active identity provider requires at least one allowed email domain.",
+    "For security reasons the stored password is never displayed – every edit of this connection requires re-entering it.": "For security reasons the stored password is never displayed – every edit of this connection requires re-entering it.",
+    "For security reasons the stored client secret is never displayed – every edit of this connection requires re-entering it.": "For security reasons the stored client secret is never displayed – every edit of this connection requires re-entering it.",
+    "Deactivating or deleting a connection: linked accounts have no local password, so these users cannot sign in anymore until the connection is reactivated. The accounts themselves are kept. In an emergency, the break-glass command restores local password login for individual accounts.": "Deactivating or deleting a connection: linked accounts have no local password, so these users cannot sign in anymore until the connection is reactivated. The accounts themselves are kept. In an emergency, the break-glass command restores local password login for individual accounts.",
+    "Stored passwords and client secrets are never displayed again for security reasons – every edit of a connection requires re-entering them.": "Stored passwords and client secrets are never displayed again for security reasons – every edit of a connection requires re-entering them."
 }

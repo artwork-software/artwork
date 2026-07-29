@@ -5,7 +5,6 @@ namespace Artwork\Modules\ExternalUserManagement\Service;
 use Artwork\Core\Mail\MailService;
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
 
 class ExternalUserSyncService
 {
@@ -93,16 +92,16 @@ class ExternalUserSyncService
 
             $this->externalUserService->syncUserGroups($source, $user, $groups, $this->groupMappingService);
 
-            // Beim ersten Import einmalig eine Willkommens-/Passwort-Festlegen-Mail senden.
+            // Beim ersten Import einmalig eine Willkommens-Mail senden (Anmeldung mit den
+            // Verzeichnis-Zugangsdaten – kein Passwort-Reset, der Account ist IdP-gebunden).
             // Das Flag wird atomar mit dem Import gesetzt; der Versand erfolgt erst nach
             // erfolgreichem Commit, damit die Mail bei einem Rollback nicht rausgeht.
             if ($externalUser->import_notification_sent_at === null && !empty($user->email)) {
-                $token = Password::broker()->createToken($user);
                 $externalUser->forceFill(['import_notification_sent_at' => now()])->save();
 
-                DB::afterCommit(function () use ($externalUser, $user, $token): void {
+                DB::afterCommit(function () use ($externalUser, $user): void {
                     try {
-                        $this->mailService->sendExternalUserImported($user, $token, $externalUser);
+                        $this->mailService->sendExternalUserImported($user, $externalUser);
                     } catch (\Throwable $e) {
                         // Mail-Fehler (z. B. SMTP down) darf den Sync nicht abbrechen und die
                         // Willkommens-Mail nicht dauerhaft verlieren: Flag zurücksetzen,

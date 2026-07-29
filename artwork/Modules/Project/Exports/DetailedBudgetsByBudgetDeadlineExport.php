@@ -30,7 +30,35 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
         private readonly string $endBudgetDeadline,
         private readonly bool $accountManagementGlobal = false,
         private readonly ?Collection $budgetColumnSettings = null,
+        private readonly ?array $desiredColumns = null,
     ) {
+    }
+
+    /**
+     * @return array<int, string> alle wählbaren Spalten-Keys (inkl. der nur bei
+     * globaler Kontoverwaltung sichtbaren Namensspalten)
+     */
+    public static function availableColumnKeys(): array
+    {
+        return [
+            'premiere',
+            'project_name',
+            'artist_or_group',
+            'project_state',
+            'cost_center',
+            'kst',
+            'kst_name',
+            'real_account',
+            'kto_name',
+            'position',
+            'forecast_costs',
+            'forecast_earnings',
+            'forecast_outcome',
+            'sage',
+            'sage_revenue',
+            'sage_result',
+            'source',
+        ];
     }
 
     public function view(): View
@@ -43,10 +71,56 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
         }
 
         return view('exports.detailedProjectBudgetsByBudgetDeadline', [
+            'columns' => $this->getColumns($columnNames),
             'rows' => $this->getRows(),
-            'accountManagementGlobal' => $this->accountManagementGlobal,
-            'columnNames' => $columnNames,
         ]);
+    }
+
+    /**
+     * @param array<int, string> $columnNames
+     * @return array<string, string> Spalten-Key => Excel-Überschrift
+     */
+    private function getColumns(array $columnNames): array
+    {
+        $columns = [
+            'premiere' => 'Premiere',
+            'project_name' => 'Projektname Originalsprache',
+            'artist_or_group' => 'Künstler*innen',
+            'project_state' => 'Projektstatus',
+            'cost_center' => 'KTR',
+            'kst' => $columnNames[1] ?? 'Kst',
+        ];
+
+        if ($this->accountManagementGlobal) {
+            $columns['kst_name'] = ($columnNames[1] ?? 'Kst') . ' Name';
+        }
+
+        $columns['real_account'] = $columnNames[0] ?? 'Sachkonto';
+
+        if ($this->accountManagementGlobal) {
+            $columns['kto_name'] = ($columnNames[0] ?? 'Sachkonto') . ' Name';
+            $columns['position'] = $columnNames[2] ?? 'Position';
+        }
+
+        $columns += [
+            'forecast_costs' => 'Vorschau Kosten',
+            'forecast_earnings' => 'Vorschau Erlöse',
+            'forecast_outcome' => 'Vorschau Resultat',
+            'sage' => 'Ist - Sage',
+            'sage_revenue' => 'Ist Erlöse',
+            'sage_result' => 'Ist Resultat',
+            'source' => 'Quelle (Name der Spalte im Budget)',
+        ];
+
+        if ($this->desiredColumns !== null) {
+            $columns = array_filter(
+                $columns,
+                fn(string $key) => in_array($key, $this->desiredColumns, true),
+                ARRAY_FILTER_USE_KEY
+            );
+        }
+
+        return $columns;
     }
 
     /**
@@ -111,16 +185,16 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                     'forecast_costs' => $noDataAvailable,
                     'forecast_earnings' => $noDataAvailable,
                     'forecast_outcome' => $noDataAvailable,
+                    'source' => $noDataAvailable,
                 ];
-                $rows[] = $row;
 
                 if ($sageColumn !== null) {
-                    $rows['sage'] = $noDataAvailable;
-                    $rows['sage_revenue'] = $noDataAvailable;
-                    $rows['sage_result'] = $noDataAvailable;
+                    $row['sage'] = $noDataAvailable;
+                    $row['sage_revenue'] = $noDataAvailable;
+                    $row['sage_result'] = $noDataAvailable;
                 }
 
-                $rows['source'] = $noDataAvailable;
+                $rows[] = $row;
                 continue;
             }
 
@@ -159,6 +233,14 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
         $kstColumnId = $sortedColumns->get(1)?->getAttribute('id');
         $positionColumnId = $sortedColumns->get(2)?->getAttribute('id');
 
+        // Die budgetrelevante Spalte liefert die Vorschau-Werte - identisch zur
+        // aggregierten Export-Variante. Fallback für Altbestand ohne Flag:
+        // letzte Wertspalte (type "empty").
+        $forecastColumnId = (
+            $tableColumns->first(fn(Column $column) => $column->getAttribute('relevant_for_project_groups'))
+                ?? $tableColumns->filter(fn(Column $column) => $column->getAttribute('type') === 'empty')->last()
+        )?->getAttribute('id');
+
         $rows = [];
         foreach ($projectBudgetTable->getAttribute('mainPositions') as $mainPosition) {
             [
@@ -167,17 +249,11 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
             ] = $this->getIsCostMainPositionAndSubPositionRows($mainPosition);
 
             foreach ($subPositionRows as $subPositionRow) {
-                $lastColumnNotSageId = $tableColumns->last(
-                    function (Column $column) {
-                        return $column->getAttribute('type') !== 'sage';
-                    }
-                )->getAttribute('id');
-
                 $forecastCellValue = (float) $subPositionRow->getAttribute('cells')->first(
                     fn(ColumnCell $columnCell) => (
-                        $columnCell->getAttribute('column_id') === $lastColumnNotSageId
+                        $columnCell->getAttribute('column_id') === $forecastColumnId
                     )
-                )->getAttribute('value');
+                )?->getAttribute('value');
 
                 $kstValue = $kstColumnId ? $subPositionRow->getAttribute('cells')->first(
                     fn (ColumnCell $columnCell) => (

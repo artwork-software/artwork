@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Services;
 
+use App\Settings\ShiftSettings;
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -12,6 +13,7 @@ use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Inventory\Services\ProductBasketService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Enum\ProjectTabComponentEnum;
 use Artwork\Modules\Project\Services\ProjectTabService;
@@ -55,6 +57,7 @@ class UserService
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTabService $projectTabService,
+        private readonly ShiftSettings $shiftSettings,
         protected ProductBasketService $productBasketService,
     ) {
     }
@@ -265,7 +268,8 @@ class UserService
                     $user->id,
                     'user',
                     $startOfWeek,
-                    $endOfWeek
+                    $endOfWeek,
+                    $this->shouldHideUncommittedShiftsInOwnRoster($user)
                 )
             )
             //->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
@@ -278,7 +282,10 @@ class UserService
             ->setRooms(static fn() => $roomService->getAllWithoutTrashed())
             ->setProjects(static fn() => $projectService->getAll())
             ->setShiftQualifications(static fn() => $shiftQualificationService->getAllOrderedByCreationDateAscending())
-            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending($user))
+            ->setShifts(fn() => $this->getUserShiftsOrderedByStartAscending(
+                $user,
+                $this->shouldHideUncommittedShiftsInOwnRoster($user)
+            ))
             ->setVacations(
                 tap(
                     $this->getUserVacationsByMonthOrderedByDateAsc($user, $calendarMonth),
@@ -340,9 +347,87 @@ class UserService
         return $this->userRepository->getUserAvailabilitiesByMonthOrderedByDateAsc($user, $monthDate);
     }
 
-    public function getUserShiftsOrderedByStartAscending(int|User $user): Collection
+    public function getUserShiftsOrderedByStartAscending(int|User $user, bool $committedOnly = false): Collection
     {
-        return $this->userRepository->getShiftsOrderedByStartAscending($user);
+        return $this->userRepository->getShiftsOrderedByStartAscending($user, $committedOnly);
+    }
+
+    public function shouldHideUncommittedShiftsInOwnRoster(User $rosterOwner): bool
+    {
+        $currentUser = $this->statefulGuard->user();
+
+        return $this->shiftSettings->hide_uncommitted_shifts_from_own_roster
+            && $currentUser instanceof User
+            && $currentUser->is($rosterOwner)
+            && !$currentUser->can(PermissionEnum::CAN_VIEW_OWN_UNCOMMITTED_SHIFTS->value);
+    }
+
+    /**
+     * Quelle für das Einschalt-Seeding, wenn das Setting aus den
+     * Anzeigeeinstellungen der Inventar-Artikelplanung aktiviert wird
+     * (die Artikelplanung hat keinen user_filters-Eintrag).
+     */
+    public const SHARE_DATE_SOURCE_INVENTORY_ARTICLE_PLAN = 'inventory_article_plan';
+
+    /**
+     * Schreibt denselben Zeitraum in alle Ansichts-Filter (Kalender, Planung,
+     * Schichtplan, deren Tagesansichten, die Listenansicht und die
+     * Inventar-Artikelplanung). Wird genutzt, wenn der User "Zeitraum in
+     * allen Ansichten teilen" aktiviert hat.
+     * PROJECT_SHIFT_FILTER bleibt außen vor — der Projekt-Schichten-Tab folgt
+     * dem Projektzeitraum und nicht der globalen Navigation.
+     */
+    public function syncSharedCalendarFilterDates(User $user, string $startDate, string $endDate): void
+    {
+        foreach (UserFilterTypes::cases() as $filterType) {
+            if ($filterType === UserFilterTypes::PROJECT_SHIFT_FILTER) {
+                continue;
+            }
+
+            $user->userFilters()->updateOrCreate(
+                ['filter_type' => $filterType->value],
+                [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ]
+            );
+        }
+
+        $user->inventoryArticlePlanFilter()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]
+        );
+    }
+
+    /**
+     * Speichert das "Zeitraum in allen Ansichten teilen"-Setting. Beim
+     * Einschalten werden alle Ansichten sofort auf den Zeitraum der Ansicht
+     * gesetzt, aus der das Setting geändert wurde ($sourceFilterType).
+     */
+    public function updateShareCalendarDateSetting(User $user, bool $enabled, string $sourceFilterType): void
+    {
+        $wasEnabled = (bool) $user->getAttribute('share_calendar_date');
+        $user->update(['share_calendar_date' => $enabled]);
+
+        if (!$enabled || $wasEnabled) {
+            return;
+        }
+
+        $sourceFilter = $sourceFilterType === self::SHARE_DATE_SOURCE_INVENTORY_ARTICLE_PLAN
+            ? $user->inventoryArticlePlanFilter()->first()
+            : $user->userFilters()->where('filter_type', $sourceFilterType)->first();
+        if ($sourceFilter?->start_date === null || $sourceFilter?->end_date === null) {
+            return;
+        }
+
+        $this->syncSharedCalendarFilterDates(
+            $user,
+            Carbon::parse($sourceFilter->start_date)->format('Y-m-d'),
+            Carbon::parse($sourceFilter->end_date)->format('Y-m-d')
+        );
     }
 
     /**

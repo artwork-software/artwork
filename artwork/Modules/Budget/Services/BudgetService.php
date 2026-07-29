@@ -79,13 +79,14 @@ class BudgetService
                 position: 2
             );
 
+            // Auch Projektgruppen erhalten eine budgetrelevante Spalte (Vorschau-Spalte für Exporte).
             $columns[] = $this->columnService->createColumnInTable(
                 table: $table,
                 name: date('Y') . ' €',
                 subName: 'A',
                 type: 'empty',
                 position: 3,
-                relevant_for_project_groups: !$project->is_group,
+                relevant_for_project_groups: true,
             );
 
             if ($project->is_group){
@@ -237,7 +238,7 @@ class BudgetService
             ? SubPositionRow::find(request('selectedRow'))
             : null;
 
-        $templates = Table::where('is_template', true)->get();
+        $templates = $this->budgetCacheService->getTemplates();
 
         $selectedSumDetail = $this->resolveSelectedSumDetail();
 
@@ -279,6 +280,99 @@ class BudgetService
         ];
 
         return $loadedProjectInformation;
+    }
+
+    /**
+     * Baut den Payload-Cache eines Projekts neu auf, sofern er kalt ist.
+     * Wird nach Invalidierungen asynchron aufgerufen (WarmBudgetCache-Job).
+     */
+    public function warmBudgetCache(int $projectId): void
+    {
+        $project = Project::find($projectId);
+        $table = $project?->table()->first();
+
+        if (!$project || !$table) {
+            return;
+        }
+
+        // Zwischenzeitlich (z. B. durch einen Lese-Request) schon neu aufgebaut
+        if ($this->budgetCacheService->getBudgetPayload($projectId) !== null) {
+            return;
+        }
+
+        $this->budgetCacheService->setBudgetPayload($projectId, $this->buildBudgetPayload($project, $table));
+    }
+
+    /**
+     * Baut nach einer Zell-Änderung einen schlanken Patch für das Frontend:
+     * die frischen Zellen der betroffenen Zeile plus die neu berechneten
+     * Summen der betroffenen Sub-/Hauptposition und die Tabellen-Randwerte.
+     * Der volle Payload wird dabei einmal neu aufgebaut und direkt in den
+     * Cache geschrieben - der WarmBudgetCache-Job findet danach einen warmen
+     * Cache vor und beendet sich sofort.
+     *
+     * @return array<string, mixed>
+     */
+    public function buildCellUpdatePatchForRow(Project $project, int $subPositionRowId): array
+    {
+        $table = $project->table()->first();
+
+        if (!$table) {
+            return [];
+        }
+
+        $payload = $this->buildBudgetPayload($project, $table);
+        $this->budgetCacheService->setBudgetPayload($project->id, $payload);
+
+        /** @var Table $freshTable */
+        $freshTable = $payload['table'];
+
+        $patch = [
+            'rowCells' => [],
+            'subPositionSums' => [],
+            'mainPositionSums' => [],
+            'tableSums' => [
+                'costSums' => $freshTable->getAttribute('costSums'),
+                'earningSums' => $freshTable->getAttribute('earningSums'),
+                'commentedCostSums' => $freshTable->getAttribute('commentedCostSums'),
+                'commentedEarningSums' => $freshTable->getAttribute('commentedEarningSums'),
+                'costSumDetails' => $freshTable->getAttribute('costSumDetails'),
+                'earningSumDetails' => $freshTable->getAttribute('earningSumDetails'),
+            ],
+        ];
+
+        foreach ($freshTable->mainPositions as $mainPosition) {
+            foreach ($mainPosition->subPositions as $subPosition) {
+                foreach ($subPosition->subPositionRows as $row) {
+                    if ($row->id !== $subPositionRowId) {
+                        continue;
+                    }
+
+                    foreach ($row->cells as $cell) {
+                        $patch['rowCells'][] = [
+                            'id' => $cell->id,
+                            'column_id' => $cell->column_id,
+                            'value' => $cell->value,
+                            'verified_value' => $cell->verified_value,
+                            'commented' => $cell->commented,
+                            'display_value' => $cell->getAttribute('display_value'),
+                            'sage_value' => $cell->getAttribute('sage_value'),
+                            'current_value' => $cell->getAttribute('current_value'),
+                        ];
+                    }
+
+                    $patch['subPositionSums'][$subPosition->id] = $subPosition->getAttribute('columnSums');
+                    $patch['mainPositionSums'][$mainPosition->id] = [
+                        'columnSums' => $mainPosition->getAttribute('columnSums'),
+                        'columnVerifiedChanges' => $mainPosition->getAttribute('columnVerifiedChanges'),
+                    ];
+
+                    return $patch;
+                }
+            }
+        }
+
+        return $patch;
     }
 
     private function buildBudgetPayload(Project $project, Table $table): array
@@ -836,12 +930,13 @@ class BudgetService
                         continue;
                     }
 
+                    // Alle Einträge stammen bereits ausschließlich aus budgetrelevanten
+                    // bzw. Sage-Spalten (der Unterprojekte UND der Gruppe). Die Keys sind
+                    // Spalten-IDs der UNTERPROJEKT-Tabellen - ein Lookup in den
+                    // Gruppenspalten würde die Unterprojekt-Summen verwerfen.
                     $totalSum = '0';
-                    foreach ($sumByGroupRowIdAndColumn[$rowId] as $colId => $colSum) {
-                        $col = $columns->firstWhere('id', $colId);
-                        if ($col && (($col->relevant_for_project_groups ?? false) || $col->type === 'sage')) {
-                            $totalSum = bcadd($totalSum, $colSum, 2);
-                        }
+                    foreach ($sumByGroupRowIdAndColumn[$rowId] as $colSum) {
+                        $totalSum = bcadd($totalSum, $colSum, 2);
                     }
 
                     $sumForFrontend = str_replace('.', ',', $totalSum);

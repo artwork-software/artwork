@@ -24,6 +24,7 @@ use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\CellCalculationService;
 use Artwork\Modules\Budget\Services\CellCommentService;
 use Artwork\Modules\Budget\Services\ColumnCellService;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionDetailsService;
 use Artwork\Modules\Budget\Services\MainPositionService;
@@ -163,6 +164,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -696,14 +698,7 @@ class ProjectController extends Controller
         if (!$request->boolean('isGroup') && !empty($request->selectedGroup)) {
             $table = $project->table()->first();
             if ($table) {
-                $columns = $table->columns()->get();
-                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                    // Mark the last column as relevant for project groups
-                    $lastColumn = $columns->sortBy('position')->last();
-                    if ($lastColumn) {
-                        $lastColumn->update(['relevant_for_project_groups' => true]);
-                    }
-                }
+                app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
             }
         }
 
@@ -1637,16 +1632,19 @@ class ProjectController extends Controller
     public function verifiedMainPosition(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
+        abort_unless((bool) $mainPosition, 404);
+
         $this->setMainPositionCellVerifiedValue($mainPosition);
         $mainPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
         $verifiedRequest = $mainPosition->verified()->first();
 
-
-        DatabaseNotification::query()
-            ->whereJsonContains("data->budgetData->position_id", $mainPosition->id)
-            ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
-            ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
-            ->delete();
+        if ($verifiedRequest) {
+            DatabaseNotification::query()
+                ->whereJsonContains("data->budgetData->position_id", $mainPosition->id)
+                ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
+                ->whereJsonContains("data->budgetData->changeType", BudgetTypeEnum::BUDGET_VERIFICATION_REQUEST)
+                ->delete();
+        }
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -1663,57 +1661,62 @@ class ProjectController extends Controller
 
     private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void
     {
-        $subPositionRows = $subPosition->subPositionRows()->get();
-        foreach ($subPositionRows as $subPositionRow) {
-            $cells = $subPositionRow->cells()->get();
-            foreach ($cells as $cell) {
-                $cell->update(['verified_value' => $cell->value]);
-            }
-        }
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        $this->bulkSetVerifiedValueForRows(
+            $subPosition->subPositionRows()->select('id'),
+            $subPosition->mainPosition->table->project_id,
+            copyFromValue: true
+        );
     }
 
     private function removeSubPositionCellVerifiedValue(SubPosition $subPosition): void
     {
-        $subPositionRows = $subPosition->subPositionRows()->get();
-        foreach ($subPositionRows as $subPositionRow) {
-            $cells = $subPositionRow->cells()->get();
-            foreach ($cells as $cell) {
-                $cell->update(['verified_value' => null]);
-            }
-        }
-        broadcast(new UpdateBudget($subPosition->mainPosition->table->project_id));
+        $this->bulkSetVerifiedValueForRows(
+            $subPosition->subPositionRows()->select('id'),
+            $subPosition->mainPosition->table->project_id,
+            copyFromValue: false
+        );
     }
 
     private function setMainPositionCellVerifiedValue(MainPosition $mainPosition): void
     {
-        $subPositions = $mainPosition->subPositions()->get();
-        foreach ($subPositions as $subPosition) {
-            $subPositionRows = $subPosition->subPositionRows()->get();
-            foreach ($subPositionRows as $subPositionRow) {
-                $cells = $subPositionRow->cells()->get();
-                foreach ($cells as $cell) {
-                    $cell->update(['verified_value' => $cell->value]);
-                }
-            }
-        }
-
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        $this->bulkSetVerifiedValueForRows(
+            SubPositionRow::query()
+                ->whereIn('sub_position_id', $mainPosition->subPositions()->select('id'))
+                ->select('id'),
+            $mainPosition->table->project_id,
+            copyFromValue: true
+        );
     }
 
     private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition): void
     {
-        $subPositions = $mainPosition->subPositions()->get();
-        foreach ($subPositions as $subPosition) {
-            $subPositionRows = $subPosition->subPositionRows()->get();
-            foreach ($subPositionRows as $subPositionRow) {
-                $cells = $subPositionRow->cells()->get();
-                foreach ($cells as $cell) {
-                    $cell->update(['verified_value' => null]);
-                }
-            }
+        $this->bulkSetVerifiedValueForRows(
+            SubPositionRow::query()
+                ->whereIn('sub_position_id', $mainPosition->subPositions()->select('id'))
+                ->select('id'),
+            $mainPosition->table->project_id,
+            copyFromValue: false
+        );
+    }
+
+    /**
+     * Setzt verified_value für alle Zellen der übergebenen Zeilen als EIN Bulk-UPDATE
+     * statt einem Update pro Zelle. Bulk-Updates feuern keine Model-Events, daher
+     * werden Cache-Invalidierung (BudgetUpdated) und Broadcast explizit ausgelöst.
+     */
+    private function bulkSetVerifiedValueForRows(
+        mixed $rowIdsQuery,
+        ?int $projectId,
+        bool $copyFromValue
+    ): void {
+        ColumnCell::query()
+            ->whereIn('sub_position_row_id', $rowIdsQuery)
+            ->update(['verified_value' => $copyFromValue ? DB::raw('`value`') : null]);
+
+        if ($projectId) {
+            \Artwork\Modules\Budget\Events\BudgetUpdated::dispatch($projectId);
         }
-        broadcast(new UpdateBudget($mainPosition->table->project_id));
+        broadcast(new UpdateBudget($projectId));
     }
 
     public function updateCellSource(
@@ -1721,16 +1724,18 @@ class ProjectController extends Controller
         MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
         MoneySourceCalculationService $moneySourceCalculationService
     ) {
-        ColumnCell::find($request->cell_id)
-            ->update([
-                'linked_type' => $request->linked_type,
-                'linked_money_source_id' => $request->money_source_id
-            ]);
+        $cell = ColumnCell::find($request->cell_id);
+        abort_unless((bool) $cell, 404);
 
-        if ($request->money_source_id) {
+        $cell->update([
+            'linked_type' => $request->linked_type,
+            'linked_money_source_id' => $request->money_source_id
+        ]);
+
+        if ($request->money_source_id && ($moneySource = MoneySource::find($request->money_source_id))) {
             $moneySourceThresholdReminderService
                 ->handleThresholdReminders(
-                    MoneySource::find($request->money_source_id),
+                    $moneySource,
                     $moneySourceCalculationService,
                     $this->notificationService
                 );
@@ -1748,15 +1753,19 @@ class ProjectController extends Controller
     public function updateColumnName(Request $request): void
     {
         $column = Column::find($request->column_id);
+        abort_unless((bool) $column, 404);
+
         $column->update([
             'name' => $request->columnName
         ]);
 
-        broadcast(new UpdateBudget($column->project_id));
+        broadcast(new UpdateBudget($column->table->project_id));
     }
     public function updateTableName(Request $request): void
     {
         $table = Table::find($request->table_id);
+        abort_unless((bool) $table, 404);
+
         $table->update([
             'name' => $request->table_name
         ]);
@@ -1768,6 +1777,7 @@ class ProjectController extends Controller
     public function columnDelete(
         Column $column,
         ColumnService $columnService,
+        ColumnRelevanceService $columnRelevanceService,
         SumCommentService $sumCommentService,
         SumMoneySourceService $sumMoneySourceService,
         MainPositionDetailsService $mainPositionDetailsService,
@@ -1779,7 +1789,26 @@ class ProjectController extends Controller
         SageNotAssignedDataService $sageNotAssignedDataService,
         SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
-        $columnService->forceDelete(
+        $table = $column->table;
+
+        // Eine Tabelle braucht immer mindestens eine Wertspalte: die letzte wird
+        // nicht gelöscht, sondern geleert und bleibt budgetrelevant.
+        if ($columnRelevanceService->isLastValueColumn($column)) {
+            $column->cells()->update(['value' => '0', 'verified_value' => null]);
+            $columnRelevanceService->assignExclusive($column);
+            broadcast(new UpdateBudget($table->project_id));
+
+            return Redirect::back()->with(
+                'success',
+                __('The last value column cannot be deleted and was emptied instead.')
+            );
+        }
+
+        $hadRelevantFlag = $column->relevant_for_project_groups;
+
+        // SoftDelete statt ForceDelete: ein Fehlklick soll keine Spalte samt
+        // Zellen/Kommentaren/Sage-Zuordnungen unwiederbringlich vernichten.
+        $columnService->softDelete(
             $column,
             $sumCommentService,
             $sumMoneySourceService,
@@ -1792,6 +1821,64 @@ class ProjectController extends Controller
             $sageNotAssignedDataService,
             $sageAssignedDataService
         );
+
+        if ($hadRelevantFlag) {
+            $columnRelevanceService->ensureSingleRelevantColumn($table);
+        }
+
+        return Redirect::back();
+    }
+
+    public function getTrashedColumns(Table $table): JsonResponse
+    {
+        return response()->json(
+            $table->columns()
+                ->onlyTrashed()
+                ->orderBy('deleted_at', 'desc')
+                ->get(['id', 'name', 'subName', 'type', 'deleted_at'])
+        );
+    }
+
+    public function columnRestore(
+        Column $column,
+        ColumnService $columnService,
+        ColumnRelevanceService $columnRelevanceService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+        $table = $column->table()->withTrashed()->first();
+        $tableHadRelevantColumn = $table->columns()->where('relevant_for_project_groups', true)->exists();
+
+        $columnService->restore(
+            $column,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $mainPositionDetailsService,
+            $subPositionSumDetailService,
+            $budgetSumDetailsService,
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
+
+        // Eine wiederhergestellte Spalte darf der aktuellen budgetrelevanten
+        // Spalte das Flag nicht wegnehmen.
+        $column->refresh();
+        if ($tableHadRelevantColumn && $column->relevant_for_project_groups) {
+            $column->update(['relevant_for_project_groups' => false]);
+        }
+        $columnRelevanceService->ensureSingleRelevantColumn($table);
+        $columnService->setColumnSubName($table->id);
 
         return Redirect::back();
     }
@@ -1818,25 +1905,8 @@ class ProjectController extends Controller
 
     private function setColumnSubName(int $table_id): void
     {
-        $table = Table::find($table_id);
-
-        // Spalten abrufen und nach Position sortieren
-        $columns = $table->columns()->orderBy('position')->get();
-
-        // Nur Spalten, die einen subName bekommen sollen (nach den ersten 3)
-        $filteredColumns = $columns->skip(3)->values();
-
-        $totalColumns = $filteredColumns->count(); // Anzahl der betroffenen Spalten
-        $count = 1;
-
-        foreach ($filteredColumns as $column) {
-            // Wenn es die Spalte mit Position 100 ist, bekommt sie den letzten Buchstaben
-            $subName = ($column->position == 100) ? $this->getNameFromNumber($totalColumns) : $this->getNameFromNumber($count);
-
-            $column->update(['subName' => $subName]);
-
-            $count++;
-        }
+        // Einzige Implementierung lebt im ColumnService (auch Sage100Service nutzt sie).
+        app(ColumnService::class)->setColumnSubName($table_id);
     }
 
     public function getNameFromNumber(int $num): string
@@ -1855,7 +1925,7 @@ class ProjectController extends Controller
 
 
 
-    public function addColumn(Request $request): void
+    public function addColumn(Request $request, ColumnRelevanceService $columnRelevanceService): void
     {
         $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
@@ -1916,6 +1986,9 @@ class ProjectController extends Controller
             $column->budgetSumDetails()->create([
                 'type' => 'EARNING'
             ]);
+
+            // Die neueste Wertspalte gilt als aktueller Planungsstand und wird budgetrelevant.
+            $columnRelevanceService->assignExclusive($column);
         }
         if ($request->column_type === 'sum') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
@@ -1984,15 +2057,17 @@ class ProjectController extends Controller
         MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
         MoneySourceCalculationService $moneySourceCalculationService,
         ColumnCellService $columnCellService
-    ): void {
+    ): \Illuminate\Http\JsonResponse {
         $column = Column::find($request->column_id);
+        abort_unless((bool) $column, 404);
+
         $project = $column->table->project;
         $cell = ColumnCell::where('column_id', $request->column_id)
             ->where('sub_position_row_id', $request->sub_position_row_id)
             ->first();
 
         if ($cell === null) {
-            return;
+            return response()->json(['message' => 'Cell not found.'], 404);
         }
 
         if ($request->is_verified) {
@@ -2013,25 +2088,43 @@ class ProjectController extends Controller
         $cell->update(['value' => $request->value]);
         $columnCellService->recalculateAutomaticColumns($request->sub_position_row_id);
 
-        if ($cell->linked_money_source_id) {
-            $moneySourceThresholdReminderService->handleThresholdReminders(
-                MoneySource::find($cell->linked_money_source_id),
+        if ($linkedMoneySourceId = $cell->linked_money_source_id) {
+            // Threshold-Prüfung inkl. Notifications erst nach der Response -
+            // sie darf die Zell-Eingabe nicht ausbremsen.
+            $notificationService = $this->notificationService;
+            dispatch(static function () use (
+                $linkedMoneySourceId,
+                $moneySourceThresholdReminderService,
                 $moneySourceCalculationService,
-                $this->notificationService
-            );
+                $notificationService
+            ): void {
+                if ($moneySource = MoneySource::find($linkedMoneySourceId)) {
+                    $moneySourceThresholdReminderService->handleThresholdReminders(
+                        $moneySource,
+                        $moneySourceCalculationService,
+                        $notificationService
+                    );
+                }
+            })->afterResponse();
         }
 
         broadcast(new UpdateBudget($project->id))->toOthers();
+
+        // Schlanker Patch statt Client-Full-Refetch: frische Zellen der Zeile
+        // + neu berechnete Summen. Waermt zugleich den Budget-Cache auf.
+        return response()->json(
+            $this->budgetService->buildCellUpdatePatchForRow($project, (int) $request->sub_position_row_id)
+        );
     }
 
     public function changeColumnColor(Request $request): void
     {
         $column = Column::find($request->columnId);
+        abort_unless((bool) $column, 404);
+
         $column->update(['color' => $request->color]);
 
         broadcast(new UpdateBudget($column->table->project_id));
-
-        //return Redirect::back();
     }
 
     public function addSubPositionRow(Request $request): void
@@ -2403,17 +2496,19 @@ class ProjectController extends Controller
     public function lockColumn(Request $request): void
     {
         $column = Column::find($request->columnId);
+        abort_unless((bool) $column, 404);
+
         $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
         broadcast(new UpdateBudget($column->table->project_id));
-        //return Redirect::back();
     }
 
     public function unlockColumn(Request $request): void
     {
         $column = Column::find($request->columnId);
+        abort_unless((bool) $column, 404);
+
         $column->update(['is_locked' => false, 'locked_by' => null]);
         broadcast(new UpdateBudget($column->table->project_id));
-        //return Redirect::back();
     }
 
     public function updateProjectState(Request $request, Project $project): void
@@ -3274,17 +3369,10 @@ class ProjectController extends Controller
                 }
             }
 
-            // Ensure the project has at least one column marked as relevant for project groups
+            // Ensure the project has exactly one budget-relevant column
             $table = $project->table()->first();
             if ($table) {
-                $columns = $table->columns()->get();
-                if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                    // Mark the last column as relevant for project groups
-                    $lastColumn = $columns->sortBy('position')->last();
-                    if ($lastColumn) {
-                        $lastColumn->update(['relevant_for_project_groups' => true]);
-                    }
-                }
+                app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
             }
         }
 
@@ -3335,13 +3423,7 @@ class ProjectController extends Controller
                 if ($childProject) {
                     $table = $childProject->table()->first();
                     if ($table) {
-                        $columns = $table->columns()->get();
-                        if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                            $lastColumn = $columns->sortBy('position')->last();
-                            if ($lastColumn) {
-                                $lastColumn->update(['relevant_for_project_groups' => true]);
-                            }
-                        }
+                        app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
                     }
                 }
             }
@@ -3560,20 +3642,13 @@ class ProjectController extends Controller
             $projectGroup->save();
         }
 
-        // Ensure all projects being added to the group have at least one column marked as relevant for project groups
+        // Ensure all projects being added to the group have exactly one budget-relevant column
         foreach ($projectIdsToAdd as $projectId) {
             $project = Project::find($projectId);
             if ($project) {
                 $table = $project->table()->first();
                 if ($table) {
-                    $columns = $table->columns()->get();
-                    if ($columns->where('relevant_for_project_groups', true)->isEmpty()) {
-                        // Mark the last column as relevant for project groups
-                        $lastColumn = $columns->sortBy('position')->last();
-                        if ($lastColumn) {
-                            $lastColumn->update(['relevant_for_project_groups' => true]);
-                        }
-                    }
+                    app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($table);
                 }
             }
         }
@@ -4631,15 +4706,47 @@ class ProjectController extends Controller
         $timelineService->forceDelete($timeline);
     }
 
-    public function duplicateColumn(Column $column): void
+    public function duplicateColumn(Column $column, ColumnRelevanceService $columnRelevanceService): void
     {
         $newColumn = $column->replicate();
+        $newColumn->relevant_for_project_groups = false;
         $newColumn->save();
         $newColumn->update(['name' => $column->name . ' (Kopie)']);
         $newColumn->cells()->forceDelete();
-        $newColumn->cells()->createMany($column->cells()->get()->toArray());
+        // Verifizierungen und Finanzierungsquellen-Verknüpfungen dürfen nicht in die
+        // Kopie wandern (sonst gilt die Kopie als verifiziert bzw. zählt doppelt auf
+        // die Quelle) - analog zu addColumn.
+        $newColumn->cells()->createMany(
+            $column->cells()->get()->map(fn(ColumnCell $cell) => array_merge($cell->toArray(), [
+                'verified_value' => null,
+                'linked_money_source_id' => null,
+                'linked_type' => null,
+            ]))->all()
+        );
 
-        broadcast(new UpdateBudget($column->project_id));
+        // Summen-Gerüst wie bei addColumn anlegen, sonst fehlen der Kopie die Summenzeilen.
+        $tableId = $column->table_id;
+        $newColumn->subPositionSumDetails()->createMany(
+            SubPosition::whereHas('mainPosition', fn(Builder $query) => $query->where('table_id', $tableId))
+                ->pluck('id')
+                ->map(fn(int $subPositionId) => ['sub_position_id' => $subPositionId])
+                ->all()
+        );
+        $newColumn->mainPositionSumDetails()->createMany(
+            MainPosition::where('table_id', $tableId)
+                ->pluck('id')
+                ->map(fn(int $mainPositionId) => ['main_position_id' => $mainPositionId])
+                ->all()
+        );
+        $newColumn->budgetSumDetails()->create(['type' => 'COST']);
+        $newColumn->budgetSumDetails()->create(['type' => 'EARNING']);
+
+        // Die neueste Wertspalte gilt als aktueller Planungsstand und wird budgetrelevant.
+        if ($columnRelevanceService->isFlaggable($newColumn)) {
+            $columnRelevanceService->assignExclusive($newColumn);
+        }
+
+        broadcast(new UpdateBudget($column->table->project_id));
     }
 
     public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
@@ -4661,7 +4768,12 @@ class ProjectController extends Controller
             $newSubPositionRow->save();
             $newSubPositionRow->cells()->forceDelete();
 
-            $cellsData = $subPositionRow->cells->map(fn($cell) => $cell->toArray())->toArray();
+            // Verifizierungen/Finanzierungsquellen nicht mitkopieren (s. duplicateColumn)
+            $cellsData = $subPositionRow->cells->map(fn($cell) => array_merge($cell->toArray(), [
+                'verified_value' => null,
+                'linked_money_source_id' => null,
+                'linked_type' => null,
+            ]))->toArray();
             if (!empty($cellsData)) {
                 $newSubPositionRow->cells()->createMany($cellsData);
             }
@@ -4693,6 +4805,10 @@ class ProjectController extends Controller
         foreach ($subPositionRow->cells as $subPositionRowCell) {
             $subPositionRowCellReplicate = $subPositionRowCell->replicate();
             $subPositionRowCellReplicate->sub_position_row_id = $subPositionRowReplicate->id;
+            // Verifizierungen/Finanzierungsquellen nicht mitkopieren (s. duplicateColumn)
+            $subPositionRowCellReplicate->verified_value = null;
+            $subPositionRowCellReplicate->linked_money_source_id = null;
+            $subPositionRowCellReplicate->linked_type = null;
             $subPositionRowCellReplicate->save();
         }
         broadcast(new UpdateBudget($subPositionRow->subPosition->mainPosition->table->project_id));
@@ -4725,7 +4841,19 @@ class ProjectController extends Controller
         Request $request
     ): BinaryFileResponse|null {
         if ($request->integer('type') === 0) {
-            return (new BudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+            $request->validate([
+                'desiredColumns' => ['nullable', 'array', 'min:1'],
+                'desiredColumns.*' => [
+                    'string',
+                    Rule::in(array_keys(BudgetsByBudgetDeadlineExport::availableColumns())),
+                ],
+            ]);
+
+            return (new BudgetsByBudgetDeadlineExport(
+                $startBudgetDeadline,
+                $endBudgetDeadline,
+                $request->filled('desiredColumns') ? $request->input('desiredColumns') : null,
+            ))
                 ->download(
                     sprintf(
                         'budgets_export_%s-%s_stand_%s.xlsx',
@@ -4738,6 +4866,14 @@ class ProjectController extends Controller
         }
 
         if ($request->integer('type') === 1) {
+            $request->validate([
+                'desiredColumns' => ['nullable', 'array', 'min:1'],
+                'desiredColumns.*' => [
+                    'string',
+                    Rule::in(DetailedBudgetsByBudgetDeadlineExport::availableColumnKeys()),
+                ],
+            ]);
+
             $generalSettings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
             $budgetColumnSettings = \Artwork\Modules\Budget\Models\BudgetColumnSetting::all();
             return (new DetailedBudgetsByBudgetDeadlineExport(
@@ -4745,6 +4881,7 @@ class ProjectController extends Controller
                 $endBudgetDeadline,
                 $generalSettings->budget_account_management_global,
                 $budgetColumnSettings,
+                $request->filled('desiredColumns') ? $request->input('desiredColumns') : null,
             ))
                 ->download(
                     sprintf(

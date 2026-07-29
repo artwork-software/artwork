@@ -60,6 +60,7 @@ use Artwork\Modules\User\Models\UserContract;
 use Artwork\Modules\User\Models\UserContractAssign;
 use Artwork\Modules\User\Models\UserWorkTimePattern;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
 use Artwork\Modules\User\Services\UserUserManagementSettingService;
 use Artwork\Modules\WorkTime\Models\WorkTimeBooking;
 use Carbon\Carbon;
@@ -90,7 +91,6 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 use Throwable;
-use App\Models\User as LaravelUser;
 
 class UserController extends Controller
 {
@@ -98,6 +98,7 @@ class UserController extends Controller
         protected AuthManager $auth,
         protected GlobalQualificationService $qualificationService,
         private readonly ShiftRuleService $shiftRuleService,
+        private readonly ThreeMonthAverageTargetService $threeMonthAverageTargetService,
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -177,6 +178,25 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Filtert die Nutzerliste nach Authentifizierungsquelle:
+     * 'sso' → alle IdP-gebundenen, oder ein konkreter Provider (local|oidc|ldap).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     */
+    private function applyAuthProviderFilter($query, ?string $filter): void
+    {
+        if ($filter === 'sso') {
+            $query->where('auth_provider', '!=', 'local');
+
+            return;
+        }
+
+        if (in_array($filter, ['local', 'oidc', 'ldap'], true)) {
+            $query->where('auth_provider', $filter);
+        }
+    }
+
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(
         PermissionPresetService $permissionPresetService,
@@ -196,15 +216,18 @@ class UserController extends Controller
                 null
             );
         $searchQuery = $request->get('query');
+        $authProviderFilter = $request->get('auth_provider_filter');
 
         $users = MinimalUserIndexResource::collection(
             !empty($searchQuery)
                 ? User::search($searchQuery)
-                ->query(function ($query) use ($sortEnum): void {
+                ->query(function ($query) use ($sortEnum, $authProviderFilter): void {
                     $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
                     $query->with('departments');
                     // Exclude the placeholder "Deleted user"
                     $query->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'));
+
+                    $this->applyAuthProviderFilter($query, $authProviderFilter);
 
                     // Sortierung nur anwenden, wenn $sortEnum vorhanden ist
                     if (!is_null($sortEnum)) {
@@ -229,6 +252,7 @@ class UserController extends Controller
                 ->with('departments')
                 // Exclude the placeholder "Deleted user"
                 ->where('email', '!=', config('artwork.deleted_user_email', 'deleted-user@artwork.local'))
+                ->when($authProviderFilter, fn ($query) => $this->applyAuthProviderFilter($query, $authProviderFilter))
                 ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
@@ -727,11 +751,16 @@ class UserController extends Controller
                 $dayCompDays = $compensationDayOffs[$dateKey];
                 // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
                 // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> Minus-Delta = Überstundenabbau.
+                // Die Senkung gilt unabhängig von geleisteter Arbeit (Arbeit = Plus-Stunden).
                 $holidayCompValue = (float) $dayCompDays->where('for_holiday', true)->sum('value');
-                if ($holidayCompValue >= 1.0) {
-                    $dailyTargetMinutes = 0;
-                } elseif ($holidayCompValue > 0) {
-                    $dailyTargetMinutes = (int) round($dailyTargetMinutes * (1 - $holidayCompValue));
+                if ($holidayCompValue > 0) {
+                    $dailyTargetMinutes = max(0, $dailyTargetMinutes - $this->threeMonthAverageTargetService
+                        ->reductionMinutesFor(
+                            $user,
+                            $current,
+                            min(1.0, $holidayCompValue),
+                            $dailyTargetMinutes
+                        ));
                 }
                 $compensationInfo = $dayCompDays->map(fn ($d) => [
                     'value' => (float) $d->value,
@@ -1451,7 +1480,7 @@ class UserController extends Controller
             // so we only need to fix `causer_id` here.
             Activity::query()
                 ->where('causer_id', $user->id)
-                ->whereIn('causer_type', [User::class, LaravelUser::class])
+                ->whereIn('causer_type', [User::class, 'App\\Models\\User'])
                 ->update(['causer_id' => $reassignUserId]);
             SubEvent::where('user_id', $user->id)->update(['user_id' => $reassignUserId]);
             // Now delete the user
@@ -1499,19 +1528,35 @@ class UserController extends Controller
     }
 
 
-    public function updateCalendarSettings(User $user, Request $request): void
+    public function updateCalendarSettings(User $user, Request $request, UserService $userService): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
+        // unsignedSmallInteger-Spalte: ohne Grenzen werfen negative/zu große Werte
+        // oder Strings einen SQL-Fehler (500 statt 422)
+        $request->validate([
+            'calendar_column_width' => 'nullable|integer|between:120,400',
+        ]);
+
+        $this->updateShareCalendarDate($user, $request, $userService);
+
         $settingsFields = $request->only([
             'project_status',
             'project_artists',
             'options',
             'project_management',
+            'show_event_creator',
             'repeating_events',
             'work_shifts',
             'description',
             'event_name',
             'high_contrast',
             'expand_days',
+            // Nur vom Kalender-Settings-Modal gesendet (Spalten existieren nur
+            // auf user_calendar_settings, nicht auf den Schichtplan-Tabellen)
+            'calendar_column_width',
+            'show_artist_names_as_title',
+            'show_day_remarks',
             'use_event_status_color',
             'use_main_category_color',
             'show_qualifications',
@@ -1556,6 +1601,39 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * "Zeitraum in allen Ansichten teilen": users-Spalte statt der vier
+     * Settings-Tabellen, weil das Setting ansichtsübergreifend wirkt. Beim
+     * Einschalten übernehmen alle Ansichten den Zeitraum der Ansicht, aus
+     * deren Anzeigeoptionen das Setting aktiviert wurde.
+     */
+    private function updateShareCalendarDate(User $user, Request $request, UserService $userService): void
+    {
+        if (!$request->has('share_calendar_date')) {
+            return;
+        }
+
+        if ($request->boolean('is_shift_plan')) {
+            $sourceFilterType = $request->boolean('is_daily_view')
+                ? UserFilterTypes::SHIFT_DAILY_FILTER->value
+                : UserFilterTypes::SHIFT_FILTER->value;
+        } elseif ($request->boolean('is_planning')) {
+            $sourceFilterType = $request->boolean('is_daily_view')
+                ? UserFilterTypes::PLANNING_DAILY_FILTER->value
+                : UserFilterTypes::PLANNING_FILTER->value;
+        } else {
+            $sourceFilterType = $request->boolean('is_daily_view')
+                ? UserFilterTypes::CALENDAR_DAILY_FILTER->value
+                : UserFilterTypes::CALENDAR_FILTER->value;
+        }
+
+        $userService->updateShareCalendarDateSetting(
+            $user,
+            $request->boolean('share_calendar_date'),
+            $sourceFilterType
+        );
+    }
+
     public function toggleUserShiftTimePreset(Request $request): void
     {
         /** @var User $user */
@@ -1590,21 +1668,53 @@ class UserController extends Controller
 
     public function updateZoomFactor(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
+        // Stufen 0.4–1.4 (Zoom-Dropdown + Legacy-±0.2-Buttons); ohne Validierung
+        // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
+        $request->validate([
+            'zoom_factor' => 'required|numeric|between:0.4,1.4',
+        ]);
+
         $user->update($request->only('zoom_factor'));
     }
 
     public function updateAtAGlance(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('at_a_glance'));
+    }
+
+    public function updateShiftPlanZoomFactor(User $user, Request $request): void
+    {
+        $this->authorize('updateOwnPreferences', $user);
+
+        // Stufen 0.55/0.75/1 des Schichtplan-Spaltenzooms; ohne Validierung
+        // landen beliebige Werte in der DB bzw. Strings werfen einen SQL-Fehler
+        $request->validate([
+            'zoom_factor' => 'required|numeric|between:0.5,1',
+        ]);
+
+        $settings = $user->shift_plan_settings;
+        if ($settings === null) {
+            $user->shift_plan_settings()->create($request->only('zoom_factor'));
+        } else {
+            $settings->update($request->only('zoom_factor'));
+        }
     }
 
     public function updateBulkSortId(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('bulk_sort_id'));
     }
 
     public function updateDailyView(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $dailyView = $request->boolean('daily_view');
         // Calendar and shift plan keep their view mode independently. The legacy
         // "daily_view" column is kept in sync as a fallback for un-migrated readers.
@@ -1621,7 +1731,9 @@ class UserController extends Controller
         // week-view range so the day view opens where the user currently is
         // ("vom aktuellen Stand übernehmen"). The week filter stays untouched, so
         // switching back returns to exactly where the user left off.
-        if ($dailyView) {
+        // Bei geteiltem Zeitraum sind alle Filter ohnehin synchron — der Seed
+        // würde den gemeinsamen Zeitraum nur auf 7 Tage kürzen, also überspringen.
+        if ($dailyView && !$user->share_calendar_date) {
             $seedMap = $context === 'shift_plan'
                 ? [UserFilterTypes::SHIFT_FILTER->value => UserFilterTypes::SHIFT_DAILY_FILTER->value]
                 : [
@@ -1650,6 +1762,8 @@ class UserController extends Controller
 
     public function updateBulkColumnSize(User $user, Request $request): \Illuminate\Http\RedirectResponse
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('bulk_column_size'));
 
         // Redirect zurückgeben, damit Inertia eine gültige Antwort erhält und die
@@ -1660,6 +1774,8 @@ class UserController extends Controller
 
     public function updateShowDescriptionInBulk(User $user, Request $request): void
     {
+        $this->authorize('updateOwnPreferences', $user);
+
         $user->update($request->only('show_description_in_bulk'));
     }
 

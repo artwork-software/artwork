@@ -23,12 +23,45 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
     public function __construct(
         private readonly string $startBudgetDeadline,
         private readonly string $endBudgetDeadline,
+        private readonly ?array $desiredColumns = null,
     ) {
+    }
+
+    /**
+     * @return array<string, string> Spalten-Key => Excel-Überschrift
+     */
+    public static function availableColumns(): array
+    {
+        return [
+            'premiere' => 'Premiere',
+            'project_name' => 'Projektname Originalsprache',
+            'artist_or_group' => 'Künstler*innen',
+            'cost_center' => 'KTR',
+            'project_state' => 'Projektstatus',
+            'forecast_costs' => 'Vorschau Kosten',
+            'forecast_earnings' => 'Vorschau Erlöse',
+            'forecast_outcome' => 'Vorschau Resultat',
+            'sage' => 'Sage',
+            'sage_revenue' => 'Sage Erlöse',
+            'sage_result' => 'Sage Ergebnis',
+        ];
     }
 
     public function view(): View
     {
-        return view('exports.projectBudgetsByBudgetDeadline', ['rows' => $this->getRows()]);
+        $columns = self::availableColumns();
+        if ($this->desiredColumns !== null) {
+            $columns = array_filter(
+                $columns,
+                fn(string $key) => in_array($key, $this->desiredColumns, true),
+                ARRAY_FILTER_USE_KEY
+            );
+        }
+
+        return view('exports.projectBudgetsByBudgetDeadline', [
+            'columns' => $columns,
+            'rows' => $this->getRows(),
+        ]);
     }
 
     /**
@@ -54,7 +87,10 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                 }
             )?->load('cells.sageAssignedData');
 
-            $lastColumn = $projectBudgetTable->columns->filter(fn($column) => $column->type === "empty")->last();
+            // Die budgetrelevante Spalte liefert die Vorschau-Werte; Fallback für
+            // Altbestand ohne Flag: letzte Wertspalte (type "empty").
+            $lastColumn = $projectBudgetTable->columns->first(fn($column) => $column->relevant_for_project_groups)
+                ?? $projectBudgetTable->columns->filter(fn($column) => $column->type === "empty")->last();
             if ($lastColumn === null) {
                 $rows[] = [
                     'premiere' => Carbon::createFromFormat('Y-m-d', $project->budget_deadline)

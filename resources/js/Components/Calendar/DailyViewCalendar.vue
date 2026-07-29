@@ -35,6 +35,21 @@
                             </div>
                         </div>
                     </HolidayToolTip>
+                    <!-- Tagesbemerkung als Chip im Tageskopf (Tagesansicht hat keine eigene Spalte) -->
+                    <div
+                        v-if="dayRemarksColumnVisible && (remarkForDay(day)?.text || dayRemarksCanEdit)"
+                        class="ml-4 flex items-center max-w-md mt-1.5"
+                        :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
+                        :title="remarkForDay(day)?.text"
+                        @click="dayRemarksCanEdit ? (dayRemarkModalDay = day) : null"
+                    >
+                        <span
+                            class="text-xs bg-amber-50 border border-amber-200 text-gray-800 rounded-lg px-2 py-1 truncate"
+                            :class="{ 'text-gray-400 italic': !remarkForDay(day)?.text }"
+                        >
+                            {{ remarkForDay(day)?.text || $t('Add remark') }}
+                        </span>
+                    </div>
                 </div>
                 <div class="ml-10 flex items-center h-full truncate">
                     <div class="flex items-center h-full gap-x-2" v-if="(usePage().props.daily_view_calendar_settings ?? usePage().props.auth.user.calendar_settings)?.display_project_groups" v-for="group in getAllProjectGroupsInAllRoomsAndEventsByDay(day)" :key="group.id">
@@ -109,6 +124,14 @@
                 </div>
             </template>
         </div>
+
+        <DayRemarkEditModal
+            v-if="dayRemarkModalDay"
+            :date="dayRemarkModalDay.withoutFormat"
+            :display-date="dayRemarkModalDay.fullDay"
+            :remark="remarkForDay(dayRemarkModalDay)"
+            @close="dayRemarkModalDay = null"
+        />
     </div>
 
 </template>
@@ -123,10 +146,20 @@ import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeade
 import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import { getDaysInRange, computeEventFormattedDates } from "@/Composeables/calendarDateUtils.js";
+import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
+import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
+import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props)
 
 
-const zoom_factor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+// Reaktiv aus dem zentralen Zoom-Store (Layout-Formeln der Tagesansicht unverändert)
+const { zoomFactor: zoom_factor } = useCalendarZoom();
+
+// Tagesbemerkungen im Tageskopf (gleiche Sichtbarkeitslogik wie die Spalte);
+// Anzeige liest über remarkForDay() aus dem reaktiven Live-Store — der
+// Broadcast-Listener läuft im umgebenden BaseCalendar
+const { columnVisible: dayRemarksColumnVisible, canEdit: dayRemarksCanEdit, remarkForDay } = useDayRemarks();
+const dayRemarkModalDay = ref(null);
 const props = defineProps({
     rooms: {
         type: Object,

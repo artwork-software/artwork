@@ -14,19 +14,27 @@
                 @jump-to-day-of-month="jumpToDayOfMonth"
                 :is-planning="isPlanning"
                 :daily-view="isDaily"
-            />
-            <div
-                v-if="eventsWithoutRoomLen > 0"
-                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
-                @click="showEventsWithoutRoomComponent = true"
             >
-                <div class="flex items-center justify-center w-full h-full gap-x-1">
-                    <IconAlertTriangle class="size-4 text-white" aria-hidden="true" />
-                    <div class="text-white text-sm font-bold">
-                        {{eventsWithoutRoomLen === 1 ? $t('{0} Event without room!', [eventsWithoutRoomLen]) : $t('{0} Events without room!', [eventsWithoutRoomLen]) }}
+                <template #buttonsRight>
+                    <!-- Dezenter Hinweis-Chip statt des früheren vollflächigen roten Banners;
+                         nur Icon + Anzahl, Details im Tooltip. Tooltip öffnet nach rechts,
+                         damit er beim Umbruch der Leiste nicht unter der Mainnav (z-50) liegt -->
+                    <div
+                        v-if="eventsWithoutRoomLen > 0"
+                        class="ui-button !bg-amber-50 !border-amber-300/80 !text-amber-800 text-xs"
+                        @click="showEventsWithoutRoomComponent = true"
+                    >
+                        <ToolTipWithTextComponent
+                            direction="right"
+                            :text="String(eventsWithoutRoomLen)"
+                            :icon="IconAlertTriangle"
+                            icon-size="size-4"
+                            tooltip-width="w-64"
+                            :tooltip-text="eventsWithoutRoomLen + ' ' + $t('without room') + ' – ' + $t('There are events without a room in this period. Click to view and assign them.')"
+                        />
                     </div>
-                </div>
-            </div>
+                </template>
+            </FunctionBarCalendar>
             <div
                 v-if="hasFailedMonths"
                 class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
@@ -47,18 +55,34 @@
                 <div class="w-max -ml-3">
                     <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
                         <!-- Kopfzeile soll exakt dieselbe Raumreihenfolge/-filterung nutzen wie das Grid -->
-                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" :sticky-top="topbarHeight" />
+                        <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" :sticky-top="topbarHeight" :show-day-remarks-column="dayRemarksColumnVisible" :is-fullscreen="isFullscreen" />
                         <div
                             class="w-fit events-by-days-container"
                             :class="[isFullscreen ? 'mt-4' : '']"
                             ref="calendarToCalculate"
                         >
-                            <div
-                                v-for="day in days"
+                            <template
+                                v-for="(day, dayIndex) in days"
                                 :key="day.fullDay"
-                                class="flex gap-0.5 day-container"
-                                :class="day.isWeekend ? 'bg-gray-50' : ''"
-                                :style="dayRowStyle"
+                            >
+                            <!-- Monatsgrenze: schwarzer Balken über die ganze Zeile mit Monat + Jahr
+                                 (gleiche Optik wie die dunklen Leisten in anderen Screens);
+                                 auch für den allerersten Tag des Zeitraums, sonst fehlt dem
+                                 obersten Block bei Start mitten im Monat die Orientierung -->
+                            <div
+                                v-if="(day.isFirstDayOfMonth || dayIndex === 0) && !day.isExtraRow"
+                                class="month-separator flex items-center h-7 w-full bg-artwork-navigation-background"
+                            >
+                                <span
+                                    class="month-separator-label text-xs font-semibold text-white whitespace-nowrap px-3"
+                                >
+                                    {{ formatMonthLabel(day.withoutFormat) }}
+                                </span>
+                            </div>
+                            <div
+                                class="flex gap-0.5 day-container border-t"
+                                :class="settings.high_contrast ? 'border-gray-500' : 'border-gray-300'"
+                                :style="[dayRowStyle, dayRowBackgroundStyle(day)]"
                                 :data-day="day.fullDay"
                                 :data-day-to-jump="day.withoutFormat"
                                 :data-month="monthKeyFromDay(day)"
@@ -66,23 +90,48 @@
                             >
                                 <SingleDayInCalendar v-if="!day.isExtraRow" :isFullscreen="isFullscreen" :day="day" :sticky-top="dayStickyTop" />
 
+                                <!-- Tagesbemerkungen: sticky Spalte direkt neben dem Datum (Inline-Editor in der Zelle) -->
+                                <DayRemarkCell
+                                    v-if="dayRemarksColumnVisible && !day.isExtraRow"
+                                    :day="day"
+                                    :editable="dayRemarksCanEdit"
+                                    :is-fullscreen="isFullscreen"
+                                    :sticky-top="dayStickyTop"
+                                />
+
                                 <!-- Räume -->
                                 <template v-if="!day.isExtraRow">
                                     <template v-for="(room, roomIdx) in newCalendarData" :key="room.id ?? room.roomId ?? roomIdx">
                                         <!-- Eine Cell (Tag × Raum) -->
                                         <section
-                                            :style="cellStyle"
+                                            :style="[cellStyle, cellSeparatorStyle]"
                                             :id="`scroll_container-${day.withoutFormat}`"
                                             :data-room-id="room.roomId ?? room.id"
                                             :ref="el => registerCell(el, day, room)"
                                             :class="[
                     'group/container relative',                 // Basis
-                    'border-dashed',                            // Linienoptik wie zuvor
-                    'border-t border-gray-500',
-
-                    ''
+                    multiEdit ? 'cursor-pointer' : '',
+                    // Tagesgrenze liegt jetzt als durchgezogene Linie auf der Zeile (day-container),
+                    // die Zelle trägt nur noch die vertikale Raumtrennlinie (cellSeparatorStyle)
                   ]"
+                                            @click="toggleCellSelection(day, room)"
                                         >
+                                            <!-- Multi-Edit: Zellen-Auswahl-Overlay (Klick auf freie Fläche;
+                                                 Termin-Klicks stoppen die Propagation und landen hier nicht) -->
+                                            <div
+                                                v-if="multiEdit"
+                                                class="absolute inset-0 z-30 pointer-events-none"
+                                                :class="isCellSelected(day, room)
+                                                    ? 'border-2 border-dashed border-blue-500 bg-blue-500/10'
+                                                    : 'group-hover/container:border group-hover/container:border-dashed group-hover/container:border-blue-400/70'"
+                                            >
+                                                <div
+                                                    v-if="isCellSelected(day, room)"
+                                                    class="absolute top-0.5 right-0.5 rounded-full bg-blue-500 text-white p-0.5"
+                                                >
+                                                    <component :is="IconCirclePlus" class="size-3.5" stroke-width="2" />
+                                                </div>
+                                            </div>
                                             <!-- INNERER WRAPPER: hält Scrollbereich + Floating-Buttons -->
                                             <div :class="['relative w-full', settings.expand_days ? '' : 'h-full']">
                                                 <!-- SCROLLBAR NUR WENN SINNVOLL -->
@@ -94,13 +143,16 @@
                                                       ]"
                                                     :style="cellStyle"
                                                 >
-                                                    <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport -->
-                                                    <template v-if="isCellVisible(cellKey(day, room))">
+                                                    <!-- Nur rendern, wenn Cell (Tag×Raum) in/nahe Viewport; bei
+                                                         expand_days zeilenweise (siehe isDayRowVisible), damit die
+                                                         Auto-Zeilenhöhe beim X-Scrollen stabil bleibt -->
+                                                    <template v-if="settings.expand_days ? isDayRowVisible(day) : isCellVisible(cellKey(day, room))">
                                                         <template v-for="(cellItems) in [itemsInCell(day, room)]" :key="0">
                                                             <template v-for="(item, idx) in cellItems" :key="`${item.type}-${item.data.id}`">
                                                                 <div
                                                                     v-if="item.type === 'shift'"
                                                                     class="py-0.5"
+                                                                    @click.stop
                                                                 >
                                                                     <ShiftInCalendarCell
                                                                         :shift="item.data"
@@ -118,7 +170,7 @@
                                                                     @click="onEventClick(item.data, $event)"
                                                                 >
                                                                     <AsyncSingleEventInCalendar
-                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
+                                                                        v-memo="[item.data.id, item.data.updated_at, multiEdit, item.data.considerOnMultiEdit, fontSizeCalc, lineHeightCalc, cardWidthNum, day.withoutFormat, (room.roomId ?? room.id)]"
                                                                         :event="item.data"
                                                                         :multi-edit="multiEdit"
                                                                         :font-size="fontSizeCalc"
@@ -141,14 +193,18 @@
                                                                     />
                                                                 </div>
                                                             </template>
-                                                            <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt -->
-                                                            <div v-if="cellItems.length <= 1 && !settings.expand_days" class="h-2"></div>
+                                                            <!-- Platzhalter: weicher Abschluss, wenn wenig Inhalt. Nicht im
+                                                                 Kompaktmodus: dort würde er die Einzeiler-Kachel über die
+                                                                 flache Zeilenhöhe drücken und unnötige Scrollbalken erzeugen. -->
+                                                            <div v-if="cellItems.length <= 1 && !settings.expand_days && !isCompact" class="h-2"></div>
                                                         </template>
                                                     </template>
                                                 </div>
 
-                                                <!-- "+"-Button: jetzt OBEN RECHTS, außerhalb des Scrollbereichs -->
+                                                <!-- "+"-Button: jetzt OBEN RECHTS, außerhalb des Scrollbereichs.
+                                                     Im Multi-Edit ausgeblendet — dort wählt der Zellen-Klick die Zelle aus. -->
                                                 <button
+                                                    v-if="!multiEdit"
                                                     type="button"
                                                     class="pointer-events-auto group-hover/container:inline-flex hidden absolute bottom-1 right-1 z-20
                                                      items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
@@ -165,6 +221,7 @@
                                     </template>
                                 </template>
                             </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -197,13 +254,13 @@
             <div class="w-max" v-else>
                 <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
                     <div v-for="room in newCalendarData" :key="room.roomId ?? room.id">
-                        <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }" class="flex items-center h-full truncate">
+                        <div :style="{ minWidth: columnWidth + 'px', maxWidth: columnWidth + 'px', width: columnWidth + 'px' }" class="flex items-center h-full truncate">
                             <SingleRoomInHeader :room="room" is-light />
                         </div>
                     </div>
                 </div>
                 <div class="flex gap-0.5">
-                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', width: zoom_factor * 212 + 'px' }">
+                    <div v-for="room in newCalendarData" :key="room.roomId ?? room.id" class="flex flex-col" :style="{ minWidth: columnWidth + 'px', maxWidth: columnWidth + 'px', width: columnWidth + 'px' }">
                         <template v-for="day in days" :key="day.fullDay">
                             <div v-for="item in itemsInCell(day, room)" :key="`${item.type}-${item.data.id}`" class="mb-0.5" :id="'scroll_container-' + day.withoutFormat">
                                 <div v-if="item.type === 'shift'" class="py-0.5">
@@ -221,7 +278,7 @@
                                         :line-height="lineHeightCalc"
                                         :rooms="rooms"
                                         :has-admin-role="isAdmin"
-                                        :width="zoom_factor * 196"
+                                        :width="eventCardWidth"
                                         :first_project_tab_id="first_project_tab_id"
                                         :firstProjectShiftTabId="firstProjectShiftTabId"
                                         @edit-event="showEditEventModel"
@@ -244,19 +301,77 @@
 
         <!-- Multi-Edit Bottom Bar -->
         <div class="fixed bottom-0 w-full bg-artwork-navigation-background/30 z-[45] pointer-events-none py-3" v-if="multiEdit">
-            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="!isPlanning">
+            <!-- Auswahl-Zähler bzw. Bedien-Hinweis -->
+            <div class="flex items-center justify-center pb-2">
+                <span class="rounded-full bg-artwork-navigation-background/90 text-white text-xs px-3 py-1 select-none">
+                    <template v-if="checkedCount > 0 || selectedCellCount > 0">
+                        {{ $t('{0} event(s) · {1} cell(s) selected', [checkedCount, selectedCellCount]) }}
+                    </template>
+                    <template v-else>
+                        {{ $t('Click events to select them - click free cell space to select cells') }}
+                    </template>
+                </span>
+            </div>
+            <!-- Zellen ausgewählt: erstellen bzw. (mit Terminen kombiniert) duplizieren -->
+            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-if="selectedCellCount > 0">
                 <FormButton
-                    :disabled="checkedCount === 0"
-                    @click="showMultiEditModal = true"
-                    :text="checkedCount + ' Termin(e) verschieben'"
+                    v-if="checkedCount === 0 && (isAdmin || can('create events without request') || can('can edit planning calendar'))"
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showMultiCellCreateModal = true"
+                    :text="$t('Create event in {0} cells', [selectedCellCount])"
                 />
                 <FormButton
+                    v-else
                     class="transition-all duration-300 ease-in-out pointer-events-auto"
-                    @click="showMultiDuplicateModal = true"
-                    :disabled="checkedCount === 0"
-                    :text="checkedCount + ' ' + $t('Duplicate events')"
+                    @click="showMultiCellDuplicateModal = true"
+                    :text="$t('Duplicate {0} event(s) into {1} cells', [checkedCount, selectedCellCount])"
                 />
+                <FormButton
+                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="cancelMultiEditDuplicateSelection"
+                    :text="$t('Cancel selection')"
+                />
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-else>
+                <!-- Bearbeiten (beide Kalender; im Planungskalender nur mit Bearbeitungsrecht) -->
+                <template v-if="!isPlanning || can('can edit planning calendar') || isAdmin">
+                    <FormButton
+                        :disabled="checkedCount === 0"
+                        @click="showMultiEditModal = true"
+                        :text="checkedCount + ' Termin(e) verschieben'"
+                        class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    />
+                    <FormButton
+                        class="transition-all duration-300 ease-in-out pointer-events-auto"
+                        @click="showMultiDuplicateModal = true"
+                        :disabled="checkedCount === 0"
+                        :text="checkedCount + ' ' + $t('Duplicate events')"
+                    />
+                </template>
+                <!-- Verifizierungs-Workflow (nur Planungskalender) -->
+                <template v-if="isPlanning">
+                    <FormButton
+                        v-if="can('can see planning calendar') || isAdmin"
+                        :disabled="checkedCount === 0"
+                        @click="requestVerification"
+                        :text="checkedCount + ' ' + $t('request verification')"
+                        class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    />
+                    <FormButton
+                        v-if="can('can edit planning calendar') || isAdmin"
+                        :disabled="checkedCount === 0"
+                        @click="approveRequests"
+                        :text="checkedCount + ' ' + $t('Approve events')"
+                        class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    />
+                    <FormButton
+                        v-if="can('can edit planning calendar') || isAdmin"
+                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                        @click="showRejectEventVerificationRequestModal = true"
+                        :disabled="checkedCount === 0"
+                        :text="checkedCount + ' ' + $t('Reject events')"
+                    />
+                </template>
                 <FormButton
                     v-if="hasSelectedRoomRequests"
                     class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
@@ -272,6 +387,7 @@
                     :text="checkedCount + ' ' + $t('Decline requests')"
                 />
                 <FormButton
+                    v-if="!isPlanning || can('can edit planning calendar') || isAdmin"
                     class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="openDeleteSelectedEventsModal = true"
                     :disabled="checkedCount === 0"
@@ -282,43 +398,6 @@
                     @click="cancelMultiEditDuplicateSelection"
                     :disabled="checkedCount === 0"
                     :text="$t('Cancel selection')"
-                />
-            </div>
-            <div class="flex flex-wrap items-center justify-center gap-2 px-4" v-else>
-                <FormButton
-                    v-if="can('can see planning calendar') || isAdmin"
-                    :disabled="checkedCount === 0"
-                    @click="requestVerification"
-                    :text="checkedCount + ' ' + $t('request verification')"
-                    class="transition-all duration-300 ease-in-out pointer-events-auto"
-                />
-                <FormButton
-                    v-if="can('can edit planning calendar') || isAdmin"
-                    :disabled="checkedCount === 0"
-                    @click="approveRequests"
-                    :text="checkedCount + ' ' + $t('Approve events')"
-                    class="transition-all duration-300 ease-in-out pointer-events-auto"
-                />
-                <FormButton
-                    v-if="can('can edit planning calendar') || isAdmin"
-                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                    @click="showRejectEventVerificationModal = true"
-                    :disabled="checkedCount === 0"
-                    :text="checkedCount + ' ' + $t('Reject events')"
-                />
-                <FormButton
-                    v-if="hasSelectedRoomRequests"
-                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
-                    @click="bulkAcceptRoomRequests"
-                    :disabled="checkedCount === 0"
-                    :text="checkedCount + ' ' + $t('Accept requests')"
-                />
-                <FormButton
-                    v-if="hasSelectedRoomRequests"
-                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
-                    @click="bulkDeclineRoomRequests"
-                    :disabled="checkedCount === 0"
-                    :text="checkedCount + ' ' + $t('Decline requests')"
                 />
             </div>
         </div>
@@ -360,7 +439,25 @@
         />
 
         <MultiEditModal v-if="showMultiEditModal" :checked-events="editEvents" :rooms="rooms" @closed="closeMultiEditModal" />
-        <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" @closed="closeMultiDuplicateModal" />
+        <MultiDuplicateModal v-if="showMultiDuplicateModal" :checked-events="editEvents" :rooms="rooms" :is-planning="isPlanning" @closed="closeMultiDuplicateModal" />
+
+        <MultiCellEventCreateModal
+            v-if="showMultiCellCreateModal"
+            :cells="selectedCellsList"
+            :event-types="eventTypes"
+            :event-statuses="eventStatuses"
+            :rooms="rooms"
+            :is-planning="isPlanning"
+            @closed="closeMultiCellCreateModal"
+        />
+        <MultiCellDuplicateModal
+            v-if="showMultiCellDuplicateModal"
+            :event-ids="editEvents"
+            :cells="selectedCellsList"
+            :rooms="rooms"
+            :is-planning="isPlanning"
+            @closed="closeMultiCellDuplicateModal"
+        />
 
         <ConfirmDeleteModal
             v-if="openDeleteSelectedEventsModal"
@@ -395,11 +492,12 @@
             @close="closeShowRejectEventVerificationModal"
             :event-ids="editEvents"
         />
+
     </div>
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef} from "vue";
+import {computed, defineAsyncComponent, inject, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import axios from "axios";
 import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
@@ -407,9 +505,13 @@ import {IconAlertTriangle, IconCirclePlus} from "@tabler/icons-vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useShiftCalendarListener} from "@/Composeables/Listener/useShiftCalendarListener.js";
+import {useCalendarZoom} from "@/Composeables/useCalendarZoom.js";
+import {useDayRemarks} from "@/Composeables/useDayRemarks.js";
+import {formatMonthLabel} from "@/Composeables/calendarDateUtils.js";
 import {can} from "laravel-permission-to-vuejs";
 import CalendarPlaceholder from "@/Components/Calendar/Elements/CalendarPlaceholder.vue";
 import SingleRoomInHeader from "@/Components/Calendar/Elements/SingleRoomInHeader.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
 
 const props = defineProps({
     rooms: { type: Object, required: true },
@@ -441,6 +543,8 @@ const DeclineEventModal = defineAsyncComponent({ loader: () => import("@/Layouts
 const ConfirmDeleteModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/ConfirmDeleteModal.vue") });
 const FormButton = defineAsyncComponent({ loader: () => import("@/Layouts/Components/General/Buttons/FormButton.vue") });
 const MultiEditModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiEditModal.vue") });
+const MultiCellEventCreateModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiCellEventCreateModal.vue") });
+const MultiCellDuplicateModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiCellDuplicateModal.vue") });
 const RejectEventVerificationRequestModal = defineAsyncComponent({
     loader: () => import("@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue"),
     delay: 200,
@@ -453,18 +557,46 @@ const AsyncSingleEventInCalendar = defineAsyncComponent({
 const ShiftInCalendarCell = defineAsyncComponent({
     loader: () => import('@/Components/Calendar/Elements/ShiftInCalendarCell.vue'),
 });
+const DayRemarkCell = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/Elements/DayRemarkCell.vue'),
+});
+
+// Tagesbemerkungen: Sichtbarkeit/Rechte zentral aus dem Composable.
+// Anzeige-Updates (eigenes Speichern + Broadcasts) laufen über den reaktiven
+// Live-Store in useDayRemarks — die day-Objekte hier sind NICHT zuverlässig
+// reaktiv (computed/enrichDays + v-memo auf den Seiten), Mutationen daran
+// würden kein Re-Render auslösen. Bearbeitet wird inline in der Zelle
+// (DayRemarkCell); das Modal nutzen nur Schichtplan & Tagesansichten.
+const {
+    columnVisible: dayRemarksColumnVisible,
+    canEdit: dayRemarksCanEdit,
+    listenForDayRemarkUpdates,
+} = useDayRemarks();
+// Live-Updates anderer User → Store (Zellen/Chips lesen reaktiv daraus)
+const stopDayRemarkListener = listenForDayRemarkUpdates();
+onBeforeUnmount(() => stopDayRemarkListener());
 
 // User & Settings
 const user = computed(() => page.props.auth.user);
 const settings = computed(() => user.value.calendar_settings);
-const zoom_factor = ref(user.value.zoom_factor ?? 1);
+const {
+    zoomFactor: zoom_factor,
+    columnWidth,
+    rowHeight,
+    eventCardWidth,
+    isCompact,
+    zoomIn,
+    zoomOut,
+    monthViewRequestId,
+} = useCalendarZoom();
 const isDaily = computed(() => !!user.value.calendar_daily_view);
 const atAGlance = computed(() => !!user.value.at_a_glance);
 
-// Maße/Styles
-const cellWidthPx = computed(() => `${zoom_factor.value * 212}px`);
-const cardWidthNum = computed(() => zoom_factor.value * 196);
-const rowHeightPx = computed(() => `${zoom_factor.value * 212}px`);
+// Maße/Styles: Spaltenbreite ist vom Zoom entkoppelt (Anzeigeeinstellung),
+// der Zoom steuert nur noch die Zeilenhöhe/Informationsdichte.
+const cellWidthPx = computed(() => `${columnWidth.value}px`);
+const cardWidthNum = computed(() => eventCardWidth.value);
+const rowHeightPx = computed(() => `${rowHeight.value}px`);
 const dayRowStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
@@ -475,6 +607,39 @@ const cellStyle = computed(() => ({
     height: settings.value.expand_days ? "" : rowHeightPx.value,
     minHeight: settings.value.expand_days ? rowHeightPx.value : ""
 }));
+// Vertikale Trennlinie zwischen den Raumspalten (inline statt Tailwind-Klasse,
+// damit sie unabhängig vom Zeilen-Border-Style bleibt).
+const cellSeparatorStyle = computed(() => ({
+    borderLeft: `1px solid ${settings.value.high_contrast ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.18)'}`
+}));
+
+// Wochenend-/Feiertags-Einfärbung der ganzen Tageszeile (inkl. Datumsspalte).
+// Feiertag schlägt Wochenende; Feiertagston wird aus holiday.color abgeleitet.
+// Eintägige Feiertage färben deutlich, mehrtägige Zeiträume (Ferien) nur sehr
+// dezent — sonst wären ganze Wochen farblich überladen. Liegen beide auf einem
+// Tag, gewinnt der eintägige Feiertag.
+const dayTintColor = (day) => {
+    if (!day || day.isExtraRow) return null;
+    const holidays = day.holidays ?? [];
+    const singleDayHoliday = holidays.find(
+        (holiday) => holiday?.color && (!holiday.end_date || holiday.end_date === holiday.date)
+    );
+    const coloredHoliday = singleDayHoliday ?? holidays.find((holiday) => holiday?.color);
+    if (coloredHoliday) {
+        const alpha = singleDayHoliday
+            ? (settings.value.high_contrast ? '59' : '33')
+            : (settings.value.high_contrast ? '33' : '1A');
+        return `${coloredHoliday.color}${alpha}`;
+    }
+    if (day.isWeekend) {
+        return settings.value.high_contrast ? '#dbeafe' : '#eff6ff';
+    }
+    return null;
+};
+const dayRowBackgroundStyle = (day) => {
+    const tint = dayTintColor(day);
+    return tint ? { backgroundColor: tint } : {};
+};
 // Topbar count
 const eventsWithoutRoomLen = computed(() =>
     Array.isArray(props.eventsWithoutRoom) ? props.eventsWithoutRoom.length : (props.eventsWithoutRoom?.length ?? 0)
@@ -485,8 +650,8 @@ const topbarRef = ref(null);
 const calendarRef = ref(null);
 const topbarHeight = ref(80); // default fallback
 
-// Sticky offset for the date in the day column: topbar + room header (h-16) + spacing
-const dayStickyTop = computed(() => topbarHeight.value + 64 + 8);
+// Sticky offset for the date in the day column: topbar + room header (h-11) + spacing
+const dayStickyTop = computed(() => topbarHeight.value + 44 + 8);
 let topbarObserver = null;
 
 // State
@@ -588,14 +753,31 @@ function useCellVisibility(options = {}) {
         visibleKeys.value.clear();
     };
 
-    return { observe, isVisible, dispose };
+    return { observe, isVisible, visibleKeys, dispose };
 }
-const { observe: observeCell, isVisible: isCellVisible, dispose: disposeCells } = useCellVisibility({
+const { observe: observeCell, isVisible: isCellVisible, visibleKeys: visibleCellKeys, dispose: disposeCells } = useCellVisibility({
     root: null,
     rootMargin: '1200px',
     threshold: 0.01
 });
 const cellKey = (day, room) => `${day.withoutFormat}:${(room.roomId ?? room.id)}`;
+
+// Bei "Tage aufklappen" bestimmen ALLE Zellen einer Zeile deren Auto-Höhe.
+// Würden Zellen horizontal virtualisiert (mount/unmount je nach X-Scroll),
+// spränge die Zeilenhöhe beim Scrollen und der Inhalt verschöbe sich vertikal.
+// Deshalb rendert eine Zeile dort alle Raum-Zellen, sobald sie vertikal in
+// Viewport-Nähe ist — erkennbar daran, dass mindestens eine ihrer Zellen im
+// IntersectionObserver sichtbar ist (die Zellen unter dem Viewport-X-Bereich
+// sind das immer). Im Modus mit fixer Zeilenhöhe bleibt die sparsamere
+// Zell-Virtualisierung in beiden Achsen aktiv.
+const visibleDayKeys = computed(() => {
+    const days = new Set<string>();
+    for (const key of visibleCellKeys.value) {
+        days.add(key.slice(0, key.indexOf(':')));
+    }
+    return days;
+});
+const isDayRowVisible = (day) => visibleDayKeys.value.has(day.withoutFormat);
 const registerCell = (el: HTMLElement | null, day: DayLike, room: RoomLike) => {
     const key = cellKey(day, room);
     if (el) {
@@ -969,9 +1151,13 @@ onMounted(async () => {
         });
         topbarObserver.observe(topbarRef.value);
     }
+
+    // Strg/Cmd + Scrollrad zoomt durch die Stufen (statt Browser-Zoom)
+    calendarRef.value?.addEventListener('wheel', handleWheelZoom, { passive: false });
 });
 
 onBeforeUnmount(() => {
+    calendarRef.value?.removeEventListener('wheel', handleWheelZoom);
     if (monthObserver) monthObserver.disconnect();
     monthObserver = null;
     monthSentinelSeen.value.clear();
@@ -993,18 +1179,24 @@ onBeforeUnmount(() => {
 
 // ---------- Multi-Edit etc. ----------
 const checkedCount = computed(() => editEvents.value.length);
-const hasSelectedRoomRequests = computed(() => {
-    if (!editEvents.value.length) return false;
+// Nur die tatsächlichen Raumanfragen aus der Auswahl — normale Termine in einer
+// gemischten Auswahl gehen nicht mit an die Bulk-Annehmen/-Ablehnen-Endpunkte.
+const selectedRoomRequestIds = computed(() => {
+    if (!editEvents.value.length) return [];
     const selectedIds = new Set(editEvents.value);
+    const requestIds = [];
     for (const room of newCalendarData.value) {
         for (const slot of Object.values(room.content || {})) {
             for (const evt of (slot.events ?? [])) {
-                if (selectedIds.has(evt.id) && evt.occupancy_option) return true;
+                if (selectedIds.has(evt.id) && evt.occupancy_option && !requestIds.includes(evt.id)) {
+                    requestIds.push(evt.id);
+                }
             }
         }
     }
-    return false;
+    return requestIds;
 });
+const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.length > 0);
 
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
@@ -1030,6 +1222,7 @@ function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventR
 }
 function toggleMultiEdit(value) {
     multiEdit.value = value;
+    if (!value) clearCellSelection();
     if (!value && editEvents.value.length) {
         const next = newCalendarData.value.map(room => {
             let roomChanged = false;
@@ -1048,8 +1241,67 @@ function toggleMultiEdit(value) {
         editEvents.value = [];
     }
 }
+// ---------- Multi-Edit: Zellen-Auswahl (Tag×Raum) ----------
+// Klick auf freie Zellenfläche im Multi-Edit wählt die Zelle aus. Nur Zellen
+// gewählt → "Termin in N Zellen erstellen"; Termine UND Zellen gewählt →
+// "M Termin(e) in N Zellen duplizieren".
+const selectedCells = ref(new Map());
+const selectedCellCount = computed(() => selectedCells.value.size);
+const selectedCellsList = computed(() => Array.from(selectedCells.value.values()));
+const showMultiCellCreateModal = ref(false);
+const showMultiCellDuplicateModal = ref(false);
+
+const isCellSelected = (day, room) => selectedCells.value.has(cellKey(day, room));
+const toggleCellSelection = (day, room) => {
+    if (!multiEdit.value || day.isExtraRow) return;
+    const key = cellKey(day, room);
+    const next = new Map(selectedCells.value);
+    if (next.has(key)) {
+        next.delete(key);
+    } else {
+        next.set(key, { day: day.withoutFormat, room_id: room.roomId ?? room.id });
+    }
+    selectedCells.value = next;
+};
+const clearCellSelection = () => {
+    if (selectedCells.value.size) selectedCells.value = new Map();
+};
+
+// Nach Erstellen/Duplizieren die betroffenen Monate neu laden (zuverlässiger
+// als auf Broadcasts zu warten)
+async function refetchMonthsForCells(cellList) {
+    const keys = new Set(
+        cellList.map((cell) => (cell.day ?? "").slice(0, 7)).filter(Boolean)
+    );
+    for (const key of keys) {
+        loadedMonths.value.delete(key);
+        failedMonths.value.delete(key);
+        await loadMonth(key, ++currentEpoch);
+    }
+}
+
+const closeMultiCellCreateModal = async (created) => {
+    showMultiCellCreateModal.value = false;
+    if (created) {
+        const cells = selectedCellsList.value;
+        clearCellSelection();
+        await refetchMonthsForCells(cells);
+    }
+};
+
+const closeMultiCellDuplicateModal = async (duplicated) => {
+    showMultiCellDuplicateModal.value = false;
+    if (duplicated) {
+        const cells = selectedCellsList.value;
+        clearCellSelection();
+        cancelMultiEditDuplicateSelection();
+        await refetchMonthsForCells(cells);
+    }
+};
+
 const cancelMultiEditDuplicateSelection = () => {
-    // Clear event selections but keep multi-edit mode active
+    // Clear event and cell selections but keep multi-edit mode active
+    clearCellSelection();
     editEvents.value = [];
     const next = newCalendarData.value.map(room => {
         let roomChanged = false;
@@ -1072,10 +1324,10 @@ const acceptSingleRoomRequest = (event) => {
     router.put(route('events.accept', { event: event.id }), { accepted: true }, { preserveScroll: true });
 };
 const bulkAcceptRoomRequests = () => {
-    router.put(route('events.bulk-accept'), { eventIds: editEvents.value }, { preserveScroll: true });
+    router.put(route('events.bulk-accept'), { eventIds: selectedRoomRequestIds.value }, { preserveScroll: true });
 };
 const bulkDeclineRoomRequests = () => {
-    router.put(route('events.bulk-decline'), { eventIds: editEvents.value }, { preserveScroll: true });
+    router.put(route('events.bulk-decline'), { eventIds: selectedRoomRequestIds.value }, { preserveScroll: true });
 };
 const openDeleteEventModal = (event, type) => {
     deleteType.value = type;
@@ -1334,6 +1586,12 @@ const requestVerification = () => {
     });
 };
 
+const closeShowRejectEventVerificationModal = () => {
+    showRejectEventVerificationRequestModal.value = false;
+    // Auswahl leeren, Multi-Edit-Modus bleibt aktiv (Zellen sind in diesem Zweig nie gewählt)
+    cancelMultiEditDuplicateSelection();
+};
+
 const openAddSubEventModal = (mainEvent, mode, desiredEvent) => {
     if (mode === 'create') {
         //only set eventToEdit as base for new sub event
@@ -1403,9 +1661,45 @@ const onEventClick = (evt: any, e?: MouseEvent) => {
     const nextState = !(evt?.considerOnMultiEdit === true);
     handleMultiEditEventCheckboxChange(evt.id, nextState, (evt?.room_id ?? evt?.roomId ?? null));
 };
+
+// ---------- Zoom-Bedienung ----------
+// Strg/Cmd + Scrollrad: stufig zoomen, Browser-Zoom unterdrücken. Kurz
+// gedrosselt, damit ein Radtick nicht mehrere Stufen überspringt.
+let wheelZoomLockedUntil = 0;
+const handleWheelZoom = (e: WheelEvent) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (atAGlance.value) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now < wheelZoomLockedUntil) return;
+    wheelZoomLockedUntil = now + 180;
+    if (e.deltaY > 0) zoomOut();
+    else zoomIn();
+};
+
+// "Monatsansicht" aus dem Zoom-Dropdown: nach dem Sprung auf die kompakteste
+// Stufe zum Anfang des aktuell fokussierten Monats scrollen.
+watch(monthViewRequestId, async () => {
+    const key = focusedMonthKey.value ?? monthList.value[0]?.key;
+    if (!key) return;
+    const firstDayOfMonth = (props.days as any[]).find(
+        (d: any) => (d.withoutFormat || '').startsWith(key) && !d.isExtraRow
+    );
+    if (!firstDayOfMonth) return;
+    await nextTick();
+    await jumpToDayOfMonth(firstDayOfMonth.withoutFormat);
+});
 </script>
 
 <style scoped>
+/* Monatsname mittig zur sichtbaren Bildschirmbreite: sticky hält das Label
+   beim horizontalen Scrollen durch das breite Grid in der Viewport-Mitte. */
+.month-separator-label {
+    position: sticky;
+    left: 50vw;
+    transform: translateX(-50%);
+}
+
 .cell {
     overflow: auto;
     scrollbar-color: rgba(156,163,175,0.5) transparent; /* Firefox */

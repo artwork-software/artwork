@@ -4,6 +4,7 @@ namespace Artwork\Modules\ExternalUserManagement\Service;
 
 use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\ExternalUserManagement\Repository\ExternalUserSourceRepository;
+use Artwork\Modules\ExternalUserManagement\Support\OidcProviderPreset;
 use Illuminate\Database\Eloquent\Collection;
 
 class ExternalUserSourceService
@@ -30,12 +31,28 @@ class ExternalUserSourceService
 
     public function create(array $data): ExternalUserSource
     {
-        return $this->repository->create($data);
+        return $this->repository->create($this->normalizePresetConfig($data));
     }
 
     public function update(ExternalUserSource $source, array $data): ExternalUserSource
     {
-        return $this->repository->update($source, $data);
+        return $this->repository->update($source, $this->normalizePresetConfig($data));
+    }
+
+    /**
+     * Presets (Google/Microsoft/Custom) auf dieselbe Config-Struktur wie Custom
+     * normalisieren, bevor die Verbindung persistiert wird.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function normalizePresetConfig(array $data): array
+    {
+        if (($data['type'] ?? null) === 'identity_provider' && isset($data['config']) && is_array($data['config'])) {
+            $data['config'] = OidcProviderPreset::normalize($data['config']);
+        }
+
+        return $data;
     }
 
     public function delete(ExternalUserSource $source): bool

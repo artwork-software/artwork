@@ -627,6 +627,25 @@
                         </th>
                     @endforeach
                 </tr>
+
+                {{-- Tagesbemerkungen (optional): eine Zeile unter den Tages-Headern --}}
+                @php
+                    $pageHasRemarks = !empty($dayRemarks)
+                        && collect($daysPage)->contains(fn ($d) => !empty($dayRemarks[$d['fullDay']] ?? null));
+                @endphp
+                @if($pageHasRemarks)
+                    <tr>
+                        <th colspan="2"
+                            style="font-size:{{ $s(7) }}; font-weight:700; padding:2px 3px; text-align:right; vertical-align:top; background-color:#fef9ec; border-bottom:1px solid rgba(64,64,64,0.35);">
+                            Tagesbemerkungen
+                        </th>
+                        @foreach($daysPage as $dayInfo)
+                            <td style="font-size:{{ $s(7) }}; line-height:1.25; padding:2px 3px; text-align:left; vertical-align:top; background-color:#fef9ec; border-bottom:1px solid rgba(64,64,64,0.35); word-wrap:break-word;">
+                                {{ $dayRemarks[$dayInfo['fullDay']] ?? '' }}
+                            </td>
+                        @endforeach
+                    </tr>
+                @endif
                 </thead>
 
                 <tbody>

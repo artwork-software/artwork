@@ -6,10 +6,10 @@
                 <div class="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap">
                     <!-- Datepicker first (top-left), as everywhere else in the app -->
                     <div class="shrink-0">
-                        <DatePickerComponent
+                        <DateRangeControl
                             v-if="dataArray"
-                            :dateValueArray="dataArray"
-                            :is_inventory_article_planning="true"
+                            :date-value-array="dataArray"
+                            mode="article-planning"
                         />
                     </div>
 
@@ -112,6 +112,21 @@
                                     class="size-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
                                 />
                                 {{ $t('Only planned articles') }}
+                            </label>
+
+                            <!-- Ansichtsübergreifend (users-Spalte) — gleiche Einstellung wie in den Kalender-Anzeigeoptionen -->
+                            <label class="mt-2 flex items-start gap-2 text-[12px] font-medium text-zinc-700 cursor-pointer select-none max-w-[260px]">
+                                <input
+                                    type="checkbox"
+                                    v-model="shareCalendarDate"
+                                    class="mt-0.5 size-3.5 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <span>
+                                    {{ $t('Share time period across views') }}
+                                    <span class="block text-[10px] font-normal text-zinc-400">
+                                        {{ $t('Calendar, planning calendar, shift plan, list view and article planning always show the same time period. Changing the date in one view applies it everywhere.') }}
+                                    </span>
+                                </span>
                             </label>
                         </div>
                     </teleport>
@@ -517,6 +532,8 @@ const issuesByArticle = computed(() => {
 
 // Ref 1.18: "nur verplante" toggle (persisted per user).
 const onlyPlanned = ref(props.planningSettings?.only_planned ?? false);
+// Ansichtsübergreifend (users-Spalte), daher aus auth.user statt den Planning-Settings
+const shareCalendarDate = ref(usePage().props.auth.user.share_calendar_date ?? false);
 const isArticlePlanned = (article) => (issuesByArticle.value[article.id]?.length ?? 0) > 0;
 
 // Filtered grouped articles based on debounced search input
@@ -621,6 +638,7 @@ const persistViewSettings = debounce(() => {
     const openSubcategories = Object.keys(subOpen).filter((k) => subOpen[k]);
     router.patch(route('update.user.inventory.article-plan.view-settings.update', usePage().props.auth.user.id), {
         only_planned: onlyPlanned.value,
+        share_calendar_date: shareCalendarDate.value,
         open_categories: openCategories,
         open_subcategories: openSubcategories,
     }, {
@@ -679,6 +697,7 @@ const toggleAllCategories = () => {
 
 // Persist the toggle whenever it changes.
 watch(onlyPlanned, persistViewSettings);
+watch(shareCalendarDate, persistViewSettings);
 
 /** Helpers */
 const countGroup = (group) => {
@@ -833,8 +852,8 @@ const onBarLeave = () => {
     tooltip.issue = null;
 };
 
-const DatePickerComponent = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
+const DateRangeControl = defineAsyncComponent({
+    loader: () => import('@/Artwork/DateRange/DateRangeControl.vue'),
     delay: 200,
 });
 

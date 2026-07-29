@@ -39,7 +39,7 @@
             border: 1px solid #d4d4d8;
         }
         table.cal th.kw { width: 26px; background: #3f3f46; }
-        table.cal th.we { background: #27272a; }
+        table.cal th.we { background: #1e3a8a; }
 
         td.kw {
             border: 1px solid #d4d4d8;
@@ -57,7 +57,8 @@
             height: 90px; /* Mindesthöhe – Zellen wachsen bei vollem Inhalt mit */
         }
         td.out { background: #f4f4f5; }
-        td.weekend { background: #fafaf9; }
+        td.weekend { background: #dbeafe; }
+        td.weekend .daynum { color: #1e3a8a; }
         td.holiday { background: #fef2f2; }
 
         .daynum { font-size: 10px; font-weight: 700; color: #3f3f46; margin-bottom: 2px; }
@@ -242,7 +243,7 @@
         </table>
 
         <div class="legend">
-            <span><span class="swatch" style="background:#fafaf9;"></span>Wochenende</span>
+            <span><span class="swatch" style="background:#dbeafe;"></span>Wochenende</span>
             <span><span class="swatch" style="background:#fef2f2;"></span>Feiertag</span>
             <span><span class="swatch" style="background:#f4f4f5;"></span>anderer Monat</span>
             <span><span class="swatch" style="background:#a1a1aa;"></span>Individuelle Zeit</span>

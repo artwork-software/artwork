@@ -5,6 +5,7 @@ namespace Artwork\Modules\Project\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\BusinessIntelligence\Models\BiAudienceCategoryValue;
 use Artwork\Modules\BusinessIntelligence\Models\BiEventData;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectData;
 use Artwork\Modules\BusinessIntelligence\Models\BiProjectRoomCapacity;
@@ -363,19 +364,37 @@ class Project extends Model
         return null;
     }
 
+    // biData/biEventData sind bewusst auf den Ist-Scope gefiltert: sämtliche
+    // Bestandsaufrufer (Dashboard, Export, Projektliste) meinen Ist-Zahlen.
+    // Plan-Zahlen laufen über die plan*-Relationen (BI-Ausbau Phase 3).
     public function biData(): HasOne
     {
-        return $this->hasOne(BiProjectData::class, 'project_id', 'id');
+        return $this->hasOne(BiProjectData::class, 'project_id', 'id')->where('scope', 'actual');
+    }
+
+    public function planBiData(): HasOne
+    {
+        return $this->hasOne(BiProjectData::class, 'project_id', 'id')->where('scope', 'plan');
     }
 
     public function biEventData(): HasMany
     {
-        return $this->hasMany(BiEventData::class, 'project_id', 'id');
+        return $this->hasMany(BiEventData::class, 'project_id', 'id')->where('scope', 'actual');
+    }
+
+    public function planBiEventData(): HasMany
+    {
+        return $this->hasMany(BiEventData::class, 'project_id', 'id')->where('scope', 'plan');
     }
 
     public function biRoomCapacities(): HasMany
     {
         return $this->hasMany(BiProjectRoomCapacity::class, 'project_id', 'id');
+    }
+
+    public function biAudienceCategoryValues(): HasMany
+    {
+        return $this->hasMany(BiAudienceCategoryValue::class, 'project_id', 'id');
     }
 
     public function biSnapshots(): HasMany

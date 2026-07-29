@@ -119,7 +119,10 @@ final class EventIndexTest extends FeatureTestCase
         // die Notification-Blöcke haben dann auf $room->name gecrasht (500).
         $this->actingAsAdmin();
         $project = Project::factory()->create();
-        $event = Event::factory()->create(['project_id' => $project->id]);
+        $event = Event::factory()->create([
+            'project_id' => $project->id,
+            'occupancy_option' => true,
+        ]);
         Room::find($event->room_id)?->delete();
 
         $response = $this->put(route('events.accept', $event), ['adminComment' => null]);
@@ -132,7 +135,10 @@ final class EventIndexTest extends FeatureTestCase
     {
         $this->actingAsAdmin();
         $project = Project::factory()->create();
-        $event = Event::factory()->create(['project_id' => $project->id]);
+        $event = Event::factory()->create([
+            'project_id' => $project->id,
+            'occupancy_option' => true,
+        ]);
         Room::find($event->room_id)?->delete();
 
         $response = $this->put(route('events.decline', $event), ['comment' => 'Kein Platz']);

@@ -28,7 +28,7 @@ class ExternalIssue extends Model
     use HasFactory;
 
     protected $fillable = [
-        'material_value', 'issued_by_id', 'received_by_id',
+        'material_value', 'issued_by_id', 'received_by_id', 'project_id',
         'issue_date', 'return_date', 'return_remarks',
         'external_name', 'external_address', 'external_email', 'external_phone', 'special_items_done',
         'name'
@@ -38,6 +38,7 @@ class ExternalIssue extends Model
         'material_value' => 'decimal:2',
         'issued_by_id' => 'integer',
         'received_by_id' => 'integer',
+        'project_id' => 'integer',
         'special_items_done' => 'boolean',
         'issue_date' => 'date',
         'return_date' => 'date',
@@ -56,6 +57,11 @@ class ExternalIssue extends Model
     public function receivedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by_id', 'id', 'user');
+    }
+
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\Artwork\Modules\Project\Models\Project::class, 'project_id');
     }
 
     public function files(): \Illuminate\Database\Eloquent\Relations\HasMany

@@ -80,10 +80,20 @@ readonly class ShiftListViewSerializer
             $data = [
                 'id' => $worker->id,
                 'type' => $type,
+                // Gleiche Pivot-Shape wie ShiftDTO::serializeAllWorkers — die Zeilen-Aktionen
+                // (User entfernen, Arbeitszeit/Notiz speichern) brauchen die Pivot-ID.
                 'pivot' => $worker->pivot ? [
+                    'id' => $worker->pivot->id ?? null,
                     'shift_qualification_id' => $worker->pivot->shift_qualification_id ?? null,
                     'is_overbooked' => (bool) ($worker->pivot->is_overbooked ?? false),
+                    'craft_abbreviation' => $worker->pivot->craft_abbreviation ?? null,
+                    'short_description' => $worker->pivot->short_description ?? null,
+                    'start_time' => $worker->pivot->start_time ?? null,
+                    'end_time' => $worker->pivot->end_time ?? null,
                 ] : null,
+                'globalQualifications' => $worker->relationLoaded('globalQualifications')
+                    ? $worker->globalQualifications->map(fn ($q) => ['id' => $q->id])->values()->all()
+                    : [],
                 'is_unavailable' => $shift !== null
                     && ShiftWorkerAvailability::isWorkerUnavailable($shift, $worker),
             ];

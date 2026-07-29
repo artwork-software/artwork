@@ -239,7 +239,7 @@ function normalizeTime(val) {
     return val
 }
 
-defineEmits(['userRemoved'])
+const emit = defineEmits(['userRemoved'])
 
 const props = defineProps({
     person: {
@@ -461,7 +461,11 @@ const returnCraftColor = computed(() => {
 const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState = true) => {
 
     const userType = user.type === 'user' ? 0 : user.type === 'freelancer' ? 1 : 2;
-    const usersPivotId = user.pivot.id;
+    const usersPivotId = user.pivot?.id;
+    if (!usersPivotId) {
+        console.error('deleteUserFromShift: pivot id missing on worker payload', user);
+        return;
+    }
     router.delete(
         route(
             'shift.removeUserByType',
@@ -478,11 +482,12 @@ const deleteUserFromShift = (user, removeFromSingleShift = true, preserveState =
             preserveScroll: true,
             // Verhindere kompletten Page-Reload – WebSockets übernehmen das UI-Update
             preserveState: true,
+            onSuccess: () => emit('userRemoved', { person: user }),
         }
     );
 }
 
-const hasAdminRole = () => props.isAdmin || usePage().props.auth.user?.roles?.some?.(r => r.name?.toLowerCase?.().includes('admin'))
+const hasAdminRole = () => is('artwork admin')
 </script>
 
 <style scoped>

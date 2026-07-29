@@ -14,6 +14,24 @@ class BudgetCacheService
     private const TTL_BUDGET = 3600;
     private const TTL_STATIC = 86400;
 
+    /**
+     * Memoisiert pro Projekt die Menge der mitzuinvalidierenden Projekt-IDs
+     * (Projekt selbst + Gruppen + Gruppen-Unterprojekte). Spart bei
+     * Mutations-Bursts (Spalte anlegen, Sage-Import) die wiederholten
+     * Gruppen-Queries pro gespeichertem Modell. Bewusst statisch: Gruppen-
+     * Zugehörigkeit ändert sich innerhalb eines Requests/Imports nicht.
+     *
+     * @var array<int, array<int, int>>
+     */
+    private static array $relatedProjectIdsMemo = [];
+
+    /**
+     * Dedupliziert WarmBudgetCache-Dispatches pro Request/Prozess.
+     *
+     * @var array<int, true>
+     */
+    private static array $warmDispatched = [];
+
     public function getBudgetPayload(int $projectId): ?array
     {
         return Cache::get($this->budgetKey($projectId));
@@ -31,17 +49,84 @@ class BudgetCacheService
 
     public function forgetForProjectGroup(Project $project): void
     {
-        $this->forgetBudgetPayload($project->id);
+        foreach ($this->relatedProjectIds($project->id) as $relatedProjectId) {
+            $this->forgetBudgetPayload($relatedProjectId);
+        }
+    }
 
-        foreach ($project->groups as $group) {
-            $this->forgetBudgetPayload($group->id);
+    public function forgetForProjectAndRelated(int $projectId): void
+    {
+        foreach ($this->relatedProjectIds($projectId) as $relatedProjectId) {
+            $this->forgetBudgetPayload($relatedProjectId);
+        }
+    }
+
+    /**
+     * True genau beim ersten Aufruf pro Projekt und Prozess - der Aufrufer
+     * dispatcht dann den WarmBudgetCache-Job. Wiederholte Saves im selben
+     * Request pushen so nicht erneut in die Queue (der Job selbst ist
+     * zusaetzlich ShouldBeUnique).
+     */
+    public function shouldDispatchWarmJob(int $projectId): bool
+    {
+        if (isset(self::$warmDispatched[$projectId])) {
+            return false;
         }
 
-        if ($project->is_group) {
-            foreach ($project->projectsOfGroup as $subProject) {
-                $this->forgetBudgetPayload($subProject->id);
+        if (count(self::$warmDispatched) > 500) {
+            self::$warmDispatched = [];
+        }
+
+        self::$warmDispatched[$projectId] = true;
+
+        return true;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function relatedProjectIds(int $projectId): array
+    {
+        if (!array_key_exists($projectId, self::$relatedProjectIdsMemo)) {
+            if (count(self::$relatedProjectIdsMemo) > 500) {
+                self::$relatedProjectIdsMemo = [];
             }
+
+            $ids = [$projectId];
+            $project = Project::find($projectId);
+
+            if ($project) {
+                foreach ($project->groups as $group) {
+                    $ids[] = $group->id;
+                }
+
+                if ($project->is_group) {
+                    foreach ($project->projectsOfGroup as $subProject) {
+                        $ids[] = $subProject->id;
+                    }
+                }
+            }
+
+            self::$relatedProjectIdsMemo[$projectId] = $ids;
         }
+
+        return self::$relatedProjectIdsMemo[$projectId];
+    }
+
+    /**
+     * Budget-Templates werden bei jedem Budget-Tab-Aufruf gebraucht -
+     * gecacht statt bei jedem Request alle Template-Tabellen zu laden.
+     */
+    public function getTemplates(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Cache::remember('budget:static:templates', self::TTL_BUDGET, function () {
+            return \Artwork\Modules\Budget\Models\Table::where('is_template', true)->get();
+        });
+    }
+
+    public function forgetTemplates(): void
+    {
+        Cache::forget('budget:static:templates');
     }
 
     public function getStaticLookups(): array

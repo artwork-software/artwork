@@ -8,7 +8,8 @@
           - {{ $t('Collective Booking') }}
         </span>
                 </div>
-                <TrashIcon
+                <PropertyIcon
+                    name="IconTrash"
                     v-if="currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data'])"
                     class="w-6 h-6 hover:text-red-600 cursor-pointer"
                     @click="showDeleteConfirmation"
@@ -72,11 +73,13 @@
                                     {{ $t('single booking') }} {{ index + 1 }}
                                   </span>
                                     <template>
-                                        <ChevronUpIcon
+                                        <PropertyIcon
+                                            name="IconChevronUp"
                                             v-if="isOpen(childBooking.id)"
                                             class="w-5 h-5 text-gray-500"
                                         />
-                                        <ChevronDownIcon
+                                        <PropertyIcon
+                                            name="IconChevronDown"
                                             v-else
                                             class="w-5 h-5 text-gray-500"
                                         />
@@ -123,9 +126,10 @@
                                             :height="5"
                                             :width="5"
                                         />
-                                        {{ comment.created_at }}
+                                        {{ formatDateTime(comment.created_at) }}
                                     </div>
-                                    <TrashIcon
+                                    <PropertyIcon
+                                        name="IconTrash"
                                         v-if="$page.props.auth.user.id === comment.user.id"
                                         class="w-6 h-6 hover:text-red-600 cursor-pointer"
                                         @click="removeComment(comment.id)"
@@ -150,8 +154,8 @@
 
 <script>
 import {defineComponent} from 'vue';
-import {XIcon, ChevronDownIcon, ChevronUpIcon} from '@heroicons/vue/outline';
-import {TrashIcon} from '@heroicons/vue/solid';
+import {formatBookingDataDate, formatDateTime} from '@/Layouts/Components/Budget/bookingDate.js';
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue';
 import {router, useForm} from '@inertiajs/vue3';
 import Permissions from '@/Mixins/Permissions.vue';
 import IconLib from '@/Mixins/IconLib.vue';
@@ -164,10 +168,7 @@ import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vu
 
 export default defineComponent({
     components: {
-        XIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        TrashIcon,
+        PropertyIcon,
         BaseModal,
         BookingModalContents,
         UserPopoverTooltip,
@@ -202,11 +203,8 @@ export default defineComponent({
         isOpen(id) {
             return Boolean(this.openChildren[id]);
         },
-        formatBookingDataDate(dateString) {
-            const [date] = dateString.split('T');
-            const [year, month, day] = date.split('-');
-            return `${day}.${month}.${year}`;
-        },
+        formatBookingDataDate,
+        formatDateTime,
         formattedAmount(value) {
             return Number(String(value).replace(',', '.')).toLocaleString('de-DE', {
                 minimumFractionDigits: 2
@@ -221,6 +219,7 @@ export default defineComponent({
                         this.$page.props.loadedProjectInformation.BudgetTab.recentlyCreatedSageAssignedDataComment
                     );
                     this.bookingDataCommentForm.reset();
+                    this.$emit('budget-updated');
                 }
             });
         },
@@ -230,6 +229,7 @@ export default defineComponent({
                 onSuccess: () => {
                     const idx = this.currentSageAssignedData.comments.findIndex(c => c.id === id);
                     if (idx > -1) this.currentSageAssignedData.comments.splice(idx, 1);
+                    this.$emit('budget-updated');
                 }
             });
         },

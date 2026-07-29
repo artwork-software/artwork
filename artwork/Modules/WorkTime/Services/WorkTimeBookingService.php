@@ -7,6 +7,7 @@ use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
 use Artwork\Modules\User\Services\WorkingHourCacheService;
+use Artwork\Modules\User\Services\ThreeMonthAverageTargetService;
 use Artwork\Modules\WorkTime\Repositories\WorkTimeBookingRepository;
 use Carbon\Carbon;
 
@@ -16,6 +17,7 @@ class WorkTimeBookingService
         protected GeneralSettings $settings,
         protected WorkTimeBookingRepository $repository,
         protected WorkingHourCacheService $workingHourCacheService,
+        protected ThreeMonthAverageTargetService $threeMonthAverageTargetService,
     ) {
     }
 
@@ -44,26 +46,42 @@ class WorkTimeBookingService
                 ? $today->diffInMinutes($plannedTime)
                 : 0;
 
-            if ($this->repository->isHoliday($today)) {
-                $wantedMinutes = 0;
+            $workedTimes = $this->calculateShiftMinutes($today, $user);
+
+            $isHoliday = $this->repository->isHoliday($today);
+
+            // Sondertage senken das Soll unabhängig davon, ob gearbeitet wurde:
+            // Arbeit am Feiertag erzeugt Plus-Stunden, die ein regulärer
+            // Ausgleichstag (volles Soll, keine Arbeit) später wieder abbaut.
+            if ($isHoliday) {
+                if ($user->activeWorkContract()?->use_three_month_average_for_target_reduction) {
+                    $wantedMinutes = max(0, $wantedMinutes - $this->threeMonthAverageTargetService
+                        ->averageMinutesFor($user, $today, $wantedMinutes));
+                } else {
+                    $wantedMinutes = 0;
+                }
             }
 
             // DP-18 Stufe 2: Nur Ausgleichstage für Sondertage (for_holiday) senken das Tagessoll.
             // Nicht-Holiday-Ausgleichstage lassen das Soll bestehen -> der freie Tag erzeugt ein
             // Minus-Delta = Überstundenabbau.
-            $holidayCompValue = (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
+            // Nicht an einem Feiertag: dort hat der Feiertagszweig oben das Soll
+            // bereits gesenkt — eine zweite Reduktion wäre doppelt.
+            $holidayCompValue = $isHoliday ? 0.0 : (float) \Artwork\Modules\Shift\Models\CompensationDayOff::query()
                 ->where('user_id', $user->id)
                 ->where('for_holiday', true)
                 ->whereNotNull('granted_date')
                 ->whereDate('granted_date', $today->toDateString())
                 ->sum('value');
-            if ($holidayCompValue >= 1.0) {
-                $wantedMinutes = 0;
-            } elseif ($holidayCompValue > 0) {
-                $wantedMinutes = (int) round($wantedMinutes * (1 - $holidayCompValue));
+            if ($holidayCompValue > 0) {
+                $reductionMinutes = $this->threeMonthAverageTargetService->reductionMinutesFor(
+                    $user,
+                    $today,
+                    min(1.0, $holidayCompValue),
+                    $wantedMinutes
+                );
+                $wantedMinutes = max(0, $wantedMinutes - $reductionMinutes);
             }
-
-            $workedTimes = $this->calculateShiftMinutes($today, $user);
             $workTimeBalanceChange = $this->calculateWorkTimeBalanceChange(
                 $workedTimes['total'],
                 $wantedMinutes

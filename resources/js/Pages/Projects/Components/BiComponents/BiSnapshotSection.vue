@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="canEdit" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end max-w-2xl print:hidden">
+        <div v-if="canEdit" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_9rem_auto] sm:items-end max-w-3xl print:hidden">
             <BaseInput
                 id="snapshot_name"
                 v-model="newName"
@@ -11,6 +11,14 @@
                 id="snapshot_date"
                 v-model="newDate"
                 :label="$t('Date')"
+            />
+            <ArtworkBaseListbox
+                :model-value="newScopeItem"
+                @update:model-value="value => newScope = value?.id ?? 'actual'"
+                :items="scopeItems"
+                by="id"
+                option-label="name"
+                :label="$t('Data set')"
             />
             <BaseUIButton @click="createSnapshot" :label="$t('Create')" is-add-button :disabled="!newName || !newDate" />
         </div>
@@ -80,6 +88,12 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <span class="font-medium text-sm text-gray-900">{{ snapshot.name }}</span>
+                        <span
+                            v-if="snapshot.scope === 'plan'"
+                            class="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700"
+                        >
+                            {{ $t('Plan') }}
+                        </span>
                         <span class="text-xs text-gray-400 ml-2">{{ formatDate(snapshot.snapshot_date) }}</span>
                         <span class="text-xs text-gray-400 ml-2">{{ $t('by') }} {{ snapshot.creator?.first_name }} {{ snapshot.creator?.last_name }}</span>
                     </div>
@@ -110,6 +124,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
@@ -119,19 +134,35 @@ import { useBiSaveFeedback } from '@/Composeables/BiSaveFeedback.js';
 
 const t = useTranslation();
 
+// Sage-Buchungen nur mit aktiver Schnittstelle in den Kennzahl-Grids zeigen
+const sageApiEnabled = !!usePage().props.sageApiEnabled;
+
 const props = defineProps({
     snapshots: { type: Array, default: () => [] },
     canEdit: { type: Boolean, default: false },
     projectId: { type: Number, required: true },
     current: { type: Object, default: () => ({}) },
+    audienceCategories: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['updated']);
+
+const categoryNameById = computed(() => new Map(
+    props.audienceCategories.map(category => [category.id, category.name])
+));
 
 const newName = ref('');
 const newDate = ref('');
 const expandedId = ref(null);
 const compareId = ref(null);
+
+// Scope-Wahl beim Anlegen: Ist- oder Plan-Datensatz einfrieren
+const scopeItems = [
+    { id: 'actual', name: t('Actual') },
+    { id: 'plan', name: t('Plan') },
+];
+const newScope = ref('actual');
+const newScopeItem = computed(() => scopeItems.find(i => i.id === newScope.value) ?? scopeItems[0]);
 
 const currencyFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
@@ -165,13 +196,26 @@ const flatten = (data) => {
         ['Revenue', { value: metricFromSnapshot(data, 'revenue_total', 'revenue'), translate: true }],
         ['Contracts', { value: num(dv.contract_count), translate: true }],
         ['Events', { value: num(dv.event_count), translate: true }],
-        ['Bookings', { value: num(dv.booking_count), translate: true }],
         ['Tasks total', { value: num(dv.task_total), translate: true }],
         ['Tasks open', { value: num(dv.task_open), translate: true }],
         ['Documents', { value: num(dv.document_count), translate: true }],
     ]);
+    if (sageApiEnabled) {
+        map.set('Bookings', { value: num(dv.booking_count), translate: true });
+    }
     (data?.tag_counts ?? []).forEach((tag) => {
         map.set(tag.tag_name_de || tag.tag_name, { value: num(tag.count), translate: false });
+    });
+    // Besucher*innen-Kategorien: Summe je Kategorie (Gesamt- oder Terminwerte)
+    const categorySums = new Map();
+    (data?.category_values ?? []).forEach((entry) => {
+        if (entry?.quantity === null || entry?.quantity === undefined) return;
+        const id = entry.bi_audience_category_id;
+        categorySums.set(id, (categorySums.get(id) ?? 0) + num(entry.quantity));
+    });
+    categorySums.forEach((value, id) => {
+        const name = categoryNameById.value.get(id) ?? `${t('Category')} #${id}`;
+        map.set(name, { value, translate: false });
     });
     return map;
 };
@@ -200,9 +244,12 @@ const comparison = computed(() => {
 
 // Verlauf über alle Snapshots (chronologisch) + aktueller Stand als letzter Punkt
 const trendChart = computed(() => {
-    if (props.snapshots.length < 2) return null;
+    // Verlaufslinie nur über Ist-Snapshots — Plan-Snapshots sind Zielmarken,
+    // keine Zeitreihe (sie erscheinen als gestrichelte Referenzlinien).
+    const actualSnapshots = props.snapshots.filter(s => (s.scope ?? 'actual') === 'actual');
+    if (actualSnapshots.length < 2) return null;
 
-    const sorted = [...props.snapshots].sort(
+    const sorted = [...actualSnapshots].sort(
         (a, b) => new Date(a.snapshot_date) - new Date(b.snapshot_date)
     );
 
@@ -271,6 +318,7 @@ const createSnapshot = async () => {
         () => axios.post(route('projects.bi.snapshots.store', props.projectId), {
             name: newName.value,
             snapshot_date: newDate.value,
+            scope: newScope.value,
         })
     );
     if (ok) {

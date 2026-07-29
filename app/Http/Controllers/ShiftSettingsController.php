@@ -7,6 +7,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Permission\Services\ShiftSettingsPermissionService;
 use Artwork\Modules\Shift\Models\ShiftCommitWorkflowUser;
 use Artwork\Modules\Shift\Services\GlobalQualificationService;
 use Artwork\Modules\Shift\Services\ShiftQualificationService;
@@ -107,6 +108,38 @@ class ShiftSettingsController extends Controller
                 ['shift_settings' => __('flash-messages.shift-settings.error.update')]
             );
         }
+
+        return $this->redirector->back();
+    }
+
+    public function updateGranularPermissions(
+        Request $request,
+        ShiftSettings $shiftSettings,
+        ShiftSettingsPermissionService $permissionService
+    ): RedirectResponse {
+        $enabled = $request->boolean('granular_permissions_enabled');
+
+        // Defaults nur EINMALIG verteilen. Sonst würde ein erneutes Off→On
+        // individuell entzogene granulare Rechte wieder zurückbringen.
+        if ($enabled && !$shiftSettings->granular_defaults_granted) {
+            $permissionService->grantGranularDefaultsToMasterPermissionHolders();
+            $shiftSettings->granular_defaults_granted = true;
+        }
+
+        $shiftSettings->granular_permissions_enabled = $enabled;
+        $shiftSettings->save();
+
+        return $this->redirector->back();
+    }
+
+    public function updateOwnRosterUncommittedShiftVisibility(
+        Request $request,
+        ShiftSettings $shiftSettings
+    ): RedirectResponse {
+        $shiftSettings->hide_uncommitted_shifts_from_own_roster = $request->boolean(
+            'hide_uncommitted_shifts_from_own_roster'
+        );
+        $shiftSettings->save();
 
         return $this->redirector->back();
     }

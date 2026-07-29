@@ -1,6 +1,17 @@
 <template>
     <ArtworkBaseModal @close="handleClose" v-if="cell && cell.id" :title="$t('Cell Details')" description="">
         <div class="mx-4">
+            <!-- Save Error Indicator -->
+            <div v-if="errorMessage" class="flex items-center justify-between mb-4 text-red-600 bg-red-50 p-3 rounded-md">
+                <div class="flex items-center">
+                    <IconAlertCircle stroke-width="1.5" class="mr-2 h-5 w-5" />
+                    <span class="text-sm font-medium">{{ errorMessage }}</span>
+                </div>
+                <button @click="errorMessage = null" class="p-1 hover:bg-red-100 rounded">
+                    <IconX class="w-4 h-4" stroke-width="1.5" />
+                </button>
+            </div>
+
             <!-- Error Indicator -->
             <div v-if="loadError" class="flex items-center mb-4 text-red-600 bg-red-50 p-3 rounded-md">
                 <IconAlertCircle stroke-width="1.5" class="mr-2 h-5 w-5" />
@@ -129,7 +140,7 @@
                     </button>
 
                     <!-- Summary -->
-                    <div class="mt-6 bg-gradient-to-r from-artwork-buttons-create to-blue-600 rounded-lg p-4 text-white">
+                    <div class="mt-6 bg-artwork-buttons-create rounded-lg p-4 text-white">
                         <div class="flex justify-between items-center">
                             <span class="font-semibold text-lg">{{ $t('Total') }}</span>
                             <span class="text-2xl font-bold">{{ formatCurrency(totalCalculated) }}</span>
@@ -151,14 +162,15 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm resize-none"
                         />
                         <div class="mt-3 flex justify-end">
-                            <button
+                            <ArtworkBaseModalButton
+                                variant="primary"
+                                size="xs"
+                                :disabled="!newComment || newComment.trim() === '' || isSaving"
                                 @click="saveCommentOnly"
-                                :disabled="!newComment || newComment.trim() === ''"
-                                class="px-4 py-2 bg-artwork-buttons-create text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
                             >
                                 <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                 {{ $t('Save comment') }}
-                            </button>
+                            </ArtworkBaseModalButton>
                         </div>
                     </div>
 
@@ -362,12 +374,21 @@
                 </BaseUIButton>
                 <BaseUIButton is-add-button icon="IconDeviceFloppy"
                     @click="saveAndClose"
-                    :disabled="cell?.column?.is_locked"
+                    :disabled="cell?.column?.is_locked || isSaving"
                 >
-                    {{ $t('Save & Close') }}
+                    {{ isSaving ? $t('Saving...') : $t('Save & Close') }}
                 </BaseUIButton>
             </div>
         </div>
+        <ConfirmDeleteModal
+            v-if="commentToDelete"
+            :title="$t('Delete comment')"
+            :description="$t('Are you sure you want to delete this comment?')"
+            :button="$t('Delete')"
+            :is_budget="true"
+            @closed="commentToDelete = null"
+            @delete="performDeleteComment"
+        />
         <ConfirmDeleteModal
             v-if="showConfirmCalculationModal"
             :title="$t('Save calculation')"
@@ -392,8 +413,10 @@ import {
     IconChevronDown,
     IconCheck,
     IconDeviceFloppy,
-    IconAlertCircle
+    IconAlertCircle,
+    IconX
 } from '@tabler/icons-vue';
+import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue';
 import { router } from '@inertiajs/vue3';
@@ -405,6 +428,8 @@ export default {
     components: {
         BaseUIButton,
         ArtworkBaseModal,
+        ArtworkBaseModalButton,
+        IconX,
         IconLock,
         IconCalculator,
         IconMessage,
@@ -440,6 +465,13 @@ export default {
             default: null
         }
     },
+    emits: [
+        'comment-saved',
+        'comment-deleted',
+        'calculations-saved',
+        'budget-updated',
+        'closed'
+    ],
     data() {
         // Default linkedType basierend auf budgetType setzen
         const defaultLinkedType = this.budgetType === 'BUDGET_TYPE_COST'
@@ -463,6 +495,9 @@ export default {
             tempIdCounter: 0,
             isLoading: true,
             loadError: null,
+            errorMessage: null,
+            isSaving: false,
+            commentToDelete: null,
             showConfirmCalculationModal: false
         };
     },
@@ -518,14 +553,15 @@ export default {
         }
     },
     watch: {
-        cell: {
-            handler(newCell, oldCell) {
-
-                if (newCell) {
+        // Nur bei einem Zellwechsel neu initialisieren. Der fruehere deep-Watcher
+        // lief bei jeder Mutation (z. B. Kommentar-Patch) und hat dabei Tab und
+        // ungespeicherte Eingaben zurueckgesetzt.
+        'cell.id': {
+            handler(newId) {
+                if (newId) {
                     this.initializeData();
                 }
             },
-            deep: true,
             immediate: true
         },
         moneySourceQuery(newValue) {
@@ -636,11 +672,11 @@ export default {
             }
 
             if (!this.cell || !this.cell.id) {
-                console.error('Cell or cell.id is missing:', this.cell);
-                alert(this.$t('Error: Cell data not loaded. Please close and reopen the modal.'));
+                this.errorMessage = this.$t('Error: Cell data not loaded. Please close and reopen the modal.');
                 return;
             }
 
+            this.isSaving = true;
             try {
                 const response = await axios.post(
                     route('project.budget.cell.comment.store', { columnCell: this.cell.id }),
@@ -664,13 +700,20 @@ export default {
                     });
                 }
             } catch (error) {
-                console.error('Error saving comment:', error);
-                alert(this.$t('Error saving comment. Please try again.'));
+                this.errorMessage = this.$t('Error saving comment. Please try again.');
+            } finally {
+                this.isSaving = false;
             }
         },
 
-        async deleteComment(comment) {
-            if (!confirm(this.$t('Are you sure you want to delete this comment?'))) {
+        deleteComment(comment) {
+            this.commentToDelete = comment;
+        },
+
+        async performDeleteComment() {
+            const comment = this.commentToDelete;
+            this.commentToDelete = null;
+            if (!comment) {
                 return;
             }
 
@@ -699,7 +742,7 @@ export default {
                     }
                 }
             } catch (error) {
-                alert(this.$t('Error deleting comment. Please try again.'));
+                this.errorMessage = this.$t('Error deleting comment. Please try again.');
             }
         },
 
@@ -738,6 +781,10 @@ export default {
         },
 
         async saveAndClose() {
+            if (this.isSaving) {
+                return;
+            }
+            this.isSaving = true;
             // Speichere nur die Daten des aktuell aktiven Tabs
             try {
                 if (this.activeTab === 'calculation') {
@@ -766,6 +813,8 @@ export default {
             } catch (error) {
                 console.error('Error in saveAndClose:', error);
                 // Modal bleibt offen bei Fehler
+            } finally {
+                this.isSaving = false;
             }
         },
 
@@ -773,20 +822,15 @@ export default {
             // Check if cell already has a value
             const cellValue = Number(this.cell?.value ?? this.cell?.sage_value ?? this.cell?.current_value);
 
-            console.log('saveCalculations - cellValue:', cellValue, 'totalCalculated:', this.totalCalculated);
-
             if (cellValue !== 0 && cellValue !== this.totalCalculated) {
-                console.log('Showing confirmation modal');
                 this.showConfirmCalculationModal = true;
                 return;
             }
 
-            console.log('No confirmation needed, saving directly');
             await this.performSaveCalculations();
         },
 
         async performSaveCalculations() {
-            console.log('performSaveCalculations called');
             try {
                 // Füge cell_id zu allen Kalkulationen hinzu (für neue Kalkulationen)
                 const calculationsWithCellId = this.calculations.map(calc => ({
@@ -797,8 +841,6 @@ export default {
                     description: calc.description || '',
                     position: calc.position || 0
                 }));
-
-                console.log('Saving calculations:', calculationsWithCellId);
 
                 const response = await axios.patch(
                     route('project.budget.cell-calculation.update'),
@@ -814,8 +856,6 @@ export default {
                     }
                 );
 
-                console.log('Calculations saved successfully:', response.data);
-
                 // Emitte Event, damit BudgetComponent die Tabelle aktualisiert
                 this.$emit('calculations-saved', {
                     cellId: this.cell.id,
@@ -823,30 +863,21 @@ export default {
                     cellValue: response.data.cell_value
                 });
 
-                console.log('Closing confirmation modal and parent modal');
                 // Close the confirmation modal and parent modal after successful save
                 this.closeConfirmCalculationModal();
                 this.$emit('closed', true);
             } catch (error) {
-                console.error('Error saving calculations:', error);
-                alert(this.$t('Error saving calculations. Please try again.'));
+                this.errorMessage = this.$t('Error saving calculations. Please try again.');
             }
         },
 
         async saveLinking() {
             if (!this.cell || !this.cell.id) {
-                console.error('Cell or cell.id is missing:', this.cell);
-                alert(this.$t('Error: Cell data not loaded. Please close and reopen the modal.'));
+                this.errorMessage = this.$t('Error: Cell data not loaded. Please close and reopen the modal.');
                 return;
             }
 
             try {
-                console.log('Saving linking:', {
-                    cell_id: this.cell.id,
-                    linked_type: this.isLinked ? this.linkedType.type : null,
-                    money_source_id: this.isLinked ? this.selectedMoneySource?.id : null
-                });
-
                 await axios.patch(
                     route('project.budget.cell-source.update'),
                     {
@@ -862,10 +893,9 @@ export default {
                     }
                 );
 
-                console.log('Linking saved successfully');
             } catch (error) {
-                console.error('Error saving linking:', error);
-                alert(this.$t('Error saving linking. Please try again.'));
+                this.errorMessage = this.$t('Error saving linking. Please try again.');
+                throw error;
             }
         },
 

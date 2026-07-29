@@ -3,10 +3,14 @@
 namespace Tests\Feature\Http\Controllers\Event;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomRequestNotificationService;
 use Artwork\Modules\User\Models\User;
+use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -177,6 +181,55 @@ final class EventStoreTest extends FeatureTestCase
     }
 
     #[Test]
+    public function request_only_user_always_creates_a_room_request_even_if_client_requests_direct_booking(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $roomOwner = User::factory()->create();
+        $roomAdmin = User::factory()->create();
+        $room = Room::factory()->create([
+            'user_id' => $roomOwner->id,
+            'everyone_can_book' => false,
+        ]);
+        $room->users()->attach($roomAdmin->id, ['is_admin' => true, 'can_request' => false]);
+        $eventType = EventType::factory()->create();
+        $this->mock(RoomRequestNotificationService::class)
+            ->shouldReceive('notifyRoomAdmins')
+            ->once()
+            ->with(Mockery::type(Event::class));
+        $this->mock(EventCollisionService::class)
+            ->shouldReceive('adjoiningCollision')
+            ->once()
+            ->andReturn([])
+            ->getMock()
+            ->shouldReceive('getCollision')
+            ->once()
+            ->andReturn(Event::query()->whereKey(-1));
+        $response = $this->postJson(route('events.store'), $this->validPayload($eventType, $room, [
+            'isOption' => false,
+            'showProjectPeriodInCalendar' => true,
+        ]));
+
+        $response->assertRedirect();
+        $event = Event::query()->latest('id')->firstOrFail();
+        $this->assertSame($requester->id, $event->user_id);
+        $this->assertTrue($event->occupancy_option);
+    }
+
+    #[Test]
+    public function invalid_room_request_flag_is_rejected(): void
+    {
+        $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $eventType = EventType::factory()->create();
+
+        $this->postJson(route('events.store'), $this->validPayload($eventType, $room, [
+            'isOption' => 'false',
+        ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('isOption');
+    }
+
+    #[Test]
     public function admin_can_store_event_associated_with_existing_project(): void
     {
         $this->actingAsAdmin();
@@ -206,5 +259,29 @@ final class EventStoreTest extends FeatureTestCase
             'project_id' => $project->id,
             'event_type_id' => $eventType->id,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    private function validPayload(EventType $eventType, Room $room, array $overrides = []): array
+    {
+        return array_replace([
+            'start' => '2026-05-10 10:00',
+            'end' => '2026-05-10 12:00',
+            'projectIdMandatory' => false,
+            'creatingProject' => false,
+            'eventNameMandatory' => false,
+            'eventTypeId' => $eventType->id,
+            'roomId' => $room->id,
+            'title' => 'Room request',
+            'isOption' => true,
+            'audience' => false,
+            'isLoud' => false,
+            'allDay' => false,
+            'is_series' => false,
+            'isPlanning' => false,
+        ], $overrides);
     }
 }

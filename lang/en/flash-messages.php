@@ -154,7 +154,8 @@ return [
         'error' => [
             'authentication_failed' => 'Authentication via the identity provider failed. Please try again.',
             'missing_email' => 'The identity provider did not return an email address. Login is not possible.',
-            'domain_not_allowed' => 'Your email domain is not allowed for this login.'
+            'domain_not_allowed' => 'Your email domain is not allowed for this login.',
+            'password_login_disabled' => 'This account signs in through your identity provider. Please use the SSO button.'
         ]
     ]
 ];

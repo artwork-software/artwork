@@ -5,8 +5,10 @@ namespace Tests\Feature\Http\Controllers\Event;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Gate;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\FeatureTestCase;
 
@@ -135,6 +137,73 @@ final class EventUpdateTest extends FeatureTestCase
     }
 
     #[Test]
+    public function requester_cannot_accept_own_room_request(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = Event::factory()->create([
+            'user_id' => $requester->id,
+            'occupancy_option' => true,
+        ]);
+
+        $this->putJson(route('events.accept', $event))->assertForbidden();
+
+        $this->assertTrue($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function requester_is_not_authorized_to_confirm_own_room_request_while_editing(): void
+    {
+        $requester = $this->actingAsUserWith([PermissionEnum::EVENT_REQUEST]);
+        $event = Event::factory()->create([
+            'user_id' => $requester->id,
+            'occupancy_option' => true,
+        ]);
+
+        $this->assertTrue(Gate::forUser($requester)->denies('answerRoomRequest', $event));
+
+        $this->assertTrue($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function room_admin_can_accept_a_pending_room_request(): void
+    {
+        $roomAdmin = User::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $room->users()->attach($roomAdmin->id, ['is_admin' => true, 'can_request' => false]);
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => true,
+        ]);
+        $this->actingAs($roomAdmin);
+
+        $this->put(route('events.accept', $event))->assertRedirect();
+
+        $this->assertFalse($event->fresh()->occupancy_option);
+    }
+
+    #[Test]
+    public function room_owner_can_answer_when_no_room_admin_exists(): void
+    {
+        $roomOwner = User::factory()->create();
+        $room = Room::factory()->create([
+            'user_id' => $roomOwner->id,
+            'everyone_can_book' => false,
+        ]);
+        $event = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => true,
+        ]);
+        $this->actingAs($roomOwner);
+
+        $this->put(route('events.decline', $event))->assertRedirect();
+
+        $event->refresh();
+        $this->assertNull($event->room_id);
+        $this->assertFalse($event->occupancy_option);
+        $this->assertSame($room->id, $event->declined_room_id);
+    }
+
+    #[Test]
     public function guest_cannot_answer_on_event(): void
     {
         $event = Event::factory()->create();
@@ -167,4 +236,5 @@ final class EventUpdateTest extends FeatureTestCase
         // Method early-returns without response data
         $response->assertSuccessful();
     }
+
 }

@@ -30,6 +30,8 @@ class ShiftPlanService
         $roomsList = $shiftPlanContext['filteredRooms']->map(fn($room) => [
             'roomId' => $room->id,
             'roomName' => $room->name,
+            // Effektive Raumfarbe (Raum- oder Areal-Farbe) — analog zum Batch-Payload
+            'roomColor' => $room->getEffectiveColor(),
         ])->values()->all();
 
         // Presets are global config (not user/date/filter specific) and change

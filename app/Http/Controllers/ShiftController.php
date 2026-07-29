@@ -1160,7 +1160,7 @@ class ShiftController extends Controller
                 $userType
             ));
 
-            return null;
+            return $isShiftTab ? $this->redirector->back() : null;
         }
 
         $serviceToUse->removeFromShift(

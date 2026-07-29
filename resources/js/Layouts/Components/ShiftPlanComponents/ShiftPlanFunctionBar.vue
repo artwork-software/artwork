@@ -3,18 +3,14 @@
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
-                    <!-- Date Shortcuts - 3 vertical icons -->
-                    <DatePickerComponent v-if="dateValue" :dateValueArray="dateValue"
-                                           :is_shift_plan="true" :is_daily_view="isDailyView"></DatePickerComponent>
+                    <DateRangeControl
+                        v-if="dateValue"
+                        :date-value-array="dateValue"
+                        mode="shift-plan"
+                        :extra-params="{ isDailyView: isDailyView }"
+                        :show-today="false"
+                    />
                     <div class="flex gap-x-1 mx-2">
-                        <ToolTipComponent
-                            direction="right"
-                            :tooltip-text="$t('Today')"
-                            icon="IconCalendar"
-                            icon-size="h-5 w-5"
-                            @click="jumpToToday"
-                            classesButton="ui-button"
-                        />
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('Current week')"
@@ -33,13 +29,6 @@
                         />
                     </div>
                     <div class="flex items-center mx-4 gap-x-1 select-none">
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="$t('Previous time range')"
-                            icon="IconChevronLeftPipe"
-                            icon-size="h-7 w-7"
-                            @click="previousTimeRange"
-                        />
                         <ToolTipComponent
                             direction="bottom"
                             :tooltip-text="scrollBackTooltip"
@@ -109,24 +98,6 @@
                             icon-size="h-7 w-7"
                             @click="scrollToNextDay"
                         />
-
-                        <ToolTipComponent
-                            direction="bottom"
-                            :tooltip-text="$t('Next time range')"
-                            icon="IconChevronRightPipe"
-                            icon-size="h-7 w-7"
-                            @click="nextTimeRange"
-                        />
-                    </div>
-                    <div class="items-center hidden">
-                        <div class="flex items-center">
-                            <button class="ml-2 text-black" @click="previousTimeRange">
-                                <PropertyIcon name="IconChevronLeft" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
-                            </button>
-                            <button class="ml-2  text-black" @click="nextTimeRange">
-                                <PropertyIcon name="IconChevronRight" stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -188,6 +159,53 @@
                     <slot name="moreButtons">
 
                     </slot>
+
+                    <!-- Kompaktmodus-Hinweis: unter 100 % zeigen Schichtkarten nur Zeit·Gewerk·Besetzung,
+                         Zuweisen per Drag & Drop braucht 100 % (Klick öffnet weiterhin das Schicht-Modal) -->
+                    <div
+                        v-if="isCompactShiftZoom && !isDailyView"
+                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                    >
+                        <ToolTipWithTextComponent
+                            direction="bottom"
+                            :text="$t('Compact')"
+                            :icon="IconInfoCircle"
+                            icon-size="size-4"
+                            tooltip-width="w-72"
+                            :tooltip-text="$t('Below 100% zoom, shift cards show only time, craft and staffing. Click a card to open it — for drag & drop assignment zoom back to 100%.')"
+                        />
+                    </div>
+
+                    <!-- Zoom-Schnellauswahl: Tagesspaltenbreite (mehr Tage auf einen Blick) -->
+                    <Menu v-if="!isDailyView" as="div" class="relative">
+                        <MenuButton class="ui-button text-xs" :title="$t('Zoom')">
+                            {{ shiftZoomPercent }}%
+                            <PropertyIcon name="IconChevronDown" class="size-3.5" />
+                        </MenuButton>
+                        <transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="opacity-0 scale-95"
+                            enter-to-class="opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="opacity-100 scale-100"
+                            leave-to-class="opacity-0 scale-95"
+                        >
+                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
+                                <div class="w-56 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                    <BaseMenuItem
+                                        v-for="step in shiftZoomSteps"
+                                        :key="step"
+                                        white-menu-background
+                                        without-translation
+                                        :icon="step === shiftZoomFactor ? 'IconCheck' : 'IconPercentage'"
+                                        :title="Math.round(step * 100) + '%' + (step === 1 ? ' – ' + $t('Standard') : ' – ' + $t('more days at a glance'))"
+                                        @click="setShiftZoomFactor(step)"
+                                    />
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+
                     <!--<ToolTipComponent direction="bottom" :tooltip-text="$t('Display Settings')" icon="IconSettings" icon-size="h-7 w-7"
                                       @click="showCalendarSettingsModal = true"/>-->
 
@@ -281,9 +299,10 @@ import {
 
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {router, useForm, Link, usePage} from "@inertiajs/vue3";
+import {router, Link, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import {ref, computed, watch, nextTick, defineAsyncComponent} from 'vue';
 import {useI18n} from "vue-i18n";
 const {t: $t} = useI18n();
@@ -296,6 +315,10 @@ import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettin
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ToolTipWithTextComponent from "@/Components/ToolTips/ToolTipWithTextComponent.vue";
+import {IconInfoCircle} from "@tabler/icons-vue";
+import {useShiftPlanZoom} from "@/Composeables/useShiftPlanZoom.js";
 import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 const {hasAdminRole, can} = usePermission(usePage().props);
 
@@ -307,11 +330,14 @@ const ExportModal = defineAsyncComponent({
     timeout: 3000,
 });
 
-const DatePickerComponent = defineAsyncComponent({
-    loader: () => import('@/Layouts/Components/DatePickerComponent.vue'),
-    delay: 200,
-    timeout: 3000,
-})
+// Schichtplan-Spaltenzoom (reaktiv, debounced persistiert)
+const {
+    zoomFactor: shiftZoomFactor,
+    zoomPercent: shiftZoomPercent,
+    zoomSteps: shiftZoomSteps,
+    setZoomFactor: setShiftZoomFactor,
+    isCompact: isCompactShiftZoom,
+} = useShiftPlanZoom();
 
 const props = defineProps({
     dateValue: Array,
@@ -331,7 +357,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['enterFullscreenMode', 'previousTimeRange', 'nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
+const emit = defineEmits(['enterFullscreenMode', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode']);
 
 // Data properties
 const showConfirmCommitModal = ref(false);
@@ -373,6 +399,21 @@ const shiftPlanExportConfiguration = computed(() => {
             projectName: (projectId || useProjectMode) ? props.projectNameUsedForProjectTimePeriod : null,
             // In project mode, shifts/events belonging to this project are highlighted in the PDF.
             highlightProjectId: useProjectMode ? settings.time_period_project_id : null,
+            // Selectable filter dimensions for the export dialog …
+            filterOptions: {
+                rooms: (props.filterOptions?.room_ids ?? []).map(({id, name}) => ({id, name})),
+                areas: (props.filterOptions?.area_ids ?? []).map(({id, name}) => ({id, name})),
+                eventTypes: (props.filterOptions?.event_type_ids ?? []).map(({id, name}) => ({id, name})),
+                crafts: props.crafts.map(({id, name}) => ({id, name})),
+            },
+            // … prefilled with the filters currently active in the shift plan.
+            activeFilters: {
+                room_ids: props.user_filters?.room_ids ?? [],
+                area_ids: props.user_filters?.area_ids ?? [],
+                event_type_ids: props.user_filters?.event_type_ids ?? [],
+                craft_ids: props.user_filters?.craft_ids ?? [],
+            },
+            // Flat craft config for the personnel (worker matrix) export mode.
             craftIds: props.user_filters?.craft_ids ?? [],
             crafts: props.crafts.map(({id, name}) => ({id, name})),
         },
@@ -383,15 +424,6 @@ const shiftPlanExportConfiguration = computed(() => {
             crafts: props.crafts.map(({id, name, universally_applicable}) => ({id, name, universally_applicable})),
         },
     };
-});
-
-const userCalendarSettings = useForm({
-    is_daily_view: props.isDailyView,
-    show_qualifications: activeSettings.value ? activeSettings.value.show_qualifications : false,
-    shift_notes: activeSettings.value ? activeSettings.value.shift_notes : false,
-    high_contrast: activeSettings.value ? activeSettings.value.high_contrast : false,
-    expand_days: activeSettings.value ? activeSettings.value.expand_days : false,
-    display_project_groups: activeSettings.value ? activeSettings.value.display_project_groups : false,
 });
 
 const CalendarSettingsModal = defineAsyncComponent({
@@ -448,13 +480,6 @@ const scrollForwardTooltip = computed(() => {
 });
 
 // Methods
-const saveUserCalendarSettings = () => {
-    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.auth.user.id}), {
-        preserveScroll: true
-    });
-    document.getElementById('displaySettings').click();
-};
-
 const getTimePeriodProjectId = () => {
     return activeSettings.value?.time_period_project_id;
 };
@@ -525,14 +550,6 @@ const enterFullscreenMode = () => {
     emit('enterFullscreenMode');
 };
 
-const previousTimeRange = () => {
-    emit('previousTimeRange');
-};
-
-const nextTimeRange = () => {
-    emit('nextTimeRange');
-};
-
 const filtersChanged = (activeFilters) => {
     // This method was not used in the original component
 };
@@ -553,37 +570,6 @@ const changeDailyViewMode = (newValue) => {
         preserveScroll: false,
         preserveState: false
     });
-};
-
-// Shortcut functions for the three icons (adapted from FunctionBarCalendar)
-const jumpToToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
-
-    // Switch to daily mode if not already in daily mode
-    if (!dailyViewMode.value) {
-        changeDailyViewMode(true);
-        // Update dates after mode change
-        setTimeout(() => {
-            router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-                start_date: today,
-                end_date: today,
-                isDailyView: true,
-            }, {
-                preserveScroll: true,
-                preserveState: false
-            });
-        }, 100);
-    } else {
-        // If already in daily mode, just update the dates
-        router.patch(route('update.user.shift.calendar.filter.dates', usePage().props.auth.user.id), {
-            start_date: today,
-            end_date: today,
-            isDailyView: props.isDailyView,
-        }, {
-            preserveScroll: true,
-            preserveState: false
-        });
-    }
 };
 
 const jumpToCurrentWeek = () => {

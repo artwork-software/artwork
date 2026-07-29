@@ -14,7 +14,33 @@ use Illuminate\Database\Eloquent\Model;
 
 class BudgetModelProjectResolverService
 {
+    /**
+     * Memoisiert die Projekt-Aufloesung pro Modell (Klasse + ID). Ohne Memo
+     * kostet jede Zell-Speicherung bis zu 4-5 Lazy-Queries fuer die
+     * Relationskette bis zur project_id - bei Bursts (Spalte anlegen,
+     * Sage-Import) multipliziert sich das. Die Zuordnung Zelle->Projekt
+     * aendert sich nie, daher ist das Memo gefahrlos.
+     *
+     * @var array<string, int|null>
+     */
+    private static array $memo = [];
+
     public function resolveProjectId(Model $model): ?int
+    {
+        $key = $model::class . ':' . $model->getKey();
+
+        if (array_key_exists($key, self::$memo)) {
+            return self::$memo[$key];
+        }
+
+        if (count(self::$memo) > 2000) {
+            self::$memo = [];
+        }
+
+        return self::$memo[$key] = $this->doResolveProjectId($model);
+    }
+
+    private function doResolveProjectId(Model $model): ?int
     {
         return match (true) {
             $model instanceof Table => $model->project_id,

@@ -50,7 +50,7 @@
                     type="number"
                     :id="'bi_bulk_' + field.key"
                     v-model.number="bulkValues[field.key]"
-                    :label="$t(field.label)"
+                    :label="(field.translate ?? true) ? $t(field.label) : field.label"
                     :min="0"
                     :step="field.key === 'revenue' ? 0.01 : 1"
                     class="w-32"
@@ -202,11 +202,17 @@ const props = defineProps({
     projectEvents: { type: Array, default: () => [] },
     canEdit: { type: Boolean, default: false },
     projectId: { type: Number, required: true },
-    // [{ key: 'visitors', label: 'Visitors' }, ...] — nur Kennzahlen im Pro-Termin-Modus
+    // [{ key: 'visitors', label: 'Visitors' }, ...] — nur Kennzahlen im Pro-Termin-Modus.
+    // Kategorie-Spalten tragen zusätzlich categoryId (+ translate:false beim Label)
+    // und speichern über den category-values-Endpoint statt upsert-event-data.
     fields: { type: Array, required: true },
+    // Pro-Termin-Werte der Besucher*innen-Kategorien (scope actual, event_id gesetzt)
+    categoryValues: { type: Array, default: () => [] },
     showOccupancy: { type: Boolean, default: false },
     // room_id → effektive Kapazität (Override oder Raum-Default)
     effectiveCapacities: { type: Object, default: () => ({}) },
+    // Plan/Ist-Dimension: bestimmt, in welchen Datensatz gespeichert wird
+    scope: { type: String, default: 'actual' },
 });
 
 const emit = defineEmits(['updated']);
@@ -228,7 +234,7 @@ const columns = computed(() => [
     { key: 'name', label: 'Event', translate: true },
     { key: 'date', label: 'Date', translate: true },
     { key: 'room', label: 'Room', translate: true },
-    ...props.fields.map(f => ({ key: f.key, label: f.label, translate: true })),
+    ...props.fields.map(f => ({ key: f.key, label: f.label, translate: f.translate ?? true })),
     ...(props.showOccupancy ? [{ key: 'occupancy', label: 'Occupancy rate', translate: true }] : []),
 ]);
 
@@ -247,7 +253,23 @@ const hasActiveFilter = computed(() => filterRoomId.value !== null || search.val
 
 const entriesByEventId = computed(() => new Map(props.eventData.map(e => [e.event_id, e])));
 
+const fieldByKey = computed(() => new Map(props.fields.map(f => [f.key, f])));
+
+const categoryValueMap = computed(() => {
+    const map = new Map();
+    props.categoryValues.forEach((value) => {
+        if (value.event_id !== null && value.event_id !== undefined) {
+            map.set(`${value.event_id}:${value.bi_audience_category_id}`, value.quantity);
+        }
+    });
+    return map;
+});
+
 const getEventValue = (eventId, fieldKey) => {
+    const field = fieldByKey.value.get(fieldKey);
+    if (field?.categoryId) {
+        return categoryValueMap.value.get(`${eventId}:${field.categoryId}`) ?? null;
+    }
     const entry = entriesByEventId.value.get(eventId);
     return entry ? entry[fieldKey] : null;
 };
@@ -277,7 +299,7 @@ const valuesEqual = (draft, propValue) => {
 };
 
 // Draft verwerfen, sobald der Server denselben Wert liefert (Save angekommen)
-watch(() => props.eventData, () => {
+watch(() => [props.eventData, props.categoryValues], () => {
     Object.keys(drafts).forEach((key) => {
         const [eventId, fieldKey] = key.split(':');
         if (valuesEqual(drafts[key], getEventValue(Number(eventId), fieldKey))) {
@@ -445,20 +467,34 @@ const applyBulk = async () => {
     if (!hasBulkInput.value || selectedIds.value.size === 0) return;
     bulkSaving.value = true;
     const data = {};
+    const categoryEntries = [];
     props.fields.forEach((field) => {
         const value = bulkValues[field.key];
-        if (value !== null && value !== undefined && value !== '') {
+        if (value === null || value === undefined || value === '') return;
+        if (field.categoryId) {
+            categoryEntries.push({ categoryId: field.categoryId, quantity: Number(value) });
+        } else {
             data[field.key] = Number(value);
         }
     });
     const ok = await biSave.run(async () => {
         // allSettled statt all: bei Teilfehlern wissen, was durchging —
         // Auswahl bleibt dann stehen, der Refetch zeigt die gespeicherten Zeilen
-        const results = await Promise.allSettled(
-            [...selectedIds.value].map(eventId =>
-                axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data)
-            )
-        );
+        const requests = [];
+        if (Object.keys(data).length > 0) {
+            [...selectedIds.value].forEach(eventId => requests.push(
+                axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), { ...data, scope: props.scope })
+            ));
+        }
+        if (categoryEntries.length > 0) {
+            const values = [...selectedIds.value].flatMap(eventId => categoryEntries.map(entry => ({
+                bi_audience_category_id: entry.categoryId,
+                event_id: eventId,
+                quantity: entry.quantity,
+            })));
+            requests.push(axios.put(route('projects.bi.upsert-category-values', props.projectId), { values, scope: props.scope }));
+        }
+        const results = await Promise.allSettled(requests);
         const failed = results.filter(r => r.status === 'rejected');
         if (failed.length > 0) {
             throw new Error(`${failed.length}/${results.length} bulk saves failed`);
@@ -472,11 +508,24 @@ const applyBulk = async () => {
 };
 
 const saveEventValue = async (eventId, fieldKey, value) => {
-    const data = {};
-    data[fieldKey] = value === '' ? null : Number(value);
-    const ok = await biSave.run(
-        () => axios.put(route('projects.bi.upsert-event-data', [props.projectId, eventId]), data)
-    );
+    const field = fieldByKey.value.get(fieldKey);
+    const parsed = value === '' ? null : Number(value);
+    const ok = await biSave.run(() => {
+        if (field?.categoryId) {
+            return axios.put(route('projects.bi.upsert-category-values', props.projectId), {
+                scope: props.scope,
+                values: [{
+                    bi_audience_category_id: field.categoryId,
+                    event_id: eventId,
+                    quantity: parsed,
+                }],
+            });
+        }
+        return axios.put(
+            route('projects.bi.upsert-event-data', [props.projectId, eventId]),
+            { [fieldKey]: parsed, scope: props.scope }
+        );
+    });
     if (ok) {
         emit('updated');
     }

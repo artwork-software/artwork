@@ -19,7 +19,6 @@ class ExternalUserImported extends Mailable implements ShouldQueue
 
     public function __construct(
         public User $user,
-        public string $token,
         public ExternalUser $externalUser,
     ) {
     }
@@ -33,22 +32,15 @@ class ExternalUserImported extends Mailable implements ShouldQueue
         $senderAddress = $settings->business_email !== '' ? $settings->business_email : $fallbackSenderMail;
         $pageTitle = $settings->page_title !== '' ? $settings->page_title : Config::get('mail.fallback_page_title');
 
-        $resetUrl = sprintf(
-            '%s/reset-password/%s?email=%s',
-            Config::get('app.url'),
-            $this->token,
-            urlencode($this->user->email)
-        );
-
         return $this
             ->from($senderAddress, $pageTitle)
-            ->subject('Willkommen bei ' . $pageTitle . ' – Passwort festlegen')
+            ->subject('Willkommen bei ' . $pageTitle)
             ->markdown(
                 'emails.external_user_imported',
                 [
                     'name' => trim($this->user->first_name . ' ' . $this->user->last_name),
                     'page_title' => $pageTitle,
-                    'url' => $resetUrl,
+                    'url' => rtrim((string) Config::get('app.url'), '/') . '/login',
                     'sender_email' => $senderAddress,
                 ]
             );

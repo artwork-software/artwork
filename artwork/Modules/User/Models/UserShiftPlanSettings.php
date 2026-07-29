@@ -15,12 +15,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property boolean $description
  * @property boolean $options
  * @property boolean $project_management
+ * @property boolean $show_event_creator
  * @property boolean $repeating_events
  * @property boolean $use_project_time_period
  * @property int $time_period_project_id
  * @property boolean $event_name
  * @property boolean $high_contrast
  * @property boolean $expand_days
+ * @property float $zoom_factor
  * @property boolean $use_event_status_color
  * @property boolean $use_main_category_color
  * @property boolean $work_shifts
@@ -52,6 +54,7 @@ class UserShiftPlanSettings extends Model
         'project_status',
         'options',
         'project_management',
+        'show_event_creator',
         'repeating_events',
         'work_shifts',
         'description',
@@ -60,6 +63,7 @@ class UserShiftPlanSettings extends Model
         'event_name',
         'high_contrast',
         'expand_days',
+        'zoom_factor',
         'use_event_status_color',
         'use_main_category_color',
         'show_qualifications',
@@ -80,6 +84,7 @@ class UserShiftPlanSettings extends Model
         'project_status' => 'boolean',
         'options' => 'boolean',
         'project_management' => 'boolean',
+        'show_event_creator' => 'boolean',
         'repeating_events' => 'boolean',
         'work_shifts' => 'boolean',
         'description' => 'boolean',
@@ -87,6 +92,7 @@ class UserShiftPlanSettings extends Model
         'event_name' => 'boolean',
         'high_contrast' => 'boolean',
         'expand_days' => 'boolean',
+        'zoom_factor' => 'float',
         'use_event_status_color' => 'boolean',
         'use_main_category_color' => 'boolean',
         'show_qualifications' => 'boolean',

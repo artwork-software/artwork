@@ -470,6 +470,21 @@
                 {{ $t('Show details') }}
             </button>
         </article>
+
+        <!-- Externe Ausgaben -->
+        <div v-if="projectExternalIssues.length > 0" class="mt-8">
+            <h3 class="mb-3 flex items-center gap-2 text-base font-semibold text-zinc-900">
+                <span class="inline-block size-2 rounded-full bg-amber-500"></span>
+                {{ $t('External issues of material') }}
+            </h3>
+            <div class="space-y-3">
+                <SingleExternMaterialIssue
+                    v-for="externalIssue in projectExternalIssues"
+                    :key="'external-' + externalIssue.id"
+                    :extern-material-issue="externalIssue"
+                />
+            </div>
+        </div>
     </section>
     <!-- Lightbox Preview -->
     <teleport to="body">
@@ -579,6 +594,7 @@ import {
     IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash, IconPrinter,
 } from '@tabler/icons-vue'
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
+import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleExternMaterialIssue.vue";
 import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -642,6 +658,7 @@ const issueToDelete = ref<InternalIssue | null>(null)
 const isLoadingMaterials = ref(false)
 const loadMaterialsError = ref('')
 const localMaterials = ref<InternalIssue[]>(props.materials ?? [])
+const localExternalMaterials = ref<any[]>([])
 const materialSets = ref([])
 
 // Provide materialSets to child components
@@ -689,6 +706,7 @@ async function fetchMaterials() {
             route('projects.tabs.material-issues', { project: projectId })
         )
         localMaterials.value = data?.materials ?? []
+        localExternalMaterials.value = data?.externalMaterials ?? []
         materialSets.value = data?.materialSets ?? []
     } catch (error) {
         console.error(error)
@@ -702,6 +720,9 @@ async function fetchMaterials() {
 // 🔹 Issues dieses Projekts (wie gehabt)
 const projectIssues = computed(() =>
     localMaterials.value.filter(m => String(m.project_id ?? '') === String(props.project.id))
+)
+const projectExternalIssues = computed(() =>
+    localExternalMaterials.value.filter(m => String(m.project_id ?? '') === String(props.project.id))
 )
 /** Expand/Collapse State */
 const openSet = ref<Set<number>>(new Set())
@@ -1000,6 +1021,15 @@ function onKey(e: KeyboardEvent) {
 }
 
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
+// Externe Ausgabe-Kacheln mutieren über Inertia-Visits (Bearbeiten/Rückgabe/Löschen);
+// die per Axios geladene Liste danach nachziehen.
+const removeRouterSuccessListener = router.on('success', () => {
+    if (localExternalMaterials.value.length > 0) {
+        fetchMaterials()
+    }
+})
+onBeforeUnmount(() => removeRouterSuccessListener())
 
 const downloadFile = (file: FileItem) => {
     window.open(fileUrl(file), '_blank')

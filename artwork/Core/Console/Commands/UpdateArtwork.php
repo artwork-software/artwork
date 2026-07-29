@@ -119,6 +119,7 @@ class UpdateArtwork extends Command
         $this->call('artwork:add-new-components');
         $this->call('artwork:add-bi-event-type-tags');
         $this->call('artwork:add-bi-export-presets');
+        $this->call('artwork:add-bi-audience-categories');
     }
 
     private function updateShiftQualificationIcons(): void

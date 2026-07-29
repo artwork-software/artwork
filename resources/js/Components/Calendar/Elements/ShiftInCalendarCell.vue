@@ -119,6 +119,7 @@
 
 <script setup>
 import {computed, defineAsyncComponent, ref} from "vue";
+import { useCalendarZoom } from "@/Composeables/useCalendarZoom.js";
 import {Link, usePage} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import {IconEdit} from "@tabler/icons-vue";
@@ -149,7 +150,7 @@ const canPlanShifts = computed(() => can("can plan shifts") || is("artwork admin
 
 // Über 100 % Kalender-Zoom wächst die Karte per CSS zoom mit (Inhalt layoutet wie
 // bei 100 % und wird inkl. Schrift/Icons hochskaliert); bei ≤ 100 % bleibt alles wie bisher.
-const zoomFactor = ref(usePage().props.auth.user.zoom_factor ?? 1);
+const { zoomFactor } = useCalendarZoom();
 const contentZoom = computed(() => (zoomFactor.value > 1 ? zoomFactor.value : 1));
 
 // Projekt-Tab mit Schichtenkomponente; Backend fällt selbst auf den ersten/Default-Tab

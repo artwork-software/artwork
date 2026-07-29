@@ -49,6 +49,14 @@ final class CalendarControllerTest extends FeatureTestCase
     }
 
     #[Test]
+    public function regular_user_cannot_view_calendar_settings_page(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get(route('calendar.settings'))->assertForbidden();
+    }
+
+    #[Test]
     public function admin_can_store_calendar_settings(): void
     {
         $this->actingAsAdmin();
@@ -59,5 +67,18 @@ final class CalendarControllerTest extends FeatureTestCase
         ]);
 
         $response->assertRedirect();
+    }
+
+    #[Test]
+    public function regular_user_cannot_change_global_calendar_settings(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('calendar-settings.store'), [
+            'start' => '08:00',
+            'end' => '20:00',
+            'day_remarks_enabled' => true,
+            'day_remarks_mandatory' => true,
+        ])->assertForbidden();
     }
 }

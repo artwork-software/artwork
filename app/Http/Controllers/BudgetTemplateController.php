@@ -15,6 +15,7 @@ use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\CellCalculationService;
 use Artwork\Modules\Budget\Services\CellCommentService;
 use Artwork\Modules\Budget\Services\ColumnCellService;
+use Artwork\Modules\Budget\Services\ColumnRelevanceService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionDetailsService;
 use Artwork\Modules\Budget\Services\MainPositionService;
@@ -233,6 +234,11 @@ class BudgetTemplateController extends Controller
 
         $this->createTemplate($table->name, $table, false, $project->id);
 
+        // Vorlagen können kein oder mehrere Flags mitbringen - Invariante wiederherstellen.
+        if ($newTable = $project->table()->first()) {
+            app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($newTable);
+        }
+
         return Redirect::back();
     }
 
@@ -287,6 +293,11 @@ class BudgetTemplateController extends Controller
                 false,
                 $project->id
             );
+
+            // Auch beim Import aus einem Projekt: genau eine budgetrelevante Spalte sicherstellen.
+            if ($newTable = $project->table()->first()) {
+                app(ColumnRelevanceService::class)->ensureSingleRelevantColumn($newTable);
+            }
         }
     }
 

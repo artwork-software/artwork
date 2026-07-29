@@ -8,20 +8,145 @@
         </div>
         <template v-else>
             <div class="sm:flex sm:items-center mb-6">
-                <div class="sm:flex-auto">
+                <div class="sm:flex-auto flex flex-wrap items-center gap-x-4 gap-y-2">
                     <span class="block text-2xl font-bold text-gray-900">{{ $t('Business Intelligence') }}</span>
+                    <!-- Ist/Plan-Umschalter -->
+                    <div
+                        v-if="canEditComponent || hasPlan"
+                        class="flex rounded-lg border border-gray-200 p-0.5 print:hidden"
+                    >
+                        <button
+                            type="button"
+                            class="rounded-md px-3 py-1 text-xs font-medium transition"
+                            :class="scope === 'actual' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                            @click="scope = 'actual'"
+                        >
+                            {{ $t('Actual') }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md px-3 py-1 text-xs font-medium transition"
+                            :class="scope === 'plan' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                            @click="scope = 'plan'"
+                        >
+                            {{ $t('Plan') }}
+                        </button>
+                    </div>
                 </div>
                 <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4 print:hidden" v-if="canEditComponent">
                     <BaseUIButton @click="showExportModal = true" :label="$t('Export')" icon="IconFileExport" v-if="canExport || hasAdminRole()"/>
                 </div>
             </div>
 
+            <!-- ================= PLAN-ANSICHT ================= -->
+            <template v-if="scope === 'plan'">
+                <div class="mb-4 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 px-4 py-2.5 flex items-center gap-2">
+                    <span class="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                        {{ $t('Plan') }}
+                    </span>
+                    <span class="text-sm text-indigo-900">
+                        {{ $t('You are editing plan values. Actual figures stay untouched.') }}
+                    </span>
+                </div>
+
+                <!-- Schnellstart, solange kein Plan-Datensatz existiert -->
+                <div v-if="!planData" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ $t('Record plan values') }}</h4>
+                    <p class="text-xs text-gray-500 mb-4 max-w-2xl">
+                        {{ $t('Plan values hold the expected visitors, tickets and revenue for this project. Once actuals come in, the plan-vs-actual comparison appears in the actual view.') }}
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <BaseUIButton :label="$t('Start empty')" hide-icon @click="initializePlan('empty')" />
+                        <BaseUIButton
+                            :label="$t('Copy structure from actuals')"
+                            hide-icon
+                            white
+                            @click="initializePlan('copy_actual_structure')"
+                        />
+                        <BaseUIButton
+                            :label="$t('Copy values from another project')"
+                            hide-icon
+                            white
+                            @click="showPlanCopySearch = !showPlanCopySearch"
+                        />
+                    </div>
+                    <div v-if="showPlanCopySearch" class="mt-4 max-w-md">
+                        <BaseInput
+                            id="bi_plan_copy_search"
+                            v-model="planCopyQuery"
+                            :label="$t('Search project')"
+                            @update:model-value="searchPlanCopyProjects"
+                        />
+                        <div v-if="planCopyResults.length > 0" class="mt-2 divide-y divide-gray-100 rounded-md border border-gray-200">
+                            <button
+                                v-for="result in planCopyResults"
+                                :key="result.id"
+                                type="button"
+                                class="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                @click="initializePlan('copy_project', result.id)"
+                            >
+                                {{ result.name }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <template v-else>
+                    <BiKpiHeader
+                        :summary="planMetricsSummary ?? {}"
+                        :event-data="planEventData"
+                        :project-events="projectEvents"
+                    />
+
+                    <BiSectionCard :title="$t('Audience & revenue')" :icon="IconUsers">
+                        <BiAudienceRevenueSection
+                            :bi-data="planData"
+                            :metrics-summary="planMetricsSummary ?? {}"
+                            :event-data="planEventData"
+                            :project-events="projectEvents"
+                            :room-capacities="roomCapacities"
+                            :project-rooms="projectRooms"
+                            :audience-categories="audienceCategories"
+                            :audience-category-values="planAudienceCategoryValues"
+                            :budget-suggestions="budgetSuggestions"
+                            scope="plan"
+                            :can-edit="canEditComponent"
+                            :project-id="project.id"
+                            @updated="fetchData"
+                        />
+                    </BiSectionCard>
+
+                    <p class="mt-4 text-xs text-gray-400">
+                        {{ $t('Production data, capacities, time effort and custom fields are maintained in the actual view — they apply to both.') }}
+                    </p>
+                </template>
+            </template>
+
+            <!-- ================= IST-ANSICHT ================= -->
+            <template v-else>
             <!-- Kennzahlen auf einen Blick -->
             <BiKpiHeader
                 :summary="metricsSummary"
                 :event-data="eventData"
                 :project-events="projectEvents"
             />
+
+            <!-- Plan-Ist-Gegenüberstellung, sobald Planwerte existieren -->
+            <BiPlanComparisonCard
+                v-if="hasPlan"
+                :plan-comparison="planComparison"
+                :event-data="eventData"
+                :plan-event-data="planEventData"
+                :project-events="projectEvents"
+            />
+
+            <!-- Freier Zeitraumvergleich (A vs. B) auf Projektebene -->
+            <div class="mb-6">
+                <BiPeriodComparisonCard
+                    :project-id="project.id"
+                    :project-period="projectPeriod"
+                />
+            </div>
 
             <!-- Datenqualität: was fehlt für belastbare Auswertungen? -->
             <div
@@ -75,6 +200,9 @@
                         :project-events="projectEvents"
                         :room-capacities="roomCapacities"
                         :project-rooms="projectRooms"
+                        :audience-categories="audienceCategories"
+                        :audience-category-values="audienceCategoryValues"
+                        :budget-suggestions="budgetSuggestions"
                         :can-edit="canEditComponent"
                         :project-id="project.id"
                         @updated="fetchData"
@@ -126,7 +254,8 @@
                         :snapshots="snapshots"
                         :can-edit="canEditComponent"
                         :project-id="project.id"
-                        :current="{ bi_data: biData, event_data: eventData, derived_values: derivedValues, tag_counts: tagCounts }"
+                        :current="{ bi_data: biData, event_data: eventData, derived_values: derivedValues, tag_counts: tagCounts, category_values: audienceCategoryValues }"
+                        :audience-categories="audienceCategories"
                         @updated="fetchData"
                     />
                 </BiSectionCard>
@@ -146,12 +275,14 @@
                     />
                 </BiSectionCard>
             </div>
+            </template>
 
             <BiExportModal
                 v-if="showExportModal"
                 :project="project"
                 :tag-counts="tagCounts"
                 :bi-custom-fields="biCustomFields"
+                :audience-categories="audienceCategories"
                 :default-date-from="projectPeriod?.from ?? null"
                 :default-date-to="projectPeriod?.to ?? null"
                 @close="showExportModal = false"
@@ -191,6 +322,9 @@ import BiTimeEffortSection from "@/Pages/Projects/Components/BiComponents/BiTime
 import BiSnapshotSection from "@/Pages/Projects/Components/BiComponents/BiSnapshotSection.vue";
 import BiCustomFieldsSection from "@/Pages/Projects/Components/BiComponents/BiCustomFieldsSection.vue";
 import BiExportModal from "@/Pages/Projects/Components/BiComponents/BiExportModal.vue";
+import BiPlanComparisonCard from "@/Pages/Projects/Components/BiComponents/BiPlanComparisonCard.vue";
+import BiPeriodComparisonCard from "@/Pages/Projects/Components/BiComponents/BiPeriodComparisonCard.vue";
+import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -211,6 +345,51 @@ const metricsSummary = ref({});
 const biData = ref(null);
 const eventData = ref([]);
 const roomCapacities = ref([]);
+const audienceCategories = ref([]);
+const audienceCategoryValues = ref([]);
+
+// --- Plan/Ist ---
+const scope = ref('actual');
+const planData = ref(null);
+const planEventData = ref([]);
+const planMetricsSummary = ref(null);
+const planComparison = ref(null);
+const planAudienceCategoryValues = ref([]);
+const budgetSuggestions = ref(null);
+
+const hasPlan = computed(() => !!planComparison.value?.has_plan || !!planData.value);
+
+const showPlanCopySearch = ref(false);
+const planCopyQuery = ref('');
+const planCopyResults = ref([]);
+
+let planSearchTimer = null;
+const searchPlanCopyProjects = () => {
+    clearTimeout(planSearchTimer);
+    if (!planCopyQuery.value || planCopyQuery.value.length < 2) {
+        planCopyResults.value = [];
+        return;
+    }
+    planSearchTimer = setTimeout(async () => {
+        const { data } = await axios.get(route('projects.search'), { params: { query: planCopyQuery.value } });
+        planCopyResults.value = (data ?? []).filter(p => p.id !== props.project.id).slice(0, 8);
+    }, 300);
+};
+
+const initializePlan = async (mode, sourceProjectId = null) => {
+    const ok = await saveFeedback.run(
+        () => axios.post(route('projects.bi.plan.initialize', props.project.id), {
+            mode,
+            source_project_id: sourceProjectId,
+        })
+    );
+    if (ok) {
+        showPlanCopySearch.value = false;
+        planCopyQuery.value = '';
+        planCopyResults.value = [];
+        await fetchData();
+    }
+};
 const derivedValues = ref({});
 const tagCounts = ref([]);
 const timeEfforts = ref([]);
@@ -313,6 +492,14 @@ const fetchData = async () => {
         biData.value = response.data.bi_data;
         eventData.value = response.data.event_data;
         roomCapacities.value = response.data.room_capacities;
+        audienceCategories.value = response.data.audience_categories || [];
+        audienceCategoryValues.value = response.data.audience_category_values || [];
+        planData.value = response.data.plan_data || null;
+        planEventData.value = response.data.plan_event_data || [];
+        planMetricsSummary.value = response.data.plan_metrics_summary || null;
+        planComparison.value = response.data.plan_comparison || null;
+        planAudienceCategoryValues.value = response.data.plan_audience_category_values || [];
+        budgetSuggestions.value = response.data.budget_suggestions || null;
         derivedValues.value = response.data.derived_values;
         tagCounts.value = response.data.tag_counts;
         timeEfforts.value = response.data.time_efforts;

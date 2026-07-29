@@ -433,6 +433,19 @@
                             </div>
                         </fieldset>
                     </div>
+
+                    <!-- Tagesbemerkungen mitdrucken (nur bei aktivem Feature & Sichtrecht) -->
+                    <div v-if="dayRemarksAvailable" class="flex items-center gap-2">
+                        <input
+                            id="includeDayRemarks"
+                            v-model="pdf.includeDayRemarks"
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        />
+                        <label for="includeDayRemarks" class="text-sm text-zinc-800 cursor-pointer">
+                            {{ $t('Include day remarks') }}
+                        </label>
+                    </div>
                 </div>
             </section>
 
@@ -485,7 +498,7 @@ import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 
 const $t = useTranslation()
 const emits = defineEmits<{ (e: 'closed', value: boolean): void }>()
-const props = defineProps<{ pdfTitle?: string; project?: any }>()
+const props = defineProps<{ pdfTitle?: string; project?: any; preselectedFilters?: Record<string, number[] | null> | null }>()
 
 const showModalInformation = ref(true)
 
@@ -520,8 +533,13 @@ const pdf = useForm({
     daysPerPage: 7,
     exportMode: 'relative' as 'relative' | 'block',
     filter: {} as Record<string, number[] | null>,
-    colorSource: 'eventType' as 'eventType' | 'mainCategory'
+    colorSource: 'eventType' as 'eventType' | 'mainCategory',
+    includeDayRemarks: false
 })
+
+// Tagesbemerkungen nur anbieten, wenn Feature aktiv und User sie sehen darf
+const dayRemarksState = (usePage().props.day_remarks ?? { enabled: false, can_view: false }) as any
+const dayRemarksAvailable = computed(() => !!dayRemarksState.enabled && !!dayRemarksState.can_view)
 
 const pdfSelectedProject = ref<any | null>(null)
 const selectedPaperSize = ref<{ id: string; name: string }>({ id: 'a4', name: 'A4 (Standard)' })
@@ -550,9 +568,27 @@ const loadFilterPresets = async () => {
     }
 }
 
+// Aktive Kalender-Filter des Users als Vorauswahl übernehmen (im Modal weiterhin anpassbar).
+// Setzt checked für ALLE Einträge (true/false), damit keine veralteten Häkchen aus den
+// geteilten filterOptions-Referenzen (CalendarFilterModal) übrig bleiben.
+const applyActiveUserFilters = () => {
+    const source = props.preselectedFilters ?? (usePage().props.user_filters as Record<string, any> | undefined) ?? null
+    if (!source) return
+    const cats = filteredOptionsByCategories.value
+    Object.keys(cats).forEach(category => {
+        Object.keys(cats[category]).forEach(subKey => {
+            const activeIds = Array.isArray(source[subKey]) ? source[subKey] : []
+            cats[category][subKey].forEach((f: any) => {
+                f.checked = activeIds.includes(f.id)
+            })
+        })
+    })
+}
+
 // Beim Mount laden
 onMounted(() => {
     loadFilterPresets()
+    applyActiveUserFilters()
 })
 
 // Aktuellen Filter-Status für das Speichern sammeln

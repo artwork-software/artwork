@@ -5,7 +5,19 @@
         modal-size="max-w-4xl"
         @close="handleCloseAttempt"
     >
-        <div class="space-y-4">
+        <div v-if="requestSubmitted" class="space-y-5 rounded-lg border border-green-200 bg-green-50 p-5">
+            <div>
+                <h3 class="text-base font-semibold text-green-900">{{ $t('Room request submitted') }}</h3>
+                <p class="mt-1 text-sm text-green-800">
+                    {{ $t('The event was created as a room request and is not firmly booked yet. You will be notified after it has been reviewed.') }}
+                </p>
+            </div>
+            <div class="flex justify-end">
+                <FormButton @click="closeModal(true)" :text="$t('Close')" />
+            </div>
+        </div>
+
+        <div v-else class="space-y-4">
 
             <!-- Top Meta + Tip -->
             <div class="flex flex-col gap-2">
@@ -478,8 +490,8 @@
                     <div class="space-y-1.5">
                         <div class="ui-hint">{{ $t('Date & Time') }}</div>
                         <div class="text-[13px] text-zinc-800">
-                            <span v-if="startDate === endDate">{{ startDate }} • {{ startTime }} – {{ endTime }}</span>
-                            <span v-else>{{ startDate }} {{ startTime }} — {{ endDate }} {{ endTime }}</span>
+                            <span v-if="startDate === endDate">{{ formatDateGerman(startDate) }} • {{ startTime }} – {{ endTime }}</span>
+                            <span v-else>{{ formatDateGerman(startDate) }} {{ startTime }} — {{ formatDateGerman(endDate) }} {{ endTime }}</span>
                         </div>
                     </div>
                     <div class="space-y-1.5">
@@ -705,6 +717,7 @@ const helpTextLengthRoom = ref('')
 const initialRoomId = ref(null)
 const showRejections = ref(false)
 const isLoading = ref(false)
+const requestSubmitted = ref(false)
 const quickDurations = [30, 60, 90]
 
 const bookingOptions = [{ name: 'Option 1' }, { name: 'Option 2' }, { name: 'Option 3' }, { name: 'Option 4' }]
@@ -756,6 +769,8 @@ const modalDescription = computed(() => {
     }
     return props.isPlanning
         ? $t('You are about to create a planned event. Please fill in the necessary details and save it. The event will not be visible to regular users until it is confirmed.')
+        : !canCreateDirect.value
+            ? $t('This booking requires approval. Saving creates a room request; the event is not firmly booked until it has been accepted.')
         : $t('Fill in the details for the new room allocation. Once you save, the event will be created and visible to users with access to the selected room.')
 })
 
@@ -788,7 +803,7 @@ const requestDisabled = computed(() => {
     if (!selectedRoom.value || !submit.value || invalidSeries || isLoading.value) return true
     const canRequestGlobal = can('request room occupancy')
     const canRequestRoom = isRequestableForRoom.value
-    if (!canRequestGlobal && !canRequestRoom && !props.isPlanning) return true
+    if (!canRequestGlobal && !canRequestRoom && !canCreateDirect.value) return true
     if (!can('can see planning calendar') && props.isPlanning) return true
     return false
 })
@@ -825,6 +840,12 @@ onMounted(() => {
 })
 
 // --- Methods
+// Anzeige im Read-only-Modus: ISO (Input-Format) → DD.MM.YYYY
+function formatDateGerman(isoDate) {
+    const parts = (isoDate ?? '').split('-')
+    if (parts.length !== 3) return isoDate ?? ''
+    return `${parts[2]}.${parts[1]}.${parts[0]}`
+}
 function canAccessProject() {
     if (can('view projects') || can('write projects')) return true
     if (selectedProject.value?.creator_id === page.props.auth.user.id) return true
@@ -956,6 +977,7 @@ function closeModal(closedOnPurpose = false) {
     allDayEvent.value = !!page.props.event_all_day_default
     series.value = false
     seriesEndDate.value = null
+    requestSubmitted.value = false
     showProjectInfo.value = Boolean(props.project) || (props.calendarProjectPeriod && page.props.auth.user.calendar_settings.time_period_project_id)
     creatingProject.value = false
     projectName.value = null
@@ -1270,8 +1292,7 @@ async function doSaveEvent() {
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
                 onSuccess: () => {
-                    isLoading.value = false
-                    closeModal(true)
+                    handleSuccessfulSave()
                 },
                 onError: (resp) => {
                     isLoading.value = false
@@ -1283,8 +1304,7 @@ async function doSaveEvent() {
                 preserveScroll: true,
                 preserveState: (pg) => typeof pg?.component === 'undefined',
                 onSuccess: () => {
-                    isLoading.value = false
-                    closeModal(true)
+                    handleSuccessfulSave()
                 },
                 onError: (resp) => {
                     isLoading.value = false
@@ -1298,12 +1318,22 @@ async function doSaveEvent() {
     try {
         if (!props.event?.id) await axios.post('/events', data)
         else await axios.put(`/events/${props.event.id}`, data)
-        isLoading.value = false
-        closeModal(true)
+        handleSuccessfulSave()
     } catch (e) {
         isLoading.value = false
         error.value = e?.response?.data?.errors ?? e
     }
+}
+
+function handleSuccessfulSave() {
+    isLoading.value = false
+
+    if (isOption.value && !canCreateDirect.value) {
+        requestSubmitted.value = true
+        return
+    }
+
+    closeModal(true)
 }
 async function singleSaveEvent() {
     allSeriesEvents.value = false

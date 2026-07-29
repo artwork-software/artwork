@@ -43,5 +43,16 @@ class LdapService
     {
         return $this->ldapApi->authenticate($source, $username, $password);
     }
+
+    /**
+     * Verifiziert die Credentials per Bind und liefert bei Erfolg das
+     * normalisierte Nutzerprofil (inkl. stabilem Identifier) zurück, sonst null.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function authenticateAndFetch(ExternalUserSource $source, string $username, string $password): ?array
+    {
+        return $this->ldapApi->authenticateAndFetch($source, $username, $password);
+    }
 }
 

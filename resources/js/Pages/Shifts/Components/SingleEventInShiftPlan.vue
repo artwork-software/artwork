@@ -3,7 +3,7 @@
         <div>
             <div class="text-secondary-hover rounded-lg flex flex-col"
                  :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
-                 :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, usePage().props.high_contrast_percent), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, usePage().props.high_contrast_percent)),
+                 :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage)),
                  borderColor: eventType.hex_code}">
 
                 <!-- Projektgruppen-Balken (wie im FullEventInCalendar) -->
@@ -143,6 +143,7 @@
                             v-if="shiftPlanSettings.project_management && project?.leaders?.length"
                             class="mt-1 flex flex-wrap items-center gap-1"
                         >
+                            <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('PM:') }}</span>
                             <UserPopoverTooltip
                                 v-for="user in project.leaders.slice(0, 3)"
                                 :key="'leader-' + user.id"
@@ -157,6 +158,19 @@
                             >
                                 +{{ project.leaders.length - 3 }}
                             </div>
+                        </div>
+                        <!-- Terminersteller*in (Anzeigeeinstellung "Terminersteller*in") -->
+                        <div
+                            v-if="shiftPlanSettings.show_event_creator && event.created_by"
+                            class="mt-1 flex flex-wrap items-center gap-1"
+                        >
+                            <span v-if="showCreatorLeaderLabels" class="text-[10px] font-semibold opacity-80">{{ $t('Creator:') }}</span>
+                            <UserPopoverTooltip
+                                :user="event.created_by"
+                                lazy-load
+                                width="5"
+                                height="5"
+                            />
                         </div>
                     </div>
                     <!-- Timeline Icon -->
@@ -208,13 +222,19 @@ const AddEditTimelineModal = defineAsyncComponent({
 
 const { resolveEventType, resolveProject } = useShiftPlanLookups();
 
-const percentage = usePage().props.high_contrast_percent;
 const shiftPlanSettings = computed(() => usePage().props.shift_plan_settings ?? usePage().props.auth.user.calendar_settings);
+// Nur wenn Projektleitung UND Terminersteller*in aktiv sind, brauchen die
+// Avatar-Reihen ein "PL:"/"Erstell:"-Label zur Unterscheidung.
+const showCreatorLeaderLabels = computed(() =>
+    shiftPlanSettings.value?.project_management && shiftPlanSettings.value?.show_event_creator
+);
 const expandDays = computed(() => shiftPlanSettings.value?.expand_days ?? false);
 const {
     backgroundColorWithOpacity,
+    getHighContrastPercent,
     getTextColorBasedOnBackground,
 } = useColorHelper();
+const percentage = computed(() => getHighContrastPercent(shiftPlanSettings.value));
 
 const props = defineProps({
     event: {

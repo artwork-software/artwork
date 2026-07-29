@@ -18,6 +18,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -304,6 +305,14 @@ class ProjectDayAssignmentService
                     $this->formatDateSpanLabel($datesToCreate->first(), $datesToCreate->last()),
                 ]
             );
+
+            $this->notifyPersonAboutBindingChange(
+                'assigned',
+                $project,
+                $employableType,
+                $employableId,
+                $this->formatDateSpanLabel($datesToCreate->first(), $datesToCreate->last())
+            );
         }
 
         $this->logAssignmentActivity(
@@ -359,6 +368,16 @@ class ProjectDayAssignmentService
             );
         }
 
+        if ($assignment->isBinding()) {
+            $this->notifyPersonAboutBindingChange(
+                'removed',
+                $assignment->project,
+                $assignment->employable_type,
+                $assignment->employable_id,
+                $this->formatDateSpanLabel($firstDate, $lastDate)
+            );
+        }
+
         $this->logAssignmentActivity(
             $assignment,
             'deleted',
@@ -396,6 +415,16 @@ class ProjectDayAssignmentService
             ProjectDayAssignment::withTrashed()->whereIn('id', $rows->pluck('id'))->forceDelete();
         });
         $this->broadcastProjectAssignmentsChanged($projectId);
+
+        if ($rows->contains(static fn (ProjectDayAssignment $row) => $row->isBinding())) {
+            $this->notifyPersonAboutBindingChange(
+                'removed',
+                Project::withTrashed()->find($projectId),
+                $employableType,
+                $employableId,
+                $this->formatDateSpanLabel($rows->min('date'), $rows->max('date'))
+            );
+        }
 
         return true;
     }
@@ -476,6 +505,14 @@ class ProjectDayAssignmentService
                 $assignment->project?->name ?? '',
                 $this->formatDateSpanLabel($wishRows->min('date'), $wishRows->max('date')),
             ]
+        );
+
+        $this->notifyPersonAboutBindingChange(
+            'wish_accepted',
+            $assignment->project,
+            $assignment->employable_type,
+            $assignment->employable_id,
+            $this->formatDateSpanLabel($wishRows->min('date'), $wishRows->max('date'))
         );
 
         $this->broadcastProjectAssignmentsChanged($assignment->project_id);
@@ -958,6 +995,146 @@ class ProjectDayAssignmentService
     }
 
     /**
+     * Benachrichtigt die betroffene Person über Anlegen/Entfernen einer verbindlichen
+     * Zuordnung bzw. die Übernahme ihres Wunsches — pro Tag gebündelt: existiert für
+     * heute bereits eine ungelesene Benachrichtigung derselben Art, wird sie zu
+     * „:count neue Projektzuordnungen" zusammengefasst statt eine weitere zu erzeugen
+     * (Produktentscheidung 21.07.2026). Nur User erhalten Benachrichtigungen; die
+     * auslösende Person selbst nie.
+     */
+    private function notifyPersonAboutBindingChange(
+        string $kind,
+        ?Project $project,
+        string $employableType,
+        int $employableId,
+        string $datesLabel,
+        ?string $reasonKey = null
+    ): void {
+        if ($employableType !== User::class || $employableId === Auth::id()) {
+            return;
+        }
+
+        $person = User::find($employableId);
+
+        if ($person === null) {
+            return;
+        }
+
+        [$singleKey, $bundledKey, $icon, $priority, $broadcastType] = match ($kind) {
+            'assigned' => [
+                'notification.project_assignment.person_assigned',
+                'notification.project_assignment.person_assigned_bundled',
+                'green',
+                3,
+                'success',
+            ],
+            'removed' => [
+                'notification.project_assignment.person_removed',
+                'notification.project_assignment.person_removed_bundled',
+                'red',
+                2,
+                'error',
+            ],
+            'wish_accepted' => [
+                'notification.project_assignment.person_wish_accepted',
+                'notification.project_assignment.person_wish_accepted_bundled',
+                'green',
+                3,
+                'success',
+            ],
+        };
+
+        $descriptionLine = trim(($project?->name ?? '') . ' · ' . $datesLabel, ' ·');
+
+        if ($reasonKey !== null) {
+            $descriptionLine .= ' · ' . __($reasonKey, [], $person->language);
+        }
+
+        $notificationKey = sprintf(
+            'project-assignment-%s-%d-%s',
+            $kind,
+            $person->id,
+            Carbon::now()->format('Y-m-d')
+        );
+
+        $existing = DatabaseNotification::query()
+            ->where('notifiable_type', $person->getMorphClass())
+            ->where('notifiable_id', $person->id)
+            ->whereNull('read_at')
+            ->whereJsonContains('data->notificationKey', $notificationKey)
+            ->first();
+
+        if ($existing !== null) {
+            $data = $existing->data;
+            $bundleCount = ($data['bundleCount'] ?? 1) + 1;
+            $data['bundleCount'] = $bundleCount;
+            $data['title'] = __($bundledKey, ['count' => $bundleCount], $person->language);
+            $descriptions = is_array($data['description'] ?? null) ? $data['description'] : [];
+            $descriptions[] = ['type' => 'string', 'title' => $descriptionLine, 'href' => null];
+            $data['description'] = array_values($descriptions);
+            $data['created_at'] = Carbon::now()->translatedFormat('d.m.Y H:i');
+
+            // created_at mit anheben, damit die gebündelte Benachrichtigung wieder oben
+            // in der Liste auftaucht; bewusst KEIN erneuter Push — Sinn der Bündelung
+            $existing->forceFill(['data' => $data, 'created_at' => Carbon::now()])->save();
+            $person->update(['show_notification_indicator' => true]);
+
+            return;
+        }
+
+        $title = __($singleKey, ['projectName' => $project?->name ?? ''], $person->language);
+
+        $this->notificationService->setNotificationTo($person);
+        $this->notificationService->setTitle($title);
+        $this->notificationService->setIcon($icon);
+        $this->notificationService->setPriority($priority);
+        $this->notificationService->setProjectId($project?->id);
+        $this->notificationService->setNotificationKey($notificationKey);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage([
+            'id' => Str::uuid()->toString(),
+            'type' => $broadcastType,
+            'message' => $title,
+        ]);
+        $this->notificationService->setDescription([
+            1 => [
+                'type' => 'string',
+                'title' => $descriptionLine,
+                'href' => null,
+            ],
+        ]);
+        $this->notificationService->createNotification();
+        $this->notificationService->clearNotificationData();
+    }
+
+    /**
+     * Tage im Bereich, an denen ein aktueller Frei-/Abwesenheits-Eintrag der Person
+     * eine Zuordnung des Typs auflösen würde — gleiche Invariante wie
+     * handleVacationEntry/restoreForShiftRemoval: „Frei" (FREE_WORK) löst verbindliche
+     * Zuordnungen und Wünsche auf, Abwesenheiten (OFF_WORK, NOT_AVAILABLE) nur Wünsche.
+     *
+     * @return SupportCollection<int, string> Y-m-d
+     */
+    private function getVacationBlockedDates(
+        string $employableType,
+        int $employableId,
+        string $rangeStart,
+        string $rangeEnd,
+        bool $forBinding
+    ): SupportCollection {
+        return \Artwork\Modules\Vacation\Models\Vacation::query()
+            ->without(['series', 'conflicts'])
+            ->where('vacationer_type', $employableType)
+            ->where('vacationer_id', $employableId)
+            ->whereBetween('date', [$rangeStart, $rangeEnd])
+            ->whereIn('type', $forBinding ? ['FREE_WORK'] : ['FREE_WORK', 'OFF_WORK', 'NOT_AVAILABLE'])
+            ->pluck('date')
+            ->map(static fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->unique()
+            ->values();
+    }
+
+    /**
      * Auflösung durch Terminverschiebung: Einzeltag-Zuordnungen außerhalb des
      * neuen Projektzeitraums werden aufgelöst, Ganz-Zeitraum-Gruppen auf den
      * neuen Zeitraum re-materialisiert (Phase-5-Hook, siehe EventController).
@@ -1007,12 +1184,26 @@ class ProjectDayAssignmentService
 
             ProjectDayAssignment::query()->whereIn('id', $rows->pluck('id'))->delete();
 
-            if ($rows->contains(static fn (ProjectDayAssignment $row) => $row->isBinding())) {
+            $bindingRows = $rows->filter(static fn (ProjectDayAssignment $row) => $row->isBinding());
+
+            if ($bindingRows->isNotEmpty()) {
                 $this->notifyPlannersAboutDissolution($project, $workerName, $datesLabel, 'reschedule');
                 $this->logProjectChange(
                     $project,
                     'Project assignment was dissolved because the project was rescheduled',
                     [$workerName, $datesLabel]
+                );
+
+                $this->notifyPersonAboutBindingChange(
+                    'removed',
+                    $project,
+                    $bindingRows->first()->employable_type,
+                    $bindingRows->first()->employable_id,
+                    $bindingRows
+                        ->map(static fn (ProjectDayAssignment $row) => $row->date->format('d.m.Y'))
+                        ->unique()
+                        ->implode(', '),
+                    'notification.project_assignment.removed_reason_reschedule'
                 );
             }
 
@@ -1079,11 +1270,23 @@ class ProjectDayAssignmentService
                 )
                 : collect();
 
+            // Per Frei-/Abwesenheits-Eintrag aufgelöste Tage bleiben aufgelöst, solange
+            // der Eintrag noch existiert — wird er gelöscht, kommt der Tag beim nächsten
+            // Zeitraum-Sync automatisch zurück (Produktentscheidung 21.07.2026)
+            $vacationBlockedDates = $this->getVacationBlockedDates(
+                $first->employable_type,
+                $first->employable_id,
+                $targetDates->first(),
+                $targetDates->last(),
+                $first->isBinding()
+            );
+
             $missingDates = $targetDates
                 ->reject(static fn ($date) => $existingDates->contains($date))
                 ->reject(static fn ($date) => $supersededDates->contains($date))
                 ->reject(static fn ($date) => $otherGroupDates->contains($date))
-                ->reject(static fn ($date) => $shiftCoveredDates->contains($date));
+                ->reject(static fn ($date) => $shiftCoveredDates->contains($date))
+                ->reject(static fn ($date) => $vacationBlockedDates->contains($date));
             $obsoleteRows = $rows->reject(static fn ($row) => $targetDates->contains($row->date->format('Y-m-d')));
 
             // Supersedete Zeilen außerhalb des neuen Zeitraums neutralisieren: ein späterer

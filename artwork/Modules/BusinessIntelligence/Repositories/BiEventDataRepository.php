@@ -29,18 +29,19 @@ class BiEventDataRepository extends BaseRepository
         return $this->biEventData->newModelQuery();
     }
 
-    public function getByProjectId(int $projectId): Collection
+    public function getByProjectId(int $projectId, string $scope = 'actual'): Collection
     {
         return $this->getNewModelQuery()
             ->where('project_id', $projectId)
+            ->where('scope', $scope)
             ->with('event')
             ->get();
     }
 
-    public function upsert(int $projectId, int $eventId, array $data): BiEventData
+    public function upsert(int $projectId, int $eventId, array $data, string $scope = 'actual'): BiEventData
     {
         return BiEventData::updateOrCreate(
-            ['project_id' => $projectId, 'event_id' => $eventId],
+            ['project_id' => $projectId, 'event_id' => $eventId, 'scope' => $scope],
             $data
         );
     }

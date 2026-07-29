@@ -18,29 +18,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class BiDashboardService
 {
-    /**
-     * Representative hours per effort bucket, used to fold the manual
-     * time-effort buckets into the proxy score.
-     */
-    private const EFFORT_HOURS = [
-        '0-10' => 5,
-        '10-25' => 17.5,
-        '25-50' => 37.5,
-        '50-100' => 75,
-        '100+' => 125,
-    ];
-
-    /**
-     * Weights of the Aufwand-Proxy-Score. Shipped to the frontend so the score
-     * can be explained instead of appearing as a black-box number.
-     */
-    private const SCORE_WEIGHTS = [
-        'contracts' => 2,
-        'bookings' => 1,
-        'open_tasks' => 1.5,
-        'documents' => 0.5,
-        'effort_hours' => 0.1,
-    ];
+    // Score-Gewichte und Effort-Stunden leben geteilt in BiDerivedValuesService
+    // (eine Wahrheit für Dashboard UND Export).
 
     public function __construct(
         private readonly BiProjectMetricsService $metricsService,
@@ -52,48 +31,89 @@ class BiDashboardService
     /**
      * @return array<string, mixed>
      */
-    public function getDashboardData(?string $from = null, ?string $to = null): array
-    {
+    public function getDashboardData(
+        ?string $from = null,
+        ?string $to = null,
+        ?string $compareFrom = null,
+        ?string $compareTo = null,
+        bool $noCompare = false
+    ): array {
         [$rangeFrom, $rangeTo] = $this->resolveDateRange($from, $to);
+
+        // Vergleichszeitraum: explizit gewählt, sonst Vorjahr (Default);
+        // 'kein Vergleich' unterdrückt den zweiten Lauf komplett.
+        $comparisonFrom = null;
+        $comparisonTo = null;
+        if (!$noCompare) {
+            if ($compareFrom || $compareTo) {
+                $comparisonFrom = $compareFrom ? Carbon::parse($compareFrom) : null;
+                $comparisonTo = $compareTo ? Carbon::parse($compareTo) : null;
+            } else {
+                $comparisonFrom = $rangeFrom?->copy()->subYear();
+                $comparisonTo = $rangeTo?->copy()->subYear();
+            }
+        }
 
         // Versions-Suffix: Schreibzugriffe bumpen bi_dashboard_version, damit
         // frisch erfasste Zahlen nicht 10 Minuten hinter dem Cache hängen.
         $cacheKey = 'bi_dashboard_'
             . ($rangeFrom?->toDateString() ?? 'null') . '_'
             . ($rangeTo?->toDateString() ?? 'null')
+            . '_c' . ($comparisonFrom?->toDateString() ?? 'null')
+            . '_' . ($comparisonTo?->toDateString() ?? 'null')
             . '_v' . Cache::get('bi_dashboard_version', 0);
 
-        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($rangeFrom, $rangeTo): array {
-            $projects = $this->loadProjects();
+        return Cache::remember(
+            $cacheKey,
+            now()->addMinutes(10),
+            function () use ($rangeFrom, $rangeTo, $comparisonFrom, $comparisonTo): array {
+                $projects = $this->loadProjects();
 
-            $current = $this->aggregate($projects, $rangeFrom, $rangeTo);
-            // Jahresvergleich nur über datumsfilterbare Werte: TOTAL-Modus-Kennzahlen sind
-            // zeitraum-neutral und würden im Vorjahres-Lauf denselben Wert liefern (Delta immer 0).
-            // comparable_kpis ist das aktuelle Pendant mit identischen Ausschlussregeln.
-            $comparable = $this->aggregateComparableKpis($projects, $rangeFrom, $rangeTo);
-            $previous = $this->aggregateComparableKpis(
-                $projects,
-                $rangeFrom?->copy()->subYear(),
-                $rangeTo?->copy()->subYear()
-            );
+                $current = $this->aggregate($projects, $rangeFrom, $rangeTo);
+                // Vergleich nur über datumsfilterbare Werte: TOTAL-Modus-Kennzahlen sind
+                // zeitraum-neutral und würden im Vergleichs-Lauf denselben Wert liefern
+                // (Delta immer 0). comparable_kpis ist das aktuelle Pendant mit
+                // identischen Ausschlussregeln.
+                $hasComparison = $comparisonFrom !== null || $comparisonTo !== null;
+                $comparable = $hasComparison
+                    ? $this->aggregateComparableKpis($projects, $rangeFrom, $rangeTo)
+                    : null;
+                $previous = $hasComparison
+                    ? $this->aggregateComparableKpis($projects, $comparisonFrom, $comparisonTo)
+                    : null;
 
-            return [
-                'range' => [
-                    'from' => $rangeFrom?->toDateString(),
-                    'to' => $rangeTo?->toDateString(),
-                ],
-                'kpis' => $current['kpis'],
-                'comparable_kpis' => $comparable,
-                'previous_kpis' => $previous,
-                'score_weights' => self::SCORE_WEIGHTS,
-                'effort_hours_map' => self::EFFORT_HOURS,
-                'by_category' => $current['by_category'],
-                'projects' => $current['projects'],
-                'monthly' => $this->buildMonthlySeries($projects, $rangeFrom, $rangeTo),
-                'data_gaps' => $this->findDataGaps($projects, $rangeFrom, $rangeTo),
-                'tags_linked' => BiEventTypeTag::has('eventTypes')->exists(),
-            ];
-        });
+                return [
+                    'range' => [
+                        'from' => $rangeFrom?->toDateString(),
+                        'to' => $rangeTo?->toDateString(),
+                    ],
+                    'comparison_range' => $hasComparison
+                        ? [
+                            'from' => $comparisonFrom?->toDateString(),
+                            'to' => $comparisonTo?->toDateString(),
+                        ]
+                        : null,
+                    'kpis' => $current['kpis'],
+                    'audience_quotas' => $current['audience_quotas'],
+                    'plan_summary' => $current['plan_summary'],
+                    'comparable_kpis' => $comparable,
+                    'previous_kpis' => $previous,
+                    'score_weights' => BiDerivedValuesService::SCORE_WEIGHTS,
+                    'effort_hours_map' => BiDerivedValuesService::EFFORT_HOURS,
+                    'by_category' => $current['by_category'],
+                    'projects' => $current['projects'],
+                    'monthly' => $this->buildMonthlySeries(
+                        $projects,
+                        $rangeFrom,
+                        $rangeTo,
+                        $comparisonFrom,
+                        $comparisonTo
+                    ),
+                    'data_gaps' => $this->findDataGaps($projects, $rangeFrom, $rangeTo),
+                    'tags_linked' => BiEventTypeTag::has('eventTypes')->exists(),
+                ];
+            }
+        );
     }
 
     private function loadProjects(): Collection
@@ -103,7 +123,10 @@ class BiDashboardService
             ->with([
                 'biData',
                 'biEventData.event',
+                'planBiData',
+                'planBiEventData.event',
                 'biRoomCapacities',
+                'biAudienceCategoryValues',
                 'biTimeEfforts',
                 'events.room',
                 'events.event_type.biTags',
@@ -117,20 +140,59 @@ class BiDashboardService
     }
 
     /**
+     * Nur Projekte, die im Zeitraum stattfinden (mind. ein Termin überlappt
+     * den Zeitraum) — ohne Zeitraum bleibt die volle Liste erhalten. Projekte
+     * ganz ohne Termine fallen bei aktivem Filter bewusst raus, auch wenn sie
+     * BI-Werte im TOTAL-Modus tragen: die sind keinem Datum zuordenbar.
+     *
+     * @param Collection<int, Project> $projects
+     * @return Collection<int, Project>
+     */
+    private function projectsInRange(Collection $projects, ?Carbon $from, ?Carbon $to): Collection
+    {
+        if (!$from && !$to) {
+            return $projects;
+        }
+
+        return $projects
+            ->filter(fn(Project $project): bool => $this->eventsInRangeCount($project, $from, $to) > 0)
+            ->values();
+    }
+
+    /**
      * @param Collection<int, Project> $projects
      * @return array<string, mixed>
      */
     private function aggregate(Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
+        $projects = $this->projectsInRange($projects, $from, $to);
+
         $rows = [];
         $totalVisitors = 0;
         $totalRevenue = 0.0;
+        $totalCosts = 0.0;
+        $anyCostsRecorded = false;
         $totalTickets = 0;
         $totalCapacity = 0;
         $totalEventDays = 0;
         $totalPerformances = 0;
 
         $anyVisitorsEstimated = false;
+
+        // Kategorien-Summen (Vollzahler*innen/Ermäßigt/Freikarten) über alle Projekte
+        $categoryTotals = ['full' => 0, 'reduced' => 0, 'free' => 0];
+        $categoryRecorded = ['full' => false, 'reduced' => false, 'free' => false];
+        $projectsWithCategories = 0;
+
+        // Plan-Aggregation (nur Projekte mit Plan-Werten zählen in die Erreichung)
+        $planMetrics = $this->metricsService->forScope('plan');
+        $planVisitorsTotal = 0;
+        $planRevenueTotal = 0.0;
+        $planCostsTotal = 0.0;
+        $actualVisitorsAgainstPlan = 0;
+        $actualRevenueAgainstPlan = 0.0;
+        $actualCostsAgainstPlan = 0.0;
+        $projectsWithPlan = 0;
 
         foreach ($projects as $project) {
             ['value' => $visitorsValue, 'estimated' => $visitorsEstimated] =
@@ -148,6 +210,40 @@ class BiDashboardService
             $performances = $this->metricsService->performances($project, $from, $to);
             $eventDays = $this->metricsService->eventDays($project, $from, $to);
 
+            // Plan-Werte je Projekt (Zeilen-Spalten + Haus-Erreichung)
+            $planVisitors = $planMetrics->visitors($project, $from, $to);
+            $planRevenue = $planMetrics->revenue($project, $from, $to);
+            $planCosts = $planMetrics->costs($project);
+            $actualCosts = $this->metricsService->costs($project);
+            if ($planVisitors !== null || $planRevenue !== null || $planCosts !== null) {
+                $projectsWithPlan++;
+                if ($planVisitors !== null) {
+                    $planVisitorsTotal += $planVisitors;
+                    $actualVisitorsAgainstPlan += $visitorsValue ?? 0;
+                }
+                if ($planRevenue !== null) {
+                    $planRevenueTotal += $planRevenue;
+                    $actualRevenueAgainstPlan += $revenue;
+                }
+                if ($planCosts !== null) {
+                    $planCostsTotal += $planCosts;
+                    $actualCostsAgainstPlan += $actualCosts ?? 0.0;
+                }
+            }
+
+            $categorySums = $this->metricsService->categorySums($project, $from, $to);
+            $hasCategoryData = false;
+            foreach ($categorySums as $type => $sum) {
+                if ($sum !== null) {
+                    $categoryTotals[$type] += $sum;
+                    $categoryRecorded[$type] = true;
+                    $hasCategoryData = true;
+                }
+            }
+            if ($hasCategoryData) {
+                $projectsWithCategories++;
+            }
+
             $contracts = $project->contracts->count();
             $bookings = $this->derivedValuesService->getBookingCount($project);
             [$openTasks, $totalTasks] = $this->taskCounts($project);
@@ -155,11 +251,11 @@ class BiDashboardService
             $effortHours = $this->effortHours($project);
 
             $score = round(
-                self::SCORE_WEIGHTS['contracts'] * $contracts
-                + self::SCORE_WEIGHTS['bookings'] * $bookings
-                + self::SCORE_WEIGHTS['open_tasks'] * $openTasks
-                + self::SCORE_WEIGHTS['documents'] * $documents
-                + self::SCORE_WEIGHTS['effort_hours'] * $effortHours,
+                BiDerivedValuesService::SCORE_WEIGHTS['contracts'] * $contracts
+                + BiDerivedValuesService::SCORE_WEIGHTS['bookings'] * $bookings
+                + BiDerivedValuesService::SCORE_WEIGHTS['open_tasks'] * $openTasks
+                + BiDerivedValuesService::SCORE_WEIGHTS['documents'] * $documents
+                + BiDerivedValuesService::SCORE_WEIGHTS['effort_hours'] * $effortHours,
                 1
             );
 
@@ -179,10 +275,28 @@ class BiDashboardService
                 'bookings_per_performance' => $denominator ? round($bookings / $denominator, 2) : null,
                 'tasks_docs_per_production' => $totalTasks + $documents,
                 'effort_score' => $score,
+                'free_tickets_rate' => $this->metricsService->freeTicketsRate($project, $from, $to),
+                'plan_visitors' => $planVisitors,
+                'plan_revenue' => $planRevenue,
+                'costs' => $actualCosts !== null ? round($actualCosts, 2) : null,
+                'plan_costs' => $planCosts,
+                'costs_attainment' => ($planCosts !== null && $planCosts > 0 && $actualCosts !== null)
+                    ? round($actualCosts / $planCosts * 100, 1)
+                    : null,
+                // Erreichung bevorzugt Umsatz (Steuerungsgröße), sonst Besucher*innen
+                'attainment' => match (true) {
+                    $planRevenue !== null && $planRevenue > 0 => round($revenue / $planRevenue * 100, 1),
+                    $planVisitors !== null && $planVisitors > 0 => round(($visitorsValue ?? 0) / $planVisitors * 100, 1),
+                    default => null,
+                },
             ];
 
             $totalVisitors += $visitors;
             $totalRevenue += $revenue;
+            if ($actualCosts !== null) {
+                $totalCosts += $actualCosts;
+                $anyCostsRecorded = true;
+            }
             $totalTickets += $tickets;
             $totalCapacity += $capacity;
             $totalEventDays += $eventDays;
@@ -194,13 +308,70 @@ class BiDashboardService
                 'visitors' => $totalVisitors,
                 'visitors_estimated' => $anyVisitorsEstimated,
                 'revenue' => round($totalRevenue, 2),
+                // null = kein Projekt hat Kosten erfasst (Kachel wird dann nicht angezeigt)
+                'costs' => $anyCostsRecorded ? round($totalCosts, 2) : null,
                 'occupancy' => $totalCapacity > 0 ? round($totalTickets / $totalCapacity * 100, 1) : null,
                 'event_days' => $totalEventDays,
                 'performances' => $totalPerformances,
                 'project_count' => $projects->count(),
             ],
+            'audience_quotas' => $this->buildAudienceQuotas(
+                $categoryTotals,
+                $categoryRecorded,
+                $projectsWithCategories
+            ),
+            'plan_summary' => $projectsWithPlan > 0
+                ? [
+                    'projects_with_plan' => $projectsWithPlan,
+                    'plan_visitors' => $planVisitorsTotal,
+                    'plan_revenue' => round($planRevenueTotal, 2),
+                    'plan_costs' => round($planCostsTotal, 2),
+                    'visitors_attainment' => $planVisitorsTotal > 0
+                        ? round($actualVisitorsAgainstPlan / $planVisitorsTotal * 100, 1)
+                        : null,
+                    'revenue_attainment' => $planRevenueTotal > 0
+                        ? round($actualRevenueAgainstPlan / $planRevenueTotal * 100, 1)
+                        : null,
+                    'costs_attainment' => $planCostsTotal > 0
+                        ? round($actualCostsAgainstPlan / $planCostsTotal * 100, 1)
+                        : null,
+                ]
+                : null,
             'by_category' => $this->groupByCategory($rows),
             'projects' => $rows,
+        ];
+    }
+
+    /**
+     * Haus-Quoten aus den Kategorien-Summen; null, solange kein Projekt im
+     * Zeitraum Kategoriewerte erfasst hat (Kacheln erscheinen erst mit Daten).
+     *
+     * @param array{full: int, reduced: int, free: int} $totals
+     * @param array{full: bool, reduced: bool, free: bool} $recorded
+     * @return ?array<string, mixed>
+     */
+    private function buildAudienceQuotas(array $totals, array $recorded, int $projectsWithCategories): ?array
+    {
+        if ($projectsWithCategories === 0) {
+            return null;
+        }
+
+        $issued = $totals['full'] + $totals['reduced'] + $totals['free'];
+        $paid = $totals['full'] + $totals['reduced'];
+
+        return [
+            'tickets_issued' => $issued,
+            'full' => $recorded['full'] ? $totals['full'] : null,
+            'reduced' => $recorded['reduced'] ? $totals['reduced'] : null,
+            'free' => $recorded['free'] ? $totals['free'] : null,
+            'free_tickets_rate' => ($recorded['free'] && $issued > 0)
+                ? round($totals['free'] / $issued * 100, 1)
+                : null,
+            'reduced_tickets_rate' => ($recorded['reduced'] && $paid > 0)
+                ? round($totals['reduced'] / $paid * 100, 1)
+                : null,
+            'paying_rate' => $issued > 0 ? round($paid / $issued * 100, 1) : null,
+            'projects_with_categories' => $projectsWithCategories,
         ];
     }
 
@@ -216,6 +387,11 @@ class BiDashboardService
      */
     private function aggregateComparableKpis(Collection $projects, ?Carbon $from, ?Carbon $to): array
     {
+        // Auch der Vergleichslauf zählt nur Projekte, die im jeweiligen
+        // Zeitraum stattfinden — sonst verwässern TOTAL-Modus-Werte von
+        // Projekten außerhalb des Vergleichszeitraums das Vorjahres-Delta.
+        $projects = $this->projectsInRange($projects, $from, $to);
+
         $totalVisitors = 0;
         $totalRevenue = 0.0;
         $totalTickets = 0;
@@ -294,52 +470,81 @@ class BiDashboardService
 
     /**
      * Monthly visitors/revenue from per-event entries (totals have no date and are
-     * excluded by design), incl. the same month one year earlier for comparison.
+     * excluded by design), incl. the comparison range aligned by month INDEX —
+     * so a season (Aug–Jul) can be laid over a calendar year or any free range.
      *
      * @param Collection<int, Project> $projects
      * @return array<int, array<string, mixed>>
      */
-    private function buildMonthlySeries(Collection $projects, ?Carbon $from, ?Carbon $to): array
-    {
+    private function buildMonthlySeries(
+        Collection $projects,
+        ?Carbon $from,
+        ?Carbon $to,
+        ?Carbon $compareFrom = null,
+        ?Carbon $compareTo = null
+    ): array {
         $currentBuckets = $this->bucketEventDataByMonth($projects, $from, $to);
-        $previousBuckets = $this->bucketEventDataByMonth(
-            $projects,
-            $from?->copy()->subYear(),
-            $to?->copy()->subYear()
-        );
+        $previousBuckets = ($compareFrom || $compareTo)
+            ? $this->bucketEventDataByMonth($projects, $compareFrom, $compareTo)
+            : [];
 
-        $months = array_keys($currentBuckets);
+        $months = $this->monthSequence($from, $to, array_keys($currentBuckets));
+        $compareMonths = ($compareFrom || $compareTo)
+            ? $this->monthSequence($compareFrom, $compareTo, array_keys($previousBuckets))
+            : [];
 
-        if ($from && $to) {
-            $months = [];
-            $cursor = $from->copy()->startOfMonth();
-            $end = $to->copy()->startOfMonth();
-            // Sicherheitsgrenze: höchstens 36 Monatsspalten, sonst wird das Chart unlesbar
-            $guard = 0;
-            while ($cursor->lte($end) && $guard < 36) {
-                $months[] = $cursor->format('Y-m');
-                $cursor->addMonth();
-                $guard++;
-            }
-        } else {
-            sort($months);
-        }
-
-        return array_map(function (string $month) use ($currentBuckets, $previousBuckets): array {
-            $prevMonth = Carbon::createFromFormat('Y-m', $month)->subYear()->format('Y-m');
+        return array_map(function (string $month, int $index) use (
+            $currentBuckets,
+            $previousBuckets,
+            $compareMonths
+        ): array {
+            // Ausrichtung über den Monats-Index ab Zeitraumbeginn, nicht über den
+            // Kalendermonat — nur so sind ungleiche Zeiträume überlagerbar.
+            $compareMonth = $compareMonths[$index] ?? null;
 
             return [
                 'month' => $month,
+                'compare_month' => $compareMonth,
                 'visitors' => $currentBuckets[$month]['visitors'] ?? 0,
                 'revenue' => round($currentBuckets[$month]['revenue'] ?? 0.0, 2),
-                // null statt 0, wenn es für den Vorjahresmonat keine Daten gibt —
+                // null statt 0, wenn es für den Vergleichsmonat keine Daten gibt —
                 // sonst zeichnet das Chart eine irreführende flache 0-Linie
-                'prev_visitors' => $previousBuckets[$prevMonth]['visitors'] ?? null,
-                'prev_revenue' => isset($previousBuckets[$prevMonth])
-                    ? round($previousBuckets[$prevMonth]['revenue'], 2)
+                'prev_visitors' => $compareMonth !== null
+                    ? ($previousBuckets[$compareMonth]['visitors'] ?? null)
+                    : null,
+                'prev_revenue' => ($compareMonth !== null && isset($previousBuckets[$compareMonth]))
+                    ? round($previousBuckets[$compareMonth]['revenue'], 2)
                     : null,
             ];
-        }, $months);
+        }, $months, array_keys($months));
+    }
+
+    /**
+     * Monatsfolge eines Zeitraums (Y-m); ohne vollständigen Zeitraum die Monate
+     * mit Daten. Sicherheitsgrenze 36 Monate, sonst wird das Chart unlesbar.
+     *
+     * @param array<int, string> $fallbackMonths
+     * @return array<int, string>
+     */
+    private function monthSequence(?Carbon $from, ?Carbon $to, array $fallbackMonths): array
+    {
+        if (!$from || !$to) {
+            sort($fallbackMonths);
+
+            return $fallbackMonths;
+        }
+
+        $months = [];
+        $cursor = $from->copy()->startOfMonth();
+        $end = $to->copy()->startOfMonth();
+        $guard = 0;
+        while ($cursor->lte($end) && $guard < 36) {
+            $months[] = $cursor->format('Y-m');
+            $cursor->addMonth();
+            $guard++;
+        }
+
+        return $months;
     }
 
     /**
@@ -466,7 +671,7 @@ class BiDashboardService
                 ? $effort->effort_bucket->value
                 : (string) $effort->effort_bucket;
 
-            return self::EFFORT_HOURS[$bucket] ?? 0;
+            return BiDerivedValuesService::EFFORT_HOURS[$bucket] ?? 0;
         });
     }
 

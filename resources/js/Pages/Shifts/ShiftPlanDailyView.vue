@@ -32,35 +32,14 @@
                         </div>
 
                         <template v-else>
-                            <div class="flex flex-row items-center">
-                                <ToolTipComponent
-                                    direction="bottom"
-                                    :tooltip-text="$t('Time range back')"
-                                    :icon="IconChevronLeft"
-                                    icon-size="h-5 w-5 text-primary"
-                                    @click="previousTimeRange"
-                                    classesButton="ui-button"
-                                />
-                                <date-picker-component :date-value-array="props.dateValue" :is_shift_plan="true" :is_daily_view="true"/>
-                                <ToolTipComponent
-                                    direction="bottom"
-                                    :tooltip-text="$t('Time range forward')"
-                                    :icon="IconChevronRight"
-                                    icon-size="h-5 w-5 text-primary"
-                                    @click="nextTimeRange"
-                                    classesButton="ui-button"
-                                />
-                            </div>
+                            <DateRangeControl
+                                :date-value-array="props.dateValue"
+                                mode="shift-plan"
+                                :extra-params="{ isDailyView: true }"
+                                :on-today-override="jumpToToday"
+                            />
 
                             <div class="flex gap-x-1 mx-2">
-                                <ToolTipComponent
-                                    direction="right"
-                                    :tooltip-text="$t('Today')"
-                                    :icon="IconCalendar"
-                                    icon-size="h-5 w-5"
-                                    @click="jumpToToday"
-                                    classesButton="ui-button"
-                                />
                                 <ToolTipComponent
                                     direction="right"
                                     :tooltip-text="$t('Current week')"
@@ -358,6 +337,22 @@
                                 </div>
                             </div>
 
+                            <!-- Tagesbemerkung als Chip im Tageskopf (gleiche Inhalte wie Kalender/Dienstplan) -->
+                            <div
+                                v-if="dayRemarksColumnVisible && (remarkForDay(day)?.text || dayRemarksCanEdit)"
+                                class="flex items-center min-w-0 max-w-md shrink"
+                                :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
+                                :title="remarkForDay(day)?.text"
+                                @click.stop="dayRemarksCanEdit ? (dayRemarkModalDay = day) : null"
+                            >
+                                <span
+                                    class="text-[11px] bg-amber-50/90 text-gray-800 rounded-lg px-2 py-1 truncate"
+                                    :class="{ '!text-gray-400 italic': !remarkForDay(day)?.text }"
+                                >
+                                    {{ remarkForDay(day)?.text || $t('Add remark') }}
+                                </span>
+                            </div>
+
                             <div class="flex items-center justify-end min-w-0 flex-1">
                                 <!-- Verbindlich Zugeordnete: rechts vom Datum -->
                                 <div
@@ -512,13 +507,22 @@
                 :enums="projectShiftExportTabs"
                 :configuration="projectShiftExportConfiguration"
             />
+
+            <DayRemarkEditModal
+                v-if="dayRemarkModalDay"
+                :date="dayRemarkModalDay.withoutFormat"
+                :display-date="dayRemarkModalDay.fullDay"
+                :remark="remarkForDay(dayRemarkModalDay)"
+                is-in-shift-plan
+                @close="dayRemarkModalDay = null"
+            />
         </component>
     </div>
 </template>
 
 <script setup lang="ts">
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
-import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import { ref, provide, onMounted, onUnmounted, onBeforeUnmount, watch, computed, nextTick, shallowRef, triggerRef, defineAsyncComponent } from "vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import { router, usePage } from "@inertiajs/vue3";
@@ -543,6 +547,8 @@ import FunctionBarSetting from "@/Artwork/Filter/FunctionBarSetting.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import axios from "axios";
 import { enrichDays } from "@/Composeables/calendarDateUtils.js";
+import { useDayRemarks } from "@/Composeables/useDayRemarks.js";
+import DayRemarkEditModal from "@/Components/Calendar/Elements/DayRemarkEditModal.vue";
 import DailyRoomSplitTimeline from "@/Pages/Shifts/DailyViewComponents/DailyRoomSplitTimeline.vue";
 import dayjs from "dayjs";
 import {can, is} from "laravel-permission-to-vuejs";
@@ -748,6 +754,21 @@ const showCalendarWarning = ref(props.calendarWarningText)
 const withoutExtraRows = (days: any[]) => (days ?? []).filter((d: any) => !d?.isExtraRow)
 
 const daysLocal = shallowRef<any[]>(withoutExtraRows(props.days as any[]))
+
+// --- Tagesbemerkungen (gleiche Inhalte/Rechte wie Kalender & Dienstplan-Wochenansicht) ---
+// Anzeige liest über remarkForDay() aus dem reaktiven Live-Store des
+// Composables — daysLocal ist ein shallowRef, Mutationen daran würden die
+// Tagesköpfe nicht neu rendern.
+const {
+    columnVisible: dayRemarksColumnVisible,
+    canEdit: dayRemarksCanEdit,
+    remarkForDay,
+    listenForDayRemarkUpdates,
+} = useDayRemarks()
+const dayRemarkModalDay = ref<any>(null)
+// Live-Updates anderer User → Store
+const stopDayRemarkListener = listenForDayRemarkUpdates()
+onBeforeUnmount(() => stopDayRemarkListener())
 
 // G4: Stable empty array to avoid creating new references
 const EMPTY_ARRAY: readonly any[] = Object.freeze([])
@@ -1597,54 +1618,6 @@ const jumpToCurrentMonth = () => {
     }
 
     patchDates()
-}
-
-const previousTimeRange = () => {
-    const dateValueCopy = Array.isArray(props.dateValue) ? [...props.dateValue] : []
-    if (!dateValueCopy[0] || !dateValueCopy[1]) return
-
-    const start = new Date(dateValueCopy[0])
-    const end = new Date(dateValueCopy[1])
-    const dayDifference = Math.round((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
-
-    const newEnd = new Date(start)
-    newEnd.setDate(newEnd.getDate() - 1)
-    const newStart = new Date(newEnd)
-    newStart.setDate(newStart.getDate() - dayDifference)
-
-    router.patch(
-        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        {
-            start_date: newStart.toISOString().slice(0, 10),
-            end_date: newEnd.toISOString().slice(0, 10),
-            isDailyView: true,
-        },
-        { preserveScroll: true, preserveState: false }
-    )
-}
-
-const nextTimeRange = () => {
-    const dateValueCopy = Array.isArray(props.dateValue) ? [...props.dateValue] : []
-    if (!dateValueCopy[0] || !dateValueCopy[1]) return
-
-    const start = new Date(dateValueCopy[0])
-    const end = new Date(dateValueCopy[1])
-    const dayDifference = Math.round((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
-
-    const newStart = new Date(end)
-    newStart.setDate(newStart.getDate() + 1)
-    const newEnd = new Date(newStart)
-    newEnd.setDate(newEnd.getDate() + dayDifference)
-
-    router.patch(
-        route("update.user.shift.calendar.filter.dates", page.props.auth.user.id),
-        {
-            start_date: newStart.toISOString().slice(0, 10),
-            end_date: newEnd.toISOString().slice(0, 10),
-            isDailyView: true,
-        },
-        { preserveScroll: true, preserveState: false }
-    )
 }
 
 /**

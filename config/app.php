@@ -181,6 +181,7 @@ return [
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
         Artwork\Modules\ExternalAccess\Providers\ExternalAccessServiceProvider::class,
+        Artwork\Modules\Mail\Providers\MailSettingsServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class,
         Artwork\Modules\Holidays\HolidayServiceProvider::class,

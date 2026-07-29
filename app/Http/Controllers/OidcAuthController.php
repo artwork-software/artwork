@@ -102,6 +102,10 @@ class OidcAuthController extends Controller
 
         Auth::guard(config('fortify.guard'))->login($user, true);
 
+        // Session-Fixation verhindern: Fortifys eigener Login-Pfad regeneriert die
+        // Session-ID ebenfalls – der manuelle OIDC-Login muss das selbst tun.
+        request()->session()->regenerate();
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
@@ -112,7 +116,7 @@ class OidcAuthController extends Controller
 
     /**
      * Erzwingt die pro-Quelle konfigurierte E-Mail-Domain-Allowlist.
-     * Eine leere Allowlist verweigert den Zugriff bewusst.
+     * Eine leere Allowlist verweigert den Zugriff sicherheitshalber vollständig.
      */
     private function emailDomainAllowed(ExternalUserSource $source, string $email): bool
     {

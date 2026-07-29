@@ -37,6 +37,7 @@ class UserContract extends Model
         'free_half_days_per_week',
         'special_day_rule_active',
         'compensation_period',
+        'use_three_month_average_for_target_reduction',
         'overtime_rule_active',
         'overtime_compensation_period',
         'description',
@@ -64,6 +65,7 @@ class UserContract extends Model
         'free_full_days_per_week' => 'integer',
         'free_half_days_per_week' => 'integer',
         'compensation_period' => 'integer',
+        'use_three_month_average_for_target_reduction' => 'boolean',
         'free_sundays_per_season' => 'integer',
         // Spielzeitbezogene Infodaten (DP-18)
         'free_sundays_per_season_active' => 'boolean',

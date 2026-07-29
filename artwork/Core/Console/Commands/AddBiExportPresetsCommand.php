@@ -34,6 +34,23 @@ class AddBiExportPresetsCommand extends Command
             'production_type',
             'season_year',
         ],
+        // Spiegelbild der "Interne Steuerung"-Tabelle im BI-Dashboard
+        'Steuerungssicht' => [
+            'project_name',
+            'main_category',
+            'visitors',
+            'revenue',
+            'occupancy_rate',
+            'contract_count',
+            'booking_count',
+            'contracts_per_performance',
+            'bookings_per_performance',
+            'tasks_docs_per_production',
+            'effort_score',
+            'plan_visitors',
+            'plan_revenue',
+            'attainment',
+        ],
     ];
 
     public function handle(): void

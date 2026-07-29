@@ -83,6 +83,21 @@ class MailSettingsResolver
         return $this->override($this->settings->from_address) ?? $this->fromAddressFallback();
     }
 
+    /**
+     * Nur der explizit gepflegte Override (ohne .env-Fallback) — Basis für das
+     * Absender-Rewrite beim Versand: Notifications setzen ihren Absender selbst
+     * (business_email), nur eine bewusst gesetzte From-Adresse darf das übersteuern.
+     */
+    public function fromAddressOverride(): ?string
+    {
+        return $this->override($this->settings->from_address);
+    }
+
+    public function fromNameOverride(): ?string
+    {
+        return $this->override($this->settings->from_name);
+    }
+
     public function fromAddressFallback(): ?string
     {
         return config('mail.fallback.from_address');

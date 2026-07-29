@@ -85,7 +85,8 @@ class MailSettingsController extends Controller
             ->causedBy($request->user())
             ->log('settings_updated');
 
-        return redirect()->back()->with('status', __('Settings have been updated.'));
+        // HandleInertiaRequests shared nur den Session-Key 'success' als Flash.
+        return redirect()->back()->with('success', __('Settings have been updated.'));
     }
 
     public function test(TestMailRequest $request): JsonResponse

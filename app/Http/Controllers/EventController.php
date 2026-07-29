@@ -4483,9 +4483,13 @@ class EventController extends Controller
         $events = Event::query()->whereIn('id', $validated['eventIds'])->get();
         $request->merge(['adminComment' => $validated['comment'] ?? null]);
 
-        foreach ($events as $event) {
-            $this->authorize('answerRoomRequest', $event);
-        }
+        // Die Auswahl darf gemischt sein (Anfragen + normale Termine, Räume mit
+        // und ohne Admin-Recht): nicht beantwortbare Events werden übersprungen,
+        // statt den gesamten Batch mit 403 abzubrechen. Verarbeitet wird nur,
+        // wofür die Berechtigung tatsächlich vorliegt.
+        $events = $events->filter(fn (Event $event) => $request->user()->can('answerRoomRequest', $event));
+        abort_if($events->isEmpty(), 403);
+
         foreach ($events as $event) {
             try {
                 $this->acceptEvent($request, $event);
@@ -4510,9 +4514,11 @@ class EventController extends Controller
         ]);
         $events = Event::query()->whereIn('id', $validated['eventIds'])->get();
 
-        foreach ($events as $event) {
-            $this->authorize('answerRoomRequest', $event);
-        }
+        // Gemischte Auswahl: nicht beantwortbare Events überspringen statt Batch-403
+        // (siehe bulkAcceptEvents).
+        $events = $events->filter(fn (Event $event) => $request->user()->can('answerRoomRequest', $event));
+        abort_if($events->isEmpty(), 403);
+
         foreach ($events as $event) {
             try {
                 $this->declineEvent($request, $event);

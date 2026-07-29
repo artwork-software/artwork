@@ -98,6 +98,50 @@ final class MailSettingsResolverTest extends TestCase
     }
 
     #[Test]
+    public function a_configured_from_address_overrides_the_explicit_sender_of_outgoing_mails(): void
+    {
+        $settings = $this->settings();
+        $settings->from_address = 'buehne@example.com';
+        $settings->from_name = null;
+        $settings->save();
+
+        config(['mail.default' => 'array']);
+
+        // Notifications setzen ihren Absender explizit (business_email) — der
+        // MessageSending-Listener muss den gepflegten Override trotzdem durchsetzen.
+        \Illuminate\Support\Facades\Mail::raw('Test', function ($message): void {
+            $message->to('user@example.com')->from('business@example.com', 'Theaterhaus');
+        });
+
+        $sent = app('mail.manager')->mailer('array')->getSymfonyTransport()->messages();
+        $from = $sent->first()->getOriginalMessage()->getFrom()[0];
+
+        $this->assertSame('buehne@example.com', $from->getAddress());
+        // Ohne from_name-Override bleibt der Anzeigename der Mail erhalten.
+        $this->assertSame('Theaterhaus', $from->getName());
+    }
+
+    #[Test]
+    public function without_a_from_override_the_explicit_sender_stays_untouched(): void
+    {
+        $settings = $this->settings();
+        $settings->from_address = null;
+        $settings->from_name = null;
+        $settings->save();
+
+        config(['mail.default' => 'array']);
+
+        \Illuminate\Support\Facades\Mail::raw('Test', function ($message): void {
+            $message->to('user@example.com')->from('business@example.com', 'Theaterhaus');
+        });
+
+        $sent = app('mail.manager')->mailer('array')->getSymfonyTransport()->messages();
+        $from = $sent->first()->getOriginalMessage()->getFrom()[0];
+
+        $this->assertSame('business@example.com', $from->getAddress());
+    }
+
+    #[Test]
     public function effective_config_array_merges_db_and_env(): void
     {
         config([

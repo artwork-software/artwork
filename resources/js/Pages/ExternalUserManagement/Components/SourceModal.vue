@@ -117,6 +117,9 @@
                         :error="form.errors['config.bind_password']"
                         required
                     />
+                    <p v-if="source" class="mt-1 text-xs text-amber-600">
+                        {{ $t('For security reasons the stored password is never displayed – every edit of this connection requires re-entering it.') }}
+                    </p>
                 </div>
 
                 <!-- SSL/TLS Options -->
@@ -271,6 +274,9 @@
                         :error="form.errors['config.client_secret']"
                         required
                     />
+                    <p v-if="source" class="mt-1 text-xs text-amber-600">
+                        {{ $t('For security reasons the stored client secret is never displayed – every edit of this connection requires re-entering it.') }}
+                    </p>
                 </div>
 
                 <!-- Advanced OIDC fields (Custom only – presets prefill these) -->

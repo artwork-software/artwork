@@ -5,17 +5,18 @@
 
     <p style="font-weight: 300; margin-bottom: 3em;">
         Hallo{{ $name !== '' ? ' ' . $name : '' }}. Du wurdest soeben in {{ $page_title }} importiert und ein Konto
-        wurde für dich angelegt. Bevor du dich anmelden kannst, musst du einmalig dein Passwort festlegen. Klicke dazu
-        auf den Button weiter unten. Aus Sicherheitsgründen ist dieser Link nur zeitlich begrenzt gültig.
+        wurde für dich angelegt. Du meldest dich einfach mit deinen gewohnten Zugangsdaten deiner Organisation an
+        (E-Mail-Adresse bzw. Benutzername und das Passwort, das du auch an deinem Arbeitsplatz verwendest) –
+        ein separates Passwort für {{ $page_title }} ist nicht nötig.
     </p>
 
     @component('mail::button', ['url' => $url])
-        Passwort festlegen
+        Zur Anmeldung
     @endcomponent
 
     <p style="font-weight: 300; margin-top: 3em;">
-        Solltest du den Link verpasst haben, kannst du dein Passwort jederzeit über die Funktion
-        „Passwort vergessen" auf der Anmeldeseite neu anfordern. Bei Fragen erreichst du uns unter
+        Hinweis: Die Funktion „Passwort vergessen" gilt für dein Konto nicht – dein Passwort wird zentral von
+        deiner Organisation verwaltet. Bei Fragen erreichst du uns unter
         <a href="mailto:{{ $sender_email }}">{{ $sender_email }}</a>.
     </p>
 

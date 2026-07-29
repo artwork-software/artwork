@@ -648,7 +648,7 @@ class WorkingHourService
                     // Holiday-related compensation day: reduce the target. In the optional
                     // contract mode the reduction uses the previous three completed months.
                     $compValue = $compensationDays->get($dateStr, 0);
-                    if ($compValue > 0 && $dailyPlanned === 0 && $user instanceof User) {
+                    if ($compValue > 0 && $user instanceof User) {
                         $offWorkNegativeAdjustment += $this->threeMonthAverageTargetService->reductionMinutesFor(
                             $user,
                             $current,

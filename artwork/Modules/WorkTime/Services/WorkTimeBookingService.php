@@ -50,10 +50,11 @@ class WorkTimeBookingService
 
             $isHoliday = $this->repository->isHoliday($today);
 
+            // Sondertage senken das Soll unabhängig davon, ob gearbeitet wurde:
+            // Arbeit am Feiertag erzeugt Plus-Stunden, die ein regulärer
+            // Ausgleichstag (volles Soll, keine Arbeit) später wieder abbaut.
             if ($isHoliday) {
-                if ($workedTimes['total'] > 0) {
-                    // Gearbeitete Feiertage reduzieren das Soll nicht.
-                } elseif ($user->activeWorkContract()?->use_three_month_average_for_target_reduction) {
+                if ($user->activeWorkContract()?->use_three_month_average_for_target_reduction) {
                     $wantedMinutes = max(0, $wantedMinutes - $this->threeMonthAverageTargetService
                         ->averageMinutesFor($user, $today, $wantedMinutes));
                 } else {
@@ -72,7 +73,7 @@ class WorkTimeBookingService
                 ->whereNotNull('granted_date')
                 ->whereDate('granted_date', $today->toDateString())
                 ->sum('value');
-            if ($holidayCompValue > 0 && $workedTimes['total'] === 0) {
+            if ($holidayCompValue > 0) {
                 $reductionMinutes = $this->threeMonthAverageTargetService->reductionMinutesFor(
                     $user,
                     $today,

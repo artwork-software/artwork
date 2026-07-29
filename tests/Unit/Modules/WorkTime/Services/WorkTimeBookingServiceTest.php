@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Modules\WorkTime\Services;
 
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Shift\Models\CompensationDayOff;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Models\UserWorkTime;
@@ -126,6 +127,81 @@ final class WorkTimeBookingServiceTest extends TestCase
             'user_id' => $user->id,
             'name' => 'daily_work_time_booking_2026-07-21',
             'wanted_working_hours' => 0,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * Produktentscheidung 2026-07-29: Sondertage senken das Soll auch dann,
+     * wenn gearbeitet wurde — die Arbeit erzeugt Plus-Stunden, die ein
+     * regulärer Ausgleichstag (volles Soll) später abbaut.
+     */
+    #[Test]
+    public function working_on_a_holiday_still_zeroes_the_daily_target(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        Holiday::create([
+            'name' => 'Testfeiertag',
+            'date' => '2026-07-21',
+            'yearly' => false,
+            'from_api' => false,
+        ]);
+        $user->individualTimes()->create([
+            'title' => 'Feiertagsdienst',
+            'start_date' => '2026-07-21',
+            'end_date' => '2026-07-21',
+            'full_day' => true,
+            'working_time_minutes' => 480,
+        ]);
+
+        $this->service->calculateDailyWorkingHours();
+
+        $this->assertDatabaseHas('work_time_bookings', [
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-21',
+            'wanted_working_hours' => 0,
+            'worked_hours' => 480,
+            'work_time_balance_change' => 480,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    #[Test]
+    public function holiday_based_compensation_day_off_reduces_the_target_even_when_work_was_performed(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-21 12:00:00')); // Dienstag, kein Feiertag
+
+        $user = $this->workShiftUserWithDailyTarget('08:00');
+        CompensationDayOff::create([
+            'user_id' => $user->id,
+            'value' => 1.0,
+            'deadline' => '2026-08-31',
+            'granted_date' => '2026-07-21',
+            'granted_at' => now(),
+            'reason' => 'Ausgleichstag für Feiertagsarbeit',
+            'for_holiday' => true,
+        ]);
+        $user->individualTimes()->create([
+            'title' => 'Kurzfristiger Einsatz',
+            'start_date' => '2026-07-21',
+            'end_date' => '2026-07-21',
+            'full_day' => true,
+            'working_time_minutes' => 120,
+        ]);
+
+        $this->service->calculateDailyWorkingHours();
+
+        // Reduktion gilt trotz Arbeit; die 120 geleisteten Minuten werden Plus.
+        $this->assertDatabaseHas('work_time_bookings', [
+            'user_id' => $user->id,
+            'name' => 'daily_work_time_booking_2026-07-21',
+            'wanted_working_hours' => 0,
+            'worked_hours' => 120,
+            'work_time_balance_change' => 120,
         ]);
 
         Carbon::setTestNow();

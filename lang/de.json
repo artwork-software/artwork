@@ -5687,5 +5687,17 @@
     "Unable to load budget data.": "Budget-Daten konnten nicht geladen werden.",
     "Cell not found. Please refresh the page.": "Zelle nicht gefunden. Bitte lade die Seite neu.",
     "The value could not be saved. Please try again.": "Der Wert konnte nicht gespeichert werden. Bitte versuche es erneut.",
-    "Delete comment": "Kommentar löschen"
+    "Delete comment": "Kommentar löschen",
+    "LDAP synchronization was queued.": "Die LDAP-Synchronisation wurde eingereiht.",
+    "LDAP synchronization is running.": "Die LDAP-Synchronisation läuft.",
+    "LDAP synchronization completed.": "Die LDAP-Synchronisation wurde abgeschlossen.",
+    "LDAP synchronization failed. Please check the logs.": "Die LDAP-Synchronisation ist fehlgeschlagen. Bitte prüfe die Logs.",
+    "LDAP synchronization was cancelled because the source is no longer active.": "Die LDAP-Synchronisation wurde abgebrochen, weil die Quelle nicht mehr aktiv ist.",
+    "Another sync is still running. The queued sync will retry.": "Es läuft bereits eine Synchronisation. Die eingereihte Synchronisation wird es erneut versuchen.",
+    "No synchronization is running.": "Es läuft keine Synchronisation.",
+    "An active identity provider requires at least one allowed email domain.": "Ein aktiver Identity Provider benötigt mindestens eine erlaubte E-Mail-Domain.",
+    "For security reasons the stored password is never displayed – every edit of this connection requires re-entering it.": "Aus Sicherheitsgründen wird das gespeicherte Passwort nie angezeigt – bei jeder Bearbeitung dieser Verbindung muss es neu eingegeben werden.",
+    "For security reasons the stored client secret is never displayed – every edit of this connection requires re-entering it.": "Aus Sicherheitsgründen wird das gespeicherte Client Secret nie angezeigt – bei jeder Bearbeitung dieser Verbindung muss es neu eingegeben werden.",
+    "Deactivating or deleting a connection: linked accounts have no local password, so these users cannot sign in anymore until the connection is reactivated. The accounts themselves are kept. In an emergency, the break-glass command restores local password login for individual accounts.": "Deaktivieren oder Löschen einer Verbindung: Verknüpfte Konten haben kein lokales Passwort – diese Nutzer*innen können sich nicht mehr anmelden, bis die Verbindung wieder aktiviert wird. Die Konten selbst bleiben erhalten. Im Notfall stellt der Break-Glass-Befehl den lokalen Passwort-Login für einzelne Konten wieder her.",
+    "Stored passwords and client secrets are never displayed again for security reasons – every edit of a connection requires re-entering them.": "Gespeicherte Passwörter und Client Secrets werden aus Sicherheitsgründen nie wieder angezeigt – bei jeder Bearbeitung einer Verbindung müssen sie neu eingegeben werden."
 }

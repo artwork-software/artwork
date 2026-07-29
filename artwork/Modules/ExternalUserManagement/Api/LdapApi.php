@@ -305,15 +305,9 @@ class LdapApi implements ExternalUserManagementApi
         $connectionName = $this->registerConnection($source);
 
         $config = $source->config ?? [];
-        $baseDn = $config['base_dn'] ?? '';
         $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
 
-        $user = LdapUser::on($connectionName)
-            ->in($baseDn)
-            ->where('sAMAccountName', '=', $username)
-            ->orWhere('userPrincipalName', '=', $username)
-            ->orWhere('mail', '=', $username)
-            ->first();
+        $user = $this->buildLoginQuery($connectionName, $config, $username)->first();
 
         if (!$user) {
             return null;
@@ -341,6 +335,43 @@ class LdapApi implements ExternalUserManagementApi
                 'display_name' => $this->getAttributeValue($user, 'displayName'),
             ],
         ];
+    }
+
+    /**
+     * Baut die Login-Suche: derselbe user_filter wie beim Sync UND einer der drei
+     * Login-Attribut-Vergleiche. Wer vom Filter ausgeschlossen ist, darf sich auch
+     * nicht interaktiv anmelden. Die Attribut-Vergleiche müssen wegen des rawFilter
+     * explizit als OR-Gruppe geklammert werden – LdapRecord wrappt where/orWhere
+     * neben einem raw-Filter sonst nicht als einzelnes OR.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function buildLoginQuery(
+        string $connectionName,
+        array $config,
+        string $username
+    ): \LdapRecord\Query\Model\Builder {
+        // Operationale Attribute (z. B. entryUUID bei OpenLDAP) werden von '*'
+        // nicht mitgeliefert – das Identifier-Attribut muss wie beim Sync
+        // explizit selektiert werden, sonst ist der Login-Treffer identifier-los.
+        $identifierAttribute = $config['identifier_attribute'] ?? 'objectGUID';
+
+        $query = LdapUser::on($connectionName)
+            ->select(['*', $identifierAttribute, 'mail', 'givenName', 'sn', 'displayName', 'cn'])
+            ->rawFilter($this->normalizeFilter($config['user_filter'] ?? null))
+            ->orFilter(static function ($query) use ($username): void {
+                $query->where('sAMAccountName', '=', $username)
+                    ->orWhere('userPrincipalName', '=', $username)
+                    ->orWhere('mail', '=', $username);
+            });
+
+        $baseDn = $config['base_dn'] ?? '';
+
+        if ($baseDn !== '') {
+            $query->in($baseDn);
+        }
+
+        return $query;
     }
 
     /**

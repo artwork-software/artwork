@@ -54,6 +54,31 @@ final class EventBulkActionsTest extends FeatureTestCase
     }
 
     #[Test]
+    public function mixed_selection_accepts_the_requests_and_skips_normal_events(): void
+    {
+        $roomAdmin = User::factory()->create();
+        $room = Room::factory()->create(['everyone_can_book' => false]);
+        $room->users()->attach($roomAdmin->id, ['is_admin' => true, 'can_request' => false]);
+        $request = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => true,
+        ]);
+        $normalEvent = Event::factory()->create([
+            'room_id' => $room->id,
+            'occupancy_option' => false,
+        ]);
+        $this->actingAs($roomAdmin);
+
+        // Gemischte Auswahl darf nicht mit Batch-403 abbrechen: Anfragen werden
+        // beantwortet, normale Termine übersprungen.
+        $this->put(route('events.bulk-accept'), ['eventIds' => [$request->id, $normalEvent->id]])
+            ->assertRedirect();
+
+        $this->assertFalse($request->fresh()->occupancy_option);
+        $this->assertFalse($normalEvent->fresh()->occupancy_option);
+    }
+
+    #[Test]
     public function bulk_room_request_decision_requires_at_least_one_event(): void
     {
         $this->actingAsAdmin();

@@ -1179,18 +1179,24 @@ onBeforeUnmount(() => {
 
 // ---------- Multi-Edit etc. ----------
 const checkedCount = computed(() => editEvents.value.length);
-const hasSelectedRoomRequests = computed(() => {
-    if (!editEvents.value.length) return false;
+// Nur die tatsächlichen Raumanfragen aus der Auswahl — normale Termine in einer
+// gemischten Auswahl gehen nicht mit an die Bulk-Annehmen/-Ablehnen-Endpunkte.
+const selectedRoomRequestIds = computed(() => {
+    if (!editEvents.value.length) return [];
     const selectedIds = new Set(editEvents.value);
+    const requestIds = [];
     for (const room of newCalendarData.value) {
         for (const slot of Object.values(room.content || {})) {
             for (const evt of (slot.events ?? [])) {
-                if (selectedIds.has(evt.id) && evt.occupancy_option) return true;
+                if (selectedIds.has(evt.id) && evt.occupancy_option && !requestIds.includes(evt.id)) {
+                    requestIds.push(evt.id);
+                }
             }
         }
     }
-    return false;
+    return requestIds;
 });
+const hasSelectedRoomRequests = computed(() => selectedRoomRequestIds.value.length > 0);
 
 function handleMultiEditEventCheckboxChange(eventId, considerOnMultiEdit, eventRoomId) {
     if (considerOnMultiEdit) {
@@ -1318,10 +1324,10 @@ const acceptSingleRoomRequest = (event) => {
     router.put(route('events.accept', { event: event.id }), { accepted: true }, { preserveScroll: true });
 };
 const bulkAcceptRoomRequests = () => {
-    router.put(route('events.bulk-accept'), { eventIds: editEvents.value }, { preserveScroll: true });
+    router.put(route('events.bulk-accept'), { eventIds: selectedRoomRequestIds.value }, { preserveScroll: true });
 };
 const bulkDeclineRoomRequests = () => {
-    router.put(route('events.bulk-decline'), { eventIds: editEvents.value }, { preserveScroll: true });
+    router.put(route('events.bulk-decline'), { eventIds: selectedRoomRequestIds.value }, { preserveScroll: true });
 };
 const openDeleteEventModal = (event, type) => {
     deleteType.value = type;

@@ -847,6 +847,37 @@ class BudgetService
      *
      * @param array<string, array<int, MatchRelevantProjectGroupDTO>> $groupedProjectData
      */
+    /**
+     * Nutzereingaben wie "1.234,56 €" in einen bcmath-tauglichen String überführen.
+     * Nicht interpretierbare Werte werden als '0' behandelt statt bcadd() crashen zu lassen.
+     */
+    private function normalizeDecimalString(mixed $value): string
+    {
+        $raw = preg_replace('/[^0-9,.\-]/', '', trim((string) ($value ?? ''))) ?? '';
+
+        if ($raw === '') {
+            return '0';
+        }
+
+        $lastComma = strrpos($raw, ',');
+        $lastDot = strrpos($raw, '.');
+
+        if ($lastComma !== false && $lastDot !== false) {
+            // Hinteres Zeichen ist der Dezimaltrenner, das andere der Tausendertrenner
+            $raw = $lastComma > $lastDot
+                ? str_replace(',', '.', str_replace('.', '', $raw))
+                : str_replace(',', '', $raw);
+        } elseif ($lastComma !== false) {
+            $raw = substr_count($raw, ',') > 1
+                ? str_replace(',', '', $raw)
+                : str_replace(',', '.', $raw);
+        } elseif ($lastDot !== false && substr_count($raw, '.') > 1) {
+            $raw = str_replace('.', '', $raw);
+        }
+
+        return preg_match('/^-?\d+(\.\d+)?$/', $raw) === 1 ? $raw : '0';
+    }
+
     private function enrichProjectGroupSubprojectsColumnValues(?Table $table, array $groupedProjectData): void
     {
         if (!$table) {
@@ -876,8 +907,7 @@ class BudgetService
 
                 $groupRowId = (int) $dto->groupRowId;
                 $columnId = (int) $dto->relevantColumnId;
-                $raw = str_replace(',', '.', (string) ($dto->value ?? '0'));
-                $raw = $raw === '' ? '0' : $raw;
+                $raw = $this->normalizeDecimalString($dto->value);
 
                 if (!isset($sumByGroupRowIdAndColumn[$groupRowId])) {
                     $sumByGroupRowIdAndColumn[$groupRowId] = [];
@@ -902,8 +932,7 @@ class BudgetService
                         $groupCell = $row->cells?->firstWhere('column_id', $columnId);
 
                         if ($groupCell && trim((string) ($groupCell->value ?? '')) !== '') {
-                            $groupValue = str_replace(',', '.', (string) $groupCell->value);
-                            $groupValue = $groupValue === '' ? '0' : $groupValue;
+                            $groupValue = $this->normalizeDecimalString($groupCell->value);
 
                             if (!isset($sumByGroupRowIdAndColumn[$rowId])) {
                                 $sumByGroupRowIdAndColumn[$rowId] = [];

@@ -35,6 +35,13 @@ readonly class CrmPropertyGroupService
         return $this->repository->update($group, $data);
     }
 
+    public function reorder(array $groups): void
+    {
+        foreach ($groups as $item) {
+            CrmPropertyGroup::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
+        }
+    }
+
     public function destroy(CrmPropertyGroup $group): void
     {
         if ($group->is_system) {

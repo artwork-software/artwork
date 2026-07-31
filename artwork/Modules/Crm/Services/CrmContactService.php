@@ -17,9 +17,24 @@ readonly class CrmContactService
         private CrmPropertyValueRepository $propertyValueRepository,
     ) {}
 
-    public function getByType(int $typeId, ?string $search = null, int $perPage = 15, array $filters = [], array $allowedPropertyIds = []): LengthAwarePaginator
-    {
-        return $this->contactRepository->getByType($typeId, $search, $perPage, $filters, $allowedPropertyIds);
+    public function getByType(
+        int $typeId,
+        ?string $search = null,
+        int $perPage = 15,
+        array $filters = [],
+        array $allowedPropertyIds = [],
+        ?string $sort = null,
+        string $direction = 'asc'
+    ): LengthAwarePaginator {
+        return $this->contactRepository->getByType(
+            $typeId,
+            $search,
+            $perPage,
+            $filters,
+            $allowedPropertyIds,
+            $sort,
+            $direction
+        );
     }
 
     public function searchForLinking(?string $search = null, ?int $typeId = null, int $limit = 20): Collection
@@ -65,6 +80,23 @@ readonly class CrmContactService
     public function destroy(CrmContact $contact): void
     {
         $this->contactRepository->delete($contact);
+    }
+
+    /**
+     * Wechselt den Kontakttyp. Werte von Eigenschaften, die dem neuen Typ nicht
+     * zugewiesen sind, werden gelöscht — das Frontend weist vorher darauf hin.
+     */
+    public function changeType(CrmContact $contact, \Artwork\Modules\Crm\Models\CrmContactType $newType): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($contact, $newType): void {
+            $keptPropertyIds = $newType->properties()->pluck('crm_properties.id')->toArray();
+
+            $contact->propertyValues()
+                ->whereNotIn('crm_property_id', $keptPropertyIds)
+                ->delete();
+
+            $this->contactRepository->update($contact, ['crm_contact_type_id' => $newType->id]);
+        });
     }
 
     public function updateProfileImage(CrmContact $contact, ?string $path): void

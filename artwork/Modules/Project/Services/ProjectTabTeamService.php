@@ -2,9 +2,11 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\User\Models\User;
 
@@ -39,6 +41,24 @@ class ProjectTabTeamService
             ->filter(fn(array $user): bool => $this->shouldDisplayInProjectTeam($user, $project->user_id))
             ->values();
 
+        $crmContactsInTeamEnabled = app(ProjectCreateSettings::class)->crm_contacts_in_team;
+        $crmContacts = $crmContactsInTeamEnabled
+            ? $project->teamCrmContacts()->with('contactType')->get()->map(
+                fn(CrmContact $crmContact) => [
+                    'id'                => $crmContact->id,
+                    'display_name'      => $crmContact->display_name,
+                    'profile_photo_url' => $crmContact->profile_photo_url,
+                    'contact_type'      => $crmContact->contactType ? [
+                        'id'    => $crmContact->contactType->id,
+                        'name'  => $crmContact->contactType->name,
+                        'slug'  => $crmContact->contactType->slug,
+                        'color' => $crmContact->contactType->color,
+                    ] : null,
+                    'pivot_roles'       => (array)($crmContact->pivot?->roles),
+                ]
+            )->values()
+            : collect();
+
         return [
             'project' => [
                 'id'                      => $project->id,
@@ -50,6 +70,8 @@ class ProjectTabTeamService
                 'delete_permission_users' => $project->delete_permission_users,
                 'departments'             => DepartmentIndexResource::collection($project->departments)->resolve(),
                 'projectRoles'            => ProjectRole::all(),
+                'crmContactsArray'        => $crmContacts,
+                'crmContactsInTeamEnabled' => $crmContactsInTeamEnabled,
             ],
             'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
             'projectWriteIds'   => $project->writeUsers()->pluck('user_id'),

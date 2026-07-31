@@ -60,7 +60,9 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $email = (string) $request->email;
+            // Läuft vor der Request-Validierung: Bots posten "email" auch als Array
+            $email = $request->input(Fortify::username());
+            $email = is_string($email) ? $email : '';
 
             return Limit::perMinute(5)->by($email . $request->ip());
         });

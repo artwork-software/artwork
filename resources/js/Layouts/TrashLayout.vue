@@ -129,6 +129,12 @@ const tabsMap = computed(() => {
             href: route("project.budget.trashed"),
             available: true,
         },
+        "Trash/CrmContacts": {
+            key: "Trash/CrmContacts",
+            name: proxy?.$t ? proxy.$t("CRM contacts") : "CRM contacts",
+            href: route("crm.contacts.trashed"),
+            available: can("crm manager") || is('artwork admin'),
+        },
     }
 })
 

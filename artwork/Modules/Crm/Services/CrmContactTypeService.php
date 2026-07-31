@@ -52,6 +52,13 @@ readonly class CrmContactTypeService
         $type->properties()->sync($syncData);
     }
 
+    public function reorder(array $types): void
+    {
+        foreach ($types as $item) {
+            CrmContactType::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
+        }
+    }
+
     public function getActive(): Collection
     {
         return $this->repository->getActive();

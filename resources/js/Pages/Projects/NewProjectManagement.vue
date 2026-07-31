@@ -484,7 +484,6 @@ const bulkDeleteProjects = () => {
         data: {
             project_ids: selectedProjectIds.value,
             page: page.value,
-            entitiesPerPage: perPage.value,
             query: project_search.value,
         },
         preserveScroll: true,

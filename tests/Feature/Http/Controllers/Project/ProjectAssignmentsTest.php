@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Http\Controllers\Project;
 
+use Artwork\Modules\Crm\Models\CrmContact;
+use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +14,96 @@ use Tests\Feature\FeatureTestCase;
 
 final class ProjectAssignmentsTest extends FeatureTestCase
 {
+    private function createCrmContact(): CrmContact
+    {
+        $type = CrmContactType::query()->firstOrCreate(
+            ['slug' => 'service_provider'],
+            ['name' => 'Dienstleister', 'is_system' => true, 'is_active' => true, 'sort_order' => 1]
+        );
+
+        return CrmContact::create([
+            'crm_contact_type_id' => $type->id,
+            'display_name' => 'Test Kontakt ' . uniqid(),
+            'is_active' => true,
+        ]);
+    }
+
+    private function setCrmContactsInTeamSetting(bool $enabled): void
+    {
+        $settings = app(ProjectCreateSettings::class);
+        $settings->crm_contacts_in_team = $enabled;
+        $settings->save();
+    }
+
+    #[Test]
+    public function update_team_syncs_crm_contacts_with_valid_roles_when_setting_enabled(): void
+    {
+        $this->actingAsAdmin();
+        $this->setCrmContactsInTeamSetting(true);
+        $project = Project::factory()->create();
+        $contact = $this->createCrmContact();
+        $role = ProjectRole::factory()->create();
+
+        $response = $this->patch('/projects/' . $project->id . '/team', [
+            'assigned_user_ids' => [],
+            'assigned_departments' => [],
+            'assigned_crm_contact_ids' => [
+                $contact->id => ['roles' => [$role->id, 999999]],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $pivotRoles = json_decode(
+            DB::table('crm_contact_project_team')
+                ->where('project_id', $project->id)
+                ->where('crm_contact_id', $contact->id)
+                ->value('roles'),
+            true
+        );
+        $this->assertSame([$role->id], $pivotRoles);
+    }
+
+    #[Test]
+    public function update_team_removes_unassigned_crm_contacts_when_setting_enabled(): void
+    {
+        $this->actingAsAdmin();
+        $this->setCrmContactsInTeamSetting(true);
+        $project = Project::factory()->create();
+        $contact = $this->createCrmContact();
+        $project->teamCrmContacts()->attach($contact->id, ['roles' => []]);
+
+        $this->patch('/projects/' . $project->id . '/team', [
+            'assigned_user_ids' => [],
+            'assigned_departments' => [],
+            'assigned_crm_contact_ids' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('crm_contact_project_team', [
+            'project_id' => $project->id,
+            'crm_contact_id' => $contact->id,
+        ]);
+    }
+
+    #[Test]
+    public function update_team_leaves_crm_contacts_untouched_when_setting_disabled(): void
+    {
+        $this->actingAsAdmin();
+        $this->setCrmContactsInTeamSetting(false);
+        $project = Project::factory()->create();
+        $contact = $this->createCrmContact();
+        $project->teamCrmContacts()->attach($contact->id, ['roles' => []]);
+
+        $this->patch('/projects/' . $project->id . '/team', [
+            'assigned_user_ids' => [],
+            'assigned_departments' => [],
+            'assigned_crm_contact_ids' => [],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('crm_contact_project_team', [
+            'project_id' => $project->id,
+            'crm_contact_id' => $contact->id,
+        ]);
+    }
     #[Test]
     public function guest_cannot_update_team(): void
     {

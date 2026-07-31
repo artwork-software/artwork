@@ -77,11 +77,22 @@
                                 </div>
                             </template>
                         </template>
+                        <template v-for="contact in teamCrmContacts" :key="`${role.id}-crm-${contact.id}`">
+                            <template v-if="contact?.pivot_roles?.includes(role.id)">
+                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                    <CrmContactPopoverTooltip :contact="contact" width="8" height="8"/>
+                                    <span class="text-xs font-medium whitespace-nowrap">{{ contact.display_name }}</span>
+                                </div>
+                                <div v-else class="-mr-3">
+                                    <CrmContactPopoverTooltip :contact="contact" width="11" height="11"/>
+                                </div>
+                            </template>
+                        </template>
                     </div>
                 </div>
             </template>
-            <!-- Projektteam (Departments + Users) -->
-            <div v-if="(teamProject.departments || []).length > 0 || projectTeamMembers.length > 0">
+            <!-- Projektteam (Departments + Users + CRM-Kontakte ohne Rolle) -->
+            <div v-if="(teamProject.departments || []).length > 0 || projectTeamMembers.length > 0 || crmTeamMembersWithoutRole.length > 0">
                 <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
                     {{ $t('Project team') }}
                 </span>
@@ -113,6 +124,15 @@
                             <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
                         </div>
                     </template>
+                    <template v-for="contact in crmTeamMembersWithoutRole" :key="`crm-${contact.id}`">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                            <CrmContactPopoverTooltip :contact="contact" width="8" height="8"/>
+                            <span class="text-xs font-medium whitespace-nowrap">{{ contact.display_name }}</span>
+                        </div>
+                        <div v-else class="-mr-3">
+                            <CrmContactPopoverTooltip :contact="contact" width="11" height="11"/>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -120,6 +140,8 @@
         <ProjectEditTeamModal :show="this.showTeamModal"
                               :assigned-users="teamProject?.usersArray ? teamProject.usersArray : []"
                               :assigned-departments="teamProject.departments ? teamProject.departments : []"
+                              :assigned-crm-contacts="teamCrmContacts"
+                              :crm-contacts-enabled="crmContactsInTeamEnabled"
                               :project-id="currentProjectId()"
                               :userIsProjectManager="this.userIsProjectManager()"
                               :userIsProjectCreator="this.userIsProjectCreator()"
@@ -140,6 +162,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import CrmContactPopoverTooltip from "@/Components/Crm/CrmContactPopoverTooltip.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
@@ -154,6 +177,7 @@ export default defineComponent({
         BasePageTitle,
         ToolTipDefault,
         UserPopoverTooltip,
+        CrmContactPopoverTooltip,
         ProjectEditTeamModal,
         TeamTooltip,
         UserTooltip,
@@ -229,6 +253,15 @@ export default defineComponent({
             return this.mailableTeamMembers.length > 0
                 ? this.$t('Email the entire project team') + '\n' + warning
                 : warning;
+        },
+        teamCrmContacts() {
+            return this.teamProject?.crmContactsArray ?? [];
+        },
+        crmContactsInTeamEnabled() {
+            return Boolean(this.teamProject?.crmContactsInTeamEnabled);
+        },
+        crmTeamMembersWithoutRole() {
+            return this.teamCrmContacts.filter(contact => (contact.pivot_roles ?? []).length === 0);
         },
         projectTeamMembers() {
             if (Array.isArray(this.teamProject?.projectTeamMembers)) {
@@ -336,7 +369,8 @@ export default defineComponent({
             );
         },
         checkRoleHasUser(role) {
-            return (this.teamProject?.usersArray ?? []).some(user => user.pivot_roles.includes(role.id));
+            return (this.teamProject?.usersArray ?? []).some(user => user.pivot_roles.includes(role.id))
+                || this.teamCrmContacts.some(contact => (contact.pivot_roles ?? []).includes(role.id));
         },
         setupTeamUpdateListener() {
             const id = this.currentProjectId();

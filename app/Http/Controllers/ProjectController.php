@@ -3495,6 +3495,27 @@ class ProjectController extends Controller
         $project->users()->sync($assignedUsers);
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
+        // CRM-Kontakte im Team nur synchronisieren, wenn das globale Setting aktiv ist und der
+        // Payload den Key enthält — sonst würden bestehende Verknüpfungen still gelöscht
+        if (
+            app(ProjectCreateSettings::class)->crm_contacts_in_team
+            && $request->has('assigned_crm_contact_ids')
+        ) {
+            $assignedCrmContacts = collect($request->assigned_crm_contact_ids)->map(
+                static function ($pivotData) use ($validRoleIds) {
+                    if (!is_array($pivotData)) {
+                        return $pivotData;
+                    }
+
+                    return [
+                        'roles' => $validRoleIds->intersect($pivotData['roles'] ?? [])->values()->all(),
+                    ];
+                }
+            );
+
+            $project->teamCrmContacts()->sync($assignedCrmContacts);
+        }
+
         $newProjectDepartments = $project->departments()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
@@ -4150,7 +4171,6 @@ class ProjectController extends Controller
 
         return redirect()->route('projects', [
             'page' => $request->get('page'),
-            'entitiesPerPage' => $request->get('entitiesPerPage'),
             'query' => $request->get('query'),
         ]);
     }
@@ -4195,7 +4215,6 @@ class ProjectController extends Controller
 
         return redirect()->route('projects', [
             'page' => $request->get('page'),
-            'entitiesPerPage' => $request->get('entitiesPerPage'),
             'query' => $request->get('query'),
         ]);
     }
@@ -4245,7 +4264,6 @@ class ProjectController extends Controller
 
         return redirect()->route('projects', [
             'page' => $request->get('page'),
-            'entitiesPerPage' => $request->get('entitiesPerPage'),
             'query' => $request->get('query'),
         ]);
     }
@@ -4902,7 +4920,6 @@ class ProjectController extends Controller
         $this->projectService->pin($project);
         return redirect()->route('projects', [
             'page' => $request->get('page'),
-            'entitiesPerPage' => $request->get('entitiesPerPage'),
             'query' => $request->get('query'),
         ]);
     }

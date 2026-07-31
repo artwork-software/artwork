@@ -7,7 +7,8 @@
             :aria-expanded="open"
             @click="open = !open"
         >
-            <span>{{ $t('Permissions') }} &amp; {{ $t('Project Roles') }}</span>
+            <span v-if="rolesOnly">{{ $t('Project Roles') }}</span>
+            <span v-else>{{ $t('Permissions') }} &amp; {{ $t('Project Roles') }}</span>
             <span
                 v-if="activeAssignmentCount > 0"
                 class="inline-flex min-w-5 items-center justify-center rounded-full bg-artwork-buttons-create/10 px-1.5 py-0.5 text-xs font-semibold text-primary"
@@ -31,12 +32,15 @@
                 v-show="open"
                 ref="dropdownContent"
                 role="menu"
-                class="absolute right-0 z-50 w-96 max-w-[calc(100vw-2rem)] rounded-lg bg-white shadow-lg ring-1 ring-black/5"
-                :class="opensUpward ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right'"
+                class="absolute right-0 z-50 max-w-[calc(100vw-2rem)] rounded-lg bg-white shadow-lg ring-1 ring-black/5"
+                :class="[
+                    opensUpward ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right',
+                    rolesOnly ? 'w-64' : 'w-96'
+                ]"
                 @click.stop
             >
-                <div class="grid w-full grid-cols-2 text-left">
-                    <div class="p-4 pr-3">
+                <div class="grid w-full text-left" :class="rolesOnly ? 'grid-cols-1' : 'grid-cols-2'">
+                    <div v-if="!rolesOnly" class="p-4 pr-3">
                         <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                             {{ $t('Permissions') }}
                         </div>
@@ -87,7 +91,7 @@
                         </div>
                     </div>
 
-                    <div class="border-l border-zinc-100 p-4 pl-5">
+                    <div class="p-4" :class="rolesOnly ? '' : 'border-l border-zinc-100 pl-5'">
                         <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                             {{ $t('Project Roles') }}
                         </div>
@@ -138,6 +142,7 @@ const props = defineProps({
     user: {type: Object, required: true},
     projectRoles: {type: Array, required: true},
     canManageProjectRoles: {type: Boolean, default: false},
+    rolesOnly: {type: Boolean, default: false},
 })
 
 const emit = defineEmits(['update-permission', 'toggle-role'])

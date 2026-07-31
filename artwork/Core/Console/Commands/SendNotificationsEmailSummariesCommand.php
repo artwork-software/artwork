@@ -59,6 +59,9 @@ class SendNotificationsEmailSummariesCommand extends Command
                 $this->logger->error($msg);
                 $this->logger->error($t->getTraceAsString());
                 $this->error($msg);
+                // Ursache auch an Sentry melden – der Scheduler-Wrapper meldet
+                // sonst nur "failed with exit code [1]" ohne Root-Cause.
+                report($t);
 
                 $exitCode = 1;
             }

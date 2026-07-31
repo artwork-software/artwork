@@ -5,6 +5,7 @@ namespace Artwork\Modules\Crm\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Accommodation\Models\AccommodationRoomType;
 use Artwork\Modules\Crm\Enums\CrmPropertyTypeEnum;
+use Artwork\Modules\Crm\Enums\CrmSystemContactTypeEnum;
 use Artwork\Modules\Crm\Models\CrmContact;
 use Artwork\Modules\Crm\Models\CrmContactType;
 use Artwork\Modules\Crm\Services\CrmContactService;
@@ -16,10 +17,26 @@ use Illuminate\Http\Request;
 
 class CrmContactController extends Controller
 {
+    // Kontakte dieser Typen werden aus User-/Freelancer-/Dienstleister-Profilen
+    // gespiegelt und sind im CRM read-only — Schreibzugriffe würden sonst in die
+    // Quell-Entität zurückgeschrieben.
+    private const MIRRORED_SLUGS = [
+        CrmSystemContactTypeEnum::USER->value,
+        CrmSystemContactTypeEnum::FREELANCER->value,
+        CrmSystemContactTypeEnum::SERVICE_PROVIDER->value,
+    ];
+
     public function __construct(
         private readonly CrmContactService $contactService,
         private readonly CrmPropertyGroupService $propertyGroupService,
     ) {}
+
+    private function abortIfMirrored(CrmContact $crmContact): void
+    {
+        if (in_array($crmContact->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+            abort(403, 'Gespiegelte Kontakte können nur über das jeweilige Profil geändert werden.');
+        }
+    }
 
     public function search(Request $request): JsonResponse
     {
@@ -115,6 +132,47 @@ class CrmContactController extends Controller
         ]);
     }
 
+    /**
+     * Schlanke Tooltip-Daten (Gegenstück zu UserController::tooltipInfo) —
+     * liefert nur Basisdaten + Kontaktfelder aus für den User sichtbaren Gruppen.
+     */
+    public function tooltipInfo(CrmContact $crmContact): JsonResponse
+    {
+        $crmContact->load(['contactType', 'propertyValues.property.group']);
+
+        $user = auth()->user();
+        $deptIds = $user->departments?->pluck('id')->toArray() ?? [];
+        $isCrmManager = $user->can(PermissionEnum::CRM_MANAGER->value);
+
+        $groups = $this->propertyGroupService->getVisibleForUser($user->id, $deptIds, $isCrmManager);
+        $groups->loadMissing('properties');
+        $visiblePropertyIds = $groups->flatMap(fn ($g) => $g->properties)->pluck('id')->all();
+
+        $visibleValue = static function (string $propertyName) use ($crmContact, $visiblePropertyIds): ?string {
+            return $crmContact->propertyValues
+                ->first(
+                    static fn ($propertyValue) => $propertyValue->property?->name === $propertyName
+                        && in_array($propertyValue->crm_property_id, $visiblePropertyIds, true)
+                )?->value;
+        };
+
+        return response()->json([
+            'id' => $crmContact->id,
+            'display_name' => $crmContact->display_name,
+            'profile_photo_url' => $crmContact->profile_photo_url,
+            'contact_type' => $crmContact->contactType ? [
+                'id' => $crmContact->contactType->id,
+                'name' => $crmContact->contactType->name,
+                'slug' => $crmContact->contactType->slug,
+                'color' => $crmContact->contactType->color,
+                'icon' => $crmContact->contactType->icon,
+            ] : null,
+            'email' => $visibleValue('Email'),
+            'phone_number' => $visibleValue('Telefon'),
+            'city' => $visibleValue('Stadt'),
+        ]);
+    }
+
     public function getData(CrmContact $crmContact): JsonResponse
     {
         $crmContact->load(['contactType.properties', 'propertyValues.property.group']);
@@ -182,6 +240,8 @@ class CrmContactController extends Controller
 
     public function update(Request $request, CrmContact $crmContact): RedirectResponse
     {
+        $this->abortIfMirrored($crmContact);
+
         $validated = $request->validate([
             'display_name' => 'sometimes|string|max:255',
             'profile_image' => 'nullable|string',
@@ -202,15 +262,114 @@ class CrmContactController extends Controller
         return redirect()->back();
     }
 
+    public function changeType(Request $request, CrmContact $crmContact): RedirectResponse
+    {
+        $this->abortIfMirrored($crmContact);
+
+        // Entity-gebundene Kontakte (Künstler*innen, Unterkünfte, Hersteller …) hängen
+        // strukturell an ihrem Typ — der Wechsel ist nur für freie Kontakte erlaubt.
+        if ($crmContact->entity_type !== null) {
+            abort(403, 'Der Kontakttyp von verknüpften Kontakten kann nicht geändert werden.');
+        }
+
+        $validated = $request->validate([
+            'crm_contact_type_id' => 'required|integer|exists:crm_contact_types,id',
+        ]);
+
+        $newType = CrmContactType::findOrFail($validated['crm_contact_type_id']);
+
+        if (in_array($newType->slug, self::MIRRORED_SLUGS, true)) {
+            abort(422, 'Kontakte können nicht in einen system-verwalteten Typ umgewandelt werden.');
+        }
+
+        $this->contactService->changeType($crmContact, $newType);
+
+        return redirect()->back();
+    }
+
     public function destroy(CrmContact $crmContact): RedirectResponse
     {
+        $this->abortIfMirrored($crmContact);
+
         $this->contactService->destroy($crmContact);
 
         return redirect()->route('crm.index');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:crm_contacts,id',
+        ]);
+
+        $contacts = CrmContact::with('contactType')->whereIn('id', $validated['ids'])->get();
+
+        foreach ($contacts as $contact) {
+            // Gespiegelte Kontakte werden übersprungen statt die ganze Auswahl zu blocken
+            if (in_array($contact->contactType?->slug, self::MIRRORED_SLUGS, true)) {
+                continue;
+            }
+
+            $this->contactService->destroy($contact);
+        }
+
+        return redirect()->back();
+    }
+
+    public function getTrashed(Request $request): \Inertia\Response
+    {
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('entitiesPerPage', 25);
+
+        $trashedContacts = CrmContact::onlyTrashed()
+            ->with('contactType')
+            ->when($search !== '', fn ($query) => $query->where('display_name', 'like', '%' . $search . '%'))
+            ->orderBy('display_name')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (CrmContact $contact) => [
+                'id' => $contact->id,
+                'display_name' => $contact->display_name,
+                'profile_photo_url' => $contact->profile_photo_url,
+                'deleted_at' => $contact->deleted_at?->format('d.m.Y H:i'),
+                'contact_type' => $contact->contactType ? [
+                    'name' => $contact->contactType->name,
+                    'icon' => $contact->contactType->icon,
+                    'color' => $contact->contactType->color,
+                ] : null,
+            ]);
+
+        return \Inertia\Inertia::render('Trash/CrmContacts', [
+            'trashed_contacts' => $trashedContacts,
+        ]);
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        CrmContact::onlyTrashed()->findOrFail($id)->restore();
+
+        return redirect()->back();
+    }
+
+    public function forceDelete(int $id): RedirectResponse
+    {
+        CrmContact::onlyTrashed()->findOrFail($id)->forceDelete();
+
+        return redirect()->back();
+    }
+
+    public function forceDeleteAll(): RedirectResponse
+    {
+        CrmContact::onlyTrashed()->get()->each(fn (CrmContact $contact) => $contact->forceDelete());
+
+        return redirect()->back();
+    }
+
     public function updateProfileImage(Request $request, CrmContact $crmContact): RedirectResponse
     {
+        $this->abortIfMirrored($crmContact);
+
         $request->validate([
             'profile_image' => 'required|image|max:2048',
         ]);
@@ -223,6 +382,8 @@ class CrmContactController extends Controller
 
     public function uploadPropertyFile(Request $request, CrmContact $crmContact): RedirectResponse
     {
+        $this->abortIfMirrored($crmContact);
+
         $request->validate([
             'property_id' => 'required|integer|exists:crm_properties,id',
             'file' => 'required|file|max:10240',
@@ -239,6 +400,8 @@ class CrmContactController extends Controller
 
     public function deletePropertyFile(Request $request, CrmContact $crmContact): RedirectResponse
     {
+        $this->abortIfMirrored($crmContact);
+
         $request->validate([
             'property_id' => 'required|integer|exists:crm_properties,id',
         ]);

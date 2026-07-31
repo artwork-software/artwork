@@ -63,6 +63,11 @@
             <div class="border-t border-gray-200 pt-4">
                 <h3 class="text-sm font-medium text-gray-900 mb-3">{{ $t('Filter') }}</h3>
 
+                <label v-if="hasListState" class="flex items-center gap-2 text-sm cursor-pointer mb-4">
+                    <input type="checkbox" v-model="applyListState" class="rounded border-gray-300 text-indigo-600 h-4 w-4" />
+                    {{ $t('Apply the current search and filters of the contact list') }}
+                </label>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Contact Type Filter -->
                     <div>
@@ -185,11 +190,21 @@ import debounce from 'lodash.debounce'
 
 const props = defineProps({
     contactTypes: { type: Array, required: true },
+    // Aktueller Zustand der Kontaktliste — wird bei aktivem Toggle übernommen
+    activeType: { type: Object, default: null },
+    currentSearch: { type: String, default: '' },
+    currentFilters: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['close'])
 
 const $t = useTranslation()
+
+// Aktive Listen-Suche/-Filter übernehmen (nur angeboten, wenn es welche gibt)
+const hasListState = computed(() =>
+    !!props.currentSearch || Object.keys(props.currentFilters ?? {}).length > 0
+)
+const applyListState = ref(true)
 
 // Columns
 const selectedColumns = ref(['display_name', 'contact_type'])
@@ -222,7 +237,7 @@ const deselectAllColumns = () => {
 }
 
 // Filters
-const filterContactTypeIds = ref([])
+const filterContactTypeIds = ref(props.activeType ? [props.activeType.id] : [])
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
 
@@ -279,6 +294,8 @@ const doExport = async () => {
             project_ids: selectedProjects.value.length ? selectedProjects.value.map(p => p.id) : null,
             date_from: filterDateFrom.value || null,
             date_to: filterDateTo.value || null,
+            search: (hasListState.value && applyListState.value && props.currentSearch) ? props.currentSearch : null,
+            property_filters: (hasListState.value && applyListState.value) ? props.currentFilters : null,
         }, {
             responseType: 'blob',
         })

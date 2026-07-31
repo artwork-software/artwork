@@ -141,6 +141,96 @@
                         </button>
                     </div>
                 </section>
+
+                <!-- CRM-Kontakte Section -->
+                <section v-if="crmContactsEnabled">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                        {{ $t('CRM contacts') }}
+                    </div>
+                    <div class="relative">
+                        <BaseInput
+                            id="crmContactSearch"
+                            class="w-full"
+                            :label="$t('Search CRM contacts')"
+                            v-model="crm_contact_query"
+                            type="text"
+                        />
+                        <transition
+                            leave-active-class="transition ease-in duration-100"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                        >
+                            <div
+                                v-if="showCrmSearchDropdown"
+                                class="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-zinc-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
+                            >
+                                <div
+                                    v-for="contact in crm_contact_search_results"
+                                    :key="`crm-search-${contact.id}`"
+                                    class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50"
+                                    @click="addCrmContactToProjectTeamArray(contact)"
+                                >
+                                    <img
+                                        :src="contact.profile_photo_url"
+                                        :alt="contact.display_name"
+                                        class="rounded-full h-8 w-8 object-cover"
+                                    />
+                                    <div class="flex flex-col text-sm min-w-0">
+                                        <span class="font-medium text-zinc-900 truncate">
+                                            {{ contact.display_name }}
+                                        </span>
+                                        <span v-if="contact.contact_type" class="text-xs text-zinc-500 truncate">
+                                            {{ contact.contact_type.name }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+
+                    <div
+                        v-if="crmContacts.length > 0"
+                        class="mt-4 rounded-2xl border border-zinc-200 bg-white shadow-sm divide-y divide-zinc-100"
+                    >
+                        <div
+                            v-for="contact in crmContacts"
+                            :key="`assigned-crm-${contact.id}`"
+                            class="flex items-center gap-3 px-4 py-3"
+                        >
+                            <img
+                                class="h-9 w-9 rounded-full object-cover flex-shrink-0"
+                                :src="contact.profile_photo_url"
+                                alt=""
+                            />
+
+                            <div class="min-w-0 flex-1">
+                                <div class="font-semibold text-zinc-900 truncate">
+                                    {{ contact.display_name }}
+                                </div>
+                                <div v-if="contact.contact_type" class="text-xs text-zinc-500 truncate">
+                                    {{ contact.contact_type.name }}
+                                </div>
+                            </div>
+
+                            <ProjectTeamPermissionsDropdown
+                                :user="contact"
+                                :project-roles="projectRoles"
+                                :can-manage-project-roles="hasAdminRole()"
+                                roles-only
+                                @toggle-role="addRoleToUser(contact, $event)"
+                            />
+
+                            <button
+                                type="button"
+                                @click="deleteCrmContactFromProjectTeam(contact)"
+                                class="flex-shrink-0 rounded-full p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-error"
+                            >
+                                <span class="sr-only">{{ $t('Remove CRM contact from team') }}</span>
+                                <XCircleIcon class="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             <!-- Save Button -->
@@ -187,6 +277,8 @@ const props = defineProps({
     userIsProjectCreator: { type: Boolean, default: false },
     projectId: { type: [Number, String], required: true },
     projectRoles: { type: Array, required: true },
+    assignedCrmContacts: { type: Array, default: () => [] },
+    crmContactsEnabled: { type: Boolean, default: false },
 })
 
 // Emits
@@ -198,11 +290,14 @@ const department_and_user_search_results = reactive({
     users: [],
     departments: [],
 })
+const crm_contact_query = ref('')
+const crm_contact_search_results = ref([])
 
 // useForm für PATCH
 const form = useForm({
     assigned_user_ids: {},
     assigned_departments: [],
+    assigned_crm_contact_ids: {},
 })
 
 const cloneAssignedUsers = (assignedUsers) => {
@@ -212,10 +307,19 @@ const cloneAssignedUsers = (assignedUsers) => {
     }))
 }
 
+const cloneAssignedCrmContacts = (assignedCrmContacts) => {
+    return (assignedCrmContacts || []).map(contact => ({
+        ...contact,
+        pivot_roles: [...(contact.pivot_roles ?? [])],
+    }))
+}
+
 // Lokale Kopien (damit wir nicht direkt Props mutieren)
 const users = ref(cloneAssignedUsers(props.assignedUsers))
 
 const departments = ref(props.assignedDepartments.map(d => ({ ...d })))
+
+const crmContacts = ref(cloneAssignedCrmContacts(props.assignedCrmContacts))
 
 // Halte lokale Kopien mit Props synchron, z. B. wenn Daten asynchron geladen werden oder beim Öffnen des Modals
 watch(() => props.assignedUsers, (newUsers) => {
@@ -226,17 +330,26 @@ watch(() => props.assignedDepartments, (newDeps) => {
     departments.value = (newDeps || []).map(d => ({ ...d }))
 }, { deep: true })
 
+watch(() => props.assignedCrmContacts, (newContacts) => {
+    crmContacts.value = cloneAssignedCrmContacts(newContacts)
+}, { deep: true })
+
 // Beim Öffnen des Modals auf den neuesten Stand bringen
 watch(() => props.show, (isOpen) => {
     if (isOpen) {
         users.value = cloneAssignedUsers(props.assignedUsers)
         departments.value = (props.assignedDepartments || []).map(d => ({ ...d }))
+        crmContacts.value = cloneAssignedCrmContacts(props.assignedCrmContacts)
     }
 })
 
 // --- computed ---
 const page = usePage()
 const authUserId = computed(() => page.props.auth.user.id)
+
+const showCrmSearchDropdown = computed(() => {
+    return crm_contact_query.value.length > 0 && crm_contact_search_results.value.length > 0
+})
 
 const showSearchDropdown = computed(() => {
     return (
@@ -288,6 +401,24 @@ const deleteUserFromProjectTeam = (user) => {
     users.value = users.value.filter(u => u.id !== user.id)
 }
 
+const addCrmContactToProjectTeamArray = (contactToAdd) => {
+    if (crmContacts.value.some(c => c.id === contactToAdd.id)) {
+        crm_contact_query.value = ''
+        return
+    }
+
+    crmContacts.value.push({
+        ...contactToAdd,
+        pivot_roles: [...(contactToAdd.pivot_roles ?? [])],
+    })
+
+    crm_contact_query.value = ''
+}
+
+const deleteCrmContactFromProjectTeam = (contact) => {
+    crmContacts.value = crmContacts.value.filter(c => c.id !== contact.id)
+}
+
 const updateUserPermission = (user, {permission, value}) => {
     user[permission] = value
 }
@@ -306,7 +437,24 @@ const editProjectTeam = () => {
 
     form.assigned_departments = [...departments.value]
 
-    form.patch(route('projects.update_team', { project: props.projectId }))
+    form.assigned_crm_contact_ids = {}
+    if (props.crmContactsEnabled) {
+        crmContacts.value.forEach(contact => {
+            form.assigned_crm_contact_ids[contact.id] = {
+                roles: contact.pivot_roles,
+            }
+        })
+    }
+
+    // Ohne aktives Setting den Key gar nicht mitsenden — das Backend lässt
+    // bestehende CRM-Verknüpfungen dann unangetastet
+    form.transform((data) => {
+        if (!props.crmContactsEnabled) {
+            const { assigned_crm_contact_ids, ...rest } = data
+            return rest
+        }
+        return data
+    }).patch(route('projects.update_team', { project: props.projectId }))
     closeModal(true)
 }
 
@@ -356,6 +504,26 @@ watch(
             // fallback: leeren, aber nicht crashen
             department_and_user_search_results.users = []
             department_and_user_search_results.departments = []
+        }
+    },
+    { deep: false }
+)
+
+watch(
+    crm_contact_query,
+    async (val) => {
+        if (!val || val.length === 0) {
+            crm_contact_search_results.value = []
+            return
+        }
+
+        try {
+            const response = await axios.get(route('crm.contacts.search'), {
+                params: { search: val },
+            })
+            crm_contact_search_results.value = response.data || []
+        } catch (e) {
+            crm_contact_search_results.value = []
         }
     },
     { deep: false }

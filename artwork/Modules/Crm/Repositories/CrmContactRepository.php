@@ -10,8 +10,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class CrmContactRepository
 {
-    public function getByType(int $typeId, ?string $search = null, int $perPage = 15, array $filters = [], array $allowedPropertyIds = []): LengthAwarePaginator
-    {
+    public function getByType(
+        int $typeId,
+        ?string $search = null,
+        int $perPage = 15,
+        array $filters = [],
+        array $allowedPropertyIds = [],
+        ?string $sort = null,
+        string $direction = 'asc'
+    ): LengthAwarePaginator {
         $query = CrmContact::where('crm_contact_type_id', $typeId)
             ->with([
                 'contactType',
@@ -21,10 +28,38 @@ class CrmContactRepository
                 'propertyValues.property',
             ]);
 
-        if ($search) {
-            $query->where('display_name', 'like', "%{$search}%");
+        $this->applySearch($query, $search, $allowedPropertyIds);
+        $this->applyPropertyFilters($query, $filters, $allowedPropertyIds);
+        $this->applySort($query, $sort, $direction, $allowedPropertyIds);
+
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Sucht im Anzeigenamen und in den Werten textartiger Eigenschaften (z.B. E-Mail,
+     * Telefon). $allowedPropertyIds = null bedeutet: keine Einschränkung (CRM-Manager).
+     */
+    public function applySearch($query, ?string $search, ?array $allowedPropertyIds = null): void
+    {
+        if (!$search) {
+            return;
         }
 
+        $query->where(function ($q) use ($search, $allowedPropertyIds) {
+            $q->where('display_name', 'like', "%{$search}%")
+                ->orWhereHas('propertyValues', fn ($pv) => $pv
+                    ->when($allowedPropertyIds !== null, fn ($sub) => $sub->whereIn('crm_property_id', $allowedPropertyIds))
+                    ->where('value', 'like', "%{$search}%")
+                    ->whereHas('property', fn ($p) => $p->whereIn('type', ['text', 'textarea', 'link'])));
+        });
+    }
+
+    /**
+     * Wendet die Eigenschafts-Filter der Kontaktliste an ({propertyId: wert|array}).
+     * $allowedPropertyIds = null bedeutet: keine Einschränkung (CRM-Manager).
+     */
+    public function applyPropertyFilters($query, array $filters, ?array $allowedPropertyIds = null): void
+    {
         foreach ($filters as $propertyId => $filterValue) {
             $propId = is_numeric($propertyId) ? (int) $propertyId : null;
             if ($propId === null || $filterValue === null || $filterValue === '' || $filterValue === []) {
@@ -32,7 +67,7 @@ class CrmContactRepository
             }
 
             // Skip filters for properties the user is not allowed to see (confidential groups)
-            if (!in_array($propId, $allowedPropertyIds, true)) {
+            if ($allowedPropertyIds !== null && !in_array($propId, $allowedPropertyIds, true)) {
                 continue;
             }
 
@@ -53,8 +88,37 @@ class CrmContactRepository
                 }
             });
         }
+    }
 
-        return $query->orderBy('display_name')->paginate($perPage);
+    private function applySort($query, ?string $sort, string $direction, array $allowedPropertyIds): void
+    {
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+
+        if ($sort === 'created_at') {
+            $query->orderBy('created_at', $direction);
+            return;
+        }
+
+        if ($sort !== null && str_starts_with($sort, 'prop_')) {
+            $propId = (int) substr($sort, 5);
+            if (in_array($propId, $allowedPropertyIds, true)) {
+                $property = CrmProperty::find($propId);
+                $valueColumn = $property?->type === CrmPropertyTypeEnum::NUMBER
+                    ? \Illuminate\Support\Facades\DB::raw('CAST(value AS DECIMAL(20,4))')
+                    : 'value';
+
+                $query->orderBy(
+                    \Artwork\Modules\Crm\Models\CrmPropertyValue::select($valueColumn)
+                        ->whereColumn('crm_contact_id', 'crm_contacts.id')
+                        ->where('crm_property_id', $propId)
+                        ->limit(1),
+                    $direction
+                )->orderBy('display_name');
+                return;
+            }
+        }
+
+        $query->orderBy('display_name', $direction);
     }
 
     public function searchForLinking(?string $search = null, ?int $typeId = null, int $limit = 20): Collection

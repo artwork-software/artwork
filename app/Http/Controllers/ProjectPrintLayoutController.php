@@ -11,6 +11,7 @@ use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\InternalIssue\Models\InternalIssue;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Http\Requests\StoreProjectPrintLayoutRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectPrintLayoutRequest;
@@ -153,6 +154,9 @@ class ProjectPrintLayoutController extends Controller
                         break;
                     case ProjectTabComponentEnum::PROJECT_TEAM->value:
                         $projectData->team = $project->users;
+                        $projectData->teamCrmContacts = app(ProjectCreateSettings::class)->crm_contacts_in_team
+                            ? $project->teamCrmContacts()->with('contactType')->get()
+                            : collect();
                         break;
                     case ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value:
                         $categories = $project->categories;

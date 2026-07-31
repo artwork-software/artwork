@@ -7,6 +7,7 @@ use Artwork\Modules\Crm\Http\Requests\CrmImportExecuteRequest;
 use Artwork\Modules\Crm\Http\Requests\CrmImportTypeMapRequest;
 use Artwork\Modules\Crm\Http\Requests\CrmImportUploadRequest;
 use Artwork\Modules\Crm\Services\CrmImportService;
+use Artwork\Modules\Crm\Services\CrmPropertyGroupService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ class CrmImportController extends Controller
 {
     public function __construct(
         private readonly CrmImportService $importService,
+        private readonly CrmPropertyGroupService $propertyGroupService,
     ) {
     }
 
@@ -26,6 +28,7 @@ class CrmImportController extends Controller
 
         return Inertia::render('CRM/Import/Upload', [
             'contactTypes' => $this->importService->getImportableContactTypes(),
+            'propertyGroups' => $this->propertyGroupService->getAll(),
         ]);
     }
 
@@ -36,6 +39,7 @@ class CrmImportController extends Controller
         if (!$result) {
             return Inertia::render('CRM/Import/Upload', [
                 'contactTypes' => $this->importService->getImportableContactTypes(),
+                'propertyGroups' => $this->propertyGroupService->getAll(),
                 'error' => __('The uploaded file contains no data.'),
             ]);
         }
@@ -72,6 +76,7 @@ class CrmImportController extends Controller
         if (!$sessionData) {
             return Inertia::render('CRM/Import/Upload', [
                 'contactTypes' => $this->importService->getImportableContactTypes(),
+                'propertyGroups' => $this->propertyGroupService->getAll(),
                 'error' => __('Import session expired. Please start again.'),
             ]);
         }
@@ -134,8 +139,10 @@ class CrmImportController extends Controller
                 ->with('error', __('Import session expired. Please start again.'));
         }
 
+        $duplicates = $request->validated('duplicates') ?? [];
+
         if ($request->has('type_mappings')) {
-            $result = $this->importService->runMultiTypeImport($request->validated('type_mappings'));
+            $result = $this->importService->runMultiTypeImport($request->validated('type_mappings'), $duplicates);
 
             return redirect()
                 ->route('crm.index')
@@ -143,7 +150,7 @@ class CrmImportController extends Controller
         }
 
         $slug = $this->importService->getSessionContactTypeSlug();
-        $result = $this->importService->runImport($request->validated('mapping'));
+        $result = $this->importService->runImport($request->validated('mapping'), $duplicates);
 
         return redirect()
             ->route('crm.index', ['type' => $slug])

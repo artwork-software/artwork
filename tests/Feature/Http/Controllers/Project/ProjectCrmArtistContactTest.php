@@ -218,6 +218,70 @@ final class ProjectCrmArtistContactTest extends FeatureTestCase
     }
 
     #[Test]
+    public function crm_contact_show_page_lists_team_linked_projects_with_roles(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create(['name' => 'Teamprojekt']);
+        $contact = $this->createArtistContact('Team Kontakt');
+        $role = \Artwork\Modules\Project\Models\ProjectRole::factory()->create(['name' => 'Regie']);
+        $project->teamCrmContacts()->attach($contact->id, ['roles' => [$role->id]]);
+
+        $this->get(route('crm.contacts.show', $contact))
+            ->assertOk()
+            ->assertInertia(
+                fn($page) => $page
+                    ->component('CRM/Show')
+                    ->where('linkedProjects.0.id', $project->id)
+                    ->where('linkedProjects.0.sources', ['team'])
+                    ->where('linkedProjects.0.team_roles', ['Regie'])
+            );
+    }
+
+    #[Test]
+    public function crm_contact_show_page_summarizes_residency_links(): void
+    {
+        $this->actingAsAdmin();
+        $project = Project::factory()->create(['name' => 'Aufenthaltsprojekt']);
+        $contact = $this->createArtistContact('Residency Kontakt');
+        foreach ([['2026-08-01', '2026-08-03'], ['2026-08-10', '2026-08-12']] as [$arrival, $departure]) {
+            \Artwork\Modules\ArtistResidency\Models\ArtistResidency::create([
+                'artist_crm_contact_id' => $contact->id,
+                'project_id' => $project->id,
+                'arrival_date' => $arrival,
+                'departure_date' => $departure,
+                'name' => 'Residency Kontakt',
+            ]);
+        }
+
+        $this->get(route('crm.contacts.show', $contact))
+            ->assertOk()
+            ->assertInertia(
+                fn($page) => $page
+                    ->component('CRM/Show')
+                    ->where('linkedProjects.0.id', $project->id)
+                    ->where('linkedProjects.0.sources', ['residency'])
+                    ->where('linkedProjects.0.residency_summary.from', '01.08.2026')
+                    ->where('linkedProjects.0.residency_summary.to', '12.08.2026')
+                    ->where('linkedProjects.0.residency_summary.count', 2)
+            );
+    }
+
+    #[Test]
+    public function crm_contact_tooltip_endpoint_returns_basic_data(): void
+    {
+        $this->actingAsAdmin();
+        $contact = $this->createArtistContact('Tooltip Kontakt');
+
+        $this->getJson(route('crm.contacts.tooltip', $contact))
+            ->assertOk()
+            ->assertJson([
+                'id' => $contact->id,
+                'display_name' => 'Tooltip Kontakt',
+            ])
+            ->assertJsonStructure(['contact_type', 'email', 'phone_number', 'city']);
+    }
+
+    #[Test]
     public function contact_mask_returns_editable_artist_properties_without_uploads(): void
     {
         $this->actingAsAdmin();

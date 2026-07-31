@@ -4439,6 +4439,71 @@ class EventController extends Controller
     }
 
     /**
+     * Multi-Edit im Kalender: verschiebt die gewählten Termine in genau EINE
+     * Tag×Raum-Zelle. Uhrzeiten und Dauer bleiben erhalten (mehrtägige Termine
+     * werden um das Tages-Delta verschoben), Datum und Raum kommen aus der Zelle;
+     * Schichten wandern mit.
+     */
+    public function moveEventsToCell(Request $request): void
+    {
+        $validated = $request->validate([
+            'events' => ['required', 'array', 'min:1', 'max:' . self::MAX_MULTI_CELL_SOURCE_EVENTS],
+            'events.*' => ['distinct', 'exists:events,id'],
+            'cell' => ['required', 'array'],
+            'cell.day' => ['required', 'date_format:Y-m-d'],
+            'cell.room_id' => ['required', 'exists:rooms,id'],
+        ]);
+
+        $room = Room::query()->findOrFail($validated['cell']['room_id']);
+        $events = Event::query()->with('shifts')->whereIn('id', $validated['events'])->get();
+
+        // Verschieben platziert den Termin direkt im Zielraum (ohne Anfrage-Workflow),
+        // deshalb wie bei den Geschwister-Endpunkten erst ALLE Termine autorisieren.
+        foreach ($events as $event) {
+            $this->authorize('update', $event);
+            $this->authorizeBulkEventCreation((bool) $event->getAttribute('is_planning'), $room);
+        }
+
+        $movedEvents = DB::transaction(function () use ($events, $validated, $room): array {
+            $moved = [];
+
+            foreach ($events as $event) {
+                $start = Carbon::parse($event->getAttribute('start_time'));
+                $newStart = Carbon::parse($validated['cell']['day'])
+                    ->setTimeFromTimeString($start->toTimeString());
+                $dayDelta = $start->copy()->startOfDay()
+                    ->diffInDays($newStart->copy()->startOfDay(), false);
+
+                $event->setAttribute('room_id', $room->getAttribute('id'));
+                $event->setAttribute('start_time', $newStart);
+                $event->setAttribute(
+                    'end_time',
+                    Carbon::parse($event->getAttribute('end_time'))->addDays($dayDelta)
+                );
+                $event->save();
+
+                foreach ($event->shifts as $shift) {
+                    $shift->setAttribute(
+                        'start_date',
+                        Carbon::parse($shift->getAttribute('start_date'))->addDays($dayDelta)
+                    );
+                    $shift->setAttribute(
+                        'end_date',
+                        Carbon::parse($shift->getAttribute('end_date'))->addDays($dayDelta)
+                    );
+                    $shift->save();
+                }
+
+                $moved[] = $event;
+            }
+
+            return $moved;
+        }, attempts: 3);
+
+        $this->broadcastCreatedEventsAfterResponse($movedEvents);
+    }
+
+    /**
      * Reverb failures must not turn a successfully committed bulk write into an HTTP 500.
      *
      * @param array<int, Event> $events

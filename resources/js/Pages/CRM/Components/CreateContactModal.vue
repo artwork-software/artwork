@@ -2,6 +2,7 @@
     <ArtworkBaseModal
         :title="$t('New contact')"
         :description="$t('Create a new CRM contact.')"
+        modal-size="sm:max-w-3xl"
         @close="$emit('close')"
     >
         <div class="space-y-4 mt-4">
@@ -69,16 +70,48 @@
                 required
             />
 
-            <!-- Required Properties -->
-            <template v-if="requiredProperties.length">
-                <div v-for="property in requiredProperties" :key="property.id">
-                    <CrmPropertyValueInput
-                        :property="property"
-                        :value="form.property_values[property.id] || ''"
-                        @update:value="(val) => form.property_values[property.id] = val"
-                    />
+            <!-- Property groups (collapsible, from the creation mask) -->
+            <div v-if="loadingMask" class="flex items-center gap-2 text-sm text-gray-500 py-2">
+                <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {{ $t('Loading') }}...
+            </div>
+
+            <div v-else-if="maskGroups.length" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                <div v-for="group in maskGroups" :key="group.id" class="rounded-lg border border-gray-200">
+                    <button
+                        type="button"
+                        class="w-full px-4 py-3 flex items-center gap-3 text-left"
+                        @click="toggleGroup(group.id)"
+                    >
+                        <PropertyIcon v-if="group.icon" :name="group.icon" class="h-4 w-4 text-gray-500 shrink-0" />
+                        <span class="text-sm font-medium text-gray-900">{{ $t(group.name) }}</span>
+                        <span v-if="filledCount(group)" class="text-xs text-indigo-600 tabular-nums">
+                            {{ filledCount(group) }} {{ $t('filled') }}
+                        </span>
+                        <component
+                            :is="IconChevronDown"
+                            class="h-4 w-4 text-gray-400 ml-auto transition-transform shrink-0"
+                            :class="expandedGroupIds.has(group.id) ? 'rotate-180' : ''"
+                        />
+                    </button>
+                    <div v-if="expandedGroupIds.has(group.id)" class="border-t border-gray-100 px-4 py-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div v-for="property in group.properties" :key="property.id">
+                                <CrmPropertyValueInput
+                                    :property="property"
+                                    :value="form.property_values[property.id] || ''"
+                                    :required="!!property.is_required"
+                                    uniform-label
+                                    @update:value="(val) => form.property_values[property.id] = val"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </template>
+            </div>
 
             <!-- Actions -->
             <div class="flex justify-end gap-3 mt-6">
@@ -99,8 +132,9 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useForm } from '@inertiajs/vue3'
+import axios from 'axios'
 import {
     Listbox,
     ListboxButton,
@@ -110,6 +144,7 @@ import {
 } from '@headlessui/vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue'
 import { IconChevronDown, IconCheck } from '@tabler/icons-vue'
 
@@ -147,13 +182,55 @@ const selectedTypeLabel = computed(() => {
     return selectedType.value?.name ?? ''
 })
 
-const requiredProperties = computed(() => {
-    return (selectedType.value?.properties ?? []).filter(p => p.pivot?.is_required)
-})
+// -- Creation mask: all editable properties of the type, grouped --
+const maskGroups = ref([])
+const loadingMask = ref(false)
+const expandedGroupIds = ref(new Set())
+
+const loadMask = async () => {
+    const slug = selectedType.value?.slug
+    if (!slug) {
+        maskGroups.value = []
+        return
+    }
+
+    loadingMask.value = true
+    try {
+        const response = await axios.get(route('crm.contacts.mask'), { params: { type_slug: slug } })
+        maskGroups.value = response.data.groups ?? []
+        // Gruppen mit Pflichtfeldern starten aufgeklappt, der Rest eingeklappt
+        expandedGroupIds.value = new Set(
+            maskGroups.value
+                .filter(g => (g.properties ?? []).some(p => p.is_required))
+                .map(g => g.id)
+        )
+    } catch {
+        maskGroups.value = []
+    } finally {
+        loadingMask.value = false
+    }
+}
+
+const toggleGroup = (groupId) => {
+    if (expandedGroupIds.value.has(groupId)) {
+        expandedGroupIds.value.delete(groupId)
+    } else {
+        expandedGroupIds.value.add(groupId)
+    }
+}
+
+const filledCount = (group) =>
+    (group.properties ?? []).filter(p => {
+        const v = form.property_values[p.id]
+        return v !== undefined && v !== null && String(v).trim() !== ''
+    }).length
+
+onMounted(loadMask)
 
 // Reset property values when type changes
 watch(() => form.crm_contact_type_id, () => {
     form.property_values = {}
+    loadMask()
 })
 
 const submit = () => {

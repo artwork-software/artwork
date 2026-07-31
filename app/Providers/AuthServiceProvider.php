@@ -106,6 +106,11 @@ class AuthServiceProvider extends ServiceProvider
 
         Passport::$clientUuids = false;
 
+        // Passport ≥12 registriert keine Default-View mehr – ohne dieses Binding
+        // wirft /oauth/authorize eine BindingResolutionException, sobald ein
+        // Client eine Consent-Abfrage braucht.
+        Passport::authorizationView('oauth.authorize');
+
         // Implicitly grant "admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
         Gate::before(function ($user) {

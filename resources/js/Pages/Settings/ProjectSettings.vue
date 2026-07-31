@@ -190,6 +190,19 @@
                         </p>
                     </div>
                 </div>
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.crm_contacts_in_team" id="crm_contacts_in_team" aria-describedby="crm_contacts_in_team-description" name="crm_contacts_in_team" type="checkbox" class="input-checklist"/>
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="crm_contacts_in_team" class="font-medium text-gray-900">
+                            {{ $t('CRM contacts in project team') }}
+                        </label>
+                        <p id="crm_contacts_in_team-description" class="text-gray-500 text-xs">
+                            {{ $t('Should it also be possible to link CRM contacts in the project team? This lets you show which external contacts are relevant for a project and assign them project roles.') }}
+                        </p>
+                    </div>
+                </div>
             </div>
 
         <ProjectSettingsDeleteModal
@@ -339,7 +352,8 @@ export default {
                 managers: this.createSettings.managers,
                 cost_center: this.createSettings.cost_center,
                 budget_deadline: this.createSettings.budget_deadline,
-                show_artists: this.createSettings.show_artists
+                show_artists: this.createSettings.show_artists,
+                crm_contacts_in_team: this.createSettings.crm_contacts_in_team
             }),
             showSaveSuccess: false
         }

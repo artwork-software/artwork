@@ -14,17 +14,16 @@
                 </template>
             </ToolbarHeader>
 
-            <!-- Step Indicator -->
-            <div class="mt-6 mb-8">
-                <div class="flex items-center space-x-3">
-                    <span class="flex items-center justify-center size-8 rounded-full bg-green-600 text-white text-sm font-bold">
-                        <component :is="IconCheck" class="size-4" />
-                    </span>
-                    <span class="text-sm text-gray-500">{{ $t('Upload file') }}</span>
-                    <div class="flex-1 h-px bg-indigo-300"></div>
-                    <span class="flex items-center justify-center size-8 rounded-full bg-indigo-600 text-white text-sm font-bold">2</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $t('Map columns') }}</span>
-                </div>
+            <ImportStepper :steps="['Upload file', 'Map columns']" :current-step="2" />
+
+            <!-- Where do the artwork fields come from? -->
+            <div class="mb-4 rounded-md bg-indigo-50 border border-indigo-100 p-4">
+                <p class="text-sm text-indigo-900">
+                    {{ $t('The selectable artwork fields are the properties of the property groups assigned to the contact type "{type}".', { type: $t(contactType.name) }) }}
+                    {{ $t('If a field is missing here, first assign the matching property group to the contact type in the') }}
+                    <a :href="route('crm.settings.index')" target="_blank" class="font-medium underline hover:text-indigo-700">{{ $t('CRM Settings') }}</a>
+                    {{ $t('and then restart the import.') }}
+                </p>
             </div>
 
             <!-- Warnings -->
@@ -174,6 +173,39 @@
                 </table>
             </div>
 
+            <!-- Duplicate detection -->
+            <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 max-w-2xl">
+                <ArtworkBaseToggle
+                    v-model="dupeEnabled"
+                    :label="$t('Detect existing contacts')"
+                    :description="$t('Rows that match an existing contact are skipped or update it instead of creating a duplicate.')"
+                />
+                <div v-if="dupeEnabled" class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <ArtworkBaseListbox
+                        v-model="dupeMatchOption"
+                        :items="dupeMatchOptions"
+                        by="value"
+                        option-label="label"
+                        option-key="value"
+                        :label="$t('Match by')"
+                        :enable-search="false"
+                    />
+                    <div>
+                        <span class="componentLabel">{{ $t('When a match is found') }}</span>
+                        <div class="mt-2 space-y-2">
+                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                <input type="radio" value="skip" v-model="dupeAction" class="text-indigo-600 border-gray-300" />
+                                {{ $t('Skip row') }}
+                            </label>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                <input type="radio" value="update" v-model="dupeAction" class="text-indigo-600 border-gray-300" />
+                                {{ $t('Update existing contact with the values from the file') }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Submit -->
             <div class="mt-8 flex justify-end gap-3">
                 <button class="ui-button" @click="cancel">
@@ -199,11 +231,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
+import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'
+import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
+import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import {
     Listbox,
     ListboxButton,
@@ -229,7 +264,31 @@ const columnMapping = ref({})
 
 const form = useForm({
     mapping: {},
+    duplicates: null,
 })
+
+// -- Duplicate detection --
+const dupeEnabled = ref(false)
+const dupeMatchOption = ref(null)
+const dupeAction = ref('skip')
+
+// Abgleich ist nur über den Namen oder eine tatsächlich zugeordnete Eigenschaft möglich
+const dupeMatchOptions = computed(() => {
+    const options = [{ value: 'display_name', label: 'Name' }]
+    for (const val of Object.values(columnMapping.value)) {
+        if (typeof val === 'string' && val.startsWith('prop_')) {
+            const opt = propertyOptions.value.find(o => o.value === val)
+            if (opt) options.push({ value: opt.value, label: opt.label })
+        }
+    }
+    return options
+})
+
+watch(dupeMatchOptions, (options) => {
+    if (!dupeMatchOption.value || !options.some(o => o.value === dupeMatchOption.value.value)) {
+        dupeMatchOption.value = options[0]
+    }
+}, { immediate: true })
 
 // Auto-mapping on mount
 onMounted(() => {
@@ -341,6 +400,14 @@ const submit = () => {
         display_name: displayNameColIndex !== undefined ? parseInt(displayNameColIndex) : null,
         properties,
     }
+
+    form.duplicates = dupeEnabled.value
+        ? {
+            enabled: true,
+            match_by: dupeMatchOption.value?.value ?? 'display_name',
+            action: dupeAction.value,
+        }
+        : null
 
     form.post(route('crm.import.execute'))
 }

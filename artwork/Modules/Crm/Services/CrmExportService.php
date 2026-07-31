@@ -10,6 +10,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 readonly class CrmExportService
 {
+    public function __construct(
+        private \Artwork\Modules\Crm\Repositories\CrmContactRepository $contactRepository,
+    ) {}
+
     public function export(array $filters): BinaryFileResponse
     {
         $columns = $filters['columns'] ?? ['display_name'];
@@ -20,6 +24,11 @@ readonly class CrmExportService
         if (!empty($filters['contact_type_ids'])) {
             $query->whereIn('crm_contact_type_id', $filters['contact_type_ids']);
         }
+
+        // Aktive Listen-Suche/-Filter übernehmen (Export ist CRM-Manager-only,
+        // daher keine Einschränkung auf sichtbare Eigenschaften nötig)
+        $this->contactRepository->applySearch($query, $filters['search'] ?? null);
+        $this->contactRepository->applyPropertyFilters($query, $filters['property_filters'] ?? []);
 
         if (!empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);

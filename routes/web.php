@@ -947,6 +947,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('events.multi-cell.create');
     Route::post('/events/multi-cell/duplicate', [EventController::class, 'duplicateEventsToCells'])
         ->name('events.multi-cell.duplicate');
+    Route::post('/events/multi-cell/move', [EventController::class, 'moveEventsToCell'])
+        ->name('events.multi-cell.move');
 
     // event.bulk.delete
     Route::delete('/events/bulk/delete', [EventController::class, 'bulkDeleteEvent'])
@@ -2646,15 +2648,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/export', [CrmExportController::class, 'export'])->name('crm.export');
 
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
+        // Papierkorb — muss vor den /contacts/{crmContact}-Routen stehen!
+        Route::get('/contacts/trashed', [CrmContactController::class, 'getTrashed'])
+            ->middleware('can:crm manager')->name('crm.contacts.trashed');
+        Route::delete('/contacts/force-all', [CrmContactController::class, 'forceDeleteAll'])
+            ->middleware('can:crm manager')->name('crm.contacts.force.all');
+        Route::delete('/contacts/{id}/force', [CrmContactController::class, 'forceDelete'])
+            ->middleware('can:crm manager')->name('crm.contacts.force');
+        Route::patch('/contacts/{id}/restore', [CrmContactController::class, 'restore'])
+            ->middleware('can:crm manager')->name('crm.contacts.restore');
         Route::get('/contact-mask', [CrmContactController::class, 'createMask'])
             ->middleware('can:can view crm')->name('crm.contacts.mask');
         Route::get('/contacts/{crmContact}/data', [CrmContactController::class, 'getData'])->name('crm.contacts.data');
+        Route::get('/contacts/{crmContact}/tooltip', [CrmContactController::class, 'tooltipInfo'])->name('crm.contacts.tooltip');
         Route::get('/contacts/{crmContact}', [CrmController::class, 'show'])->name('crm.contacts.show');
         // Frontend gated die Kontakt-Aktionen auf 'can view crm' (Seitenzugang); Backend daran
         // angleichen, um keine Lese-CRM-User auszusperren. Schützt weiterhin Nicht-CRM-User
         // vor gefälschten Requests. Strenger ('crm manager') wäre eine Produktentscheidung.
         Route::post('/contacts', [CrmContactController::class, 'store'])
             ->middleware('can:can view crm')->name('crm.contacts.store');
+        Route::post('/contacts/bulk-delete', [CrmContactController::class, 'bulkDestroy'])
+            ->middleware('can:can view crm')->name('crm.contacts.bulk-destroy');
+        Route::patch('/contacts/{crmContact}/type', [CrmContactController::class, 'changeType'])
+            ->middleware('can:crm manager')->name('crm.contacts.change-type');
         Route::patch('/contacts/{crmContact}', [CrmContactController::class, 'update'])
             ->middleware('can:can view crm')->name('crm.contacts.update');
         Route::delete('/contacts/{crmContact}', [CrmContactController::class, 'destroy'])
@@ -2711,10 +2727,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'settings', 'middleware' => 'can:crm manager'], function (): void {
             Route::get('/', [CrmSettingsController::class, 'index'])->name('crm.settings.index');
             Route::post('/types', [CrmContactTypeController::class, 'store'])->name('crm.types.store');
+            Route::patch('/types/reorder', [CrmContactTypeController::class, 'reorder'])->name('crm.types.reorder');
             Route::patch('/types/{crmContactType}/properties', [CrmContactTypeController::class, 'syncProperties'])->name('crm.types.sync-properties');
             Route::patch('/types/{crmContactType}', [CrmContactTypeController::class, 'update'])->name('crm.types.update');
             Route::delete('/types/{crmContactType}', [CrmContactTypeController::class, 'destroy'])->name('crm.types.destroy');
             Route::post('/groups', [CrmPropertyGroupController::class, 'store'])->name('crm.groups.store');
+            Route::patch('/groups/reorder', [CrmPropertyGroupController::class, 'reorder'])->name('crm.groups.reorder');
             Route::patch('/groups/{crmPropertyGroup}', [CrmPropertyGroupController::class, 'update'])->name('crm.groups.update');
             Route::delete('/groups/{crmPropertyGroup}', [CrmPropertyGroupController::class, 'destroy'])->name('crm.groups.destroy');
             Route::patch('/groups/{crmPropertyGroup}/permissions', [CrmPropertyGroupController::class, 'updatePermissions'])->name('crm.groups.permissions');

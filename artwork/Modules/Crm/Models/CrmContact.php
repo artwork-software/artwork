@@ -105,6 +105,16 @@ class CrmContact extends Model
         )->withTimestamps();
     }
 
+    public function teamProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Artwork\Modules\Project\Models\Project::class,
+            'crm_contact_project_team'
+        )->using(\Artwork\Modules\Project\Models\ProjectCrmContactTeamPivot::class)
+            ->withPivot('roles')
+            ->withTimestamps();
+    }
+
     public function accommodationResidencies(): HasMany
     {
         return $this->hasMany(ArtistResidency::class, 'accommodation_crm_contact_id');

@@ -14,21 +14,7 @@
                 </template>
             </ToolbarHeader>
 
-            <!-- Step Indicator -->
-            <div class="mt-6 mb-8">
-                <div class="flex items-center space-x-3">
-                    <span class="flex items-center justify-center size-8 rounded-full bg-green-600 text-white text-sm font-bold">
-                        <component :is="IconCheck" class="size-4" />
-                    </span>
-                    <span class="text-sm text-gray-500">{{ $t('Upload file') }}</span>
-                    <div class="flex-1 h-px bg-indigo-300"></div>
-                    <span class="flex items-center justify-center size-8 rounded-full bg-indigo-600 text-white text-sm font-bold">2</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $t('Map type values') }}</span>
-                    <div class="flex-1 h-px bg-gray-300"></div>
-                    <span class="flex items-center justify-center size-8 rounded-full bg-gray-200 text-gray-500 text-sm font-bold">3</span>
-                    <span class="text-sm text-gray-500">{{ $t('Map columns') }}</span>
-                </div>
-            </div>
+            <ImportStepper :steps="['Upload file', 'Map type values', 'Map columns']" :current-step="2" />
 
             <!-- Type Column Selection -->
             <div class="max-w-md mb-8">
@@ -157,6 +143,15 @@
                 {{ $t('Select a column above to see the unique values.') }}
             </div>
 
+            <!-- Missing contact type hint -->
+            <div v-if="selectedColumn && !loadingValues" class="mt-4 text-xs text-gray-500">
+                {{ $t('Contact type missing?') }}
+                <a :href="route('crm.settings.index')" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    {{ $t('Create it in the CRM settings (opens in a new tab)') }}
+                </a>
+                — {{ $t('then restart the import so the new type appears here.') }}
+            </div>
+
             <!-- Submit -->
             <div class="mt-8 flex justify-end gap-3">
                 <button class="ui-button" @click="cancel">
@@ -189,6 +184,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'
 import {
     Listbox,
     ListboxButton,

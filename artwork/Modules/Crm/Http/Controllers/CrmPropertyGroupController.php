@@ -70,6 +70,21 @@ class CrmPropertyGroupController extends Controller
         return redirect()->back();
     }
 
+    public function reorder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'groups' => 'required|array',
+            'groups.*.id' => 'required|integer|exists:crm_property_groups,id',
+            'groups.*.sort_order' => 'required|integer',
+        ]);
+
+        $this->service->reorder($validated['groups']);
+
+        broadcast(new CrmSettingsChanged());
+
+        return redirect()->back();
+    }
+
     public function destroy(CrmPropertyGroup $crmPropertyGroup): RedirectResponse
     {
         $this->service->destroy($crmPropertyGroup);

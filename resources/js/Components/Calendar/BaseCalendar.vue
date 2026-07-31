@@ -326,6 +326,14 @@
                     @click="showMultiCellDuplicateModal = true"
                     :text="$t('Duplicate {0} event(s) into {1} cells', [checkedCount, selectedCellCount])"
                 />
+                <!-- Verschieben nur bei genau EINER Zelle — bei mehreren Zellen wäre
+                     dasselbe Original nicht mehrfach verschiebbar -->
+                <FormButton
+                    v-if="checkedCount > 0 && selectedCellCount === 1"
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showMultiCellMoveModal = true"
+                    :text="$t('Move {0} event(s) into this cell', [checkedCount])"
+                />
                 <FormButton
                     class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="cancelMultiEditDuplicateSelection"
@@ -458,6 +466,13 @@
             :is-planning="isPlanning"
             @closed="closeMultiCellDuplicateModal"
         />
+        <MultiCellMoveModal
+            v-if="showMultiCellMoveModal && selectedCellsList.length === 1"
+            :event-ids="editEvents"
+            :cell="selectedCellsList[0]"
+            :rooms="rooms"
+            @closed="closeMultiCellMoveModal"
+        />
 
         <ConfirmDeleteModal
             v-if="openDeleteSelectedEventsModal"
@@ -545,6 +560,7 @@ const FormButton = defineAsyncComponent({ loader: () => import("@/Layouts/Compon
 const MultiEditModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiEditModal.vue") });
 const MultiCellEventCreateModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiCellEventCreateModal.vue") });
 const MultiCellDuplicateModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiCellDuplicateModal.vue") });
+const MultiCellMoveModal = defineAsyncComponent({ loader: () => import("@/Layouts/Components/MultiCellMoveModal.vue") });
 const RejectEventVerificationRequestModal = defineAsyncComponent({
     loader: () => import("@/Pages/EventVerification/Components/RejectEventVerificationRequestModal.vue"),
     delay: 200,
@@ -1250,6 +1266,7 @@ const selectedCellCount = computed(() => selectedCells.value.size);
 const selectedCellsList = computed(() => Array.from(selectedCells.value.values()));
 const showMultiCellCreateModal = ref(false);
 const showMultiCellDuplicateModal = ref(false);
+const showMultiCellMoveModal = ref(false);
 
 const isCellSelected = (day, room) => selectedCells.value.has(cellKey(day, room));
 const toggleCellSelection = (day, room) => {
@@ -1293,6 +1310,25 @@ const closeMultiCellDuplicateModal = async (duplicated) => {
     showMultiCellDuplicateModal.value = false;
     if (duplicated) {
         const cells = selectedCellsList.value;
+        clearCellSelection();
+        cancelMultiEditDuplicateSelection();
+        await refetchMonthsForCells(cells);
+    }
+};
+
+const closeMultiCellMoveModal = async (moved) => {
+    showMultiCellMoveModal.value = false;
+    if (moved) {
+        // Beim Verschieben ändern sich auch die Ursprungszellen — deshalb neben der
+        // Ziel-Zelle auch die Monate der ausgewählten (verschobenen) Termine neu laden
+        const cells = [...selectedCellsList.value];
+        for (const room of newCalendarData.value) {
+            for (const [d, slot] of Object.entries(room.content ?? {})) {
+                if ((slot.events ?? []).some(e => e.considerOnMultiEdit)) {
+                    cells.push({ day: d.includes('-') ? d : deKeyToIso(d) });
+                }
+            }
+        }
         clearCellSelection();
         cancelMultiEditDuplicateSelection();
         await refetchMonthsForCells(cells);

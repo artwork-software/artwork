@@ -206,7 +206,6 @@ const componentMapping = {
 };
 
 const page = ref(route().params.page ?? 1);
-const perPage = ref(route().params.entitiesPerPage ?? 10);
 const query = ref(route().params.query ?? "");
 
 const openMenu = (projectId, event) => {
@@ -228,7 +227,6 @@ const closeEditProjectModal = () => {
         preserveScroll: true,
         data: {
             page: page.value,
-            entitiesPerPage: perPage.value,
             query: query.value,
         },
     });
@@ -285,7 +283,7 @@ const checkPermission = (project, type) => {
 const pinProject = () => {
     router.post(
         route("project.pin", { project: props.project.id }),
-        { page: page.value, entitiesPerPage: perPage.value, query: query.value },
+        { page: page.value, query: query.value },
         { preserveScroll: true, preserveState: true }
     );
 };
@@ -293,7 +291,7 @@ const pinProject = () => {
 const duplicateProject = () => {
     router.post(
         route("projects.duplicate", { project: props.project.id }),
-        { page: page.value, entitiesPerPage: perPage.value, query: query.value },
+        { page: page.value, query: query.value },
         { preserveScroll: true }
     );
 };
@@ -302,7 +300,7 @@ const openDeleteProjectModal = () => (deletingProject.value = true);
 
 const deleteProject = () => {
     router.delete(route("projects.destroy", { project: props.project.id }), {
-        data: { page: page.value, entitiesPerPage: perPage.value, query: query.value },
+        data: { page: page.value, query: query.value },
         preserveScroll: true,
     });
     closeDeleteProjectModal();

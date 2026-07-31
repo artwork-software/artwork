@@ -49,8 +49,16 @@
 
             <!-- Header -->
             <div class="flex items-center gap-6 mb-8">
-                <div class="size-20 shrink-0">
+                <div class="size-20 shrink-0 relative group/avatar">
                     <img :src="contact.profile_photo_url" alt="" class="size-20 rounded-full object-cover" />
+                    <label
+                        v-if="!isReadOnly"
+                        class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+                        :title="$t('Upload profile image')"
+                    >
+                        <component :is="IconCamera" class="h-6 w-6 text-white" />
+                        <input type="file" accept="image/*" class="sr-only" @change="onProfileImageChange" />
+                    </label>
                 </div>
                 <div>
                     <h1 v-if="!editing" class="text-2xl font-bold text-gray-900">{{ contact.display_name }}</h1>
@@ -68,8 +76,13 @@
                         <PropertyIcon v-if="contact.contact_type?.icon" :name="contact.contact_type?.icon" class="mr-1.5 h-4 w-4" />
                         {{ $t(contact.contact_type?.name) }}
                     </span>
+                    <p v-if="profileImageError" class="mt-1 text-sm text-red-600">{{ profileImageError }}</p>
                 </div>
                 <div class="ml-auto flex items-center gap-2" v-if="!isReadOnly && activeTab === 'info'">
+                    <button v-if="canChangeType && !editing" class="ui-button" @click="showChangeTypeModal = true">
+                        <component :is="IconSwitchHorizontal" stroke-width="1" class="size-5" />
+                        {{ $t('Change type') }}
+                    </button>
                     <button class="ui-button-add" @click="toggleEditing">
                         <component :is="editing ? IconCheck : IconEdit" stroke-width="1" class="size-5" />
                         {{ editing ? $t('Save changes') : $t('Edit') }}
@@ -112,6 +125,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Project') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Linked via') }}</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Period') }}</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Linked on') }}</th>
                         </tr>
@@ -127,6 +141,19 @@
                                     {{ project.name }}
                                 </Link>
                                 <span v-else class="font-medium text-gray-900">{{ project.name }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <div class="flex flex-col gap-1.5">
+                                    <span v-if="(project.sources ?? []).includes('artist')" class="inline-flex w-fit items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                                        {{ $t('Artist linking') }}
+                                    </span>
+                                    <span v-if="(project.sources ?? []).includes('team')" class="inline-flex w-fit items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                                        {{ $t('Project team') }}<template v-if="project.team_roles?.length">:&nbsp;{{ project.team_roles.join(', ') }}</template>
+                                    </span>
+                                    <span v-if="(project.sources ?? []).includes('residency')" class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                                        {{ $t('Artist residency') }}<template v-if="project.residency_summary">:&nbsp;{{ residencySummaryText(project.residency_summary) }}</template>
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 <template v-if="project.first_event_date">
@@ -266,11 +293,22 @@
                     <div class="ml-3">
                         <p class="text-sm text-blue-700">
                             {{ $t('This contact is linked to a user account. Changes must be made in the user profile.') }}
+                            <Link v-if="sourceProfileUrl" :href="sourceProfileUrl" class="font-medium underline hover:text-blue-900">
+                                {{ $t('Open profile') }}
+                            </Link>
                         </p>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Change Contact Type Modal -->
+        <ChangeContactTypeModal
+            v-if="showChangeTypeModal"
+            :contact="contact"
+            :contact-types="contactTypes"
+            @close="showChangeTypeModal = false"
+        />
     </AppLayout>
 </template>
 
@@ -280,9 +318,14 @@ import { router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyGroupSection from '@/Pages/CRM/Components/CrmPropertyGroupSection.vue'
-import { IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconCirclePlus, IconX } from '@tabler/icons-vue'
+import ChangeContactTypeModal from '@/Pages/CRM/Components/ChangeContactTypeModal.vue'
+import {
+    IconArrowLeft, IconEdit, IconCheck, IconInfoCircle, IconTrash, IconCirclePlus, IconX,
+    IconCamera, IconSwitchHorizontal,
+} from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
+import debounce from 'lodash.debounce'
 
 const props = defineProps({
     contact: { type: Object, required: true },
@@ -290,6 +333,9 @@ const props = defineProps({
     externalAccessStatus: { type: Object, default: null },
     linkedProjects: { type: Array, default: () => [] },
     firstProjectTabId: { type: Number, default: null },
+    sourceProfileUrl: { type: String, default: null },
+    contactTypes: { type: Array, default: () => [] },
+    canChangeType: { type: Boolean, default: false },
 })
 
 const $t = useTranslation()
@@ -298,6 +344,12 @@ const activeTab = ref('info')
 
 // Backend liefert "d.m.Y H:i" – im Projektprotokoll nur das Datum anzeigen
 const dateOnly = (value) => (value ? String(value).split(' ')[0] : '-')
+
+// Zusammenfassung der Aufenthalte: Zeitraum + Anzahl (bei mehr als einem Aufenthalt)
+const residencySummaryText = (summary) => {
+    const period = summary.from && summary.to ? `${summary.from} – ${summary.to}` : (summary.from ?? summary.to ?? '')
+    return summary.count > 1 ? `${period} (${summary.count})` : period
+}
 
 const editing = ref(false)
 const editableDisplayName = ref(props.contact.display_name ?? '')
@@ -309,6 +361,10 @@ const showSuccess = (msg) => {
 }
 
 const getPropertyValue = (propertyId) => {
+    // Noch nicht gespeicherte (debounced) Eingaben haben Vorrang vor dem Serverstand
+    if (propertyId in pendingPropertyValues.value) {
+        return pendingPropertyValues.value[propertyId] ?? ''
+    }
     const pv = props.contact.property_values?.find(v => v.crm_property_id === propertyId)
     return pv?.value ?? ''
 }
@@ -337,6 +393,10 @@ const toggleEditing = () => {
             return
         }
         validationErrors.value = {}
+
+        // Ausstehende (debounced) Wertänderungen sofort speichern
+        debouncedFlush.cancel()
+        flushPropertyUpdates()
 
         // Save display_name if changed
         const trimmedName = editableDisplayName.value.trim()
@@ -387,12 +447,49 @@ const visibleGroups = computed(() => {
         .filter(group => group.properties.length > 0)
 })
 
-const updatePropertyValue = ({ propertyId, value }) => {
+// Eingaben werden gesammelt und gebündelt gespeichert statt pro Tastendruck
+// einen PATCH zu feuern (Request-Flut + Race-Conditions).
+const pendingPropertyValues = ref({})
+
+const flushPropertyUpdates = () => {
+    const values = { ...pendingPropertyValues.value }
+    pendingPropertyValues.value = {}
+    if (Object.keys(values).length === 0) return
+
     router.patch(route('crm.contacts.update', props.contact.id), {
-        property_values: { [propertyId]: value },
+        property_values: values,
     }, {
         preserveState: true,
         preserveScroll: true,
+    })
+}
+
+const debouncedFlush = debounce(flushPropertyUpdates, 600)
+
+const updatePropertyValue = ({ propertyId, value }) => {
+    pendingPropertyValues.value[propertyId] = value
+    debouncedFlush()
+}
+
+const showChangeTypeModal = ref(false)
+
+const profileImageError = ref('')
+
+const onProfileImageChange = (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    profileImageError.value = ''
+    router.post(route('crm.contacts.profile-image', props.contact.id), {
+        profile_image: file,
+    }, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => showSuccess($t('Profile image updated')),
+        onError: (errors) => {
+            profileImageError.value = errors.profile_image ?? $t('Upload failed')
+        },
     })
 }
 

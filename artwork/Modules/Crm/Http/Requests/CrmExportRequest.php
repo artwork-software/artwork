@@ -23,6 +23,8 @@ class CrmExportRequest extends FormRequest
             'project_ids.*' => ['integer', 'exists:projects,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'property_filters' => ['nullable', 'array'],
         ];
     }
 }

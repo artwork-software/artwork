@@ -350,4 +350,139 @@ final class EventMultiCellTest extends FeatureTestCase
             'end_time' => '2026-08-12 02:00:00',
         ]);
     }
+
+    #[Test]
+    public function guest_cannot_move_events_to_cell(): void
+    {
+        $this->postJson(route('events.multi-cell.move'), [])
+            ->assertUnauthorized();
+    }
+
+    #[Test]
+    public function user_without_update_rights_cannot_move_foreign_events(): void
+    {
+        $event = Event::factory()->create();
+        $room = Room::factory()->create();
+        $this->actingAsUserWith([]);
+
+        $this->postJson(route('events.multi-cell.move'), [
+            'events' => [$event->id],
+            'cell' => ['day' => '2026-08-03', 'room_id' => $room->id],
+        ])->assertForbidden();
+    }
+
+    #[Test]
+    public function source_owner_cannot_move_regular_event_into_closed_room_without_create_rights(): void
+    {
+        $user = $this->actingAsUserWith([]);
+        $source = Event::factory()->create(['user_id' => $user->id, 'is_planning' => false]);
+        $targetRoom = Room::factory()->create(['everyone_can_book' => false]);
+
+        $this->postJson(route('events.multi-cell.move'), [
+            'events' => [$source->id],
+            'cell' => ['day' => '2026-08-10', 'room_id' => $targetRoom->id],
+        ])->assertForbidden();
+    }
+
+    #[Test]
+    public function move_requires_events_and_a_target_cell(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson(route('events.multi-cell.move'), ['events' => []])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['events', 'cell']);
+    }
+
+    #[Test]
+    public function admin_can_move_events_into_cell(): void
+    {
+        $this->actingAsAdmin();
+        $targetRoom = Room::factory()->create();
+        $eventA = Event::factory()->create([
+            'start_time' => '2026-08-01 10:00:00',
+            'end_time' => '2026-08-01 12:00:00',
+            'allDay' => false,
+        ]);
+        $eventB = Event::factory()->create([
+            'start_time' => '2026-08-02 19:00:00',
+            'end_time' => '2026-08-02 22:00:00',
+            'allDay' => false,
+        ]);
+
+        $countBefore = Event::query()->count();
+
+        $this->postJson(route('events.multi-cell.move'), [
+            'events' => [$eventA->id, $eventB->id],
+            'cell' => ['day' => '2026-08-10', 'room_id' => $targetRoom->id],
+        ])->assertSuccessful();
+
+        // Verschieben erzeugt keine Kopien
+        $this->assertSame($countBefore, Event::query()->count());
+        $this->assertDatabaseHas('events', [
+            'id' => $eventA->id,
+            'room_id' => $targetRoom->id,
+            'start_time' => '2026-08-10 10:00:00',
+            'end_time' => '2026-08-10 12:00:00',
+        ]);
+        $this->assertDatabaseHas('events', [
+            'id' => $eventB->id,
+            'room_id' => $targetRoom->id,
+            'start_time' => '2026-08-10 19:00:00',
+            'end_time' => '2026-08-10 22:00:00',
+        ]);
+    }
+
+    #[Test]
+    public function moving_multi_day_events_preserves_duration(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $event = Event::factory()->create([
+            'start_time' => '2026-08-01 20:00:00',
+            'end_time' => '2026-08-03 02:00:00',
+            'allDay' => false,
+        ]);
+
+        $this->postJson(route('events.multi-cell.move'), [
+            'events' => [$event->id],
+            'cell' => ['day' => '2026-08-10', 'room_id' => $room->id],
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('events', [
+            'id' => $event->id,
+            'room_id' => $room->id,
+            'start_time' => '2026-08-10 20:00:00',
+            'end_time' => '2026-08-12 02:00:00',
+        ]);
+    }
+
+    #[Test]
+    public function moving_events_shifts_their_shifts_by_the_same_delta(): void
+    {
+        $this->actingAsAdmin();
+        $room = Room::factory()->create();
+        $event = Event::factory()->create([
+            'start_time' => '2026-08-01 10:00:00',
+            'end_time' => '2026-08-01 18:00:00',
+            'allDay' => false,
+        ]);
+        $shift = \Artwork\Modules\Shift\Models\Shift::factory()->create([
+            'event_id' => $event->id,
+            'start_date' => '2026-08-01',
+            'end_date' => '2026-08-01',
+        ]);
+
+        $this->postJson(route('events.multi-cell.move'), [
+            'events' => [$event->id],
+            'cell' => ['day' => '2026-08-10', 'room_id' => $room->id],
+        ])->assertSuccessful();
+
+        $this->assertDatabaseHas('shifts', [
+            'id' => $shift->id,
+            'event_id' => $event->id,
+            'start_date' => '2026-08-10',
+            'end_date' => '2026-08-10',
+        ]);
+    }
 }

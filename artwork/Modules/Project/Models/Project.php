@@ -164,6 +164,14 @@ class Project extends Model
         return $this->belongsToMany(CrmContact::class, 'crm_contact_project')->withTimestamps();
     }
 
+    public function teamCrmContacts(): BelongsToMany
+    {
+        return $this->belongsToMany(CrmContact::class, 'crm_contact_project_team')
+            ->using(ProjectCrmContactTeamPivot::class)
+            ->withPivot('roles')
+            ->withTimestamps();
+    }
+
     public function costCenter(): BelongsTo
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id', 'id', 'cost_center');

@@ -22,11 +22,23 @@ class CrmContactTypeController extends Controller
             'name' => 'required|string|max:255',
             'icon' => 'nullable|string',
             'color' => 'nullable|string',
+            'properties' => 'sometimes|array',
+            'properties.*.id' => 'required|integer|exists:crm_properties,id',
+            'properties.*.is_required' => 'boolean',
+            'properties.*.show_in_list' => 'boolean',
+            'properties.*.is_filterable' => 'boolean',
         ]);
+
+        $properties = $validated['properties'] ?? null;
+        unset($validated['properties']);
 
         $validated['slug'] = Str::slug($validated['name']);
 
-        $this->service->store($validated);
+        $type = $this->service->store($validated);
+
+        if ($properties !== null) {
+            $this->service->syncProperties($type, $properties);
+        }
 
         broadcast(new CrmSettingsChanged());
 
@@ -41,9 +53,36 @@ class CrmContactTypeController extends Controller
             'color' => 'nullable|string',
             'is_active' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer',
+            'properties' => 'sometimes|array',
+            'properties.*.id' => 'required|integer|exists:crm_properties,id',
+            'properties.*.is_required' => 'boolean',
+            'properties.*.show_in_list' => 'boolean',
+            'properties.*.is_filterable' => 'boolean',
         ]);
 
+        $properties = $validated['properties'] ?? null;
+        unset($validated['properties']);
+
         $this->service->update($crmContactType, $validated);
+
+        if ($properties !== null) {
+            $this->service->syncProperties($crmContactType, $properties);
+        }
+
+        broadcast(new CrmSettingsChanged());
+
+        return redirect()->back();
+    }
+
+    public function reorder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'types' => 'required|array',
+            'types.*.id' => 'required|integer|exists:crm_contact_types,id',
+            'types.*.sort_order' => 'required|integer',
+        ]);
+
+        $this->service->reorder($validated['types']);
 
         broadcast(new CrmSettingsChanged());
 

@@ -14,22 +14,16 @@
                 </template>
             </ToolbarHeader>
 
-            <!-- Step Indicator -->
-            <div class="mt-6 mb-8">
-                <div class="flex items-center space-x-3">
-                    <span class="flex items-center justify-center size-8 rounded-full bg-green-600 text-white text-sm font-bold">
-                        <component :is="IconCheck" class="size-4" />
-                    </span>
-                    <span class="text-sm text-gray-500">{{ $t('Upload file') }}</span>
-                    <div class="flex-1 h-px bg-green-300"></div>
-                    <span class="flex items-center justify-center size-8 rounded-full bg-green-600 text-white text-sm font-bold">
-                        <component :is="IconCheck" class="size-4" />
-                    </span>
-                    <span class="text-sm text-gray-500">{{ $t('Map type values') }}</span>
-                    <div class="flex-1 h-px bg-indigo-300"></div>
-                    <span class="flex items-center justify-center size-8 rounded-full bg-indigo-600 text-white text-sm font-bold">3</span>
-                    <span class="text-sm font-medium text-gray-900">{{ $t('Map columns') }}</span>
-                </div>
+            <ImportStepper :steps="['Upload file', 'Map type values', 'Map columns']" :current-step="3" />
+
+            <!-- Where do the artwork fields come from? -->
+            <div class="mb-4 rounded-md bg-indigo-50 border border-indigo-100 p-4">
+                <p class="text-sm text-indigo-900">
+                    {{ $t('The selectable artwork fields per tab are the properties of the property groups assigned to the respective contact type.') }}
+                    {{ $t('If a field is missing here, first assign the matching property group to the contact type in the') }}
+                    <a :href="route('crm.settings.index')" target="_blank" class="font-medium underline hover:text-indigo-700">{{ $t('CRM Settings') }}</a>
+                    {{ $t('and then restart the import.') }}
+                </p>
             </div>
 
             <!-- Tabs -->
@@ -221,6 +215,28 @@
                 </div>
             </template>
 
+            <!-- Duplicate detection -->
+            <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 max-w-2xl">
+                <ArtworkBaseToggle
+                    v-model="dupeEnabled"
+                    :label="$t('Detect existing contacts')"
+                    :description="$t('Matching is done via the contact name within the respective contact type.')"
+                />
+                <div v-if="dupeEnabled" class="mt-4">
+                    <span class="componentLabel">{{ $t('When a match is found') }}</span>
+                    <div class="mt-2 space-y-2">
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="radio" value="skip" v-model="dupeAction" class="text-indigo-600 border-gray-300" />
+                            {{ $t('Skip row') }}
+                        </label>
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="radio" value="update" v-model="dupeAction" class="text-indigo-600 border-gray-300" />
+                            {{ $t('Update existing contact with the values from the file') }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <!-- Submit -->
             <div class="mt-8 flex flex-col items-end gap-2">
                 <div class="flex gap-3">
@@ -258,6 +274,8 @@ import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'
+import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import {
     Listbox,
     ListboxButton,
@@ -287,7 +305,11 @@ const typeMappings = reactive({})
 
 const form = useForm({
     type_mappings: [],
+    duplicates: null,
 })
+
+const dupeEnabled = ref(false)
+const dupeAction = ref('skip')
 
 const propertyTypeIcons = {
     text: IconTypography,
@@ -485,6 +507,9 @@ const submit = () => {
     })
 
     form.type_mappings = mappings
+    form.duplicates = dupeEnabled.value
+        ? { enabled: true, match_by: 'display_name', action: dupeAction.value }
+        : null
     form.post(route('crm.import.execute'))
 }
 

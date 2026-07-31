@@ -82,6 +82,16 @@
                         {{ $t('{count} contacts created', { count: importResult.created }) }}
                     </p>
                 </div>
+                <div v-if="importResult.updated > 0" class="rounded-md bg-blue-50 p-3">
+                    <p class="text-sm font-medium text-blue-800">
+                        {{ $t('{count} existing contacts updated', { count: importResult.updated }) }}
+                    </p>
+                </div>
+                <div v-if="importResult.duplicates > 0" class="rounded-md bg-gray-50 border border-gray-200 p-3">
+                    <p class="text-sm font-medium text-gray-700">
+                        {{ $t('{count} rows skipped as duplicates', { count: importResult.duplicates }) }}
+                    </p>
+                </div>
                 <div v-if="importResult.skipped?.length > 0" class="rounded-md bg-yellow-50 border border-yellow-200 p-3">
                     <button
                         class="flex items-center gap-2 text-sm font-medium text-yellow-800 w-full text-left"
@@ -126,6 +136,21 @@
                 </nav>
             </div>
 
+            <!-- Bulk action bar -->
+            <div v-if="selectedIds.size > 0" class="mt-4 flex items-center gap-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5">
+                <span class="text-sm font-medium text-indigo-900">{{ $t('{count} selected', { count: selectedIds.size }) }}</span>
+                <button type="button" class="text-sm text-indigo-600 hover:text-indigo-500" @click="toggleSelectPage">
+                    {{ allOnPageSelected ? $t('Deselect all') : $t('Select all on this page') }}
+                </button>
+                <button type="button" class="text-sm text-gray-500 hover:text-gray-700" @click="selectedIds = new Set()">
+                    {{ $t('Clear selection') }}
+                </button>
+                <button type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-500" @click="showBulkDeleteModal = true">
+                    <component :is="IconTrash" class="size-4" />
+                    {{ $t('Delete selection') }}
+                </button>
+            </div>
+
             <!-- Contacts Table -->
             <div class="mt-6">
                 <BaseTable
@@ -136,10 +161,23 @@
                     :total="contacts.total"
                     :page-size="contacts.per_page"
                     v-model:page="page"
+                    :sort-key="sortState.key"
+                    :sort-direction="sortState.direction"
                     @page-change="onPageChange"
+                    @sort-change="onSortChange"
                     :empty-title="$t('No contacts')"
                     :empty-message="$t('No contacts found for this type.')"
                 >
+                    <template #cell-_select="{ row }">
+                        <input
+                            type="checkbox"
+                            class="rounded border-gray-300 text-indigo-600"
+                            :checked="selectedIds.has(row.id)"
+                            @click.stop
+                            @change="toggleSelect(row.id)"
+                        />
+                    </template>
+
                     <template #cell-display_name="{ row }">
                         <Link :href="route('crm.contacts.show', row.id)" class="flex items-center hover:text-indigo-600">
                             <div class="size-10 shrink-0">
@@ -197,6 +235,15 @@
             @delete="deleteContact"
         />
 
+        <!-- Bulk Delete Confirmation -->
+        <ConfirmDeleteModal
+            v-if="showBulkDeleteModal"
+            @close="showBulkDeleteModal = false"
+            :title="$t('Delete selection')"
+            :description="$t('Are you sure you want to delete {count} contacts?', { count: selectedIds.size })"
+            @delete="bulkDelete"
+        />
+
         <!-- Filter Modal -->
         <CrmFilterModal
             v-if="showFilterModal"
@@ -210,6 +257,9 @@
         <CrmExportModal
             v-if="showExportModal"
             :contact-types="contactTypes"
+            :active-type="activeType"
+            :current-search="searchInput"
+            :current-filters="activeFilters"
             @close="showExportModal = false"
         />
 
@@ -292,7 +342,13 @@ watch(() => props.contacts?.current_page, (v) => { if (v) page.value = v })
 
 // Build dynamic columns from properties that have show_in_list
 const columns = computed(() => {
-    const cols = [{ key: 'display_name', label: 'Name', sortable: false }]
+    const cols = []
+
+    if (!isMirroredType.value) {
+        cols.push({ key: '_select', label: '', sortable: false, width: '40px' })
+    }
+
+    cols.push({ key: 'display_name', label: 'Name', sortable: true })
 
     if (props.activeType?.properties) {
         props.activeType.properties
@@ -301,7 +357,7 @@ const columns = computed(() => {
                 cols.push({
                     key: `prop_${p.id}`,
                     label: p.name,
-                    sortable: false,
+                    sortable: true,
                     type: p.type,
                     accessor: (row) => {
                         const pv = (row.property_values ?? []).find(v => v.crm_property_id === p.id)
@@ -314,15 +370,21 @@ const columns = computed(() => {
     return cols
 })
 
+const sortState = ref({ key: null, direction: null })
+
 const switchType = (slug) => {
     activeFilters.value = {}
+    sortState.value = { key: null, direction: null }
+    selectedIds.value = new Set()
     router.get(route('crm.index'), { type: slug }, {
         preserveState: true,
         preserveScroll: true,
     })
 }
 
-const reloadContacts = () => {
+// One place that assembles the full query state so page changes and sorting
+// never drop the active search/filters again.
+const buildQueryData = () => {
     const data = { type: props.activeType?.slug, search: searchInput.value || '' }
     const nonEmpty = Object.fromEntries(
         Object.entries(activeFilters.value).filter(([, v]) =>
@@ -330,7 +392,21 @@ const reloadContacts = () => {
         )
     )
     if (Object.keys(nonEmpty).length > 0) data.filters = JSON.stringify(nonEmpty)
-    router.reload({ data, preserveScroll: true, only: ['contacts'] })
+    if (sortState.value.key && sortState.value.direction) {
+        data.sort = sortState.value.key
+        data.direction = sortState.value.direction
+    }
+    if (props.contacts?.per_page) data.per_page = props.contacts.per_page
+    return data
+}
+
+const reloadContacts = (extra = {}) => {
+    selectedIds.value = new Set()
+    router.reload({
+        data: { ...buildQueryData(), page: 1, ...extra },
+        preserveScroll: true,
+        only: ['contacts'],
+    })
 }
 
 const debouncedReload = debounce(() => reloadContacts(), 500)
@@ -350,9 +426,51 @@ const applyFilters = (filters) => {
 }
 
 function onPageChange({ page: newPage, pageSize }) {
+    selectedIds.value = new Set()
     router.reload({
         only: ['contacts'],
-        data: { page: newPage, per_page: pageSize, type: props.activeType?.slug },
+        data: { ...buildQueryData(), page: newPage, per_page: pageSize ?? props.contacts?.per_page },
+    })
+}
+
+function onSortChange({ key, direction }) {
+    sortState.value = direction ? { key, direction } : { key: null, direction: null }
+    reloadContacts()
+}
+
+// -- Bulk selection / delete --
+const selectedIds = ref(new Set())
+const showBulkDeleteModal = ref(false)
+
+const allOnPageSelected = computed(() =>
+    (props.contacts?.data?.length ?? 0) > 0 && props.contacts.data.every(c => selectedIds.value.has(c.id))
+)
+
+const toggleSelect = (id) => {
+    if (selectedIds.value.has(id)) {
+        selectedIds.value.delete(id)
+    } else {
+        selectedIds.value.add(id)
+    }
+}
+
+const toggleSelectPage = () => {
+    if (allOnPageSelected.value) {
+        selectedIds.value = new Set()
+    } else {
+        selectedIds.value = new Set((props.contacts?.data ?? []).map(c => c.id))
+    }
+}
+
+const bulkDelete = () => {
+    const count = selectedIds.value.size
+    router.post(route('crm.contacts.bulk-destroy'), { ids: [...selectedIds.value] }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showBulkDeleteModal.value = false
+            selectedIds.value = new Set()
+            showSuccess($t('{count} contacts deleted', { count }))
+        },
     })
 }
 

@@ -107,11 +107,11 @@ readonly class CrmImportService
         ];
     }
 
-    public function runImport(array $mapping): array
+    public function runImport(array $mapping, array $duplicates = []): array
     {
         $sessionData = $this->getSession();
         if (!$sessionData) {
-            return ['created' => 0, 'skipped' => []];
+            return ['created' => 0, 'updated' => 0, 'duplicates' => 0, 'skipped' => []];
         }
 
         $contactType = CrmContactType::with('properties')->findOrFail($sessionData['typeId']);
@@ -121,11 +121,66 @@ readonly class CrmImportService
             $sessionData['typeId'],
             $mapping,
             $contactType->properties,
+            $duplicates,
         );
 
         $this->cleanup();
 
         return $result;
+    }
+
+    /**
+     * Baut das Duplikat-Lookup für einen Kontakttyp: normalisierter Schlüsselwert → Kontakt-ID.
+     * Schlüssel ist entweder der Anzeigename ('display_name') oder eine Eigenschaft ('prop_<id>').
+     */
+    private function buildDuplicateLookup(int $contactTypeId, string $matchBy): array
+    {
+        $lookup = [];
+
+        if (str_starts_with($matchBy, 'prop_')) {
+            $propertyId = (int) substr($matchBy, 5);
+
+            \Artwork\Modules\Crm\Models\CrmPropertyValue::query()
+                ->where('crm_property_id', $propertyId)
+                ->whereHas('contact', fn ($q) => $q->where('crm_contact_type_id', $contactTypeId))
+                ->orderBy('id')
+                ->get(['crm_contact_id', 'value'])
+                ->each(function ($value) use (&$lookup): void {
+                    $key = mb_strtolower(trim((string) $value->value));
+                    if ($key !== '' && !isset($lookup[$key])) {
+                        $lookup[$key] = $value->crm_contact_id;
+                    }
+                });
+
+            return $lookup;
+        }
+
+        \Artwork\Modules\Crm\Models\CrmContact::query()
+            ->where('crm_contact_type_id', $contactTypeId)
+            ->orderBy('id')
+            ->get(['id', 'display_name'])
+            ->each(function ($contact) use (&$lookup): void {
+                $key = mb_strtolower(trim((string) $contact->display_name));
+                if ($key !== '' && !isset($lookup[$key])) {
+                    $lookup[$key] = $contact->id;
+                }
+            });
+
+        return $lookup;
+    }
+
+    /**
+     * Ermittelt den Duplikat-Schlüssel der aktuellen Zeile passend zu match_by.
+     */
+    private function resolveDuplicateKey(string $matchBy, string $displayName, array $propertyValues): string
+    {
+        if (str_starts_with($matchBy, 'prop_')) {
+            $propertyId = (int) substr($matchBy, 5);
+
+            return mb_strtolower(trim((string) ($propertyValues[$propertyId] ?? '')));
+        }
+
+        return mb_strtolower(trim($displayName));
     }
 
     public function extractUniqueColumnValuesFromFile(string $path, int $columnIndex): array
@@ -184,12 +239,17 @@ readonly class CrmImportService
             });
     }
 
-    public function runMultiTypeImport(array $typeMappings): array
+    public function runMultiTypeImport(array $typeMappings, array $duplicates = []): array
     {
         $sessionData = $this->getSession();
         if (!$sessionData || !($sessionData['multiType'] ?? false)) {
-            return ['created' => 0, 'skipped' => []];
+            return ['created' => 0, 'updated' => 0, 'duplicates' => 0, 'skipped' => []];
         }
+
+        // Beim Multi-Typ-Import wird immer über den Anzeigenamen abgeglichen
+        $duplicatesEnabled = (bool) ($duplicates['enabled'] ?? false);
+        $duplicateAction = ($duplicates['action'] ?? 'skip') === 'update' ? 'update' : 'skip';
+        $duplicateLookups = [];
 
         $typeColumnIndex = $sessionData['typeColumnIndex'];
         $typeValueMapping = collect($sessionData['typeValueMapping']);
@@ -224,11 +284,13 @@ readonly class CrmImportService
 
         if (count($rows) <= 1) {
             $this->cleanup();
-            return ['created' => 0, 'skipped' => []];
+            return ['created' => 0, 'updated' => 0, 'duplicates' => 0, 'skipped' => []];
         }
 
         $dataRows = array_slice($rows, 1);
         $created = 0;
+        $updated = 0;
+        $duplicateCount = 0;
         $skipped = [];
 
         foreach ($dataRows as $rowIndex => $row) {
@@ -308,7 +370,33 @@ readonly class CrmImportService
             }
 
             try {
-                $this->contactService->store(
+                $duplicateKey = $duplicatesEnabled ? mb_strtolower(trim($displayName)) : '';
+
+                if ($duplicatesEnabled && $duplicateKey !== '') {
+                    $duplicateLookups[$contactTypeId] ??= $this->buildDuplicateLookup($contactTypeId, 'display_name');
+
+                    if (isset($duplicateLookups[$contactTypeId][$duplicateKey])) {
+                        if ($duplicateAction === 'update') {
+                            $existing = \Artwork\Modules\Crm\Models\CrmContact::find(
+                                $duplicateLookups[$contactTypeId][$duplicateKey]
+                            );
+                            if ($existing) {
+                                $this->contactService->update(
+                                    $existing,
+                                    ['display_name' => $displayName],
+                                    $propertyValues,
+                                );
+                                $updated++;
+                                continue;
+                            }
+                        } else {
+                            $duplicateCount++;
+                            continue;
+                        }
+                    }
+                }
+
+                $contact = $this->contactService->store(
                     [
                         'crm_contact_type_id' => $contactTypeId,
                         'display_name' => $displayName,
@@ -316,6 +404,10 @@ readonly class CrmImportService
                     $propertyValues,
                 );
                 $created++;
+
+                if ($duplicatesEnabled && $duplicateKey !== '') {
+                    $duplicateLookups[$contactTypeId][$duplicateKey] ??= $contact->id;
+                }
             } catch (\Throwable $e) {
                 Log::warning('CRM Import: Failed to create contact', [
                     'row' => $rowNumber,
@@ -327,7 +419,7 @@ readonly class CrmImportService
 
         $this->cleanup();
 
-        return ['created' => $created, 'skipped' => $skipped];
+        return ['created' => $created, 'updated' => $updated, 'duplicates' => $duplicateCount, 'skipped' => $skipped];
     }
 
     public function cleanup(): void
@@ -387,13 +479,14 @@ readonly class CrmImportService
         int $contactTypeId,
         array $mapping,
         Collection $properties,
+        array $duplicates = [],
     ): array {
         $sheets = Excel::toArray(new class {
         }, $filePath);
         $rows = $sheets[0] ?? [];
 
         if (count($rows) <= 1) {
-            return ['created' => 0, 'skipped' => []];
+            return ['created' => 0, 'updated' => 0, 'duplicates' => 0, 'skipped' => []];
         }
 
         $dataRows = array_slice($rows, 1);
@@ -401,7 +494,16 @@ readonly class CrmImportService
         $propertyMapping = $mapping['properties'] ?? [];
 
         $created = 0;
+        $updated = 0;
+        $duplicateCount = 0;
         $skipped = [];
+
+        $duplicatesEnabled = (bool) ($duplicates['enabled'] ?? false);
+        $matchBy = (string) ($duplicates['match_by'] ?? 'display_name');
+        $duplicateAction = ($duplicates['action'] ?? 'skip') === 'update' ? 'update' : 'skip';
+        $duplicateLookup = $duplicatesEnabled
+            ? $this->buildDuplicateLookup($contactTypeId, $matchBy)
+            : [];
 
         $propertiesById = $properties->keyBy('id');
         $nameColumnIndices = $this->resolveNameFallbackColumns($propertyMapping, $propertiesById);
@@ -455,7 +557,29 @@ readonly class CrmImportService
             }
 
             try {
-                $this->contactService->store(
+                $duplicateKey = $duplicatesEnabled
+                    ? $this->resolveDuplicateKey($matchBy, $displayName, $propertyValues)
+                    : '';
+
+                if ($duplicatesEnabled && $duplicateKey !== '' && isset($duplicateLookup[$duplicateKey])) {
+                    if ($duplicateAction === 'update') {
+                        $existing = \Artwork\Modules\Crm\Models\CrmContact::find($duplicateLookup[$duplicateKey]);
+                        if ($existing) {
+                            $this->contactService->update(
+                                $existing,
+                                ['display_name' => $displayName],
+                                $propertyValues,
+                            );
+                            $updated++;
+                            continue;
+                        }
+                    } else {
+                        $duplicateCount++;
+                        continue;
+                    }
+                }
+
+                $contact = $this->contactService->store(
                     [
                         'crm_contact_type_id' => $contactTypeId,
                         'display_name' => $displayName,
@@ -463,6 +587,11 @@ readonly class CrmImportService
                     $propertyValues,
                 );
                 $created++;
+
+                // Zeilen mit gleichem Schlüssel innerhalb derselben Datei greifen ab jetzt
+                if ($duplicatesEnabled && $duplicateKey !== '') {
+                    $duplicateLookup[$duplicateKey] ??= $contact->id;
+                }
             } catch (\Throwable $e) {
                 Log::warning('CRM Import: Failed to create contact', [
                     'row' => $rowNumber,
@@ -472,7 +601,7 @@ readonly class CrmImportService
             }
         }
 
-        return ['created' => $created, 'skipped' => $skipped];
+        return ['created' => $created, 'updated' => $updated, 'duplicates' => $duplicateCount, 'skipped' => $skipped];
     }
 
     private const NAME_FALLBACK_ALIASES = [

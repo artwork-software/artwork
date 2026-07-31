@@ -25,6 +25,11 @@ class CrmImportExecuteRequest extends FormRequest
             'type_mappings.*.display_name' => ['nullable', 'integer'],
             'type_mappings.*.properties' => ['nullable', 'array'],
             'type_mappings.*.properties.*' => ['integer'],
+
+            'duplicates' => ['nullable', 'array'],
+            'duplicates.enabled' => ['boolean'],
+            'duplicates.match_by' => ['nullable', 'string', 'regex:/^(display_name|prop_\d+)$/'],
+            'duplicates.action' => ['nullable', 'in:skip,update'],
         ];
     }
 }

@@ -19,6 +19,8 @@ class ProjectCreateSettingsUpdateRequest extends FormRequest
             'managers' => 'required|boolean',
             'cost_center' => 'required|boolean',
             'budget_deadline' => 'required|boolean',
+            'show_artists' => 'sometimes|boolean',
+            'crm_contacts_in_team' => 'sometimes|boolean',
         ];
     }
 }

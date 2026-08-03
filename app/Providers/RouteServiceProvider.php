@@ -17,7 +17,7 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
-        if (config('app.env') === 'production') {
+        if (config('app.force_https')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 

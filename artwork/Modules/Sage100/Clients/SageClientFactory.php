@@ -8,7 +8,7 @@ class SageClientFactory
 {
     public function createClient(): SageClient
     {
-        if (!env('SAGE_API_ENABLED', false)) {
+        if (!config('services.sage.enabled')) {
             return new NullSageClient();
         }
 

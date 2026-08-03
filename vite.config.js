@@ -15,6 +15,11 @@ const ddevPrimaryUrl = process.env.DDEV_PRIMARY_URL_WITHOUT_PORT
 const origin = ddevPrimaryUrl ? `${ddevPrimaryUrl}:${port}` : undefined;
 
 export default defineConfig({
+    // Frontend-Env kommt ausschliesslich zur Laufzeit ueber window.__APP_CONFIG__
+    // (config/frontend.php -> app.blade.php). Kein VITE_-Wert darf ins Bundle, sonst
+    // ist das Artefakt wieder an eine Umgebung gebunden und muss pro Kunde neu gebaut
+    // werden. Dieser Prefix existiert nicht, Vite exponiert damit nichts mehr.
+    envPrefix: 'ARTWORK_NEVER_EXPOSE_',
     build: {
         // for modern browsers / node versions — ESNext includes top-level await
         target: 'esnext',

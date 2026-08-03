@@ -47,7 +47,7 @@ class BiDerivedValuesService
      */
     public function isSageApiEnabled(): bool
     {
-        if (!env('SAGE_API_ENABLED', false)) {
+        if (!config('services.sage.enabled')) {
             return false;
         }
 

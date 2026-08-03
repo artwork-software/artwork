@@ -115,7 +115,7 @@ class HandleInertiaRequests extends Middleware
         }
         $sageApiEnabled = false;
 
-        if (env('SAGE_API_ENABLED', false)) {
+        if (config('services.sage.enabled')) {
             $sageApiSettingsService = app(SageApiSettingsService::class);
             $sageApiSettings = $sageApiSettingsService->getFirst();
             $sageApiEnabled = !is_null($sageApiSettings) && $sageApiSettings->enabled;

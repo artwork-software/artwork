@@ -63,6 +63,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Consumed by Artwork\Core\Http\Middleware\TrustProxies. Customer setups
+    | terminate TLS in front of the application, so the X-Forwarded-* headers
+    | have to be honoured or Laravel generates http:// URLs behind an https
+    | proxy. "*" trusts every client's forwarded headers and is only safe while
+    | the container is reachable exclusively through the reverse proxy — which
+    | is the normal case inside a Docker network. Installations that expose the
+    | container directly must set TRUSTED_PROXIES to concrete IPs/CIDRs
+    | (comma separated).
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES', '*'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Force HTTPS
+    |--------------------------------------------------------------------------
+    |
+    | Whether generated URLs are forced to https. Defaults to the previous
+    | behaviour (on in production) but stays overridable for installations that
+    | run plain http internally.
+    |
+    */
+
+    'force_https' => (bool) env('APP_FORCE_HTTPS', env('APP_ENV', 'production') === 'production'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

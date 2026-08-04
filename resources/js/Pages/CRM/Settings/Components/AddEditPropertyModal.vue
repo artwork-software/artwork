@@ -39,7 +39,7 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-                <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
                     {{ property ? $t('Save') : $t('Create') }}
                 </BaseUIButton>

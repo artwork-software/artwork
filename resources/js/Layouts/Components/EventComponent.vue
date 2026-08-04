@@ -577,9 +577,9 @@
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
-            <button type="button" class="ui-button-cancel" @click="showAssignmentImpactModal = false">
+            <BaseUIButton type="button" variant="secondary" hide-icon @click="showAssignmentImpactModal = false">
                 {{ $t('Cancel') }}
-            </button>
+            </BaseUIButton>
             <BaseUIButton type="button" variant="primary" hide-icon @click="confirmAssignmentImpactAndSave">
                 {{ $t('Move anyway') }}
             </BaseUIButton>

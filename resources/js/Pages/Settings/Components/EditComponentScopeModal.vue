@@ -93,7 +93,7 @@ function save() {
 
       <div class="flex items-center justify-end gap-3 pt-2">
         <BaseUIButton type="button" hide-icon @click="close">{{ $t('Cancel') }}</BaseUIButton>
-        <button type="button" class="ui-button-primary" @click="save">{{ $t('Save') }}</button>
+        <BaseUIButton type="button" variant="primary" hide-icon @click="save">{{ $t('Save') }}</BaseUIButton>
       </div>
     </div>
   </ArtworkBaseModal>

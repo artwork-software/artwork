@@ -40,9 +40,9 @@
                 </div>
 
                 <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" class="ui-button-cancel" @click="$emit('close')">
+                    <BaseUIButton type="button" variant="secondary" hide-icon @click="$emit('close')">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                     <BaseUIButton
                         type="button"
                         variant="primary"

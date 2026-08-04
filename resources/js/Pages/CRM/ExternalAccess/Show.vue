@@ -15,7 +15,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2" v-if="canManage">
-                    <button v-if="!access.revoked_at" class="ui-button-cancel" @click="revokeOpen = true">{{ $t('Revoke access') }}</button>
+                    <BaseUIButton v-if="!access.revoked_at" variant="secondary" hide-icon @click="revokeOpen = true">{{ $t('Revoke access') }}</BaseUIButton>
                     <BaseUIButton v-else hide-icon @click="reactivate">{{ $t('Reactivate') }}</BaseUIButton>
                     <BaseUIButton v-if="canRelink" hide-icon @click="relinkOpen = true">{{ $t('Re-link to another contact') }}</BaseUIButton>
                 </div>
@@ -118,7 +118,7 @@
                 <textarea v-model="revokeReason" rows="3" class="block w-full rounded-lg border-border text-sm" />
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button class="ui-button-cancel" @click="revokeOpen = false">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="revokeOpen = false">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon @click="revoke">{{ $t('Revoke access') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
@@ -130,7 +130,7 @@
                 <input type="date" v-model="extendCrmDate" class="block w-full rounded-lg border-border text-sm" />
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button class="ui-button-cancel" @click="extendCrmOpen = false">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="extendCrmOpen = false">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon :disabled="!extendCrmDate" @click="extendCrm">{{ $t('Extend') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
@@ -142,7 +142,7 @@
                 <input type="date" v-model="extendScopeDate" class="block w-full rounded-lg border-border text-sm" />
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button class="ui-button-cancel" @click="extendScopeOpen = false">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="extendScopeOpen = false">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon :disabled="!extendScopeDate" @click="extendScope">{{ $t('Extend') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
@@ -154,7 +154,7 @@
                 <input type="number" v-model="relinkContactId" :placeholder="$t('CRM contact ID')" class="block w-full rounded-lg border-border text-sm" />
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button class="ui-button-cancel" @click="relinkOpen = false">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="relinkOpen = false">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon :disabled="!relinkContactId" @click="relink">{{ $t('Confirm re-linking') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>

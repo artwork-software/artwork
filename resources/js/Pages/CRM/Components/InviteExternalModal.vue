@@ -130,7 +130,7 @@
         </div>
 
         <div class="flex justify-end gap-2 mt-6">
-            <button type="button" class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
+            <BaseUIButton type="button" variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
             <BaseUIButton
                 type="button"
                 variant="primary"

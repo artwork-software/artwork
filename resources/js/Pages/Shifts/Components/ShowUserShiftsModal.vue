@@ -861,9 +861,9 @@
             </div>
 
             <div class="flex justify-end gap-2 mt-6">
-                <button type="button" class="ui-button-cancel" @click="keepShiftsAndSetStatus">
+                <BaseUIButton type="button" variant="secondary" hide-icon @click="keepShiftsAndSetStatus">
                     {{ t('No, only change status') }}
-                </button>
+                </BaseUIButton>
                 <BaseUIButton
                     type="button"
                     variant="primary"

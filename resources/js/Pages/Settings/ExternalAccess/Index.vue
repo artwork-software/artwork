@@ -160,7 +160,7 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button class="ui-button-cancel" @click="addOpen = false">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="addOpen = false">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon :disabled="!addForm.option || !addForm.types.length" @click="addRecipient">{{ $t('Add recipient') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
@@ -174,7 +174,7 @@
                 </label>
             </div>
             <div class="flex justify-end gap-2 mt-6">
-                <button class="ui-button-cancel" @click="editOpen = false">{{ $t('Cancel') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="editOpen = false">{{ $t('Cancel') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon :disabled="!editForm.types.length" @click="updateRecipient">{{ $t('Save settings') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>

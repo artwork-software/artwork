@@ -43,7 +43,7 @@
             </section>
 
             <div class="mt-6 flex flex-wrap gap-3 justify-end" v-if="submission.status === 'pending'">
-                <button class="ui-button-cancel" @click="rejectAll">{{ $t('Reject all') }}</button>
+                <BaseUIButton variant="secondary" hide-icon @click="rejectAll">{{ $t('Reject all') }}</BaseUIButton>
                 <BaseUIButton hide-icon :disabled="!hasAnyDecision" @click="applyPartial">{{ $t('Apply decisions') }}</BaseUIButton>
                 <BaseUIButton variant="primary" hide-icon @click="approveAll">{{ $t('Approve all') }}</BaseUIButton>
             </div>

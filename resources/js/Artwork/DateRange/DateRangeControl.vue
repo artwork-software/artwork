@@ -704,4 +704,12 @@ onUnmounted(() => {
     appearance: none;
     -moz-appearance: textfield;
 }
+
+/* Firefox kann sein Kalender-Icon nicht ausblenden (kein ::-webkit-calendar-picker-indicator) —
+   das Icon sitzt innerhalb der festen Breite und schneidet sonst die Jahreszahl ab */
+@supports (-moz-appearance: none) {
+    .drc-date-input {
+        width: 7.6rem;
+    }
+}
 </style>

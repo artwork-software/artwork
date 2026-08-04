@@ -3,7 +3,7 @@
             <ToolbarHeader
                 :icon="IconCalendarEvent"
                 :title="title || $t('Event Settings')"
-                icon-bg-class="bg-special-orange text-special-orange"
+                icon-bg-class="bg-special-orange-surface text-special-orange"
                 :description="description || $t('Set global event settings.')"
                 :search-enabled="false"
             >

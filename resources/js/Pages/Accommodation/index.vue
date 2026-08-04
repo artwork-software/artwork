@@ -5,7 +5,7 @@
             <ToolbarHeader
                 :icon="IconLamp2"
                 title="Accommodations"
-                icon-bg-class="bg-success text-success"
+                icon-bg-class="bg-success-surface text-success"
                 :description="accommodations?.length ? `${accommodations?.length} ${$t('Accommodations')}` : ''"
                 :search-enabled="false"
             >

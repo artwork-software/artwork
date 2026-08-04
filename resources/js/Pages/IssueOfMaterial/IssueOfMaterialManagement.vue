@@ -6,7 +6,7 @@
             <ToolbarHeader title="Material issue book"
                            description="Track and filter all internal material issues across projects and rooms."
                            :icon="IconMenu4"
-                           icon-bg-class="bg-warning text-warning"
+                           icon-bg-class="bg-warning-surface text-warning"
             >
                 <template #actions>
                     <ToolTipComponent

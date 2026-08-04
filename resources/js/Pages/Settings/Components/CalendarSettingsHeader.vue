@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconCalendar"
                 :title="title || $t('Calendar Settings')"
-                icon-bg-class="bg-success text-success"
+                icon-bg-class="bg-success-surface text-success"
                 :description="description || $t('Define global settings for the calendar.')"
                 :search-enabled="false"
             >

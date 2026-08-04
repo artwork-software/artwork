@@ -5,7 +5,7 @@
             <ToolbarHeader
                 :icon="IconChecklist"
                 :title="$t('My ToDo-Lists')"
-                icon-bg-class="bg-success text-success"
+                icon-bg-class="bg-success-surface text-success"
                 :description="$t('Organize, filter and edit your tasks')"
                 :search-enabled="false"
             >

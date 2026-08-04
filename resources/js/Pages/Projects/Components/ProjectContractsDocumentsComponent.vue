@@ -5,7 +5,7 @@
             <ToolbarHeader
                 :icon="IconFileText"
                 :title="$t('Contracts')"
-                icon-bg-class="bg-success text-success"
+                icon-bg-class="bg-success-surface text-success"
                 :description="contracts.length ? `${contracts.length} ${$t('Contracts')}` : ''"
             >
                 <template #actions>

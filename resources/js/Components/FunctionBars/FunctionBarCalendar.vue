@@ -238,6 +238,7 @@
                         :tooltip-text="$t('Add Event')"
                         :icon="IconCirclePlus"
                         icon-size="h-5 w-5"
+                        white-icon
                         @click="$emit('wantsToAddNewEvent');"
                         classesButton="ui-button-add"
                     />
@@ -259,6 +260,7 @@
                         :tooltip-text="$t('Add Event')"
                         :icon="IconCirclePlus"
                         icon-size="h-5 w-5"
+                        white-icon
                         @click="$emit('wantsToAddNewEvent');"
                         classesButton="ui-button-add"
                     />

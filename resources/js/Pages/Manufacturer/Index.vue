@@ -8,7 +8,7 @@
             <ToolbarHeader
                 :icon="IconBuildingFactory2"
                 title="Manufacturers"
-                icon-bg-class="bg-warning text-warning"
+                icon-bg-class="bg-warning-surface text-warning"
                 v-model="searchManufacturerInput"
                 :description="manufacturers?.data?.length ? `${manufacturers?.data?.length} ${$t('Manufacturer')}` : ''"
                 :search-enabled="true"

@@ -1,10 +1,11 @@
 <template>
-    <div class="card white" :class="classes">
+    <BaseCard elevation="raised" class="w-full" :class="classes">
         <slot></slot>
-    </div>
+    </BaseCard>
 </template>
 
 <script setup>
+import BaseCard from '@/Artwork/Cards/BaseCard.vue'
 
 const props = defineProps({
     classes: {

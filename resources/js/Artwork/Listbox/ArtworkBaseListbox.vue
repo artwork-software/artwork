@@ -30,13 +30,13 @@
                     <div class="col-start-1 row-start-1 truncate flex items-center gap-2" :class="isSmall ? 'min-w-0 pr-1' : 'pr-6'">
                         <span
                             v-if="showColorIndicator && getColor(internalValue as Option)"
-                            :class="['inline-block size-3 rounded-full flex-shrink-0', disabled ? 'opacity-60' : '']"
+                            class="inline-block size-3 rounded-full flex-shrink-0"
                             :style="{ backgroundColor: getColor(internalValue as Option) }"
                         ></span>
                         <span class="truncate">{{ displayText }}</span>
                     </div>
                     <PropertyIcon name="IconChevronUp"
-                        class="col-start-1 row-start-1 self-center justify-self-end text-gray-500 transition-transform"
+                        class="col-start-1 row-start-1 self-center justify-self-end text-text-muted transition-transform"
                         :class="[open ? 'rotate-180' : '', isSmall ? 'size-3.5 shrink-0' : 'size-5 sm:size-4']"
                         aria-hidden="true"
                     />
@@ -57,7 +57,7 @@
                         <!-- Sticky Controls (Suchfeld + Sortierung) -->
                         <div
                             v-if="shouldShowControls"
-                            class="sticky top-0 z-10 bg-white/95 backdrop-blur supports-backdrop-blur:bg-white border-b border-gray-100"
+                            class="sticky top-0 z-10 bg-surface/95 backdrop-blur supports-backdrop-blur:bg-surface border-b border-border-subtle"
                         >
                             <slot
                                 name="controls"
@@ -73,7 +73,7 @@
                                     <div v-if="sortFieldChoices.length" class="min-w-0">
                                         <label class="sr-only">Sort by</label>
                                         <select
-                                            class="block w-40 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-900 shadow-sm focus:outline-hidden focus:ring-1 focus:ring-blue-600"
+                                            class="block w-40 h-8 rounded-md border border-border bg-surface px-2 text-sm text-text focus:border-accent-600"
                                             :value="localSortBy"
                                             @change="e => setSortBy((e.target as HTMLSelectElement).value)"
                                         >
@@ -86,7 +86,7 @@
                                     <!-- Sort-Richtung -->
                                     <button v-if="sortFieldChoices.length"
                                         type="button"
-                                        class="rounded-md border border-gray-200 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-50 focus:outline-hidden focus:ring-1 focus:ring-blue-600"
+                                        class="h-8 rounded-md border border-border bg-surface px-2.5 text-sm text-text hover:bg-surface-canvas"
                                         @click="toggleDirection"
                                     >
                                         {{ localSortDirection === 'asc' ? $t('Ascending') : $t('Descending') }}
@@ -98,7 +98,7 @@
                                         <input
                                             type="text"
                                             :placeholder="$t(searchPlaceholder)"
-                                            class="w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 shadow-sm focus:outline-hidden focus:ring-1 focus:ring-blue-600"
+                                            class="w-full h-8 rounded-md border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:border-accent-600"
                                             :value="localSearchQuery"
                                             @input="e => setQuery((e.target as HTMLInputElement).value)"
                                             @keydown.stop
@@ -131,16 +131,16 @@
 
                                         <span
                                             v-if="selected"
-                                            :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
+                                            :class="[active ? 'text-accent-700' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                         >
-                                          <PropertyIcon name="IconCheck" class="size-5" aria-hidden="true" />
+                                          <PropertyIcon name="IconCheck" class="size-4" aria-hidden="true" />
                                         </span>
                                     </slot>
                                 </li>
                             </ListboxOption>
                         </template>
 
-                        <li v-else class="relative cursor-default select-none py-2 pl-3 pr-9 text-gray-500">
+                        <li v-else class="relative cursor-default select-none py-2 pl-3 pr-9 text-text-muted">
                             <slot name="empty">
                                 {{ emptyText }}
                             </slot>
@@ -149,7 +149,7 @@
 
                     <div
                         v-else
-                        class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-sm ring-1 ring-black/5 shadow-lg text-gray-500"
+                        class="absolute z-10 mt-1 w-full rounded-lg bg-surface px-3 py-2 text-sm border border-border-subtle shadow-overlay text-text-muted"
                     >
                         <slot name="loading">Loading…</slot>
                     </div>
@@ -229,19 +229,19 @@ const props = defineProps({
     buttonClass: {
         type: String,
         default:
-            'menu-button bg-white focus:outline-hidden focus:ring-0 focus:border-0 w-full text-left rounded-md border border-gray-200 shadow-sm px-3 py-2 text-sm font-normal text-gray-900 focus:ring-1 focus:ring-blue-600 sm:text-sm',
+            'w-full min-h-8 bg-surface flex items-center justify-between gap-1 text-left rounded-md border border-border px-3 py-1 text-sm font-normal text-text focus:border-accent-600',
     },
     optionsClass: {
         type: String,
         default:
-            'mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm',
+            'mt-1 max-h-60 overflow-auto rounded-lg bg-surface py-1 text-sm border border-border-subtle shadow-overlay',
     },
     optionBaseClass: {
         type: String,
-        default: 'relative cursor-default py-2 pr-9 pl-3 select-none',
+        default: 'relative cursor-default min-h-8 py-1.5 pr-9 pl-3 select-none',
     },
-    activeClass: { type: String, default: 'bg-indigo-600 text-white outline-hidden' },
-    inactiveClass: { type: String, default: 'text-gray-900' },
+    activeClass: { type: String, default: 'bg-accent-50 text-accent-700' },
+    inactiveClass: { type: String, default: 'text-text' },
 
     /** --- NEU: Suche / Filter / Sortierung --- */
     enableSearch: { type: Boolean, default: true },
@@ -463,24 +463,22 @@ const prettyKey = (key: string) => {
     const spaced = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_\-]+/g, ' ')
     return spaced.charAt(0).toUpperCase() + spaced.slice(1)
 }
-/** Kompakte Klassen der isSmall-Variante (Button, Options-Panel, einzelne Option).
- *  Bewusst ohne .menu-button: dessen (ungelayerte) px-4/py-4/text-sm-Regeln würden
- *  die kompakten Utilities überschreiben. */
+/** Kompakte Klassen der isSmall-Variante (Button, Options-Panel, einzelne Option). */
 const smallButtonClass =
-    'w-full bg-white flex items-center justify-between gap-1 text-left rounded-md border border-gray-200 shadow-sm px-2.5 py-1.5 text-xs font-normal text-gray-700 focus:outline-hidden focus:ring-1 focus:ring-blue-600';
+    'w-full min-h-7 bg-surface flex items-center justify-between gap-1 text-left rounded-md border border-border px-2.5 py-1 text-xs font-normal text-text focus:border-accent-600';
 const smallOptionsClass =
-    'mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-xs ring-1 shadow-lg ring-black/5 focus:outline-hidden';
+    'mt-1 max-h-60 overflow-auto rounded-lg bg-surface py-1 text-xs border border-border-subtle shadow-overlay';
 const smallOptionBaseClass = 'relative cursor-default py-1.5 pr-8 pl-2.5 select-none';
 
 const finalOptionsClass = computed(() => `${props.isSmall ? smallOptionsClass : props.optionsClass} z-[99999]`);
 const finalOptionBaseClass = computed(() => (props.isSmall ? smallOptionBaseClass : props.optionBaseClass));
 
-// Disabled visual style similar to BaseInput: gray background and no pointer cursor
+// Disabled visual style similar to BaseInput: sunken background and no pointer cursor
 const finalButtonClass = computed(() => {
     const base = props.isSmall ? smallButtonClass : props.buttonClass;
     if (props.disabled) {
-        // Append Tailwind classes so they take precedence over earlier bg utilities
-        return [base, 'bg-gray-300 cursor-not-allowed'].join(' ');
+        // "!"-Klassen, damit sie frühere bg/text/border-Utilities sicher überschreiben
+        return [base, '!bg-surface-sunken !text-text-subtle !border-border-subtle cursor-not-allowed'].join(' ');
     }
     return base;
 });

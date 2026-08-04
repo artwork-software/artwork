@@ -7,14 +7,14 @@
                 </MenuButton>
             </div>
 
-            <transition enter-active-class="transition ease-out duration-100"
+            <transition enter-active-class="transition ease-out duration-100 motion-reduce:transition-none"
                         enter-from-class="transform opacity-0 scale-95"
                         enter-to-class="transform opacity-100 scale-100"
-                        leave-active-class="transition ease-in duration-75"
+                        leave-active-class="transition ease-in duration-75 motion-reduce:transition-none"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-black/10 ring-opacity-5 focus:outline-none" :class="[menuWidth, whiteMenuBackground ? 'bg-white' : 'bg-artwork-navigation-background']">
-                    <div class="max-h-60 overflow-y-auto">
+                <MenuItems class="z-50 rounded-lg border border-border-subtle bg-surface shadow-overlay" :class="[menuWidth]">
+                    <div class="max-h-60 overflow-y-auto p-1">
                         <slot name="menu"/>
                     </div>
                 </MenuItems>

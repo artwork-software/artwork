@@ -5,7 +5,7 @@ export default {
 </script>
 
 <template>
-    <tbody class="w-full">
+    <tbody class="w-full divide-y divide-border-subtle">
         <slot />
     </tbody>
 </template>

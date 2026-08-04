@@ -10,7 +10,7 @@
         />
 
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="checkIfAnyFilterIsActive">
-              <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
+              <span class="relative inline-flex size-2.5 rounded-full bg-accent-600"></span>
         </span>
     </div>
 

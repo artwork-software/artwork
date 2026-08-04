@@ -6427,5 +6427,10 @@
     "bis": "to",
     "to": "to",
     "of": "of",
-    "px": "px"
+    "px": "px",
+    "There is currently no data available.": "There is currently no data available.",
+    "Previous page": "Previous",
+    "Next page": "Next",
+    "Rows per page": "Rows per page",
+    "Erfolgreich gespeichert!": "Saved successfully!"
 }

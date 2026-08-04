@@ -1,7 +1,7 @@
 <template>
     <button
         type="button"
-        class="group relative block overflow-hidden rounded-lg ring-1 ring-zinc-200 bg-white/70"
+        class="group relative block overflow-hidden rounded-lg ring-1 ring-border-subtle bg-surface"
         :class="sizeClass"
         @click="$emit('open')"
         :aria-label="`Preview ${name}`"
@@ -26,14 +26,14 @@
         />
 
         <!-- Fallback/Icon -->
-        <div v-else class="flex h-full w-full items-center justify-center text-zinc-400">
+        <div v-else class="flex h-full w-full items-center justify-center text-text-subtle">
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="currentColor" aria-hidden="true">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16l4-4h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
             </svg>
         </div>
 
         <!-- Fokus-Ring -->
-        <span class="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-black/5 group-focus-visible:ring-2 group-focus-visible:ring-indigo-500" />
+        <span class="pointer-events-none absolute inset-0 rounded-lg ring-1 ring-border-subtle group-focus-visible:ring-2 group-focus-visible:ring-accent-600" />
     </button>
 </template>
 

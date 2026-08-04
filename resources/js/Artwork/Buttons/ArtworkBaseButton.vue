@@ -1,30 +1,36 @@
 <template>
-    <button
-        :class="['inline-flex items-center justify-center rounded-md font-medium shadow-sm transition duration-200 ease-in-out font-lexend',variantClass[variant], sizeClass[size]]"
+    <!-- Dünner Wrapper auf BaseUIButton (Design-Basis v1) — Props bleiben kompatibel -->
+    <BaseUIButton
         :type="type"
-        :disabled="disabled">
+        :variant="variantMap[variant] ?? 'secondary'"
+        :size="sizeMap[size] ?? 'md'"
+        :disabled="disabled"
+        hide-icon
+    >
         <slot />
-    </button>
+    </BaseUIButton>
 </template>
 
 <script setup>
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+
 const props = defineProps({
     type: { type: String, default: 'button' },
     variant: { type: String, default: 'primary' }, // 'primary', 'secondary', 'danger'
-    size: { type: String, default: 'md' }, // 'sm', 'md', 'lg'
+    size: { type: String, default: 'md' }, // 'xs', 'sm', 'md', 'lg'
     disabled: { type: Boolean, default: false }
 })
 
-const variantClass = {
-    primary: 'bg-artwork-buttons-create text-white hover:bg-artwork-buttons-hover disabled:bg-gray-500',
-    secondary: 'bg-gray-800 text-white hover:bg-gray-700 disabled:bg-gray-100',
-    danger: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300'
+const variantMap = {
+    primary: 'primary',
+    secondary: 'secondary',
+    danger: 'danger'
 }
 
-const sizeClass = {
-    xs: 'text-xs px-4 py-1',
-    sm: 'px-6 py-1.5 text-sm',
-    md: 'px-8 py-2 text-sm',
-    lg: 'px-10 py-3 text-lg'
+const sizeMap = {
+    xs: 'sm',
+    sm: 'sm',
+    md: 'md',
+    lg: 'lg'
 }
 </script>

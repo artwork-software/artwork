@@ -1,6 +1,6 @@
 <template>
     <div class="-mx-2 sm:mx-0">
-        <div class="rounded-2xl border border-zinc-200/70 bg-white/85 backdrop-blur px-3 py-3 sm:px-5 sm:py-4 shadow-sm">
+        <div class="rounded-2xl border border-border-subtle bg-surface px-3 py-3 sm:px-5 sm:py-4 shadow-raised">
             <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                 <!-- Brand/Icon + Titel -->
                 <div class="flex items-center gap-3 mr-auto min-w-0">
@@ -11,10 +11,10 @@
                         <component v-if="icon" :is="icon" class="size-6" />
                     </div>
                     <div class="min-w-0">
-                        <div class="text-zinc-900 text-xl sm:text-2xl font-semibold tracking-tight truncate">
+                        <div class="text-text text-xl sm:text-2xl font-semibold tracking-tight truncate">
                             {{ $t(title) }}
                         </div>
-                        <div v-if="$slots.subtitle || description" class="text-xs text-zinc-500">
+                        <div v-if="$slots.subtitle || description" class="text-xs text-text-subtle">
                             <slot name="subtitle">
                                 {{ $t(description) }}
                             </slot>
@@ -50,11 +50,11 @@
                         />
                         <button
                             type="button"
-                            class="shrink-0 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-zinc-100 transition"
+                            class="shrink-0 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken transition"
                             @click="closeSearchbar"
                             aria-label="Close search"
                         >
-                            <IconX class="size-5 text-zinc-500" />
+                            <IconX class="size-5 text-text-subtle" />
                         </button>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ const props = defineProps<{
     title: string
     description?: string
     icon?: IconType
-    iconBgClass?: string     // z.B. "bg-blue-600/10 text-blue-700"
+    iconBgClass?: string     // z.B. "bg-accent-50 text-accent-700"
     searchEnabled?: boolean  // Quick-Search anzeigen?
     modelValue?: string      // v-model für die Suche
     searchLabel?: string
@@ -101,7 +101,7 @@ const showSearchbar = ref(false)
 const searchBarInput = ref<{ focus?: () => void; select?: () => void } | null>(null)
 
 const icon = props.icon ?? null
-const iconBgClass = props.iconBgClass ?? 'bg-blue-600/10 text-blue-700'
+const iconBgClass = props.iconBgClass ?? 'bg-accent-50 text-accent-700'
 const searchInputId = props.searchInputId ?? 'toolbar-search'
 const searchLabel = props.searchLabel ?? 'Search'
 const searchPlaceholder = props.searchPlaceholder ?? ''

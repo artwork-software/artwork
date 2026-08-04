@@ -1,22 +1,18 @@
 <template>
-    <div class="button glassy group relative overflow-hidden">
-        <!-- If left is true, text will be on the left side -->
-        <p v-if="left" class="max-w-0 overflow-hidden opacity-0 transform -translate-x-2 transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:opacity-100 group-hover:translate-x-0 whitespace-nowrap group-hover:px-2 group-hover:text-artwork-buttons-create">
-            {{ $t(text) }}
-        </p>
-        <span>
-            <component :is="icon" class="group-hover:text-artwork-buttons-create" :class="[iconSize]" />
-        </span>
-        <p v-if="!left" class="max-w-0 overflow-hidden opacity-0 transform -translate-x-2 transition-all duration-300 ease-in-out group-hover:max-w-xs group-hover:opacity-100 group-hover:translate-x-0 whitespace-nowrap group-hover:px-2 group-hover:text-artwork-buttons-create">
-            {{ $t(text) }}
-        </p>
-    </div>
-
+    <!-- Ex-Glassy-Button: jetzt BaseUIButton variant="ghost" mit Tooltip statt
+         Max-Width-Hover-Animation (Design-Basis v1). Props bleiben kompatibel. -->
+    <BaseUIButton
+        variant="ghost"
+        :icon="icon"
+        :aria-label="$t(text)"
+        v-tooltip="{ value: $t(text), class: 'aw-tooltip' }"
+    />
 </template>
 
 <script setup lang="ts">
-
-import {IconCirclePlus} from "@tabler/icons-vue";
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
+import { IconCirclePlus } from '@tabler/icons-vue'
+import type { Component, PropType } from 'vue'
 
 const props = defineProps({
     icon: {
@@ -37,9 +33,4 @@ const props = defineProps({
         default: false
     }
 })
-
 </script>
-
-<style scoped>
-
-</style>

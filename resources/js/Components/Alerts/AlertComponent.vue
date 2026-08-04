@@ -55,26 +55,26 @@ const icon = computed(() => {
 const textColor = computed(() => {
     switch (props.type) {
         case 'info':
-            return 'text-artwork-info';
+            return 'text-info';
         case 'warning':
-            return 'text-artwork-warning';
+            return 'text-warning';
         case 'error':
-            return 'text-artwork-error';
+            return 'text-danger';
         case 'success':
-            return 'text-artwork-success';
+            return 'text-success';
         case 'dashboard':
-            return 'text-gray-500';
+            return 'text-text-muted';
         case 'plus':
-            return 'text-artwork-info cursor-pointer !items-center hover:text-artwork-buttons-create duration-150 ease-in-out';
+            return 'text-info cursor-pointer !items-center hover:text-accent-700 duration-150 ease-in-out';
         default:
-            return 'text-artwork-buttons-create';
+            return 'text-accent-600';
     }
 });
 </script>
 
 <template>
     <div class="flex items-start gap-x-1" :class="[textColor, textSize, classes]">
-        <PropertyIcon :name="icon" :class="iconSize" v-if="showIcon" />
+        <PropertyIcon :name="icon" :class="iconSize" :stroke-width="1.5" v-if="showIcon" />
         <span v-if="text">
             {{ text }}
         </span>

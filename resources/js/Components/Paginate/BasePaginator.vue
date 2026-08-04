@@ -1,13 +1,13 @@
 <template>
     <div class="flex items-center justify-between w-full">
-        <div class="text-xs">
+        <div class="text-xs text-text-muted">
             <div class="flex-auto">
-                <p>{{ entities.from ?? 0 }} - {{ entities.to ?? 0 }} von {{ entities.total }}</p>
+                <p class="tabular-nums">{{ entities.from ?? 0 }} - {{ entities.to ?? 0 }} {{ $t('of') }} {{ entities.total }}</p>
             </div>
-            <Menu as="div" class="relative inline-block text-base-600 hover:text-base-900">
+            <Menu as="div" class="relative inline-block text-text-muted hover:text-text">
                 <MenuButton class="flex items-center me-4">
-                    <p>Zeilen pro Seite: {{ entities.per_page }}</p>
-                    <IconChevronDown class="w-5 h-5"/>
+                    <p>{{ $t('Rows per page') }}: {{ entities.per_page }}</p>
+                    <IconChevronDown class="w-5 h-5" stroke-width="1.5"/>
                 </MenuButton>
                 <transition enter-active-class="transition-enter-active"
                             enter-from-class="transition-enter-from"
@@ -16,9 +16,9 @@
                             leave-from-class="transition-leave-from"
                             leave-to-class="transition-leave-to">
                     <MenuItems
-                        class="absolute origin-top-left z-50 bottom-0 right-0 mb-6 p-1 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-                        <MenuItem v-for="entitiesToShow in entitiesPerPage" :key="entities" as="template" v-slot="{ active }">
-                            <button @click="updateEntitiesPerPage(entitiesToShow)" :class="[active ? 'bg-gray-500 text-white' : 'text-gray-600', 'group flex items-center justify-center w-full rounded-md px-2 py-1 text-sm',]">
+                        class="absolute origin-top-left z-50 bottom-0 right-0 mb-6 p-1 rounded-md bg-surface border border-border-subtle shadow-overlay">
+                        <MenuItem v-for="entitiesToShow in entitiesPerPage" :key="entitiesToShow" as="template" v-slot="{ active }">
+                            <button @click="updateEntitiesPerPage(entitiesToShow)" :class="[active ? 'bg-surface-sunken text-text' : 'text-text-muted', 'group flex items-center justify-center w-full rounded-md px-2 py-1 text-sm tabular-nums',]">
                                 {{ entitiesToShow }}
                             </button>
                         </MenuItem>
@@ -34,12 +34,12 @@
                         <div v-for="(link, key) in entities.links" :key="key">
                             <div v-if="link.url === null"
                                  v-html="link.label"
-                                 class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 text-gray-400"/>
+                                 class="mr-1 mb-1 inline-flex items-center justify-center min-w-7 h-7 px-1.5 text-[13px] leading-4 tabular-nums text-text-subtle"/>
                             <a v-else
                                v-html="link.label"
-                               class="cursor-pointer mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white"
-                               :class="{ 'text-artwork-buttons-create': link.active }"
-                               @click="updatePage(link.label, entities.current_page, entities.per_page)"/>
+                               class="cursor-pointer mr-1 mb-1 inline-flex items-center justify-center min-w-7 h-7 px-1.5 text-[13px] leading-4 tabular-nums rounded-md"
+                               :class="link.active ? 'bg-accent-600 text-white' : 'text-text hover:bg-surface-sunken'"
+                               @click="updatePage(link, entities.current_page, entities.per_page)"/>
                         </div>
                     </div>
                 </div>
@@ -91,12 +91,36 @@ export default {
     },
     methods: {
         usePage,
-        updatePage(page, currentPage, entitiesPerPage) {
-            if (page.includes('Weiter') || page.includes('Next')) {
-                page = ++currentPage;
-            } else if (page.includes('Zurück') || page.includes('Previous') || page.includes('Back')) {
-                page = --currentPage;
+        resolvePageFromLink(link, currentPage) {
+            // Primär: page-Query-Parameter aus link.url parsen (label-unabhängig, sprachneutral)
+            if (link?.url) {
+                try {
+                    const parsedUrl = new URL(link.url, window.location.origin);
+                    const pageParam = parsedUrl.searchParams.get('page');
+
+                    if (pageParam !== null && !isNaN(Number(pageParam))) {
+                        return Number(pageParam);
+                    }
+                } catch (e) {
+                    // fällt auf Label-Heuristik zurück
+                }
             }
+
+            // Fallback: altes Label-Verhalten
+            let page = link?.label ?? '';
+
+            if (page.includes('Weiter') || page.includes('Next')) {
+                return currentPage + 1;
+            }
+
+            if (page.includes('Zurück') || page.includes('Previous') || page.includes('Back')) {
+                return currentPage - 1;
+            }
+
+            return page;
+        },
+        updatePage(link, currentPage, entitiesPerPage) {
+            const page = this.resolvePageFromLink(link, currentPage);
 
             if (this.emitUpdateEntitiesPerPage) {
                 this.$emit('updatePage', page, entitiesPerPage);

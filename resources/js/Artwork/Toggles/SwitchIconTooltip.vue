@@ -6,11 +6,13 @@
             :aria-label="tooltipText"
             v-tooltip.bottom="tooltipBinding"
             :class="[
-        model ? 'bg-blue-600 hover:bg-blue-600/95' : 'bg-gray-200',
+        disabled
+            ? (model ? 'bg-accent-200' : 'bg-border-subtle')
+            : (model ? 'bg-accent-600 hover:bg-accent-700' : 'bg-border'),
         sizeClasses.track,
         'relative inline-flex cursor-pointer rounded-full transition-colors duration-300 ease-out shadow-inner',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-        disabled ? 'opacity-60 cursor-not-allowed' : ''
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
+        disabled ? 'cursor-not-allowed' : ''
       ]"
         >
             <span class="sr-only">{{ tooltipText }}</span>
@@ -21,7 +23,7 @@
                 :class="[
           model ? sizeClasses.knobTranslateOn : sizeClasses.knobTranslateOff,
           sizeClasses.knob,
-          'inline-flex transform items-center justify-center rounded-full bg-white ring-1 ring-black/5 shadow transition duration-300 ease-out'
+          'inline-flex transform items-center justify-center rounded-full bg-white shadow-raised transition duration-300 ease-out'
         ]"
             >
         <PropertyIcon
@@ -36,7 +38,7 @@
         <!-- Right Label -->
         <span v-if="label"
             class="model-title cursor-pointer ml-3 text-sm "
-            :class="model ? 'text-zinc-700' : 'text-gray-300'"
+            :class="model ? 'text-text' : 'text-text-subtle'"
             role="button"
             tabindex="0"
             @click="set(true)"

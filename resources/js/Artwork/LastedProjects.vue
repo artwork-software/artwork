@@ -132,7 +132,7 @@ const hasItems = computed(() => filteredItems.value.length > 0);
             </h3>
             <button
                 v-if="hasItems"
-                class="text-[11px] underline underline-offset-2 hover:text-blue-600 duration-200 ease-in-out cursor-pointer"
+                class="text-[11px] underline underline-offset-2 hover:text-accent-700 duration-200 ease-in-out cursor-pointer"
                 type="button"
                 @click="clearList"
             >
@@ -143,16 +143,16 @@ const hasItems = computed(() => filteredItems.value.length > 0);
         <!-- Loading -->
         <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             <div v-for="i in 6" :key="i" class="animate-pulse rounded-lg border p-2 flex gap-2">
-                <div class="h-8 w-8 rounded bg-gray-200" />
+                <div class="h-8 w-8 rounded bg-surface-sunken" />
                 <div class="flex-1">
-                    <div class="h-3 bg-gray-200 rounded w-3/4 mb-1" />
-                    <div class="h-2.5 bg-gray-200 rounded w-1/3" />
+                    <div class="h-3 bg-surface-sunken rounded w-3/4 mb-1" />
+                    <div class="h-2.5 bg-surface-sunken rounded w-1/3" />
                 </div>
             </div>
         </div>
 
         <!-- Empty -->
-        <div v-else-if="!hasItems" class="text-xs text-gray-500 italic py-2">
+        <div v-else-if="!hasItems" class="text-xs text-text-subtle italic py-2">
             {{ emptyText }}
         </div>
 
@@ -161,7 +161,7 @@ const hasItems = computed(() => filteredItems.value.length > 0);
             <div
                 v-for="p in filteredItems"
                 :key="p.id"
-                class="group rounded-lg border border-zinc-300 p-2 flex gap-2 items-center hover:shadow-sm transition cursor-pointer"
+                class="group rounded-lg border border-border p-2 flex gap-2 items-center hover:shadow-raised transition cursor-pointer"
                 role="button"
                 tabindex="0"
                 @click="onSelect(p)"
@@ -178,8 +178,8 @@ const hasItems = computed(() => filteredItems.value.length > 0);
                         class="h-8 w-8 rounded object-cover"
                         @error="(e:any) => (e.target.style.display='none')"
                     />
-                    <div v-else class="h-8 w-8 rounded bg-gray-100 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div v-else class="h-8 w-8 rounded bg-surface-sunken flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                   d="M4 6a2 2 0 012-2h3l2 2h7a2 2 0 012 2v1M4 6v12a2 2 0 002 2h12a2 2 0 002-2V9M8 13h8M8 17h5"/>
                         </svg>
@@ -189,7 +189,7 @@ const hasItems = computed(() => filteredItems.value.length > 0);
                 <!-- Text -->
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs font-medium leading-4">{{ p.name }}</p>
-                    <p v-if="p.is_group" class="text-[10px] text-gray-500 leading-none mt-0.5">
+                    <p v-if="p.is_group" class="text-[10px] text-text-subtle leading-none mt-0.5">
                         {{ $t('Group') }}
                     </p>
                 </div>

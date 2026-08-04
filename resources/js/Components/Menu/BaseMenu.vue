@@ -19,13 +19,7 @@
                 <MenuButton
                     :id="buttonId"
                     type="button"
-                    class="flex items-center justify-center rounded-lg h-full outline-none ring-inset transition focus-visible:ring-2 cursor-pointer"
-                    :class="[
-                        whiteIcon
-                          ? 'focus-visible:ring-white/70'
-                          : 'focus-visible:ring-indigo-500/70',
-
-                      ]"
+                    class="flex items-center justify-center rounded-lg h-full transition motion-reduce:transition-none cursor-pointer"
                     :aria-label="!showMenuButtonText ? $t(menuButtonAria) : undefined"
                 >
                     <!-- Iconbereich -->
@@ -77,18 +71,18 @@
 
             <!-- Menu -->
             <transition
-                enter-active-class="transition ease-out duration-100"
+                enter-active-class="transition ease-out duration-100 motion-reduce:transition-none"
                 enter-from-class="opacity-0 scale-95"
                 enter-to-class="opacity-100 scale-100"
-                leave-active-class="transition ease-in duration-75"
+                leave-active-class="transition ease-in duration-75 motion-reduce:transition-none"
                 leave-from-class="opacity-100 scale-100"
                 leave-to-class="opacity-0 scale-95"
             >
                 <MenuItems
-                    class="z-50 mt-2 origin-top-right focus:outline-none"
+                    class="z-50 mt-2 origin-top-right"
                 >
                     <div
-                        class="rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5"
+                        class="rounded-lg border border-border-subtle bg-surface p-1 shadow-overlay"
                         :class="[
                             menuWidth,
                             needsMaxHeight ? 'max-h-72 overflow-auto xl:max-h-none' : ''

@@ -715,12 +715,13 @@
         @apply bg-white/15 ring-white/30;
     }
 
+    /* Alias auf BaseUIButton variant="secondary" (Design-Basis v1) */
     .new-button {
-        @apply inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px cursor-pointer;
+        @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface h-8 px-3 text-[13px] font-medium text-text hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out cursor-pointer;
     }
 
     .new-button-small {
-        @apply inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 active:translate-y-px cursor-pointer;
+        @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface h-7 px-2.5 text-xs font-medium text-text hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out cursor-pointer;
     }
 
     .artwork-container {
@@ -741,12 +742,13 @@
     .ui-card-header { @apply flex items-center gap-2 mb-2; }
     .ui-card-title { @apply text-[13.5px] font-semibold text-zinc-900; }
     .ui-dot { @apply inline-block size-2.5 rounded-full; }
-    .ui-button { @apply select-none bg-white inline-flex items-center gap-x-2 justify-center rounded-xl border border-zinc-200/80 px-2.5 py-2.5 cursor-pointer hover:bg-zinc-50  duration-200 ease-in-out transition disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed text-sm;}
-    .ui-button-small { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-md border border-zinc-200/80 px-2.5 bg-white py-0.5 cursor-pointer hover:bg-zinc-50  duration-200 ease-in-out transition disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed text-xs;}
-    .ui-button-add { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-xl bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-2.5 cursor-pointer hover:bg-blue-100 duration-200 ease-in-out transition text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    .ui-button-delete { @apply select-none  inline-flex items-center gap-x-2 justify-center rounded-xl bg-red-50 text-red-500 border border-red-200/80 px-4 py-2.5 cursor-pointer hover:bg-red-100 duration-200 ease-in-out transition text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    .ui-button-add-small { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-md bg-blue-50 text-blue-500 border border-blue-200/80 px-4 py-0.5 cursor-pointer hover:bg-blue-100 duration-200 ease-in-out transition text-xs disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
-    .ui-button-delete-small { @apply select-none inline-flex items-center gap-x-2 justify-center rounded-md bg-red-50 text-red-500 border border-red-200/80 px-4 py-0.5 cursor-pointer hover:bg-red-100 duration-200 ease-in-out transition text-xs disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed;}
+    /* Aliasse auf die BaseUIButton-Varianten (Design-Basis v1) — Templates nutzen sie noch direkt */
+    .ui-button { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md border border-border bg-surface min-h-8 px-3 text-[13px] font-medium text-text cursor-pointer hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md border border-border bg-surface min-h-7 px-2.5 text-xs font-medium text-text cursor-pointer hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-add { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-accent-600 text-white border border-accent-600 min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-accent-700 hover:border-accent-700 transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-delete { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-add-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-accent-600 text-white border border-accent-600 min-h-7 px-2.5 text-xs font-medium cursor-pointer hover:bg-accent-700 hover:border-accent-700 transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
+    .ui-button-delete-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-7 px-2.5 text-xs font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
     /* Listbox Trigger (kompakt) */
     .ui-lb-trigger { @apply flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 h-10 shadow-sm; }
     .ui-lb-trigger-text { @apply min-w-0; }
@@ -755,7 +757,7 @@
     .ui-lb-icon { @apply size-4 text-zinc-400; }
 
     .dashboard-chip {
-        @apply flex items-center justify-center gap-2 rounded-xl border px-2.5 py-2 text-xs hover:bg-gray-50;
+        @apply flex items-center justify-center gap-2 rounded-md border border-border bg-surface px-2.5 py-2 text-xs hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out;
     }
 
     /* Inputs kompakt */
@@ -785,13 +787,13 @@
 
     /* Buttons */
     .ui-link-btn {
-        @apply text-[12.5px] text-indigo-600 hover:text-indigo-700 underline-offset-2 hover:underline;
+        @apply text-[12.5px] text-accent-600 hover:text-accent-700 underline-offset-2 hover:underline;
     }
     .ui-icon-btn {
-        @apply inline-flex items-center justify-center rounded-md border border-transparent text-zinc-400 hover:text-rose-600;
+        @apply inline-flex items-center justify-center rounded-md border border-transparent text-text-subtle hover:text-danger;
     }
     .ui-btn-primary {
-        @apply inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-[13px] font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+        @apply inline-flex items-center justify-center rounded-md bg-accent-600 min-h-8 px-3 text-[13px] font-medium text-white hover:bg-accent-700 transition-[background-color,border-color] duration-150 ease-out;
     }
 
     /* Transition */
@@ -800,7 +802,7 @@
 
     /* Buttons */
     .ui-btn-secondary {
-        @apply inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-[13px] text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+        @apply inline-flex items-center justify-center rounded-md border border-border bg-surface min-h-8 px-3 text-[13px] font-medium text-text hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out;
     }
 
     /* Sticky Footer innerhalb des Modals */
@@ -920,7 +922,7 @@
     }
 
     .aw-checklist-input {
-        @apply col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-blue-500 dark:checked:bg-blue-500 dark:indeterminate:border-blue-500 dark:indeterminate:bg-blue-500 dark:focus-visible:outline-blue-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:checked:bg-white/10 forced-colors:appearance-auto
+        @apply col-start-1 row-start-1 size-4 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border-subtle disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto
     }
 
     .aw-input-svg {
@@ -973,7 +975,7 @@
 
         .timeline-date-input,
         .timeline-time-input {
-            @apply h-10 placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border w-full border-gray-300;
+            @apply h-8 placeholder:subpixel-antialiased rounded-md w-full border-border focus:border-accent-600;
         }
     }
 
@@ -982,7 +984,7 @@
     }
 
     .timeline-textarea {
-        @apply block w-full placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300;
+        @apply block w-full placeholder:subpixel-antialiased rounded-md border-border focus:border-accent-600;
     }
 }
 
@@ -1012,10 +1014,10 @@
 }
 
 .input {
-    @apply rounded-md px-2.5 w-full text-sm border border-gray-300 focus:ring-0 text-primary placeholder-gray-500 placeholder-transparent transition-all duration-150 ease-in-out;
+    @apply rounded-md px-2.5 w-full text-sm border border-border bg-surface text-text placeholder-text-subtle placeholder-transparent transition-[border-color,background-color] duration-150 ease-out;
 
     &:disabled {
-        @apply bg-gray-100 text-gray-600;
+        @apply bg-surface-sunken text-text-subtle cursor-not-allowed;
     }
 
 }
@@ -1025,58 +1027,58 @@
 }
 
 .input-checklist {
-    color: var(--color-artwork-success);
-    @apply border border-gray-300 rounded-lg p-2.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0 shadow-sm;
+    color: var(--color-success);
+    @apply border border-border rounded-md p-2.5 text-sm text-left;
 }
 
 .input-checklist-small {
-    color: var(--color-artwork-success);
-    @apply border border-gray-300 rounded-md p-0.5 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
+    color: var(--color-success);
+    @apply border border-border rounded-md p-0.5 text-sm text-left;
 }
 
 .input-checklist-dark {
-    color: var(--color-artwork-success);
-    @apply rounded-lg p-2 text-sm text-left focus:ring-0 focus:outline-none focus-visible:ring-0;
+    color: var(--color-success);
+    @apply rounded-md p-2 text-sm text-left;
 }
 
 .menu-button {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+    @apply w-full flex items-center justify-between border border-border bg-surface rounded-md px-3 min-h-8 py-1 text-sm placeholder-transparent;
 
     span {
-        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        @apply text-left float-left text-sm placeholder-transparent text-text-muted;
     }
 }
 
 .menu-button-no-padding {
-    @apply w-full flex items-center justify-between shadow-sm border border-gray-200 rounded-md px-4 text-sm placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create;
+    @apply w-full flex items-center justify-between border border-border bg-surface rounded-md px-3 min-h-8 text-sm placeholder-transparent;
 
     span {
-        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        @apply text-left float-left text-sm placeholder-transparent text-text-muted;
     }
 }
 
 .menu-button-no-flex {
-    @apply w-full block shadow-sm border border-gray-200 rounded-md px-4 py-4 text-sm placeholder-transparent focus:outline-none focus:ring-1;
+    @apply w-full block border border-border bg-surface rounded-md px-3 min-h-8 py-1 text-sm placeholder-transparent;
 
     span {
-        @apply text-left float-left text-sm placeholder-transparent text-gray-500;
+        @apply text-left float-left text-sm placeholder-transparent text-text-muted;
     }
 }
 
 
 .btn-icon {
-    @apply grid place-items-center size-9 rounded-xl border border-zinc-200/80 bg-white hover:bg-zinc-50 transition-colors;
+    @apply grid place-items-center size-8 rounded-md border border-border bg-surface text-text hover:bg-surface-sunken transition-colors;
 }
 .btn-subtle {
-    @apply inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors;
+    @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface min-h-7 px-2.5 text-xs font-medium text-text hover:bg-surface-sunken transition-colors;
 }
 
 /* Inputs */
 .form-input {
-    @apply w-full rounded-xl border border-zinc-200/80 bg-white py-2 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400;
+    @apply w-full rounded-md border border-border bg-surface py-2 pr-3 text-sm text-text placeholder:text-text-subtle focus:border-accent-600;
 }
 .form-textarea {
-    @apply rounded-xl border border-zinc-200/80 bg-white py-2.5 pr-3 pl-3 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400;
+    @apply rounded-md border border-border bg-surface py-2.5 pr-3 pl-3 text-sm text-text placeholder:text-text-subtle focus:border-accent-600;
 }
 
 /* Position Picker spots */

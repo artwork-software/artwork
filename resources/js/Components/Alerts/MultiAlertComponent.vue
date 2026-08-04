@@ -7,14 +7,14 @@
         leave-from-class="opacity-100"
         leave-to-class="transform opacity-0"
     >
-        <div class="rounded-md bg-red-50 p-4">
+        <div class="rounded-[8px] bg-danger-surface border border-danger-border py-2.5 px-3">
             <div class="flex">
                 <div class="shrink-0">
-                    <PropertyIcon name="IconXboxX" class="size-5 text-red-400" aria-hidden="true" />
+                    <PropertyIcon name="IconXboxX" class="size-5 text-danger" aria-hidden="true" />
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">{{ $t('Unfortunately there were {0} errors during transmission.', [errorCount])}}</h3>
-                    <div class="mt-2 text-sm text-red-700">
+                    <h3 class="text-[13px] font-medium text-danger">{{ $t('Unfortunately there were {0} errors during transmission.', [errorCount])}}</h3>
+                    <div class="mt-2 text-[13px] text-danger">
                         <ul role="list" class="list-disc space-y-1 pl-5">
                             <li v-for="error in errors">
                                 {{ error }}
@@ -29,7 +29,6 @@
 
 <script setup>
 
-import {IconXboxX} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({

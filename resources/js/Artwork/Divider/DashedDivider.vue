@@ -1,6 +1,6 @@
 <template>
     <div >
-        <dl class="border-t border-dashed border-gray-300"></dl>
+        <dl class="border-t border-dashed border-border"></dl>
     </div>
 </template>
 

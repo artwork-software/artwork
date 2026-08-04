@@ -25,6 +25,9 @@ class UpdateContainerCommand extends Command
 
     public function handle(): void
     {
+        // Muss vor dem Nullen gelesen werden — danach liefert die Config null.
+        $database = config('database.connections.mysql.database');
+
         $this->line('Creating db if not exists');
         config(['database.connections.mysql.database' => null]);
         DB::purge('mysql');
@@ -32,11 +35,11 @@ class UpdateContainerCommand extends Command
         $migrator = app('migrator');
         $freshConnection = $migrator->resolveConnection('mysql');
         tap($freshConnection->unprepared(
-            sprintf('CREATE DATABASE IF NOT EXISTS `%s` ', env('DB_DATABASE'))
+            sprintf('CREATE DATABASE IF NOT EXISTS `%s` ', $database)
         ), function (): void {
             DB::purge('mysql');
         });
-        config(['database.connections.mysql.database' => env('DB_DATABASE')]);
+        config(['database.connections.mysql.database' => $database]);
 
         $this->line('Migrating');
         Artisan::call('migrate --force');

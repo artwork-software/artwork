@@ -23,7 +23,7 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e): void {
             if (app()->bound('sentry')) {
-                if (env('APP_ENV', 'local') === 'local' || app()->runningUnitTests()) {
+                if (app()->environment('local') || app()->runningUnitTests()) {
                     return;
                 }
                 app('sentry')->captureException($e);

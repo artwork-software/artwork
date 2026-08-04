@@ -66,7 +66,7 @@ export default defineComponent({
                     permission: true
                 },
                 {
-                    name: this.$t('Event Eigenschaften'),
+                    name: this.$t('Event properties'),
                     href: route('event_settings.event_properties.index'),
                     current: route().current('event_settings.event_properties.index'),
                     permission: true

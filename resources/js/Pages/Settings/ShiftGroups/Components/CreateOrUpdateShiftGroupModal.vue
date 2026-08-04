@@ -10,7 +10,7 @@
                         no-margin-top
                         id="name"
                         v-model="shiftGroupForm.name"
-                        :label="$t('Name of the global qualification')"
+                        :label="$t('Name of the shift group')"
                     />
                 </div>
             </div>

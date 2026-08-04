@@ -8,6 +8,16 @@
                        {{ $t('New Event Type') }}
                    </button>
                </template>
+               <SettingsGuideBanner
+                   class="mb-6"
+                   storage-key="settings-guide.event.types"
+                   title="How does this area work?"
+                   :paragraphs="[
+                       'Event types categorise your events: each type has a colour and an abbreviation that identify its events in the calendar.',
+                       'A type also controls what is required when creating an event — for example a mandatory project assignment or an individual event name.',
+                       'Whether events of a type define the project period and who has to verify them in the planning calendar is set per type in the edit dialog.',
+                   ]"
+               />
                <div>
                    <BasePageTitle
                        title="Event Types"
@@ -107,6 +117,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {IconEdit, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BiEventTypeTagManager from "@/Pages/Settings/EventType/Components/BiEventTypeTagManager.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -146,6 +157,7 @@ export default {
         }
     },
     components: {
+        SettingsGuideBanner,
         BiEventTypeTagManager,
         BasePageTitle,
         BaseMenuItem,

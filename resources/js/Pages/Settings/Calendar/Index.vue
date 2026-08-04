@@ -1,10 +1,19 @@
 <template>
     <CalendarSettingsHeader :title="$t('Calendar Settings')" :description="$t('Define global settings for the calendar.')">
+        <SettingsGuideBanner
+            class="mb-5"
+            storage-key="settings-guide.calendar.general"
+            title="How does this area work?"
+            :paragraphs="[
+                'Start and end time define which hours the day view of the calendar and the shift plan displays. The range may span midnight — for example 22:00 to 08:00.',
+                'Day remarks add one shared remark per day as a separate column in the calendar, the planning calendar and the shift plan.',
+            ]"
+        />
         <div class="card white p-5">
             <div>
                 <BasePageTitle
                     :title="$t('Calendar Settings')"
-                    :description="$t('Specify the times that are to be displayed in a reduced or compressed form in the daily view. With this setting, you determine which time intervals are highlighted less to improve the clarity of the daily view. Specify the exact time period you want so that the hours in your daily calendar are displayed in a clear and structured way.')" />
+                    :description="$t('Defines which hours the day view of the calendar and the shift plan displays. The range may span midnight (e.g. 22:00–08:00).')" />
             </div>
 
             <div class="my-5">
@@ -103,6 +112,7 @@ import {ref} from "vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 
 const props = defineProps({

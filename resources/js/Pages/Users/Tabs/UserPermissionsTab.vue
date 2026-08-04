@@ -159,7 +159,7 @@
                 </div>
                 <div class="text-sm text-red-700">
                     {{
-                        $t('re you sure you want to delete {last_name}, {first_name} from the system?', {
+                        $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
                             last_name: user_to_edit.last_name,
                             first_name: user_to_edit.first_name
                         })

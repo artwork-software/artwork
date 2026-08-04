@@ -3,6 +3,18 @@
         :title="$t('Open violations')"
         :description="$t('Overview of all open shift rule violations.')"
     >
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.violations"
+            title="How to handle open violations"
+            class="mb-6"
+            :paragraphs="[
+                'This list collects all violations detected by the shift rule check. You have three ways to handle them:',
+                '\'Resolve\' marks a violation as done without further consequences.',
+                '\'Ignore\' discards it with a documented reason that remains visible on the violation.',
+                '\'Edit\' lets you set substitute days off that are credited directly to the person\'s hour account.'
+            ]"
+        />
+
         <div class="card white p-5">
             <div v-if="violations.length === 0" class="text-center py-10 text-gray-400 text-sm">
                 {{ $t('No open violations found.') }}
@@ -92,6 +104,7 @@
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ViolationEditModal from "@/Pages/Shifts/Components/ViolationEditModal.vue";
 import IgnoreViolationModal from "@/Pages/Shifts/Components/IgnoreViolationModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";

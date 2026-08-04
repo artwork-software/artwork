@@ -3,6 +3,15 @@
         :title="$t('General')"
         :description="$t('Define global settings for inventory planning.')"
     >
+        <SettingsGuideBanner
+            class="mb-4"
+            storage-key="settings-guide.inventory.general"
+            title="How does this area work?"
+            :paragraphs="[
+                'These settings control the global behavior of all inventory articles.',
+                'Every change is saved immediately.',
+            ]"
+        />
         <div class="card white p-5">
             <div class="space-y-6">
                 <div>
@@ -74,6 +83,7 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm} from "@inertiajs/vue3";

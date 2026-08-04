@@ -117,9 +117,14 @@ class CrmContactController extends Controller
                     'name' => $group->name,
                     'icon' => $group->icon,
                     'properties' => $properties,
+                    // Gruppen-Reihenfolge des Typs (kleinste Pivot-sort_order der Gruppe)
+                    'sort_order' => $properties
+                        ->map(fn ($property) => $typeProperties[$property['id']]->pivot->sort_order ?? 0)
+                        ->min() ?? 0,
                 ];
             })
             ->filter(fn ($group) => count($group['properties']) > 0)
+            ->sortBy('sort_order')
             ->values();
 
         return response()->json([

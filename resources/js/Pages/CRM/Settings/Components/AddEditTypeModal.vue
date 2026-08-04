@@ -31,16 +31,31 @@
                 </div>
                 <p class="text-xs text-gray-500 mt-0.5 mb-3">
                     {{ $t('Assigned groups define which fields contacts of this type have. Expand a group to fine-tune individual properties.') }}
+                    {{ $t('Drag groups to define their order on the contact page of this type.') }}
                 </p>
+
+                <!-- Explanation of the three per-property pivot flags -->
+                <SettingsGuideBanner
+                    variant="static"
+                    title="What the options per property mean"
+                    :paragraphs="flagInfoParagraphs"
+                    class="mb-3"
+                />
 
                 <div v-if="!propertyGroups.length" class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
                     {{ $t('No property groups exist yet. Create a property group first — afterwards you can assign it to this contact type.') }}
                 </div>
 
-                <div v-else class="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                <draggable
+                    v-else
+                    :list="localGroups"
+                    item-key="id"
+                    ghost-class="opacity-50"
+                    handle=".group-order-handle"
+                    class="space-y-2 max-h-[45vh] overflow-y-auto pr-1"
+                >
+                    <template #item="{ element: group }">
                     <div
-                        v-for="group in propertyGroups"
-                        :key="group.id"
                         class="rounded-lg border transition-colors"
                         :class="isGroupAssigned(group) ? 'border-indigo-200 bg-white' : 'border-gray-200 bg-gray-50/70'"
                     >
@@ -49,6 +64,11 @@
                             class="px-4 py-3 flex items-center gap-3 cursor-pointer select-none"
                             @click="toggleExpanded(group.id)"
                         >
+                            <component
+                                :is="IconGripVertical"
+                                class="group-order-handle h-4 w-4 text-gray-300 hover:text-gray-500 cursor-grab shrink-0"
+                                @click.stop
+                            />
                             <ToolTipComponent
                                 v-if="isGroupLocked(group)"
                                 direction="right"
@@ -123,7 +143,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                    </template>
+                </draggable>
             </div>
 
             <div class="flex justify-end gap-3">
@@ -139,12 +160,14 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
+import draggable from 'vuedraggable'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import IconSelector from '@/Components/Icon/IconSelector.vue'
 import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
-import { IconChevronDown } from '@tabler/icons-vue'
+import { IconChevronDown, IconGripVertical } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()
@@ -166,6 +189,12 @@ const propertyTypeLabels = {
     link: 'Link',
     upload: 'Upload',
 }
+
+const flagInfoParagraphs = [
+    'Mandatory field: the property must be filled when creating or editing a contact and is marked with a red asterisk.',
+    'Show in list view: the property gets its own sortable column in the contact list.',
+    'Filterable: the property appears in the filter of the contact list.',
+]
 
 const form = useForm({
     name: props.contactType?.name ?? '',
@@ -196,6 +225,23 @@ for (const group of props.propertyGroups) {
 const checkedPropertyIds = ref(new Set(assignedPropertyIds))
 const pivotData = reactive(initialPivotData)
 const expandedGroupIds = ref(new Set())
+
+// Lokale, sortierbare Kopie der Gruppen: zugewiesene zuerst in der Typ-Reihenfolge
+// (abgeleitet aus der Pivot-Sortierung von contactType.properties), Rest global.
+const typeGroupOrder = new Map()
+;(props.contactType?.properties ?? []).forEach((p, index) => {
+    if (!typeGroupOrder.has(p.crm_property_group_id)) {
+        typeGroupOrder.set(p.crm_property_group_id, index)
+    }
+})
+
+const localGroups = ref(
+    [...props.propertyGroups].sort((a, b) => {
+        const ai = typeGroupOrder.has(a.id) ? typeGroupOrder.get(a.id) : Number.MAX_SAFE_INTEGER
+        const bi = typeGroupOrder.has(b.id) ? typeGroupOrder.get(b.id) : Number.MAX_SAFE_INTEGER
+        return ai - bi
+    })
+)
 
 const isGroupLocked = (group) =>
     !!props.contactType?.is_system && !!group.is_system
@@ -255,20 +301,22 @@ const toggleProperty = (property) => {
     }
 }
 
-const allProperties = computed(() =>
-    props.propertyGroups.flatMap(g => g.properties ?? [])
-)
-
 const submit = () => {
-    form.properties = [...checkedPropertyIds.value].map(id => {
-        const prop = allProperties.value.find(p => p.id === id)
-        return {
-            id,
-            is_required: pivotData[id]?.is_required ?? false,
-            show_in_list: pivotData[id]?.show_in_list ?? false,
-            is_filterable: prop?.type === 'upload' ? false : (pivotData[id]?.is_filterable ?? false),
+    // Reihenfolge der (gedraggten) Gruppen in fortlaufende Pivot-sort_order übersetzen
+    let sortCounter = 0
+    form.properties = []
+    for (const group of localGroups.value) {
+        for (const prop of (group.properties ?? [])) {
+            if (!checkedPropertyIds.value.has(prop.id)) continue
+            form.properties.push({
+                id: prop.id,
+                is_required: pivotData[prop.id]?.is_required ?? false,
+                show_in_list: pivotData[prop.id]?.show_in_list ?? false,
+                is_filterable: prop.type === 'upload' ? false : (pivotData[prop.id]?.is_filterable ?? false),
+                sort_order: ++sortCounter,
+            })
         }
-    })
+    }
 
     if (props.contactType) {
         form.patch(route('crm.types.update', props.contactType.id), {

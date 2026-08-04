@@ -1,15 +1,25 @@
 <template>
     <div class="">
         <div class="flex items-center gap-x-4">
-            <div class="mt-0.5 rounded-lg bg-zinc-50 p-2 ring-1 ring-inset ring-zinc-200">
+            <div
+                class="mt-0.5 rounded-lg p-2 ring-1 ring-inset"
+                :style="{ backgroundColor: (shiftGroup.color ?? '#9E1C60') + '20', '--tw-ring-color': (shiftGroup.color ?? '#9E1C60') + '70', color: shiftGroup.color ?? '#9E1C60' }"
+            >
                 <PropertyIcon
                     stroke-width="1.5"
-                    class="text-black size-7"
+                    class="size-7"
                     :name="shiftGroup.icon ?? 'IconBan'"
                 />
             </div>
 
-            {{ shiftGroup.name }}
+            <div class="flex items-center gap-x-2">
+                <span
+                    class="inline-flex size-2.5 shrink-0 rounded-full"
+                    :style="{ backgroundColor: shiftGroup.color ?? '#9E1C60' }"
+                    :title="shiftGroup.color"
+                />
+                {{ shiftGroup.name }}
+            </div>
         </div>
     </div>
     <div class="">

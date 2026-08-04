@@ -101,6 +101,14 @@
                     <!-- Group Mappings -->
                     <div v-if="source.group_mappings && source.group_mappings.length > 0" class="mt-4">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">{{ $t('Group Mappings') }}</h4>
+                        <SettingsGuideBanner
+                            class="mb-2"
+                            variant="static"
+                            title="What do group mappings do?"
+                            :paragraphs="[
+                                'Each mapping automatically assigns the stored artwork roles to every user in the respective directory group — applied on every synchronization.',
+                            ]"
+                        />
                         <div class="space-y-2">
                             <div
                                 v-for="mapping in source.group_mappings"
@@ -153,9 +161,11 @@ import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import SourceModal from "./Components/SourceModal.vue";
 import HowItWorksPanel from "./Components/HowItWorksPanel.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     components: {
+        SettingsGuideBanner,
         ToolSettingsHeader,
         BaseUIButton,
         ConfirmDeleteModal,

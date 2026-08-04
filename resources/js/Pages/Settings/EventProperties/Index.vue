@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="$t('Event Properties')">
+    <app-layout :title="$t('Event properties')">
         <EventSettingHeader>
             <template #actions>
                 <button class="ui-button-add" @click="showEventPropertyModal = true">
@@ -7,10 +7,18 @@
                     {{ $t('New Event Property') }}
                 </button>
             </template>
+            <SettingsGuideBanner
+                storage-key="settings-guide.event.properties"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Event properties are freely definable characteristics you can tick on an event — several at once, for example With audience or Hybrid.',
+                    'They appear as icons on the event in the calendar, can be used as filters there and are included in the Excel export.',
+                ]"
+            />
             <div class="my-10">
                 <div class="mb-4">
-                    <BasePageTitle title="Event Eigenschaften"
-                                      description="Hier kannst du die Event Eigenschaften verwalten."/>
+                    <BasePageTitle title="Event properties"
+                                      description="Manage the event properties here."/>
                 </div>
                 <ul role="list" class="flex flex-col gap-y-3">
                     <li v-for="(eventProperty) in event_properties"
@@ -32,7 +40,7 @@
                                         <PencilAltIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"/>
-                                        {{ $t('Event-Eigenschaft bearbeiten') }}
+                                        {{ $t('Edit event property') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
@@ -42,7 +50,7 @@
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                             aria-hidden="true"/>
-                                        {{ $t('Event-Eigenschaft löschen') }}
+                                        {{ $t('Delete event property') }}
                                     </a>
                                 </MenuItem>
                             </BaseMenu>
@@ -83,6 +91,7 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const props = defineProps({
         event_properties: {

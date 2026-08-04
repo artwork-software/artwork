@@ -2,6 +2,15 @@
     <AppLayout :title="$t('Public holidays & school vacations via interface')">
         <EventSettingHeader>
 
+            <SettingsGuideBanner
+                storage-key="settings-guide.event.holidays"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Public holidays and school vacations appear coloured in the calendar, the planning calendar and the shift plan — import them via the interface or create them manually.',
+                    'Days marked as special day set the target working time to zero: every hour worked on such a day counts as overtime.',
+                ]"
+            />
+
             <!-- Länderwahl -->
             <fieldset class="my-4 bg-white rounded-2xl border border-gray-200/70 shadow-sm p-5">
                 <label class="block text-sm/6 font-semibold text-gray-900 dark:text-white mb-2">
@@ -387,6 +396,15 @@
             <section class="mt-10">
                 <div class="bg-white rounded-2xl border border-gray-200/70 shadow-sm">
                     <div class="p-4 sm:p-6 lg:p-8">
+                        <SettingsGuideBanner
+                            class="mb-4"
+                            variant="static"
+                            title="Imported entries"
+                            :paragraphs="[
+                                'Entries imported via the interface cannot be edited here and are replaced each time the import runs again.',
+                                'Imported entries are marked as special day by default — check the Special Day column after every import.',
+                            ]"
+                        />
                         <div class="flex items-center justify-between mb-4">
                             <transition
                                 enter-active-class="duration-300 ease-out"
@@ -571,6 +589,7 @@ import {IconCheck, IconChevronDown, IconEdit, IconInfoCircle, IconTrash} from "@
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const props = defineProps({
     holidays: { type: Object, required: true },

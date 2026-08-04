@@ -10,10 +10,29 @@
             </button>
         </template>
 
+        <SettingsGuideBanner
+            storage-key="settings-guide.project.bi-fields"
+            title="How does this area work?"
+            :paragraphs="[
+                'This tab bundles two tools: audience categories structure how ticket numbers are recorded, BI fields are free additional fields for your projects.',
+            ]"
+        />
+
         <div class="mt-4 space-y-6">
             <BiAudienceCategoryManager />
 
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
+                <SettingsGuideBanner
+                    class="mb-4"
+                    variant="inline"
+                    storage-key="settings-guide.project.bi-fields.fields"
+                    title="What are BI fields?"
+                    :paragraphs="[
+                        'BI fields appear in the BI section of the project detail page and as extra columns in the BI export.',
+                        'Drag the fields to change their order — it defines both the display order and the export order.',
+                        'Only simple field types are available on purpose, so the values stay exportable.',
+                    ]"
+                />
                 <div v-if="biFields.length === 0" class="text-center text-sm text-gray-500 py-8">
                     {{ $t('No BI fields created yet.') }}
                 </div>
@@ -89,6 +108,7 @@ import { router } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
 import { IconCirclePlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue';
 import BiAudienceCategoryManager from '@/Pages/Settings/BiSettings/Components/BiAudienceCategoryManager.vue';
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue';
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue';

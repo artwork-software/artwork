@@ -1,9 +1,19 @@
 <template>
-    <ShiftSettingsHeader :title="$t('Day Services')">
+    <ShiftSettingsHeader :title="$t('Day Services')" :description="$t('Manage day services that can be assigned in the shift plan.')">
         <!-- Actions -->
         <template #actions>
             <BaseUIButton label="New Day Service" use-translation is-add-button  @click="openNew"/>
         </template>
+
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.day-services"
+            title="How day services work"
+            :paragraphs="[
+                'Day services are assigned in the shift plan: switch to day service mode there and click on a person\'s day cell to assign a day service as a tile.',
+                'Assigned day services also appear in the PDF export of the operational plan.'
+            ]"
+            footnote="Deleting a day service removes all of its assignments."
+        />
 
         <!-- Liste -->
         <div class="mt-5">
@@ -97,6 +107,7 @@ import { IconCirclePlus, IconEdit, IconTrash } from '@tabler/icons-vue'
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 defineOptions({ name: 'DayServiceIndex' })
 

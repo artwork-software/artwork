@@ -30,6 +30,8 @@ readonly class CrmContactTypeService
                 'is_required' => $prop['is_required'] ?? false,
                 'show_in_list' => $prop['show_in_list'] ?? false,
                 'is_filterable' => $prop['is_filterable'] ?? false,
+                // Bestimmt die Gruppen-/Feld-Reihenfolge dieses Typs auf der Kontaktseite
+                'sort_order' => $prop['sort_order'] ?? 0,
             ];
         }
 
@@ -44,6 +46,7 @@ readonly class CrmContactTypeService
                         'is_required' => $sp->pivot->is_required,
                         'show_in_list' => $sp->pivot->show_in_list,
                         'is_filterable' => $sp->pivot->is_filterable,
+                        'sort_order' => $sp->pivot->sort_order ?? 0,
                     ];
                 }
             }

@@ -27,6 +27,7 @@ class CrmContactTypeController extends Controller
             'properties.*.is_required' => 'boolean',
             'properties.*.show_in_list' => 'boolean',
             'properties.*.is_filterable' => 'boolean',
+            'properties.*.sort_order' => 'nullable|integer',
         ]);
 
         $properties = $validated['properties'] ?? null;
@@ -58,6 +59,7 @@ class CrmContactTypeController extends Controller
             'properties.*.is_required' => 'boolean',
             'properties.*.show_in_list' => 'boolean',
             'properties.*.is_filterable' => 'boolean',
+            'properties.*.sort_order' => 'nullable|integer',
         ]);
 
         $properties = $validated['properties'] ?? null;
@@ -97,6 +99,7 @@ class CrmContactTypeController extends Controller
             'properties.*.is_required' => 'boolean',
             'properties.*.show_in_list' => 'boolean',
             'properties.*.is_filterable' => 'boolean',
+            'properties.*.sort_order' => 'nullable|integer',
         ]);
 
         $this->service->syncProperties($crmContactType, $validated['properties']);

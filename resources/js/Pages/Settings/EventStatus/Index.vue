@@ -9,6 +9,16 @@
                 </button>
             </template>
 
+            <SettingsGuideBanner
+                class="mb-6"
+                storage-key="settings-guide.event.status"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Event statuses give every event a workflow state with its own colour — for example requested, confirmed or cancelled.',
+                    'Use the master switch to enable the module for your instance, then create statuses and drag them into the order you want.',
+                ]"
+            />
+
             <div class="flex items-center gap-x-2">
                 <Switch v-model="settingsForm.enable_status" :class="[settingsForm.enable_status ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
                     <span :class="[settingsForm.enable_status ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
@@ -29,12 +39,21 @@
                 </div>
             </div>
 
+            <SettingsGuideBanner
+                class="mt-4"
+                variant="static"
+                title="Where the status appears"
+                :paragraphs="[
+                    'When the module is active, the status appears in the event creation form, in bulk editing, in the calendar display settings and in the project print view.',
+                    'The order of the list below determines the order in the status dropdown.',
+                ]"
+            />
 
             <div class="my-10" v-if="enable_status">
                 <div class="mb-4">
                     <BasePageTitle
                         title="Event Status"
-                        description="Hier kannst du die Event Status verwalten."
+                        description="Manage the event statuses here."
                     />
                 </div>
 
@@ -119,6 +138,7 @@ import AddEditEventStatusModal from "@/Pages/Settings/EventStatus/Components/Add
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const props = defineProps({
     eventStatuses: {

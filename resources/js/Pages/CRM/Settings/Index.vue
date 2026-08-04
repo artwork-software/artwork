@@ -18,49 +18,13 @@
             </ToolbarHeader>
 
             <!-- Workflow explanation -->
-            <div class="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50">
-                <button
-                    type="button"
-                    class="w-full px-5 py-4 flex items-center gap-3 text-left"
-                    @click="toggleWorkflowHelp"
-                >
-                    <component :is="IconInfoCircle" class="h-5 w-5 text-indigo-600 shrink-0" />
-                    <span class="text-sm font-semibold text-gray-900">{{ $t('How the CRM setup works') }}</span>
-                    <component
-                        :is="IconChevronDown"
-                        class="h-4 w-4 text-gray-400 ml-auto transition-transform shrink-0"
-                        :class="workflowHelpCollapsed ? '' : 'rotate-180'"
-                    />
-                </button>
-                <div v-if="!workflowHelpCollapsed" class="px-5 pb-5">
-                    <div class="grid gap-3 md:grid-cols-4">
-                        <div v-for="(step, index) in workflowSteps" :key="index" class="rounded-xl bg-white border border-gray-100 p-4 flex flex-col">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="flex items-center justify-center size-6 rounded-full bg-indigo-600 text-white text-xs font-bold shrink-0">{{ index + 1 }}</span>
-                                <span class="text-sm font-medium text-gray-900">{{ $t(step.title) }}</span>
-                            </div>
-                            <p class="text-xs text-gray-500 grow">{{ $t(step.text) }}</p>
-                            <button
-                                v-if="step.action"
-                                type="button"
-                                class="mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-500 text-left flex items-center gap-1"
-                                @click="step.action()"
-                            >
-                                <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
-                                {{ $t(step.actionLabel) }}
-                            </button>
-                            <Link
-                                v-else-if="step.href"
-                                :href="step.href"
-                                class="mt-3 text-xs font-medium text-indigo-600 hover:text-indigo-500 flex items-center gap-1"
-                            >
-                                <component :is="IconArrowRight" class="h-3.5 w-3.5" />
-                                {{ $t(step.actionLabel) }}
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <SettingsGuideBanner
+                variant="banner"
+                storage-key="crm-settings-workflow-help-collapsed"
+                title="How the CRM setup works"
+                :steps="workflowSteps"
+                class="mt-6"
+            />
 
             <Transition
                 enter-active-class="transition ease-out duration-200"
@@ -119,20 +83,36 @@
                                         {{ $t('Confidential') }}
                                     </span>
                                     <span v-if="group.is_system" class="text-xs text-gray-400">({{ $t('System') }})</span>
-                                    <!-- Which contact types use this group -->
-                                    <div class="hidden lg:flex items-center gap-1.5 ml-3 min-w-0">
+                                    <!-- Which contact types use this group (max. 3 Chips, Rest im Hover-Tooltip) -->
+                                    <div class="hidden lg:flex items-center gap-1.5 ml-3 min-w-0 overflow-hidden">
                                         <template v-if="typesUsingGroup(group).length">
                                             <span class="text-xs text-gray-400 shrink-0">{{ $t('Used by') }}:</span>
                                             <span
-                                                v-for="type in typesUsingGroup(group)"
+                                                v-for="type in typesUsingGroup(group).slice(0, maxVisibleTypeChips)"
                                                 :key="type.id"
-                                                class="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-2 py-0.5 text-xs text-gray-600 shrink-0"
+                                                class="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-2 py-0.5 text-xs text-gray-600 shrink-0 max-w-40"
                                             >
-                                                <PropertyIcon v-if="type.icon" :name="type.icon" class="h-3 w-3" :style="type.color ? { color: type.color } : {}" />
-                                                {{ $t(type.name) }}
+                                                <PropertyIcon v-if="type.icon" :name="type.icon" class="h-3 w-3 shrink-0" :style="type.color ? { color: type.color } : {}" />
+                                                <span class="truncate">{{ $t(type.name) }}</span>
+                                            </span>
+                                            <span
+                                                v-if="typesUsingGroup(group).length > maxVisibleTypeChips"
+                                                class="relative group/moretypes inline-flex items-center rounded-full bg-gray-100 border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600 shrink-0 cursor-default"
+                                            >
+                                                +{{ typesUsingGroup(group).length - maxVisibleTypeChips }}
+                                                <span class="pointer-events-none absolute left-0 top-full z-20 mt-1.5 hidden group-hover/moretypes:block w-max max-w-xs rounded-lg bg-gray-900 px-3 py-2 shadow-lg">
+                                                    <span
+                                                        v-for="type in typesUsingGroup(group).slice(maxVisibleTypeChips)"
+                                                        :key="type.id"
+                                                        class="flex items-center gap-1.5 text-xs text-white py-0.5"
+                                                    >
+                                                        <PropertyIcon v-if="type.icon" :name="type.icon" class="h-3 w-3 shrink-0" :style="type.color ? { color: type.color } : {}" />
+                                                        {{ $t(type.name) }}
+                                                    </span>
+                                                </span>
                                             </span>
                                         </template>
-                                        <span v-else class="text-xs text-gray-400 italic">{{ $t('Not assigned to any contact type yet') }}</span>
+                                        <span v-else class="text-xs text-gray-400 italic truncate">{{ $t('Not assigned to any contact type yet') }}</span>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
@@ -320,9 +300,10 @@ import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import AddEditTypeModal from '@/Pages/CRM/Settings/Components/AddEditTypeModal.vue'
 import AddEditGroupModal from '@/Pages/CRM/Settings/Components/AddEditGroupModal.vue'
 import AddEditPropertyModal from '@/Pages/CRM/Settings/Components/AddEditPropertyModal.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import {
     IconCirclePlus, IconEdit, IconTrash, IconGripVertical, IconSettings,
-    IconInfoCircle, IconChevronDown, IconArrowRight, IconLayoutGrid, IconAddressBook,
+    IconLayoutGrid, IconAddressBook,
 } from '@tabler/icons-vue'
 import { useCrmSettingsListener } from '@/Composeables/Listener/useCrmSettingsListener.js'
 import { useTranslation } from '@/Composeables/Translation.js'
@@ -345,15 +326,7 @@ const propertyTypeLabels = {
     upload: 'Upload',
 }
 
-// -- Workflow help (collapsible, remembered per browser) --
-const WORKFLOW_HELP_KEY = 'crm-settings-workflow-help-collapsed'
-const workflowHelpCollapsed = ref(localStorage.getItem(WORKFLOW_HELP_KEY) === '1')
-
-const toggleWorkflowHelp = () => {
-    workflowHelpCollapsed.value = !workflowHelpCollapsed.value
-    localStorage.setItem(WORKFLOW_HELP_KEY, workflowHelpCollapsed.value ? '1' : '0')
-}
-
+// -- Workflow help (rendered via SettingsGuideBanner, collapsed state remembered per browser) --
 const workflowSteps = [
     {
         title: 'Create property groups',
@@ -434,6 +407,8 @@ const assignedGroupCount = (type) => {
     const groupIds = new Set((type.properties ?? []).map(p => p.crm_property_group_id))
     return groupIds.size
 }
+
+const maxVisibleTypeChips = 3
 
 const typesUsingGroup = (group) => {
     const seen = new Map()

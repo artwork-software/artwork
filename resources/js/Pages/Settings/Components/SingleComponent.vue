@@ -162,7 +162,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                         <!-- Note -->
                         <div class="mt-3">
                             <div class="xxsDarkBold text-[11px] text-zinc-600">
-                                Tooltip Text (optional):
+                                {{ $t('Tooltip text (optional):') }}
                             </div>
 
                             <div

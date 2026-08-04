@@ -10,6 +10,15 @@
             </button>
         </template>
 
+        <SettingsGuideBanner
+            class="mb-4"
+            storage-key="settings-guide.inventory.categories"
+            title="How does this area work?"
+            :paragraphs="[
+                'Categories form the tree structure of the inventory sidebar. At the same time they define the field schema of the articles: the properties assigned to a category become the fields of its articles.',
+                'Caution: deleting a category also irrevocably deletes all articles in it.',
+            ]"
+        />
         <div class="mb-10 card white p-5">
 
             <div class="my-8 flow-root">
@@ -76,6 +85,7 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import AddEditCategoryModal from "@/Pages/InventorySetting/Components/AddEditCategoryModal.vue";
 import {ref} from "vue";
 import SingleCategoryInSettings from "@/Pages/InventorySetting/Components/SingleCategoryInSettings.vue";

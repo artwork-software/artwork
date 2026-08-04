@@ -11,6 +11,17 @@
             />
         </template>
 
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.preset-groups"
+            title="How shift preset groups work"
+            class="mb-6"
+            :paragraphs="[
+                'Groups bundle templates that belong together — for example all shifts of one event type. In the shift plan you can then apply a whole group at once instead of picking each template individually.',
+                'Groups also keep the template list manageable when many templates exist.'
+            ]"
+            footnote="Deleting a group only removes the grouping — the templates themselves are kept."
+        />
+
         <div class="rounded-2xl border border-zinc-200/70 bg-white/85 backdrop-blur px-5 py-5 shadow-sm">
             <div>
                 <TransitionGroup v-if="groups?.length" name="list" tag="ul" class="space-y-2">
@@ -125,6 +136,7 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ShiftPresetGroupAddEditModal from "@/Pages/Settings/ShiftPresetGroupAddEditModal.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 defineProps({
     groups: {type: Array, required: true},

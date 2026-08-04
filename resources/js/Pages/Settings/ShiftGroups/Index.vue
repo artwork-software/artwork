@@ -1,6 +1,15 @@
 <template>
     <ShiftSettingsHeader :title="$t('shift groups')" :description="$t('Manage shift groups used to categorize shifts.')">
 
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.shift-groups"
+            title="How shift groups work"
+            :paragraphs="[
+                'Shift groups categorize shifts and are the prerequisite for the rule type \'Rest time between shift groups\' in the \'Shift warnings – rules\' tab — without maintained groups this rule cannot take effect.',
+                'The warning switch additionally reports when a person is assigned to shifts of more than one group on the same day.'
+            ]"
+        />
+
         <div class="card white p-5 mt-10">
             <div class="flex items-center justify-between">
                 <BasePageTitle class=""
@@ -61,6 +70,7 @@ import {ref} from "vue";
 import CreateOrUpdateShiftGroupModal from "@/Pages/Settings/ShiftGroups/Components/CreateOrUpdateShiftGroupModal.vue";
 import {IconCheck, IconX} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {router, usePage} from "@inertiajs/vue3";
 
 const props = defineProps({

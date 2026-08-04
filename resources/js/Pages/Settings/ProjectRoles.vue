@@ -1,10 +1,10 @@
 <template>
     <ProjectSettingsHeader :title="$t('Project Role Settings')">
         <template #actions>
-            <button class="ui-button-add" @click="showAddProjectRoleModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showAddProjectRoleModal = true">
                 <PropertyIcon name="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add Project Role') }}
-            </button>
+            </BaseUIButton>
         </template>
             <SettingsGuideBanner
                 class="mb-6"
@@ -68,10 +68,12 @@ import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ProjectRoles",
     components: {
+        BaseUIButton,
         ConfirmDeleteModal,
         SettingsGuideBanner,
         PropertyIcon,

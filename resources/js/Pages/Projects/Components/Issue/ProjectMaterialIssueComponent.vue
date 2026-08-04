@@ -22,25 +22,25 @@
                     icon-size="h-4 w-4"
                     @click="showLogModal = true"
                 />
-                <button
+                <BaseUIButton
                     type="button"
-                    class="new-button"
+                    hide-icon
                     @click="toggleAll(false)">
                     {{ $t('Close all')}}
-                </button>
-                <button
+                </BaseUIButton>
+                <BaseUIButton
                     type="button"
-                    class="new-button"
+                    hide-icon
                     @click="toggleAll(true)">
                     {{ $t('Expand all')}}
-                </button>
-                <button
+                </BaseUIButton>
+                <BaseUIButton
                     type="button"
-                    class="new-button"
+                    hide-icon
                     @click="openCreateMaterialIssue">
                     <IconCirclePlus class="size-4" />
                     {{ $t('New')}}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
 
@@ -209,27 +209,28 @@
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2">
-                    <button
+                    <BaseUIButton
                         type="button"
-                        class="new-button"
+                        hide-icon
                         @click.stop="printIssue(issue)">
                         <IconPrinter class="size-4" />
                         {{ $t('Print')}}
-                    </button>
-                    <button
+                    </BaseUIButton>
+                    <BaseUIButton
                         type="button"
-                        class="new-button"
+                        hide-icon
                         @click.stop="openEditIssue(issue)">
                         <IconEdit class="size-4" />
                         {{ $t('Edit')}}
-                    </button>
-                    <button
+                    </BaseUIButton>
+                    <BaseUIButton
                         type="button"
-                        class="new-button text-danger hover:text-danger"
+                        hide-icon
+                        class="!text-danger hover:!text-danger"
                         @click.stop="openDeleteModal(issue)">
                         <IconTrash class="size-4" />
                         {{ $t('Delete')}}
-                    </button>
+                    </BaseUIButton>
                 </div>
             </header>
 
@@ -439,14 +440,14 @@
                                     </div>
                                 </div>
 
-                                <button
+                                <BaseUIButton
                                     type="button"
-                                    class="new-button"
+                                    hide-icon
                                     @click="downloadFile(f)"
                                 >
                                     <IconDownload class="size-4" />
                                     {{ $t('Download') }}
-                                </button>
+                                </BaseUIButton>
                             </div>
                         </div>
 
@@ -591,6 +592,7 @@ import {
     IconChevronRight, IconAlertTriangle, IconFileText, IconDownload, IconHome, IconBuildingFactory,
     IconSticker2, IconCircleCheck, IconWindowMaximize, IconTrash, IconPrinter,
 } from '@tabler/icons-vue'
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleExternMaterialIssue.vue";
 import MaterialIssueLogModal from "@/Pages/IssueOfMaterial/Components/MaterialIssueLogModal.vue";

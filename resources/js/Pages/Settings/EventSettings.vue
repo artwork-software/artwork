@@ -3,10 +3,10 @@
 
            <EventSettingHeader>
                <template #actions>
-                   <button class="ui-button-add" @click="openAddEventTypeModal">
+                   <BaseUIButton variant="primary" hide-icon @click="openAddEventTypeModal">
                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                        {{ $t('New Event Type') }}
-                   </button>
+                   </BaseUIButton>
                </template>
                <SettingsGuideBanner
                    class="mb-6"
@@ -115,6 +115,7 @@ import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertica
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BiEventTypeTagManager from "@/Pages/Settings/EventType/Components/BiEventTypeTagManager.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -154,6 +155,7 @@ export default {
         }
     },
     components: {
+        BaseUIButton,
         SettingsGuideBanner,
         BiEventTypeTagManager,
         BasePageTitle,

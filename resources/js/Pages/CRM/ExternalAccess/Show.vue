@@ -16,8 +16,8 @@
                 </div>
                 <div class="flex gap-2" v-if="canManage">
                     <button v-if="!access.revoked_at" class="ui-button-cancel" @click="revokeOpen = true">{{ $t('Revoke access') }}</button>
-                    <button v-else class="ui-button" @click="reactivate">{{ $t('Reactivate') }}</button>
-                    <button v-if="canRelink" class="ui-button" @click="relinkOpen = true">{{ $t('Re-link to another contact') }}</button>
+                    <BaseUIButton v-else hide-icon @click="reactivate">{{ $t('Reactivate') }}</BaseUIButton>
+                    <BaseUIButton v-if="canRelink" hide-icon @click="relinkOpen = true">{{ $t('Re-link to another contact') }}</BaseUIButton>
                 </div>
             </header>
 
@@ -25,7 +25,7 @@
             <section class="rounded-2xl border border-border-subtle bg-white p-6">
                 <header class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">{{ $t('CRM access') }}</h2>
-                    <button v-if="canManage" class="ui-button" @click="extendCrmOpen = true">{{ $t('Extend') }}</button>
+                    <BaseUIButton v-if="canManage" hide-icon @click="extendCrmOpen = true">{{ $t('Extend') }}</BaseUIButton>
                 </header>
                 <p class="mt-4 text-sm">
                     <strong>{{ $t('Valid until') }}:</strong>
@@ -119,7 +119,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button class="ui-button-cancel" @click="revokeOpen = false">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" @click="revoke">{{ $t('Revoke access') }}</button>
+                <BaseUIButton variant="primary" hide-icon @click="revoke">{{ $t('Revoke access') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
 
@@ -131,7 +131,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button class="ui-button-cancel" @click="extendCrmOpen = false">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!extendCrmDate" @click="extendCrm">{{ $t('Extend') }}</button>
+                <BaseUIButton variant="primary" hide-icon :disabled="!extendCrmDate" @click="extendCrm">{{ $t('Extend') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
 
@@ -143,7 +143,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button class="ui-button-cancel" @click="extendScopeOpen = false">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!extendScopeDate" @click="extendScope">{{ $t('Extend') }}</button>
+                <BaseUIButton variant="primary" hide-icon :disabled="!extendScopeDate" @click="extendScope">{{ $t('Extend') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
 
@@ -155,7 +155,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button class="ui-button-cancel" @click="relinkOpen = false">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!relinkContactId" @click="relink">{{ $t('Confirm re-linking') }}</button>
+                <BaseUIButton variant="primary" hide-icon :disabled="!relinkContactId" @click="relink">{{ $t('Confirm re-linking') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
     </AppLayout>
@@ -166,6 +166,7 @@ import { ref } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import StatusBadge from './Components/StatusBadge.vue'
 

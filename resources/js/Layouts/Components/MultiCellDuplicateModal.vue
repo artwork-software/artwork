@@ -41,9 +41,9 @@
 
             <div class="ui-footer">
                 <div class="flex items-center justify-end gap-2">
-                    <button type="button" class="ui-btn-secondary" @click="$emit('closed', false)">
+                    <BaseUIButton type="button" hide-icon @click="$emit('closed', false)">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                     <FormButton
                         :disabled="submitting"
                         @click="submit"
@@ -61,6 +61,7 @@ import axios from "axios";
 import { useI18n } from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const { t } = useI18n(), $t = t;
 

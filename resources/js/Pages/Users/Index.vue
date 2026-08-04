@@ -14,14 +14,14 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <button
+                    <BaseUIButton
                         type="button"
-                        class="ui-button"
+                        hide-icon
                         :class="authProviderFilter === 'sso' ? '!bg-accent-600 !text-white' : ''"
                         @click="setAuthProviderFilter('sso')"
                     >
                         {{ $t('SSO only') }}
-                    </button>
+                    </BaseUIButton>
 
                     <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-text" menu-width="w-72" classes="ui-button" menu-button-text="Sort">
                         <div class="flex items-center justify-between py-1">
@@ -46,10 +46,10 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <button v-if="hasAdminRole()" class="ui-button-add"  @click="addingUser = true">
+                    <BaseUIButton v-if="hasAdminRole()" variant="primary" hide-icon @click="addingUser = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite new users') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>

@@ -4,10 +4,10 @@
         :description="$t('Manage custom fields for Business Intelligence.')"
     >
         <template #actions>
-            <button class="ui-button-add inline-flex items-center gap-2" @click="openCreateModal">
+            <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2" @click="openCreateModal">
                 <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Create BI field') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -58,20 +58,22 @@
                             </div>
 
                             <div class="flex items-center gap-2 flex-shrink-0">
-                                <button
+                                <BaseUIButton
                                     type="button"
-                                    class="ui-button bg-white hover:bg-surface-sunken transition"
+                                    hide-icon
+                                    class="bg-white hover:bg-surface-sunken transition"
                                     @click="openEditModal(element)"
                                 >
                                     <IconEdit class="size-4 text-accent-600" />
-                                </button>
-                                <button
+                                </BaseUIButton>
+                                <BaseUIButton
                                     type="button"
-                                    class="ui-button bg-danger-surface hover:bg-danger-surface transition"
+                                    hide-icon
+                                    class="!bg-danger-surface hover:!bg-danger-surface transition"
                                     @click="confirmDelete(element)"
                                 >
                                     <IconTrash class="size-4 text-danger" />
-                                </button>
+                                </BaseUIButton>
                             </div>
                         </div>
                     </template>
@@ -109,6 +111,7 @@ import draggable from 'vuedraggable';
 import { IconCirclePlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BiAudienceCategoryManager from '@/Pages/Settings/BiSettings/Components/BiAudienceCategoryManager.vue';
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue';
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue';

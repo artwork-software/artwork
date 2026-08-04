@@ -58,10 +58,10 @@
                             <component :is="IconUpload" stroke-width="1" class="size-5" />
                             {{ $t('Import') }}
                         </Link>
-                        <button class="ui-button-add" @click="showCreateModal = true">
+                        <BaseUIButton variant="primary" hide-icon @click="showCreateModal = true">
                             <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                             {{ $t('New contact') }}
-                        </button>
+                        </BaseUIButton>
                     </template>
                 </template>
             </ToolbarHeader>
@@ -212,10 +212,10 @@
                     <template v-else>
                         <p class="mt-1 text-sm text-text-subtle">{{ $t('Get started by creating a new contact.') }}</p>
                         <div class="mt-6">
-                            <button class="ui-button-add" @click="showCreateModal = true">
+                            <BaseUIButton variant="primary" hide-icon @click="showCreateModal = true">
                                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                                 {{ $t('New contact') }}
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </template>
                 </div>
@@ -288,6 +288,7 @@ import { usePermission } from '@/Composeables/Permission.js'
 // import InviteExternalModal from '@/Pages/CRM/Components/InviteExternalModal.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'

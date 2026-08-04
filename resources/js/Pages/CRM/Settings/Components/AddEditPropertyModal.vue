@@ -40,9 +40,9 @@
 
             <div class="flex justify-end gap-3 mt-6">
                 <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" @click="submit" :disabled="form.processing">
+                <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
                     {{ property ? $t('Save') : $t('Create') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -52,6 +52,7 @@
 import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { IconX, IconCirclePlus } from '@tabler/icons-vue'

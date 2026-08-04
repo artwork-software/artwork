@@ -2,10 +2,10 @@
     <app-layout :title="$t('Event properties')">
         <EventSettingHeader>
             <template #actions>
-                <button class="ui-button-add" @click="showEventPropertyModal = true">
+                <BaseUIButton variant="primary" hide-icon @click="showEventPropertyModal = true">
                     <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('New Event Property') }}
-                </button>
+                </BaseUIButton>
             </template>
             <SettingsGuideBanner
                 storage-key="settings-guide.event.properties"
@@ -78,6 +78,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import {ref} from "vue";

@@ -45,22 +45,22 @@
 
             <!-- Aktionen: immer sichtbar -->
             <div v-if="canManage" class="flex flex-col justify-center gap-1 pr-2">
-                <button
+                <BaseUIButton
                     type="button"
-                    class="ui-button"
+                    hide-icon
                     :aria-label="$t('Edit')"
                     @click="showEditModal = true"
                 >
                     <IconEdit class="w-4 h-4" />
-                </button>
-                <button
+                </BaseUIButton>
+                <BaseUIButton
                     type="button"
-                    class="ui-button"
+                    hide-icon
                     :aria-label="$t('Delete')"
                     @click="showDeleteConfirmModal = true"
                 >
                     <IconTrash class="w-4 h-4 text-danger" />
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </div>
@@ -92,6 +92,7 @@ import { ref, computed, getCurrentInstance } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
 import AddEditVacationsModal from '@/Pages/Users/Components/AddEditVacationsModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
 import { IconAlertTriangle, IconEdit, IconRepeat, IconTrash } from '@tabler/icons-vue'

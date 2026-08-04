@@ -32,10 +32,10 @@
                         classesButton="ui-button"
                     />
 
-                    <button class="ui-button-add" @click="openContractUploadModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openContractUploadModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New contract') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
@@ -209,6 +209,7 @@ import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue"
 import ContractFilterModal from "@/Pages/Contracts/Components/ContractFilterModal.vue"
 import ContractExportModal from "@/Pages/Contracts/Components/ContractExportModal.vue"
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue"
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue"
 import BaseTable from '@/Artwork/Table/BaseTable.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
@@ -227,6 +228,7 @@ export default {
         BaseMenu,
         BaseTable,
         ToolbarHeader,
+        BaseUIButton,
         ContractEditModal,
         ContractDeleteModal,
         ContractUploadModal,

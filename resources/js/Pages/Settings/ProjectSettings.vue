@@ -68,10 +68,10 @@
                         </div>
                     </div>
 
-                    <button class="ui-button-add" @click="openAddStateModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openAddStateModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add Status') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <ProjectSettingsItem
@@ -307,10 +307,12 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     mixins: [Permissions],
     components: {
+        BaseUIButton,
         SettingsGuideBanner,
         BasePageTitle,
         ProjectSettingsHeader,

@@ -9,10 +9,10 @@
                            icon-bg-class="bg-accent-50 text-accent-700"
             >
                 <template #actions>
-                    <button class="ui-button-add"  @click="openIssueOfMaterialModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openIssueOfMaterialModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New issue of material') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
 
             </ToolbarHeader>
@@ -230,13 +230,13 @@
                     </div>
                     <!-- Reset button at bottom right (no Apply button) -->
                     <div v-if="!filtersCollapsed" class="flex justify-end gap-2 mt-4">
-                        <button
+                        <BaseUIButton
                             type="button"
+                            hide-icon
                             @click="resetFilters"
-                            class="ui-button"
                         >
                             {{ $t('Reset') }}
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </div>
                 <!-- Aktive Filter Zusammenfassung (immer sichtbar) -->
@@ -336,6 +336,7 @@ import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import IssueTabs from "@/Pages/IssueOfMaterial/Components/IssueTabs.vue";
 import IssueOfMaterialModal from "@/Pages/IssueOfMaterial/IssueOfMaterialModal.vue";
 import SingleExternMaterialIssue from "@/Pages/IssueOfMaterial/Components/SingleExternMaterialIssue.vue";

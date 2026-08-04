@@ -46,20 +46,20 @@
                         <h2 class="text-lg font-semibold">{{ $t('Property groups') }}</h2>
                         <p class="text-sm text-text-subtle">{{ $t('Organize properties into groups. Confidential groups require permissions to view.') }}</p>
                     </div>
-                    <button class="ui-button-add" @click="showGroupModal = true">
+                    <BaseUIButton variant="primary" hide-icon @click="showGroupModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New group') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <div v-if="!localPropertyGroups.length" class="rounded-lg border border-dashed border-border bg-surface-sunken p-10 text-center">
                     <component :is="IconLayoutGrid" class="mx-auto h-10 w-10 text-text-subtle" />
                     <p class="mt-3 text-sm font-medium text-text">{{ $t('No property groups yet') }}</p>
                     <p class="mt-1 text-sm text-text-subtle">{{ $t('Start here: property groups bundle the properties your contacts share, e.g. address or conditions.') }}</p>
-                    <button class="ui-button-add mx-auto mt-4" @click="showGroupModal = true">
+                    <BaseUIButton variant="primary" hide-icon class="mx-auto mt-4" @click="showGroupModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New group') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <draggable
@@ -175,20 +175,20 @@
                         <h2 class="text-lg font-semibold">{{ $t('Contact types') }}</h2>
                         <p class="text-sm text-text-subtle">{{ $t('Manage the types of contacts in your CRM.') }}</p>
                     </div>
-                    <button class="ui-button-add" @click="showTypeModal = true">
+                    <BaseUIButton variant="primary" hide-icon @click="showTypeModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New type') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <div v-if="!localContactTypes.length" class="rounded-lg border border-dashed border-border bg-surface-sunken p-10 text-center">
                     <component :is="IconAddressBook" class="mx-auto h-10 w-10 text-text-subtle" />
                     <p class="mt-3 text-sm font-medium text-text">{{ $t('No contact types yet') }}</p>
                     <p class="mt-1 text-sm text-text-subtle">{{ $t('Create your first contact type to categorize CRM contacts. You can assign property groups directly while creating it.') }}</p>
-                    <button class="ui-button-add mx-auto mt-4" @click="showTypeModal = true">
+                    <BaseUIButton variant="primary" hide-icon class="mx-auto mt-4" @click="showTypeModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New type') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <div v-else class="bg-white border border-border-subtle rounded-lg">
@@ -294,6 +294,7 @@ import { router, Link } from '@inertiajs/vue3'
 import draggable from 'vuedraggable'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'

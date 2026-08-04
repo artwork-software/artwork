@@ -864,14 +864,15 @@
                 <button type="button" class="ui-button-cancel" @click="keepShiftsAndSetStatus">
                     {{ t('No, only change status') }}
                 </button>
-                <button
+                <BaseUIButton
                     type="button"
-                    class="ui-button-add"
+                    variant="primary"
+                    hide-icon
                     :disabled="cleanupProcessing"
                     @click="confirmCleanupAndSetStatus"
                 >
                     {{ t('Yes, remove') }}
-                </button>
+                </BaseUIButton>
             </div>
         </ArtworkBaseModal>
     </ArtworkBaseModal>

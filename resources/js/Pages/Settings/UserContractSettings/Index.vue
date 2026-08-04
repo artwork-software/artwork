@@ -1,10 +1,10 @@
 <template>
     <ShiftSettingsHeader :title="$t('User Contracts')" :description="$t('Manage contract templates with employment-law parameters.')">
         <template #actions>
-            <button class="ui-button-add" @click="showCreateOrUpdateUserContractModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateUserContractModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add User Contracts') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -38,6 +38,7 @@
 <script setup>
 
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
 import CreateOrUpdateWorkTimePatternModal

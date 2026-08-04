@@ -14,10 +14,10 @@
                     :search-tooltip="$t('Search')"
                 >
                     <template #actions>
-                        <button class="ui-button-add" @click="openAddTeamModal">
+                        <BaseUIButton variant="primary" hide-icon @click="openAddTeamModal">
                             <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                             {{ $t('Create Team') }}
-                        </button>
+                        </BaseUIButton>
                     </template>
                 </ToolbarHeader>
             </template>
@@ -250,6 +250,7 @@ import { useI18n } from 'vue-i18n'
 // Neue, wiederverwendbare Komponenten
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseTable, { type TableColumn } from '@/Artwork/Table/BaseTable.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 // Deine bestehenden Komponenten
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'

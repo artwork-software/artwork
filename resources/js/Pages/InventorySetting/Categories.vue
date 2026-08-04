@@ -4,10 +4,10 @@
         :description="$t('Edit and create categories for your inventory.')"
     >
         <template #actions>
-            <button class="ui-button-add" @click="showAddEditCategoryModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showAddEditCategoryModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create Category') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -85,6 +85,7 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import AddEditCategoryModal from "@/Pages/InventorySetting/Components/AddEditCategoryModal.vue";
 import {ref} from "vue";

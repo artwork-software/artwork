@@ -30,30 +30,33 @@
             <div
                 class="absolute w-full text-center items-center justify-center hidden group-hover:flex space-x-4"
             >
-                <button
+                <BaseUIButton
                     v-if="originalKeyVisualNotDefault"
                     @click="downloadKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-special-orange"
+                    hide-icon
+                    class="bg-white hover:text-special-orange"
                 >
                     <IconDownload class="h-5 w-5" aria-hidden="true" />
-                </button>
+                </BaseUIButton>
 
-                <button
+                <BaseUIButton
                     @click="selectNewKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-accent-600"
+                    hide-icon
+                    class="bg-white hover:text-accent-600"
                 >
                     <IconEdit class="h-5 w-5" aria-hidden="true" />
-                </button>
+                </BaseUIButton>
 
-                <button
+                <BaseUIButton
                     @click="deleteKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-danger"
+                    hide-icon
+                    class="bg-white hover:text-danger"
                 >
                     <IconX class="h-5 w-5" aria-hidden="true" />
-                </button>
+                </BaseUIButton>
             </div>
 
             <!-- Bild -->
@@ -87,6 +90,7 @@
 import { ref, computed, watch } from 'vue'
 import { useForm, usePage, router } from '@inertiajs/vue3'
 import JetInputError from '@/Jetstream/InputError.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { IconDownload, IconEdit, IconX } from '@tabler/icons-vue'
 
 const props = defineProps({

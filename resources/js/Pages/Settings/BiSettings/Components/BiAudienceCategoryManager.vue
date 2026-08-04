@@ -7,10 +7,10 @@
                     {{ $t('Categories break visitors down into e.g. full price, reduced and free tickets. The calculation role determines how a category counts in the free-ticket and reduced-ticket rates — regardless of its name.') }}
                 </p>
             </div>
-            <button class="ui-button-add inline-flex items-center gap-2 shrink-0" @click="startCreate">
+            <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2 shrink-0" @click="startCreate">
                 <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Add category') }}
-            </button>
+            </BaseUIButton>
         </div>
 
         <div
@@ -59,9 +59,9 @@
                             >
                                 {{ element.is_active ? $t('Deactivate') : $t('Activate') }}
                             </button>
-                            <button type="button" class="ui-button bg-white hover:bg-surface-sunken transition" @click="startEdit(element)">
+                            <BaseUIButton type="button" hide-icon class="bg-white hover:bg-surface-sunken transition" @click="startEdit(element)">
                                 <IconEdit class="size-4 text-accent-600" />
-                            </button>
+                            </BaseUIButton>
                             <button type="button" class="ui-button bg-danger-surface hover:bg-danger-surface transition" @click="askDelete(element)">
                                 <IconTrash class="size-4 text-danger" />
                             </button>

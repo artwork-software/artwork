@@ -40,9 +40,9 @@
                     </div>
                 </div>
                 <div class="flex items-center mt-16 mr-8">
-                    <button class="ui-button-add" @click="openChangeTeamMembersModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openChangeTeamMembersModal">
                         {{ $t('Edit team')}}
-                    </button>
+                    </BaseUIButton>
                 </div>
 
                 <!-- Team Members Table -->
@@ -228,6 +228,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import BaseTable from "@/Artwork/Table/BaseTable.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -268,6 +269,7 @@ export default {
         BaseModal,
         BaseMenu,
         BaseTable,
+        BaseUIButton,
         FormButton,
         UserPopoverTooltip,
         TeamIconCollection,

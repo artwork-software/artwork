@@ -43,14 +43,15 @@
                     <button type="button" class="ui-button-cancel" @click="$emit('close')">
                         {{ $t('Cancel') }}
                     </button>
-                    <button
+                    <BaseUIButton
                         type="button"
-                        class="ui-button-add"
+                        variant="primary"
+                        hide-icon
                         :disabled="submitting"
                         @click="submit"
                     >
                         {{ $t('Create and link') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
         </div>
@@ -62,6 +63,7 @@ import { ref, onMounted, getCurrentInstance } from 'vue';
 import axios from 'axios';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue';
 
 const emit = defineEmits(['close', 'created']);

@@ -109,9 +109,9 @@
 
             <div class="flex justify-end gap-3 mt-6">
                 <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" @click="submit" :disabled="form.processing">
+                <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
                     {{ propertyGroup ? $t('Save') : $t('Create') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -124,6 +124,7 @@ import axios from 'axios'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import IconSelector from '@/Components/Icon/IconSelector.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import { IconX } from '@tabler/icons-vue'

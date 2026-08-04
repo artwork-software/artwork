@@ -307,13 +307,13 @@
                         <div class="text-sm text-text-muted">
                             {{ $t('Reset your password or send a reset email.') }}
                         </div>
-                        <button
+                        <BaseUIButton
                             v-if="hasAdminRole()"
                             @click="resetPassword"
-                            class="ui-button"
+                            hide-icon
                         >
                             {{ $t('Reset Password') }}
-                        </button>
+                        </BaseUIButton>
                     </div>
                     <div v-if="password_reset_status" class="mt-3 text-sm font-medium text-success">
                         {{ password_reset_status }}
@@ -346,17 +346,17 @@
                     </div>
                 </template>
 
-                <button
+                <BaseUIButton
                     v-if="can('teammanagement') || hasAdminRole()"
                     @click="openChangeTeamsModal"
-                    class="ui-button"
+                    hide-icon
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                          stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                     </svg>
                     {{ $t('Edit team membership') }}
-                </button>
+                </BaseUIButton>
 
                 <button
                     v-if="can('teammanagement') && userForm.departments.length || hasAdminRole()"

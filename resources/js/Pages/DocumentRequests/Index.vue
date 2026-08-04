@@ -8,10 +8,10 @@
                 :description="totalRequests ? `${totalRequests} ${$t('Requests')}` : ''"
             >
                 <template #actions>
-                    <button v-if="can('can create document requests') || hasAdminRole()" class="ui-button-add" @click="showCreateModal = true">
+                    <BaseUIButton v-if="can('can create document requests') || hasAdminRole()" variant="primary" hide-icon @click="showCreateModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create document request') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 

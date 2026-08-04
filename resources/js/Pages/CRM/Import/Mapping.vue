@@ -8,9 +8,9 @@
                 :description="$t('{count} rows to import', { count: totalRows })"
             >
                 <template #actions>
-                    <button class="ui-button" @click="cancel">
+                    <BaseUIButton hide-icon @click="cancel">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
@@ -208,12 +208,14 @@
 
             <!-- Submit -->
             <div class="mt-8 flex justify-end gap-3">
-                <button class="ui-button" @click="cancel">
+                <BaseUIButton hide-icon @click="cancel">
                     {{ $t('Cancel') }}
-                </button>
-                <button
+                </BaseUIButton>
+                <BaseUIButton
                     :disabled="!canSubmit || form.processing"
-                    class="ui-button-add disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
+                    variant="primary"
+                    hide-icon
+                    class="disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                     @click="submit"
                 >
                     <span v-if="form.processing" class="flex items-center gap-2">
@@ -224,7 +226,7 @@
                         {{ $t('Importing') }}...
                     </span>
                     <span v-else>{{ $t('Start import') }}</span>
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </AppLayout>
@@ -235,6 +237,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'

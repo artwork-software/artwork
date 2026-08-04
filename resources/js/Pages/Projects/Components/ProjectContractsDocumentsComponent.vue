@@ -9,10 +9,10 @@
                 :description="contracts.length ? `${contracts.length} ${$t('Contracts')}` : ''"
             >
                 <template #actions>
-                    <button class="ui-button-add" @click="openContractUploadModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openContractUploadModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New contract') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
@@ -101,10 +101,10 @@
                 :description="totalRequests ? `${totalRequests} ${$t('Requests')}` : ''"
             >
                 <template #actions>
-                    <button v-if="can('can create document requests') || hasAdminRole()" class="ui-button-add" @click="showCreateRequestModal = true">
+                    <BaseUIButton v-if="can('can create document requests') || hasAdminRole()" variant="primary" hide-icon @click="showCreateRequestModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create document request') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 

@@ -131,14 +131,15 @@
 
         <div class="flex justify-end gap-2 mt-6">
             <button type="button" class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-            <button
+            <BaseUIButton
                 type="button"
-                class="ui-button-add"
+                variant="primary"
+                hide-icon
                 :disabled="form.processing || (requirements && !requirements.invitable)"
                 @click="submit"
             >
                 {{ $t('Send invitation') }}
-            </button>
+            </BaseUIButton>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -155,6 +156,7 @@ import {
     ListboxOptions,
 } from '@headlessui/vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { IconChevronDown } from '@tabler/icons-vue'

@@ -8,9 +8,9 @@
                 :description="$t('{count} rows to import', { count: totalRows })"
             >
                 <template #actions>
-                    <button class="ui-button" @click="cancel">
+                    <BaseUIButton hide-icon @click="cancel">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
@@ -239,12 +239,14 @@
             <!-- Submit -->
             <div class="mt-8 flex flex-col items-end gap-2">
                 <div class="flex gap-3">
-                    <button class="ui-button" @click="cancel">
+                    <BaseUIButton hide-icon @click="cancel">
                         {{ $t('Cancel') }}
-                    </button>
-                    <button
+                    </BaseUIButton>
+                    <BaseUIButton
+                        variant="primary"
+                        hide-icon
                         :disabled="!canSubmit || form.processing"
-                        class="ui-button-add disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
+                        class="disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                         @click="submit"
                     >
                         <span v-if="form.processing" class="flex items-center gap-2">
@@ -255,7 +257,7 @@
                             {{ $t('Importing') }}...
                         </span>
                         <span v-else>{{ $t('Start import') }}</span>
-                    </button>
+                    </BaseUIButton>
                 </div>
                 <!-- Disabled reason -->
                 <p v-if="!canSubmit && invalidTypeNames.length > 0" class="text-sm text-warning">
@@ -275,6 +277,7 @@ import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import {
     Listbox,
     ListboxButton,

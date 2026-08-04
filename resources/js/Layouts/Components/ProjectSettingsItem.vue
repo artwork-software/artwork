@@ -13,10 +13,10 @@
 
             </div>
             <div class="">
-                <button class="ui-button-add" @click="add" :disabled="!input">
+                <BaseUIButton variant="primary" hide-icon @click="add" :disabled="!input">
                     <component :is="IconCirclePlus" class="size-6" stroke-width="1"/>
                     {{ $t('Add') }}
-                </button>
+                </BaseUIButton>
                 <!--<button text="Save" :icon="IconCheck" @click="add" :disabled="!input"/>-->
             </div>
 
@@ -39,10 +39,12 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {IconCheck, IconCirclePlus, IconCircleX, IconDotsVertical, IconPencil, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: "ProjectSettingsItem",
     components: {
+        BaseUIButton,
         BasePageTitle,
         BaseInput,
         TextInputComponent,

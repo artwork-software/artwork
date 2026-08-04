@@ -320,13 +320,7 @@
     }
 
     /* Alias auf BaseUIButton variant="secondary" (Design-Basis v1) */
-    .new-button {
-        @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface h-8 px-3 text-[13px] font-medium text-text hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out cursor-pointer;
-    }
 
-    .new-button-small {
-        @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface h-7 px-2.5 text-xs font-medium text-text hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out cursor-pointer;
-    }
 
     .artwork-container {
         @apply mx-auto container px-4 sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 mt-5 pb-20;
@@ -351,8 +345,6 @@
     .ui-button-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md border border-border bg-surface min-h-7 px-2.5 text-xs font-medium text-text cursor-pointer hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
     .ui-button-add { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-accent-600 text-white border border-accent-600 min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-accent-700 hover:border-accent-700 transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
     .ui-button-delete { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
-    .ui-button-add-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-accent-600 text-white border border-accent-600 min-h-7 px-2.5 text-xs font-medium cursor-pointer hover:bg-accent-700 hover:border-accent-700 transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
-    .ui-button-delete-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-7 px-2.5 text-xs font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
 
 
     /* Inputs kompakt */
@@ -390,9 +382,6 @@
     .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-2px); }
 
     /* Buttons */
-    .ui-btn-secondary {
-        @apply inline-flex items-center justify-center rounded-md border border-border bg-surface min-h-8 px-3 text-[13px] font-medium text-text hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out;
-    }
 
     /* Sticky Footer innerhalb des Modals */
     .ui-footer {
@@ -532,9 +521,6 @@
 
 .btn-icon {
     @apply grid place-items-center size-8 rounded-md border border-border bg-surface text-text hover:bg-surface-sunken transition-colors;
-}
-.btn-subtle {
-    @apply inline-flex items-center gap-1.5 rounded-md border border-border bg-surface min-h-7 px-2.5 text-xs font-medium text-text hover:bg-surface-sunken transition-colors;
 }
 
 /* Inputs */

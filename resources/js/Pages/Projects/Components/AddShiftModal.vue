@@ -1057,17 +1057,18 @@ const lockOrUnlockShift = (commit = false) => {
                           <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
                             {{ filteredSingleShiftPresets.length }}
                           </span>
-                            <button type="button" class="ui-button !text-xs" @click="showShiftPresetBox = !showShiftPresetBox">
+                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="showShiftPresetBox = !showShiftPresetBox">
                                 {{ showShiftPresetBox ? $t('Hide') : $t('Show') }}
-                            </button>
-                            <button
+                            </BaseUIButton>
+                            <BaseUIButton
                                 v-if="hasActiveShiftPreset"
                                 type="button"
-                                class="ui-button !text-xs"
+                                hide-icon
+                                class="!text-xs"
                                 @click="resetShiftPresetSelection({ alsoFields: true })"
                             >
                                 {{ $t('Reset') }}
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
 
@@ -1085,10 +1086,10 @@ const lockOrUnlockShift = (commit = false) => {
                             </div>
                         </div>
                         <div v-else>
-                            <button type="button" class="ui-button !text-xs" @click="showShiftSearchbar = true">
+                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="showShiftSearchbar = true">
                                 <PropertyIcon name="IconSearch" class="h-4 w-4" />
                                 <span>{{ $t('Search') }}</span>
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
 
@@ -1176,17 +1177,18 @@ const lockOrUnlockShift = (commit = false) => {
                               <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
                                 {{ filteredShiftTimePresets.length }}
                               </span>
-                            <button type="button" class="ui-button !text-xs" @click="toggleTimePresetBox()">
+                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="toggleTimePresetBox()">
                                 {{ showTimePresetBox ? $t('Hide') : $t('Show') }}
-                            </button>
-                            <button
+                            </BaseUIButton>
+                            <BaseUIButton
                                 v-if="hasActiveTimePreset"
                                 type="button"
-                                class="ui-button !text-xs"
+                                hide-icon
+                                class="!text-xs"
                                 @click="resetTimePresetSelection"
                             >
                                 {{ $t('Reset') }}
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
 
@@ -1204,10 +1206,10 @@ const lockOrUnlockShift = (commit = false) => {
                             </div>
                         </div>
                         <div v-else>
-                            <button type="button" class="ui-button !text-xs" @click="showTimeSearchbar = true">
+                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="showTimeSearchbar = true">
                                 <PropertyIcon name="IconSearch" class="h-4 w-4" />
                                 <span>{{ $t('Search') }}</span>
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
 
@@ -1271,9 +1273,9 @@ const lockOrUnlockShift = (commit = false) => {
                               <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
                                 {{ globalQualifications?.length }}
                               </span>
-                            <button type="button" class="ui-button !text-xs" @click="toggleGlobalQualificationBox()">
+                            <BaseUIButton type="button" hide-icon class="!text-xs" @click="toggleGlobalQualificationBox()">
                                 {{ showGlobalQualificationBox ? $t('Hide') : $t('Show') }}
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
 
@@ -1518,9 +1520,9 @@ const lockOrUnlockShift = (commit = false) => {
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" class="ui-button !text-xs" @click="selectedProject = null">
+                                    <BaseUIButton type="button" hide-icon class="!text-xs" @click="selectedProject = null">
                                         {{ $t('Change') }}
-                                    </button>
+                                    </BaseUIButton>
                                 </div>
                                 <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
                                     <p class="text-xs text-warning inline-flex items-center gap-0.5 flex-wrap">
@@ -1637,9 +1639,9 @@ const lockOrUnlockShift = (commit = false) => {
                     />
 
                     <div class="">
-                        <button class="ui-button !w-fit" @click="lockOrUnlockShift(false)" type="button">
+                        <BaseUIButton hide-icon class="!w-fit" @click="lockOrUnlockShift(false)" type="button">
                             {{ $t('Canceling a fixed term') }}
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </div>
 

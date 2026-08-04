@@ -218,8 +218,9 @@
                             class="group relative my-4 w-full rounded-2xl border border-border-subtle bg-white shadow-sm transition-shadow hover:shadow-md"
                         >
                             <div class="flex items-center justify-between gap-3 pl-5 pr-4 py-4">
-                                <button
-                                    class="ui-button-add"
+                                <BaseUIButton
+                                    variant="primary"
+                                    hide-icon
                                     @click="changeAreaStatus(area)"
                                     :aria-expanded="this.opened_areas.includes(area.id)"
                                     :aria-controls="`area-panel-${area.id}`"
@@ -237,7 +238,7 @@
                                     <span class="sr-only">
                                         {{ this.opened_areas.includes(area.id) ? $t('Collapse') : $t('Expand') }}
                                     </span>
-                                </button>
+                                </BaseUIButton>
 
                                 <div class="flex min-w-0 items-center gap-3">
                                     <span class="inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-border"

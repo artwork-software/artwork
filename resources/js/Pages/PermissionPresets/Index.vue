@@ -16,10 +16,10 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <button class="ui-button-add" @click="openPermissionPresetModal('create')">
+                    <BaseUIButton variant="primary" hide-icon @click="openPermissionPresetModal('create')">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create new permission presets') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 

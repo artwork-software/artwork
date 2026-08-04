@@ -4,15 +4,16 @@
         :description="$t('Manage material sets for inventory planning.')"
     >
         <template #actions>
-            <button
+            <BaseUIButton
                 v-if="can('set.create_edit') || is('artwork admin')"
-                class="ui-button-add"
+                variant="primary"
+                hide-icon
                 type="button"
                 @click="openCreate()"
             >
                 <component :is="IconCopyPlus" stroke-width="1" class="size-5" />
                 <span>{{ $t('New Material Set') }}</span>
-            </button>
+            </BaseUIButton>
         </template>
 
             <SettingsGuideBanner
@@ -182,6 +183,7 @@ import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import SingleMaterialSet from '@/Pages/MaterialSet/Components/SingleMaterialSet.vue'
 import CreateOrUpdateMaterialSetModal from '@/Pages/MaterialSet/Components/CreateOrUpdateMaterialSetModal.vue'
 import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
 import { IconSearch, IconLayoutGrid, IconList, IconCopyPlus, IconStackForward } from '@tabler/icons-vue'
 

@@ -112,13 +112,14 @@
                     </div>
 
                     <div class="px-5 py-3 border-t border-border-subtle flex justify-end">
-                        <button
-                            class="ui-button-add"
+                        <BaseUIButton
+                            variant="primary"
+                            hide-icon
                             :disabled="!(selection[index]?.mergeIds.size > 0) || merging"
                             @click="confirmCluster = index"
                         >
                             {{ $t('Merge {count} contacts', { count: (selection[index]?.mergeIds.size ?? 0) + 1 }) }}
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </div>
             </div>
@@ -141,6 +142,7 @@ import { router, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { IconUsers, IconInfoCircle, IconCircleCheck } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'

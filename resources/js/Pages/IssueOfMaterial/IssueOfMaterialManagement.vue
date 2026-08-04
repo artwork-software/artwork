@@ -18,10 +18,10 @@
                         classes-button="ui-button"
                         @click="showLogModal = true"
                     />
-                    <button class="ui-button-add" @click="openIssueOfMaterialModal">
+                    <BaseUIButton variant="primary" hide-icon @click="openIssueOfMaterialModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5"/>
                         {{ $t('New issue of material') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
 
             </ToolbarHeader>
@@ -469,13 +469,13 @@
                     </div>
                     <!-- Apply/Reset buttons at bottom right -->
                     <div v-if="!filtersCollapsed" class="flex justify-end gap-2 mt-4">
-                        <button
+                        <BaseUIButton
                             type="button"
+                            hide-icon
                             @click="resetFilters"
-                            class="ui-button"
                         >
                             {{ $t('Reset') }}
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </div>
                 <!-- Aktive Filter Zusammenfassung (immer sichtbar) -->
@@ -581,6 +581,7 @@
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";

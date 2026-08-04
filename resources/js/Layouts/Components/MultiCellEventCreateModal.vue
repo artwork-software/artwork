@@ -198,9 +198,9 @@
             <!-- Sticky Action Bar -->
             <div class="ui-footer">
                 <div class="flex items-center justify-end gap-2">
-                    <button type="button" class="ui-btn-secondary" @click="$emit('closed', false)">
+                    <BaseUIButton type="button" hide-icon @click="$emit('closed', false)">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                     <FormButton
                         :disabled="submitting"
                         @click="submit"
@@ -222,6 +222,7 @@ import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import { IconCircleX } from "@tabler/icons-vue";

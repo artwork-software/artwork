@@ -19,10 +19,10 @@
                             icon-size="size-5"
                         />
                     </div>
-                    <button class="ui-button-add" @click="showCreateOrUpdateArtistModal = true">
+                    <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateArtistModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add artist') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>

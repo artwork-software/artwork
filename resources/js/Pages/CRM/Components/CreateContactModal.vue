@@ -118,14 +118,15 @@
                 <button type="button" class="ui-button-cancel" @click="$emit('close')">
                     {{ $t('Cancel') }}
                 </button>
-                <button
+                <BaseUIButton
                     type="button"
-                    class="ui-button-add"
+                    variant="primary"
+                    hide-icon
                     @click="submit"
                     :disabled="form.processing"
                 >
                     {{ $t('Create') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -143,6 +144,7 @@ import {
     ListboxOptions,
 } from '@headlessui/vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue'

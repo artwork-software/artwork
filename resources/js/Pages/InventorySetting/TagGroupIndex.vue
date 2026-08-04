@@ -4,14 +4,14 @@
         :description="$t('Manage your inventory tags and tag groups to better organize and categorize your items.')"
     >
         <template #actions>
-            <button class="ui-button-add" @click="openCreateTagGroup">
+            <BaseUIButton variant="primary" hide-icon @click="openCreateTagGroup">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add tag group') }}
-            </button>
-            <button class="ui-button-add" @click="openCreateTag">
+            </BaseUIButton>
+            <BaseUIButton variant="primary" hide-icon @click="openCreateTag">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Add tag') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <!-- Info-Alert zu Tags -->
@@ -365,6 +365,7 @@ import {
 import Draggable from 'vuedraggable'
 
 import InventorySettingsHeader from '@/Pages/InventorySetting/Components/InventorySettingsHeader.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import AddEditTagGroupModal from '@/Pages/InventorySetting/Components/AddEditTagGroupModal.vue'
 import AddEditTagModal from '@/Pages/InventorySetting/Components/AddEditTagModal.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'

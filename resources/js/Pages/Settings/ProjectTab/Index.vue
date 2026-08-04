@@ -7,6 +7,7 @@ import DragComponentElement from "@/Pages/Settings/Components/DragComponentEleme
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -175,10 +176,10 @@ function updateComponentOrder(components) {
 <template>
     <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
         <template #actions>
-            <button class="ui-button-add" @click="showAddEditModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showAddEditModal = true">
                 <PropertyIcon name="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ t('Create tab') }}
-            </button>
+            </BaseUIButton>
         </template>
         <SettingsGuideBanner
             class="mb-6"

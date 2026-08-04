@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 const props = defineProps({
   allTabs: { type: Array, required: true },
@@ -91,7 +92,7 @@ function save() {
       </div>
 
       <div class="flex items-center justify-end gap-3 pt-2">
-        <button type="button" class="ui-button" @click="close">{{ $t('Cancel') }}</button>
+        <BaseUIButton type="button" hide-icon @click="close">{{ $t('Cancel') }}</BaseUIButton>
         <button type="button" class="ui-button-primary" @click="save">{{ $t('Save') }}</button>
       </div>
     </div>

@@ -17,10 +17,10 @@
             >
                 <template #actions>
 
-                    <button class="ui-button-add" @click="showAddEditManufacturerModal = true">
+                    <BaseUIButton variant="primary" hide-icon @click="showAddEditManufacturerModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create Manufacturer') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -100,6 +100,7 @@ const props = defineProps({
 
 import BaseTable, { type TableColumn } from '@/Artwork/Table/BaseTable.vue'
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {IconCirclePlus, IconBuildingFactory2, IconEdit, IconTrash} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";

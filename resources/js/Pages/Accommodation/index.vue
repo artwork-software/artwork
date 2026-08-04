@@ -11,10 +11,10 @@
             >
                 <template #actions>
 
-                    <button class="ui-button-add" @click="showCreateOrUpdateModal = true">
+                    <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create new Accommodation') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -101,6 +101,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import {Link, router} from "@inertiajs/vue3";
 import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 // Predefined room types from TypOfRoom enum - only these should be translated
 const predefinedRoomTypes = [

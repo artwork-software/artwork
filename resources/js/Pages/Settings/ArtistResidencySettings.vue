@@ -114,14 +114,15 @@
             </div>
 
             <div class="mt-6">
-                <button
+                <BaseUIButton
                     type="button"
-                    class="ui-button-add"
+                    variant="primary"
+                    hide-icon
                     @click="save"
                     :disabled="form.processing"
                 >
                     {{ $t('Save') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ProjectSettingsHeader>
@@ -135,6 +136,7 @@ import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHe
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 const props = defineProps({
     breakfastDeductionPerDay: { type: Number, default: 5.60 },

@@ -32,9 +32,9 @@
 
             <div class="flex justify-end gap-3 mt-6">
                 <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!selectedType || processing" @click="submit">
+                <BaseUIButton variant="primary" hide-icon :disabled="!selectedType || processing" @click="submit">
                     {{ $t('Change type') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -45,6 +45,7 @@ import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 
 const $t = useTranslation()

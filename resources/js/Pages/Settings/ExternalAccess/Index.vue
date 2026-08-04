@@ -105,7 +105,7 @@
                 </section>
 
                 <div class="flex justify-end">
-                    <button type="submit" :disabled="form.processing" class="ui-button-add">{{ $t('Save settings') }}</button>
+                    <BaseUIButton type="submit" variant="primary" hide-icon :disabled="form.processing">{{ $t('Save settings') }}</BaseUIButton>
                 </div>
             </form>
 
@@ -118,7 +118,7 @@
                             {{ $t('These recipients receive a copy of every external access notification.') }}
                         </p>
                     </div>
-                    <button class="ui-button" @click="openAdd">{{ $t('Add recipient') }}</button>
+                    <BaseUIButton hide-icon @click="openAdd">{{ $t('Add recipient') }}</BaseUIButton>
                 </header>
 
                 <ul v-if="notificationRecipients.length" class="mt-6 space-y-2">
@@ -161,7 +161,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button class="ui-button-cancel" @click="addOpen = false">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!addForm.option || !addForm.types.length" @click="addRecipient">{{ $t('Add recipient') }}</button>
+                <BaseUIButton variant="primary" hide-icon :disabled="!addForm.option || !addForm.types.length" @click="addRecipient">{{ $t('Add recipient') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
 
@@ -175,7 +175,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button class="ui-button-cancel" @click="editOpen = false">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" :disabled="!editForm.types.length" @click="updateRecipient">{{ $t('Save settings') }}</button>
+                <BaseUIButton variant="primary" hide-icon :disabled="!editForm.types.length" @click="updateRecipient">{{ $t('Save settings') }}</BaseUIButton>
             </div>
         </ArtworkBaseModal>
     </AppLayout>
@@ -187,6 +187,7 @@ import { router, useForm, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 

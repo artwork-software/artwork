@@ -3,10 +3,10 @@
 
         <EventSettingHeader>
             <template #actions>
-                <button class="ui-button-add" @click="showCreateEventStatusModal = true">
+                <BaseUIButton variant="primary" hide-icon @click="showCreateEventStatusModal = true">
                     <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('Add Event Status') }}
-                </button>
+                </BaseUIButton>
             </template>
 
             <SettingsGuideBanner
@@ -139,6 +139,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     eventStatuses: {

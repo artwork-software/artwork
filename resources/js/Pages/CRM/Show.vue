@@ -79,14 +79,14 @@
                     <p v-if="profileImageError" class="mt-1 text-sm text-danger">{{ profileImageError }}</p>
                 </div>
                 <div class="ml-auto flex items-center gap-2" v-if="!isReadOnly && activeTab === 'info'">
-                    <button v-if="canChangeType && !editing" class="ui-button" @click="showChangeTypeModal = true">
+                    <BaseUIButton v-if="canChangeType && !editing" hide-icon @click="showChangeTypeModal = true">
                         <component :is="IconSwitchHorizontal" stroke-width="1" class="size-5" />
                         {{ $t('Change type') }}
-                    </button>
-                    <button class="ui-button-add" @click="toggleEditing">
+                    </BaseUIButton>
+                    <BaseUIButton variant="primary" hide-icon @click="toggleEditing">
                         <component :is="editing ? IconCheck : IconEdit" stroke-width="1" class="size-5" />
                         {{ editing ? $t('Save changes') : $t('Edit') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
 
@@ -277,10 +277,10 @@
                 </div>
 
                 <div v-if="!isReadOnly && !showNewRow" class="mt-3">
-                    <button type="button" class="ui-button-add" @click="showNewRow = true">
+                    <BaseUIButton type="button" variant="primary" hide-icon @click="showNewRow = true">
                         <component :is="IconCirclePlus" class="h-4 w-4 mr-1" />
                         {{ $t('Add room type') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
 
@@ -322,6 +322,7 @@ import {
     IconCamera, IconSwitchHorizontal,
 } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import debounce from 'lodash.debounce'
 

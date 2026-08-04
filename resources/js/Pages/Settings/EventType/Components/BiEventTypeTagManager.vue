@@ -6,10 +6,10 @@
                 <p class="text-sm text-text-subtle">{{ $t('Define tags for BI counting of event types.') }}</p>
             </div>
             <div class="mt-3 sm:mt-0 sm:ml-4">
-                <button class="ui-button-add" @click="openAddTagModal">
+                <BaseUIButton variant="primary" hide-icon @click="openAddTagModal">
                     <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('New BI tag') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
 
@@ -135,6 +135,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { IconCirclePlus, IconEdit, IconInfoCircle, IconLink, IconTrash, IconX } from '@tabler/icons-vue';
 import BaseMenu from '@/Components/Menu/BaseMenu.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue';
 import AddEditBiTagModal from '@/Pages/Settings/EventType/Components/Modals/AddEditBiTagModal.vue';
 import AssignBiTagEventTypesModal from '@/Pages/Settings/EventType/Components/Modals/AssignBiTagEventTypesModal.vue';

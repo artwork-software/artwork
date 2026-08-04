@@ -152,10 +152,10 @@
                                     </p>
                                 </div>
                             </div>
-                            <button class="btn-subtle" @click="goBackToChatList">
+                            <BaseUIButton size="sm" hide-icon @click="goBackToChatList">
                                 <PropertyIcon name="IconChevronLeft" class="size-4" />
                                 <span class="text-xs">{{ $t('Back') }}</span>
-                            </button>
+                            </BaseUIButton>
                         </div>
 
                         <div v-else class="flex items-center justify-between">
@@ -191,10 +191,10 @@
                                         class="chat-tooltip-black-icon"
                                     />
                                 </button>
-                                <button class="btn-subtle" @click="goBackToChatList">
+                                <BaseUIButton size="sm" hide-icon @click="goBackToChatList">
                                     <PropertyIcon name="IconChevronLeft" class="size-4" />
                                     <span class="text-xs">{{ $t('Back') }}</span>
-                                </button>
+                                </BaseUIButton>
                             </div>
                         </div>
                     </div>
@@ -360,6 +360,7 @@ import {router, usePage} from "@inertiajs/vue3";
 import {useUserStatus} from "@/Composeables/useUserStatus.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const { getUserStatus } = useUserStatus()
 
 

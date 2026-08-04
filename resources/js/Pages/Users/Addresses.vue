@@ -86,10 +86,10 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <button class="ui-button-add" v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
+                    <BaseUIButton variant="primary" hide-icon v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add new Address') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -238,14 +238,14 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button
+                    <BaseUIButton
                         v-if="can('can manage workers') || is('artwork admin')"
                         @click="openSelectAddUsersModal = true"
                         type="button"
-                        class="ui-button"
+                        hide-icon
                     >
                         <PlusIcon class="size-5" />
-                    </button>
+                    </BaseUIButton>
                     <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
                         <div class="flex items-center justify-between px-4 py-2">
                             <button
@@ -277,13 +277,13 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <button
+                    <BaseUIButton
                         v-if="!showSearchbar"
                         @click="openSearchbar"
-                        class="ui-button"
+                        hide-icon
                     >
                         <SearchIcon class="size-5 text-text-muted" />
-                    </button>
+                    </BaseUIButton>
                     <div v-else class="flex items-center">
                         <input
                             id="userSearch"

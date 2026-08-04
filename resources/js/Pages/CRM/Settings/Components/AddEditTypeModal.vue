@@ -149,9 +149,9 @@
 
             <div class="flex justify-end gap-3">
                 <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" @click="submit" :disabled="form.processing">
+                <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
                     {{ contactType ? $t('Save') : $t('Create') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -164,6 +164,7 @@ import draggable from 'vuedraggable'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import IconSelector from '@/Components/Icon/IconSelector.vue'
 import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'

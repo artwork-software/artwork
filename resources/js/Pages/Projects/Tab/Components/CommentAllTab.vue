@@ -42,15 +42,16 @@
                             <div class="text-[11px] text-text-subtle">
                                 {{ commentForm.text?.length ?? 0 }} / 5000
                             </div>
-                            <button
-                                class="ui-button-add"
+                            <BaseUIButton
+                                variant="primary"
+                                hide-icon
                                 :class="commentForm.text === '' ? 'cursor-not-allowed !bg-surface-sunken !text-text-subtle !border-border-subtle' : 'cursor-pointer'"
                                 @click="addCommentToProject"
                                 :disabled="commentForm.text === ''"
                             >
                                 <IconCircleCheckFilled class="size-4" />
                                 <span class="text-sm">{{ $t('Add comment to project') }}</span>
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
                 </div>
@@ -141,6 +142,7 @@ import { useCommentListener } from "@/Composeables/Listener/useCommentListener.j
 import { IconCircleCheckFilled, IconCircleXFilled } from "@tabler/icons-vue";
 import { can, is } from "laravel-permission-to-vuejs";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 defineOptions({

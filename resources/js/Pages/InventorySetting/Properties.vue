@@ -4,10 +4,10 @@
         :description="$t('Define the properties that articles can have.')"
     >
         <template #actions>
-            <button class="ui-button-add" @click="showAddEditPropertyModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showAddEditPropertyModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create Property') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -111,6 +111,7 @@
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import {ref, watch} from "vue";
 import {router} from "@inertiajs/vue3";

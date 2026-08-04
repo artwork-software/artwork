@@ -76,14 +76,15 @@
 
                     <div class="flex items-center justify-end space-x-4">
                         <!-- button - -->
-                        <button
-                            class="ui-button-delete"
+                        <BaseUIButton
+                            variant="danger"
+                            hide-icon
                             :disabled="article.quantity <= 0 || isSaving(article.basketArticleId)"
                             @click="changeQuantity(article.basketArticleId, 'decrease')"
                             :aria-disabled="String(article.quantity <= 0 || isSaving(article.basketArticleId))"
                         >
                             –
-                        </button>
+                        </BaseUIButton>
 
                         <!-- quantity -->
                         <BaseInput
@@ -97,14 +98,15 @@
                         />
 
                         <!-- button + -->
-                        <button
-                            class="ui-button-add"
+                        <BaseUIButton
+                            variant="primary"
+                            hide-icon
                             :disabled="isSaving(article.basketArticleId)"
                             @click="changeQuantity(article.basketArticleId, 'increase')"
                             :aria-disabled="String(isSaving(article.basketArticleId))"
                         >
                             +
-                        </button>
+                        </BaseUIButton>
                         <BaseUIButton
                             class="ui-button-delete"
                             :disabled="isSaving(article.basketArticleId)"

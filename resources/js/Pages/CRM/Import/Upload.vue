@@ -168,10 +168,12 @@
 
                     <!-- Submit -->
                     <div class="flex justify-end">
-                        <button
+                        <BaseUIButton
                             type="submit"
+                            variant="primary"
+                            hide-icon
                             :disabled="!canSubmit || form.processing"
-                            class="ui-button-add disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
+                            class="disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                         >
                             <span v-if="form.processing" class="flex items-center gap-2">
                                 <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -181,7 +183,7 @@
                                 {{ $t('Uploading') }}...
                             </span>
                             <span v-else>{{ form.use_type_column ? $t('Next: Map type values') : $t('Next: Map columns') }}</span>
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </form>
 
@@ -217,6 +219,7 @@ import { useForm, Link } from '@inertiajs/vue3'
 import { useTranslation } from '@/Composeables/Translation.js'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 import ArtworkBaseToggle from '@/Artwork/Toggles/ArtworkBaseToggle.vue'
 import ImportStepper from '@/Pages/CRM/Import/Components/ImportStepper.vue'

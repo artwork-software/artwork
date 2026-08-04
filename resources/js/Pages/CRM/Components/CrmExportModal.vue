@@ -155,12 +155,13 @@
                     {{ $t('Reset') }}
                 </button>
                 <div class="flex items-center gap-3">
-                    <button type="button" class="ui-button" @click="$emit('close')">
+                    <BaseUIButton type="button" hide-icon @click="$emit('close')">
                         {{ $t('Cancel') }}
-                    </button>
-                    <button
+                    </BaseUIButton>
+                    <BaseUIButton
                         type="button"
-                        class="ui-button-add"
+                        variant="primary"
+                        hide-icon
                         :disabled="selectedColumns.length === 0 || exporting"
                         @click="doExport"
                     >
@@ -172,7 +173,7 @@
                             {{ $t('Exporting') }}...
                         </span>
                         <span v-else>{{ $t('Export Excel') }}</span>
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
         </div>
@@ -185,6 +186,7 @@ import { ref, computed } from 'vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import axios from 'axios'
 import debounce from 'lodash.debounce'
 

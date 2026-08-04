@@ -10,26 +10,26 @@
 
                 <!-- Navigation -->
                 <div class="flex items-center gap-1.5">
-                    <button
-                        class="ui-button"
+                    <BaseUIButton
+                        hide-icon
                         @click="previousMonth"
                         :aria-label="$t('Previous month')"
                     >
                         <IconChevronLeft class="h-5 w-5 text-accent-600" />
-                    </button>
+                    </BaseUIButton>
                     <button
                         class="ui-button !px-2 text-sm text-accent-600"
                         @click="goToToday"
                     >
                         {{ $t('Today') }}
                     </button>
-                    <button
-                        class="ui-button"
+                    <BaseUIButton
+                        hide-icon
                         @click="nextMonth"
                         :aria-label="$t('Next month')"
                     >
                         <IconChevronRight class="h-5 w-5 text-accent-600" />
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
         </div>
@@ -122,6 +122,7 @@
 
 <script setup>
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import { computed, ref, onBeforeUnmount } from 'vue'
 import { router } from '@inertiajs/vue3'
 import dayjs from 'dayjs'

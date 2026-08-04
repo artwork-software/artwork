@@ -445,9 +445,9 @@
                 <!-- Sticky Action Bar -->
                 <div class="ui-footer">
                     <div class="flex items-center justify-end gap-2">
-                        <button type="button" class="ui-btn-secondary" @click="closeModal">
+                        <BaseUIButton type="button" hide-icon @click="closeModal">
                             {{ $t('Cancel') }}
-                        </button>
+                        </BaseUIButton>
 
                         <FormButton
                             v-if="canCreateDirect"
@@ -532,7 +532,7 @@
                 </div>
 
                 <div class="mt-3 flex w-full justify-end">
-                    <button type="button" class="ui-btn-secondary" @click="closeModal">{{ $t('Close') }}</button>
+                    <BaseUIButton type="button" hide-icon @click="closeModal">{{ $t('Close') }}</BaseUIButton>
                 </div>
             </div>
         </div>
@@ -580,9 +580,9 @@
             <button type="button" class="ui-button-cancel" @click="showAssignmentImpactModal = false">
                 {{ $t('Cancel') }}
             </button>
-            <button type="button" class="ui-button-add" @click="confirmAssignmentImpactAndSave">
+            <BaseUIButton type="button" variant="primary" hide-icon @click="confirmAssignmentImpactAndSave">
                 {{ $t('Move anyway') }}
-            </button>
+            </BaseUIButton>
         </div>
     </ArtworkBaseModal>
 
@@ -622,6 +622,7 @@ import dayjs from 'dayjs'
 import { can } from 'laravel-permission-to-vuejs'
 
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'

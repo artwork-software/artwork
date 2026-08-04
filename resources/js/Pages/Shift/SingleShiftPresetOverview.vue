@@ -7,6 +7,7 @@ import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue"
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue"
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue"
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue"
 
 // Tabler Icons
 import {
@@ -145,10 +146,10 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
         :description="$t('Templates with times, trades, and qualifications — quick to plan and reusable.')"
     >
         <template #actions>
-            <button class="ui-button-add" type="button" @click="openAddModal">
+            <BaseUIButton variant="primary" hide-icon type="button" @click="openAddModal">
                 <IconCirclePlus class="size-4" />
                 <span>{{ $t('Create Preset') }}</span>
-            </button>
+            </BaseUIButton>
         </template>
 
         <div class="space-y-6">
@@ -303,14 +304,14 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                         <!-- Aktionen: Buttons allein -->
                         <div class="px-6 py-4">
                             <div class="flex justify-end gap-2">
-                                <button class="ui-button" type="button" @click="openEditModal(preset)">
+                                <BaseUIButton hide-icon type="button" @click="openEditModal(preset)">
                                     <IconPencil class="size-4" />
                                     <span>{{ $t('Edit') }}</span>
-                                </button>
-                                <button class="ui-button" type="button" @click="deletePreset(preset.id)">
+                                </BaseUIButton>
+                                <BaseUIButton hide-icon type="button" @click="deletePreset(preset.id)">
                                     <IconTrash class="size-4" />
                                     <span>{{ $t('Delete') }}</span>
-                                </button>
+                                </BaseUIButton>
                             </div>
                         </div>
                     </div>
@@ -369,14 +370,14 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                         </div>
 
                         <div class="mt-4 flex justify-end gap-2">
-                            <button class="ui-button" type="button" @click="openEditModal(preset)">
+                            <BaseUIButton hide-icon type="button" @click="openEditModal(preset)">
                                 <IconPencil class="size-4" />
                                 <span>{{ $t('Edit') }}</span>
-                            </button>
-                            <button class="ui-button" type="button" @click="deletePreset(preset.id)">
+                            </BaseUIButton>
+                            <BaseUIButton hide-icon type="button" @click="deletePreset(preset.id)">
                                 <IconTrash class="size-4" />
                                 <span>{{ $t('Delete') }}</span>
-                            </button>
+                            </BaseUIButton>
                         </div>
                     </div>
                 </div>
@@ -388,10 +389,10 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                     <h3 class="text-lg font-semibold text-text">{{ $t('No presets available yet') }}</h3>
                 </div>
                 <div class="mt-4 flex justify-center">
-                    <button class="ui-button" type="button" @click="openAddModal">
+                    <BaseUIButton hide-icon type="button" @click="openAddModal">
                         <IconCirclePlus class="size-4" />
                         <span>{{ $t('Create Preset') }}</span>
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
 

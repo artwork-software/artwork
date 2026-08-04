@@ -43,11 +43,11 @@
                 </ul>
             </div>
             <div>
-                <button class="new-button-small" @click="openMaterialIssueModal(issue.id)" type="button" :disabled="loadingIssueId === issue.id">
+                <BaseUIButton size="sm" hide-icon @click="openMaterialIssueModal(issue.id)" type="button" :disabled="loadingIssueId === issue.id">
                     <IconLoader2 v-if="loadingIssueId === issue.id" class="size-4 animate-spin" />
                     <IconEdit v-else class="size-4" />
                     {{ $t('Edit')}}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </div>
@@ -71,6 +71,7 @@
 <script setup>
 
 import { IconEdit, IconLoader2 } from '@tabler/icons-vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import {defineAsyncComponent, ref, watch, nextTick, computed} from 'vue';
 import axios from 'axios';
 

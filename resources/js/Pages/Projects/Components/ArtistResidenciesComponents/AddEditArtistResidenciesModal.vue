@@ -14,14 +14,14 @@
                         <!-- Artist -->
                         <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <header class="flex items-center justify-between px-4 pt-4">
-                                <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-artwork-buttons-hover">
+                                <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-accent-700">
                                     {{ $t('Artist') }}
                                 </h3>
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-xs text-accent-600 cursor-pointer hover:underline" @click="selectArtist = !selectArtist">
                                         {{ selectArtist ? $t('Close artist selection') : $t('Assign existing artist') }}
                                     </div>
-                                    <span class="inline-flex items-center rounded-full border border-artwork-navigation-color/30 bg-artwork-navigation-color/10 px-2 py-0.5 text-[11px] font-medium text-artwork-buttons-hover">
+                                    <span class="inline-flex items-center rounded-full border border-text-inverse/30 bg-text-inverse/10 px-2 py-0.5 text-[11px] font-medium text-accent-700">
                                       {{ project?.name }}
                                     </span>
                                 </div>
@@ -32,7 +32,7 @@
                                     <div class="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-sunken p-4">
                                         <!-- Avatar + Name -->
                                         <div class="flex items-center gap-4">
-                                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-semibold text-sm">
+                                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent-700 text-white font-semibold text-sm">
                                                 {{ selectedArtist.name?.slice(0, 2).toUpperCase() }}
                                             </div>
                                             <div class="flex flex-col">
@@ -82,7 +82,7 @@
                                             type="checkbox"
                                             id="do_not_save_artist"
                                             v-model="artistResidency.do_not_save_artist"
-                                            class="rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                            class="rounded border-border text-accent-700 focus:ring-accent-700"
                                         />
                                         <label for="do_not_save_artist" class="text-sm text-text-muted">
                                             {{ $t('Do not save artist in database') }}
@@ -115,14 +115,14 @@
                                                 :key="artist.id"
                                                 @click="selectedArtist = artist; selectArtist = false"
                                                 class="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-border p-4 transition-all duration-150 ease-in-out"
-                                                :class="{ 'border-artwork-buttons-hover bg-artwork-buttons-hover/10 ring-2 ring-artwork-buttons-hover/50':
+                                                :class="{ 'border-accent-700 bg-accent-700/10 ring-2 ring-accent-700/50':
                                                         selectedArtist?.id === artist.id,
-                                                    'hover:border-artwork-buttons-hover/40 hover:bg-artwork-buttons-hover/5':
+                                                    'hover:border-accent-700/40 hover:bg-accent-700/5':
                                                         selectedArtist?.id !== artist.id
                                                 }"
                                             >
                                                 <!-- Avatar -->
-                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-bold text-sm">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-700 text-white font-bold text-sm">
                                                     {{ artist.name.slice(0, 2).toUpperCase() }}
                                                 </div>
 
@@ -132,7 +132,7 @@
                                                 </div>
 
                                                 <!-- Check -->
-                                                <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-artwork-buttons-hover">
+                                                <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-accent-700">
                                                     <component :is="IconCheck" class="h-5 w-5" />
                                                 </div>
                                             </div>
@@ -151,7 +151,7 @@
                         <!-- Accommodation & Room -->
                         <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <header class="px-4 pt-4">
-                                <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-artwork-navigation-color">
+                                <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-text-inverse">
                                     {{ $t('Accommodation & room') }}
                                 </h3>
                             </header>
@@ -188,7 +188,7 @@
                         <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <div class="flex items-center justify-between px-4 pt-4">
                                 <header class="">
-                                    <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-artwork-buttons-hover">
+                                    <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-accent-700">
                                         {{ $t('Travel & costs') }}
                                     </h3>
                                 </header>
@@ -296,7 +296,7 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <div class="flex items-center">
-                                            <h4 class="xsLight">{{ $t('No. of overnight stays') }}</h4>
+                                            <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('No. of overnight stays') }}</h4>
                                             <ToolTipComponent
                                                 :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
@@ -304,19 +304,19 @@
                                                 direction="bottom"
                                             />
                                         </div>
-                                        <div class="mt-2 xsDark tabular-nums">{{ calculateTotalNights() }}</div>
+                                        <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">{{ calculateTotalNights() }}</div>
                                     </div>
 
                                     <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
-                                        <h4 class="xsLight">{{ $t('Costs for overnight stays') }}</h4>
-                                        <div class="mt-2 xsDark tabular-nums">
+                                        <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('Costs for overnight stays') }}</h4>
+                                        <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">
                                             <span class="underline decoration-double underline-offset-2">{{ calculateTotalCost }} €</span>
                                         </div>
                                     </div>
 
                                     <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <div class="flex items-center">
-                                            <h4 class="xsLight">{{ $t('Daily allowance entitlement') }}</h4>
+                                            <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('Daily allowance entitlement') }}</h4>
                                             <ToolTipComponent
                                                 :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
@@ -324,7 +324,7 @@
                                                 direction="bottom"
                                             />
                                         </div>
-                                        <div class="mt-2 xsDark tabular-nums">
+                                        <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">
                                             {{ calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance) }}
                                         </div>
                                     </div>
@@ -343,7 +343,7 @@
                     <!-- SUMMARY -->
                     <aside class="md:col-span-1">
                         <div class="md:sticky md:top-4 rounded-xl border border-border-subtle bg-white shadow-sm p-4">
-                            <h4 class="text-sm font-semibold text-text pl-3 border-l-4 border-artwork-navigation-color">
+                            <h4 class="text-sm font-semibold text-text pl-3 border-l-4 border-text-inverse">
                                 {{ $t('Summary') }}
                             </h4>
 
@@ -477,7 +477,7 @@
                                     type="checkbox"
                                     id="sync_crm_changes"
                                     v-model="syncCrmChanges"
-                                    class="rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                    class="rounded border-border text-accent-700 focus:ring-accent-700"
                                 />
                                 <label for="sync_crm_changes" class="text-sm text-text-muted">
                                     {{ $t('Apply changes to artist in CRM') }}

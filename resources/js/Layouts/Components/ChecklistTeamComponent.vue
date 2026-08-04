@@ -1,11 +1,11 @@
 <template>
     <BaseModal @closed="emitClose" v-if="editingChecklistTeams" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
             <div class="mx-3">
-                <div class="font-bold font-lexend text-primary text-2xl my-2">
+                <div class="font-bold font-lexend text-text text-2xl my-2">
                     {{ $t('Assign teams')}}
                 </div>
 
-                <div class="text-secondary tracking-tight leading-6 sub">
+                <div class="text-text-subtle tracking-tight leading-6 sub">
                     {{ $t('Enter the name of the team to which you want to assign the checklist.')}}
                 </div>
                 <div class="mt-10">
@@ -15,14 +15,14 @@
                             v-model="departmentQuery"
                             type="text"
                             autocomplete="off"
-                            class="pl-2 h-12 w-10/12 focus:border-b-primary border-b-2 border-border text-primary focus:outline-none focus:ring-0 placeholder-secondary border-0"/>
+                            class="pl-2 h-12 w-10/12 focus:border-b-primary border-b-2 border-border text-text focus:outline-none focus:ring-0 placeholder-text-subtle border-0"/>
                     </div>
 
                     <!--    Department Search Results    -->
-                    <div class="absolute max-h-60 bg-primary shadow-lg text-sm flex flex-col w-9/12">
+                    <div class="absolute max-h-60 bg-surface-inverse shadow-lg text-sm flex flex-col w-9/12">
                         <button v-for="(department, index) in searchedDepartments"
                             :key="index"
-                            class="cursor-pointer p-4 font-bold text-white hover:border-l-4 hover:border-l-success border-l-4 border-l-primary"
+                            class="cursor-pointer p-4 font-bold text-white hover:border-l-4 hover:border-l-success border-l-4 border-l-surface-inverse"
                             @click="addDepartment(department)">
                             {{ department.name }}
                         </button>
@@ -36,7 +36,7 @@
 
                 <!--    Team list    -->
                 <div v-for="(department,index) in selectedDepartments"
-                    class="mt-4 font-bold text-primary flex"
+                    class="mt-4 font-bold text-text flex"
                     :key="index">
                     <div class="flex items-center">
                         <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-11 w-11 object-cover"/>
@@ -44,7 +44,7 @@
                     </div>
                     <button type="button" @click="removeDepartment(department)">
                         <span class="sr-only">{{ $t('Remove team from checklist')}}</span>
-                        <IconCircleX stroke-width="1.5" class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
+                        <IconCircleX stroke-width="1.5" class="ml-2 mt-1 h-5 w-5 hover:text-danger text-white bg-surface-inverse rounded-full"/>
                     </button>
                 </div>
 
@@ -58,8 +58,8 @@
 </template>
 
 <script>
+import {IconCircleX, IconX} from "@tabler/icons-vue";
 
-import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -73,8 +73,8 @@ export default {
     components: {
         BaseModal,
         FormButton,
-        XIcon,
-        XCircleIcon,
+        IconX,
+        IconCircleX,
         TeamIconCollection,
         JetDialogModal,
     },

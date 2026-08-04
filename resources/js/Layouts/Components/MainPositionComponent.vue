@@ -1,7 +1,7 @@
 <template>
-    <th class="p-0" :class="[mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-update' : 'bg-primary', mainPosition.closed ? 'rounded-lg' : 'rounded-t-lg']">
+    <th class="p-0" :class="[mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-accent-600' : 'bg-surface-inverse', mainPosition.closed ? 'rounded-lg' : 'rounded-t-lg']">
         <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id" @mouseout="showMenu = null">
-            <div class="pl-2 xsWhiteBold flex w-full items-center h-10" v-if="!mainPosition.clicked">
+            <div class="pl-2 text-sm/5 font-bold text-white flex w-full items-center h-10" v-if="!mainPosition.clicked">
                 <div @click="mainPosition.clicked = !mainPosition.clicked">
                     {{ mainPosition.name }}
                 </div>
@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 xsDark bg-white rounded-md border border-border px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                <input class="my-2 ml-1 text-sm/5 font-semibold text-text bg-white rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600 focus:outline-none"
                        type="text" v-model="mainPosition.name"
                        @keyup.enter="$event.target.blur()"
                        @keyup.esc="mainPosition.name = editedNameOriginalValue ?? mainPosition.name; mainPosition.clicked = false"
@@ -23,16 +23,16 @@
                 </button>
             </div>
             <div class="flex items-center justify-end">
-                <div class="text-white items-center xsWhiteBold flex w-44 justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.auth.user.id">
+                <div class="text-white items-center text-sm/5 font-bold text-white flex w-44 justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.auth.user.id">
                     <PropertyIcon name="IconLockCog" class="w-5 h-5" stroke-width="1.5"/>
                     <p class="ml-2">{{ $t('requested to be verified') }}</p>
                 </div>
                 <div v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" class="text-white w-44 flex items-center text-center cursor-pointer justify-end mr-2" @click="verifiedMainPosition(mainPosition.verified?.main_position_id)" v-if="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
-                    <p class="xxsLight">{{ $t('Mark as verified') }}</p>
+                    <p class="text-xs/[18px] text-text-subtle">{{ $t('Mark as verified') }}</p>
                     <PropertyIcon name="IconCircleCheck" class="ml-1 h-5 w-5" stroke-width="1.5"/>
                 </div>
                 <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && !mainPosition.columnVerifiedChanges">
-                    <p class="xsWhiteBold mr-1">{{ $t('verified') }}</p>
+                    <p class="text-sm/5 font-bold text-white mr-1">{{ $t('verified') }}</p>
                     <PropertyIcon name="IconLock" class="w-5 h-5" stroke-width="1.5"/>
                 </div>
                 <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && mainPosition.columnVerifiedChanges">
@@ -42,7 +42,7 @@
                     <div class="flex w-full">
                         <BaseMenu
                             v-if="hasBudgetAccess || $can('edit budget templates')"
-                            dots-color="text-artwork-context-light"
+                            dots-color="text-border-subtle"
                             white-menu-background
                         >
                             <!-- Get verified by user -->
@@ -120,10 +120,10 @@
                 </div>
             </div>
         </div>
-        <div @click="addSubPosition(mainPosition.id)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+        <div @click="addSubPosition(mainPosition.id)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
             <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                 {{ $t('Sub position') }}
-                <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
+                <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full" />
             </div>
         </div>
         <div v-if="!mainPosition.closed" class="w-full">
@@ -140,7 +140,7 @@
                     <div class="mb-1">
                         <div class="relative">
                             <div v-if="canReorderSubPositions"
-                                 class="sub-position-drag-handle absolute left-[-16px] top-3 z-10 cursor-grab text-secondary hover:text-primaryText">
+                                 class="sub-position-drag-handle absolute left-[-16px] top-3 z-10 cursor-grab text-text-subtle hover:text-primaryText">
                                 <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
                             </div>
                             <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
@@ -167,7 +167,7 @@
             </draggable>
             <table class="w-full">
             <thead class="">
-            <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
+            <tr class=" text-sm/5 font-bold text-white flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.auth.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-accent-600' : 'bg-surface-inverse'">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
                 <td class="w-72">{{ $t('SUM') }}</td>
@@ -189,17 +189,17 @@
                             {{ calculateRelevantBudgetDataSumFormProjectsInGroupMainPosition() }}
                         </span>
                         <div v-if="this.hasBudgetAccess" class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
-                            <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
+                            <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-accent-600 rounded-full " />
                         </div>
                     </div>
                 </td>
             </tr>
             </thead>
             </table>
-            <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+            <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                     {{ $t('Main position') }}
-                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
+                    <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full" />
                 </div>
             </div>
         </div>

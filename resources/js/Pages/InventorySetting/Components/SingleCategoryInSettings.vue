@@ -12,7 +12,7 @@
     <template v-if="showActions || showOnlyActions">
         <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
             <div class="flex items-center gap-x-4">
-                <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
+                <button type="button" class="text-accent-600 hover:text-accent-700">
                     <component :is="IconEdit" @click="showAddEditCategoryModal = true" class="h-5 w-5" aria-hidden="true" />
                 </button>
                 <button type="button" class="text-danger hover:text-danger">

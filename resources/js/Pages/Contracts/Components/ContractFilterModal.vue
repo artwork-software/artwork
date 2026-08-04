@@ -23,7 +23,7 @@
                                 <p class="text-accent-600 text-xs group-hover:text-accent-600">{{ $t('KSK-liable') }}</p>
                             </div>
                             <button type="button" @click="localFilterState.kskLiable = false">
-                                <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                <IconX class="size-4 text-accent-600 hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -34,7 +34,7 @@
                                 <p class="text-accent-600 text-xs group-hover:text-accent-600">{{ $t('Foreign tax') }}</p>
                             </div>
                             <button type="button" @click="localFilterState.foreignTax = false">
-                                <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                <IconX class="size-4 text-accent-600 hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -47,7 +47,7 @@
                                 </p>
                             </div>
                             <button type="button" @click="clearDateRange">
-                                <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                <IconX class="size-4 text-accent-600 hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
                                 <p class="text-accent-600 text-xs group-hover:text-accent-600">{{ legalForm.name }}</p>
                             </div>
                             <button type="button" @click="legalForm.checked = false">
-                                <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                <IconX class="size-4 text-accent-600 hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -69,7 +69,7 @@
                                 <p class="text-accent-600 text-xs group-hover:text-accent-600">{{ contractType.name }}</p>
                             </div>
                             <button type="button" @click="contractType.checked = false">
-                                <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                <IconX class="size-4 text-accent-600 hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -102,8 +102,8 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 import { ref, computed, onMounted, watch } from 'vue';
-import { XIcon } from '@heroicons/vue/outline';
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue';
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';

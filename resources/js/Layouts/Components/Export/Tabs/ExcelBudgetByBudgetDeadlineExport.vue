@@ -58,8 +58,8 @@
                     >
                         <span v-if="!showColumns">{{ $t('Show') }}</span>
                         <span v-else>{{ $t('Hide') }}</span>
-                        <ChevronDownIcon v-if="!showColumns" class="h-5 w-5" />
-                        <ChevronUpIcon v-else class="h-5 w-5" />
+                        <IconChevronDown v-if="!showColumns" class="h-5 w-5" />
+                        <IconChevronUp v-else class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -105,7 +105,7 @@
 </template>
 
 <script setup>
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/outline";
+import {IconChevronDown, IconChevronUp} from "@tabler/icons-vue";
 import { computed, ref } from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

@@ -21,10 +21,10 @@
                     />
                 </div>
                 <div class="min-w-0">
-                    <h3 :id="titleId" class="xsDark mb-0.5 break-words" :class="localTaskDone ? 'text-text-subtle line-through' : 'text-text'">
+                    <h3 :id="titleId" class="text-sm/5 font-semibold text-text mb-0.5 break-words" :class="localTaskDone ? 'text-text-subtle line-through' : 'text-text'">
                         {{ task.name }}
                     </h3>
-                    <p class="xxsLight break-words" :class="localTaskDone ? 'text-text-subtle line-through' : 'text-text-muted'">
+                    <p class="text-xs/[18px] text-text-subtle break-words" :class="localTaskDone ? 'text-text-subtle line-through' : 'text-text-muted'">
                         {{ task.description }}
                     </p>
                 </div>

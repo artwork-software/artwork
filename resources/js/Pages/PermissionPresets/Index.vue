@@ -29,7 +29,7 @@
         <template #default>
             <div v-if="filteredPresets.length === 0" class="rounded-2xl border border-border-subtle bg-white p-10 text-center">
                 <div class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full ring-1 ring-inset ring-border-subtle">
-                    <DotsVerticalIcon class="h-6 w-6 text-text-subtle" />
+                    <IconDotsVertical class="h-6 w-6 text-text-subtle" />
                 </div>
                 <h3 class="text-base font-semibold text-text">
                     {{ $t('No permission presets found') }}
@@ -38,10 +38,13 @@
                     {{ $t('Create your first preset to reuse permission sets quickly.') }}
                 </p>
                 <div class="mt-6">
-                    <BaseCardButton
-                        text="Create preset"
+                    <BaseUIButton
+                        variant="secondary"
+                        hide-icon
                         @click="openPermissionPresetModal('create')"
-                    />
+                    >
+                        <span class="flex items-center gap-x-2">{{ $t('Create preset') }}</span>
+                    </BaseUIButton>
                 </div>
             </div>
 
@@ -112,17 +115,14 @@ import PermissionPresetModal from '@/Pages/PermissionPresets/Components/Permissi
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import ErrorComponent from '@/Layouts/Components/ErrorComponent.vue'
-import BaseCardButton from '@/Artwork/Buttons/BaseCardButton.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
 import {
     Menu, MenuButton, MenuItem, MenuItems
 } from '@headlessui/vue'
-import {
-    DotsVerticalIcon, PencilAltIcon, TrashIcon, SearchIcon, XIcon
-} from '@heroicons/vue/outline'
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconCirclePlus, IconEdit, IconTrash, IconUsersGroup} from "@tabler/icons-vue";
+import {IconCirclePlus, IconDotsVertical, IconEdit, IconSearch, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 /* Props */

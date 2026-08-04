@@ -1,9 +1,9 @@
 <template>
     <div>
         <div>
-            <h3 class="xsDark">{{ $t('Events') }}</h3>
+            <h3 class="text-sm/5 font-semibold text-text">{{ $t('Events') }}</h3>
         </div>
-        <div class="xsDark">
+        <div class="text-sm/5 font-semibold text-text">
             <div class="">
                 <table class="min-w-full divide-y divide-border">
                     <thead>

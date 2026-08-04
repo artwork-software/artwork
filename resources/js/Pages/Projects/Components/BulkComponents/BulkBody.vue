@@ -4,7 +4,7 @@
         :style="{ '--bulk-function-bar-height': `${bulkFunctionBarHeight}px` }"
     >
         <!-- Loading -->
-        <div class="absolute w-full h-full bg-artwork-buttons-context/50 top-0 z-50" v-if="isLoading">
+        <div class="absolute w-full h-full bg-text-muted/50 top-0 z-50" v-if="isLoading">
             <div class="h-full flex items-center justify-center text-white">
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
@@ -86,28 +86,28 @@
                 <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" class="!w-fit ui-button">
                     <MenuItem v-slot="{ active }">
                         <div @click="updateUserSortId(1)"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                             :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by room') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 1"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="updateUserSortId(2)"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                             :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by appointment type') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 2"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="updateUserSortId(3)"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                             :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Sort by day') }}
                             <IconCheck class="w-5 h-5" v-if="usePage().props.auth.user.bulk_sort_id === 3"/>
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="updateUserSortId(0)"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                             :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             {{ $t('Reset sorting') }}
                         </div>
                     </MenuItem>
@@ -249,7 +249,7 @@
                                  class="flex justify-center pt-4 pb-6">
                                 <IconCirclePlus
                                     @click="addEmptyEventForGroup(item.group)"
-                                    class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                    class="w-8 h-8 text-text-muted cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out"
                                     stroke-width="2"
                                 />
                             </div>
@@ -268,7 +268,7 @@
                              class="flex justify-center mt-4">
                             <IconCirclePlus
                                 @click="addEmptyEvent"
-                                class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                                class="w-8 h-8 text-text-muted cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out"
                                 stroke-width="2"
                             />
                         </div>
@@ -291,7 +291,7 @@
         <!-- Bottom actions -->
         <div class="flex items-center justify-end print:hidden" v-if="!multiEdit">
             <div class="flex items-center gap-x-4">
-                <div v-if="invalidEvents.length > 0" class="text-artwork-messages-error text-xs">
+                <div v-if="invalidEvents.length > 0" class="text-danger text-xs">
                     {{ $t('The name is not given for {0} event(s)', [invalidEvents.length]) }}
                 </div>
                 <BaseUIButton
@@ -425,7 +425,6 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IndividualColumnSizeConfigModal
     from "@/Pages/Projects/Components/BulkComponents/IndividualColumnSizeConfigModal.vue";
 import DividerChip from "@/Artwork/Divider/DividerChip.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {useBulkEventsBroadcastUpdater} from '@/Composeables/Listener/useBulkEventsBroadcastUpdater.js';
 import FunctionBarFilter from "@/Artwork/Filter/FunctionBarFilter.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";

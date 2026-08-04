@@ -75,7 +75,7 @@
             </div>
 
             <!-- CONTENT -->
-            <div class="card white mt-2 rounded-2xl border border-border-subtle bg-white/90 p-0 shadow-sm backdrop-blur">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised mt-2 rounded-2xl border border-border-subtle bg-white/90 p-0 shadow-sm backdrop-blur">
                 <!-- TABLE VIEW -->
                 <div v-if="viewMode === 'table'" class="flow-root">
                     <div class="overflow-x-auto">
@@ -182,7 +182,6 @@ import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import SingleMaterialSet from '@/Pages/MaterialSet/Components/SingleMaterialSet.vue'
 import CreateOrUpdateMaterialSetModal from '@/Pages/MaterialSet/Components/CreateOrUpdateMaterialSetModal.vue'
 import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'
-import GlassyIconButton from '@/Artwork/Buttons/GlassyIconButton.vue'
 import { can, is } from 'laravel-permission-to-vuejs'
 import { IconSearch, IconLayoutGrid, IconList, IconCopyPlus, IconStackForward } from '@tabler/icons-vue'
 

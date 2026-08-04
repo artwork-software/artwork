@@ -25,7 +25,7 @@
                     <div :id="titleId" class="mb-1  font-semibold text-sm text-text" :class="localTaskDone ? 'text-text-subtle line-through' : ''">
                         {{ task.name }}
                     </div>
-                    <p class="xxsLight mt-0.5 break-words text-text-muted" :class="localTaskDone ? 'line-through text-text-subtle' : ''">
+                    <p class="text-xs/[18px] text-text-subtle mt-0.5 break-words text-text-muted" :class="localTaskDone ? 'line-through text-text-subtle' : ''">
                         {{ task.description }}
                     </p>
                 </div>

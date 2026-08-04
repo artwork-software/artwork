@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <p v-if="dayServiceForm.errors.icon" class="mt-2 text-xs text-artwork-messages-error">
+            <p v-if="dayServiceForm.errors.icon" class="mt-2 text-xs text-danger">
                 {{ dayServiceForm.errors.icon }}
             </p>
 

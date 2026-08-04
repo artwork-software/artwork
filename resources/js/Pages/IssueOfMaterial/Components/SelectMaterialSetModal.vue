@@ -165,7 +165,6 @@
 <script setup>
 import { ref, computed, inject, onMounted, watch } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import ToolTipWithTextComponent from '@/Components/ToolTips/ToolTipWithTextComponent.vue'
 import {useTranslation} from "@/Composeables/Translation.js";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

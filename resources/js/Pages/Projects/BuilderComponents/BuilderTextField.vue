@@ -1,5 +1,5 @@
 <template>
-    <div class="xxsLight">
+    <div class="text-xs/[18px] text-text-subtle">
         <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
         <p class="line-clamp-2" v-html="project['TextField'][component.component_id]?.data?.text"></p>
     </div>

@@ -7,7 +7,7 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div class="col-span-1">
                     <div class="-mt-1">
-                        <div class="xsLight flex items-center justify-start">
+                        <div class="text-sm/5 font-bold text-text-subtle flex items-center justify-start">
                             {{ $t('Color') }}
                         </div>
                        <div class="mt-1 flex items-center justify-center">
@@ -95,7 +95,7 @@
                                     name="notification-method"
                                     type="radio"
                                     :checked="notificationMethod.id === eventTypeForm.verification_mode"
-                                    class="size-5 text-primary border-border focus:ring-primary"
+                                    class="size-5 text-text border-border focus:ring-surface-inverse"
                                 />
                                 <label :for="notificationMethod.id" class="ml-3 block text-sm/6 font-medium text-text">{{ $t(notificationMethod.title) }}</label>
                             </div>
@@ -121,12 +121,12 @@
                                                 <img class="inline-block size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                                             </div>
                                             <div class="mx-2">
-                                                <p class="xsDark">{{ user.name}}</p>
+                                                <p class="text-sm/5 font-semibold text-text">{{ user.name}}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeUserFromEventType(index)">
-                                                <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
+                                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                                             </button>
                                         </div>
                                     </div>
@@ -153,6 +153,7 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
@@ -161,7 +162,6 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {computed} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";

@@ -1,6 +1,6 @@
 <template>
     <div class="flex w-full items-center justify-between gap-x-4 mb-4">
-        <h2 class=" leading-6 font-bold font-lexend text-primary" :class="project ? 'headline3' : 'headline1'">
+        <h2 class=" leading-6 font-bold font-lexend text-text" :class="project ? 'font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text' : 'font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text'">
             {{ $t(title) }}
         </h2>
         <div class="bg-border-subtle text-sm text-text-subtle leading-none border-2 border-border-subtle rounded-full inline-flex print:hidden">
@@ -53,7 +53,6 @@ import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const { can, canAny } = usePermission(usePage().props)
 

@@ -112,18 +112,18 @@
                             <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
                                 <div class="flex items-center justify-between w-full">
                                     <span>{{ selectedLegalForm.name }}</span>
-                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                 </div>
                             </ListboxButton>
                             <ListboxButton v-else class="menu-button">
                                 <span>{{ $t('Legal form')}}</span>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOptions class="absolute w-full z-10 mt-16 bg-surface-inverse rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                        <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                 {{ legalForm.name }}
                                             </span>
                                             <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
@@ -145,18 +145,18 @@
                             <ListboxButton v-if="selectedContractType !== null" class="menu-button">
                                 <div class="flex items-center justify-between w-full">
                                     <span>{{ selectedContractType.name }}</span>
-                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                 </div>
                             </ListboxButton>
                             <ListboxButton v-else class="menu-button">
                                 <span>{{ $t('Contract type')}}</span>
-                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                        <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                 {{ contractType.name }}
                                             </span>
                                             <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
@@ -175,7 +175,7 @@
                 <div class="col-span-full">
                     <div class="flex items-center mb-2">
                         <input id="kskLiable" type="checkbox" v-model="form.ksk_liable" class="input-checklist"/>
-                        <label for="kskLiable" :class="form.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'" class="ml-2">
+                        <label for="kskLiable" :class="form.ksk_liable ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'" class="ml-2">
                             {{ $t('KSK-liable')}}
                         </label>
                     </div>
@@ -202,7 +202,7 @@
                 <div class="col-span-full">
                     <div class="flex items-center mb-2">
                         <input id="foreignTax" type="checkbox" v-model="form.foreign_tax" class="input-checklist"/>
-                        <label for="foreignTax" :class="form.foreign_tax ? 'xsDark' : 'xsLight subpixel-antialiased'" class="ml-2">
+                        <label for="foreignTax" :class="form.foreign_tax ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'" class="ml-2">
                             {{ $t('Foreign tax')}}
                         </label>
                     </div>

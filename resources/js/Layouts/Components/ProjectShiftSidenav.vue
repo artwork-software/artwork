@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import {PencilAltIcon} from '@heroicons/vue/outline';
+import {IconEdit} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ShiftInformationModal from "@/Layouts/Components/ShiftInformationModal.vue";
@@ -35,7 +35,7 @@ export default {
         ProjectCopyrightModal,
         ShiftInformationModal,
         TagComponent,
-        PencilAltIcon,
+        IconEdit,
         // RelevantDatesForShiftPlanningComponent, // Commented out - component can be removed
         ShiftContactPersonsComponent,
         GeneralShiftInformationComponent

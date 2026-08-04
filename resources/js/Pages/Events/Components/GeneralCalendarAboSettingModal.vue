@@ -85,8 +85,8 @@ export default {
     <ArtworkBaseModal v-if="true" @close="closeModal(false)" title="Calendar subscription settings" description="Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.">
         <div class="max-h-[calc(100%-10rem)] mt-5">
             <div class="mb-5">
-                <h2 class="headline1 mb-6">{{ $t('Calendar subscription settings') }}</h2>
-                <p class="text-secondary subpixel-antialiased text-sm">
+                <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mb-6">{{ $t('Calendar subscription settings') }}</h2>
+                <p class="text-text-subtle subpixel-antialiased text-sm">
                     {{ $t('Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.') }}
                 </p>
             </div>
@@ -139,7 +139,7 @@ export default {
                             {{ $t('Select event types') }}
                         </ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
+                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-accent-600 sm:text-sm sm:leading-6">
                                 <span class="block truncate">{{ event_types?.map((eventType) => eventType?.name).join(', ') }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                           <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-text-subtle" aria-hidden="true" />
@@ -149,10 +149,10 @@ export default {
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="eventTyp in eventTypes" :key="eventTyp.id" :value="eventTyp" v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ eventTyp.name }}</span>
 
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                         <PropertyIcon name="IconCircleCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                         </li>
@@ -185,7 +185,7 @@ export default {
                             {{ $t('Select areas') }}
                         </ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
+                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-accent-600 sm:text-sm sm:leading-6">
                                 <span class="block truncate">{{ selected_areas?.map((selected_area) => selected_area?.name).join(', ') }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                           <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-text-subtle" aria-hidden="true" />
@@ -195,10 +195,10 @@ export default {
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="area in areas" :key="area.id" :value="area" v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ area.name }}</span>
 
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                         <PropertyIcon name="IconCircleCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                         </li>
@@ -230,7 +230,7 @@ export default {
                             {{ $t('Select rooms') }}
                         </ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
+                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-accent-600 sm:text-sm sm:leading-6">
                                 <span class="block truncate">{{ selected_rooms?.map((selected_room) => selected_room?.name).join(', ') }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                           <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-text-subtle" aria-hidden="true" />
@@ -240,10 +240,10 @@ export default {
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="room in rooms" :key="room.id" :value="room" v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ room.name }}</span>
 
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                         <PropertyIcon name="IconCircleCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                         </li>
@@ -290,7 +290,7 @@ export default {
 
             <div class="flex items-center justify-between">
                 <div>
-                    <div v-if="aboForm.id" class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="closeModal(true)">
+                    <div v-if="aboForm.id" class="flex items-center text-xs text-accent-700 underline cursor-pointer" @click="closeModal(true)">
                         <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5"/>
                         <span class="ml-1">{{ $t('Show instructions') }}</span>
                     </div>
@@ -298,12 +298,12 @@ export default {
                 <BaseUIButton @click="create(true)" :label="aboForm.id ? $t('Save') : $t('Subscribe')" is-add-button :disabled="aboForm.processing" />
             </div>
 
-            <div v-if="aboForm.id" class="mt-2 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3" >
+            <div v-if="aboForm.id" class="mt-2 text-accent-600 bg-accent-600/10 rounded-lg p-3" >
                 <div class="flex items-center gap-1 mb-2">
                     <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5"/>
                     <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
                 </div>
-                <div class="text-xs text-artwork-buttons-create w-fit">
+                <div class="text-xs text-accent-600 w-fit">
                     {{ $t('As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.') }}
                 </div>
             </div>

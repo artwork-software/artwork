@@ -20,7 +20,7 @@
                     role="list"
                     class="relative pl-8 space-y-2
                            before:content-[''] before:absolute before:left-3 before:top-0 before:bottom-0 before:w-px
-                           before:bg-artwork-buttons-hover/60 before:z-0"
+                           before:bg-accent-700/60 before:z-0"
                 >
                     <li
                         v-for="(historyItem, index) in projectItems"
@@ -29,7 +29,7 @@
                     >
                         <!-- Punkt auf der Linie -->
                         <span
-                            class="absolute -left-6 top-5 block h-2.5 w-2.5 rounded-full bg-artwork-buttons-hover ring-2 ring-white z-10"
+                            class="absolute -left-6 top-5 block h-2.5 w-2.5 rounded-full bg-accent-700 ring-2 ring-white z-10"
                             aria-hidden="true"
                         ></span>
 
@@ -38,7 +38,7 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <!-- Datum / Zeit -->
                                 <span
-                                    class="inline-flex h-6 items-center rounded-full border border-artwork-navigation-color/25 bg-artwork-navigation-color/10 px-2 text-[11px] font-medium text-artwork-buttons-hover tabular-nums"
+                                    class="inline-flex h-6 items-center rounded-full border border-text-inverse/25 bg-text-inverse/10 px-2 text-[11px] font-medium text-accent-700 tabular-nums"
                                 >
                                     {{ historyItem.created_at }}
                                 </span>

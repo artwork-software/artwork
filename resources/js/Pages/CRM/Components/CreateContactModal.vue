@@ -38,7 +38,7 @@
                                             active
                                                 ? 'bg-accent-600 text-white'
                                                 : isSelected
-                                                    ? '!bg-artwork-action-buttons/10'
+                                                    ? '!bg-accent-600/10'
                                                     : 'text-text',
                                             'relative cursor-default select-none py-2 pl-3 pr-9'
                                         ]"
@@ -58,7 +58,7 @@
                         </transition>
                     </div>
                 </Listbox>
-                <p v-if="form.errors.crm_contact_type_id" class="mt-1 text-xs text-artwork-messages-error">{{ form.errors.crm_contact_type_id }}</p>
+                <p v-if="form.errors.crm_contact_type_id" class="mt-1 text-xs text-danger">{{ form.errors.crm_contact_type_id }}</p>
             </div>
 
             <!-- Display Name -->

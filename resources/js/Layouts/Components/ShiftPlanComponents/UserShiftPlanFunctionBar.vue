@@ -6,7 +6,7 @@
                     direction="bottom"
                     :tooltip-text="$t('Time range back')"
                     :icon="IconChevronLeft"
-                    icon-size="h-5 w-5 text-primary"
+                    icon-size="h-5 w-5 text-text"
                     @click="previousTimeRange"
                     classesButton="ui-button"
                 />
@@ -19,7 +19,7 @@
                     direction="bottom"
                     :tooltip-text="$t('Time range forward')"
                     :icon="IconChevronRight"
-                    icon-size="h-5 w-5 text-primary"
+                    icon-size="h-5 w-5 text-text"
                     @click="nextTimeRange"
                     classesButton="ui-button"
                 />
@@ -39,7 +39,7 @@
                 direction="bottom"
                 :tooltip-text="$t('History')"
                 icon="IconHistory"
-                icon-size="h-5 w-5 text-primary"
+                icon-size="h-5 w-5 text-text"
                 @click="$emit('openHistoryModal')"
                 classesButton="ui-button"
             />
@@ -47,7 +47,7 @@
                 direction="bottom"
                 :tooltip-text="$t('Export shift plan as PDF')"
                 :icon="IconFileTypePdf"
-                icon-size="h-5 w-5 text-primary"
+                icon-size="h-5 w-5 text-text"
                 @click="showExportModal = true"
                 classesButton="ui-button"
             />
@@ -74,8 +74,6 @@
 
 <script>
 import Button from "@/Jetstream/Button.vue";
-import {CalendarIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import DateRangeControl from "@/Artwork/DateRange/DateRangeControl.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -85,7 +83,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CalendarAboSettingModal from "@/Pages/Shifts/Components/CalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
+import {IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight, IconFileTypePdf} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import UserShiftPlanExportModal from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanExportModal.vue";
 
@@ -103,10 +101,10 @@ export default {
         ShiftPlanFilter,
         Dropdown,
         Button,
-        CalendarIcon,
-        ChevronDownIcon,
-        ChevronLeftIcon,
-        ChevronRightIcon,
+        IconCalendar,
+        IconChevronDown,
+        IconChevronLeft,
+        IconChevronRight,
         DateRangeControl,
     },
     props: [

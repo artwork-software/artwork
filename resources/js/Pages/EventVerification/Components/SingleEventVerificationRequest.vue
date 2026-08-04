@@ -1,5 +1,5 @@
 <template>
-    <WhiteInnerCard>
+    <BaseCard elevation="raised" class="w-full">
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
             <div class="p-1 rounded-lg w-1" :class="statuses[eventVerification.status]"></div>
             <div class="w-full">
@@ -18,28 +18,37 @@
                 </p>
                 <div class="flex items-center justify-between mt-3">
                     <div>
-                        <BaseCardButton text="Open in Calendar" @click="openPlanningCalendarWithEventId">
-                            <component :is="IconCalendar" class="size-4" aria-hidden="true" />
-                        </BaseCardButton>
+                        <BaseUIButton variant="secondary" hide-icon @click="openPlanningCalendarWithEventId">
+                            <span class="flex items-center gap-x-2">
+                                <component :is="IconCalendar" class="size-4" aria-hidden="true" />
+                                {{ $t('Open in Calendar') }}
+                            </span>
+                        </BaseUIButton>
                     </div>
                     <div>
-                        <BaseCardButton text="Approve" @click="approveRequest" v-if="eventVerification.status === 'pending'" class="!bg-success hover:!bg-success capitalize text-xs font-lexend">
-                            <component :is="IconCheckbox" class="size-4" aria-hidden="true" />
-                        </BaseCardButton>
+                        <BaseUIButton variant="secondary" hide-icon @click="approveRequest" v-if="eventVerification.status === 'pending'" class="!bg-success hover:!bg-success capitalize text-xs font-lexend">
+                            <span class="flex items-center gap-x-2">
+                                <component :is="IconCheckbox" class="size-4" aria-hidden="true" />
+                                {{ $t('Approve') }}
+                            </span>
+                        </BaseUIButton>
                     </div>
                     <div>
-                        <BaseCardButton text="Reject" @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-danger hover:!bg-danger capitalize text-xs font-lexend">
-                            <component :is="IconBan" class="size-4" aria-hidden="true" />
-                        </BaseCardButton>
+                        <BaseUIButton variant="secondary" hide-icon @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-danger hover:!bg-danger capitalize text-xs font-lexend">
+                            <span class="flex items-center gap-x-2">
+                                <component :is="IconBan" class="size-4" aria-hidden="true" />
+                                {{ $t('Reject') }}
+                            </span>
+                        </BaseUIButton>
                     </div>
                 </div>
             </div>
         </div>
-    </WhiteInnerCard>
+    </BaseCard>
     <!--<td class="py-4 pr-3 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-3">
         <div>
             <div class="flex items-start gap-x-1">
-                <component is="IconCalendar" class="size-6 text-text-subtle hover:text-artwork-buttons-create duration-200 ease-in-out cursor-pointer" @click="openPlanningCalendarWithEventId" aria-hidden="true" />
+                <component is="IconCalendar" class="size-6 text-text-subtle hover:text-accent-600 duration-200 ease-in-out cursor-pointer" @click="openPlanningCalendarWithEventId" aria-hidden="true" />
                 <p class="text-sm/6 font-semibold text-text">{{ eventVerification?.event?.eventName }}</p>
             </div>
             <p class="mt-1 flex items-center gap-x-1 text-[10px] text-text-subtle">
@@ -64,14 +73,14 @@
     <td class="px-3 py-4 text-sm whitespace-nowrap text-text-subtle">
         <div class="flex items-center justify-center gap-x-2">
             <div>
-                <SmallFormButton @click="approveRequest" v-if="eventVerification.status === 'pending'" class="!bg-success hover:!bg-success capitalize text-xs font-lexend">
+                <BaseUIButton variant="primary" hide-icon @click="approveRequest" v-if="eventVerification.status === 'pending'" class="!bg-success hover:!bg-success capitalize text-xs font-lexend">
                     <component is="IconCheckbox" class="size-4" aria-hidden="true" />
-                </SmallFormButton>
+                </BaseUIButton>
             </div>
             <div>
-                <SmallFormButton @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-danger hover:!bg-danger capitalize text-xs font-lexend">
+                <BaseUIButton variant="primary" hide-icon @click="showRejectEventVerificationRequestModal = true" v-if="eventVerification.status === 'pending'" class="!bg-danger hover:!bg-danger capitalize text-xs font-lexend">
                     <component is="IconBan" class="size-4" aria-hidden="true" />
-                </SmallFormButton>
+                </BaseUIButton>
             </div>
         </div>
 
@@ -87,12 +96,11 @@
 
 <script setup>
 
-import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import {router, usePage} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {defineAsyncComponent, ref} from "vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
-import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
+import BaseCard from "@/Artwork/Cards/BaseCard.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import dayjs from "dayjs";
 import {IconBan, IconCalendar, IconCheckbox} from "@tabler/icons-vue";
 

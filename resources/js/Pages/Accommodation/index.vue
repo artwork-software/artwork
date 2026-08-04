@@ -141,12 +141,6 @@ const SingleAccommodation = defineAsyncComponent({
     timeout: 3000,
 })
 
-const ArtworkBaseButton = defineAsyncComponent({
-    loader: () => import('@/Artwork/Buttons/ArtworkBaseButton.vue'),
-    delay: 200,
-    timeout: 3000,
-})
-
 const cols = ref<TableColumn[]>([
     { key: 'name',  label: 'Name',  sortable: false },
     { key: 'address', label: 'Address', sortable: false },

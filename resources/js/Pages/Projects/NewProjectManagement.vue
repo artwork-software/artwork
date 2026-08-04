@@ -93,7 +93,7 @@
 
                                 <div class="flex items-center justify-end">
                                     <button
-                                        class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer transition"
+                                        class="text-xs font-semibold text-accent-600 hover:text-accent-700 cursor-pointer transition"
                                         @click="applyFiltersAndSort()"
                                         type="button"
                                     >
@@ -115,7 +115,7 @@
                         <MenuItem v-for="projectSortEnumName in projectSortEnumNames" :key="projectSortEnumName" v-slot="{ active }">
                             <div
                                 @click="sortBy = projectSortEnumName; applyFiltersAndSort()"
-                                :class="[ active ? 'bg-accent-50 text-artwork-buttons-create ' : 'text-text-muted ',
+                                :class="[ active ? 'bg-accent-50 text-accent-600 ' : 'text-text-muted ',
                                         'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-md'
                                       ]"
                             >
@@ -137,7 +137,7 @@
                             icon-size="size-6"
                             :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
                             direction="bottom"
-                            :classes-button="selectionMode ? 'ui-button text-artwork-buttons-create' : 'ui-button'"
+                            :classes-button="selectionMode ? 'ui-button text-accent-600' : 'ui-button'"
                         />
                     </button>
 
@@ -150,7 +150,7 @@
                 <div class="flex items-center gap-2 pb-2" v-if="lastProject?.id">
                     <div class="text-sm text-text-muted ">{{ $t('Last visited project') }}:</div>
                     <a
-                        class="text-artwork-buttons-create text-sm font-semibold inline-flex items-center gap-1"
+                        class="text-accent-600 text-sm font-semibold inline-flex items-center gap-1"
                         :href="route('projects.tab', { project: lastProject.id, projectTab: first_project_tab_id })"
                     >
                         <component :is="IconGeometry" class="size-4" />
@@ -318,7 +318,7 @@
                         type="checkbox"
                         :checked="allOnPageSelected"
                         @change="toggleSelectAllOnPage"
-                        class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                        class="h-4 w-4 rounded border-border text-accent-700 focus:ring-accent-700 cursor-pointer"
                     />
                     {{ $t('Select all on this page') }}
                     <span class="ml-2 text-text-subtle">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
@@ -330,7 +330,7 @@
                     <button
                         type="button"
                         class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
-                        :class="selectedProjectIds.length === 0 ? 'bg-border cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                        :class="selectedProjectIds.length === 0 ? 'bg-border cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700'"
                         :disabled="selectedProjectIds.length === 0"
                         @click="openBulkDeleteModal"
                     >
@@ -403,7 +403,6 @@ import debounce from "lodash.debounce";
 import SingleProjectInManagement from "@/Pages/Projects/ProjectManagmentComponents/SingleProjectInManagement.vue";
 import { useExportTabEnums } from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

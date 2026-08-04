@@ -156,7 +156,7 @@
                             v-for="link in paginationLinks"
                             :key="link.label"
                             class="rounded px-2.5 py-1 text-[11px] font-medium transition-colors"
-                            :class="link.active ? 'bg-artwork-buttons-hover text-white'
+                            :class="link.active ? 'bg-accent-700 text-white'
                                 : link.url
                                     ? 'bg-surface-sunken text-text-muted hover:bg-border-subtle'
                                     : 'bg-surface-sunken text-text-subtle cursor-not-allowed'"

@@ -11,8 +11,8 @@
                     />
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-artwork-buttons-create font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
+                        border-accent-600 border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-accent-600 font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
@@ -25,7 +25,7 @@
                         <span v-else>{{ contract.name }}</span>
                         <PropertyIcon name="IconCircleX"
                             stroke-width="1.5" @click="this.file = null"
-                            class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
+                            class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-danger"
                             aria-hidden="true"/>
                     </div>
                 </div>
@@ -74,23 +74,23 @@
                                 <ListboxButton v-if="selectedLegalForm !== null" class="menu-button">
                                     <div class="flex items-center justify-between w-full">
                                         <span>{{ selectedLegalForm.name }}</span>
-                                        <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
                                 <ListboxButton v-else class="menu-button">
                                     <span>{{ $t('Legal form')}}</span>
-                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-surface-inverse rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
-                                                    <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                    <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ legalForm.name }}
                                                     </span>
                                                 </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                     <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                 </span>
                                             </li>
@@ -112,28 +112,28 @@
                                             <span>{{ selectedContractType.name }}</span>
                                         </span>
                                         <span class="pointer-events-none">
-                                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                            <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                         </span>
                                     </div>
                                 </ListboxButton>
                                 <ListboxButton v-else class="menu-button">
-                                    <div class="flex flex-grow xsLight text-left subpixel-antialiased">
+                                    <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
                                         {{ $t('Contract type')}}
                                     </div>
                                     <span class="pointer-events-none">
-                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </span>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
-                                                    <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                    <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ contractType.name }}
                                                     </span>
                                                 </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                     <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                 </span>
                                             </li>
@@ -157,24 +157,24 @@
                             <Listbox as="div" class="flex w-28 relative" v-model="selectedCurrency" id="currencySelect">
                                 <ListboxButton class="menu-button">
                                     <span>{{ selectedCurrency?.name || '€' }}</span>
-                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="currency in currencies"
                                                        :key="currency.id"
                                                        :value="currency"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-2 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-2 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
                                             <span
-                                                :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-1 block truncate']">
+                                                :class="[selected ? 'text-sm/5 font-bold text-white' :  'font-normal', 'ml-1 block truncate']">
                                                         {{ currency.name }}
                                                     </span>
                                                 </div>
                                                 <span
-                                                    :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                    :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                       <PropertyIcon name="IconCheck" stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
@@ -189,7 +189,7 @@
                         <div class="flex items-center mb-2">
                             <input id="kskLiableEdit" type="checkbox" v-model="kskLiable"
                                    class="input-checklist"/>
-                            <label for="kskLiableEdit" :class="kskLiable ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="kskLiableEdit" :class="kskLiable ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('KSK-liable')}}
                             </label>
@@ -216,7 +216,7 @@
                                 <input id="hasPowerOfAttorneyEdit" type="checkbox" v-model="hasPowerOfAttorney"
                                        class="input-checklist"/>
                                 <label for="hasPowerOfAttorneyEdit"
-                                       :class="hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       :class="hasPowerOfAttorney ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Power of attorney is available')}}
                                 </label>
@@ -224,7 +224,7 @@
                             <div class="flex items-center mb-2">
                                 <input id="isFreedEdit" type="checkbox" v-model="isFreed"
                                        class="input-checklist"/>
-                                <label for="isFreedEdit" :class="isFreed ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="isFreedEdit" :class="isFreed ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Liberated at home')}}
                                 </label>
@@ -234,7 +234,7 @@
                         <div class="flex items-center mb-2">
                             <input id="foreignTaxEdit" type="checkbox" v-model="foreignTax"
                                    class="input-checklist"/>
-                            <label for="foreignTaxEdit" :class="foreignTax ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="foreignTaxEdit" :class="foreignTax ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('Foreign tax')}}
                             </label>
@@ -310,20 +310,20 @@
                         />
                     </div>
 
-                    <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-border">
+                    <div class="-mx-5 bg-surface-canvas px-5 py-5 col-span-full border-b border-dashed border-border">
                         <div class="relative w-full">
                             <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for')"/>
                         </div>
                         <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center flex-wrap">
-                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-primary">
+                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-text">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full object-cover" :src="user?.profile_photo_url" alt=""/>
-                                    <span class="flex ml-4 sDark">
+                                    <span class="flex ml-4 text-base/5 font-semibold text-text">
                                         {{ user.first_name }} {{ user.last_name }}
                                     </span>
                                     <button type="button" @click="deleteUserFromContractUserArray(index)">
                                         <span class="sr-only">{{ $t('Remove user from contract')}}</span>
-                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full text-text border-0 "/>
                                     </button>
                                 </div>
                             </div>
@@ -338,7 +338,7 @@
                                 class="w-full"
                                 @focus="department_query = ''"
                             />
-                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto sm:text-sm">
+                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-surface-inverse shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto sm:text-sm">
                                 <div class="border-border-subtle">
                                     <div v-for="(department, index) in department_search_results" :key="index" class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4" @click="addDepartmentToContractArray(department)">
@@ -352,15 +352,15 @@
                             </div>
                         </div>
                         <div v-if="departmentsWithAccess.length > 0" class="mt-2 mb-4 flex items-center flex-wrap">
-                            <div v-for="(department,index) in departmentsWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-primary">
+                            <div v-for="(department,index) in departmentsWithAccess" class="flex mr-5 mb-2 rounded-full items-center font-bold text-text">
                                 <div class="flex items-center">
                                     <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-11 w-11 object-cover"/>
-                                    <span class="flex ml-4 sDark">
+                                    <span class="flex ml-4 text-base/5 font-semibold text-text">
                                         {{ department.name }}
                                     </span>
                                     <button type="button" @click="deleteDepartmentFromContractArray(index)">
                                         <span class="sr-only">{{ $t('Remove team from contract')}}</span>
-                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                        <PropertyIcon name="IconX" stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full text-text border-0 "/>
                                     </button>
                                 </div>
                             </div>
@@ -369,7 +369,7 @@
                 </div>
                 <div class="bg-backgroundGray -mx-10 pt-6 pb-12">
                     <div class="px-12 w-full">
-                        <div class="xxsDarkBold flex items-center cursor-pointer"
+                        <div class="text-xs/[15px] font-semibold text-text flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
                             {{ $t('Add further details or task')}}
                             <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="showExtraSettings" class=" ml-1 mr-3 flex-shrink-0 h-4 w-4" />
@@ -381,7 +381,7 @@
                                     <input id="hasGroup" type="checkbox" v-model="task.done"
                                            class="ring-offset-0 cursor-pointer focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <label for="hasGroup"
-                                           :class="task.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                           :class="task.checked ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                            class="ml-2">
                                         {{ task.name }}
                                     </label>
@@ -411,7 +411,7 @@
                         <div class="flex items-center">
                             <img :src="commentItem.user?.profile_photo_url" alt="profile_photo"
                                  class="h-5 w-5 mr-2 rounded-2xl"/>
-                            <div class="text-secondary text-sm">{{commentItem.created_at}}</div>
+                            <div class="text-text-subtle text-sm">{{commentItem.created_at}}</div>
                         </div>
                         <div class="mt-2 mb-4">
                             {{commentItem.text}}
@@ -431,11 +431,10 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconChevronUp, IconCirclePlus, IconCircleX, IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 import Button from "@/Jetstream/Button.vue";
@@ -491,16 +490,16 @@ export default {
         ContractTaskForm,
         JetDialogModal,
         JetInputError,
-        XIcon,
+        IconX,
         Listbox,
         ListboxOption,
         ListboxOptions,
         ListboxButton,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        CheckIcon,
-        PlusCircleIcon,
-        XCircleIcon
+        IconChevronDown,
+        IconChevronUp,
+        IconCheck,
+        IconCirclePlus,
+        IconCircleX
     },
     watch: {
         user_query: {

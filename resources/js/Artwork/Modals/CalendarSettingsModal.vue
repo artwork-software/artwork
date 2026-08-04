@@ -987,8 +987,8 @@
                 />
                 <label
                     for="cb-options"
-                    :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                    class="ml-4 my-auto text-secondary cursor-pointer"
+                    :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                    class="ml-4 my-auto text-text-subtle cursor-pointer"
                 >
                     {{ $t('Option prioritization') }}
                 </label>
@@ -1006,7 +1006,6 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import { router, useForm, usePage } from "@inertiajs/vue3";
 // Button/Input nicht genutzt – bewusst entfernt, um Bundle clean zu halten
 import { can, is } from "laravel-permission-to-vuejs";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import { computed } from "vue";

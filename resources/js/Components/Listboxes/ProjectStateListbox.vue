@@ -1,9 +1,8 @@
 <script setup>
+import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 
-import {ChevronDownIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
-import {CheckIcon} from "@heroicons/vue/solid";
 import {ref, watch, onMounted} from "vue";
 import {useTranslation} from '@/Composeables/Translation.js';
 
@@ -78,7 +77,7 @@ const emit = defineEmits(['update:selectedProjectState'])
                               }">
                       {{ projectStates?.find(state => state.id === currentState)?.name}}
                 </span>
-                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
             </button>
         </ListboxButton>
         <transition leave-active-class="transition ease-in duration-100"
@@ -90,14 +89,14 @@ const emit = defineEmits(['update:selectedProjectState'])
                                v-for="state in projectStates"
                                :key="state.id"
                                :value="state.id" v-slot="{ active, selected }">
-                    <li :class="[active ? ' text-secondary' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']">
+                    <li :class="[active ? ' text-text-subtle' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']">
                         <div class="flex">
                             <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: textColorWithDarken(state.color), borderColor: textColorWithDarken(state.color)}">
                                 {{ state.name }}
                             </span>
                         </div>
-                        <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                            <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                        <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                            <IconCheck v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                         </span>
                     </li>
                 </ListboxOption>

@@ -61,7 +61,7 @@ export default {
         <!-- Button oder Icon, das den Tooltip triggert -->
         <button @mouseover="show = true" @mouseleave="show = false" class="cursor-pointer" :class="classes">
             <!-- Ihr SVG-Icon -->
-            <PropertyIcon name="IconExclamationCircle" class="h-5 w-5 text-artwork-buttons-context" v-if="!showBackgroundIcon && !showDraggable && !showXIcon && !show24HIcon" :class="iconClasses" />
+            <PropertyIcon name="IconExclamationCircle" class="h-5 w-5 text-text-muted" v-if="!showBackgroundIcon && !showDraggable && !showXIcon && !show24HIcon" :class="iconClasses" />
             <PropertyIcon name="IconBackground" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showBackgroundIcon" :class="iconClasses"/>
             <PropertyIcon name="IconDragDrop" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showDraggable" :class="iconClasses"  />
             <PropertyIcon name="IconX" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" v-if="showXIcon" :class="iconClasses"  />

@@ -74,9 +74,9 @@
                             direction="bottom"
                             @click="exportArtist"
                         />
-                        <ArtworkBaseModalButton variant="primary" @click="showCreateOrUpdateArtistModal = true">
+                        <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateArtistModal = true">
                             {{ $t('Add artist') }}
-                        </ArtworkBaseModalButton>
+                        </BaseUIButton>
                     </div>
                 </div>
                 <div class="mt-8 flow-root">
@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import UserHeader from "@/Pages/Users/UserHeader.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {defineAsyncComponent, nextTick, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconPalette, IconCirclePlus, IconFileExport, IconEdit, IconTrash} from "@tabler/icons-vue";

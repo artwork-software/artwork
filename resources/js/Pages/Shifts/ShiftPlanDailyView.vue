@@ -250,7 +250,7 @@
                 <div v-if="!day.isExtraRow">
                     <!-- Day Header: always render (lightweight) -->
                     <div
-                        class="flex items-center w-full bg-artwork-navigation-background text-text-inverse sticky ml-1 z-30"
+                        class="flex items-center w-full bg-surface-inverse text-text-inverse sticky ml-1 z-30"
                         :style="dayHeaderStyle"
                     >
                         <div class="flex items-center justify-between w-full gap-x-4 px-4">
@@ -410,7 +410,7 @@
                         >
                             <div
                                 :ref="el => setRoomContainerRef(roomDayKey(day.fullDay, room), el)"
-                                class="flex flex-col-reverse items-center justify-between bg-artwork-navigation-background text-text-inverse py-4 border-t-2 border-dashed"
+                                class="flex flex-col-reverse items-center justify-between bg-surface-inverse text-text-inverse py-4 border-t-2 border-dashed"
                             >
                                 <div class="relative group text-xs font-bold font-lexend -rotate-90 h-full flex items-center text-center justify-center py-4 overflow-visible">
                                     <span
@@ -419,7 +419,7 @@
                                         :style="{ maxWidth: getRoomNameMaxWidth(roomDayKey(day.fullDay, room)) }"
                                     >{{ room.roomName }}</span>
                                     <div v-if="isRoomNameTruncated(roomDayKey(day.fullDay, room))" class="absolute hidden group-hover:block top-40 ml-22 z-9999 rotate-90">
-                                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-text-inverse whitespace-nowrap">
+                                        <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-text-inverse whitespace-nowrap">
                                             {{ room.roomName }}
                                         </div>
                                     </div>
@@ -1650,7 +1650,7 @@ function formatDate(dateLike: any) {
  */
 const topBarContainerClass = computed(() => {
     if (props.project) return "w-full sticky top-0 z-40 px-3 pt-2 pb-2 bg-white"
-    return "card glassy p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none"
+    return "rounded-lg bg-surface border border-border-subtle shadow-raised p-4 bg-white/50 w-full sticky top-0 z-40 !rounded-t-none"
 })
 
 const topBarStyle = computed(() => {

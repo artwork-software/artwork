@@ -1,11 +1,11 @@
 <template>
-    <tr class="cursor-pointer xsLight pb-1" @click="category.closed = !category.closed">
+    <tr class="cursor-pointer text-sm/5 font-bold text-text-subtle pb-1" @click="category.closed = !category.closed">
        <td>
            <div class="py-1.5 bg-surface-sunken w-full" >
                <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
                    <component :is="IconCategory" class="h-4 w-4" />
                    {{ category.name }}
-                   <ChevronDownIcon
+                   <IconChevronDown
                        :class="category.closed ? '' : 'rotate-180 transform'"
                        class="h-4 w-4 mt-0.5"
                    />
@@ -18,9 +18,8 @@
 
 <script setup>
 
-import {ChevronDownIcon} from "@heroicons/vue/outline";
 import SingleGroupInCategory from "@/Pages/Inventory/Components/SingleGroupInCategory.vue";
-import {IconCategory} from "@tabler/icons-vue";
+import {IconCategory, IconChevronDown} from "@tabler/icons-vue";
 
 const props = defineProps({
     category: {

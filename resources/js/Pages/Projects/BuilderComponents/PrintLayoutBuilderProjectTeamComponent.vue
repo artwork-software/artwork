@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Project team') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('Project team') }}</h3>
         <div v-if="project.team?.length > 0 || project.teamCrmContacts?.length > 0" class="space-y-1">
             <div v-for="(user, index) in project.team" :key="index" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-border-subtle">
                 <div class="flex items-center">
@@ -8,7 +8,7 @@
                         <img class="inline-block size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                     </div>
                     <div class="mx-2">
-                        <p class="xsDark group-hover:text-text">{{ user.full_name }}</p>
+                        <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ user.full_name }}</p>
                     </div>
                 </div>
             </div>
@@ -22,15 +22,15 @@
                         </span>
                     </span>
                     <div class="mx-2 flex items-center gap-x-1.5">
-                        <p class="xsDark group-hover:text-text">{{ contact.display_name }}</p>
-                        <span v-if="contact.contact_type" class="text-[10px] text-secondary whitespace-nowrap">
+                        <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ contact.display_name }}</p>
+                        <span v-if="contact.contact_type" class="text-[10px] text-text-subtle whitespace-nowrap">
                             ({{ $t(contact.contact_type.name) }})
                         </span>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

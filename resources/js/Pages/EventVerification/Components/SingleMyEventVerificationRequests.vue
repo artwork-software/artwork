@@ -1,5 +1,5 @@
 <template>
-    <WhiteInnerCard>
+    <BaseCard elevation="raised" class="w-full">
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full px-4 pt-4 pb-2">
             <!-- STATUS ANZEIGE -->
             <div class="p-1 rounded-lg w-1"
@@ -51,13 +51,13 @@
                 </div>
             </div>
         </div>
-    </WhiteInnerCard>
+    </BaseCard>
 </template>
 
 <script setup>
 
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
+import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import DashedDivider from "@/Artwork/Divider/DashedDivider.vue";
 
 const props = defineProps({

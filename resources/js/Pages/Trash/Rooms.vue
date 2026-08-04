@@ -6,11 +6,11 @@
     />
     <div v-for="area in trashed_rooms.data" :key="area.id" class="w-full">
         <div v-if="area.rooms.length > 0" class="flex w-full bg-white my-2 border border-border-subtle">
-            <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="area.hidden = !area.hidden">
-                <ChevronUpIcon v-if="area.hidden !== true"
-                               class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                <ChevronDownIcon v-else
-                                 class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+            <button class="bg-accent-600 hover:bg-accent-700 flex" @click="area.hidden = !area.hidden">
+                <IconChevronUp v-if="area.hidden !== true"
+                               class="h-6 w-6 text-white my-auto"></IconChevronUp>
+                <IconChevronDown v-else
+                                 class="h-6 w-6 text-white my-auto"></IconChevronDown>
             </button>
             <div class="flex mt-8 w-full ml-4 flex-wrap p-4">
                 <div class="flex justify-between w-full">
@@ -30,7 +30,7 @@
                                         <div class="ml-4 my-auto text-lg font-black text-sm">
                                             {{ room.name }}
                                         </div>
-                                        <div class="ml-6 flex items-center text-secondary text-sm my-auto">
+                                        <div class="ml-6 flex items-center text-text-subtle text-sm my-auto">
                                             angelegt am {{ room.created_at }} von
                                             <img :src="room.created_by.profile_photo_url"
                                                  :alt="room.created_by.first_name"
@@ -42,11 +42,11 @@
                                         <MenuItem v-slot="{ active }">
                                             <Link as="button" method="patch"
                                                   :href="route('rooms.restore', { id: room.id })"
-                                                  :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                                <RefreshIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                                <IconRefresh
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                     aria-hidden="true"/>
                                                 {{ $t('Restore')}}
                                             </Link>
@@ -54,11 +54,11 @@
                                         <MenuItem v-slot="{ active }">
                                             <Link as="button" method="delete"
                                                   :href="route('rooms.force', { id: room.id })"
-                                                  :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                                <IconTrash
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                     aria-hidden="true"/>
                                                 {{ $t('Delete permanently')}}
                                             </Link>
@@ -71,12 +71,12 @@
                     </div>
 
                     <h2 v-on:click="switchVisibility(area.id)"
-                        class="text-sm mt-10 pb-2 flex font-bold text-primary cursor-pointer">
+                        class="text-sm mt-10 pb-2 flex font-bold text-text cursor-pointer">
                         {{ $t('Temporary rooms')}}
-                        <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
-                                       class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                        <ChevronDownIcon v-else
-                                         class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                        <IconChevronUp v-if="showTemporaryRooms.includes(area.id)"
+                                       class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
+                        <IconChevronDown v-else
+                                         class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
                     </h2>
 
                     <div v-show="showTemporaryRooms.includes(area.id)">
@@ -91,7 +91,7 @@
                                         </div>
 
                                         <div
-                                            class="ml-6 flex items-center text-secondary text-sm my-auto">
+                                            class="ml-6 flex items-center text-text-subtle text-sm my-auto">
                                             angelegt am {{ room.created_at }} von
                                             <img
                                                 :src="room.created_by.profile_photo_url"
@@ -103,11 +103,11 @@
                                         <MenuItem v-slot="{ active }">
                                             <Link as="button" method="patch"
                                                   :href="route('rooms.restore', { id: room.id })"
-                                                  :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                                <RefreshIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                                <IconRefresh
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                     aria-hidden="true"/>
                                                 {{$t('Restore')}}
                                             </Link>
@@ -115,11 +115,11 @@
                                         <MenuItem v-slot="{ active }">
                                             <Link as="button" method="delete"
                                                   :href="route('rooms.force', { id: room.id })"
-                                                  :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                                <IconTrash
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                     aria-hidden="true"/>
                                                 {{ $t('Delete permanently')}}
                                             </Link>
@@ -152,10 +152,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
-import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -173,11 +172,11 @@ export default {
         BasePaginator,
         TrashSearchAndActions,
         ConfirmDeleteModal,
-        Input, XIcon, SearchIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        Menu, MenuButton, DotsVerticalIcon,
-        MenuItems,MenuItem, RefreshIcon, TrashIcon, Link
+        Input, IconX, IconSearch,
+        IconChevronDown,
+        IconChevronUp,
+        Menu, MenuButton, IconDotsVertical,
+        MenuItems,MenuItem, IconRefresh, IconTrash, Link
     },
     data() {
       return {

@@ -20,7 +20,7 @@
                 <div class="w-full col-span-1">
 
 
-                    <div class="card white p-5">
+                    <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                         <SettingsGuideBanner
                             class="mb-4"
                             variant="inline"
@@ -44,8 +44,8 @@
 
                 <!-- Components List -->
 
-                <div class="col-span-1 card glassy p-5">
-                    <div class="card white p-5">
+                <div class="col-span-1 rounded-lg bg-surface border border-border-subtle shadow-raised p-5">
+                    <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                         <div class="flex items-center justify-end w-full mb-3">
                             <div class="w-44 md:w-56 lg:w-72">
                                 <div>
@@ -88,7 +88,6 @@ import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {computed, ref} from "vue";
 import CreateOrUpdateProjectPrintLayoutModal from "@/Pages/Settings/ProjectPrintLayout/Components/CreateOrUpdateProjectPrintLayoutModal.vue";
 import SingleProjectPrintLayout from "@/Pages/Settings/ProjectPrintLayout/Components/SingleProjectPrintLayout.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";

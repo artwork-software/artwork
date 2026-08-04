@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-row mt-2">
-        <span class="xxsLight">{{ budget.requested_position.name }}</span>
-        <span class="xxsLight ml-3">
+        <span class="text-xs/[18px] text-text-subtle">{{ budget.requested_position.name }}</span>
+        <span class="text-xs/[18px] text-text-subtle ml-3">
             <a :href="route('projects.tab', {project: this.budget.project.id, projectTab: this.first_project_budget_tab_id})" class="text-accent-700">
                 {{ budget.project.name }}
             </a>
@@ -17,8 +17,8 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -26,7 +26,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default {
     mixins: [Permissions],
     name: "NotificationBudgetRequest",
-    components: {FormButton, Button, XIcon, Link},
+    components: {FormButton, Button, IconX, Link},
     props: [
         'budget',
         'first_project_budget_tab_id'

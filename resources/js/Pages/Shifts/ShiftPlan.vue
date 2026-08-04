@@ -82,12 +82,12 @@
                             <div class="flex items-center justify-center gap-x-4">
                                 <button type="button" @click="initializeCalendarMultiEditSave"
                                         :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto"
-                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-accent-600 hover:bg-accent-600/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-accent-600']">
                                     {{ $t('Create') }}
                                 </button>
                                 <button type="button" @click="openCellMultiEditCalendarDelete = true"
                                         :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto"
-                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-danger hover:bg-danger/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-accent-600']">
                                     {{ $t('Delete') }}
                                 </button>
                             </div>
@@ -124,7 +124,7 @@
                     >
                         <!-- Corner (oben links) -->
                         <template #corner>
-                            <div :style="{ width: shiftLeftWidth + 'px' }" class="bg-artwork-navigation-background flex items-center justify-end pr-2">
+                            <div :style="{ width: shiftLeftWidth + 'px' }" class="bg-surface-inverse flex items-center justify-end pr-2">
                                 <span v-if="visibleKW != null" class="text-[10px] font-semibold text-white/80 tracking-wide">
                                     KW {{ visibleKW }}
                                 </span>
@@ -136,9 +136,9 @@
                             <div
                                 class="relative h-full w-full flex flex-col
                                    text-[11px] leading-none text-white
-                                   bg-artwork-navigation-background/95 backdrop-blur
+                                   bg-surface-inverse/95 backdrop-blur
                                    border-b border-white/10 border-r
-                                   hover:bg-artwork-navigation-background transition-colors"
+                                   hover:bg-surface-inverse transition-colors"
                                 :class="[
                                     day.isExtraRow ? 'border-l-2 border-l-white/40' : '',
                                     !day.isExtraRow && day.isFirstDayOfMonth ? 'border-l-2 border-l-white/70' : '',
@@ -244,8 +244,8 @@
                         <!-- Row Header (Room Name) -->
                         <template #rowHeader="{ room, rowIndex }">
                             <div
-                                class="xsDark h-full flex items-start"
-                                :class="[roomHeaderStyle(room) ? '' : (rowIndex % 2 === 0 ? 'bg-background-gray' : 'bg-secondary-hover')]"
+                                class="text-sm/5 font-semibold text-text h-full flex items-start"
+                                :class="[roomHeaderStyle(room) ? '' : (rowIndex % 2 === 0 ? 'bg-surface-canvas' : 'bg-surface')]"
                                 :style="[{ width: shiftLeftWidth + 'px', maxWidth: shiftLeftWidth + 'px' }, roomHeaderStyle(room) ?? {}]"
                             >
                                 <!-- Sticky so the room name stays visible when scrolling through very tall rows -->
@@ -276,7 +276,7 @@
                                     class="absolute inset-0 z-100"
                                     :class="[
                                           multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
-                                            ? 'bg-surface-inverse opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
+                                            ? 'bg-surface-inverse opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-accent-600'
                                             : '',
                                           checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
                                     ]"
@@ -284,7 +284,7 @@
                                 ></div>
 
                                 <!-- ExtraRow -->
-                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-l-2 border-border-strong"></div>
+                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-border-subtle border-l-2 border-border-strong"></div>
 
                                 <!-- Normal cell -->
                                 <div
@@ -305,7 +305,7 @@
                                                     data-sp-pgbar
                                                     :disabled="checkIfUserIsAdminOrInGroup(group)"
                                                     :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
-                                                    class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-artwork-navigation-background px-2 py-1 text-xs font-bold text-white"
+                                                    class="mb-0.5 flex items-center gap-x-1 rounded-lg bg-surface-inverse px-2 py-1 text-xs font-bold text-white"
                                                 >
                                                     <PropertyIcon :name="group.icon" class="size-4" />
                                                     <span>{{ group.name }}</span>
@@ -483,11 +483,11 @@
                     </div>
                 </div>
 
-                <div class="bg-artwork-navigation-background pointer-events-auto">
+                <div class="bg-surface-inverse pointer-events-auto">
                     <div v-show="showUserOverview"
-                        class="relative z-20 w-[97%] overflow-y-scroll bg-artwork-navigation-background "
+                        class="relative z-20 w-[97%] overflow-y-scroll bg-surface-inverse "
                         :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: 20 + 'px' }">
-                        <div class="fixed z-20 flex w-full items-center justify-between bg-artwork-navigation-background pr-9 py-3">
+                        <div class="fixed z-20 flex w-full items-center justify-between bg-surface-inverse pr-9 py-3">
                             <div class="flex items-center justify-end gap-x-3">
                                 <SwitchIconTooltip v-if="can('can plan shifts') || is('artwork admin')" v-model="multiEditMode" :tooltip-text="$t('Edit')" size="md" @change="toggleMultiEditMode" icon="IconPencil"/>
                                 <ToolTipComponent
@@ -514,15 +514,15 @@
                                     <button type="button" @click="showCellMultiEditModal = true"
                                             :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
                                             class="pointer-events-auto" :class="[
-                                           Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
-                                            'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                           Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-accent-600 hover:bg-accent-600/90',
+                                            'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-accent-600']">
                                         {{ $t('Edit Entries') }}
                                     </button>
                                     <button type="button" @click="openCellMultiEditDelete = true"
                                             :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
                                             class="pointer-events-auto" :class="[
-                                            Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
-                                            'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                            Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-danger hover:bg-danger/90',
+                                            'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-accent-600']">
                                         {{ $t('Delete Entries') }}
                                     </button>
                                 </div>
@@ -586,16 +586,16 @@
                                     </div>
                                 </BaseFilter>
                                 <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-fit" right
-                                          classesButton="ui-button-small hover:!bg-white text-artwork-buttons-context">
+                                          classesButton="ui-button-small hover:!bg-white text-text-muted">
                                     <div class="flex items-center justify-end py-1">
-                                        <span class="xxsLight w-full cursor-pointer pr-4 pt-0.5 text-right"
+                                        <span class="text-xs/[18px] text-text-subtle w-full cursor-pointer pr-4 pt-0.5 text-right"
                                               @click="resetSort()">
                                             {{ $t('Reset') }}
                                         </span>
                                     </div>
                                     <MenuItem v-slot="{ active }">
                                         <div @click="toggleSortWorkersByQualification"
-                                             :class="[active ? 'text-text-muted' : 'text-secondary','group flex cursor-pointer items-center justify-between gap-x-4 px-4 py-2 text-sm subpixel-antialiased']">
+                                             :class="[active ? 'text-text-muted' : 'text-text-subtle','group flex cursor-pointer items-center justify-between gap-x-4 px-4 py-2 text-sm subpixel-antialiased']">
                                             <span :class="sortWorkersByQualification ? 'font-bold' : ''">
                                                 {{ $t('Group by function') }}
                                             </span>
@@ -607,7 +607,7 @@
                                         v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                         :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
                                         <div @click="applySort(computedShiftPlanWorkerSortEnum)"
-                                             :class="[active ? 'text-text-muted' : 'text-secondary','group flex cursor-pointer items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                             :class="[active ? 'text-text-muted' : 'text-text-subtle','group flex cursor-pointer items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             <template
                                                 v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                 <span
@@ -684,7 +684,7 @@
                             <template #rowHeader="{ row }">
                                 <div v-if="row.kind === 'craft'" class="w-full px-2">
                                     <div
-                                        class="xsLight font-lexend! flex w-96 justify-between cursor-pointer pb-1 "
+                                        class="text-sm/5 font-bold text-text-subtle font-lexend! flex w-96 justify-between cursor-pointer pb-1 "
                                         @click="changeCraftVisibility(row.craft.id)"
                                     >
                                         <div class="flex items-center gap-2">

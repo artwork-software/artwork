@@ -16,7 +16,7 @@
                         />
                     </div>
                     <div class="select-none">
-                        <div v-if="!saveFilterOption" @click="saveFilterOption = true" class="underline text-artwork-buttons-create text-sm underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Save') }}</div>
+                        <div v-if="!saveFilterOption" @click="saveFilterOption = true" class="underline text-accent-600 text-sm underline-offset-2 cursor-pointer hover:text-accent-700 duration-200 ease-in-out">{{ $t('Save') }}</div>
                         <div v-else @click="saveFilterOption = false" class="underline text-danger text-sm underline-offset-2 cursor-pointer hover:text-danger/80 duration-200 ease-in-out">{{ $t('Cancel') }}</div>
                     </div>
                 </div>
@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeFilter(filter)">
-                                        <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
                                     </button>
                                 </div>
                             </div>
@@ -71,7 +71,7 @@
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeActiveFilter(filter)">
-                                        <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                        <IconX class="size-4 text-accent-600 hover:text-danger" />
                                     </button>
                                 </div>
                             </div>
@@ -90,7 +90,7 @@
                     <div class="space-y-2 mt-2">
                         <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey"
                              v-show="filterSubCategory.length > 0">
-                            <div class="card white px-4 ">
+                            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 ">
                                 <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                     <div class="text-sm text-text">
                                         {{ $t(subKey) }}
@@ -156,13 +156,10 @@
 
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {computed, onMounted, ref} from "vue";
-import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import {IconChevronDown} from "@tabler/icons-vue";
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

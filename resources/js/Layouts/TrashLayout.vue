@@ -28,9 +28,9 @@
                         :key="tab.key"
                         type="button"
                         class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition
-                               focus:outline-none focus:ring-2 focus:ring-primary/30"
+                               focus:outline-none focus:ring-2 focus:ring-surface-inverse/30"
                         :class="tab.key === activeKey
-                            ? 'border-primary/30 bg-primary/10 text-primary'
+                            ? 'border-surface-inverse/30 bg-surface-inverse/10 text-text'
                             : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
                         @click="goTo(tab.href)"
                     >

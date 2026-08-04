@@ -1,5 +1,5 @@
 <template>
-    <div class="xxsLight">
+    <div class="text-xs/[18px] text-text-subtle">
         <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
         <a
             v-if="linkText && linkText.length > 0"

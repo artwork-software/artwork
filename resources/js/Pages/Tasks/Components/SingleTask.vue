@@ -6,13 +6,13 @@
                        v-model="task.done"
                        type="checkbox"
                        class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-border"/>
-                <div class="ml-4 my-auto mDark"
-                     :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                <div class="ml-4 my-auto text-lg/[21px] font-semibold text-text"
+                     :class="task.done ? 'text-text-subtle line-through' : 'text-text'">
                     {{ task.name }}
                 </div>
                 <div v-if="!task.done && task.deadline"
-                     class="ml-2 my-auto pt-1 xsLight "
-                     :class="task.isDeadlineInFuture ? '' : 'text-error'">
+                     class="ml-2 my-auto pt-1 text-sm/5 font-bold text-text-subtle "
+                     :class="task.isDeadlineInFuture ? '' : 'text-danger'">
                     {{ $t('until')}} {{ task.humanDeadline }}
                 </div>
             </div>
@@ -33,13 +33,13 @@
         </div>
         <Link v-if="task.projectId"
               :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
-              class="my-1 flex ml-10 xsDark">
+              class="my-1 flex ml-10 text-sm/5 font-semibold text-text">
             {{ task.projectName }}
-            <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
+            <IconChevronRight class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
             {{ task.checklistName }}
         </Link>
 
-        <div class="ml-10 my-3 xsLight">
+        <div class="ml-10 my-3 text-sm/5 font-bold text-text-subtle">
             {{ task.description }}
         </div>
     </div>
@@ -48,13 +48,13 @@
 </template>
 
 <script>
-import {ChevronRightIcon} from "@heroicons/vue/solid";
+import {IconChevronRight} from "@tabler/icons-vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {
     name: "SingleTask",
-    components: {TeamIconCollection, Link, ChevronRightIcon},
+    components: {TeamIconCollection, Link, IconChevronRight},
     props: [
         'task',
         'first_project_tasks_tab_id'

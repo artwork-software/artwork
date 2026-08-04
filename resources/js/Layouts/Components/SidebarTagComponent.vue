@@ -4,21 +4,25 @@
           :style="{ backgroundColor: this.backgroundColorWithOpacity(this.item?.color), color: this.getTextColorBasedOnParent(), borderColor: this.backgroundColorWithOpacity(this.item?.color, 30) }">
         {{ item?.name }}
         <button v-if="!hideX" type="button" @click="this.method(property)">
-            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+            <IconX class="ml-1 h-4 w-4 hover:text-danger "/>
         </button>
     </span>
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 
 export default {
     name: "SidebarTagComponent",
-    components: { Button, XIcon },
-    mixins: [Permissions, ColorHelper],
+    components: { Button, IconX },
+    mixins: [Permissions],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, isDarkColorByLuminance: isDarkColor} = useColorHelper();
+        return {backgroundColorWithOpacity, isDarkColor};
+    },
     props: ['item', 'icon', 'hideX', 'method', 'property'],
     data() {
         return {

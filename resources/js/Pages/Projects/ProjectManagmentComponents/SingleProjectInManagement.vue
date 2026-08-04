@@ -14,7 +14,7 @@
                     v-if="fullProject?.pinned_by_users && fullProject?.pinned_by_users.includes($page.props.auth.user.id)"
                 >
                     <div class="rounded-full p-0.5 bg-white border border-border-subtle shadow-sm">
-                        <component :is="IconPinned" class="h-5 w-5 text-artwork-buttons-create" />
+                        <component :is="IconPinned" class="h-5 w-5 text-accent-600" />
                     </div>
                 </div>
 
@@ -35,7 +35,7 @@
                             :checked="selected"
                             @click.stop
                             @change="$emit('toggle-selection', project.id)"
-                            class="mr-3 h-4 w-4 shrink-0 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                            class="mr-3 h-4 w-4 shrink-0 rounded border-border text-accent-700 focus:ring-accent-700 cursor-pointer"
                             :aria-label="$t('Select project')"
                         />
 

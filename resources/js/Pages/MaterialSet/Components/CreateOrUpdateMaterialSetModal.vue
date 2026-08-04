@@ -314,7 +314,6 @@ import { useForm, usePage } from "@inertiajs/vue3";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArticleSearch from "@/Components/SearchBars/ArticleSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import InventoryFunctionBarFilter from "@/Artwork/Filter/InventoryFunctionBarFilter.vue";
 import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import axios from "axios";

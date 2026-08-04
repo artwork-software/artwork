@@ -8,10 +8,10 @@
                     <div>
                         <MenuButton class="w-full">
                             <div class="menu-button">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                <div class="flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
                                     {{ $t('Select source categories')}}
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                             </div>
                         </MenuButton>
 
@@ -23,7 +23,7 @@
                             leave-from-class="transform scale-100 opacity-100"
                             leave-to-class="transform scale-95 opacity-0"
                         >
-                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-white/10 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-white/10 rounded-lg bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div v-if="moneySourceCategories.length > 0" class="grid grid-cols-1 gap-2">
                                     <div v-for="category in moneySourceCategories"
                                          :key="category.id"
@@ -31,9 +31,9 @@
                                         <input type="checkbox"
                                                v-model="selectedCategoryIds"
                                                :value="category.id"
-                                               class="checkBoxOnDark"
+                                               class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"
                                         />
-                                        <p :class="[selectedCategoryIds.includes(category.id) ? 'text-white' : 'text-secondary', 'ml-2 text-xs subpixel-antialiased align-text-middle']">
+                                        <p :class="[selectedCategoryIds.includes(category.id) ? 'text-white' : 'text-text-subtle', 'ml-2 text-xs subpixel-antialiased align-text-middle']">
                                             {{ category.name }}
                                         </p>
                                     </div>
@@ -60,9 +60,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -85,10 +85,10 @@ export default {
         MenuButton,
         Menu,
         BaseFilterTag,
-        ChevronDownIcon,
+        IconChevronDown,
         BaseFilterDisclosure,
         JetDialogModal,
-        XIcon
+        IconX
     },
     props: ['show', 'closeModal', 'moneySourceId', 'moneySourceCategories', 'moneySourceCurrentCategories'],
     data() {

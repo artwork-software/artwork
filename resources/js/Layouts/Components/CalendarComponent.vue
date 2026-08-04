@@ -2,7 +2,7 @@
     <div class=" items-center relative bg-secondaryHover" id="myCalendar">
         <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
             <div v-if="filteredEvents?.length > 0"
-                 class="ml-5 flex errorText items-center cursor-pointer mb-5 "
+                 class="ml-5 flex text-sm/5 text-danger items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()">
                 <IconAlertTriangle class="h-6  mr-2"/>
                 {{
@@ -55,7 +55,7 @@
                     </div>
                 </template>
                 <template #today-button>
-                    <div class="flex w-24 xsDark text-artwork-buttons-create" v-if="currentView === 'year'">
+                    <div class="flex w-24 text-sm/5 font-semibold text-text text-accent-600" v-if="currentView === 'year'">
                         {{ $t('Current year') }}
                     </div>
                 </template>
@@ -78,7 +78,7 @@
                     <div class="text-left centered mt-3 cursor-pointer"
                          :style="{backgroundColor: backgroundColorWithOpacity(event.event_type_color), color: TextColorWithDarken(event.event_type_color)}">
                         <div class="flex w-full justify-between items-center">
-                            <div v-if="!project" class="flex eventHeader truncate mx-1">
+                            <div v-if="!project" class="flex text-xs/5 font-bold truncate mx-1">
                                 <div v-if="event.eventTypeAbbreviation" class="mr-1">
                                     {{ event.eventTypeAbbreviation }}:
                                 </div>
@@ -95,7 +95,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="eventTime mx-1" v-if="event.subEvents?.length > 0">
+                        <div class="text-xs/[18px] mx-1" v-if="event.subEvents?.length > 0">
                             <div>
                                 {{ $t('Sub-events') }}:
                             </div>
@@ -114,9 +114,9 @@
                             <div v-else class="truncate">
                                 {{ event.eventName }}
                             </div>
-                            <span class="flex w-full eventTime">
+                            <span class="flex w-full text-xs/[18px]">
                             <span v-if="event.start.getDay() === event.end.getDay()"
-                                  class="items-center eventTime">
+                                  class="items-center text-xs/[18px]">
                                 <span v-if="event.allDay"
                                       class="lowercase">
                                     {{ $t('Full day') }}
@@ -125,15 +125,15 @@
                                     {{ event.start.formatTime("HH:mm") }} - {{ event.end.formatTime("HH:mm") }}
                                 </span>
                             </span>
-                            <span class="flex w-full eventTime" v-else>
-                                <span class="text-error mx-1">!</span>
+                            <span class="flex w-full text-xs/[18px]" v-else>
+                                <span class="text-danger mx-1">!</span>
                                 <span v-if="event.allDay">
                                     {{ event.start.format("DD.MM.") }} - {{ event.end.format("DD.MM.") }}
                                     <span class="lowercase">
                                         {{ $t('Full day') }}
                                     </span>
                                 </span>
-                                <span v-else class="items-center eventTime">
+                                <span v-else class="items-center text-xs/[18px]">
                                     {{ event.start.format("DD.MM. HH:mm") }} - {{ event.end.format("DD.MM. HH:mm") }}
                                 </span>
                             </span>
@@ -169,11 +169,11 @@
                                                             leave-from-class="transition-leave-from"
                                                             leave-to-class="transition-leave-to">
                                                     <MenuItems
-                                                        class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                        class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                         <MenuItem v-for="user in event.projectLeaders"
                                                                   v-slot="{ active }">
                                                             <Link href="#"
-                                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
                                                                      class="rounded-full"
                                                                      :src="user.profile_photo_url"
@@ -241,24 +241,10 @@
 </template>
 
 <script>
+import {IconAlertTriangle, IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconFileText, IconFilter, IconTrash, IconX} from "@tabler/icons-vue";
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    CalendarIcon,
-    ChevronDownIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    DocumentTextIcon,
-    DotsVerticalIcon,
-    ExclamationIcon,
-    FilterIcon,
-    PencilAltIcon,
-    PlusCircleIcon,
-    TrashIcon,
-    XCircleIcon,
-    XIcon,
-} from '@heroicons/vue/outline';
 import {
     Disclosure,
     DisclosureButton,
@@ -275,7 +261,6 @@ import {
     SwitchGroup,
     SwitchLabel
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Link, router} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -301,12 +286,12 @@ export default {
         DatePickerComponent,
         NewUserToolTip,
         BaseFilter,
-        PlusCircleIcon,
-        ExclamationIcon,
+        IconCirclePlus,
+        IconAlertTriangle,
         Button,
         CalendarFilterTagComponent,
-        CalendarIcon,
-        FilterIcon,
+        IconCalendar,
+        IconFilter,
         SwitchLabel,
         SwitchGroup,
         Disclosure,
@@ -314,27 +299,27 @@ export default {
         DisclosurePanel,
         VueCal,
         JetDialogModal,
-        XIcon,
-        DocumentTextIcon,
-        XCircleIcon,
+        IconX,
+        IconFileText,
+        IconCircleX,
         Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        ChevronLeftIcon,
-        ChevronRightIcon,
+        IconChevronDown,
+        IconChevronUp,
+        IconChevronLeft,
+        IconChevronRight,
         SvgCollection,
-        CheckIcon,
+        IconCheck,
         Switch,
         Menu,
         MenuButton,
         MenuItem,
         MenuItems,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
+        IconEdit,
+        IconTrash,
+        IconDotsVertical,
         Link,
         EventComponent,
         EventsWithoutRoomComponent,

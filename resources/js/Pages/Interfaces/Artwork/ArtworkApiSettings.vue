@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="headline2 mb-4">{{ $t('API Keys Management') }}</h2>
+    <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mb-4">{{ $t('API Keys Management') }}</h2>
     <SettingsGuideBanner
       class="mb-6"
       variant="static"
@@ -15,9 +15,9 @@
       <div class="col-span-3 flex justify-end">
         <button
           @click="showCreateModal = true"
-          class="px-4 py-2 bg-artwork-buttons-create hover:bg-artwork-buttons-create-hover text-white rounded-md flex items-center transition-all duration-150 ease-in-out"
+          class="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-md flex items-center transition-all duration-150 ease-in-out"
         >
-          <PlusIcon class="h-5 w-5 mr-2" />
+          <IconPlus class="h-5 w-5 mr-2" />
           {{ $t('Create New API Key') }}
         </button>
       </div>
@@ -75,10 +75,10 @@
                 <div>
                   <button
                     @click="toggleDropdown(token.id)"
-                    class="inline-flex justify-center rounded-md border border-border shadow-sm px-3 py-1.5 bg-white text-sm font-medium text-text-muted hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary"
+                    class="inline-flex justify-center rounded-md border border-border shadow-sm px-3 py-1.5 bg-white text-sm font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600"
                   >
                     {{ $t('Actions') }}
-                    <ChevronDownIcon class="ml-2 -mr-0.5 h-4 w-4" aria-hidden="true" />
+                    <IconChevronDown class="ml-2 -mr-0.5 h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
                 <div v-if="activeDropdown === token.id"
@@ -131,7 +131,7 @@
               id="name"
               v-model="form.name"
               type="text"
-              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
+              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:ring-accent-600 focus:border-accent-600 sm:text-sm"
               required
             />
             <div v-if="form.errors.name" class="text-danger text-xs mt-1">
@@ -147,7 +147,7 @@
               id="expires_at"
               v-model="form.expires_at"
               type="date"
-              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
+              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:ring-accent-600 focus:border-accent-600 sm:text-sm"
             />
             <div v-if="form.errors.expires_at" class="text-danger text-xs mt-1">
               {{ form.errors.expires_at }}
@@ -159,7 +159,7 @@
           <button
             @click="createToken"
             type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-create-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:ml-3 sm:w-auto sm:text-sm"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:ml-3 sm:w-auto sm:text-sm"
             :disabled="form.processing"
           >
             {{ $t('Create') }}
@@ -167,7 +167,7 @@
           <button
             @click="showCreateModal = false"
             type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
           >
             {{ $t('Cancel') }}
           </button>
@@ -191,7 +191,7 @@
               @click="copyToken(selectedToken.token)"
               class="p-1 text-text-muted hover:bg-border-subtle rounded"
             >
-              <ClipboardCopyIcon class="h-5 w-5" />
+              <IconClipboardCopy class="h-5 w-5" />
             </button>
           </div>
           <p v-else class="text-sm text-text-subtle mt-2">
@@ -203,7 +203,7 @@
           <button
             @click="selectedToken = null"
             type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
           >
             {{ $t('Close') }}
           </button>
@@ -230,12 +230,12 @@
             {{ $t('API Logs') }}: {{ currentLogToken?.name }}
           </h3>
           <button @click="closeLogModal" class="text-text-subtle hover:text-text-subtle">
-            <XIcon class="h-5 w-5" />
+            <IconX class="h-5 w-5" />
           </button>
         </div>
 
         <div v-if="loadingLogs" class="flex justify-center items-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-artwork-primary"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
         </div>
 
         <div v-else>
@@ -324,17 +324,11 @@
 </template>
 
 <script>
+import {IconChevronDown, IconCircleCheck, IconClipboardCopy, IconPlus, IconX} from "@tabler/icons-vue";
 import { defineComponent } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
-import {
-  PlusIcon,
-  CheckCircleIcon,
-  ClipboardCopyIcon,
-  ChevronDownIcon,
-  XIcon
-} from '@heroicons/vue/solid'
 import dayjs from 'dayjs'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 
@@ -343,11 +337,11 @@ export default defineComponent({
     SettingsGuideBanner,
     ConfirmationComponent,
     BaseModal,
-    PlusIcon,
-    CheckCircleIcon,
-    ClipboardCopyIcon,
-    ChevronDownIcon,
-    XIcon
+    IconPlus,
+    IconCircleCheck,
+    IconClipboardCopy,
+    IconChevronDown,
+    IconX
   },
   props: {
     tokens: {

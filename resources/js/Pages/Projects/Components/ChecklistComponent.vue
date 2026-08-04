@@ -3,7 +3,7 @@
         <div v-if="!isInOwnTaskManagement && loadChecklistsError" class="mb-2 text-xs text-danger">
             {{ loadChecklistsError }}
         </div>
-        <div v-else-if="!isInOwnTaskManagement && isLoadingChecklists" class="mb-2 text-xs text-secondary">
+        <div v-else-if="!isInOwnTaskManagement && isLoadingChecklists" class="mb-2 text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
 
@@ -140,7 +140,7 @@
         >
             <template #search>
                 <div v-if="!showSearch" @click="openSearchBar" class="ui-button">
-                    <IconSearch class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
+                    <IconSearch class="h-5 w-5 cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out" />
                 </div>
                 <div v-if="showSearch" class="flex items-center gap-x-2">
                     <div class="relative w-72">
@@ -155,7 +155,7 @@
                     </div>
 
                     <div @click="removeSearch" class="ui-button">
-                        <IconX class="h-5 w-5 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
+                        <IconX class="h-5 w-5 hover:text-accent-700 transition-all duration-150 ease-in-out" />
                     </div>
                 </div>
             </template>
@@ -163,14 +163,14 @@
                 <BaseMenu show-sort-icon dots-size="h-5 w-5" menu-width="w-72" classes-button="ui-button">
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                             :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                             {{ $t('ToDo-List name descending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 2"
-                             :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                             :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                             {{ $t('ToDo-List name ascending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                         </div>

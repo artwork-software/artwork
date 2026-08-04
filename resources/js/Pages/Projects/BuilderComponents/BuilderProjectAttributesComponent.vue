@@ -8,7 +8,7 @@
                 :class="attribute.pivot?.is_main ? 'border-warning-border ring-1 ring-warning-border' : 'border-border-subtle'"
             >
                 <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attribute.color }" />
-                <span class="ml-1 text-xs truncate max-w-[6rem]" :class="attribute.pivot?.is_main ? 'text-warning font-semibold' : 'text-secondary'">{{ attribute.name }}</span>
+                <span class="ml-1 text-xs truncate max-w-[6rem]" :class="attribute.pivot?.is_main ? 'text-warning font-semibold' : 'text-text-subtle'">{{ attribute.name }}</span>
             </div>
             <div v-if="overflowAttributes.length > 0" class="relative" @click.stop>
                 <button
@@ -30,7 +30,7 @@
                             :class="attr.pivot?.is_main ? 'border-warning-border ring-1 ring-warning-border' : 'border-border-subtle'"
                         >
                             <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attr.color }" />
-                            <span class="ml-1 text-xs" :class="attr.pivot?.is_main ? 'text-warning font-semibold' : 'text-secondary'">{{ attr.name }}</span>
+                            <span class="ml-1 text-xs" :class="attr.pivot?.is_main ? 'text-warning font-semibold' : 'text-text-subtle'">{{ attr.name }}</span>
                         </div>
                     </div>
                 </div>

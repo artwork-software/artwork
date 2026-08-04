@@ -13,11 +13,11 @@
                             <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
                         </div>
                         <div class="mx-2">
-                            <p class="xsDark group-hover:text-text">{{ groupProject.name}}</p>
+                            <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ groupProject.name}}</p>
                         </div>
                         <div class="flex items-center">
                             <button type="button" @click="deleteGroupFormListByIndex(index)">
-                                <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
+                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -45,13 +45,13 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
-import {XIcon} from "@heroicons/vue/outline";
 import Button from "@/Jetstream/Button.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";

@@ -5,7 +5,7 @@
             <div class="flex items-center gap-2">
         <span
             v-if="preset"
-            class="inline-flex items-center gap-1 rounded-full border border-artwork-navigation-color/30 bg-artwork-navigation-color/10 px-2 py-0.5 text-[11px] font-medium text-artwork-buttons-hover ring-1 ring-inset ring-white/50"
+            class="inline-flex items-center gap-1 rounded-full border border-text-inverse/30 bg-text-inverse/10 px-2 py-0.5 text-[11px] font-medium text-accent-700 ring-1 ring-inset ring-white/50"
         >
           {{ $t('Template') }}
         </span>
@@ -25,7 +25,7 @@
                 @click="deleteTime"
                 :aria-label="$t('Delete row')"
             >
-                <XCircleIcon class="h-5 w-5" aria-hidden="true" />
+                <IconCircleX class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
 
@@ -133,9 +133,9 @@
 </template>
 
 <script setup>
+import {IconCircleX} from "@tabler/icons-vue";
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { XCircleIcon } from '@heroicons/vue/solid'
 
 const props = defineProps({
     time: { type: Object, required: true },

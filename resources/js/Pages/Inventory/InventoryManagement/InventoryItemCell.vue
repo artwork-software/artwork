@@ -164,7 +164,7 @@ const emits = defineEmits(['isEditingCellValue']),
         ].join(' ');
     },
     getBackgroundClsForInput = () => {
-        return props.cell.column.background_color !== 'bg-secondary' ?
+        return props.cell.column.background_color !== 'bg-text-subtle' ?
             props.cell.column.background_color :
             'bg-white';
     },

@@ -16,7 +16,7 @@
                             {{ $t('My room booking requests') }}
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <WhiteInnerCard v-for="req in myRoomRequests" :key="req.id">
+                            <BaseCard elevation="raised" class="w-full" v-for="req in myRoomRequests" :key="req.id">
                                 <div class="p-4">
                                     <div class="flex items-center gap-x-2">
                                         <div
@@ -63,7 +63,7 @@
                                         </button>
                                     </div>
                                 </div>
-                            </WhiteInnerCard>
+                            </BaseCard>
                         </div>
                     </section>
 
@@ -133,7 +133,6 @@ import BaseEventVerificationLayout from "@/Pages/EventVerification/BaseEventVeri
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
 import SinglePlannedEventInVerificationPage
     from "@/Pages/EventVerification/Components/SinglePlannedEventInVerificationPage.vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import {IconPencil} from "@tabler/icons-vue";
 import {usePermission} from "@/Composeables/Permission.js";

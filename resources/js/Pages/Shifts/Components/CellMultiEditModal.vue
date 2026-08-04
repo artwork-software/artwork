@@ -39,24 +39,24 @@
                                 {{ multiEditCellForm.vacation_type.name }}
                             </span>
                         </div>
-                        <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-primary" aria-hidden="true" />
+                        <PropertyIcon name="IconChevronDown" class="h-5 w-5 text-text" aria-hidden="true" />
                     </ListboxButton>
                     <ListboxOptions
-                        class="absolute mt-1 w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm"
+                        class="absolute mt-1 w-full z-10 bg-surface-inverse shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm"
                     >
                         <ListboxOption
                             v-for="type in vacationTypes"
                             :key="type.type"
                             :value="type"
                             v-slot="{ selected }"
-                            class="cursor-pointer rounded-md p-2 mb-0.5 flex justify-between items-center text-secondary"
+                            class="cursor-pointer rounded-md p-2 mb-0.5 flex justify-between items-center text-text-subtle"
                         >
                             <div class="flex items-center gap-2 truncate">
                                 <span
                                     class="inline-flex h-1.5 w-1.5 rounded-full"
                                     :class="dotClassForVacationType(type)"
                                 ></span>
-                                <span :class="[selected ? 'xsWhiteBold' : 'xsLight', 'truncate']">
+                                <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'truncate']">
                                     {{ type.name }}
                                 </span>
                             </div>
@@ -88,7 +88,7 @@
                     </div>
                     <button
                         type="button"
-                        class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                         @click="addIndividualTime"
                     >
                         <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -96,7 +96,7 @@
                     </button>
                 </div>
 
-                <div v-if="multiEditCellForm.individual_times.length" class="text-sm mt-2 xsLight">
+                <div v-if="multiEditCellForm.individual_times.length" class="text-sm mt-2 text-sm/5 font-bold text-text-subtle">
                     <!-- Kopfzeile -->
                     <div class="hidden md:block text-[11px] text-text-subtle">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-1 px-1">
@@ -159,7 +159,7 @@
                     <div class="mt-1 sm:hidden">
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1 text-xs xsLight hover:text-artwork-buttons-hover transition-colors"
+                            class="inline-flex items-center gap-1 text-xs text-sm/5 font-bold text-text-subtle hover:text-accent-700 transition-colors"
                             @click="addIndividualTime"
                         >
                             <PropertyIcon name="IconCirclePlus" class="h-5 w-5" stroke-width="2" />

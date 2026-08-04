@@ -2,8 +2,8 @@
     <app-layout :title="$t(title)">
         <div v-if="$page.props.jetstream.canUpdateProfileInformation" class="mx-auto container">
             <div>
-                <div class="mt-5 sticky top-0 card white p-5 z-50 mb-5">
-                    <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.auth.user.id">
+                <div class="mt-5 sticky top-0 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 z-50 mb-5">
+                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mb-5" v-if="user_to_edit.id === $page.props.auth.user.id">
                         {{ $t('My account')}}
                     </div>
                     <div class="flex items-center gap-4">
@@ -12,10 +12,10 @@
                              alt=""/>
                         <div>
                             <div class="flex flex-grow w-full gap-x-1">
-                                <div class="headline1">
+                                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                                     {{ user_to_edit.first_name }}
                                 </div>
-                                <div class="headline1">
+                                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                                     {{ user_to_edit.last_name }}
                                 </div>
                             </div>
@@ -30,7 +30,7 @@
                         <BaseTabs :tabs="tabs" />
                     </div>
                 </div>
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <div class="w-full">
                         <slot></slot>
                     </div>

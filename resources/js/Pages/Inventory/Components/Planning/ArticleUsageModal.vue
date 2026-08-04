@@ -31,7 +31,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center justify-center w-full">
-                                <div class="ml-2 text-secondary text-sm">{{ $t('Details on Click') }}</div>
+                                <div class="ml-2 text-text-subtle text-sm">{{ $t('Details on Click') }}</div>
                                 <svg
                                     class=" w-3 h-3 transition-transform duration-200"
                                     :class="{ 'rotate-90': isStatusDetailsExpanded }"
@@ -215,7 +215,6 @@
 
 <script setup>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {TabGroup, TabList, Tab, TabPanels, TabPanel} from '@headlessui/vue'
 import UsageTable from './UsageTable.vue'
 import {ref} from 'vue'

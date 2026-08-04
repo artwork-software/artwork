@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="closeDeclineRequestModal" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
         <div class="mx-4">
-            <div class="headline1 my-2">
+            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                 {{ $t('Cancel booking') }}
             </div>
             <div class="flex flex-wrap w-full items-center">
@@ -38,9 +38,9 @@
                     </div>
                     <div class="mb-3">
                         <div v-if="requestToDecline?.project">
-                            <div class="xxsLight flex items-center">
+                            <div class="text-xs/[18px] text-text-subtle flex items-center">
                                 {{ $t('assigned to') }}
-                                <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                <div class="text-text-subtle font-black leading-3 subpixel-antialiased ml-2">
                                     {{ requestToDecline?.project?.name }}
                                 </div>
                             </div>
@@ -54,15 +54,15 @@
                             </div>
                             -->
                         </div>
-                        <div class="xxsLight" v-else>
+                        <div class="text-xs/[18px] text-text-subtle" v-else>
                             {{ $t('No project assignment') }}
                         </div>
                     </div>
-                    <div class="mb-3 xsDark">
+                    <div class="mb-3 text-sm/5 font-semibold text-text">
                         {{ requestToDecline?.roomName }} - {{ dayjs(requestToDecline?.start).format('DD.MM.YYYY HH:mm') }}
                         - {{ dayjs(requestToDecline?.end).format('DD.MM.YYYY HH:mm') }}
                     </div>
-                    <div class="mb-3 xsDark">
+                    <div class="mb-3 text-sm/5 font-semibold text-text">
                         {{ $t('Event info') }} {{ requestToDecline?.description }}
                     </div>
 
@@ -84,7 +84,7 @@
                 />
                 <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
                 </div>
             </div>
         </div>
@@ -92,11 +92,10 @@
 </template>
 
 <script>
-import {XIcon} from "@heroicons/vue/solid";
+import {IconAdjustments, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Button from "@/Jetstream/Button.vue";
-import {AdjustmentsIcon} from "@heroicons/vue/outline";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import dayjs from "dayjs";
@@ -121,11 +120,11 @@ export default {
         FormButton,
         UserPopoverTooltip,
         NewUserToolTip,
-        AdjustmentsIcon,
+        IconAdjustments,
         Button,
         UserTooltip,
         JetDialogModal,
-        XIcon
+        IconX
     },
     emits: ['closed', 'declined'],
     props: ['requestToDecline', 'eventTypes'],

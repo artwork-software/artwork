@@ -9,7 +9,7 @@
             @click="selectNewKeyVisual"
         >
             <div class="space-y-1 text-center">
-                <div class="xsLight flex my-auto h-14 items-center">
+                <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-14 items-center">
                     <span v-html="$t('Drag your key visual here')"></span>
                     <input
                         id="keyVisual-upload"

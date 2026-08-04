@@ -35,7 +35,7 @@
                             @click="deleteUserFromForm(index)"
                             :aria-label="$t('Remove user')"
                         >
-                            <PropertyIcon name="XIcon" class="size-4" />
+                            <PropertyIcon name="IconX" class="size-4" />
                         </button>
                     </div>
                 </div>
@@ -83,8 +83,7 @@
 import { ref, computed } from 'vue'
 import UserSearch from '@/Components/SearchBars/UserSearch.vue'
 import TextInputComponent from '@/Components/Inputs/TextInputComponent.vue'
-import { XIcon } from '@heroicons/vue/outline'
-import { IconInfoSquareRoundedFilled } from '@tabler/icons-vue'
+import {IconInfoSquareRoundedFilled, IconX} from "@tabler/icons-vue"
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";

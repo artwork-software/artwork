@@ -4,7 +4,7 @@
         <div class="flex justify-end items-center ml-8 -mt-14">
             <button v-if="hasAnyTrashedItems" @click="showConfirmDeleteAll = true"
                     class="cursor-pointer text-danger hover:text-danger mr-3">
-                <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+                <IconTrash class="h-5 w-5" aria-hidden="true"/>
             </button>
         </div>
     </div>
@@ -26,6 +26,7 @@
 </template>
 
 <script>
+import {IconTrash} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
 
@@ -39,7 +40,6 @@ import { ref, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 import TrashItems from "@/Layouts/Components/TrashItems.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {TrashIcon} from "@heroicons/vue/outline";
 
 const props = defineProps({
     trashed_genres: Array,

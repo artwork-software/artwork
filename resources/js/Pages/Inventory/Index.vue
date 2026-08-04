@@ -202,7 +202,7 @@
                                                 <!-- Subcategory group row (spans the full width of the shared table) -->
                                                 <tr class="bg-surface-sunken">
                                                     <td :colspan="category.unionProperties.length + (hideArticleImages ? 3 : 4)" class="p-0">
-                                                        <div class="sticky left-0 w-fit px-4 py-2 border-l-4 border-artwork-buttons-create flex items-center gap-x-2">
+                                                        <div class="sticky left-0 w-fit px-4 py-2 border-l-4 border-accent-600 flex items-center gap-x-2">
                                                             <h3 class="text-sm font-semibold text-text">{{ subcategory.name }}</h3>
                                                             <span class="inline-flex items-center rounded-full bg-border-subtle px-2 py-0.5 text-xs font-medium text-text-muted">
                                                                 {{ subcategory.articles.length }}
@@ -319,7 +319,6 @@ import InventoryActiveFilterChips from "@/Pages/Inventory/LayoutComponents/Inven
 import {COMPACT_LISTBOX_BUTTON_CLASS, INVENTORY_FILTER_RELOAD_PROPS, useInventoryFilters} from "@/Pages/Inventory/Composables/useInventoryFilters.js";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
-import SmallFormButton from "@/Components/Buttons/SmallFormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import {IconBarcode, IconIdBadge, IconLayoutGrid, IconLayoutList} from "@tabler/icons-vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";

@@ -144,7 +144,7 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
 
     /** Klassen (Defaults an deinen Stil angelehnt) */
-    labelClass: { type: String, default: 'xsDark' },
+    labelClass: { type: String, default: 'text-sm/5 font-semibold text-text' },
     inputClass: {
         type: String,
         default:

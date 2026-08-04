@@ -5,7 +5,7 @@
                 type="checkbox"
                 :checked="selected"
                 @change="$emit('toggle-selection', project.id)"
-                class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                class="h-4 w-4 rounded border-border text-accent-700 focus:ring-accent-700 cursor-pointer"
                 :aria-label="$t('Select project')"
             />
         </div>
@@ -31,12 +31,12 @@
                             checkPermission(project, 'view')"
                           :href="getEditHref(project)"
                           class="flex w-full my-auto">
-                        <p class="xsDark flex items-center">
+                        <p class="text-sm/5 font-semibold text-text flex items-center">
                             {{ truncate(project.name, 30, '...') }}
                         </p>
                     </Link>
                     <div v-else class="flex w-full my-auto items-center">
-                        <p class="xsDark flex items-center">
+                        <p class="text-sm/5 font-semibold text-text flex items-center">
                             <span v-if="project.is_group">
                                 <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
                                      aria-hidden="true" alt=""/>
@@ -57,8 +57,8 @@
             </div>
             <div class="col-span-1">
                 <div v-if="project.pinned_by_users && project.pinned_by_users?.includes($page.props.auth.user.id)"
-                     class="flex items-center xxsLight subpixel-antialiased">
-                    <IconPinned class="h-5 w-5 text-primary"/>
+                     class="flex items-center text-xs/[18px] text-text-subtle subpixel-antialiased">
+                    <IconPinned class="h-5 w-5 text-text"/>
                 </div>
             </div>
             <div class="flex justify-end gap-x-2">
@@ -68,27 +68,27 @@
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
                         <a @click="openEditProjectModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <PropertyIcon name="IconEdit" stroke-width="1.5"
-                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                       aria-hidden="true"/>
                             {{ $t('Edit basic data') }}
                         </a>
                     </MenuItem>
                     <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.auth.user.id)">
                         <a @click="pinProject()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconPinnedOff" stroke-width="1.5"
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                            aria-hidden="true"/>
                             {{  $t('Undo pinning') }}
                         </a>
                     </MenuItem>
                     <MenuItem class="cursor-pointer" v-slot="{ active }" v-else>
                         <a @click="pinProject()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconPin" stroke-width="1.5"
-                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                      aria-hidden="true"/>
                             {{  $t('Pin') }}
                         </a>
@@ -96,9 +96,9 @@
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
                         <a href="#" @click="duplicateProject()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                       aria-hidden="true"/>
                             {{ $t('Duplicate') }}
                         </a>
@@ -106,9 +106,9 @@
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('delete projects') || this.checkPermission(project, 'delete')">
                         <a href="#" @click="openDeleteProjectModal()"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconTrash" stroke-width="1.5"
-                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                        aria-hidden="true"/>
                             {{ $t('Put in the trash') }}
                         </a>
@@ -120,21 +120,21 @@
 
     <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject" modal-image="/Svgs/Overlays/illu_warning.svg">
         <div class="mx-4">
-            <div class="font-black font-lexend text-primary text-3xl my-2">
+            <div class="font-black font-lexend text-text text-3xl my-2">
                 {{ $t('Delete project') }}
             </div>
-            <div class="text-error subpixel-antialiased">
+            <div class="text-danger subpixel-antialiased">
                 {{ $t('Are you sure you want to delete the project?', [project.name]) }}
             </div>
             <div class="flex justify-between mt-6">
-                <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                <button class="bg-accent-600 hover:bg-accent-700 rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-white"
                         @click="deleteProject">
                     {{ $t('Delete') }}
                 </button>
                 <div class="flex my-auto">
                             <span @click="closeDeleteProjectModal()"
-                                  class="xsLight cursor-pointer">
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">
                                 {{ $t('No, not really') }}
                             </span>
                 </div>
@@ -174,7 +174,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {Link, router} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import {IconCalendarMonth} from "@tabler/icons-vue";
@@ -191,7 +191,11 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,},
-    mixins: [IconLib, Permissions, ColorHelper],
+    mixins: [IconLib, Permissions],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
+        return {backgroundColorWithOpacity, TextColorWithDarken};
+    },
     props: {
         project: {
             type: Object,

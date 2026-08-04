@@ -132,7 +132,7 @@
                                 <input
                                     v-if="canEdit"
                                     type="number"
-                                    class="w-24 rounded-md border border-border bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
+                                    class="w-24 rounded-md border border-border bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                                     :min="0"
                                     :step="field.key === 'revenue' ? 0.01 : 1"
                                     :data-bi-cell="field.key"

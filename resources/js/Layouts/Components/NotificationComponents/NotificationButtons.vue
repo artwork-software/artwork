@@ -89,8 +89,7 @@
 </template>
 
 <script>
-import {PencilAltIcon} from "@heroicons/vue/outline";
-import {XIcon} from "@heroicons/vue/solid";
+import {IconEdit, IconX} from "@tabler/icons-vue";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -117,8 +116,8 @@ export default {
     components: {
         PropertyIcon,
         DeclineEventModal,
-        PencilAltIcon,
-        XIcon
+        IconEdit,
+        IconX
     }
 }
 </script>

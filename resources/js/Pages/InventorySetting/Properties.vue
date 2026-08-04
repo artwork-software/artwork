@@ -19,7 +19,7 @@
                 'Dragging a row changes the global order of the properties.',
             ]"
         />
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <SettingsGuideBanner
                 variant="inline"
                 storage-key="settings-guide.inventory.properties.flags"

@@ -19,8 +19,8 @@
                              class="relative p-2 rounded-lg border bg-white shadow-sm hover:border-warning cursor-pointer transition duration-200 ease-in-out"
                              @click="currentMainImage = index"
                              :class="currentMainImage === index ? 'border-warning-border' : 'border-border-subtle'">
-                            <XCircleIcon @click.stop="removeImage(image)"
-                                         class="absolute top-1 right-1 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
+                            <IconCircleX @click.stop="removeImage(image)"
+                                         class="absolute top-1 right-1 text-accent-600 h-5 w-5 hover:text-danger "/>
                             <div class="flex flex-col items-center justify-center w-full truncate min-h-16 gap-y-2">
                                 <div v-if="image._origin === 'old'">
                                     <img :src="createImageURL(image)" alt="New image preview"
@@ -187,7 +187,7 @@
                     <p v-if="fieldStatus.inventory_sub_category_id === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                     <div class="flex items-center justify-end mt-3" v-if="selectedSubCategory">
                         <div
-                            class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
+                            class="text-xs text-accent-600 underline underline-offset-4 hover:text-accent-700 duration-200 ease-in-out cursor-pointer"
                             @click="selectedSubCategory = null">{{ $t('Remove the sub-category assignment') }}
                         </div>
                     </div>
@@ -211,7 +211,7 @@
                         <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
                         <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
                             <span class="text-xs text-danger font-lexend">{{ $t('Sum of detailed articles') }}: </span>
-                            <button type="button" class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
+                            <button type="button" class="text-xs font-semibold text-accent-600 hover:text-accent-700 font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
                                 {{ formatQuantity(calculateTotalQuantity) }}
                                 <component :is="IconClick" class="size-3.5" />
                             </button>
@@ -256,9 +256,9 @@
                         <div class="grid grid-cols-2 gap-x-4 mb-3">
                             <div class="flex items-center">
                                 <div class="absolute top-0 left-0 w-px h-[90%] bg-border"></div>
-                                <div class="font-lexend text-sm flex items-center text-secondary">
+                                <div class="font-lexend text-sm flex items-center text-text-subtle">
                                     <div class="w-5 h-px bg-border"></div>
-                                    <div class="ml-4 text-primary">{{ statusValue.name }}</div>
+                                    <div class="ml-4 text-text">{{ statusValue.name }}</div>
                                 </div>
                             </div>
                             <div>
@@ -296,7 +296,7 @@
                                 class="flex items-center gap-x-0.5 cursor-pointer">
                                    <ToolTipWithTextComponent
                                        :text="formatQuantity(calculateStatusQuantityInArticle)"
-                                       classes="text-artwork-buttons-create"
+                                       classes="text-accent-600"
                                        icon-right
                                        stroke="2"
                                        :icon="IconClick"
@@ -361,7 +361,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize xsLight cursor-default">
+                                    <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize text-sm/5 font-bold text-text-subtle cursor-default">
                                         {{ $t(capitalizeFirstLetter(property?.type)) }}
                                     </td>
 
@@ -619,7 +619,7 @@
                                     <span class="text-xs text-text-subtle">{{ selectionCount }}</span>
                                     <button
                                         type="button"
-                                        class="text-artwork-buttons-create text-xs hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
+                                        class="text-accent-600 text-xs hover:text-accent-700 duration-200 ease-in-out cursor-pointer"
                                         @click="openBulkEdit"
                                     >
                                         {{ $t('Edit selection') }}
@@ -639,7 +639,7 @@
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="col-span-full">
                                         <div
-                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
                                             <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                                 {{ $t('Status') }}
                                             </label>
@@ -669,7 +669,7 @@
                                     <!-- NEU: Property-Auswahl (nur nicht-across_articles, Schnittmenge der Auswahl) -->
                                     <div class="col-span-full" v-if="bulkEditableProperties.length">
                                         <div
-                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
                                             <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                                 {{ $t('Property') }}
                                             </label>
@@ -687,7 +687,7 @@
                                     <!-- NEU: Property-Wert-Eingabe je nach Prop-Typ -->
                                     <div class="col-span-full" v-if="selectedBulkProp">
                                         <div
-                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
                                             <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                                 {{ $t('Property value') }}
                                             </label>
@@ -755,7 +755,7 @@
                                             {{ $t('Cancel') }}
                                         </button>
                                         <button type="button"
-                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                                                class="text-xs text-accent-600 hover:text-accent-700"
                                                 @click="applyBulkEdit">
                                             {{ $t('Apply') }}
                                         </button>
@@ -768,7 +768,7 @@
                             <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-border-subtle divide-dashed" role="list">
                                 <li v-for="(item, idx) in filteredDetailedArticles" :key="item.id ?? item._key ?? `idx-${idx}`" class="">
                                     <!-- NEU: Checkbox + Button nebeneinander -->
-                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-border-subtle focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2"
+                                    <div class="flex items-center group w-full cursor-pointer hover:text-accent-600 hover:bg-border-subtle focus:text-accent-600 focus:outline-hidden gap-1.5 px-4 py-2"
                                          :class="[ isActiveDetailedArticle(item) || isSelected(item) ? 'text-accent-600 bg-surface-sunken' : 'text-text',
                                              isDetailedArticleIncomplete(item) ? 'border-l-2 border-danger bg-danger-surface' : ''
                                          ]">
@@ -854,14 +854,14 @@
                                 <div class="flex items-center gap-x-3">
                                     <button
                                         type="button"
-                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        class="text-accent-600 hover:text-accent-700 duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
                                         @click="addNewDetailedArticle">
                                         <component :is="IconCirclePlus" class="h-5 w-5" aria-hidden="true"/>
                                         <span>{{ $t('Add Detailed Article') }}</span>
                                     </button>
                                     <button
                                         type="button"
-                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        class="text-accent-600 hover:text-accent-700 duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
                                         @click="initBulkCreate">
                                         <component :is="IconCopyPlus" class="h-5 w-5" aria-hidden="true"/>
                                         <span>{{ $t('Bulk create') }}</span>
@@ -879,7 +879,7 @@
                                         :max="100"
                                     />
                                     <div
-                                        class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                        class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
                                         <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                             {{ $t('Status') }}
                                         </label>
@@ -967,7 +967,7 @@
                                             {{ $t('Cancel') }}
                                         </button>
                                         <button type="button"
-                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                class="text-xs text-accent-600 hover:text-accent-700 cursor-pointer"
                                                 @click="executeBulkCreate">
                                             {{ $t('Create items') }}
                                         </button>
@@ -1019,7 +1019,7 @@
 
                             <div class="col-span-full">
                                 <div
-                                    class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
+                                    class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
                                     <label for="location" class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                         {{ $t('Status*') }}
                                     </label>
@@ -1190,7 +1190,6 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import ToolTipWithTextComponent from '@/Components/ToolTips/ToolTipWithTextComponent.vue'
-import {XCircleIcon} from '@heroicons/vue/solid'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -1202,18 +1201,7 @@ import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Compo
 import PropertyFileCell from "@/Pages/Inventory/Components/Article/PropertyFileCell.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
-import {
-    IconClick,
-    IconCopy,
-    IconCopyPlus,
-    IconInfoCircle,
-    IconPhoto,
-    IconPhotoPlus,
-    IconCirclePlus,
-    IconTrash,
-    IconTag,
-    IconLock
-} from '@tabler/icons-vue'
+import {IconCirclePlus, IconCircleX, IconClick, IconCopy, IconCopyPlus, IconInfoCircle, IconLock, IconPhoto, IconPhotoPlus, IconTag, IconTrash} from "@tabler/icons-vue"
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

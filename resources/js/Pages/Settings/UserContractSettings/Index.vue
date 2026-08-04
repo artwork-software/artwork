@@ -17,7 +17,7 @@
             footnote="Important: people without an assigned contract are not covered by the rule check at all."
         />
 
-            <div class="card white p-5 mt-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-5">
                 <ul role="list" class="divide-y divide-border-subtle" v-if="contracts.length > 0">
                     <li v-for="contract in contracts" :key="contract.id" class="flex justify-between gap-x-6 py-5">
                         <SingleUserContractTemplate :contract="contract" />
@@ -40,7 +40,6 @@
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
 import {ref} from "vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import CreateOrUpdateWorkTimePatternModal
     from "@/Pages/Settings/WorkTimePattern/Components/CreateOrUpdateWorkTimePatternModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";

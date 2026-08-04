@@ -19,11 +19,11 @@
         />
 
         <div class="flex items-center gap-3 mt-4 mb-2 text-xs">
-            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="selectAll">
+            <button type="button" class="text-accent-600 hover:text-accent-700" @click="selectAll">
                 {{ $t('Select all') }}
             </button>
             <span class="text-text-subtle">|</span>
-            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="deselectAll">
+            <button type="button" class="text-accent-600 hover:text-accent-700" @click="deselectAll">
                 {{ $t('Deselect all') }}
             </button>
             <span class="ml-auto text-text-subtle">{{ selectedIds.size }} / {{ eventTypes.length }}</span>
@@ -52,7 +52,7 @@
             </p>
         </div>
 
-        <div v-if="errorMessage" class="errorText mt-3">
+        <div v-if="errorMessage" class="text-sm/5 text-danger mt-3">
             {{ errorMessage }}
         </div>
 

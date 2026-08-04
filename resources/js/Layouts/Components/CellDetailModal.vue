@@ -37,7 +37,7 @@
                         @click="activeTab = tab.id"
                         :class="[
                             activeTab === tab.id
-                                ? 'bg-white text-artwork-buttons-create shadow-sm'
+                                ? 'bg-white text-accent-600 shadow-sm'
                                 : 'text-text-muted hover:text-text',
                             'flex-1 py-2.5 px-3 text-sm font-medium rounded-md transition-all duration-200'
                         ]"
@@ -60,7 +60,7 @@
                             <div
                                 v-for="(calc, index) in calculations"
                                 :key="calc.tempId || calc.id"
-                                class="bg-surface-sunken rounded-lg p-4 border border-border-subtle hover:border-artwork-buttons-create transition-all duration-200"
+                                class="bg-surface-sunken rounded-lg p-4 border border-border-subtle hover:border-accent-600 transition-all duration-200"
                             >
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex-1">
@@ -72,7 +72,7 @@
                                             type="text"
                                             :disabled="cell?.column?.is_locked"
                                             :placeholder="$t('e.g. Personnel costs')"
-                                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
+                                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
                                         />
                                     </div>
                                     <button
@@ -96,7 +96,7 @@
                                             step="0.01"
                                             :disabled="cell?.column?.is_locked"
                                             placeholder="0.00"
-                                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
+                                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
                                         />
                                     </div>
                                     <div class="flex items-end">
@@ -115,7 +115,7 @@
                                         rows="2"
                                         :disabled="cell?.column?.is_locked"
                                         :placeholder="$t('Additional notes...')"
-                                        class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm resize-none"
+                                        class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm resize-none"
                                     />
                                 </div>
                             </div>
@@ -133,14 +133,14 @@
                     <button
                         v-if="!cell?.column?.is_locked"
                         @click="addCalculation"
-                        class="w-full py-3 border-2 border-dashed border-border rounded-lg text-text-muted hover:border-artwork-buttons-create hover:text-artwork-buttons-create hover:bg-accent-50 transition-all duration-200 flex items-center justify-center font-medium text-sm"
+                        class="w-full py-3 border-2 border-dashed border-border rounded-lg text-text-muted hover:border-accent-600 hover:text-accent-600 hover:bg-accent-50 transition-all duration-200 flex items-center justify-center font-medium text-sm"
                     >
                         <IconCirclePlus class="w-5 h-5 mr-2" stroke-width="2" />
                         {{ $t('Add calculation item') }}
                     </button>
 
                     <!-- Summary -->
-                    <div class="mt-6 bg-artwork-buttons-create rounded-lg p-4 text-white">
+                    <div class="mt-6 bg-accent-600 rounded-lg p-4 text-white">
                         <div class="flex justify-between items-center">
                             <span class="font-semibold text-lg">{{ $t('Total') }}</span>
                             <span class="text-2xl font-bold">{{ formatCurrency(totalCalculated) }}</span>
@@ -159,18 +159,19 @@
                             v-model="newComment"
                             rows="4"
                             :placeholder="$t('What do I need to know about this item?')"
-                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm resize-none"
+                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent text-sm resize-none"
                         />
                         <div class="mt-3 flex justify-end">
-                            <ArtworkBaseModalButton
+                            <BaseUIButton
                                 variant="primary"
-                                size="xs"
+                                size="sm"
+                                hide-icon
                                 :disabled="!newComment || newComment.trim() === '' || isSaving"
                                 @click="saveCommentOnly"
                             >
                                 <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                 {{ $t('Save comment') }}
-                            </ArtworkBaseModalButton>
+                            </BaseUIButton>
                         </div>
                     </div>
 
@@ -232,7 +233,7 @@
                             v-model="isLinked"
                             type="checkbox"
                             :disabled="cell?.column?.is_locked"
-                            class="h-5 w-5 text-artwork-buttons-create border-border rounded focus:ring-artwork-buttons-create disabled:cursor-not-allowed"
+                            class="h-5 w-5 text-accent-600 border-border rounded focus:ring-accent-600 disabled:cursor-not-allowed"
                         />
                         <label
                             :class="[isLinked ? 'text-text font-medium' : 'text-text-muted']"
@@ -261,7 +262,7 @@
                                 <Listbox v-model="linkedType" :disabled="cell?.column?.is_locked">
                                     <div class="relative">
                                         <ListboxButton
-                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create disabled:bg-surface-sunken disabled:cursor-not-allowed"
+                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-border focus:outline-none focus:ring-2 focus:ring-accent-600 disabled:bg-surface-sunken disabled:cursor-not-allowed"
                                         >
                                             <span class="block truncate text-sm">{{ linkedType.name }}</span>
                                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -285,7 +286,7 @@
                                                 >
                                                     <div
                                                         :class="[
-                                                            active ? 'bg-artwork-buttons-create text-white' : 'text-text',
+                                                            active ? 'bg-accent-600 text-white' : 'text-text',
                                                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                                                         ]"
                                                     >
@@ -322,7 +323,7 @@
                                         type="text"
                                         :disabled="cell?.column?.is_locked"
                                         :placeholder="$t('Search funding source...')"
-                                        class="w-full px-3 py-2.5 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
+                                        class="w-full px-3 py-2.5 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
                                     />
 
                                     <!-- Search Results -->
@@ -339,7 +340,7 @@
                                                 v-for="(source, index) in moneySourceSearchResults"
                                                 :key="index"
                                                 @click="selectMoneySource(source)"
-                                                class="cursor-pointer px-4 py-3 hover:bg-artwork-buttons-create hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
+                                                class="cursor-pointer px-4 py-3 hover:bg-accent-600 hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
                                             >
                                                 <p class="font-medium text-sm">{{ source.name }}</p>
                                             </div>
@@ -416,7 +417,6 @@ import {
     IconAlertCircle,
     IconX
 } from '@tabler/icons-vue';
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue';
 import { router } from '@inertiajs/vue3';
@@ -428,7 +428,6 @@ export default {
     components: {
         BaseUIButton,
         ArtworkBaseModal,
-        ArtworkBaseModalButton,
         IconX,
         IconLock,
         IconCalculator,

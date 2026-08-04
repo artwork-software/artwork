@@ -14,7 +14,7 @@
             <!-- Trigger -->
             <div
                 class="flex w-full items-center justify-center h-full font-semibold"
-                :class="[whiteIcon ? 'text-white' : 'text-artwork-buttons-context']"
+                :class="[whiteIcon ? 'text-white' : 'text-text-muted']"
             >
                 <MenuButton
                     :id="buttonId"
@@ -133,7 +133,7 @@ const props = withDefaults(defineProps<{
     /** ARIA-Label, wenn kein sichtbarer Text vorhanden ist */
     menuButtonAria?: string
 }>(), {
-    dotsColor: 'text-artwork-navigation-text',
+    dotsColor: 'text-text-inverse',
     dotsSize: 'size-5',
     noRelative: false,
     showSortIcon: false,

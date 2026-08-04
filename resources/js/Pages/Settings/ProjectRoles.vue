@@ -25,8 +25,8 @@
                             </div>
                         </div>
                         <div class="flex gap-x-3">
-                            <PropertyIcon name="IconEdit" class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="openRoleEditForm(role)"/>
-                            <PropertyIcon name="IconTrash "class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="openDeleteRoleModal(role)"/>
+                            <PropertyIcon name="IconEdit" class="w-5 h-5 text-text-muted cursor-pointer" @click="openRoleEditForm(role)"/>
+                            <PropertyIcon name="IconTrash "class="w-5 h-5 text-text-muted cursor-pointer" @click="openDeleteRoleModal(role)"/>
                         </div>
                     </div>
                 </div>
@@ -64,7 +64,6 @@ import IconLib from "@/Mixins/IconLib.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
@@ -77,7 +76,6 @@ export default {
         SettingsGuideBanner,
         PropertyIcon,
         ProjectSettingsHeader,
-        GlassyIconButton,
         BaseInput,
         TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton},
     mixins: [IconLib],

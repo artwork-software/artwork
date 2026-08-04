@@ -5,7 +5,7 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex items-center justify-end">
                         <div class="w-full flex items-center">
-                            <p class="items-center flex mr-2 headline1">
+                            <p class="items-center flex mr-2 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                                 {{ $t('Projects') }}
                             </p>
                         </div>
@@ -18,26 +18,26 @@
                                 </div>
                                 <div v-else class="flex items-center w-60">
                                     <div>
-                                        <input type="text" ref="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"/>
+                                        <input type="text" ref="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"/>
                                     </div>
-                                    <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
+                                    <IconX class="ml-2 cursor-pointer h-7 w-7 text-text-muted" @click="closeSearchbar()"/>
                                 </div>
                             </div>
                             <BaseFilter only-icon="true" :left="false">
                                 <div class="w-full">
                                     <div class="flex justify-end mb-3">
-                                        <span class="xxsLight cursor-pointer text-right w-full" @click="resetFilter">
+                                        <span class="text-xs/[18px] text-text-subtle cursor-pointer text-right w-full" @click="resetFilter">
                                             {{ $t('Reset') }}
                                         </span>
                                     </div>
                                     <SwitchGroup as="div" class="flex items-center">
                                         <Switch v-model="showOnlyMyProjects"
-                                                :class="[showOnlyMyProjects ? 'bg-success' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                                                :class="[showOnlyMyProjects ? 'bg-success' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
                                             <span class="sr-only">Use setting</span>
                                             <span aria-hidden="true"
                                                   :class="[showOnlyMyProjects ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                         </Switch>
-                                        <SwitchLabel as="span" class="ml-3 xxsLight">
+                                        <SwitchLabel as="span" class="ml-3 text-xs/[18px] text-text-subtle">
                                             {{ $t('Show only my projects') }}
                                         </SwitchLabel>
                                     </SwitchGroup>
@@ -45,7 +45,7 @@
                                         <input v-model="showProjectGroups"
                                                type="checkbox"
                                                class="input-checklist-dark"/>
-                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                        <p class="ml-4 my-auto text-sm text-text-subtle">
                                             {{ $t('Project groups') }}
                                         </p>
                                     </div>
@@ -53,7 +53,7 @@
                                         <input v-model="showProjects"
                                                type="checkbox"
                                                class="input-checklist-dark"/>
-                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                        <p class="ml-4 my-auto text-sm text-text-subtle">
                                             {{ $t('Projects') }}
                                         </p>
                                     </div>
@@ -61,7 +61,7 @@
                                         <input v-model="showExpiredProjects"
                                                type="checkbox"
                                                class="input-checklist-dark"/>
-                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                        <p class="ml-4 my-auto text-sm text-text-subtle">
                                             {{ $t('Show expired projects') }}
                                         </p>
                                     </div>
@@ -69,7 +69,7 @@
                                         <input v-model="showFutureProjects"
                                                type="checkbox"
                                                class="input-checklist-dark"/>
-                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                        <p class="ml-4 my-auto text-sm text-text-subtle">
                                             {{ $t('Show future projects') }}
                                         </p>
                                     </div>
@@ -77,11 +77,11 @@
                                         <input v-model="showProjectsWithoutEvents"
                                                type="checkbox"
                                                class="input-checklist-dark"/>
-                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                        <p class="ml-4 my-auto text-sm text-text-subtle">
                                             {{ $t('Show projects without events') }}
                                         </p>
                                     </div>
-                                    <div class="flex justify-between xsLight mb-3"
+                                    <div class="flex justify-between text-sm/5 font-bold text-text-subtle mb-3"
                                          @click="showProjectStateFilter = !showProjectStateFilter">
                                         {{ $t('Project status') }}
                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5"
@@ -96,7 +96,7 @@
                                             <input v-model="state.clicked"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">{{
+                                            <p class="ml-4 my-auto text-sm text-text-subtle">{{
                                                     state.name
                                                 }}</p>
                                         </div>
@@ -110,14 +110,14 @@
                             </BaseFilter>
                             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                                 <div class="flex items-center justify-end py-1">
-                                    <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
+                                    <span class="pr-4 pt-0.5 text-xs/[18px] text-text-subtle cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
                                     </span>
                                 </div>
                                 <MenuItem v-for="projectSortEnumName in projectSortEnumNames"
                                           v-slot="{ active }">
                                     <div @click="this.sortBy = projectSortEnumName; this.applyFiltersAndSort()"
-                                         :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                         :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                         {{ getSortEnumTranslation(projectSortEnumName) }}
                                         <IconCheck v-if="this.getUserSortBySetting() === projectSortEnumName" class="w-5 h-5"/>
                                     </div>
@@ -131,14 +131,14 @@
                             <div v-if="$role('artwork admin') || $can('delete projects')"
                                  @click="toggleSelectionMode"
                                  class="cursor-pointer"
-                                 :class="selectionMode ? 'text-artwork-buttons-create' : ''">
+                                 :class="selectionMode ? 'text-accent-600' : ''">
                                 <ToolTipComponent :icon="IconChecklist"
                                                   icon-size="h-7 w-7"
                                                   :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
                                                   direction="bottom"/>
                             </div>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
-                                <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
+                                <span class="ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
                             <PlusButton v-if="$can('create and edit own project') || $role('artwork admin')" :button-text="$t('New project')"
@@ -151,49 +151,49 @@
                             class="rounded-full items-center font-medium text-tagTextGreen border bg-tagBgGreen border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ getSortEnumTranslation(this.getUserSortBySetting()) }}
                             <button type="button" @click="this.resetSort();">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showOnlyMyProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                             {{ $t('My projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showOnlyMyProjects');">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showProjectGroups')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                             {{ $t('Project groups') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showProjectGroups');">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showProjects');">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showExpiredProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Show expired projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showExpiredProjects');">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showFutureProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Show future projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showFutureProjects');">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('hideProjectsWithoutEvents')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Hide projects without events') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('hideProjectsWithoutEvents');">
-                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
 
@@ -203,19 +203,19 @@
                                 {{ state.name }}
                                 <button type="button"
                                         @click="state.clicked = false; this.applyFiltersAndSort();">
-                                    <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                    <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                                 </button>
                             </span>
                         </template>
                     </div>
                     -->
                     <div class="my-3 w-full">
-                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project) in pinnedProjects" :key="project.id">
+                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-surface-sunken rounded-xl px-3 my-2" v-for="(project) in pinnedProjects" :key="project.id">
                             <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
                         </div>
                     </div>
                     <div class="my-3 w-full" :class="selectionMode ? 'pb-20' : ''">
-                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project) in this.projects.data" :key="project.id">
+                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-surface-sunken rounded-xl px-3 my-2" v-for="(project) in this.projects.data" :key="project.id">
                             <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" :selectable="selectionMode" :selected="selectedProjectIds.includes(project.id)" @toggle-selection="toggleProjectSelection" />
                         </div>
                     </div>
@@ -233,24 +233,24 @@
         <div v-if="selectionMode"
              class="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-white/95 backdrop-blur px-6 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
             <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-secondary">
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-text-subtle">
                     <input
                         type="checkbox"
                         :checked="allOnPageSelected"
                         @change="toggleSelectAllOnPage"
-                        class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                        class="h-4 w-4 rounded border-border text-accent-700 focus:ring-accent-700 cursor-pointer"
                     />
                     {{ $t('Select all on this page') }}
-                    <span class="ml-2 text-secondary">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
+                    <span class="ml-2 text-text-subtle">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
                 </label>
                 <div class="flex items-center gap-x-4">
-                    <button type="button" class="text-sm text-secondary hover:text-primary" @click="toggleSelectionMode">
+                    <button type="button" class="text-sm text-text-subtle hover:text-text" @click="toggleSelectionMode">
                         {{ $t('Cancel') }}
                     </button>
                     <button
                         type="button"
                         class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
-                        :class="selectedProjectIds.length === 0 ? 'bg-border cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                        :class="selectedProjectIds.length === 0 ? 'bg-border cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700'"
                         :disabled="selectedProjectIds.length === 0"
                         @click="openBulkDeleteModal"
                     >
@@ -304,19 +304,19 @@
             />
         <BaseModal @closed="closeBulkDeleteModal" v-if="bulkDeleting" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
-                <div class="font-black font-lexend text-primary text-3xl my-2">
+                <div class="font-black font-lexend text-text text-3xl my-2">
                     {{ $t('Delete selected projects') }}
                 </div>
-                <div class="text-error subpixel-antialiased">
+                <div class="text-danger subpixel-antialiased">
                     {{ $t('Are you sure you want to move the {0} selected projects to the trash?', [selectedProjectIds.length]) }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white"
+                    <button class="bg-accent-600 hover:bg-accent-700 rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white"
                             @click="bulkDeleteProjects">
                         {{ $t('Delete') }}
                     </button>
                     <div class="flex my-auto">
-                        <span @click="closeBulkDeleteModal()" class="xsLight cursor-pointer">
+                        <span @click="closeBulkDeleteModal()" class="text-sm/5 font-bold text-text-subtle cursor-pointer">
                             {{ $t('No, not really') }}
                         </span>
                     </div>
@@ -349,18 +349,6 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-    ChevronDownIcon,
-    DocumentReportIcon,
-    DotsVerticalIcon,
-    DuplicateIcon,
-    InformationCircleIcon,
-    PencilAltIcon,
-    SearchIcon,
-    TrashIcon,
-    XIcon
-} from '@heroicons/vue/outline'
-import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
-import {
     Disclosure,
     DisclosureButton,
     DisclosurePanel,
@@ -382,7 +370,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import {IconCheck, IconChecklist, IconFileExport, IconPin, IconSearch, IconTrash} from "@tabler/icons-vue";
+import {IconCheck, IconChecklist, IconChevronDown, IconChevronRight, IconChevronUp, IconCircleX, IconCopy, IconDotsVertical, IconEdit, IconFileExport, IconFileReport, IconInfoCircle, IconPin, IconPlus, IconSearch, IconSelector, IconTrash, IconX} from "@tabler/icons-vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -429,7 +417,7 @@ export default defineComponent({
         BaseButton,
         SuccessModal,
         IconPin,
-        DocumentReportIcon,
+        IconFileReport,
         ProjectCreateModal,
         ProjectDataEditModal,
         UserPopoverTooltip,
@@ -442,25 +430,25 @@ export default defineComponent({
         TeamIconCollection,
         SvgCollection,
         AppLayout,
-        DotsVerticalIcon,
-        PlusSmIcon,
-        SearchIcon,
+        IconDotsVertical,
+        IconPlus,
+        IconSearch,
         Listbox,
         ListboxButton,
         ListboxLabel,
         ListboxOption,
         ListboxOptions,
-        CheckIcon,
-        SelectorIcon,
-        InformationCircleIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        XCircleIcon,
-        DuplicateIcon,
-        ChevronRightIcon,
+        IconCheck,
+        IconSelector,
+        IconInfoCircle,
+        IconChevronDown,
+        IconChevronUp,
+        IconX,
+        IconEdit,
+        IconTrash,
+        IconCircleX,
+        IconCopy,
+        IconChevronRight,
         Link,
         UserTooltip,
         TeamTooltip,

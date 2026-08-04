@@ -68,8 +68,8 @@
                     >
                         <span v-if="!showFilters">{{ $t('Show') }}</span>
                         <span v-else>{{ $t('Hide') }}</span>
-                        <ChevronDownIcon v-if="!showFilters" class="h-5 w-5" />
-                        <ChevronUpIcon v-else class="h-5 w-5" />
+                        <IconChevronDown v-if="!showFilters" class="h-5 w-5" />
+                        <IconChevronUp v-else class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -91,7 +91,7 @@
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeActiveFilter(filter)">
-                                                <component :is="IconX" class="size-4 text-accent-600 hover:text-error" />
+                                                <component :is="IconX" class="size-4 text-accent-600 hover:text-danger" />
                                             </button>
                                         </div>
                                     </div>
@@ -107,7 +107,7 @@
 
                                 <div class="space-y-2 mt-2">
                                     <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey">
-                                        <div class="card white px-4 ">
+                                        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 ">
                                             <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                                 <div class="text-sm text-text">
                                                     {{ $t(subKey) }}
@@ -175,8 +175,8 @@
                     >
                         <span v-if="!showColumns">{{ $t('Show') }}</span>
                         <span v-else>{{ $t('Hide') }}</span>
-                        <ChevronDownIcon v-if="!showColumns" class="h-5 w-5" />
-                        <ChevronUpIcon v-else class="h-5 w-5" />
+                        <IconChevronDown v-if="!showColumns" class="h-5 w-5" />
+                        <IconChevronUp v-else class="h-5 w-5" />
                     </button>
                 </div>
 
@@ -222,7 +222,6 @@ import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import {ChevronDownIcon, ChevronUpIcon, DocumentReportIcon} from "@heroicons/vue/outline";
 import {computed, ref, onMounted} from "vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Input from "@/Jetstream/Input.vue";
@@ -231,7 +230,7 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import LastedProjects from "@/Artwork/LastedProjects.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
-import {IconChevronDown, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconFileReport, IconX} from "@tabler/icons-vue";
 
 // Local open/close state per subcategory to avoid mutating computed arrays
 const openState = ref({});

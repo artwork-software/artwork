@@ -1,17 +1,17 @@
 <template>
     <BaseModal @closed="emit('close')" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
         <div class="mx-4">
-            <div class="headline1 my-2">
+            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                 {{ $t('Room properties') }}
             </div>
             <Menu class="relative">
                 <div>
                     <MenuButton @click="attributesOpened = true" class="menu-button">
                         <div class="flex items-center justify-between w-full">
-                            <div class="flex-grow xsLight text-left subpixel-antialiased">
+                            <div class="flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
                                 {{ $t('Select room properties') }}
                             </div>
-                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                         </div>
                     </MenuButton>
 
@@ -23,7 +23,7 @@
                         leave-from-class="transform scale-100 opacity-100"
                         leave-to-class="transform scale-95 opacity-0">
                         <MenuItems
-                            class="absolute right-0 w-full origin-top-right rounded-lg divide-y divide-border-subtle bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute right-0 w-full origin-top-right rounded-lg divide-y divide-border-subtle bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="p-4">
                                 <!-- Room Categories Section -->
                                 <BaseFilterDisclosure :title="$t('Room categories')">
@@ -36,12 +36,12 @@
                                                :value="category"
                                                class="input-checklist-dark"/>
                                         <p :class="[toIdsArray(currentCategories).includes(category.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                             {{ category.name }}
                                         </p>
                                     </div>
-                                    <div v-else class="text-secondary">{{ $t('No room categories created yet') }}</div>
+                                    <div v-else class="text-text-subtle">{{ $t('No room categories created yet') }}</div>
                                 </BaseFilterDisclosure>
 
                                 <hr class="border-border-strong rounded-full mt-2 mb-2">
@@ -58,12 +58,12 @@
                                                :value="room"
                                                class="input-checklist-dark"/>
                                         <p :class="[toIdsArray(currentAdjoiningRooms).includes(room.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                             {{ room.name }}
                                         </p>
                                     </div>
-                                    <div v-else class="text-secondary">{{ $t('No adjoining rooms created yet') }}</div>
+                                    <div v-else class="text-text-subtle">{{ $t('No adjoining rooms created yet') }}</div>
                                 </BaseFilterDisclosure>
 
                                 <hr class="border-border-strong rounded-full mt-2 mb-2">
@@ -80,12 +80,12 @@
                                                :value="attribute"
                                                class="input-checklist-dark"/>
                                         <p :class="[toIdsArray(currentAttributes).includes(attribute.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                             {{ attribute.name }}
                                         </p>
                                     </div>
-                                    <div v-else class="text-secondary">{{ $t('No room properties created yet') }}</div>
+                                    <div v-else class="text-text-subtle">{{ $t('No room properties created yet') }}</div>
                                 </BaseFilterDisclosure>
                             </div>
                         </MenuItems>
@@ -117,11 +117,11 @@
 </template>
 
 <script setup>
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
-import {XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import {onMounted, ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

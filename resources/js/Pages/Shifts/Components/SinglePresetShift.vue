@@ -18,18 +18,18 @@
                 <BaseMenu dots-size="h-4 w-4">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="showEditShiftModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                             <PropertyIcon name="IconEdit" stroke-width="1.5"
-                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                       aria-hidden="true"/>
                             {{  $t('edit') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="deleteShift(presetShift.id)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconTrash"  stroke-width="1.5"
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                         aria-hidden="true"/>
                             {{ $t('Delete') }}
                         </a>
@@ -69,8 +69,6 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import {DotsVerticalIcon, DuplicateIcon, TrashIcon} from "@heroicons/vue/outline";
-import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import dayjs from "dayjs";
@@ -81,7 +79,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconCopy, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
@@ -100,10 +98,10 @@ export default defineComponent({
         AddEditShiftPresetModal,
         AddShiftModal,
         DropElement,
-        XIcon,
-        DotsVerticalIcon,
-        TrashIcon,
-        DuplicateIcon,
+        IconX,
+        IconDotsVertical,
+        IconTrash,
+        IconCopy,
         Menu,
         MenuItems,
         MenuItem,

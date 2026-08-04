@@ -9,7 +9,7 @@
 
               multiEditMode ? 'text-[10px]' : 'text-[11px]'
             ]"
-            class="flex items-center xsLight text-shiftText subpixel-antialiased"
+            class="flex items-center text-sm/5 font-bold text-text-subtle text-shiftText subpixel-antialiased"
             @dragover="onDragOver"
             @drop="onDrop"
             @click="handleClickEvent"
@@ -63,10 +63,9 @@
                         </svg>
                         <span v-else class="inline-block w-2.5 h-2.5 rounded-full ml-1"
                               :class="{
-                                'bg-danger': computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0,
+                                'bg-danger': (computedUsedWorkerCount === 0 && computedMaxWorkerCount !== 0) || computedUsedWorkerCount > computedMaxWorkerCount,
                                 'bg-warning': computedUsedWorkerCount !== 0 && computedUsedWorkerCount < computedMaxWorkerCount,
-                                'bg-success': computedUsedWorkerCount === computedMaxWorkerCount,
-                                'bg-warning': computedUsedWorkerCount > computedMaxWorkerCount
+                                'bg-success': computedUsedWorkerCount === computedMaxWorkerCount
                               }">
                         </span>
                     </div>
@@ -112,7 +111,7 @@
 
         </div>
 
-        <div v-if="usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 xsLight">
+        <div v-if="usePage().props.auth.user.calendar_settings?.shift_notes" class="px-1 text-sm/5 font-bold text-text-subtle">
             {{ shift.description }}
         </div>
     </div>

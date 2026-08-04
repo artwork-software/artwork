@@ -2,14 +2,14 @@
     <BaseModal @closed="$emit('close')">
         <div>
             <div class="mb-5">
-                <h2 class="headline2 my-2">{{ holidayToEdit.name }} {{ $t('edit')}}</h2>
-                <p class="xsLight max-w-3xl">
+                <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ holidayToEdit.name }} {{ $t('edit')}}</h2>
+                <p class="text-sm/5 font-bold text-text-subtle max-w-3xl">
                     {{ $t('Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color.') }}
                 </p>
             </div>
             <div class="my-5">
-                <h3 class="headline3">{{ $t('Select states & color') }}</h3>
-                <p class="xsLight w-full my-2">
+                <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('Select states & color') }}</h3>
+                <p class="text-sm/5 font-bold text-text-subtle w-full my-2">
                     <!-- text für selbst angelegte Feiertage und deren bundesländer -->
                     {{ $t('Select the federal states that should apply to this public holiday. You can select as many federal states as you like. You can then specify a color in which the public holiday should be displayed in your calendar. You do not have to select a federal state if the public holiday applies throughout Germany.') }}
                 </p>
@@ -17,7 +17,7 @@
                     <Listbox as="div" class="relative w-full" v-model="customHolidayForm.selectedSubdivisions" multiple>
                         <ListboxButton class="menu-button">
                             <div class="flex items-center justify-between w-full">
-                                <div class="xsLight">
+                                <div class="text-sm/5 font-bold text-text-subtle">
                                     {{ $t('Select federal states') }}
                                 </div>
                                 <div>
@@ -72,7 +72,7 @@
                         <SwitchLabel as="span" class="mr-3 text-sm" :class="customHolidayForm.yearly ? 'font-bold' : 'text-text-subtle'">
                             {{ $t('Repeat the holiday annually') }}
                         </SwitchLabel>
-                        <Switch v-model="customHolidayForm.yearly" :class="[customHolidayForm.yearly ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                        <Switch v-model="customHolidayForm.yearly" :class="[customHolidayForm.yearly ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                             <span aria-hidden="true" :class="[!customHolidayForm.yearly ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 text-sm" :class="!customHolidayForm.yearly? 'font-bold' : 'text-text-subtle'">

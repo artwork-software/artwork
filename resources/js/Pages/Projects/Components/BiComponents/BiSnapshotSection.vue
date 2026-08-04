@@ -98,7 +98,7 @@
                         <span class="text-xs text-text-subtle ml-2">{{ $t('by') }} {{ snapshot.creator?.first_name }} {{ snapshot.creator?.last_name }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button @click="toggleDetail(snapshot.id)" class="text-xs text-primary hover:underline print:hidden">
+                        <button @click="toggleDetail(snapshot.id)" class="text-xs text-text hover:underline print:hidden">
                             {{ expandedId === snapshot.id ? $t('Hide') : $t('Show') }}
                         </button>
                         <button v-if="canEdit" @click="deleteSnapshot(snapshot.id)" class="text-xs text-danger hover:text-danger print:hidden">

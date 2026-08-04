@@ -5,7 +5,7 @@
             <button
                 v-if="editable && links.length < maxItems"
                 type="button"
-                class="text-xs font-medium text-artwork-buttons-create"
+                class="text-xs font-medium text-accent-600"
                 @click="addLink"
             >
                 + {{ $t('Add') }}

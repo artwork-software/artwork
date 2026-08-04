@@ -305,7 +305,7 @@ function closePreview() {
         <div v-if="loadDocumentsError" class="text-xs text-danger">
             {{ loadDocumentsError }}
         </div>
-        <div v-else-if="isLoadingDocuments" class="text-xs text-secondary">
+        <div v-else-if="isLoadingDocuments" class="text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
 

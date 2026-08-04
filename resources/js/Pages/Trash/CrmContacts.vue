@@ -33,10 +33,10 @@
                         as="button"
                         method="patch"
                         :href="route('crm.contacts.restore', { id: contact.id })"
-                        :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary',
+                        :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle',
                                  'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']"
                     >
-                        <RefreshIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" aria-hidden="true" />
+                        <IconRefresh class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700" aria-hidden="true" />
                         {{ $t('Restore') }}
                     </Link>
                 </MenuItem>
@@ -45,10 +45,10 @@
                         as="button"
                         method="delete"
                         :href="route('crm.contacts.force', { id: contact.id })"
-                        :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary',
+                        :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle',
                                  'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']"
                     >
-                        <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover" aria-hidden="true" />
+                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700" aria-hidden="true" />
                         {{ $t('Delete permanently') }}
                     </Link>
                 </MenuItem>
@@ -73,10 +73,9 @@
 </template>
 
 <script>
+import {IconRefresh, IconTrash} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {RefreshIcon} from "@heroicons/vue/solid";
-import {TrashIcon} from "@heroicons/vue/outline";
 import {MenuItem} from "@headlessui/vue";
 import {Link} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -94,8 +93,8 @@ export default {
         TrashSearchAndActions,
         ConfirmDeleteModal,
         MenuItem,
-        RefreshIcon,
-        TrashIcon,
+        IconRefresh,
+        IconTrash,
         Link,
     },
     data() {

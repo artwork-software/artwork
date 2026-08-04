@@ -22,7 +22,7 @@
         <div class="flex justify-between bg-surface-sunken pl-2 rounded-r-lg">
             <div class="flex items-center gap-x-2">
                 <img :src="event.user.profile_photo_url" class="h-8 w-8 object-cover rounded-full">
-                <div class="xsLight">
+                <div class="text-sm/5 font-bold text-text-subtle">
                     {{ event.user.name }}
                 </div>
             </div>

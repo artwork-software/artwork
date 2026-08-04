@@ -19,7 +19,7 @@
         <div class="col-span-1 hidden group-hover:block mx-auto">
            <div class="flex items-center justify-center gap-2">
                <div class="rounded-full border-4 border-danger hover:bg-danger-surface p-1 cursor-pointer">
-                   <XIcon class="h-5 w-5 cursor-pointer text-danger" @click="deleteContact"/>
+                   <IconX class="h-5 w-5 cursor-pointer text-danger" @click="deleteContact"/>
                </div>
            </div>
         </div>
@@ -29,8 +29,8 @@
 </template>
 
 <script>
+import {IconCheck, IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
-import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import {useForm} from "@inertiajs/vue3";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
@@ -42,7 +42,7 @@ export default defineComponent({
     components: {
         TextInputComponent,
         SuccessModal,
-        XIcon, CheckIcon
+        IconX, IconCheck
     },
     data(){
        return {

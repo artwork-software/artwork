@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
         <div class="mx-4">
-            <div class="mt-8 headline1 flex items-center justify-between">
+            <div class="mt-8 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text flex items-center justify-between">
                 <div>
                     {{ $t('Booking details') }}
                     <span v-if="currentSageAssignedData.is_collective_booking">

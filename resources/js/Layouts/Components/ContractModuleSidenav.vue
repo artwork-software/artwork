@@ -1,12 +1,12 @@
 <template>
     <div class="w-full mt-36" v-if="$canAny(['view edit upload contracts','can see and download contract modules']) || hasAdminRole()">
         <div class="w-full flex items-center mb-4">
-            <div class="text-secondary text-md font-semibold">
+            <div class="text-text-subtle text-md font-semibold">
                 {{ $t('Contract modules')}}
             </div>
             <PropertyIcon name="IconUpload" stroke-width="1.5" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="$can('view edit upload contracts') || hasAdminRole()"/>
         </div>
-        <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
+        <div class="w-full flex items-center mb-2 cursor-pointer text-text-subtle hover:text-white"
              v-for="contractModule in contractModules.data"
         >
             <PropertyIcon name="IconDownload" stroke-width="1.5" class="w-4 h-4 mr-2" @click="download(contractModule)" v-if="$canAny(['view edit upload contracts','can see and download contract modules']) || hasAdminRole()"/>
@@ -14,7 +14,7 @@
             <div v-else>
                 {{ contractModule.name }}
             </div>
-            <PropertyIcon name="IconCircleX" stroke-width="1.5" class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openDeleteModal(contractModule)" v-if="$canAny(['view edit upload contracts']) || hasAdminRole()"/>
+            <PropertyIcon name="IconCircleX" stroke-width="1.5" class="w-4 h-4 ml-auto bg-danger rounded-full text-white" @click="openDeleteModal(contractModule)" v-if="$canAny(['view edit upload contracts']) || hasAdminRole()"/>
         </div>
         <ContractModuleDeleteModal
             :show="showDeleteModal"
@@ -26,17 +26,13 @@
             :close-modal="closeUploadModal"
         />
     </div>
-    <div v-else class="xsLight">
+    <div v-else class="text-sm/5 font-bold text-text-subtle">
         {{ $t('You do not have the necessary authorization to view uploaded contract modules.')}}
     </div>
 </template>
 
 <script>
-import {
-    DownloadIcon,
-    UploadIcon,
-    XCircleIcon
-} from '@heroicons/vue/outline';
+import {IconCircleX, IconDownload, IconUpload} from "@tabler/icons-vue";
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal.vue";
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal.vue";
 import {usePage} from "@inertiajs/vue3";
@@ -53,9 +49,9 @@ export default {
     components: {
         PropertyIcon,
         ContractModuleDeleteModal,
-        DownloadIcon,
-        UploadIcon,
-        XCircleIcon,
+        IconDownload,
+        IconUpload,
+        IconCircleX,
         ContractModuleUploadModal
     },
     data() {

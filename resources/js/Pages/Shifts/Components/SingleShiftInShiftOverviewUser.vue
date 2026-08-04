@@ -25,7 +25,7 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <PopoverPanel static class="z-50 w-96 focus:outline-none  card glassy">
+                            <PopoverPanel static class="z-50 w-96 focus:outline-none  rounded-lg bg-surface border border-border-subtle shadow-raised">
                                 <div class="px-4 py-2">
                                     <div>
                                         <p class="text-xs text-text-muted mb-2 font-lexend font-bold">

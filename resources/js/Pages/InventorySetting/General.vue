@@ -12,7 +12,7 @@
                 'Every change is saved immediately.',
             ]"
         />
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <div class="space-y-6">
                 <div>
                     <BaseCheckbox
@@ -25,8 +25,8 @@
             </div>
         </div>
 
-        <div class="card white p-5 mt-4">
-            <h3 class="font-lexend font-semibold text-primary mb-4">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-4">
+            <h3 class="font-lexend font-semibold text-text mb-4">
                 {{ $t('Inventory number display') }}
             </h3>
             <div class="space-y-6">
@@ -53,8 +53,8 @@
             </div>
         </div>
 
-        <div class="card white p-5 mt-4">
-            <h3 class="font-lexend font-semibold text-primary mb-4">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-4">
+            <h3 class="font-lexend font-semibold text-text mb-4">
                 {{ $t('Article images') }}
             </h3>
             <div class="space-y-6">

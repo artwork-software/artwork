@@ -1,12 +1,12 @@
 <template>
     <header
-        class="sticky z-30 rounded-lg bg-artwork-navigation-background flex items-center gap-0.5 h-11"
+        class="sticky z-30 rounded-lg bg-surface-inverse flex items-center gap-0.5 h-11"
         :style="{'--col-w': columnWidth + 'px','--lead-w': dateColumnWidth + 'px','--remarks-w': dayRemarkColumnWidth + 'px', top: stickyTop + 'px'}"
         role="row">
         <!-- linker Spacer: sticky wie die Datumsspalte darunter, sonst schieben
              sich beim horizontalen Scrollen Raumheader über die Datumsspalte -->
         <div
-            class="lead shrink-0 h-full rounded-l-lg bg-artwork-navigation-background sticky-left-lead"
+            class="lead shrink-0 h-full rounded-l-lg bg-surface-inverse sticky-left-lead"
             :class="{ 'no-nav-offset': isFullscreen }"
             aria-hidden="true"
         ></div>
@@ -16,7 +16,7 @@
              durchtauchen -->
         <div
             v-if="showDayRemarksColumn"
-            class="remarks-col shrink-0 h-full text-white text-xs font-medium px-1.5 truncate bg-artwork-navigation-background sticky-left-remarks"
+            class="remarks-col shrink-0 h-full text-white text-xs font-medium px-1.5 truncate bg-surface-inverse sticky-left-remarks"
             :class="{ 'no-nav-offset': isFullscreen }"
             role="columnheader"
         >

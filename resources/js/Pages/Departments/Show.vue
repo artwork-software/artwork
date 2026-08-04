@@ -3,14 +3,14 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="headline1">{{ $t('Team profile')}}</h2>
+                    <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">{{ $t('Team profile')}}</h2>
                 </div>
                 <div class="flex mt-12">
                     <Menu as="div" class=" relative">
                         <div>
                             <MenuButton class="flex items-center rounded-full">
-                                <ChevronDownIcon v-if="teamForm.svg_name === ''"
-                                                 class="ml-1 flex-shrink-0 mt-1 h-20 w-20 flex my-auto items-center font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                <IconChevronDown v-if="teamForm.svg_name === ''"
+                                                 class="ml-1 flex-shrink-0 mt-1 h-20 w-20 flex my-auto items-center font-semibold rounded-full shadow-sm text-white bg-black"></IconChevronDown>
                                 <TeamIconCollection v-else class="h-24 w-24" :iconName="teamForm.svg_name"/>
                             </MenuButton>
                         </div>
@@ -21,10 +21,10 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="z-40 overflow-y-auto origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5">
+                                class="z-40 overflow-y-auto origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5">
                                 <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                     <Link href="#" @click="teamForm.svg_name = item.iconName; editTeam()"
-                                          :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                          :class="[active ? 'bg-text-inverse/10 text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TeamIconCollection class="h-16 w-16" :iconName="item.iconName"/>
                                     </Link>
                                 </MenuItem>
@@ -33,10 +33,10 @@
                     </Menu>
                     <div class="relative w-full ml-8 mt-8 w-3/4 max-w-xl">
                         <input id="teamName" v-model="teamForm.name" @focusout="editTeam" type="text"
-                               class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary border-l-0 border-t-0 border-r-0 border-b-2 border-border text-primary placeholder-secondary placeholder-transparent"
+                               class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-surface-inverse border-l-0 border-t-0 border-r-0 border-b-2 border-border text-text placeholder-text-subtle placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="teamName"
-                               class="absolute left-0 text-sm -top-7 text-text-muted -top-3.5 transition-all subpixel-antialiased text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                               class="absolute left-0 text-sm -top-7 text-text-muted -top-3.5 transition-all subpixel-antialiased text-text-subtle peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                     </div>
                 </div>
                 <div class="flex items-center mt-16 mr-8">
@@ -48,7 +48,7 @@
                 <!-- Team Members Table -->
                 <div class="mt-8">
                     <div v-if="teamForm.users.length === 0">
-                        <span class="xsLight">{{ $t('No team members added yet')}}</span>
+                        <span class="text-sm/5 font-bold text-text-subtle">{{ $t('No team members added yet')}}</span>
                     </div>
                     <BaseTable
                         v-else
@@ -78,9 +78,9 @@
                             <BaseMenu has-no-offset white-menu-background>
                                 <MenuItem v-slot="{ active }">
                                     <a @click="removeUserFromTeam(row)"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                        <TrashIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                       :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                        <IconTrash
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                             aria-hidden="true"/>
                                         {{ $t('Remove person from team')}}
                                     </a>
@@ -90,7 +90,7 @@
                     </BaseTable>
                 </div>
                 <div class="flex mt-12">
-                    <span @click="openDeleteTeamModal()" class="xsLight cursor-pointer">{{ $t('Delete team permanently')}}</span>
+                    <span @click="openDeleteTeamModal()" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('Delete team permanently')}}</span>
                 </div>
             </div>
 
@@ -98,21 +98,21 @@
         <!-- Team löschen Modal -->
         <BaseModal @closed="closeDeleteTeamModal" v-if="deletingTeam" modal-image="/Svgs/Overlays/illu_warning.svg" >
                 <div class="mx-4">
-                    <div class="headline1 my-2">
+                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                         {{ $t('Delete Team')}}
                     </div>
-                    <div class="errorText">
+                    <div class="text-sm/5 text-danger">
                         {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: department.name })}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteTeam">
                             {{ $t('Delete')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteTeamModal()"
-                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -120,21 +120,21 @@
         <!--Alle Nutzer aus Team löschen Modal -->
         <BaseModal @closed="closeDeleteAllTeamMembersModal" v-if="deletingAllTeamMembers" modal-image="/Svgs/Overlays/illu_warning.svg" >
                 <div class="mx-4">
-                    <div class="headline1 my-2">
+                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                         {{$t('Delete all team members')}}
                     </div>
-                    <div class="errorText">
+                    <div class="text-sm/5 text-danger">
                         {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: department.name })}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteAllTeamMembers">
                             {{ $t('Delete all team members')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteAllTeamMembersModal"
-                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -142,26 +142,26 @@
         <!-- Change TeamMember Modal -->
         <BaseModal @closed="closeChangeTeamMembersModal" v-if="showChangeTeamMemberModal" modal-image="/Svgs/Overlays/illu_team_edit.svg" >
                 <div class="mx-3">
-                    <div class="headline1 my-2">
+                    <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                         {{ $t('Edit team members')}}
                     </div>
-                    <div class="xsLight">
+                    <div class="text-sm/5 font-bold text-text-subtle">
                         {{ $t('Enter the name of the user you want to add to the team.')}}
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
                             <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary border-l-0 border-t-0 border-r-0 border-b-2 border-border text-primary placeholder-secondary placeholder-transparent"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-surface-inverse border-l-0 border-t-0 border-r-0 border-b-2 border-border text-text placeholder-text-subtle placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="userSearch"
-                                   class="absolute left-0 text-base -top-5 text-text-muted text-sm -top-3.5 transition-all subpixel-antialiased text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                   class="absolute left-0 text-base -top-5 text-text-muted text-sm -top-3.5 transition-all subpixel-antialiased text-text-subtle peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                         </div>
 
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto sm:text-sm">
                                 <div class="border-border-subtle">
@@ -182,16 +182,16 @@
                         <div class="flex">
                         </div>
                         <span v-for="(user,index) in teamForm.users"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-text">
                             <div class="flex items-center">
                                 <UserPopoverTooltip :id="user.id" :user="user" height="11" width="11" />
-                                <span class="flex ml-4 sDark">
+                                <span class="flex ml-4 text-base/5 font-semibold text-text">
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
                             </div>
                             <button type="button" @click="deleteUserFromTeam(user)">
                                 <span class="sr-only">User aus Team entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                                <IconCircleX class="ml-2 mt-1 h-5 w-5 hover:text-danger "/>
                             </button>
                         </span>
                     </div>
@@ -209,13 +209,12 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 
 
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetButton from "@/Jetstream/Button.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -277,18 +276,18 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
+        IconX,
+        IconEdit,
+        IconTrash,
+        IconDotsVertical,
         SvgCollection,
-        XCircleIcon,
+        IconCircleX,
         JetButton,
         JetDialogModal,
         JetInput,
         JetInputError,
-        CheckIcon,
-        ChevronDownIcon,
+        IconCheck,
+        IconChevronDown,
         UserTooltip
     },
     data() {

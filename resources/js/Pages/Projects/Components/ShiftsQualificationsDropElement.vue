@@ -38,14 +38,12 @@ import {IconChevronDown, IconChevronUp, IconDotsVertical, IconFilter, IconSearch
 import {Float} from "@headlessui-float/vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import Input from "@/Jetstream/Input.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsDropElement',
-    mixins: [ColorHelper],
     components: {
         PropertyIcon,
         IconFilter, Input, IconSearch, IconChevronUp, CraftFilter, IconX,

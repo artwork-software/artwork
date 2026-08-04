@@ -19,14 +19,14 @@
                                 <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle"
                                         @click="closeModal">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true"/>
+                                    <IconX class="h-6 w-6" aria-hidden="true"/>
                                 </button>
                             </div>
                             <div class="relative z-40">
-                                <div class="font-black font-lexend text-primary text-3xl my-2">
+                                <div class="font-black font-lexend text-text text-3xl my-2">
                                     {{ $t('Create timeline') }}
                                 </div>
-                                <p class="xsLight subpixel-antialiased">
+                                <p class="text-sm/5 font-bold text-text-subtle subpixel-antialiased">
                                     {{ $t('Define the shift-relevant times. You can create shifts along this timeline.') }}
                                 </p>
                                 <div class="mt-10">
@@ -83,13 +83,13 @@
                                                       id="comment"
                                             />
                                         </div>
-                                        <XCircleIcon class="group-hover:block ml-2 mt-2 delete-icon" @click="showAddTimeLineForm = false"/>
+                                        <IconCircleX class="group-hover:block ml-2 mt-2 delete-icon" @click="showAddTimeLineForm = false"/>
                                     </div>
                                     <div class="h-1">
                                         <div class="mt-5 w-full h-1 border-b-2 border-dashed !flex items-center justify-center relative cursor-pointer group-hover:block"
                                              @click="showAddTimeLineForm = true">
                                             <div class="absolute flex items-center justify-center w-full ">
-                                                <PlusCircleIcon class="h-6 w-6"/>
+                                                <IconCirclePlus class="h-6 w-6"/>
                                             </div>
                                         </div>
                                     </div>
@@ -107,11 +107,8 @@
 </template>
 
 <script setup>
+import {IconCirclePlus, IconCircleX, IconX} from "@tabler/icons-vue";
 import {ref} from "vue";
-import {
-    XCircleIcon,
-    XIcon
-} from "@heroicons/vue/solid";
 import {
     Dialog,
     DialogPanel,
@@ -119,7 +116,6 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
-import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 import {router, useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

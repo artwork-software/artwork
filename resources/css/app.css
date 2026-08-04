@@ -61,45 +61,6 @@
     --z-100: 100;
 }
 
-/* ------------------------------------------------------------
-   Alias-Layer (Welle 1) — alte Tokennamen bleiben gültig,
-   zeigen aber auf die neuen Werte. Wird in Welle 4 schrittweise
-   entfernt. Nur hier dürfen Alt-Namen existieren.
-   ------------------------------------------------------------ */
-@theme {
-    --color-primary:                  var(--color-text);
-    --color-secondary:                var(--color-text-subtle);
-    --color-help:                     var(--color-text-subtle);
-    --color-secondary-hover:          #FCFCFB;
-    --color-silver-gray:              var(--color-border);
-    --color-background-gray:          var(--color-surface-canvas);
-    --color-background-gray2:         #E3E3E3;
-    --color-light-background-gray:    var(--color-surface-canvas);
-    --color-lightBackgroundGray:      var(--color-surface-canvas);
-    --color-user-bg:                  var(--color-surface-sunken);
-    --color-button-blue:              var(--color-accent-600);
-    --color-menu-button-blue:         var(--color-accent-600);
-    --color-button-hover:             var(--color-accent-700);
-    --color-error:                    var(--color-danger);
-    --color-artwork-buttons-create:   var(--color-accent-600);
-    --color-artwork-buttons-default:  var(--color-accent-600);
-    --color-artwork-buttons-update:   var(--color-accent-600);
-    --color-artwork-buttons-hover:    var(--color-accent-700);
-    --color-artwork-buttons-context:  var(--color-text-muted);
-    --color-artwork-navigation-background: var(--color-surface-inverse);
-    --color-artwork-navigation-color: var(--color-text-inverse);
-    --color-artwork-context-light:    var(--color-border-subtle);
-    --color-artwork-context-dark:     var(--color-text-muted);
-    --color-artwork-error:            var(--color-danger);
-    --color-artwork-warning:          var(--color-warning);
-    --color-artwork-success:          var(--color-success);
-    --color-artwork-info:             var(--color-text-subtle);
-    --shadow-glass:                   var(--shadow-overlay);
-    --shadow-glass-small:             var(--shadow-raised);
-    --shadow-elevation-two:           var(--shadow-overlay);
-    --shadow-card:                    var(--shadow-overlay);
-    --shadow-artwork-card:            var(--shadow-raised);
-}
 
 /* Fokus — verbindlich, nie überschreiben */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
@@ -192,211 +153,39 @@
 
     .base-menu-link {
         .base-menu-icon {
-            @apply text-secondary;
+            @apply text-text-subtle;
         }
     }
 
-    .headline1{
-        font: normal normal 900 30px/34px Lexend;
-        letter-spacing: -0.15px;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .headline2{
-        font: normal normal 600 20px/25px Lexend;
-        letter-spacing: 0.4px;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .headline3{
-        font: normal normal 600 18px/21px Lexend;
-        letter-spacing: 0.4px;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .headline3Light{
-        font: normal normal 18px/21px Inter;
-        letter-spacing: 0;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .headline4{
-        font: normal normal 600 20px/25px Lexend;
-        letter-spacing: -0.1px;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .headline6Light{
-        font: normal normal 600 10px/19px Inter;
-        letter-spacing: 0.5px;
-        color: var(--color-text-subtle);
-        text-transform: uppercase;
-        opacity: 1;
-    }
 
-    .xxsLight{
-        font: normal normal 12px/18px Inter;
-        letter-spacing: -0.18px;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .xxsDark{
-        font: normal normal 12px/15px Inter;
-        letter-spacing: 0;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .xxsDarkBold{
-        font: normal normal 600 12px/15px Inter;
-        letter-spacing: 0;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .sLight{
-        font: normal normal 16px/19px Inter;
-        letter-spacing: 0.14px;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .xsLighter{
-        font: normal normal 14px/20px Inter;
-        letter-spacing: 0.14px;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .xsWhiteBold{
-        font: normal normal bold 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: #FCFCFB;
-        opacity: 1;
-    }
 
-    .xWhiteBold{
-        font: normal normal bold 18px/20px Inter;
-        letter-spacing: -0.07px;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .xsLight{
-        font: normal normal bold 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .xxsLightSidebar{
-        font: normal normal 600 10px/20px Inter;
-        letter-spacing: -0.07px;
-        color: var(--color-text-subtle);
-        opacity: 1;
-    }
 
-    .xsDark{
-        font: normal normal 600 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .componentLabel{
-        display: block;
-        font-size: 0.875rem;
-        line-height: 1.5rem;
-        font-weight: 700;
-        color: var(--color-text);
-    }
 
-    .sDark{
-        font: normal normal 600 16px/20px Inter;
-        letter-spacing: 0;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .mDark{
-        font: normal normal 600 18px/21px Inter;
-        letter-spacing: 0;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .errorText{
-        font: normal normal 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: var(--color-danger);
-        opacity: 1;
-    }
 
-    .successText{
-        font: normal normal 14px/20px Inter;
-        letter-spacing: -0.07px;
-        color: var(--color-success);
-        opacity: 1;
-    }
 
-    .inputMain{
-        border: 1px solid var(--color-border);
-        opacity: 1;
-    }
 
-    .eventTime{
-        font: normal normal 12px/18px Inter;
-    }
 
-    .eventHeader{
-        font: normal normal bold 12px/20px Inter;
-    }
 
-    .eventBorder{
-        border: 1px solid var(--color-border);
-        opacity: 1;
-    }
 
-    .calendarRoomHeader{
-        font: normal normal 13px/18px Inter;
-        letter-spacing: -0.2px;
-    }
-    .calendarRoomHeaderBold{
-        font: normal normal bold 13px/18px Inter;
-        letter-spacing: -0.2px;
-    }
 
-    .eventText{
-        font: normal 600 10px/19px Inter;
-    }
 
-    .bigNumber{
-        font: normal normal 40px/48px Lexend;
-        color: var(--color-text);
-        opacity: 1;
-    }
 
-    .linkText{
-        text-align: left;
-        font: normal normal 12px/18px Inter;
-        letter-spacing: -0.18px;
-        color: var(--color-accent-600);
-        opacity: 1;
-    }
 
-    .columnSubName {
-        font: normal normal 600 10px/19px Inter;
-        letter-spacing: 0.5px;
-        color: var(--color-text-subtle);
-        text-transform: uppercase;
-        opacity: 1;
-    }
 
     .stateColorDefault {
         background-color: #FCFCFBFF;
@@ -464,208 +253,8 @@
         color: #21485C;
     }
 
-    .checkBoxOnDark {
-        --tw-ring-offset-shadow: 0 0 transparent;
-        --tw-ring-offset-width: 0px;
-        --tw-ring-offset-color: #fff;
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 transparent), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-offset-color, rgba(59, 130, 246, 0.5));
-        cursor: pointer;
-        --tw-ring-inset: var(--tw-empty, /*!*/ /*!*/);
-        outline: var(--tw-ring-inset) var(--tw-ring-offset-width) var(--tw-ring-color), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-color, rgba(59, 130, 246, 0.5));
-        height: 1.5rem;
-        width: 1.5rem;
-        color: #1FC687;
-        border-width: 2px;
-        border-color: #d2d6dc;
-    }
 
-    @media (max-width: 639px) {
-        .headline1 {
-            font: normal normal 900 24px/34px Lexend;
-        }
 
-        .headline2 {
-            font: normal normal 600 18px/25px Lexend;
-        }
-
-        .headline3 {
-            font: normal normal 600 16px/21px Lexend;
-        }
-
-        .headline3Light {
-            font: normal normal 16px/21px Inter;
-        }
-
-        .headline4 {
-            font: normal normal 600 18px/25px Lexend;
-        }
-
-        .xxsLight{
-            font: normal normal 10px/18px Inter;
-        }
-
-        .xxsDark{
-            font: normal normal 10px/15px Inter;
-        }
-
-        .xxsDarkBold{
-            font: normal normal 600 10px/15px Inter;
-        }
-
-        .sLight{
-            font: normal normal 14px/19px Inter;
-        }
-
-        .xsLighter{
-            font: normal normal 12px/20px Inter;
-        }
-
-        .xsWhiteBold{
-            font: normal normal bold 12px/20px Inter;
-        }
-
-        .xWhiteBold{
-            font: normal normal bold 16px/20px Inter;
-        }
-
-        .xsLight{
-            font: normal normal bold 12px/20px Inter;
-        }
-
-        .xsDark{
-            font: normal normal 600 12px/20px Inter;
-        }
-
-        .sDark{
-            font: normal normal 600 14px/20px Inter;
-        }
-
-        .mDark{
-            font: normal normal 600 16px/21px Inter;
-        }
-
-        .errorText{
-            font: normal normal 12px/20px Inter;
-        }
-
-        .successText{
-            font: normal normal 12px/20px Inter;
-        }
-
-        .eventTime{
-            font: normal normal 10px/18px Inter;
-        }
-
-        .eventHeader{
-            font: normal normal bold 10px/20px Inter;
-        }
-
-        .calendarRoomHeader{
-            font: normal normal 10px/18px Inter;
-        }
-
-        .bigNumber{
-            font: normal normal 30px/48px Lexend;
-        }
-
-        .linkText{
-            font: normal normal 10px/18px Inter;
-        }
-    }
-
-    @media (min-width: 640px) and (max-width: 767px) {
-        .headline1 {
-            font: normal normal 900 28px/34px Lexend;
-        }
-
-        .headline2 {
-            font: normal normal 600 20px/25px Lexend;
-        }
-
-        .headline3 {
-            font: normal normal 600 18px/21px Lexend;
-        }
-
-        .headline3Light {
-            font: normal normal 18px/21px Inter;
-        }
-
-        .headline4 {
-            font: normal normal 600 20px/25px Lexend;
-        }
-
-        .xxsLight{
-            font: normal normal 12px/18px Inter;
-        }
-
-        .xxsDark{
-            font: normal normal 12px/15px Inter;
-        }
-
-        .xxsDarkBold{
-            font: normal normal 600 12px/15px Inter;
-        }
-
-        .sLight{
-            font: normal normal 16px/19px Inter;
-        }
-
-        .xsLighter{
-            font: normal normal 14px/20px Inter;
-        }
-
-        .xsWhiteBold{
-            font: normal normal bold 14px/20px Inter;
-        }
-
-        .xWhiteBold{
-            font: normal normal bold 18px/20px Inter;
-        }
-
-        .xsLight{
-            font: normal normal bold 14px/20px Inter;
-        }
-
-        .xsDark{
-            font: normal normal 600 14px/20px Inter;
-        }
-
-        .sDark{
-            font: normal normal 600 16px/20px Inter;
-        }
-
-        .mDark{
-            font: normal normal 600 18px/21px Inter;
-        }
-
-        .errorText{
-            font: normal normal 14px/20px Inter;
-        }
-
-        .successText{
-            font: normal normal 14px/20px Inter;
-        }
-
-        .eventTime{
-            font: normal normal 12px/18px Inter;
-        }
-
-        .eventHeader{
-            font: normal normal bold 12px/20px Inter;
-        }
-
-        .calendarRoomHeader{
-            font: normal normal 13px/18px Inter;
-        }
-
-        .bigNumber{
-            font: normal normal 40px/48px Lexend;
-        }
-
-        .linkText{
-            font: normal normal 12px/18px Inter;
-        }
-    }
 
     .transition-enter-active {
         @apply transition ease-out duration-100;
@@ -828,38 +417,6 @@
     }
 
 
-    .headline {
-        &.h1 {
-            font: normal normal 900 30px/34px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h2 {
-            font: normal normal 900 24px/28px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h3 {
-            font: normal normal 900 20px/24px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h4 {
-            font: normal normal 900 16px/20px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-
-        &.h5 {
-            font: normal normal 900 14px/18px Lexend;
-            letter-spacing: -0.15px;
-            opacity: 1;
-        }
-    }
-
 
     .aw-checklist-input {
         @apply col-start-1 row-start-1 size-4 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border-subtle disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto
@@ -869,41 +426,6 @@
         @apply pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25;
     }
 
-    .card {
-        @apply rounded-lg;
-        &.glassy {
-            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-[#4A70A910] text-left backdrop-blur-sm  border border-gray-100 ring-2 ring-white/30 ring-inset shadow-glass;
-        }
-
-        &.glassy-shiftplan {
-            @apply flex h-fit rounded-lg grow flex-col bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-white/50 active:bg-artwork-navigation-background shadow-glass;
-        }
-
-        &.white {
-            @apply bg-white rounded-lg border border-gray-100 w-full shadow-glass;
-        }
-    }
-
-    .button {
-        @apply relative;
-        &.glassy {
-            box-shadow: var(--shadow-glass-small);
-            @apply flex h-fit w-fit items-center rounded-lg p-1.5 bg-gradient-to-bl  from-white/40 to-sky-100/30 text-left backdrop-blur-sm border border-gray-100 cursor-pointer;
-        }
-        span {
-            box-shadow: var(--shadow-glass-small);
-            @apply bg-white rounded-xl border border-gray-100 w-fit p-1.5 relative z-30;
-
-            svg {
-                @apply text-gray-500;
-            }
-        }
-
-        p {
-            @apply text-gray-500 text-xs font-lexend font-semibold relative z-20;
-        }
-
-    }
 }
 
 .timeline-container {
@@ -920,7 +442,7 @@
     }
 
     .timeline-error-text {
-        @apply text-error text-xs;
+        @apply text-danger text-xs;
     }
 
     .timeline-textarea {
@@ -928,28 +450,12 @@
     }
 }
 
-.delete-icon {
-    @apply hidden h-5 w-5 hover:text-error cursor-pointer;
-}
-
-
-.text-hover {
-    @apply cursor-pointer transition-all ease-in-out duration-300 hover:bg-white hover:rounded-full p-0.5
-}
 
 .base-menu-link {
     @apply cursor-pointer flex items-center px-4 py-2 text-sm subpixel-antialiased;
 
     .base-menu-icon {
         @apply mr-3 h-5 w-5;
-    }
-}
-
-.btn {
-    @apply rounded-lg;
-
-    &:hover {
-        @apply bg-gray-200;
     }
 }
 
@@ -963,7 +469,7 @@
 }
 
 .input-label {
-    @apply cursor-text px-1 absolute left-0 -top-6 peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none;
+    @apply cursor-text px-1 absolute left-0 -top-6 peer-placeholder-shown:text-xs transition-all subpixel-antialiased peer-placeholder-shown:text-text-subtle peer-placeholder-shown:left-2 pointer-events-none;
 }
 
 .input-checklist {
@@ -1099,22 +605,6 @@
     .modal-description {
         @apply text-gray-400 font-lexend font-light;
     }
-}
-
-.btn-group-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
-.btn-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
-.btn-border-hover {
-    @apply transition-colors duration-300 ease-in-out
-}
-
-.btn-group-border-hover {
-    @apply transition-colors duration-300 ease-in-out
 }
 
 

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3 select-none">
-      <div v-if="shouldCompressCalendarHours" class="flex xxsDark items-center px-4 mt-1.5 text-xs text-text-subtle">
+      <div v-if="shouldCompressCalendarHours" class="flex text-xs/[15px] text-text items-center px-4 mt-1.5 text-xs text-text-subtle">
           {{ $t('Hours between {start} - {end} are hidden', {
               start: calendarHoursRange.start,
               end: calendarHoursRange.end

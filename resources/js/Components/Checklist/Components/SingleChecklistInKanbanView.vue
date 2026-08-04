@@ -7,7 +7,7 @@
                         <span v-if="checklist.private" class="shrink-0">
                             <IconLock stroke-width="1.5" class="h-6 w-6" />
                         </span>
-                        <div class="print:headline3 text-xs font-semibold truncate">
+                        <div class="print:font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text text-xs font-semibold truncate">
                             <span>{{ checklist.name }}</span>
                         </div>
                     </div>
@@ -15,7 +15,7 @@
                         <span class="bg-accent-50 border border-accent-200 text-accent-600 text-xs px-2 py-0.5 rounded print:border print:bg-border-subtle print:text-text-subtle print:border-border-subtle print:rounded-lg">
                             {{ orderTasksByDeadline.filter(t => checkIfUserIsInTaskIfInOwnTaskManagement(t)).length }}
                         </span>
-                        <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>
+                        <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>
                         <BaseMenu has-no-offset white-menu-background v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
                             <BaseMenuItem icon="IconUserPlus" title="Assign users" white-menu-background v-if="!checklist.private" @click="openEditChecklistTeamsModal = true"/>
                             <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background v-if="checklist" @click="showChecklistEditModal = true"/>
@@ -30,7 +30,7 @@
                 <div v-if="checklist.hasProject && checklist?.project?.id" class="text-xs">
                     <Link
                         :href="route('projects.tab', {project: checklist?.project?.id, projectTab: checklist?.project?.checklist_tab_id ?? 1})"
-                        class="text-artwork-buttons-create hover:underline"
+                        class="text-accent-600 hover:underline"
                     >
                         ({{ checklist?.project?.name }})
                     </Link>

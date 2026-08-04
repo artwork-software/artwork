@@ -15,7 +15,7 @@
                         @click="previousMonth"
                         :aria-label="$t('Previous month')"
                     >
-                        <ChevronLeftIcon class="h-5 w-5 text-accent-600" />
+                        <IconChevronLeft class="h-5 w-5 text-accent-600" />
                     </button>
                     <button
                         class="ui-button !px-2 text-sm text-accent-600"
@@ -28,7 +28,7 @@
                         @click="nextMonth"
                         :aria-label="$t('Next month')"
                     >
-                        <ChevronRightIcon class="h-5 w-5 text-accent-600" />
+                        <IconChevronRight class="h-5 w-5 text-accent-600" />
                     </button>
                 </div>
             </div>
@@ -121,10 +121,10 @@
 </template>
 
 <script setup>
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
 import { computed, ref, onBeforeUnmount } from 'vue'
 import { router } from '@inertiajs/vue3'
 import dayjs from 'dayjs'
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/solid'
 import { assignmentStripStyle, assignmentLabel } from '@/Composeables/UseProjectDayAssignments.js'
 
 const props = defineProps({

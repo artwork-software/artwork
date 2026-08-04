@@ -10,7 +10,7 @@
                         @click="activeTab = tab.id"
                         :class="[
                             activeTab === tab.id
-                                ? 'bg-white text-artwork-buttons-create shadow-sm'
+                                ? 'bg-white text-accent-600 shadow-sm'
                                 : 'text-text-muted hover:text-text',
                             'flex-1 py-2.5 px-3 text-sm font-medium rounded-md transition-all duration-200'
                         ]"
@@ -36,13 +36,13 @@
                             v-model="newComment"
                             rows="4"
                             :placeholder="$t('What do I need to know about this item?')"
-                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm resize-none"
+                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent text-sm resize-none"
                         />
                         <div class="mt-3 flex justify-end">
                             <button
                                 @click="saveComment"
                                 :disabled="!newComment || newComment.trim() === ''"
-                                class="px-4 py-2 bg-artwork-buttons-create text-white rounded-md hover:bg-accent-700 disabled:bg-border disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
+                                class="px-4 py-2 bg-accent-600 text-white rounded-md hover:bg-accent-700 disabled:bg-border disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
                             >
                                 <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                 {{ $t('Save comment') }}
@@ -107,7 +107,7 @@
                         <input
                             v-model="isLinked"
                             type="checkbox"
-                            class="h-5 w-5 text-artwork-buttons-create border-border rounded focus:ring-artwork-buttons-create"
+                            class="h-5 w-5 text-accent-600 border-border rounded focus:ring-accent-600"
                         />
                         <label
                             :class="[isLinked ? 'text-text font-medium' : 'text-text-muted']"
@@ -136,7 +136,7 @@
                                 <Listbox v-model="linkedType">
                                     <div class="relative">
                                         <ListboxButton
-                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create"
+                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-border focus:outline-none focus:ring-2 focus:ring-accent-600"
                                         >
                                             <span class="block truncate text-sm">{{ linkedType.name }}</span>
                                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -160,7 +160,7 @@
                                                 >
                                                     <div
                                                         :class="[
-                                                            active ? 'bg-artwork-buttons-create text-white' : 'text-text',
+                                                            active ? 'bg-accent-600 text-white' : 'text-text',
                                                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                                                         ]"
                                                     >
@@ -191,7 +191,7 @@
                                         v-model="moneySourceQuery"
                                         type="text"
                                         :placeholder="$t('Search funding source...')"
-                                        class="w-full px-3 py-2.5 border border-border rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm"
+                                        class="w-full px-3 py-2.5 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent text-sm"
                                     />
 
                                     <!-- Search Results -->
@@ -208,7 +208,7 @@
                                                 v-for="(source, index) in moneySourceSearchResults"
                                                 :key="index"
                                                 @click="selectMoneySource(source)"
-                                                class="cursor-pointer px-4 py-3 hover:bg-artwork-buttons-create hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
+                                                class="cursor-pointer px-4 py-3 hover:bg-accent-600 hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
                                             >
                                                 <p class="font-medium text-sm">{{ source.name }}</p>
                                             </div>
@@ -235,7 +235,7 @@
                                 <button
                                     @click="saveMoneySourceLink"
                                     :disabled="!selectedMoneySource"
-                                    class="px-4 py-2 bg-artwork-buttons-create text-white rounded-md hover:bg-accent-700 disabled:bg-border disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
+                                    class="px-4 py-2 bg-accent-600 text-white rounded-md hover:bg-accent-700 disabled:bg-border disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
                                 >
                                     <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                     {{ $t('Save') }}

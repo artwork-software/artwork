@@ -195,13 +195,13 @@ defineExpose({
     <div v-if="noVirtualize" ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
         <!-- Sticky Header Row -->
         <div
-            class="sticky top-0 z-40 bg-artwork-navigation-background/95 backdrop-blur
+            class="sticky top-0 z-40 bg-surface-inverse/95 backdrop-blur
                    border-b border-white/10 flex"
             :style="{ height: headerHeight + 'px', width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px' }"
         >
             <div
                 class="sticky left-0 z-50 shrink-0 flex items-stretch
-                       bg-artwork-navigation-background/95 backdrop-blur
+                       bg-surface-inverse/95 backdrop-blur
                        border-r border-white/10"
                 :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
             >
@@ -256,13 +256,13 @@ defineExpose({
 
             <!-- Sticky Header Row -->
             <div
-                class="sticky top-0 z-40 bg-artwork-navigation-background/95 backdrop-blur
+                class="sticky top-0 z-40 bg-surface-inverse/95 backdrop-blur
          border-b border-white/10"
                 :style="{ height: headerHeight + 'px' }"
             >
                 <div
                     class="sticky left-0 z-50 inline-flex items-stretch
-           bg-artwork-navigation-background/95 backdrop-blur
+           bg-surface-inverse/95 backdrop-blur
            border-r border-white/10"
                     :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
                 >

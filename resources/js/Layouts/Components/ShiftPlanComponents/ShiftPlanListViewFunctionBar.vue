@@ -34,23 +34,23 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems
-                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5">
+                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-surface-inverse shadow-lg ring-1 ring-black ring-opacity-5">
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('day')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Day')" icon="IconCalendar" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('week')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')" icon="IconCalendarWeek" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('month')"
-                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                                 :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-white', 'block px-4 py-2 text-sm']">
                                                 <ToolTipComponent direction="right" :tooltip-text="$t('Jump around') + ' ' + $t('Month')" icon="IconCalendarMonth" icon-size="h-5 w-5 text-white"/>
                                             </div>
                                         </MenuItem>

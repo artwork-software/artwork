@@ -33,7 +33,7 @@
             class="fixed z-[9999] pointer-events-none"
             :style="{ top: tooltipPosition.top + 'px', left: tooltipPosition.left + 'px' }"
         >
-            <div class="w-64 rounded-lg bg-artwork-navigation-background px-3 py-2 text-white shadow-xl text-xs space-y-0.5">
+            <div class="w-64 rounded-lg bg-surface-inverse px-3 py-2 text-white shadow-xl text-xs space-y-0.5">
                 <div v-if="event.isPlanning && !event.hasVerification" class="font-semibold text-blue-300">{{ $t('Planned Event') }}</div>
                 <div v-else-if="event.hasVerification" class="font-semibold text-orange-300">{{ $t('Verification requested') }}</div>
                 <div v-if="effectiveEventName" class="font-semibold">{{ effectiveEventName }}</div>

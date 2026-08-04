@@ -15,7 +15,7 @@
                 @focus="handleDescriptionClick()"
                 @keydown.enter.prevent="handleDescriptionClick()"
                 :tabindex="canEditComponent ? 0 : undefined"
-                class="flex items-center gap-x-1 w-full focus:ring-2 focus:ring-artwork-buttons-create rounded"
+                class="flex items-center gap-x-1 w-full focus:ring-2 focus:ring-accent-600 rounded"
             >
                 <component v-if="!projectData.project_value?.data?.text" :is="IconBlockquote" class="size-4 shrink-0" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'" />
                 <div
@@ -32,7 +32,7 @@
                     :label="data.data.placeholder"
                     ref="descriptionRef"
                     :rows="5"
-                    :bg-color="inSidebar ? '!bg-artwork-navigation-background !border-white/10 !w-80' : 'bg-white'"
+                    :bg-color="inSidebar ? '!bg-surface-inverse !border-white/10 !w-80' : 'bg-white'"
                     class="w-full"
                     :class="inSidebar ? '!w-80' : 'w-full'"
                     :id="'component-' + data.id"

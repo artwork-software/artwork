@@ -56,25 +56,25 @@
             >
         </div>
     </td>
-    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap text-secondary font-semibold" :class="hideImage ? 'left-0' : 'left-20'">
+    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap text-text-subtle font-semibold" :class="hideImage ? 'left-0' : 'left-20'">
         <div class="flex items-center">
             <span class="truncate">{{ item?.name }}</span>
-            <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2 shrink-0" />
+            <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-text-subtle font-semibold ml-2 shrink-0" />
         </div>
         <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-text-subtle">
             {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
         </div>
     </td>
-    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap" :class="[hideImage ? 'left-[256px]' : 'left-[336px]', item.quantity === 0 ? 'text-danger' : 'text-artwork-buttons-create']">{{ formatQuantity(item?.quantity) }}</td>
+    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap" :class="[hideImage ? 'left-[256px]' : 'left-[336px]', item.quantity === 0 ? 'text-danger' : 'text-accent-600']">{{ formatQuantity(item?.quantity) }}</td>
     <td class="p-3 text-sm whitespace-nowrap font-semibold truncate"
         :class="[ isNumericProperty(property) ? 'text-right tabular-nums' : '',
-            isEmptyProperty(property) ? 'text-text-subtle font-normal' : 'text-secondary'
+            isEmptyProperty(property) ? 'text-text-subtle font-normal' : 'text-text-subtle'
         ]"
         v-for="property in columnProperties" :key="property.id">
         <template v-if="cellDisplays[property.id].type === 'file'">
             <a v-if="cellDisplays[property.id].file"
                :href="route('inventory-management.articles.property-file.download', { path: cellDisplays[property.id].file.path })"
-               class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
+               class="text-accent-600 hover:text-accent-700 underline cursor-pointer">
                 {{ cellDisplays[property.id].file.name }}
             </a>
             <span v-else>-</span>
@@ -88,9 +88,9 @@
         </PropertyDiffTooltip>
         <template v-else>{{ cellDisplays[property.id].empty ? '-' : cellDisplays[property.id].text }}</template>
     </td>
-    <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-secondary font-semibold sm:pr-0">
+    <td class="py-3 pr-3 pl-3 text-sm whitespace-nowrap text-text-subtle font-semibold sm:pr-0">
         <div class="flex items-center gap-x-4">
-            <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="showArticleDetail = true">
+            <button type="button" class="text-accent-600 hover:text-accent-700" @click="showArticleDetail = true">
                 <component :is="IconEye" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>

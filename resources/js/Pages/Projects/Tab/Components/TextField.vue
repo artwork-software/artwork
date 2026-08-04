@@ -84,7 +84,7 @@ watch(
                     v-model="text"
                     :label="projectData.data.placeholder"
                     without-translation
-                    :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-white/10 !text-text-inverse' : ''"
+                    :input-classes="inSidebar ? '!bg-surface-inverse !border-white/10 !text-text-inverse' : ''"
                 />
             </div>
         </div>

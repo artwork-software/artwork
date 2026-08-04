@@ -68,7 +68,7 @@
             </HolidayToolTip>
         </div>
         <div :style="hourTextStyle" class="mt-3 mr-2" v-else>
-            <div class="" :class="zoomFactor < 0.6 ? 'xxsDark' : 'xsDark'">
+            <div class="" :class="zoomFactor < 0.6 ? 'text-xs/[15px] text-text' : 'text-sm/5 font-semibold text-text'">
                 {{ hour }}
             </div>
         </div>

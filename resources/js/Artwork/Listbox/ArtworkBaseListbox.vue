@@ -225,7 +225,7 @@ const props = defineProps({
     colorProperty: { type: String, default: 'color' },
 
     /** Klassen – Standard an dein Design angelehnt, aber überschreibbar */
-    labelClass: { type: String, default: 'xsDark' },
+    labelClass: { type: String, default: 'text-sm/5 font-semibold text-text' },
     buttonClass: {
         type: String,
         default:

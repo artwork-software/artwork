@@ -9,7 +9,7 @@
                 <img src="/Svgs/Logos/artwork_logo_big.svg" alt="artwork_logo_big"/>
             </div>
             <div class="flex items-center">
-                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Accept Invitation')}}</h2>
+                <h2 class="mt-6 text-3xl font-lexend font-bold text-text">{{$t('Accept Invitation')}}</h2>
                 <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -63,9 +63,9 @@
                         </div>
                     </div>
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
-                    <div class="flex items-center text-secondary mt-2 ml-3">
+                    <div class="flex items-center text-text-subtle mt-2 ml-3">
                         <SvgCollection svgName="arrowTopLeft"/>
-                        <div class="hind w-full ml-2 mt-1">
+                        <div class="w-full ml-2 mt-1">
                             {{ $t('The password must be at least 10 characters long.') }}
                         </div>
                     </div>
@@ -82,9 +82,9 @@
                         </div>
                     </div>
                     <jet-input-error :message="form.errors.password_confirmation" class="mt-2"/>
-                    <div class="flex items-center text-secondary mt-2 ml-3">
+                    <div class="flex items-center text-text-subtle mt-2 ml-3">
                         <SvgCollection svgName="arrowTopLeft"/>
-                        <div class="hind w-full ml-2 mt-1">
+                        <div class="w-full ml-2 mt-1">
                             {{$t('Please confirm your password here.')}}
                         </div>
                     </div>
@@ -93,8 +93,8 @@
             <div class="text-xs text-text-subtle">
                 {{ $t('Input fields marked with * are mandatory') }}
             </div>
-            <BaseButton :disabled="form.email === '' || form.password === '' || form.password_confirmation === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.password === '' || form.password_confirmation === '' || form.first_name === '' || form.last_name === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
-                    class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create hover:shadow-artwork-buttons-create hover:bg-artwork-buttons-hoverfocus:outline-none">
+            <BaseButton :disabled="form.email === '' || form.password === '' || form.password_confirmation === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.password === '' || form.password_confirmation === '' || form.first_name === '' || form.last_name === '' ? 'bg-text-subtle hover:bg-text-subtle' : '']" type="submit"
+                    class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-accent-600 hover:bg-accent-700">
                 {{ $t('Register')}}
             </BaseButton>
         </form>

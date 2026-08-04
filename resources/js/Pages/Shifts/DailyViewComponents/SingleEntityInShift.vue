@@ -16,7 +16,7 @@
                         leave-active-class="transition ease-in duration-75"
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95">
-                <PopoverPanel static class="z-50 w-96  card glassy">
+                <PopoverPanel static class="z-50 w-96  rounded-lg bg-surface border border-border-subtle shadow-raised">
                     <div class="px-4 py-2">
                         <div>
                             <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
@@ -73,7 +73,7 @@
                     class="fixed z-[9999] pointer-events-none"
                     :style="{ top: personNameTooltipPosition.top + 'px', left: personNameTooltipPosition.left + 'px' }"
                 >
-                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                    <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                         {{ person.name || person.full_name }}
                     </div>
                 </div>
@@ -141,7 +141,7 @@
                                 :class="person.pivot?.short_description?.length > 0 ? 'text-black border-1 border-border-subtle w-5 h-5' : 'text-text-subtle hover:text-text-muted'"
                                 v-tooltip.bottom="descriptionTooltip"
                             />
-                            <span v-if="!hasCollision" class="truncate min-w-0 hidden xl:block xsDark" v-tooltip.bottom="descriptionTooltip">
+                            <span v-if="!hasCollision" class="truncate min-w-0 hidden xl:block text-sm/5 font-semibold text-text" v-tooltip.bottom="descriptionTooltip">
                                 {{ person.pivot?.short_description }}
                             </span>
                         </PopoverButton>
@@ -152,7 +152,7 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <PopoverPanel class="z-50 w-96 card glassy">
+                            <PopoverPanel class="z-50 w-96 rounded-lg bg-surface border border-border-subtle shadow-raised">
                                 <div class="px-4 py-2">
                                     <div>
                                         <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
@@ -195,7 +195,6 @@
 
 <script setup>
 
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {
     Menu,
     MenuButton,

@@ -36,7 +36,7 @@
         <button type="button"
                 class="inventory-top-bar-new-column-btn"
                 @click="openAddColumnModal()" v-if="can('can manage inventory stock') || hasAdminRole()">
-            <PlusIcon stroke-width="2" class="h-4 w-4 mr-2"/>
+            <IconPlus stroke-width="2" class="h-4 w-4 mr-2"/>
             <p class="text-sm">{{ $t('New column') }}</p>
         </button>
     </div>
@@ -50,10 +50,9 @@
 </template>
 
 <script setup>
-import {IconX, IconSearch, IconFileExport} from "@tabler/icons-vue";
+import {IconFileExport, IconPlus, IconSearch, IconX} from "@tabler/icons-vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
-import {PlusIcon} from "@heroicons/vue/solid";
 import {nextTick, ref} from "vue";
 import AddColumnModal from "@/Pages/Inventory/InventoryManagement/AddColumnModal.vue";
 import Button from "@/Jetstream/Button.vue";

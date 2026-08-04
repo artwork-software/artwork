@@ -139,7 +139,7 @@
                             >
                                 {{ project.name }}
                                 <button type="button" @click="removeProject(project.id)" class="hover:text-danger">
-                                    <XIcon class="size-3.5" />
+                                    <IconX class="size-3.5" />
                                 </button>
                             </span>
                         </div>
@@ -180,11 +180,11 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 import { ref, computed } from 'vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
-import { XIcon } from '@heroicons/vue/outline'
 import axios from 'axios'
 import debounce from 'lodash.debounce'
 

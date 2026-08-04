@@ -163,7 +163,7 @@ function create() {
                                 v-model="aboForm.notification_time_unit"
                                 id="notification_time_unit"
                                 name="notification_time_unit"
-                                class="block w-full rounded-md border border-border-subtle bg-white py-2.5 px-3 h-14 text-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
+                                class="block w-full rounded-md border border-border-subtle bg-white py-2.5 px-3 h-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-600"
                             >
                                 <option value="minutes">{{ $t('Minute(s)') }}</option>
                                 <option value="hours">{{ $t('Hour(s)') }}</option>
@@ -181,7 +181,7 @@ function create() {
                 <button
                     v-if="aboForm.id"
                     type="button"
-                    class="flex items-center text-xs text-artwork-buttons-hover underline"
+                    class="flex items-center text-xs text-accent-700 underline"
                     @click="showCalendarAboInfoModal = true"
                 >
                     <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
@@ -200,13 +200,13 @@ function create() {
         <!-- Info-Hinweis -->
         <div
             v-if="aboForm.id"
-            class="mt-3 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3"
+            class="mt-3 text-accent-600 bg-accent-600/10 rounded-lg p-3"
         >
             <div class="flex items-center gap-1 mb-2">
                 <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
                 <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
             </div>
-            <div class="text-xs text-artwork-buttons-create w-fit">
+            <div class="text-xs text-accent-600 w-fit">
                 {{
                     $t(
                         'As soon as you click on "Save", your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.'

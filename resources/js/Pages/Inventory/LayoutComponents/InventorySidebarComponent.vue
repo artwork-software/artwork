@@ -5,22 +5,22 @@
             <div class="">
                 <div class="">
                     <div class="space-y-4">
-                        <WhiteInnerCard>
+                        <BaseCard elevation="raised" class="w-full">
                             <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                 <div class="p-1 rounded-lg w-1 bg-text-subtle"></div>
                                 <Link preserve-scroll :href="route('inventory.index', linkQuery)" class="group flex items-center justify-between w-full">
-                                    <span class=" text-sm font-bold tracking-tight" :class="route().current('inventory.index') ? 'text-artwork-buttons-create' : ''">{{ $t('All articles') }}</span>
+                                    <span class=" text-sm font-bold tracking-tight" :class="route().current('inventory.index') ? 'text-accent-600' : ''">{{ $t('All articles') }}</span>
                                     <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600 ring-inset">{{ props.articlesCount }}</span>
                                 </Link>
                             </div>
 
-                        </WhiteInnerCard>
+                        </BaseCard>
                         <div v-for="category in visibleCategories" :key="category.id" class="first:pt-0 last:pb-0">
-                            <WhiteInnerCard>
+                            <BaseCard elevation="raised" class="w-full">
                                 <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
-                                    <div class="p-1 rounded-lg w-1 bg-artwork-buttons-create"></div>
+                                    <div class="p-1 rounded-lg w-1 bg-accent-600"></div>
                                     <div class="w-full">
-                                        <Link preserve-scroll class="flex items-center w-full justify-between" :href="route('inventory.category.show', { inventoryCategory: category.id, ...linkQuery })" :class="[route().current('inventory.category.show', category.id) ? 'text-artwork-buttons-create font-semibold' : '']">
+                                        <Link preserve-scroll class="flex items-center w-full justify-between" :href="route('inventory.category.show', { inventoryCategory: category.id, ...linkQuery })" :class="[route().current('inventory.category.show', category.id) ? 'text-accent-600 font-semibold' : '']">
                                             <div class="first-letter:capitalize text-sm font-bold tracking-tight max-w-64">
                                                 <div>
                                                     {{ category.name }}
@@ -41,7 +41,7 @@
                                                            ...linkQuery
                                                         })" class="flex items-center justify-between" :class="[route().current('inventory.sub.category.show', { inventoryCategory: category.id,
                                                             inventorySubCategory: subCategory.id
-                                                        }) ? 'text-artwork-buttons-create font-semibold' : '']">
+                                                        }) ? 'text-accent-600 font-semibold' : '']">
                                                     <div class="first-letter:capitalize text-xs pl-2 py-1 flex items-center justify-between w-full">
                                                         <div class="flex items-center gap-x-0.5">
                                                             <component :is="IconPointFilled" class="size-4" stroke-width="1" aria-hidden="true" />
@@ -56,7 +56,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </WhiteInnerCard>
+                            </BaseCard>
                         </div>
                     </div>
                 </div>
@@ -70,7 +70,6 @@
 import {Link} from "@inertiajs/vue3";
 import {computed} from "vue";
 import BaseCard from "@/Artwork/Cards/BaseCard.vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
 import {IconChevronDown, IconPointFilled} from "@tabler/icons-vue";
 
 const props = defineProps({

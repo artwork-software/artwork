@@ -1,11 +1,11 @@
 <template>
     <BaseModal v-if="true" full-modal @closed="$emit('closed')">
         <div class="mb-5 px-6 mt-14">
-            <h1 class="headline1 mb-4">
+            <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mb-4">
                 <!-- Headline Text für MultiEdit -->
                 {{ $t('Book inventory for multiple events') }}
             </h1>
-            <p class="xsLight">
+            <p class="text-sm/5 font-bold text-text-subtle">
                 <!-- Beschreibungstext für MultiEdit -->
                 {{ $t('Select the number of inventory items to be booked for each event.')}}
             </p>
@@ -13,9 +13,9 @@
 
         <div class="bg-surface-sunken py-4 px-6">
             <div class="flex items-center justify-between">
-                <AlertComponent classes="!text-artwork-buttons-create cursor-pointer" show-icon icon-size="h-5 w-5" :text="showInfoText ? $t('Hide help') : $t('Show help')" @click="openCloseShowInfoText" />
+                <AlertComponent classes="!text-accent-600 cursor-pointer" show-icon icon-size="h-5 w-5" :text="showInfoText ? $t('Hide help') : $t('Show help')" @click="openCloseShowInfoText" />
                 <div v-if="autoCloseInfoText < 15">
-                    <p class="xxsLight">
+                    <p class="text-xs/[18px] text-text-subtle">
                         {{ $t('The help is hidden in {0} seconds.', [autoCloseInfoText])}}
                     </p>
                 </div>
@@ -42,7 +42,7 @@
 
         <div class="my-10 divide-y-2 divide-dashed px-6" >
             <div class="py-2" v-for="items in currentTab.groupedItems">
-                <h3 class="headline3 pb-2">{{ items.craft }}</h3>
+                <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text pb-2">{{ items.craft }}</h3>
                 <NumberInputComponent
                     class="pb-2"
                     v-for="item in items.items"

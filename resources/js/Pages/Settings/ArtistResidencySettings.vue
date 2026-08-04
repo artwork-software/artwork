@@ -13,7 +13,7 @@
                 'This tab is only saved when you click the save button.',
             ]"
         />
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <BasePageTitle
                 :title="$t('Artist residencies')"
                 :description="$t('Settings for artist residencies such as default values for breakfast deductions.')"
@@ -60,7 +60,7 @@
                     <input
                         type="checkbox"
                         v-model="form.artist_residency_do_not_save_default"
-                        class="rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                        class="rounded border-border text-accent-700 focus:ring-accent-700"
                     />
                     <span class="text-sm font-medium text-text-muted">
                         {{ $t('“Do not save artist in database” checked by default') }}
@@ -85,7 +85,7 @@
                             <input
                                 type="checkbox"
                                 v-model="column.enabled"
-                                class="rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                class="rounded border-border text-accent-700 focus:ring-accent-700"
                             />
                             <span class="text-sm text-text-muted">{{ $t(nameColumnLabels[column.key] ?? column.key) }}</span>
                         </label>

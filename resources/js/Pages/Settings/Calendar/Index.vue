@@ -9,7 +9,7 @@
                 'Day remarks add one shared remark per day as a separate column in the calendar, the planning calendar and the shift plan.',
             ]"
         />
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <div>
                 <BasePageTitle
                     :title="$t('Calendar Settings')"
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <div class="card white p-5 mt-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-5">
             <BasePageTitle
                 :title="$t('Day remarks')"
                 :description="$t('If activated, the calendar, planning calendar and shift plan show a separate day remarks column with one shared remark per day. Who can see and edit the remarks is controlled via the user permissions.')" />
@@ -56,7 +56,7 @@
                         @update:model-value="saveDayRemarksSettings"
                         :class="[
                             tinyTimePeriod.day_remarks_enabled ?
-                                'bg-artwork-buttons-create' :
+                                'bg-accent-600' :
                                 'bg-border-subtle',
                             'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                         ]">
@@ -78,7 +78,7 @@
                                :value="false"
                                v-model="tinyTimePeriod.day_remarks_mandatory"
                                @change="saveDayRemarksSettings"
-                               class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
+                               class="mt-0.5 h-4 w-4 border-border text-accent-600 focus:ring-accent-600"/>
                         <span class="text-sm text-text">
                             <span class="font-medium">{{ $t('Users decide themselves') }}</span>
                             <span class="block text-xs text-text-subtle">{{ $t('Users can show or hide the column via their display settings. It is shown by default.') }}</span>
@@ -90,7 +90,7 @@
                                :value="true"
                                v-model="tinyTimePeriod.day_remarks_mandatory"
                                @change="saveDayRemarksSettings"
-                               class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
+                               class="mt-0.5 h-4 w-4 border-border text-accent-600 focus:ring-accent-600"/>
                         <span class="text-sm text-text">
                             <span class="font-medium">{{ $t('Column is mandatory for all users') }}</span>
                             <span class="block text-xs text-text-subtle">{{ $t('The column is always shown and cannot be hidden via the display settings.') }}</span>

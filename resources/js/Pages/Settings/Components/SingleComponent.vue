@@ -161,7 +161,7 @@ function requestDeleteComponentInDisclosure(componentId) {
 
                         <!-- Note -->
                         <div class="mt-3">
-                            <div class="xxsDarkBold text-[11px] text-text-muted">
+                            <div class="text-xs/[15px] font-semibold text-text text-[11px] text-text-muted">
                                 {{ $t('Tooltip text (optional):') }}
                             </div>
 
@@ -188,7 +188,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                         <!-- Ordner-Inhalt -->
                         <div v-if="isFolder" class="mt-3">
                             <Disclosure v-slot="{ open }" as="div">
-                                <DisclosureButton class="xsDark flex items-center gap-2 text-sm">
+                                <DisclosureButton class="text-sm/5 font-semibold text-text flex items-center gap-2 text-sm">
                                     <component :is="open ? IconFolderOpen : IconFolder" class="size-4 text-text-muted" />
                                     {{ $t('Components in Disclosure') }} ({{ folderChildCount }})
                                     <IconChevronDown class="size-4 text-text-muted transition-transform" :class="{ 'rotate-180': open }" />
@@ -254,7 +254,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                                     href="#"
                                     @click.prevent="removeComponentFromTab(element.id)"
                                     :class="[
-                    active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary',
+                    active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle',
                     'group flex items-center px-4 py-2 text-sm rounded-md'
                   ]"
                                 >

@@ -17,16 +17,16 @@
                                 </button>
                             </div>
                             <div class="relative z-40">
-                                <div class="font-black font-lexend text-primary text-3xl my-2">
+                                <div class="font-black font-lexend text-text text-3xl my-2">
                                     {{ $t('Apply to all')}}
                                 </div>
-                                <p class="xsLight">
+                                <p class="text-sm/5 font-bold text-text-subtle">
                                     {{ $t('Would you like to apply the changes to all dates?')}}
                                 </p>
                             </div>
                             <div class="flex justify-center mt-5 gap-4">
-                                <button @click="allElement()" type="button" class=" hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-artwork-buttons-create'">{{ $t('Apply to all')}}</button>
-                                <button @click="singleElement()" type="button" class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white">{{ $t('Only apply to this event')}}</button>
+                                <button @click="allElement()" type="button" class=" hover:bg-accent-700 py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-accent-600'">{{ $t('Apply to all')}}</button>
+                                <button @click="singleElement()" type="button" class="bg-accent-600 hover:bg-accent-700 py-2 px-8 rounded-full text-white">{{ $t('Only apply to this event')}}</button>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -37,8 +37,8 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -51,7 +51,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon
+        IconX
     },
     data(){
         return {

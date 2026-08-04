@@ -17,7 +17,7 @@
                         </div>
                         <button type="button" @click="removeUserFromRoom(user.id)">
                             <span class="sr-only">{{ $t('Remove user as room admin') }}</span>
-                            <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
+                            <IconCircleX class="ml-2 h-5 w-5 hover:text-danger "/>
                         </button>
                     </div>
                     <div class="flex items-center gap-x-1">
@@ -27,7 +27,7 @@
                                :value="user.id"
                                class="input-checklist"/>
                         <label :for="user.id + '-cb-is_admin'"
-                               :class="[user.pivot.is_admin ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
+                               :class="[user.pivot.is_admin ? 'text-text' : 'text-text-subtle', 'subpixel-antialiased']"
                                class="text-sm cursor-pointer">
                             {{ $t('Room admin') }}
                         </label>
@@ -39,7 +39,7 @@
                                :value="user.id"
                                class="input-checklist"/>
                         <label :for="user.id + '-cb-can_request'"
-                               :class="[user.pivot.can_request ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
+                               :class="[user.pivot.can_request ? 'text-text' : 'text-text-subtle', 'subpixel-antialiased']"
                                class="text-sm cursor-pointer">
                             {{ $t('Authorized to request') }}
                         </label>
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import {XCircleIcon} from '@heroicons/vue/outline';
+import {IconCircleX} from "@tabler/icons-vue";
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";

@@ -13,7 +13,7 @@
                 </a>
             </div>
         </div>
-        <div v-else class="text-sm text-secondary">-</div>
+        <div v-else class="text-sm text-text-subtle">-</div>
     </div>
 </template>
 <script setup>

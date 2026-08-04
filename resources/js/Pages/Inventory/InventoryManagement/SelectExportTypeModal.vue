@@ -1,7 +1,7 @@
 <template>
     <BaseModal v-if="show" @closed="close(false)">
         <div class="select-export-type-modal-container">
-            <h1 class="headline1">
+            <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Inventory export') }}
             </h1>
             <span>{{ $t('Please select the format in which the export is to be created.')}}</span>

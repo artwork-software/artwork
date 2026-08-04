@@ -53,7 +53,7 @@
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                         :title="t('Show shift history for this person and day')"
                         @click="openHistory"
                     >
@@ -122,7 +122,7 @@
                             <button
                                 v-if="canPlanShifts || isOwnCell"
                                 type="button"
-                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                                 @click="showProjectAssignmentModal = true"
                             >
                                 <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -227,7 +227,7 @@
                             </div>
                             <button
                                 type="button"
-                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                                 @click="addIndividualTime"
                             >
                                 <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -414,7 +414,7 @@
                             <div class="mt-3 sm:hidden">
                                 <button
                                     type="button"
-                                    class="inline-flex items-center gap-1 text-xs xsLight hover:text-artwork-buttons-hover transition-colors"
+                                    class="inline-flex items-center gap-1 text-xs text-sm/5 font-bold text-text-subtle hover:text-accent-700 transition-colors"
                                     @click="addIndividualTime"
                                 >
                                     <PropertyIcon name="IconCirclePlus"
@@ -456,7 +456,7 @@
                         </div>
                         <button
                             type="button"
-                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                             @click="showAddViolationModal = true"
                         >
                             <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -605,19 +605,19 @@
                                     </span>
                                 </div>
                                 <PropertyIcon name="IconChevronDown"
-                                    class="h-5 w-5 text-primary"
+                                    class="h-5 w-5 text-text"
                                     aria-hidden="true"
                                 />
                             </ListboxButton>
                             <ListboxOptions
-                                class="absolute mt-1 w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm"
+                                class="absolute mt-1 w-full z-10 bg-surface-inverse shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm"
                             >
                                 <ListboxOption
                                     v-for="type in vacationTypes"
                                     :key="type.type"
                                     :value="type"
                                     v-slot="{ selected }"
-                                    class="text-secondary cursor-pointer rounded-md p-2 mb-0.5 flex justify-between items-center"
+                                    class="text-text-subtle cursor-pointer rounded-md p-2 mb-0.5 flex justify-between items-center"
                                 >
                                     <div class="flex items-center gap-2 truncate">
                                         <span
@@ -626,7 +626,7 @@
                                         ></span>
                                         <span
                                             :class="[
-                                                selected ? 'xsWhiteBold' : 'xsLight',
+                                                selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle',
                                                 'truncate'
                                             ]"
                                         >
@@ -653,7 +653,7 @@
                             <label v-for="opt in freeDayPartOptions" :key="opt.value"
                                    class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm cursor-pointer"
                                    :class="freeDayPart === opt.value
-                                       ? 'border-artwork-buttons-create text-artwork-buttons-create bg-artwork-buttons-create/5'
+                                       ? 'border-accent-600 text-accent-600 bg-accent-600/5'
                                        : 'border-border-subtle text-text-muted'">
                                 <input type="radio" class="hidden" :value="opt.value" v-model="freeDayPart" />
                                 {{ t(opt.label) }}

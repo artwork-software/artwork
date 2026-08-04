@@ -46,7 +46,7 @@
                 </div>
             </div>
 
-            <div class="card white p-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
                     <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                         <component :is="IconCalendarWeek" class="size-4 text-text-subtle" stroke-width="1.5" />
@@ -83,7 +83,7 @@
         <!-- No pattern: custom working times form -->
         <div class="mt-5" v-else>
             <form @submit.prevent="submit" class="space-y-4">
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <div class="flex items-center justify-between gap-4 flex-wrap">
                         <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                             <component :is="IconCalendarWeek" class="size-4 text-text-subtle" stroke-width="1.5" />
@@ -115,7 +115,7 @@
                     </div>
                 </div>
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                         <component :is="IconCalendarDue" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Validity period') }}

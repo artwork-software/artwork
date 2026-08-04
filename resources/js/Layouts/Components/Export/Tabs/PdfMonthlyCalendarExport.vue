@@ -168,7 +168,7 @@
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeActiveFilter(filter)">
-                                        <component :is="IconX" class="size-4 text-accent-600 hover:text-error" />
+                                        <component :is="IconX" class="size-4 text-accent-600 hover:text-danger" />
                                     </button>
                                 </div>
                             </div>
@@ -184,7 +184,7 @@
 
                         <div class="space-y-2 mt-2">
                             <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey" v-show="filterSubCategory.length > 0">
-                                <div class="card white px-4 ">
+                                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 ">
                                     <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
                                         <div class="text-sm text-text">
                                             {{ $t(subKey) }}
@@ -193,7 +193,7 @@
                                             <div class="hidden md:flex items-center gap-2 mr-2">
                                                 <button
                                                     type="button"
-                                                    class="text-[11px] text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                    class="text-[11px] text-accent-600 hover:text-accent-700 cursor-pointer"
                                                     @click.stop="selectAllInSubcategory(mainKey, subKey)"
                                                 >
                                                     {{ $t('Select all') }}
@@ -201,7 +201,7 @@
                                                 <span class="text-text-subtle text-xs">•</span>
                                                 <button
                                                     type="button"
-                                                    class="text-[11px] text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                    class="text-[11px] text-accent-600 hover:text-accent-700 cursor-pointer"
                                                     @click.stop="deselectAllInSubcategory(mainKey, subKey)"
                                                 >
                                                     {{ $t('Deselect all') }}
@@ -347,7 +347,7 @@
                                         :for="'monthly-' + paperOrientation.id"
                                         class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
                                         peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
-                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-primary"
+                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text"
                                         :class="orientationDisabled ? 'text-text-subtle cursor-not-allowed' : ''"
                                     >
                                         {{ paperOrientation.title }}
@@ -386,7 +386,7 @@
                                     :for="`monthly-colorSource-${mode.id}`"
                                     class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
                                     peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
-                                    border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-primary"
+                                    border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text"
                                 >
                                     {{ mode.label }}
                                 </label>

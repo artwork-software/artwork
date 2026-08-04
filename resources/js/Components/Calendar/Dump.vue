@@ -27,7 +27,7 @@
 
         <!-- At-a-glance -->
         <!--<div class="mt-[4.5rem] w-max" v-else>
-            <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
+            <div class="flex items-center sticky gap-0.5 h-16 bg-surface-inverse z-30 top-[64px] rounded-lg mb-3">
                 <div v-for="(room, rIdx) in newCalendarData" :key="room.id ?? room.roomId ?? rIdx">
                     <div :style="{ minWidth: cellWidthPx, maxWidth: cellWidthPx, width: cellWidthPx }" class="flex items-center h-full truncate">
                         <SingleRoomInHeader :room="room" is-light />

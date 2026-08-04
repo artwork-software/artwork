@@ -6,7 +6,7 @@
                  mit leerer Teamliste alle bestehenden Mitglieder aus dem Projekt entfernen -->
             <IconEdit class="w-5 h-5 rounded-full"
                       :class="[
-                          inSidebar ? 'text-white' : 'text-artwork-buttons-context',
+                          inSidebar ? 'text-white' : 'text-text-muted',
                           teamDataLoaded ? 'cursor-pointer' : 'opacity-50 cursor-wait'
                       ]"
                       @click="teamDataLoaded ? showTeamModal = true : ensureTeamData(true)"
@@ -17,7 +17,7 @@
                           :class="[
                               unmailableTeamMembers.length > 0
                                   ? 'text-warning'
-                                  : (inSidebar ? 'text-white' : 'text-artwork-buttons-context'),
+                                  : (inSidebar ? 'text-white' : 'text-text-muted'),
                               mailableTeamMembers.length > 0 ? 'cursor-pointer' : 'cursor-not-allowed'
                           ]"
                           @click="openTeamMail"
@@ -38,18 +38,18 @@
         <div v-if="loadError" class="text-xs text-danger mt-2">
             {{ loadError }}
         </div>
-        <div v-else-if="loadingTeam" class="text-xs text-secondary mt-2">
+        <div v-else-if="loadingTeam" class="text-xs text-text-subtle mt-2">
             {{ $t('Loading data...') }}
         </div>
         <div class="flex flex-wrap gap-4 mt-2 mb-3">
             <!-- Projektleitung -->
             <div v-if="(teamProject.project_managers || []).length > 0">
-                <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+                <span class="flex font-black w-full text-[10px]/5 font-semibold text-text-subtle subpixel-antialiased tracking-widest uppercase">
                     {{ $t('Project management') }}
                 </span>
                 <div class="flex flex-wrap mt-2 gap-2">
                     <template v-for="user in (teamProject.project_managers || [])" :key="user.id">
-                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-accent-600/10 px-3 py-1">
                             <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                             <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
                         </div>
@@ -62,13 +62,13 @@
             <!-- Rollen -->
             <template v-for="role in (teamProject.projectRoles || [])" :key="role.id">
                 <div v-if="checkRoleHasUser(role)">
-                    <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+                    <span class="flex font-black w-full text-[10px]/5 font-semibold text-text-subtle subpixel-antialiased tracking-widest uppercase">
                         {{ role.name }}
                     </span>
                     <div class="flex flex-wrap mt-2 gap-2">
                         <template v-for="user in (teamProject.usersArray || [])" :key="`${role.id}-${user.id}`">
                             <template v-if="user?.pivot_roles?.includes(role.id)">
-                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-accent-600/10 px-3 py-1">
                                     <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                                     <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
                                 </div>
@@ -79,7 +79,7 @@
                         </template>
                         <template v-for="contact in teamCrmContacts" :key="`${role.id}-crm-${contact.id}`">
                             <template v-if="contact?.pivot_roles?.includes(role.id)">
-                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                                <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-accent-600/10 px-3 py-1">
                                     <CrmContactPopoverTooltip :contact="contact" width="8" height="8"/>
                                     <span class="text-xs font-medium whitespace-nowrap">{{ contact.display_name }}</span>
                                 </div>
@@ -93,13 +93,13 @@
             </template>
             <!-- Projektteam (Departments + Users + CRM-Kontakte ohne Rolle) -->
             <div v-if="(teamProject.departments || []).length > 0 || projectTeamMembers.length > 0 || crmTeamMembersWithoutRole.length > 0">
-                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
+                <span class="flex font-black text-[10px]/5 font-semibold text-text-subtle w-full subpixel-antialiased tracking-widest uppercase">
                     {{ $t('Project team') }}
                 </span>
                 <div class="flex flex-wrap mt-2 gap-2">
                     <template v-if="teamProject.departments?.length > 0">
                         <template v-for="department in teamProject.departments" :key="department.id">
-                            <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                            <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-accent-600/10 px-3 py-1">
                                 <TeamIconCollection :data-tooltip-target="department.name"
                                                     :iconName="department.svg_name"
                                                     :alt="department.name"
@@ -116,7 +116,7 @@
                         </template>
                     </template>
                     <template v-for="user in projectTeamMembers" :key="user.id">
-                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-accent-600/10 px-3 py-1">
                             <UserPopoverTooltip :user="user" width="8" height="8" classes="border-2 border-white rounded-full" />
                             <span class="text-xs font-medium whitespace-nowrap">{{ user.first_name }} {{ user.last_name }}</span>
                         </div>
@@ -125,7 +125,7 @@
                         </div>
                     </template>
                     <template v-for="contact in crmTeamMembersWithoutRole" :key="`crm-${contact.id}`">
-                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-artwork-buttons-create/10 px-3 py-1">
+                        <div v-if="showNames" class="inline-flex items-center gap-x-2 rounded-full bg-accent-600/10 px-3 py-1">
                             <CrmContactPopoverTooltip :contact="contact" width="8" height="8"/>
                             <span class="text-xs font-medium whitespace-nowrap">{{ contact.display_name }}</span>
                         </div>

@@ -2,8 +2,8 @@
     <ArtworkBaseModal @close="closeModal" v-if="show" :title="$t('Edit document')" :description="$t('Replace document')">
             <div class="mx-4">
                 <div class="flex items-center cursor-pointer" @click="downloadProjectFile(file)">
-                    <DownloadIcon class="w-4 h-4 mr-2 text-artwork-buttons-create"/>
-                    <div class="text-artwork-buttons-create text-sm my-6">{{ file.name }}</div>
+                    <IconDownload class="w-4 h-4 mr-2 text-accent-600"/>
+                    <div class="text-accent-600 text-sm my-6">{{ file.name }}</div>
                 </div>
                 <div>
                     <input
@@ -15,8 +15,8 @@
                     />
                     <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-artwork-buttons-create font-bold text-center">
+                        border-accent-600 border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-accent-600 font-bold text-center">
                             {{ $t('Drag document here to upload or click in the field')}}
                         </p>
                     </div>
@@ -27,20 +27,20 @@
                           id="description"
                           v-model="comment"
                           rows="4"
-                          class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:border-secondary focus:border-1 w-full border-border"/>
+                          class="border border-border resize-none text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:border-text-subtle focus:border-1 w-full border-border"/>
                 </div>
                 <div class="my-1">
                     <div class="relative w-full">
                         <div class="w-full">
                             <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
                                    :placeholder="$t('Document access for') + '*'"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:border-secondary focus:border-1 w-full border-border"/>
+                                   class="h-12 text-base/5 font-semibold text-text border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:border-text-subtle focus:border-1 w-full border-border"/>
                         </div>
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto sm:text-sm">
                                 <div class="border-white/10">
@@ -59,18 +59,18 @@
                     </div>
                     <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in usersWithAccess"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                              class="flex mr-5 rounded-full items-center font-bold text-text">
                                         <div class="flex items-center">
                                             <img class="flex h-11 w-11 rounded-full object-cover"
                                                  :src="user.profile_photo_url"
                                                  alt=""/>
-                                            <span class="flex ml-4 sDark">
+                                            <span class="flex ml-4 text-base/5 font-semibold text-text">
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromFileUserArray(index)">
                                                 <span class="sr-only">{{$t('Remove user from contract')}}</span>
-                                                <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
+                                                <IconX
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full bg-accent-600 text-white border-0 "/>
                                             </button>
                                         </div>
 
@@ -89,7 +89,7 @@
                         <div class="flex items-center">
                             <img :src="comment.user.profile_photo_url" alt="profile_photo"
                                  class="h-5 w-5 mr-2 rounded-2xl"/>
-                            <div class="text-secondary text-sm">{{comment.created_at}}</div>
+                            <div class="text-text-subtle text-sm">{{comment.created_at}}</div>
                         </div>
                         <div class="mt-2 mb-4">
                             {{comment.text}}
@@ -101,9 +101,9 @@
 </template>
 
 <script>
+import {IconDownload, IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -125,8 +125,8 @@ export default {
         FormButton,
         JetDialogModal,
         JetInputError,
-        XIcon,
-        DownloadIcon
+        IconX,
+        IconDownload
     },
     data() {
         return {

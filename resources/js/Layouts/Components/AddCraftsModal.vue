@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken p-4">
-                    <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-border text-primary focus:ring-primary focus:ring-2">
+                    <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-border text-text focus:ring-surface-inverse focus:ring-2">
                     <label for="universally_applicable" class="text-sm text-text">{{$t('Universally applicable')}}</label>
                 </div>
             </div>
@@ -74,7 +74,7 @@
 
             <div class="mt-4 flex items-center gap-3">
                 <span class="text-sm" :class="enabled ? 'text-text-subtle' : 'text-text font-medium'">{{$t('Allocable to a limited extent')}}</span>
-                <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-create' : 'bg-border-subtle', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                <Switch v-model="enabled" :class="[enabled ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                     <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <span class="text-sm" :class="!enabled ? 'text-text-subtle' : 'text-text font-medium'">{{$t('Can be scheduled by all shift planners')}}</span>
@@ -84,10 +84,10 @@
                 <div class="sm:w-96">
                     <Listbox as="div">
                         <div class="relative">
-                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition">
+                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-border focus:outline-none focus:ring-2 focus:ring-surface-inverse/20 focus:border-surface-inverse/40 transition">
                                 <span class="block truncate text-left">{{$t('Select users')}}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                              <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                              <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                             </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -112,7 +112,7 @@
                                 <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
                             </div>
                             <button type="button" @click="togglePlanner(user, 'shift_planer')" class="p-1" aria-label="{{$t('Remove')}}">
-                                <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                                <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-text hover:text-danger"/>
                             </button>
                         </li>
                     </ul>
@@ -144,7 +144,7 @@
                         <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
                     </div>
                     <button type="button" @click="deleteDepartmentManager(user)" class="p-1" aria-label="$t('Delete department management')">
-                        <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                        <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-text hover:text-danger"/>
                     </button>
                 </li>
             </ul>

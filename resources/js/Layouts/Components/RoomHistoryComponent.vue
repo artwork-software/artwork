@@ -1,15 +1,15 @@
 <template>
     <BaseModal @closed="closeRoomHistoryModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_project_history.svg">
             <div class="mx-4">
-                <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                <div class="font-bold font-lexend text-text tracking-wide text-2xl my-2">
                     {{$t('Room history')}}
                 </div>
-                <div class="text-secondary subpixel-antialiased relative z-5">
+                <div class="text-text-subtle subpixel-antialiased relative z-5">
                     {{ $t('Here you can see what was changed by whom and when.')}}
                 </div>
                 <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-x-scroll">
                     <div class="flex items-center w-full my-1" v-for="(historyItem,index) in this.room_history">
-                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                            <span class="w-40 text-text-subtle my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
                         <div class="flex items-center w-full relative z-20">
@@ -17,7 +17,7 @@
                                                 :width="7"
                                                 :user="historyItem.changes[0].changed_by"
                                                 :id="index"/>
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                            <div class="text-text-subtle subpixel-antialiased ml-2 text-sm my-auto">
                                 {{
                                     $t(
                                         historyItem.changes[0].translationKey,
@@ -33,11 +33,10 @@
 </template>
 
 <script>
+import {IconCheck, IconX} from "@tabler/icons-vue";
 
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon} from '@heroicons/vue/outline';
-import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -51,8 +50,8 @@ export default {
         UserPopoverTooltip,
         NewUserToolTip,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
+        IconX,
+        IconCheck,
     },
     props: ['room_history'],
     emits: ['closed'],

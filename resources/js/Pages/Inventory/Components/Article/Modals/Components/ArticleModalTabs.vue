@@ -3,7 +3,7 @@
         <nav class="-mb-px uppercase text-xs tracking-wide flex space-x-8" aria-label="Tabs">
             <div v-for="tab in tabs" v-show="tab.show" :key="tab?.id"
                  @click="updateTab(tab.id)"
-                  :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-text-muted hover:border-border', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold cursor-pointer']"
+                  :class="[tab.current ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold cursor-pointer']"
                   :aria-current="tab.current ? 'page' : undefined">
                 {{ $t(tab?.name) }}
             </div>

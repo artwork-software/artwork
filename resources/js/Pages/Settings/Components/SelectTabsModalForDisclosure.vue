@@ -1,4 +1,5 @@
 <script>
+import {IconX} from "@tabler/icons-vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import {
@@ -11,7 +12,6 @@ import {
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
-import {XIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/vue3";
 import {
     Listbox,
@@ -32,7 +32,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel,
+        IconX, DialogPanel,
         Listbox,
         ListboxButton,
         ListboxOptions,
@@ -94,10 +94,10 @@ export default {
                                 </button>
                             </div>
                             <div class="relative z-40 px-4">
-                                <div class="mt-8 headline1">
+                                <div class="mt-8 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                                    Wähle Tabs aus
                                 </div>
-                                <p class="xsLight my-6">
+                                <p class="text-sm/5 font-bold text-text-subtle my-6">
                                     Welche Tabs sollen in dieser Komponente einbezogen werden ?
                                 </p>
 
@@ -106,7 +106,7 @@ export default {
                                         <SwitchLabel as="span" class="text-sm">
                                             <span class="font-medium text-text">Nur aktuellen Tab einbeziehen</span>
                                         </SwitchLabel>
-                                        <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-hover' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
+                                        <Switch v-model="enabled" :class="[enabled ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-700 focus:ring-offset-2']">
                                             <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                         </Switch>
                                         <SwitchLabel as="span" class="text-sm">
@@ -118,7 +118,7 @@ export default {
                                     <Listbox as="div" v-model="selected" multiple>
                                         <ListboxLabel class="block text-sm font-medium leading-6 text-text">Ausgewählte Tabs</ListboxLabel>
                                         <div class="relative mt-2">
-                                            <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover sm:text-sm sm:leading-6">
+                                            <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-accent-700 sm:text-sm sm:leading-6">
                                                 <span class="block truncate"> {{ selected.map((tab) => tab.name).join(', ') }}</span>
                                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                   <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
@@ -128,10 +128,10 @@ export default {
                                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                 <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                                     <ListboxOption as="template" v-for="tab in tabs" :key="tab.id" :value="tab" v-slot="{ active, selected }">
-                                                        <li :class="[active ? 'bg-artwork-buttons-hover text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                        <li :class="[active ? 'bg-accent-700 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ tab.name }}</span>
 
-                                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-hover', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-700', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                                 <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
                                                               </span>
                                                         </li>
@@ -144,7 +144,7 @@ export default {
                                 <div class="flex justify-between mt-5 items-center pr-4">
                                     <FormButton
                                         @click="addComponentWithScope(true)" :text="$t('Save')" />
-                                    <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">
+                                    <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal">
                                         {{ $t('No, not really') }}
                                     </p>
                                 </div>

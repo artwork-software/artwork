@@ -10,23 +10,23 @@
 
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-            <div class="xsLight">
+            <div class="text-sm/5 font-bold text-text-subtle">
                 {{ $t('Project') }}
             </div>
-            <div class="xsLight">
+            <div class="text-sm/5 font-bold text-text-subtle">
                 {{ $t('Column') }}
             </div>
-            <div class="xsLight">
+            <div class="text-sm/5 font-bold text-text-subtle">
                 {{ $t('Value') }}
             </div>
         </div>
 
         <div class="space-y-3 divide-y divide-border-subtle divide-dashed mb-10">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3" v-for="row in data">
-                <div class="xsDark">
+                <div class="text-sm/5 font-semibold text-text">
                     {{ row.subProjectName }}
                 </div>
-                <div class="xsLight">
+                <div class="text-sm/5 font-bold text-text-subtle">
                     {{ row.relevantColumnName }}
                 </div>
                 <div class="font-bold text-sm" :class="row.type === 'BUDGET_TYPE_COST' ? 'text-danger' : 'text-success'">

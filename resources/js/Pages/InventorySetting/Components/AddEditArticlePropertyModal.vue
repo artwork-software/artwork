@@ -31,7 +31,7 @@
                             </ListboxLabel>
                             <div class="relative mt-2">
                                 <ListboxButton class="menu-button">
-                                    <div class="col-start-1 row-start-1 xsDark truncate pr-6">{{ selectedType?.name ? $t(selectedType?.name) : '' }}</div>
+                                    <div class="col-start-1 row-start-1 text-sm/5 font-semibold text-text truncate pr-6">{{ selectedType?.name ? $t(selectedType?.name) : '' }}</div>
                                     <component :is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-text-subtle sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
                                 </ListboxButton>
 

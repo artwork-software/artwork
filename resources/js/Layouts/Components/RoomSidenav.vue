@@ -1,69 +1,69 @@
 <template>
     <div class="w-full mt-24">
         <div class="flex">
-            <div class="text-secondary text-md">
+            <div class="text-text-subtle text-md">
                 {{$t('Access to room')}}
             </div>
-            <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openRoomAccessModal"/>
         </div>
-        <div class="text-secondary text-sm mt-4 uppercase">{{$t('Room admin')}}</div>
+        <div class="text-text-subtle text-sm mt-4 uppercase">{{$t('Room admin')}}</div>
         <div class="flex" v-if="room.room_admins?.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.room_admins">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
         </div>
-        <div v-else class="text-secondary text-sm mt-2">
+        <div v-else class="text-text-subtle text-sm mt-2">
             {{$t('No room admins available yet')}}
         </div>
-        <div class="text-secondary text-sm mt-4 uppercase">{{ $t('Authorized to request')}}</div>
+        <div class="text-text-subtle text-sm mt-4 uppercase">{{ $t('Authorized to request')}}</div>
         <div class="flex" v-if="room.requestable_by?.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.requestable_by">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
         </div>
-        <div v-else class="text-secondary text-sm mt-2">
+        <div v-else class="text-text-subtle text-sm mt-2">
             {{ $t('So far, no user is authorized to make inquiries')}}
         </div>
 
         <hr class="my-10 border-darkGray">
 
         <div class="flex">
-            <div class="text-secondary text-md">
+            <div class="text-text-subtle text-md">
                 {{$t('Room properties')}}
             </div>
-            <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openEditRoomAttributesModal"/>
         </div>
         <div v-if="adjoiningRooms?.length > 0 || categories?.length > 0 || attributes?.length > 0">
             <div class="mt-4 flex flex-wrap">
                 <div v-for="category in categories"
-                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-primary w-fit rounded-full">
+                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-surface-inverse w-fit rounded-full">
                     {{ category.name}}
                 </div>
                 <div v-for="attribute in attributes"
-                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-primary w-fit rounded-full">
+                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-surface-inverse w-fit rounded-full">
                     {{ attribute.name}}
                 </div>
                 <div v-for="room in adjoiningRooms"
-                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-primary w-fit rounded-full">
+                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-surface-inverse w-fit rounded-full">
                     {{ room.name}}
                 </div>
             </div>
         </div>
-        <div v-else class="text-secondary text-sm mt-4">
+        <div v-else class="text-text-subtle text-sm mt-4">
             {{$t('No properties selected yet')}}
         </div>
 
         <hr class="my-10 border-darkGray">
 
         <div class="flex items-center">
-            <div class="text-secondary text-md">
+            <div class="text-text-subtle text-md">
                 {{ $t('Documents')}}
             </div>
-            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showRoomFiles ? 'rotate-180' : '']"
+            <IconChevronDown class="w-4 h-4 ml-4" :class="[ showRoomFiles ? 'rotate-180' : '']"
                              @click="showRoomFiles = !showRoomFiles"/>
-            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
             <RoomFileUploadModal
                 :show="showFileUploadModal"
@@ -74,10 +74,10 @@
         <div v-if="showRoomFiles">
             <div v-if="room.room_files?.length > 0" class="mt-4">
                 <div v-for="roomFile in room.room_files">
-                    <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" >
-                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadRoomFile(roomFile)"/>
+                    <div class="flex items-center w-full mb-2 cursor-pointer text-text-subtle hover:text-white" >
+                        <IconDownload class="w-4 h-4 mr-2" @click="downloadRoomFile(roomFile)"/>
                         <div>{{ roomFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(roomFile)"/>
+                        <IconCircleX class="w-4 h-4 ml-auto bg-danger rounded-full text-white" @click="openFileDeleteModal(roomFile)"/>
                     </div>
                 </div>
                 <FileDeleteModal
@@ -88,7 +88,7 @@
                 />
             </div>
             <div v-else>
-                <div class="text-secondary text-sm mt-4">{{ $t('No documents available')}}</div>
+                <div class="text-text-subtle text-sm mt-4">{{ $t('No documents available')}}</div>
             </div>
         </div>
         <RoomAccessModal
@@ -112,13 +112,7 @@
 </template>
 
 <script setup>
-import {
-    UploadIcon,
-    PencilAltIcon,
-    DownloadIcon,
-    XCircleIcon,
-    ChevronDownIcon
-} from '@heroicons/vue/outline';
+import {IconChevronDown, IconCircleX, IconDownload, IconEdit, IconUpload} from "@tabler/icons-vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {onMounted, ref} from "vue";
 import RoomAccessModal from "@/Layouts/Components/RoomAccessModal.vue";

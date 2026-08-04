@@ -32,7 +32,7 @@
                                     @click="closeModal"
                                 >
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
+                                    <IconX class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </DialogTitle>
 
@@ -175,9 +175,8 @@
 <script setup>
 import { computed, reactive, ref, watch, getCurrentInstance } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import { XIcon } from '@heroicons/vue/solid'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { IconRepeat } from '@tabler/icons-vue'
+import {IconRepeat, IconX} from "@tabler/icons-vue"
 import BaseButton from '@/Layouts/Components/General/Buttons/BaseButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 

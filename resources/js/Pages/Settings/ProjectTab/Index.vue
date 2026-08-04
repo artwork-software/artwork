@@ -6,7 +6,6 @@ import SingleTabComponent from "@/Pages/Settings/Components/SingleTabComponent.v
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 
 import { computed, ref, watch } from "vue";
@@ -194,7 +193,7 @@ function updateComponentOrder(components) {
             <!-- Tab components -->
             <div class="w-full col-span-1">
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <draggable
                         ghost-class="opacity-50"
                         key="draggableKey"
@@ -216,8 +215,8 @@ function updateComponentOrder(components) {
             </div>
 
             <!-- Components List -->
-            <div class="col-span-1 card glassy p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
-                <div class="card white p-5 space-y-3">
+            <div class="col-span-1 rounded-lg bg-surface border border-border-subtle shadow-raised p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 space-y-3">
                     <!-- Suche bleibt beim Scrollen der Palette sichtbar -->
                     <div class="sticky top-0 z-10 -mx-5 px-5 -mt-5 pt-5 pb-3 bg-white border-b border-border-subtle">
                         <div class="flex items-center justify-end w-full">

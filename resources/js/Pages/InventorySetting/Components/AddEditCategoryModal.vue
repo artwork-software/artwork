@@ -70,7 +70,7 @@
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize xsLight cursor-default">
+                                                <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize text-sm/5 font-bold text-text-subtle cursor-default">
                                                     {{ $t(capitalizeFirstLetter(property?.type)) }}
                                                 </td>
                                                 <td class="text-sm whitespace-nowrap text-text-subtle sm:pr-0">
@@ -183,7 +183,7 @@
                                                         <div v-if="filteredPropertiesByCategory.length > 0">
                                                             <div v-for="property in filteredPropertiesByCategory">
                                                                 <div @click="addPropertyToCategory(property)" class="px-4 py-3 cursor-pointer hover:bg-surface-sunken rounded-lg duration-200 ease-in-out">
-                                                                    <div class="xsDark">
+                                                                    <div class="text-sm/5 font-semibold text-text">
                                                                         {{ property.name }}
                                                                     </div>
                                                                 </div>
@@ -234,7 +234,7 @@
                                     </div>
                                     <component :is="IconChevronUp"
                                         :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-5 w-5 text-artwork-buttons-context"
+                                        class="h-5 w-5 text-text-muted"
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="px-4 pb-2 pt-4 text-sm text-text-subtle">
@@ -289,7 +289,7 @@
                                                                             </button>
                                                                         </div>
                                                                     </td>
-                                                                    <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize xsLight cursor-default">
+                                                                    <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize text-sm/5 font-bold text-text-subtle cursor-default">
                                                                         {{ $t(capitalizeFirstLetter(property?.type)) }}
                                                                     </td>
                                                                     <td class="text-sm whitespace-nowrap text-text-subtle sm:pr-0">
@@ -402,7 +402,7 @@
                                                                         <div v-if="getFilteredPropertiesForSubCategory(subCategory).length > 0">
                                                                             <div v-for="property in getFilteredPropertiesForSubCategory(subCategory)">
                                                                                 <div @click="addPropertyToSubCategory(property, subCategory)" class="px-4 py-3 cursor-pointer hover:bg-surface-sunken rounded-lg duration-200 ease-in-out">
-                                                                                    <div class="xsDark">
+                                                                                    <div class="text-sm/5 font-semibold text-text">
                                                                                         {{ property.name }}
                                                                                     </div>
                                                                                 </div>

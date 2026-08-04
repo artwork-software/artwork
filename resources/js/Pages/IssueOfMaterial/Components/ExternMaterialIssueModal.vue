@@ -252,7 +252,7 @@
                             <div v-if="usageError" class="mb-4 flex items-start justify-between gap-3 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
                                 <span>{{ $t(usageError) }}</span>
                                 <button type="button" class="shrink-0 font-medium text-warning hover:text-warning" @click="usageError = null">
-                                    <XIcon class="h-4 w-4" />
+                                    <IconX class="h-4 w-4" />
                                 </button>
                             </div>
                             <div v-if="externMaterialIssueForm.articles.length > 0" class="divide-y divide-border-subtle">
@@ -485,7 +485,6 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import RoomSearch from "@/Components/SearchBars/RoomSearch.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/ArticleSearchFilterModal.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -501,17 +500,7 @@ import axios from "axios";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import Galleria from "primevue/galleria";
-import {
-    IconCircleCheck,
-    IconCopy,
-    IconFile,
-    IconInfoCircle,
-    IconListDetails,
-    IconLoader, IconParentheses,
-    IconCirclePlus,
-    IconTrash,
-    IconWindowMaximize
-} from "@tabler/icons-vue";
+import {IconCircleCheck, IconCirclePlus, IconCopy, IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconTrash, IconWindowMaximize, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     externMaterialIssue: {

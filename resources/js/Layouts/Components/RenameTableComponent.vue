@@ -3,11 +3,11 @@
             <div class="mx-4">
                 <div>
                     <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
+                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                             {{ $t('Rename table') }}
                         </div>
                     </h1>
-                    <h2 class="xsLight mb-2 mt-8">
+                    <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-8">
                         {{ $t('Choose a meaningful name for your template. This will make it easy for all users to find.') }}
                     </h2>
                     <div class="flex items-center w-full mr-2">
@@ -27,10 +27,9 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -42,11 +41,11 @@ export default {
         BaseModal,
         FormButton,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon,
+        IconX,
+        IconCheck,
+        IconChevronDown,
         InputComponent,
-        XCircleIcon
+        IconCircleX
     },
     data() {
         return {

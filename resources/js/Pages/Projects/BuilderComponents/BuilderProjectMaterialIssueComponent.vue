@@ -8,7 +8,7 @@
                 {{ issue.name || issue.title || '-' }}
             </div>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

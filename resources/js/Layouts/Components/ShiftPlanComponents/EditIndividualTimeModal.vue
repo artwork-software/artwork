@@ -64,7 +64,7 @@
                 type="button"
                 @click="save"
                 :disabled="saving"
-                class="px-4 py-2 text-sm font-medium text-white bg-artwork-buttons-create rounded-lg hover:bg-artwork-buttons-hover disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
+                class="px-4 py-2 text-sm font-medium text-white bg-accent-600 rounded-lg hover:bg-accent-700 disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
             >
                 {{ saving ? $t('Saving...') : $t('Save') }}
             </button>

@@ -14,7 +14,7 @@
             :sticky-offset-top-px="stickyOffset"
             :is-in-project-view="true"
         />
-        <div v-else class="text-secondary text-sm">{{ $t('Loading...') }}</div>
+        <div v-else class="text-text-subtle text-sm">{{ $t('Loading...') }}</div>
     </div>
 </template>
 

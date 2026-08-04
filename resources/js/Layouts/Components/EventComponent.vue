@@ -228,7 +228,7 @@
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
                         <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
                         <div v-if="selectedRoom"
-                             class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-4 xsDark"
+                             class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-4 text-sm/5 font-semibold text-text"
                         >
                             <span class="truncate">{{ selectedRoom.name }}</span>
                             <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="selectedRoom = null" type="button">
@@ -273,7 +273,7 @@
                                     >
                                         {{ selectedProject?.name }}
                                     </a>
-                                    <span v-else class="truncate xsDark text-text">{{ selectedProject?.name }}</span>
+                                    <span v-else class="truncate text-sm/5 font-semibold text-text text-text">{{ selectedProject?.name }}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
                                     <button type="button" class="ui-icon-btn" @click="removeProject" :aria-label="$t('Remove project')">
@@ -1161,7 +1161,7 @@ function checkChanges() {
 }
 
 const uiLbBtn =
-    'menu-button bg-white focus:outline-none focus:ring-0 w-full text-left rounded-md border border-border-subtle shadow-sm px-3 py-4 h-13 xsDark text-text';
+    'menu-button bg-white w-full text-left rounded-md border border-border-subtle px-3 py-4 h-13 text-sm/5 font-semibold text-text';
 const uiLbOpts =
     'mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-text ring-1 shadow-lg ring-black/5 focus:outline-none';
 

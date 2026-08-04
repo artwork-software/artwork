@@ -2,15 +2,15 @@
     <BaseModal v-if="show" @closed="close">
         <div class="add-category-or-group-modal-container">
             <h1 v-if="typeIsCategory()"
-                class="headline1">
+                class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Add category') }}
             </h1>
             <h1 v-if="typeIsGroup()"
-                class="headline1">
+                class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Add group') }}
             </h1>
             <h1 v-if="typeIsFolder()"
-                class="headline1">
+                class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Add Folder') }}
             </h1>
             <div class="new-category-or-group-form">

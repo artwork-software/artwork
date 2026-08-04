@@ -29,7 +29,7 @@
                     type="button"
                     :disabled="selectedShiftIds.length === 0 || duplicateInFlight"
                     @click="duplicateSelectedShifts"
-                    :class="[(selectedShiftIds.length === 0 || duplicateInFlight) ? 'bg-border-strong cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
+                    :class="[(selectedShiftIds.length === 0 || duplicateInFlight) ? 'bg-border-strong cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-600/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
                 >
                     {{ $t('Duplicate') }}
                 </button>
@@ -37,7 +37,7 @@
                     type="button"
                     :disabled="selectedShiftIds.length === 0"
                     @click="showDeleteConfirm = true"
-                    :class="[selectedShiftIds.length === 0 ? 'bg-border-strong cursor-not-allowed' : 'bg-artwork-error hover:bg-artwork-error/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
+                    :class="[selectedShiftIds.length === 0 ? 'bg-border-strong cursor-not-allowed' : 'bg-danger hover:bg-danger/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
                 >
                     {{ $t('Delete') }}
                 </button>
@@ -52,7 +52,7 @@
                     <div v-for="dayData in localGroupedShifts" :key="dayData.day" :ref="el => setDayRef(dayData.day, el)">
                         <!-- Day header — black sticky bar (always rendered) -->
                         <div
-                            class="sticky z-30 bg-artwork-navigation-background text-white px-4 py-2.5 font-semibold text-base rounded-r-lg flex items-center gap-2"
+                            class="sticky z-30 bg-surface-inverse text-white px-4 py-2.5 font-semibold text-base rounded-r-lg flex items-center gap-2"
                             :style="{ top: dayHeaderStickyTop + 'px' }"
                         >
                             {{ formatDayHeader(dayData.day) }}

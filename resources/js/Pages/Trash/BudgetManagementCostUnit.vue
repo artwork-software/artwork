@@ -6,11 +6,11 @@
     />
     <div v-for="trashedCostUnit in trashedCostUnits.data" :key="trashedCostUnit.id"
          class="flex w-full bg-white my-2 border border-border-subtle">
-        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
-            <ChevronUpIcon v-if="trashedCostUnit.hidden === true"
+        <button class="bg-accent-600 hover:bg-accent-700 flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
+            <IconChevronUp v-if="trashedCostUnit.hidden === true"
                            class="h-6 w-6 text-white my-auto"
             />
-            <ChevronDownIcon v-else
+            <IconChevronDown v-else
                              class="h-6 w-6 text-white my-auto"
             />
         </button>
@@ -26,7 +26,7 @@
                         <div class="flex">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                <IconDotsVertical
                                     class=" flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -50,10 +50,10 @@
                                                   }
                                               )"
                                               :class="[active ? 'bg-primaryHover text-white' :
-                                                'text-secondary',
+                                                'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <RefreshIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            <IconRefresh
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                 aria-hidden="true"/>
                                             {{ $t('Restore') }}
                                         </Link>
@@ -67,10 +67,10 @@
                                                   }
                                               )"
                                               :class="[active ? 'bg-primaryHover text-white' :
-                                                'text-secondary',
+                                                'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            <IconTrash
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                 aria-hidden="true"/>
                                             {{ $t('Delete permanently') }}
                                         </Link>
@@ -104,10 +104,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
-import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -124,17 +123,17 @@ export default {
         TrashSearchAndActions,
         ConfirmDeleteModal,
         Input,
-        XIcon,
-        SearchIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconX,
+        IconSearch,
+        IconChevronDown,
+        IconChevronUp,
         Menu,
         MenuButton,
-        DotsVerticalIcon,
+        IconDotsVertical,
         MenuItems,
         MenuItem,
-        RefreshIcon,
-        TrashIcon,
+        IconRefresh,
+        IconTrash,
         Link
     },
     data() {

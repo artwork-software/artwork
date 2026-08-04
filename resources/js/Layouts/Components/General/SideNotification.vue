@@ -8,8 +8,8 @@
                         leave-active-class="transition-leave-active"
                         leave-from-class="transition-leave-from"
                         leave-to-class="transition-leave-to">
-                <div v-if="show" class="pointer-events-auto w-full max-w-sm overflow-hidden card glassy p-4">
-                    <div class="card white">
+                <div v-if="show" class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-surface border border-border-subtle shadow-raised p-4">
+                    <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised">
                         <div class="p-4">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0">

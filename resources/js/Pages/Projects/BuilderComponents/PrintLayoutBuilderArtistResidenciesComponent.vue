@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('artist management') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('artist management') }}</h3>
         <div v-if="residencies?.length > 0">
             <table class="min-w-full divide-y divide-border text-sm">
                 <thead>
@@ -23,7 +23,7 @@
                 </tbody>
             </table>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

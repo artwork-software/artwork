@@ -71,7 +71,7 @@
                         <h3 class="text-lg font-medium text-text mb-4">{{ $t('Available Transitions') }}</h3>
                         <div class="flex flex-wrap gap-2">
                             <form v-for="transition in availableTransitions" :key="transition.name" @submit.prevent="executeTransition(transition.name)">
-                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-artwork-buttons-create border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-artwork-buttons-hover active:bg-artwork-buttons-hover disabled:bg-border-strong disabled:cursor-not-allowed transition">
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-accent-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-accent-700 active:bg-accent-700 disabled:bg-border-strong disabled:cursor-not-allowed transition">
                                     {{ transition.name }}
                                 </button>
                             </form>

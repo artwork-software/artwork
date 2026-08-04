@@ -43,7 +43,7 @@
                     @openEditModal="openEditSectorModal"
                 />
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <div class="">
                         <BasePageTitle :title="$t('Project Status')" :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')" />
                     </div>
@@ -123,7 +123,7 @@
                 </div>
             </transition>
 
-            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4 card white p-5">
+            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
                         <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="input-checklist" />
@@ -293,9 +293,7 @@
 
 <script>
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
-import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid"
-import {IconInfoCircle, IconCirclePlus} from '@tabler/icons-vue';
+import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconInfoCircle, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -307,7 +305,6 @@ import ProjectStateTagComponent from "@/Layouts/Components/ProjectStateTagCompon
 import Permissions from "@/Mixins/Permissions.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
-import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
@@ -317,26 +314,25 @@ export default {
         SettingsGuideBanner,
         BasePageTitle,
         ProjectSettingsHeader,
-        BaseCardButton,
         TinyPageHeadline,
         ProjectStateModal,
         ProjectStateTagComponent,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
-        XCircleIcon,
-        PlusSmIcon,
+        IconCircleX,
+        IconPlus,
         SvgCollection,
-        CheckIcon,
+        IconCheck,
         Menu,
         MenuButton,
         MenuItem,
         MenuItems,
         JetDialogModal,
-        ChevronDownIcon,
-        DotsVerticalIcon,
-        TrashIcon,
-        PencilAltIcon,
-        XIcon,
+        IconChevronDown,
+        IconDotsVertical,
+        IconTrash,
+        IconEdit,
+        IconX,
         ToolTipComponent,
         IconInfoCircle,
     },

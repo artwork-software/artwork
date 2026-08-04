@@ -22,7 +22,7 @@
     <template v-if="showActions || showOnlyActions">
         <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
             <div class="flex items-center gap-x-4">
-                <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
+                <button type="button" class="text-accent-600 hover:text-accent-700">
                     <component :is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
                 </button>
                 <button type="button" class="text-danger hover:text-danger" v-if="property.is_deletable">

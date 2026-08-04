@@ -9,11 +9,11 @@
             <div v-if="loadError" class="mt-2 text-xs text-danger">
                 {{ loadError }}
             </div>
-            <div v-else-if="loading" class="mt-2 text-xs text-secondary">
+            <div v-else-if="loading" class="mt-2 text-xs text-text-subtle">
                 {{ $t('Loading data...') }}
             </div>
             <template v-else>
-                <div class="mt-2 subpixel-antialiased xsDark" :class="{'!text-white': inSidebar}">
+                <div class="mt-2 subpixel-antialiased text-sm/5 font-semibold text-text" :class="{'!text-white': inSidebar}">
                     <span v-if="artistName">{{ artistName }}</span>
                 </div>
                 <!-- Sidebar: verknüpfte CRM-Künstler*innen nur als Namen anzeigen -->

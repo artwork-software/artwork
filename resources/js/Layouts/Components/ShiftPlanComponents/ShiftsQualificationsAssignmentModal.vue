@@ -7,7 +7,7 @@
     >
         <div class="mx-4">
             <!-- Header mit Avatar & Frage -->
-            <div class="mb-4 xsLight">
+            <div class="mb-4 text-sm/5 font-bold text-text-subtle">
                 {{ $t('In which qualification should') }}
                 <img
                     class="inline h-6 w-6 object-cover rounded-full ring-2 ring-white shadow"
@@ -23,7 +23,7 @@
 
                 <div
                     v-if="currentShiftToAssign"
-                    class="xsLight my-2 grid gap-2 sm:flex sm:items-center sm:gap-3"
+                    class="text-sm/5 font-bold text-text-subtle my-2 grid gap-2 sm:flex sm:items-center sm:gap-3"
                 >
                   <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs">
                     <span class="font-medium">{{ $t('Shift') }}</span>

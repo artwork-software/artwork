@@ -2,7 +2,7 @@
     <div id="myCalendar" class="bg-white min-w-[98%] w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
             <div class="flex justify-center w-full bg-white" :class="filteredEvents?.length ? 'mt-10' : ''">
-                <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
+                <div class="mt-4 flex text-sm/5 text-danger items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"
                      v-if="filteredEvents?.length > 0"
                      >
@@ -25,7 +25,7 @@
                                  :personal-filters="personalFilters"
                                  :user_filters="user_filters"
             />
-            <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
+            <div :class="this.project ? 'bg-surface-canvas' : 'bg-white'">
                 <!-- Calendar -->
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
@@ -117,7 +117,7 @@
                        class="!border-2 !border-danger bg-transparent !text-danger hover:!text-white hover:!bg-danger hover:!border-transparent resize-none"
                        :text="$t('Decline selected requests')"/>
             <FormButton @click="openDeleteSelectedEventsModal = true"
-                       class="!border-2 !border-artwork-buttons-create bg-transparent !text-artwork-buttons-create hover:!text-white hover:!bg-artwork-buttons-hover !hover:border-transparent resize-none"
+                       class="!border-2 !border-accent-600 bg-transparent !text-accent-600 hover:!text-white hover:!bg-accent-700 !hover:border-transparent resize-none"
                        :text="$t('Delete events')"/>
         </div>
 
@@ -142,11 +142,11 @@
 </template>
 
 <script>
+import {IconAlertTriangle} from "@tabler/icons-vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
-import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Link, router} from "@inertiajs/vue3";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -173,7 +173,7 @@ export default {
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
         EventsWithoutRoomComponent,
-        ExclamationIcon,
+        IconAlertTriangle,
         EventComponent
     },
     data() {

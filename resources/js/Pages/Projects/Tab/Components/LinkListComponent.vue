@@ -57,7 +57,7 @@
                             <div
                                 :key="element.id"
                                 class="rounded-lg border p-3 mb-3"
-                                :class="inSidebar ? 'border-white/10 bg-artwork-navigation-background/40' : 'border-border-subtle bg-white'"
+                                :class="inSidebar ? 'border-white/10 bg-surface-inverse/40' : 'border-border-subtle bg-white'"
                             >
                                 <div class="flex items-center gap-2 mb-2">
                                     <div class="drag-handle cursor-grab" :class="dragging ? 'cursor-grabbing' : ''">
@@ -74,7 +74,7 @@
                                         :label="index === 0 ? (projectData.data.placeholder_label || $t('Display')) : ''"
                                         :placeholder="index > 0 ? (projectData.data.placeholder_label || $t('Display')) : ''"
                                         without-translation
-                                        :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-white/20 !text-text-inverse' : ''"
+                                        :input-classes="inSidebar ? '!bg-surface-inverse !border-white/20 !text-text-inverse' : ''"
                                     />
 
                                     <BaseInput
@@ -85,7 +85,7 @@
                                         :label="index === 0 ? (projectData.data.placeholder_url || 'Link') : ''"
                                         :placeholder="index > 0 ? (projectData.data.placeholder_url || 'Link') : ''"
                                         without-translation
-                                        :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-white/20 !text-text-inverse' : ''"
+                                        :input-classes="inSidebar ? '!bg-surface-inverse !border-white/20 !text-text-inverse' : ''"
                                     />
                                 </div>
 

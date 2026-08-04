@@ -100,7 +100,7 @@
                         <button
                             type="button"
                             @click="showAddRoomType = true"
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-artwork-buttons-create bg-artwork-buttons-create/10 hover:bg-artwork-buttons-create/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-buttons-create"
+                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-accent-600 bg-accent-600/10 hover:bg-accent-600/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600"
                         >
                             <component :is="IconCirclePlus" class="h-4 w-4 mr-2" />
                             {{ $t('Add room type') }}
@@ -194,14 +194,12 @@
 
 <script setup>
 
-import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {computed, ref, watch} from "vue";
 import {useForm, router} from "@inertiajs/vue3";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {ListboxButton, ListboxOption, ListboxOptions, Listbox} from "@headlessui/vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";

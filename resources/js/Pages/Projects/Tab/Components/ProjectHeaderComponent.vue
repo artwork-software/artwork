@@ -81,7 +81,7 @@
                                     class="ml-2"
                                 />
                                 <span class="ml-2 tabular-nums">{{ headerObject.project_history[0]?.created_at }}</span>
-                                <button class="inline-flex items-center gap-1 text-artwork-buttons-create hover:text-artwork-buttons-hover transition" @click="openProjectHistoryModal()">
+                                <button class="inline-flex items-center gap-1 text-accent-600 hover:text-accent-700 transition" @click="openProjectHistoryModal()">
                                     <PropertyIcon name="IconChevronRight" class="-mr-0.5 h-4 w-4" aria-hidden="true" />
                                     {{ $t('View history') }}
                                 </button>

@@ -1,17 +1,17 @@
 <template>
-    <div class="" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-border-strong'">
+    <div class="" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-accent-600' : 'border-border-strong'">
         <div class="p-5">
             <div class="flex items-center justify-between mb-4 bg-accent-50 rounded-lg px-4 py-3">
                 <div class="flex items-center gap-x-1">
                         <span v-if="checklist.private">
                             <IconLock stroke-width="1.5" class="h-6 w-6" />
                         </span>
-                    <div class="truncate print:headline3 text-xs font-semibold flex items-center gap-x-1">
+                    <div class="truncate print:font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text text-xs font-semibold flex items-center gap-x-1">
                         <span>{{ checklist.name }}</span>
                         <Link
                             v-if="checklist.hasProject && checklist?.project?.id"
                             :href="route('projects.tab', {project: checklist?.project?.id, projectTab: checklist?.project?.checklist_tab_id ?? 1})"
-                            class="text-artwork-buttons-create hover:underline whitespace-nowrap"
+                            class="text-accent-600 hover:underline whitespace-nowrap"
                         >
                             ({{ checklist?.project?.name }})
                         </Link>
@@ -21,7 +21,7 @@
                         <span class="bg-accent-50 border border-accent-200 text-accent-600 text-xs px-2 py-0.5 rounded print:border print:bg-border-subtle print:text-text-subtle print:border-border-subtle print:rounded-lg">
                             {{ checklist.tasks.length }}
                         </span>
-                    <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click.stop="openAddTaskModal = true"/>
+                    <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out print:hidden" @click.stop="openAddTaskModal = true"/>
                     <BaseMenu has-no-offset white-menu-background v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.auth.user.id) || projectManagerIds.includes($page.props.auth.user.id))) || isInOwnTaskManagement">
                         <BaseMenuItem icon="IconUserPlus" title="Assign users" white-menu-background v-if="!checklist.private" @click="openEditChecklistTeamsModal = true"/>
                         <BaseMenuItem icon="IconEdit" title="Edit" white-menu-background v-if="checklist" @click="showChecklistEditModal = true"/>

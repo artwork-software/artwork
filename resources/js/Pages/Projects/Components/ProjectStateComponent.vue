@@ -4,14 +4,14 @@
             <span class="componentLabel">{{ $t('Project status') }}</span>
             <PropertyIcon
                 name="IconEdit"
-                class="w-5 h-5 rounded-full text-artwork-buttons-context cursor-pointer"
+                class="w-5 h-5 rounded-full text-text-muted cursor-pointer"
                 @click="openEditModal"
             />
         </div>
         <div v-if="loadError" class="text-xs text-danger">
             {{ loadError }}
         </div>
-        <div v-else-if="loading" class="text-xs text-secondary">
+        <div v-else-if="loading" class="text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
         <span v-else-if="projectState" class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
@@ -39,7 +39,7 @@
                             <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
                         </span>
                         <button type="button" @click="selectedState = null" class="ml-1">
-                            <IconCircleX class="h-4 w-4 text-text-subtle hover:text-error" />
+                            <IconCircleX class="h-4 w-4 text-text-subtle hover:text-danger" />
                         </button>
                     </div>
                 </div>
@@ -56,27 +56,27 @@
                                 </div>
                             </div>
                         </div>
-                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                     </ListboxButton>
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                        <ListboxOptions class="absolute w-full z-10 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                        <ListboxOptions class="absolute w-full z-10 bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                             <ListboxOption as="template" class="max-h-8"
                                 v-for="state in availableStates"
                                 :key="state.id"
                                 :value="state"
                                 v-slot="{ active, selected }">
-                                <li :class="[active ? 'text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                <li :class="[active ? 'text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                     <div class="flex items-center">
                                         <div>
                                             <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : state?.color }"/>
                                         </div>
-                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
+                                        <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
                                             {{ state.name }}
                                             <IconCalendarMonth v-if="state.is_planning === true || state.is_planning === 1" class="w-4 h-4" />
                                         </span>
                                     </div>
-                                    <span :class="[active ? 'text-white' : 'text-secondary', 'group flex justify-end items-center text-sm subpixel-antialiased']">
-                                        <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                    <span :class="[active ? 'text-white' : 'text-text-subtle', 'group flex justify-end items-center text-sm subpixel-antialiased']">
+                                        <IconCheck v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                     </span>
                                 </li>
                             </ListboxOption>
@@ -87,7 +87,7 @@
                 <div class="flex justify-end mt-6">
                     <button
                         type="button"
-                        class="bg-artwork-buttons-create text-white rounded-full px-6 py-2 text-sm font-semibold hover:bg-artwork-buttons-hover"
+                        class="bg-accent-600 text-white rounded-full px-6 py-2 text-sm font-semibold hover:bg-accent-700"
                         @click="saveState"
                     >
                         {{ $t('Save') }}
@@ -103,8 +103,7 @@ import axios from "axios";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {CheckIcon, ChevronDownIcon} from "@heroicons/vue/solid";
-import {IconCalendarMonth, IconCircleX} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconCheck, IconChevronDown, IconCircleX} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {can} from "laravel-permission-to-vuejs";
 
@@ -116,8 +115,8 @@ export default defineComponent({
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        CheckIcon,
-        ChevronDownIcon,
+        IconCheck,
+        IconChevronDown,
         IconCalendarMonth,
         IconCircleX,
     },

@@ -96,7 +96,7 @@
                                             >
                                                 <!-- Skip option -->
                                                 <ListboxOption as="template" :value="null" v-slot="{ active, selected: isSelected }">
-                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate text-text-subtle']">{{ $t('Skip these rows') }}</span>
                                                     </li>
                                                 </ListboxOption>
@@ -111,7 +111,7 @@
                                                     :value="type.id"
                                                     v-slot="{ active, selected: isSelected }"
                                                 >
-                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <div class="flex items-center gap-2">
                                                             <PropertyIcon v-if="type.icon" :name="type.icon" class="size-5 flex-shrink-0" :style="type.color ? { color: active ? 'white' : type.color } : {}" />
                                                             <span

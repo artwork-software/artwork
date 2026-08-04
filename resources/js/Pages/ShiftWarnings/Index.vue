@@ -18,7 +18,7 @@
             footnote="A rule only applies to people whose contract is assigned to it."
         />
 
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border-subtle">
                     <thead class="bg-surface-sunken">
@@ -113,28 +113,28 @@
                                         <span class="!text-text">{{ formatTriggerType(form.trigger_type) }}</span>
                                     </span>
                                         <span class="pointer-events-none">
-                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                 </span>
                                     </div>
                                 </ListboxButton>
                                 <ListboxButton v-else class="menu-button">
-                                    <div class="flex flex-grow xsLight text-left subpixel-antialiased">
+                                    <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
                                         {{ $t('Rule type') }}
                                     </div>
                                     <span class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </span>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="type in availableRuleTypes" :key="type" :value="type" v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
-                                            <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                            <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                 {{ formatTriggerType(type) }}
                                             </span>
                                                 </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                             <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                         </span>
                                             </li>
@@ -222,15 +222,15 @@
                             <div class="relative">
                                 <Listbox as="div" class="flex relative" v-model="form.contract_ids" id="eventType" multiple>
                                     <ListboxButton class="menu-button">
-                                        <div class="flex flex-grow xsLight text-left subpixel-antialiased">
+                                        <div class="flex flex-grow text-sm/5 font-bold text-text-subtle text-left subpixel-antialiased">
                                             {{ $t('Assign contracts')}}
                                         </div>
                                         <span class="pointer-events-none">
-                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </span>
                                     </ListboxButton>
                                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                             <ListboxOption
                                                 as="template"
                                                 class="max-h-8"
@@ -239,13 +239,13 @@
                                                 :value="contract.id"
                                                 v-slot="{ active, selected }"
                                             >
-                                                <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                     <div class="flex">
-                                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                        <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                             {{ contract.name }}
                                                         </span>
                                                     </div>
-                                                    <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                    <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                         <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                     </span>
                                                 </li>
@@ -275,19 +275,21 @@
                     </div>
 
                     <div class="mt-6 flex items-center justify-between">
-                        <ArtworkBaseModalButton
+                        <BaseUIButton
                             type="button"
                             variant="danger"
+                            hide-icon
                             @click="closeModal"
                         >
                             {{ $t('Cancel') }}
-                        </ArtworkBaseModalButton>
-                        <ArtworkBaseModalButton
+                        </BaseUIButton>
+                        <BaseUIButton
                             type="submit"
                             variant="primary"
+                            hide-icon
                         >
                             {{ editingRule ? $t('Update') : $t('Create') }}
-                        </ArtworkBaseModalButton>
+                        </BaseUIButton>
                     </div>
                 </form>
             </div>
@@ -316,7 +318,6 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";

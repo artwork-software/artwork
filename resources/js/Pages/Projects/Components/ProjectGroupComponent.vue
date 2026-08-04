@@ -9,7 +9,7 @@
             {{ $t('Projects of this group') }}:
             <div v-for="project in headerObject?.projectsOfGroup">
                 <Link :href="route('projects.tab', {project: project?.id, projectTab: first_project_tab_id})"
-                      class="text-artwork-buttons-create ml-1 mr-3">
+                      class="text-accent-600 ml-1 mr-3">
                     {{ project?.name }}
                 </Link>
             </div>
@@ -18,7 +18,7 @@
             {{$t('This Project is part of the group')}}:
             <div v-for="project in headerObject?.project?.groups">
                 <Link :href="route('projects.tab', {project: project?.id, projectTab: first_project_tab_id})"
-                      class="text-artwork-buttons-create ml-1">
+                      class="text-accent-600 ml-1">
                     {{ project?.name }}
                 </Link>
             </div>

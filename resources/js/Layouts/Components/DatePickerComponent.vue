@@ -38,7 +38,7 @@
                 </template>
             </VueDatePicker>
             <div class="relative rounded-md">
-                <div class="absolute inset-y-0 pointer-events-none left-1 xsDark flex items-center pl-3 bg-white z-40 h-8 top-[3px]">
+                <div class="absolute inset-y-0 pointer-events-none left-1 text-sm/5 font-semibold text-text flex items-center pl-3 bg-white z-40 h-8 top-[3px]">
                     {{ startDateString }},
                 </div>
                 <input v-if="is_user_shift_plan === true"
@@ -50,7 +50,7 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 text-sm/5 font-semibold text-text bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[0]"
                        @focusout="updateTimes"
@@ -60,13 +60,13 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 text-sm/5 font-semibold text-text bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
-                    <PropertyIcon name="IconCalendar" class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
+                    <PropertyIcon name="IconCalendar" class="h-5 w-5 text-text-muted hidden" aria-hidden="true" />
                 </div>
             </div>
             <div class="relative rounded-md">
-                <div class="absolute inset-y-0 left-1 pointer-events-none xsDark flex items-center pl-3 bg-white z-40 h-8 top-[3px]">
+                <div class="absolute inset-y-0 left-1 pointer-events-none text-sm/5 font-semibold text-text flex items-center pl-3 bg-white z-40 h-8 top-[3px]">
                      {{ endDateString }},
                 </div>
                 <input v-if="is_user_shift_plan === true"
@@ -78,7 +78,7 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 text-sm/5 font-semibold text-text bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[1]"
                        @focusout="updateTimes"
@@ -88,9 +88,9 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 text-sm/5 font-semibold text-text bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
-                    <PropertyIcon name="IconCalendar" class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
+                    <PropertyIcon name="IconCalendar" class="h-5 w-5 text-text-muted hidden" aria-hidden="true" />
                 </div>
             </div>
         </div>

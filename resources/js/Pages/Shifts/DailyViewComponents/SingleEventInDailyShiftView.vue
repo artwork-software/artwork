@@ -133,8 +133,8 @@
             </div>
         </div>
 
-        <div class="w-full bg-surface-sunken rounded-lg py-1.5 px-3 mt-1 border border-artwork-buttons-create">
-            <div class="text-artwork-buttons-create cursor-pointer flex items-center gap-x-1"
+        <div class="w-full bg-surface-sunken rounded-lg py-1.5 px-3 mt-1 border border-accent-600">
+            <div class="text-accent-600 cursor-pointer flex items-center gap-x-1"
                 @click="showAddTimeLineModal = true">
                 <component :is="IconWand" class="size-4"/>
                 {{ event.timelines.length === 0 ? $t('Create new timeline') : $t('Edit timeline') }}

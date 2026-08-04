@@ -28,7 +28,7 @@
                     :locale="language"
                     input-class-name="!rounded-lg !border-border !py-2 !text-sm"
                 />
-                <p v-if="rangeTooLong" class="text-xs text-artwork-messages-error">
+                <p v-if="rangeTooLong" class="text-xs text-danger">
                     {{ $t('The export range must not exceed 36 months.') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
@@ -51,7 +51,7 @@
             </section>
 
             <section class="flex items-center justify-end">
-                <p v-if="exportError" class="mr-4 text-sm text-artwork-messages-error" role="alert">
+                <p v-if="exportError" class="mr-4 text-sm text-danger" role="alert">
                     {{ exportError }}
                 </p>
                 <BaseUIButton

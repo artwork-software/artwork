@@ -15,7 +15,7 @@
             ]"
         />
 
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <div v-if="violations.length === 0" class="text-center py-10 text-text-subtle text-sm">
                 {{ $t('No open violations found.') }}
             </div>

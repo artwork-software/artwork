@@ -61,7 +61,7 @@
                           class="text-danger text-xs mt-1">
                         {{ $t('Invalid Email Address') }}
                     </span>
-                    <p class="text-xs text-secondary mt-1">
+                    <p class="text-xs text-text-subtle mt-1">
                         {{ $t('This address is the sender of almost all system notifications.') }}
                     </p>
                 </div>

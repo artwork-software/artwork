@@ -6,7 +6,7 @@
         <div class="ml-3 my-auto w-full justify-start mr-6">
             <div class="flex my-auto">
                 <Link :href="route('accommodation.show', accommodation.id)"
-                      class="mr-3 sDark">
+                      class="mr-3 text-base/5 font-semibold text-text">
                     <div class="w-full space-y-1">
                         <div class="font-lexend font-medium text-text">{{ accommodation.name }}</div>
                         <div class="text-xs font-medium text-text">{{ accommodation.street }}</div>

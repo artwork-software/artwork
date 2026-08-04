@@ -268,7 +268,7 @@
                                     class="h-5 w-5"
                                     alt="groupIcon"
                                 />
-                                <Link :href="getEditHref(moneySource)" class="sDark truncate font-medium">
+                                <Link :href="getEditHref(moneySource)" class="text-base/5 font-semibold text-text truncate font-medium">
                                     {{ moneySource.name }}
                                 </Link>
                                 <IconPinned
@@ -411,8 +411,8 @@
         <!-- Zeitraum-Filter Modal -->
         <BaseModal v-if="timeSpanFilterModalVisible" @closed="closeTimeSpanFilterModal" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <h1 class="headline1 my-1">{{ $t('Select period') }}</h1>
-                <h2 class="xsLight mb-3 mt-4">
+                <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-1">{{ $t('Select period') }}</h1>
+                <h2 class="text-sm/5 font-bold text-text-subtle mb-3 mt-4">
                     {{ $t('Please select the time period in which the financial sources should be displayed.') }}
                 </h2>
                 <div class="flex gap-2">

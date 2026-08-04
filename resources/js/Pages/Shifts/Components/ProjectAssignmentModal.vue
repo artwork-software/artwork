@@ -99,7 +99,7 @@
                             type="radio"
                             value="full_period"
                             v-model="periodMode"
-                            class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"
+                            class="mt-0.5 h-4 w-4 border-border text-accent-600 focus:ring-accent-600"
                         />
                         <span>
                             <span class="text-text">{{ $t('Entire project period') }}</span>
@@ -114,7 +114,7 @@
                             type="radio"
                             value="days"
                             v-model="periodMode"
-                            class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"
+                            class="mt-0.5 h-4 w-4 border-border text-accent-600 focus:ring-accent-600"
                         />
                         <span class="text-text">{{ $t('Single day(s)') }}</span>
                     </label>

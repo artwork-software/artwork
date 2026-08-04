@@ -3,8 +3,8 @@
         <div class="bg-border-subtle py-5 px-4 flex items-center justify-between" :class="!layoutClosed ? 'rounded-t-lg' : 'rounded-lg'" >
             <div  @click="layoutClosed = !layoutClosed" class="cursor-pointer flex items-center justify-between w-fit gap-x-10">
                 <div>
-                    <h3 class="headline3">{{ layout.name }}</h3>
-                    <p class="xsDark mt-1">{{ layout.description }}</p>
+                    <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ layout.name }}</h3>
+                    <p class="text-sm/5 font-semibold text-text mt-1">{{ layout.description }}</p>
                 </div>
                 <component :is="IconChevronDown" :class="layoutClosed ? 'rotate-180' : ''" class="transition-all duration-300 ease-in-out h-6 w-6" />
             </div>
@@ -18,9 +18,9 @@
         <div v-if="!layoutClosed" class="rounded-b-lg border-border-subtle">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-2">
-                    <h4 class="xsDark mb-2">{{ $t('Header') }}</h4>
+                    <h4 class="text-sm/5 font-semibold text-text mb-2">{{ $t('Header') }}</h4>
                     <div>
-                        <component :is="IconNote" class="cursor-pointer size-5 hover:text-artwork-buttons-create ease-in-out duration-200" @click="layout.open_header_notes = !layout.open_header_notes" />
+                        <component :is="IconNote" class="cursor-pointer size-5 hover:text-accent-600 ease-in-out duration-200" @click="layout.open_header_notes = !layout.open_header_notes" />
                     </div>
                 </div>
                 <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
@@ -33,7 +33,7 @@
                         />
                     </div>
                     <div v-else v-for="index in layout['columns_header']">
-                        <p class="xxsLight" v-html="breakLine(layout.notes.header[index - 1])" />
+                        <p class="text-xs/[18px] text-text-subtle" v-html="breakLine(layout.notes.header[index - 1])" />
                     </div>
                     <template v-for="col in layout['columns_header']" :key="col">
                         <div v-if="getComponent(layout, 'header', 1, col)" :key="getComponent(layout, 'header', 1, col).id">
@@ -46,7 +46,7 @@
                 </div>
                 <hr class="my-5 opacity-20">
 
-                <h4 class="xsDark mb-2">{{ $t('Body') }}</h4>
+                <h4 class="text-sm/5 font-semibold text-text mb-2">{{ $t('Body') }}</h4>
                 <div class="grid gap-4">
                     <template v-for="row in getRowCount(layout, 'body')" :key="row">
                         <div class="grid grid-cols-1 gap-4" :class="'grid-cols-' + layout['columns_body']">
@@ -84,9 +84,9 @@
                 <hr class="my-5 opacity-20">
 
                 <div class="flex items-center justify-between mb-2">
-                    <h4 class="xsDark mb-2">{{ $t('Footer') }}</h4>
+                    <h4 class="text-sm/5 font-semibold text-text mb-2">{{ $t('Footer') }}</h4>
                     <div>
-                        <component :is="IconNote" class="cursor-pointer size-5 hover:text-artwork-buttons-create ease-in-out duration-200" @click="layout.open_footer_notes = !layout.open_footer_notes" />
+                        <component :is="IconNote" class="cursor-pointer size-5 hover:text-accent-600 ease-in-out duration-200" @click="layout.open_footer_notes = !layout.open_footer_notes" />
                     </div>
                 </div>
                 <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
@@ -99,7 +99,7 @@
                         />
                     </div>
                     <div v-else v-for="index in layout['columns_header']">
-                        <p class="xxsLight" v-html="breakLine(layout.notes.footer[index - 1])" />
+                        <p class="text-xs/[18px] text-text-subtle" v-html="breakLine(layout.notes.footer[index - 1])" />
                     </div>
                     <template v-for="col in layout['columns_footer']" :key="col">
                         <div v-if="getComponent(layout, 'footer', 1, col)" :key="getComponent(layout, 'footer', 1, col).id">

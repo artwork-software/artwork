@@ -19,19 +19,19 @@
                                 <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle"
                                         @click="closeModal">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true"/>
+                                    <IconX class="h-6 w-6" aria-hidden="true"/>
                                 </button>
                             </div>
                             <div class="relative z-40">
                                 <div v-if="hasAdminRole() || $canAny(['change system notification'])">
-                                    <div class="headline2 mt-12 mb-6">
+                                    <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mt-12 mb-6">
                                         {{ $t('Notification to all') }}
                                     </div>
-                                    <div class="xsLight">
+                                    <div class="text-sm/5 font-bold text-text-subtle">
                                         {{ $t('Share something important with all users - e.g. changes or new functions in the artwork or important messages that affect the whole house. All users can view the message in the notifications (including external users!).') }}
                                     </div>
                                     <div>
-                                        <label class="block mt-12 mb-2 xsLight">
+                                        <label class="block mt-12 mb-2 text-sm/5 font-bold text-text-subtle">
                                             {{ $t('Image') }}
                                         </label>
                                         <div class="items-center">
@@ -41,7 +41,7 @@
                                                 @dragover.prevent
                                                 @drop.stop.prevent="uploadDraggedImage($event)">
                                                 <div v-show="!notificationImagePreview" class="space-y-1 text-center">
-                                                    <div class="xsLight flex my-auto h-40 items-center"
+                                                    <div class="text-sm/5 font-bold text-text-subtle flex my-auto h-40 items-center"
                                                          v-if="this.globalNotificationForm.notificationImage === null && notificationImagePreview === null">
                                                         {{ $t('Drag your image here for the notification') }}
                                                         <input id="notificationImage-upload"
@@ -73,18 +73,18 @@
                                     </div>
                                     <div class="grid grid-cols-2 gap-4 mt-4">
                                         <div class="">
-                                            <label for="deadlineDate" class="flex items-center xsLight">
+                                            <label for="deadlineDate" class="flex items-center text-sm/5 font-bold text-text-subtle">
                                                 {{ $t('Title') }}:
                                             </label>
                                             <input type="text"
                                                    v-model="this.globalNotificationForm.notificationName"
                                                    id="eventTitle"
                                                    :placeholder="$t('Title')+ '*'"
-                                                   class="sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"/>
+                                                   class="text-base/5 font-semibold text-text border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"/>
 
                                         </div>
                                         <div>
-                                            <label for="deadlineDate" class="flex items-center xsLight">
+                                            <label for="deadlineDate" class="flex items-center text-sm/5 font-bold text-text-subtle">
                                                 {{ $t('Expiration date') }}:
                                             </label>
                                             <div class="flex items-center w-full">
@@ -92,12 +92,12 @@
                                                        id="deadlineDate"
                                                        type="date"
                                                        required
-                                                       class="border-border inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                                                       class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle disabled:border-none flex-grow"/>
                                                 <input v-model="this.globalNotificationForm.notificationDeadlineTime"
                                                        id="deadlineTime"
                                                        type="time"
                                                        required
-                                                       class="border-border inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                                       class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle  disabled:border-none"/>
                                             </div>
                                         </div>
                                     </div>
@@ -106,7 +106,7 @@
                                                   id="description"
                                                   v-model="this.globalNotificationForm.notificationDescription"
                                                   rows="4"
-                                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-border"/>
+                                                  class="border border-border resize-none w-full text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border-border"/>
                                     </div>
                                     <div class="w-full flex justify-center">
                                         <FormButton
@@ -138,8 +138,8 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -153,7 +153,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel
+        IconX, DialogPanel
     },
     props: ['globalNotification'],
     data() {

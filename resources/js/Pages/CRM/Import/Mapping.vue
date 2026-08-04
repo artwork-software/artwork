@@ -113,14 +113,14 @@
                                             >
                                                 <!-- Skip -->
                                                 <ListboxOption as="template" value="" v-slot="{ active, selected: isSelected }">
-                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate text-text-subtle']">{{ $t('Skip') }}</span>
                                                     </li>
                                                 </ListboxOption>
 
                                                 <!-- Name -->
                                                 <ListboxOption as="template" value="display_name" :disabled="isOptionTaken('display_name', colIndex)" v-slot="{ active, selected: isSelected, disabled: isDisabled }">
-                                                    <li :class="[isDisabled ? 'text-text-subtle cursor-not-allowed' : active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[isDisabled ? 'text-text-subtle cursor-not-allowed' : active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <div class="flex items-center gap-2">
                                                             <span class="inline-flex items-center justify-center size-5 rounded" :class="active && !isDisabled ? 'bg-accent-600 text-white' : 'bg-accent-100 text-accent-700'">
                                                                 <IconUser class="size-3.5" />
@@ -145,7 +145,7 @@
                                                     :disabled="isOptionTaken(opt.value, colIndex)"
                                                     v-slot="{ active, selected: isSelected, disabled: isDisabled }"
                                                 >
-                                                    <li :class="[isDisabled ? 'text-text-subtle cursor-not-allowed' : active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[isDisabled ? 'text-text-subtle cursor-not-allowed' : active ? 'bg-accent-600 text-white' : isSelected ? '!bg-accent-600/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <div class="flex items-center gap-2">
                                                             <span
                                                                 class="inline-flex items-center justify-center size-5 rounded"

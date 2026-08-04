@@ -6,9 +6,9 @@
         @dragleave="dragLeave"
         class="rounded-lg duration-100 ease-in-out border-2 border-dashed w-full mb-4"
         :class="{
-        'bg-artwork-buttons-create/10 border-artwork-buttons-create h-12 xsDark': dropOver,
-        'bg-surface-sunken border-border-strong h-12 xsLight': isDragging,
-        'border-transparent xsLight': !dropOver && !isDragging,
+        'bg-accent-600/10 border-accent-600 h-12 text-sm/5 font-semibold text-text': dropOver,
+        'bg-surface-sunken border-border-strong h-12 text-sm/5 font-bold text-text-subtle': isDragging,
+        'border-transparent text-sm/5 font-bold text-text-subtle': !dropOver && !isDragging,
     }">
         <div class="flex items-center justify-center pointer-events-none h-full ">
             {{ $t("Add the task here") }}

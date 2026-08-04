@@ -17,8 +17,8 @@
                     />
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-artwork-buttons-create font-bold text-center">
+                        border-accent-600 border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-accent-600 font-bold text-center">
                             {{ $t('Drag document here to upload or click in the field')}}
                         </p>
                     </div>
@@ -34,7 +34,7 @@
                                 {{ file.name }}
                             </div>
                             <div>
-                                <component :is="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
+                                <component :is="IconCircleX" class="size-5 text-danger cursor-pointer hover:text-accent-700 transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
                             </div>
                         </div>
                     </div>

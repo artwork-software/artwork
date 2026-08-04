@@ -28,7 +28,7 @@
                                         {{ prop.name }}: {{ $t(formatFilterLabel(prop)) }}
                                     </p>
                                 </div>
-                                <XIcon class="size-4 text-accent-600 hover:text-error" />
+                                <IconX class="size-4 text-accent-600 hover:text-danger" />
                             </div>
                         </div>
                     </template>
@@ -70,7 +70,7 @@
                     <select
                         v-else-if="prop.type === 'checkbox'"
                         v-model="localFilters[prop.id]"
-                        class="block w-full rounded-md border border-border-subtle shadow-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out text-sm"
+                        class="block w-full rounded-md border border-border-subtle shadow-sm focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600 transition-[box-shadow,border-color] duration-150 ease-in-out text-sm"
                     >
                         <option value="">{{ $t('All') }}</option>
                         <option value="1">{{ $t('Yes') }}</option>
@@ -112,8 +112,8 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 import { reactive, computed } from 'vue'
-import { XIcon } from '@heroicons/vue/outline'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'

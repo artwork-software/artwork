@@ -109,7 +109,7 @@
                                 <MenuButton
                                     class="flex size-10 items-center justify-center rounded-full bg-surface-inverse text-text-inverse ring-2 ring-white hover:bg-surface-inverse/90"
                                 >
-                                    <ChevronDownIcon class="size-5" />
+                                    <IconChevronDown class="size-5" />
                                 </MenuButton>
                                 <transition
                                     enter-active-class="transition duration-100 ease-out"
@@ -230,17 +230,13 @@ import { Link, router } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {
-    SearchIcon, TrashIcon, XIcon, PencilAltIcon, ChevronDownIcon,
-} from '@heroicons/vue/outline'
-import {IconCheck, IconCirclePlus, IconEdit, IconGeometry, IconTrash, IconUsers} from '@tabler/icons-vue'
+import {IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconGeometry, IconSearch, IconTrash, IconUsers, IconX} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
-import BaseCardButton from '@/Artwork/Buttons/BaseCardButton.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import { is } from 'laravel-permission-to-vuejs'

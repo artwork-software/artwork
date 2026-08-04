@@ -91,7 +91,7 @@
                     @focusout="updateEventInDatabase"
                     :disabled="canEditComponent === false || !hasPermission"
                 />
-                <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-error">
+                <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-danger">
                     {{ $t('Event name is mandatory') }}
                 </div>
             </div>
@@ -220,10 +220,10 @@
                     />
 
                     <!-- Copy Menu -->
-                    <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
+                    <BaseMenu show-custom-icon dots-color="!text-text-muted" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
                               :icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
-                            <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
+                            <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-text-muted" stroke-width="2" />
                             <BaseInput
                                 type="number"
                                 label="Anzahl"
@@ -235,10 +235,10 @@
                             />
                             <Listbox as="div" class="relative" v-model="event.copyType" id="room">
                                 <ListboxButton class="menu-button rounded-lg">
-                                    <div class="flex-grow flex text-left xsDark !w-12 truncate">
+                                    <div class="flex-grow flex text-left text-sm/5 font-semibold text-text !w-12 truncate">
                                         {{ event.copyType?.name }}
                                     </div>
-                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true" />
+                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true" />
                                 </ListboxButton>
                                 <ListboxOptions
                                     class="w-44 rounded-xl border border-border-subtle bg-white backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
@@ -247,8 +247,8 @@
                                         :key="copyType.name"
                                         :value="copyType"
                                         v-slot="{ selected }"
-                                        class="hover:bg-accent-700 text-secondary cursor-pointer px-3 py-2 flex justify-between">
-                                        <div :class="[selected ? 'text-artwork-buttons-create' : 'text-text', 'flex']">
+                                        class="hover:bg-accent-700 text-text-subtle cursor-pointer px-3 py-2 flex justify-between">
+                                        <div :class="[selected ? 'text-accent-600' : 'text-text', 'flex']">
                                             {{ copyType.name }}
                                         </div>
                                         <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true" />
@@ -257,7 +257,7 @@
                             </Listbox>
                             <IconCircleCheckFilled
                                 @click="createCopyByEventWithData(event)"
-                                class="w-8 h-8 min-w-6 min-h-6 text-artwork-buttons-create cursor-pointer hover:brightness-110 transition"
+                                class="w-8 h-8 min-w-6 min-h-6 text-accent-600 cursor-pointer hover:brightness-110 transition"
                                 stroke-width="2"
                             />
                         </div>
@@ -330,7 +330,7 @@
                     @keydown.enter.ctrl="saveDescription"
                     maxlength="250"
                     rows="2"
-                    class="w-full border border-artwork-buttons-context/30 rounded-lg text-sm px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-artwork-buttons-context/50"
+                    class="w-full border border-text-muted/30 rounded-lg text-sm px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-text-muted/50"
                 />
             </div>
         </div>

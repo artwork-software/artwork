@@ -43,7 +43,7 @@
 
         <!-- Read-only overview of the assigned contract values -->
         <div v-if="isContractSelected" class="mt-5 space-y-4">
-            <div class="card white p-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                     <component :is="IconCalendarOff" class="size-4 text-text-subtle" stroke-width="1.5" />
                     {{ $t('Free days & compensation') }}
@@ -56,7 +56,7 @@
                 </dl>
             </div>
 
-            <div class="card white p-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                     <component :is="IconInfoSquareRounded" class="size-4 text-text-subtle" stroke-width="1.5" />
                     {{ $t('Season-related info data') }}
@@ -78,7 +78,7 @@
                 </p>
             </div>
 
-            <div class="card white p-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                     <component :is="IconClockPlus" class="size-4 text-text-subtle" stroke-width="1.5" />
                     {{ $t('Overtime') }}
@@ -102,7 +102,7 @@
         <!-- Manual contract data (no template selected) -->
         <div class="mt-5" v-else>
             <form @submit.prevent="submit" class="space-y-4">
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                         <component :is="IconCalendarOff" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Free days & compensation') }}
@@ -144,7 +144,7 @@
                     </div>
                 </div>
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                         <component :is="IconInfoSquareRounded" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Season-related info data') }}
@@ -179,7 +179,7 @@
                     </div>
                 </div>
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
                         <component :is="IconClockPlus" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Overtime') }}

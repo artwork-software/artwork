@@ -1,7 +1,7 @@
 <script>
+import {IconX} from "@tabler/icons-vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import {XIcon} from "@heroicons/vue/solid";
 import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
@@ -17,7 +17,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel
+        IconX, DialogPanel
     },
     data(){
         return {
@@ -117,7 +117,7 @@ export default {
                                 </button>
                             </div>
                             <div class="relative z-40 pl-4">
-                                <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
+                                <div class="font-black font-lexend text-text text-3xl my-2 mb-6">
                                     Sage Daten auswählen
                                 </div>
                                 <p class="subpixel-antialiased">
@@ -143,7 +143,7 @@ export default {
                                     <div class="flex items-center my-2" v-for="data in cellData.sage_assigned_data">
                                         <div class="relative flex items-start mr-3">
                                             <div class="flex h-6 items-center">
-                                                <input id="candidates" v-model="data.checked" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-0" />
+                                                <input id="candidates" v-model="data.checked" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-4 w-4 rounded border-border text-accent-700 focus:ring-0" />
                                             </div>
                                         </div>
                                         <div class="w-28">
@@ -161,11 +161,11 @@ export default {
                                     </div>
                                     <div class="flex justify-between my-3">
                                         <div>
-                                            <p class="underline text-artwork-buttons-create cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-if="checkIfOneSelected">Alle Datensätze abwählen</p>
+                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-if="checkIfOneSelected">Alle Datensätze abwählen</p>
                                         </div>
                                         <div>
-                                            <p class="underline text-artwork-buttons-create cursor-pointer text-xs" @click="SelectAllSageAssignedData" v-if="!checkIfAllSelected">Alle Datensätze auswählen</p>
-                                            <p class="underline text-artwork-buttons-create cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-else>Alle Datensätze abwählen</p>
+                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="SelectAllSageAssignedData" v-if="!checkIfAllSelected">Alle Datensätze auswählen</p>
+                                            <p class="underline text-accent-600 cursor-pointer text-xs" @click="DeselectAllSageAssignedData" v-else>Alle Datensätze abwählen</p>
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +177,7 @@ export default {
                                     is-add-button
                                 />
 
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">
+                                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal">
                                     {{ $t('No, not really') }}
                                 </p>
                             </div>

@@ -5,18 +5,18 @@
             <div v-if="!project">
                 <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
                     <button class="ml-2 text-black previousDay" @click="previousDay">
-                        <IconChevronLeft  class="h-5 w-5 text-primary"/>
+                        <IconChevronLeft  class="h-5 w-5 text-text"/>
                     </button>
                     <button class="ml-2 text-black nextDay" @click="nextDay">
-                        <IconChevronRight class="h-5 w-5 text-primary"/>
+                        <IconChevronRight class="h-5 w-5 text-text"/>
                     </button>
                 </div>
                 <div v-else class="flex items-center">
                     <button  class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
-                        <IconChevronLeft class="h-5 w-5 text-primary"/>
+                        <IconChevronLeft class="h-5 w-5 text-text"/>
                     </button>
                     <button class="ml-2 text-black nextTimeRange" @click="nextTimeRange">
-                        <IconChevronRight class="h-5 w-5 text-primary"/>
+                        <IconChevronRight class="h-5 w-5 text-text"/>
                     </button>
                 </div>
             </div>
@@ -24,7 +24,7 @@
         <div class="flex items-center gap-x-2">
             <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
                <div class="flex items-center gap-x-2">
-                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-artwork-buttons-hover' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
+                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
                        <span class="sr-only">Use setting</span>
                        <span :class="[multiEdit ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-border transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[multiEdit ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -35,7 +35,7 @@
                           </span>
                     </span>
                    </Switch>
-                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :class="[atAGlance ? 'bg-artwork-buttons-hover' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
+                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :class="[atAGlance ? 'bg-accent-700' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
                        <span class="sr-only">Use setting</span>
                        <span :class="[atAGlance ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-border transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -50,10 +50,10 @@
             </div>
             <div class="flex items-center gap-x-4">
                 <IconZoomIn @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance"
-                            class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
+                            class="h-7 w-7 text-text-muted cursor-pointer"></IconZoomIn>
                 <IconZoomOut @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
-                             v-if="!atAGlance" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
-                <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
+                             v-if="!atAGlance" class="h-7 w-7 text-text-muted cursor-pointer"></IconZoomOut>
+                <IconArrowsDiagonal  class="h-7 w-7 text-text-muted cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
                 <!--<IndividualCalendarFilterComponent
                     class=""
                     :filter-options="filterOptions"
@@ -66,11 +66,11 @@
                     <div class="flex items-center">
                         <MenuButton>
                             <span class="items-center flex">
-                                <button type="button" class="text-sm flex items-center my-auto text-primary font-semibold transition">
-                                    <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
+                                <button type="button" class="text-sm flex items-center my-auto text-text font-semibold transition">
+                                    <IconSettings class="h-7 w-7 text-text-muted"/>
                                 </button>
                                 <span v-if="$page.props.auth.user.calendar_settings.project_status || $page.props.auth.user.calendar_settings.options || $page.props.auth.user.calendar_settings.project_management || $page.props.auth.user.calendar_settings.repeating_events || $page.props.auth.user.calendar_settings.work_shifts"
-                                      class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
+                                      class="rounded-full border-2 border-danger w-2 h-2 bg-danger absolute ml-6 ring-white ring-1">
                                 </span>
                             </span>
                         </MenuButton>
@@ -82,42 +82,42 @@
                         leave-active-class="transition duration-75 ease-in"
                         leave-from-class="transform scale-100 opacity-100"
                         leave-to-class="transform scale-95 opacity-0">
-                        <MenuItems class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        <MenuItems class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="w-76 p-6">
                                 <div class="flex py-1" v-if="!project">
                                     <input v-model="userCalendarSettings.project_status"
                                            type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <div :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{ $t('Project Status')}}</div>
+                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
+                                    <div :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                       class=" ml-4 my-auto text-text-subtle">{{ $t('Project Status')}}</div>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.options"
                                            type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{ $t('Option prioritization')}}</p>
+                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
+                                    <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                       class=" ml-4 my-auto text-text-subtle">{{ $t('Option prioritization')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="!project">
                                     <input v-model="userCalendarSettings.project_management"
                                            type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{$t('Project managers')}}</p>
+                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
+                                    <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                       class=" ml-4 my-auto text-text-subtle">{{$t('Project managers')}}</p>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.repeating_events"
                                            type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{ $t('Repeat event')}}</p>
+                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
+                                    <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                       class=" ml-4 my-auto text-text-subtle">{{ $t('Repeat event')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
                                     <input v-model="userCalendarSettings.work_shifts"
                                            type="checkbox"
-                                           class="checkBoxOnDark"/>
-                                    <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{$t('Show shifts')}}</p>
+                                           class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
+                                    <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                       class=" ml-4 my-auto text-text-subtle">{{$t('Show shifts')}}</p>
                                 </div>
                             </div>
                             <div class="flex justify-end">
@@ -133,7 +133,7 @@
                 </div>
             </div>
             <div @click="showExportModal = true">
-                <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer" />
+                <IconFileExport class="h-7 w-7 text-text-muted cursor-pointer" />
             </div>
             <PlusButton v-if="$can('request room occupancy')" @click="openEventComponent()" />
             <AddButtonSmall
@@ -171,10 +171,9 @@
 </template>
 
 <script>
+import {IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight, IconCirclePlus, IconZoomIn, IconZoomOut} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {CalendarIcon, PlusCircleIcon, ZoomInIcon, ZoomOutIcon} from '@heroicons/vue/outline'
 import {Menu, MenuButton, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
@@ -207,18 +206,18 @@ export default {
         MenuItems,
         MenuButton,
         Button,
-        PlusCircleIcon,
-        CalendarIcon,
-        ChevronDownIcon,
+        IconCirclePlus,
+        IconCalendar,
+        IconChevronDown,
         IndividualCalendarFilterComponent,
-        ChevronLeftIcon,
-        ChevronRightIcon,
+        IconChevronLeft,
+        IconChevronRight,
         SwitchGroup,
         SwitchLabel,
         Switch,
         DatePickerComponent,
-        ZoomInIcon,
-        ZoomOutIcon
+        IconZoomIn,
+        IconZoomOut
     },
     props: [
         'atAGlance',

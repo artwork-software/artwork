@@ -48,7 +48,7 @@ const persistOrder = () => {
                 'The statuses appear in the status overview of the inventory overview and on the detailed articles.',
             ]"
         />
-        <div class="mb-10 card white p-5">
+        <div class="mb-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
 
 
             <div class="mt-8 flow-root">

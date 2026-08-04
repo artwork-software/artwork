@@ -20,13 +20,13 @@
                             name="column-type"
                             type="radio"
                             :checked="checked"
-                            class="h-5 w-5 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create pointer-events-none"
+                            class="h-5 w-5 border-border text-accent-600 focus:ring-accent-600 pointer-events-none"
                             tabindex="-1"
                             readonly
                         />
                         <label
                             :for="columnType.type"
-                            :class="[checked ? 'xsDark' : 'xsLight']"
+                            :class="[checked ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
                             class="ml-3 block cursor-pointer pointer-events-none"
                         >
                             {{ columnType.title }}
@@ -36,7 +36,7 @@
             </RadioGroup>
 
             <div v-if="selectedType !== 'empty'" class="mt-6 rounded-lg bg-surface-sunken border border-border-subtle p-4">
-                <h2 class="xsLight mb-4">
+                <h2 class="text-sm/5 font-bold text-text-subtle mb-4">
                     {{ selectedType === 'sum' ? $t('What amount would you like to receive?') : $t('What difference do you want to get?') }}
                 </h2>
                 <div class="flex items-center gap-x-3">
@@ -47,7 +47,7 @@
                         class="w-1/2"
                         is-small
                     />
-                    <div class="xsDark shrink-0">{{ selectedType === 'sum' ? '+' : '-' }}</div>
+                    <div class="text-sm/5 font-semibold text-text shrink-0">{{ selectedType === 'sum' ? '+' : '-' }}</div>
                     <ArtworkBaseListbox
                         v-model="selectedSecondColumn"
                         :items="selectableColumns"
@@ -59,13 +59,14 @@
             </div>
 
             <div class="flex justify-center mt-8">
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     variant="primary"
+                    hide-icon
                     :disabled="isSubmitDisabled"
                     @click="addColumn"
                 >
                     {{ $t('Create column') }}
-                </ArtworkBaseModalButton>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -76,7 +77,7 @@ import {RadioGroup, RadioGroupOption} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 export default {
     name: 'AddColumnComponent',
@@ -84,7 +85,7 @@ export default {
     components: {
         ArtworkBaseModal,
         ArtworkBaseListbox,
-        ArtworkBaseModalButton,
+        BaseUIButton,
         RadioGroupOption,
         RadioGroup,
     },

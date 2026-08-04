@@ -14,7 +14,7 @@
                 class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
                 :class="[
                     isActive(item.id) ? '' : 'bg-white border-border-subtle text-text-muted hover:bg-surface-sunken',
-                    isReady(item.name) && !isActive(item.id) ? 'font-semibold ring-1 ring-artwork-buttons-create/40 bg-artwork-buttons-create/5' : ''
+                    isReady(item.name) && !isActive(item.id) ? 'font-semibold ring-1 ring-accent-600/40 bg-accent-600/5' : ''
                 ]"
                 :style="isActive(item.id) ? activeStyle(item) : {}"
                 @click="toggleStatus(item.id)"

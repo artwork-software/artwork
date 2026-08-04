@@ -125,7 +125,7 @@ function updateDefaultTab() {
                     <div class="flex flex-col items-start min-w-0 flex-1">
                         <!-- Title row -->
                         <div class="flex items-center gap-2 min-w-0 w-full">
-                            <h3 class="headline3 text-text truncate" :title="tab.name">{{ tab.name }}</h3>
+                            <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text text-text truncate" :title="tab.name">{{ tab.name }}</h3>
 
                             <!-- Default badge -->
                             <span
@@ -233,8 +233,8 @@ function updateDefaultTab() {
                         <Switch
                             v-model="tab.default"
                             @click="updateDefaultTab"
-                            :class="[ tab.default ? 'bg-artwork-buttons-create' : 'bg-border-subtle',
-                                'relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create/70 focus:ring-offset-1'
+                            :class="[ tab.default ? 'bg-accent-600' : 'bg-border-subtle',
+                                'relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600/70 focus:ring-offset-1'
                             ]"
                             :aria-label="$t('Set as default tab')"
                         >

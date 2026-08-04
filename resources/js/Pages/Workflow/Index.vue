@@ -12,7 +12,7 @@
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6 p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium text-text">{{ $t('Workflow Definitions') }}</h3>
-                        <Link :href="route('workflow.definitions.create')" class="inline-flex items-center px-4 py-2 bg-artwork-buttons-create border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-artwork-buttons-hover active:bg-artwork-buttons-hover focus:outline-none focus:border-border-strong focus:ring focus:ring-border disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed transition">
+                        <Link :href="route('workflow.definitions.create')" class="inline-flex items-center px-4 py-2 bg-accent-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-accent-700 active:bg-accent-700 focus:outline-none focus:border-border-strong focus:ring focus:ring-border disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed transition">
                             {{ $t('Create New Definition') }}
                         </Link>
                     </div>

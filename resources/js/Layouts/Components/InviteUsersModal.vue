@@ -30,7 +30,7 @@
                      focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                             aria-label="Add email"
                         >
-                            <CheckIcon class="h-5 w-5" />
+                            <IconCheck class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                 class="rounded p-0.5 text-text-subtle hover:text-danger hover:bg-danger-surface transition"
                 :aria-label="$t('Remove email from invitation')"
             >
-              <XCircleIcon class="h-4 w-4" />
+              <IconCircleX class="h-4 w-4" />
             </button>
           </span>
                 </div>
@@ -167,7 +167,7 @@
                     type="button"
                 >
                     <span>{{ $t('Permission presets') }}</span>
-                    <component :is="showPresets ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
+                    <component :is="showPresets ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
                 </button>
 
                 <div v-if="showPresets" class="space-y-2">
@@ -203,7 +203,7 @@
                     type="button"
                 >
                     <span>{{ $t('User permissions') }}</span>
-                    <component :is="showUserPermissions ? ChevronUpIcon : ChevronDownIcon" class="h-4 w-4" />
+                    <component :is="showUserPermissions ? IconChevronUp : IconChevronDown" class="h-4 w-4" />
                 </button>
 
                 <div v-if="showUserPermissions" class="space-y-6">
@@ -215,14 +215,14 @@
                             :placeholder="$t('Search permissions…')"
                             class="h-9 w-full rounded-lg border border-border bg-white px-9 text-sm text-text placeholder:text-text-subtle transition focus:border-border-strong focus:bg-surface-sunken"
                         />
-                        <SearchIcon class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                        <IconSearch class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
                         <button
                             v-if="permQuery"
                             class="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
                             @click="permQuery = ''"
                             aria-label="Clear permission search"
                         >
-                            <XIcon class="h-4 w-4" />
+                            <IconX class="h-4 w-4" />
                         </button>
                     </div>
 
@@ -286,6 +286,7 @@
 </template>
 
 <script setup>
+import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconSearch, IconX} from "@tabler/icons-vue";
 import { ref, computed, reactive, getCurrentInstance } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -297,8 +298,6 @@ import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import ToolTipDefault from '@/Components/ToolTips/ToolTipDefault.vue'
 import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon } from '@heroicons/vue/solid'
-import { XIcon, SearchIcon } from '@heroicons/vue/outline'
 
 /* Props */
 const props = defineProps({

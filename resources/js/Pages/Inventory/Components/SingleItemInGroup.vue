@@ -1,6 +1,6 @@
 <template>
     <tr class="w-full flex">
-        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right w-48">
+        <th class="stickyYAxisNoMarginLeft bg-surface-inverse flex items-center text-right w-48">
             <ItemDragElement :inventory_planer_ids="inventory_planer_ids" :inventory_planned_by_all="inventory_planned_by_all" :multi-edit="multiEdit" :item="item" />
         </th>
         <td v-for="day in days" class="flex gap-x-0.5 relative">

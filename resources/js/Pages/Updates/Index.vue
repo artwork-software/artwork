@@ -3,17 +3,17 @@
         <div class="inset-0 absolute z-50 bg-black opacity-50" v-if="isLoaded">
             <div class="w-full h-full flex items-center justify-center">
                 <div class="bg-white p-8 rounded-lg shadow-lg flex items-center justify-center flex-col gap-y-3">
-                    <svg class="animate-spin h-8 w-8 text-artwork-buttons-create" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-8 w-8 text-accent-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                     </svg>
-                    <div class="headline3">Aktualisierungsdaten laden</div>
+                    <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">Aktualisierungsdaten laden</div>
                 </div>
             </div>
         </div>
 
         <div class="mx-14 my-14">
-            <h1 class="headline2 mb-5">Updates</h1>
+            <h1 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mb-5">Updates</h1>
             <div class="space-y-4">
                 <div v-for="item in items">
                     <div @click="openAndLoadUpdateDetailModal(item)" class="bg-white shadow-md rounded-lg border border-border-subtle hover:shadow-lg duration-200 ease-in-out cursor-pointer">
@@ -47,7 +47,7 @@
                                         :src="item.properties.find(property => property.title === 'Author')?.rawContent[0]?.avatar_url"
                                         class="size-8 rounded-full object-cover"
                                     >
-                                    <p class="xsDark">
+                                    <p class="text-sm/5 font-semibold text-text">
                                         {{ item.properties.find(property => property.title === 'Author')?.rawContent[0]?.name }}
                                     </p>
                                 </div>

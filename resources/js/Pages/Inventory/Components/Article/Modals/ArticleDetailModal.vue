@@ -75,7 +75,7 @@
                 <div class="px-4 sm:mt-16 sm:px-2 lg:mt-0 w-full">
                     <div class="w-full flex items-center justify-between gap-4">
                         <div class="min-w-0">
-                            <h1 class="text-3xl font-lexend font-bold tracking-tight text-primary line-clamp-3">
+                            <h1 class="text-3xl font-lexend font-bold tracking-tight text-text line-clamp-3">
                                 {{ article.name }}
                             </h1>
                             <div
@@ -86,7 +86,7 @@
                             </div>
                             <div
                                 v-if="article.category"
-                                class="font-lexend text-xs text-secondary mt-0.5 font-semibold"
+                                class="font-lexend text-xs text-text-subtle mt-0.5 font-semibold"
                             >
                                 {{ article.category?.name }}
                                 <span v-if="article.sub_category">
@@ -123,7 +123,7 @@
                         >
                             <component
                                 :is="IconEdit"
-                                class="w-5 h-5 rounded-full cursor-pointer hover:text-artwork-buttons-create duration-200 ease-in-out"
+                                class="w-5 h-5 rounded-full cursor-pointer hover:text-accent-600 duration-200 ease-in-out"
                                 @click="openArticleEditModal"
                                 v-if="canEditArticle"
                             />
@@ -139,7 +139,7 @@
                     <div class="flex w-full">
                         <div class="mt-4">
                             <div
-                                class="space-y-6 text-sm text-secondary font-lexend"
+                                class="space-y-6 text-sm text-text-subtle font-lexend"
                                 v-html="article.description"
                             />
                         </div>
@@ -158,7 +158,7 @@
                                 <div class="border-b border-border-subtle">
                                     <div class="pr-2 py-4 flex items-center justify-between">
                                         <dt
-                                            class="text-sm font-bold text-primary font-lexend flex items-center gap-x-2"
+                                            class="text-sm font-bold text-text font-lexend flex items-center gap-x-2"
                                         >
                                             {{ $t('Total quantity') }}
                                             <component
@@ -170,7 +170,7 @@
                                         </dt>
                                         <p
                                             class="font-lexend text-sm pl-2"
-                                            :class="(article.total_quantity || article.quantity) === 0 ? 'text-error' : 'text-artwork-buttons-create'"
+                                            :class="(article.total_quantity || article.quantity) === 0 ? 'text-danger' : 'text-accent-600'"
                                         >
                                             {{ formatQuantity(article.total_quantity || article.quantity) }}
                                         </p>
@@ -192,14 +192,14 @@
                                             <div class="flex items-center">
                                                 <div class="w-5 -ml-4 h-px bg-border" />
                                                 <dt
-                                                    class="text-sm font-bold ml-2 text-primary font-lexend"
+                                                    class="text-sm font-bold ml-2 text-text font-lexend"
                                                 >
                                                     {{ status.name }}
                                                 </dt>
                                             </div>
                                             <p
                                                 class="font-lexend text-sm pl-2"
-                                                :class="status.pivot.value === 0 ? 'text-error' : 'text-artwork-buttons-create'"
+                                                :class="status.pivot.value === 0 ? 'text-danger' : 'text-accent-600'"
                                             >
                                                 {{ formatQuantity(status.pivot.value) }}
                                             </p>
@@ -219,14 +219,14 @@
                                     v-for="property in mergedProperties"
                                     :key="property.id"
                                 >
-                                    <dt class="text-sm font-bold text-primary font-lexend">
+                                    <dt class="text-sm font-bold text-text font-lexend">
                                         {{ property.name }}
                                     </dt>
-                                    <dd class="font-lexend text-sm text-artwork-buttons-create">
+                                    <dd class="font-lexend text-sm text-accent-600">
                                         <a
                                             v-if="property.type === 'manufacturer' && canViewCrm && article.manufacturer?.id"
                                             :href="route('crm.contacts.show', article.manufacturer.id)"
-                                            class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                            class="underline hover:text-accent-700 cursor-pointer"
                                             @click.prevent="router.visit(route('crm.contacts.show', article.manufacturer.id))"
                                         >
                                             {{ formatProperty(article, property) }}
@@ -234,7 +234,7 @@
                                         <a
                                             v-else-if="property.type === 'file' && property.pivot?.value"
                                             :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
-                                            class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                            class="underline hover:text-accent-700 cursor-pointer"
                                         >
                                             {{ fileName(property.pivot.value) }}
                                         </a>
@@ -273,18 +273,18 @@
                         v-if="article.is_detailed_quantity"
                     >
                         <div class="flex justify-between mb-4 py-3 border-b-2 border-dashed">
-                            <div class="font-lexend font-semibold text-primary">
+                            <div class="font-lexend font-semibold text-text">
                                 {{ $t('Detailed Articles') }}
                             </div>
                             <div class="flex" v-if="article.is_detailed_quantity">
                                 <div>
-                                    <h3 class="text-sm font-bold text-primary font-lexend">
+                                    <h3 class="text-sm font-bold text-text font-lexend">
                                         {{ $t('Full Quantity') }}
                                     </h3>
                                 </div>
                                 <p
                                     class="font-lexend text-sm pl-2"
-                                    :class="(article.total_quantity || article.quantity) === 0 ? 'text-error' : 'text-artwork-buttons-create'"
+                                    :class="(article.total_quantity || article.quantity) === 0 ? 'text-danger' : 'text-accent-600'"
                                 >
                                     {{ formatQuantity(article.total_quantity || article.quantity) }}
                                 </p>
@@ -303,11 +303,11 @@
                             >
                                 <h3>
                                     <DisclosureButton
-                                        class="flex items-center group justify-between w-full px-4 py-3 hover:bg-artwork-buttons-create/10"
+                                        class="flex items-center group justify-between w-full px-4 py-3 hover:bg-accent-600/10"
                                         :class="open ? 'rounded-t-lg' : 'rounded-lg'"
                                     >
                                         <span
-                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-primary flex flex-col items-start']"
+                                            :class="[open ? 'text-sm font-bold' : ' text-sm font-bold', ' font-lexend text-text flex flex-col items-start']"
                                         >
                                             <template v-if="showInventoryNumberAsName && detailedArticle.inventory_number">
                                                 <span>{{ formatInventoryNumber(detailedArticle.inventory_number) }}</span>
@@ -347,7 +347,7 @@
                                             <component
                                                 :is="IconChevronUp"
                                                 v-else
-                                                class="block size-6 text-artwork-buttons-default group-hover:text-artwork-buttons-hover"
+                                                class="block size-6 text-accent-600 group-hover:text-accent-700"
                                                 aria-hidden="true"
                                             />
                                         </span>
@@ -366,10 +366,10 @@
 
                                     <dl class="border-b border-border-subtle">
                                         <div class="py-4 flex items-center justify-between">
-                                            <dt class="text-sm font-bold text-primary font-lexend">
+                                            <dt class="text-sm font-bold text-text font-lexend">
                                                 {{ $t('Quantity') }}
                                             </dt>
-                                            <dd class="font-lexend text-sm text-artwork-buttons-create">
+                                            <dd class="font-lexend text-sm text-accent-600">
                                                 <span>{{ formatQuantity(detailedArticle.quantity) }}</span>
                                             </dd>
                                         </div>
@@ -383,14 +383,14 @@
                                             v-for="property in getMergedDetailedProperties(detailedArticle)"
                                             :key="property.id"
                                         >
-                                            <dt class="text-sm font-bold text-primary font-lexend">
+                                            <dt class="text-sm font-bold text-text font-lexend">
                                                 {{ property.name }}
                                             </dt>
-                                            <dd class="font-lexend text-sm text-artwork-buttons-create">
+                                            <dd class="font-lexend text-sm text-accent-600">
                                                 <a
                                                     v-if="property.type === 'manufacturer' && canViewCrm && detailedArticle.manufacturer?.id"
                                                     :href="route('crm.contacts.show', detailedArticle.manufacturer.id)"
-                                                    class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                                    class="underline hover:text-accent-700 cursor-pointer"
                                                     @click.prevent="router.visit(route('crm.contacts.show', detailedArticle.manufacturer.id))"
                                                 >
                                                     {{ formatProperty(detailedArticle, property) }}
@@ -398,7 +398,7 @@
                                                 <a
                                                     v-else-if="property.type === 'file' && property.pivot?.value"
                                                     :href="route('inventory-management.articles.property-file.download', { path: property.pivot.value })"
-                                                    class="underline hover:text-artwork-buttons-hover cursor-pointer"
+                                                    class="underline hover:text-accent-700 cursor-pointer"
                                                 >
                                                     {{ fileName(property.pivot.value) }}
                                                 </a>

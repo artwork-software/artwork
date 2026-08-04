@@ -8,7 +8,7 @@
                 <span class="text-[10px] text-text-subtle uppercase tracking-wide font-normal mb-0.5">
                     {{ $t('Total actual for period') }}
                 </span>
-                <span class="text-artwork-buttons-create">{{ formatMinutes(displayWorked) }}</span>
+                <span class="text-accent-600">{{ formatMinutes(displayWorked) }}</span>
             </div>
             <span class="text-text-subtle text-4xl font-normal pb-1"> - </span>
             <div class="flex flex-col items-center">

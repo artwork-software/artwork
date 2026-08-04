@@ -29,8 +29,8 @@
                             {{ preset.times_count }}
                         </div>
                         <div class="min-w-0">
-                            <p class="mDark truncate">{{ preset.name }}</p>
-                            <p class="xxsLight">
+                            <p class="text-lg/[21px] font-semibold text-text truncate">{{ preset.name }}</p>
+                            <p class="text-xs/[18px] text-text-subtle">
                                 {{ preset.times_count }} {{ $t('Points') }}
                             </p>
                         </div>

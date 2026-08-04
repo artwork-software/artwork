@@ -6,11 +6,11 @@
     />
     <div v-for="sageNotAssignedData in sageNotAssignedDataTrashed.data" :key="sageNotAssignedData.id"
          class="flex w-full bg-white my-2 border border-border-subtle">
-        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="sageNotAssignedData.hidden = !sageNotAssignedData.hidden">
-            <ChevronUpIcon v-if="sageNotAssignedData.hidden === true"
+        <button class="bg-accent-600 hover:bg-accent-700 flex" @click="sageNotAssignedData.hidden = !sageNotAssignedData.hidden">
+            <IconChevronUp v-if="sageNotAssignedData.hidden === true"
                            class="h-6 w-6 text-white my-auto"
             />
-            <ChevronDownIcon v-else
+            <IconChevronDown v-else
                              class="h-6 w-6 text-white my-auto"
             />
         </button>
@@ -26,7 +26,7 @@
                         <div class="flex">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                <IconDotsVertical
                                     class=" flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -50,10 +50,10 @@
                                                   }
                                               )"
                                               :class="[active ? 'bg-primaryHover text-white' :
-                                                'text-secondary',
+                                                'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <RefreshIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            <IconRefresh
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                 aria-hidden="true"/>
                                             {{ $t('Restore') }}
                                         </Link>
@@ -67,10 +67,10 @@
                                                   }
                                               )"
                                               :class="[active ? 'bg-primaryHover text-white' :
-                                                'text-secondary',
+                                                'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            <IconTrash
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                 aria-hidden="true"/>
                                             {{ $t('Delete permanently') }}
                                         </Link>
@@ -83,29 +83,29 @@
             </div>
             <div class="w-full mt-6 mb-12" v-if="sageNotAssignedData.hidden">
                 <div class="grid grid-cols-2">
-                    <span class="xsLight">{{ $t('Creditor') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.kreditor }}</span>
-                    <span class="xsLight">{{ $t('Betrag') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.buchungsbetrag }} EUR</span>
-                    <span class="xsLight">{{ $t('Booking text') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.buchungstext }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Creditor') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black">{{ sageNotAssignedData.kreditor }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Betrag') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black">{{ sageNotAssignedData.buchungsbetrag }} EUR</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Booking text') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black">{{ sageNotAssignedData.buchungstext }}</span>
 
-                    <span class="xsLight mt-4">{{ $t('Document number') }}</span>
-                    <span class="xsLight text-black mt-4">{{ sageNotAssignedData.belegnummer }}</span>
-                    <span class="xsLight">{{ $t('Document date') }}</span>
-                    <span class="xsLight text-black">
+                    <span class="text-sm/5 font-bold text-text-subtle mt-4">{{ $t('Document number') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black mt-4">{{ sageNotAssignedData.belegnummer }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Document date') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black">
                         {{ this.formatBookingDataDate(sageNotAssignedData.belegdatum) }}
                     </span>
 
-                    <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
-                    <span class="xsLight text-black mt-4">{{ sageNotAssignedData.sa_kto }}</span>
-                    <span class="xsLight">{{ $t('Cost bearer') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.kst_traeger }}</span>
-                    <span class="xsLight">{{ $t('Cost center') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.kst_stelle }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle mt-4">{{ $t('General ledger account') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black mt-4">{{ sageNotAssignedData.sa_kto }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Cost bearer') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black">{{ sageNotAssignedData.kst_traeger }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle">{{ $t('Cost center') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black">{{ sageNotAssignedData.kst_stelle }}</span>
 
-                    <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
-                    <span class="xsLight text-black mt-4">
+                    <span class="text-sm/5 font-bold text-text-subtle mt-4">{{ $t('Booking date') }}</span>
+                    <span class="text-sm/5 font-bold text-text-subtle text-black mt-4">
                         {{ this.formatBookingDataDate(sageNotAssignedData.buchungsdatum) }}
                     </span>
                 </div>
@@ -130,10 +130,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
-import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -150,17 +149,17 @@ export default {
         TrashSearchAndActions,
         ConfirmDeleteModal,
         Input,
-        XIcon,
-        SearchIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconX,
+        IconSearch,
+        IconChevronDown,
+        IconChevronUp,
         Menu,
         MenuButton,
-        DotsVerticalIcon,
+        IconDotsVertical,
         MenuItems,
         MenuItem,
-        RefreshIcon,
-        TrashIcon,
+        IconRefresh,
+        IconTrash,
         Link
     },
     data() {

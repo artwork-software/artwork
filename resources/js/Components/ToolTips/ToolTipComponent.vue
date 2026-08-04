@@ -132,7 +132,7 @@ const finalIconColorClass = computed(() => {
     if (props.grayIcon) return 'text-text-subtle';
     if (props.blackIcon) return 'text-text';
 
-    return 'text-artwork-buttons-context';
+    return 'text-text-muted';
 });
 
 /**

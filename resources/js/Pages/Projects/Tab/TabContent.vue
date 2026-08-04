@@ -66,7 +66,7 @@
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                                 <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name"
                                      @click="currentSideBarTab = index"
-                                     :class="[index === currentSideBarTab ? 'text-artwork-context-light border-artwork-context-light' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
+                                     :class="[index === currentSideBarTab ? 'text-border-subtle border-border-subtle' : 'border-transparent text-text-subtle hover:text-accent-700 hover:border-accent-700', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
                                      :aria-current="index === currentSideBarTab ? 'page' : undefined">
                                     {{ tab.name }}
                                 </div>

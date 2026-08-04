@@ -19,7 +19,7 @@
                 <span v-if="shift.description" class="text-text-subtle truncate print:whitespace-normal">· {{ shift.description }}</span>
             </div>
         </div>
-        <div v-else class="text-secondary">
+        <div v-else class="text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

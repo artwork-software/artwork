@@ -32,7 +32,7 @@
                             {{ createOrUpdateForm.columns_header }}
                         </span>
                     </label>
-                    <input id="columns_header" :disabled="projectPrintLayout" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_header" step="1" class="w-full h-2 bg-border-subtle rounded-lg appearance-none cursor-pointer text-artwork-buttons-create">
+                    <input id="columns_header" :disabled="projectPrintLayout" type="range" min="1" max="5" v-model="createOrUpdateForm.columns_header" step="1" class="w-full h-2 bg-border-subtle rounded-lg appearance-none cursor-pointer text-accent-600">
                 </div>
                 <div>
                     <label for="columns_footer" class="mb-2 text-sm font-medium text-text dark:text-white flex items-center justify-between">
@@ -64,7 +64,7 @@
                 </div>
                 <div class="col-span-full">
                     <SwitchGroup as="div" class="flex items-center">
-                        <Switch v-model="createOrUpdateForm.is_active" :class="[createOrUpdateForm.is_active ? 'bg-artwork-buttons-create' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                        <Switch v-model="createOrUpdateForm.is_active" :class="[createOrUpdateForm.is_active ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
                             <span class="sr-only">Use setting</span>
                             <span :class="[createOrUpdateForm.is_active ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                               <span :class="[createOrUpdateForm.is_active ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">

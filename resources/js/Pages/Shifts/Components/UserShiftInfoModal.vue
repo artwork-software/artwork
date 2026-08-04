@@ -16,7 +16,7 @@
                     @click="activate(tab.key)"
                     :class="[
                         activeTab === tab.key
-                            ? 'border-artwork-buttons-create text-artwork-buttons-create'
+                            ? 'border-accent-600 text-accent-600'
                             : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border',
                         'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium'
                     ]"

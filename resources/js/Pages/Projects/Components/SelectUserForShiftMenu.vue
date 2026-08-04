@@ -13,7 +13,7 @@
                             leave-active-class="transition ease-in duration-75"
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems v-show="canEditComponent" class="rounded-lg absolute bg-artwork-navigation-background shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none w-64 h-fit overflow-y-scroll">
+                    <MenuItems v-show="canEditComponent" class="rounded-lg absolute bg-surface-inverse shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none w-64 h-fit overflow-y-scroll">
                         <div class="text-white">
                             <div class="px-3 py-5">
                                 <div class="flex items-center justify-between">
@@ -34,7 +34,7 @@
                                             <input v-model="showIntern"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <div :class="[showIntern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                            <div :class="[showIntern ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                                 {{ $t('Internal employees') }}
                                             </div>
                                         </div>
@@ -42,7 +42,7 @@
                                             <input v-model="showExtern"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <div :class="[showExtern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                            <div :class="[showExtern ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                                 {{ $t('External employees') }}
                                             </div>
                                         </div>
@@ -50,7 +50,7 @@
                                             <input v-model="showProvider"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <div :class="[showProvider ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                            <div :class="[showProvider ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                                 {{ $t('Service provider') }}
                                             </div>
                                         </div>

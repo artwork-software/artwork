@@ -1,12 +1,12 @@
 <template>
-    <div class="mt-6 bg-lightBackgroundGray">
+    <div class="mt-6 bg-surface-canvas">
         <div class="ml-14 pr-14 pt-6">
             <div class="flex flex-col">
                 <!-- Description -->
                 <div >
-                    <div class="sDark">{{ $t('Short description') }}</div>
+                    <div class="text-base/5 font-semibold text-text">{{ $t('Short description') }}</div>
                     <div v-if="descriptionClicked === false"
-                         class="mt-2 subpixel-antialiased xsDark"
+                         class="mt-2 subpixel-antialiased text-sm/5 font-semibold text-text"
                          @click="handleDescriptionClick()" v-html="project.description ? project.description : $t('Click here to add text')">
                     </div>
                     <TextareaComponent
@@ -21,8 +21,8 @@
                 </div>
                 <!-- Individual Projectinformation -->
                 <div v-for="headline in project.project_headlines" class="mt-7">
-                    <div class="sDark" >{{ headline.name }}</div>
-                    <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased xsDark"
+                    <div class="text-base/5 font-semibold text-text" >{{ headline.name }}</div>
+                    <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-sm/5 font-semibold text-text"
                          @click="handleTextClick(headline)">
                         <p v-if="headline.text" v-html="headline.text"></p>
                         <p v-else>{{ $t('Click here to add text') }}</p>
@@ -46,10 +46,9 @@
 </template>
 
 <script>
+import {IconCircleX, IconEdit, IconFileText, IconX} from "@tabler/icons-vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import {nextTick} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -62,11 +61,11 @@ export default{
         TextareaComponent,
         ProjectDocumentsComponent,
         ConfirmDeleteModal,
-        PencilAltIcon,
-        XCircleIcon,
-        DocumentTextIcon,
+        IconEdit,
+        IconCircleX,
+        IconFileText,
         SvgCollection,
-        XIcon,
+        IconX,
         JetInputError
     },
     props: [

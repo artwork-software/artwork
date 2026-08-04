@@ -1,7 +1,7 @@
 <template>
     <Menu as="div" class="">
         <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 35}">
-            <div class="font-semibold text-artwork-buttons-context flex items-center justify-end" ref="menuButtonRef">
+            <div class="font-semibold text-text-muted flex items-center justify-end" ref="menuButtonRef">
                 <MenuButton>
                     <PropertyIcon name="IconBeach" :class="['flex-shrink-0 h-4 w-4 cursor-pointer', iconColorClass]" aria-hidden="true" />
                 </MenuButton>

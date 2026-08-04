@@ -16,7 +16,7 @@
                                 </button>
                             </div>
                             <div class="relative z-40 pl-4">
-                                <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
+                                <div class="font-black font-lexend text-text text-3xl my-2 mb-6">
                                     {{ title }}
                                 </div>
                                 <p class="text-success subpixel-antialiased">{{ description }}</p>

@@ -1,17 +1,17 @@
 <template>
     <BaseModal @closed="closeModal(false)" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
+                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                     {{ $t('Edit basic data') }}
                 </div>
                 <input :placeholder="name"
                        id="title"
                        v-model="name"
-                       class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-border"/>
+                       class="mt-4 p-4 border border-border resize-none w-full text-sm/5 font-semibold text-text placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border-border"/>
                 <div class="flex mt-2 w-full">
                     <Listbox as="div" class="flex w-full" v-model="selectedState">
                         <ListboxButton class="w-full text-left">
-                            <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-border bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            <button class="w-full h-12 flex justify-between text-sm/5 font-semibold text-text items-center text-left border border-2 border-border bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     @click="openColor = !openColor">
                                 <span class="w-full" v-if="!selectedState">
                                     {{ $t('Select project status') }}
@@ -24,7 +24,7 @@
                                         }">
                                     {{ this.states.find(state => state.id === selectedState)?.name}}
                                 </span>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                             </button>
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100"
@@ -36,7 +36,7 @@
                                                v-for="state in states"
                                                :key="state.id"
                                                :value="state.id" v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']"
+                                    <li :class="[active ? ' text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']"
                                         @click="updateProjectState(state)">
                                         <div class="flex">
                                              <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: TextColorWithDarken(state.color), borderColor: TextColorWithDarken(state.color)}">
@@ -44,8 +44,8 @@
                                              </span>
                                         </div>
                                         <span
-                                            :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                            <CheckIcon v-if="selected"
+                                            :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                            <IconCheck v-if="selected"
                                                        class="h-5 w-5 flex text-success"
                                                        aria-hidden="true"/>
                                         </span>
@@ -86,43 +86,43 @@
                         <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
                                @change="removeSelectedGroup"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                        <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                        <label for="hasGroup" :class="this.hasGroup ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                class="ml-2">
                             {{ $t('Belongs to project group') }}
                         </label>
                     </div>
                     <div v-if="this.hasGroup" class="mb-2">
                         <Listbox as="div" v-model="this.selectedGroup" id="room">
-                            <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow flex text-left xsDark">
+                            <ListboxButton class="border border-border w-full h-10 cursor-pointer truncate flex p-2">
+                                <div class="flex-grow flex text-left text-sm/5 font-semibold text-text">
                                     {{
                                         this.selectedGroup?.name ? this.selectedGroup.name : $t('Search project group')
                                     }}
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                             </ListboxButton>
-                            <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                            <ListboxOptions class="w-[88%] bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-if="this.groupProjects.length === 0"
-                                               class="w-full text-secondary cursor-pointer p-2 flex justify-between"
+                                               class="w-full text-text-subtle cursor-pointer p-2 flex justify-between"
                                                :value="null">
                                     {{ $t('No project group has been created yet') }}
                                 </ListboxOption>
                                 <ListboxOption v-for="projectGroup in groupProjects"
-                                               class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between "
+                                               class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between "
                                                :key="projectGroup.id"
                                                :value="projectGroup"
                                                v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                    <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
                                         {{ projectGroup.name }}
                                     </div>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                    <IconCheck v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                 </ListboxOption>
                             </ListboxOptions>
                         </Listbox>
                     </div>
                 </div>
                 <div class="mt-4">
-                    <div class="xsDark flex items-center gap-1.5">
+                    <div class="text-sm/5 font-semibold text-text flex items-center gap-1.5">
                         <span>{{ $t('Budget deadline') }}</span>
                         <ToolTipComponent
                             :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
@@ -136,18 +136,18 @@
                                id="budgetDeadline"
                                type="date"
                                required
-                               class="border-border inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                               class="border-border border border-border text-sm/5 font-semibold text-text placeholder-text-subtle disabled:border-none flex-grow"/>
                     </div>
                 </div>
                 <div class="mt-4 group">
-                    <div class="xsDark mb-1">{{ $t('Key Visual') }}</div>
+                    <div class="text-sm/5 font-semibold text-text mb-1">{{ $t('Key Visual') }}</div>
                     <div
                         class="flex w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
                         @dragover.prevent
                         @drop.stop.prevent="uploadDraggedKeyVisual($event)"
                         @click="selectNewKeyVisual"
                         v-if="this.project.key_visual_path === null">
-                        <div class="xsLight flex h-12 items-center text-center">
+                        <div class="text-sm/5 font-bold text-text-subtle flex h-12 items-center text-center">
                             <span v-html="$t('Drag your key visual here')"></span>
                             <input id="keyVisual-upload" ref="keyVisual"
                                    name="file-upload" type="file" class="sr-only"
@@ -158,18 +158,18 @@
                         <div
                             class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
                             <button @click="downloadKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
+                                    class="mr-3 inline-flex rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                                 <PropertyIcon name="IconDownload" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                             <button @click="selectNewKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
+                                    class="mr-3 inline-flex rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                                 <PropertyIcon name="IconEdit"
-                                    class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                    class="h-5 w-5 text-primaryText group-hover:text-accent-700"
                                     aria-hidden="true"/>
                             </button>
                             <button @click="deleteKeyVisual" type="button"
                                     class="inline-flex rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
-                                <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-accent-700"
                                        aria-hidden="true"/>
                             </button>
                         </div>
@@ -195,13 +195,9 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconDownload, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInputError from '@/Jetstream/InputError.vue'
-import {
-    DownloadIcon,
-    XIcon,
-    ChevronDownIcon
-} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import {
     Listbox,
@@ -209,14 +205,13 @@ import {
     ListboxOption,
     ListboxOptions
 } from "@headlessui/vue";
-import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -225,9 +220,12 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 export default {
     mixins: [
         Permissions,
-        IconLib,
-        ColorHelper
+        IconLib
     ],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
+        return {backgroundColorWithOpacity, TextColorWithDarken};
+    },
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,
@@ -252,10 +250,10 @@ export default {
         BaseFilterTag,
         JetDialogModal,
         JetInputError,
-        XIcon,
-        DownloadIcon,
-        ChevronDownIcon,
-        CheckIcon
+        IconX,
+        IconDownload,
+        IconChevronDown,
+        IconCheck
     },
     watch: {
         groupName: {

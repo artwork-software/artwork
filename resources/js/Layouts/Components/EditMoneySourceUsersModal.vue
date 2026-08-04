@@ -23,7 +23,7 @@
                             </div>
                             <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
                                 <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                                <IconCircleX stroke-width="1.5" class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
+                                <IconCircleX stroke-width="1.5" class="ml-3 text-accent-600 h-5 w-5 hover:text-danger "/>
                             </button>
                         </div>
                         <div class="col-span-3 flex">
@@ -32,14 +32,14 @@
                                     <input v-model="user.pivot.competent"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.pivot.competent ? 'text-primary font-black' : 'text-secondary']"
+                                    <p :class="[user.pivot.competent ? 'text-text font-black' : 'text-text-subtle']"
                                        class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
                                 </div>
                                 <div class="flex ml-8">
                                     <input v-model="user.pivot.write_access"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                    <p :class="[user.pivot.write_access ? 'text-text font-black' : 'text-text-subtle']"
                                        class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
                                 </div>
                             </div>
@@ -48,14 +48,14 @@
                                     <input v-model="user.competent"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
+                                    <p :class="[user.competent ? 'text-text font-black' : 'text-text-subtle']"
                                        class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
                                 </div>
                                 <div class="flex ml-8">
                                     <input v-model="user.write_access"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
-                                    <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                    <p :class="[user.write_access ? 'text-text font-black' : 'text-text-subtle']"
                                        class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
                                 </div>
                             </div>
@@ -72,14 +72,13 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
 
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -98,11 +97,11 @@ export default {
         FormButton,
         Dropdown,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon,
+        IconX,
+        IconCheck,
+        IconChevronDown,
         InputComponent,
-        XCircleIcon
+        IconCircleX
     },
 
     data() {

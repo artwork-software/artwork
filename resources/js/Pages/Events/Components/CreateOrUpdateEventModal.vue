@@ -3,11 +3,11 @@
 
         <form @submit.prevent="UpdateOrCreateEvent" class="divide-y divide-dashed divide-border relative">
             <div class=" absolute w-full h-full bg-white z-10 p-8 rounded-lg shadow-lg flex items-center justify-center flex-col gap-y-3" v-if="modalIsLoading">
-                <svg class="animate-spin h-8 w-8 text-artwork-buttons-create" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-8 w-8 text-accent-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                 </svg>
-                <div class="headline3">{{ $t('Load window data') }}</div>
+                <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('Load window data') }}</div>
             </div>
             <div>
                 <div class="flex items-center justify-between px-6 pt-5">
@@ -16,7 +16,7 @@
                         :title="eventForm.id ? $t('Edit Event') : $t('Create Event')"
                         :description="$t('Please make sure that you allow for preparation and follow-up time.')"
                     />
-                    <div v-if="eventForm.id" class="flex items-center xsDark">
+                    <div v-if="eventForm.id" class="flex items-center text-sm/5 font-semibold text-text">
                         {{ $t('Created by') }}
                         <div>
                             <UserPopoverTooltip
@@ -34,7 +34,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Listbox as="div" class="-mt-1 relative" v-model="selectedEventType" id="eventType">
-                                <ListboxLabel class="xsLight mb-2">{{ $t('Event type') }}</ListboxLabel>
+                                <ListboxLabel class="text-sm/5 font-bold text-text-subtle mb-2">{{ $t('Event type') }}</ListboxLabel>
                                 <ListboxButton class="menu-button">
                                     <div class="flex w-full justify-between">
                                         <div class="flex items-center gap-x-2">
@@ -45,28 +45,28 @@
                                                 {{ selectedEventType?.name }}
                                             </div>
                                         </div>
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
 
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full rounded-lg z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full rounded-lg z-10 bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="type in usePage().props.eventTypes"
                                                        :key="type.name"
                                                        :value="type"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group rounded-lg hover:bg-artwork-buttons-create cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group rounded-lg hover:bg-accent-600 cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex items-center">
                                                     <div>
                                                         <div class="block size-4 rounded-full"
                                                              :style="{'backgroundColor' : type?.hex_code }"/>
                                                     </div>
-                                                    <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate w-52']">
+                                                    <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate w-52']">
                                                     {{ type.name }}
                                                 </span>
                                                 </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                       <IconCheck stroke-width="1.5" v-if="selected"
                                                                  class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
@@ -86,7 +86,7 @@
                         </div>
                         <div v-if="usePage().props.event_status_module" class="col-span-full">
                             <Listbox as="div" class="-mt-1 relative" v-model="selectedEventStatus" id="selectedEventStatus">
-                                <ListboxLabel class="xsLight mb-2">{{ $t('Event Status') }}</ListboxLabel>
+                                <ListboxLabel class="text-sm/5 font-bold text-text-subtle mb-2">{{ $t('Event Status') }}</ListboxLabel>
                                 <ListboxButton class="menu-button">
                                     <div class="flex w-full justify-between">
                                         <div class="flex items-center gap-x-2">
@@ -97,28 +97,28 @@
                                                 {{ selectedEventStatus?.name }}
                                             </div>
                                         </div>
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
 
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full rounded-lg z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full rounded-lg z-10 bg-surface-inverse shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="status in usePage().props.eventStatuses"
                                                        :key="status.name"
                                                        :value="status"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group rounded-lg hover:bg-artwork-buttons-create cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group rounded-lg hover:bg-accent-600 cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex items-center">
                                                     <div>
                                                         <div class="block size-4 rounded-full"
                                                              :style="{'backgroundColor' : status?.color }"/>
                                                     </div>
-                                                    <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate w-52']">
+                                                    <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 block truncate w-52']">
                                                      {{ status.name }}
                                                     </span>
                                                 </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? ' text-white' : 'text-text-subtle', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                       <IconCheck stroke-width="1.5" v-if="selected"
                                                                  class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
@@ -135,7 +135,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-full">
                             <div class="flex items-center gap-x-2">
-                                <Switch v-model="eventForm.allDay" :class="[eventForm.allDay ? 'bg-artwork-buttons-create' : 'bg-border-subtle', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                                <Switch v-model="eventForm.allDay" :class="[eventForm.allDay ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
                                     <span :class="[eventForm.allDay ? 'translate-x-4' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span :class="[eventForm.allDay ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
                                         <svg class="size-4 text-text-subtle" fill="none" viewBox="0 0 12 12">
@@ -143,14 +143,14 @@
                                         </svg>
                                       </span>
                                       <span :class="[eventForm.allDay ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                        <svg class="size-4 text-artwork-buttons-create" fill="currentColor" viewBox="0 0 12 12">
+                                        <svg class="size-4 text-accent-600" fill="currentColor" viewBox="0 0 12 12">
                                           <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                                         </svg>
                                       </span>
                                     </span>
                                 </Switch>
                                 <div>
-                                    <p class="xsDark">{{ $t('Full day')}}</p>
+                                    <p class="text-sm/5 font-semibold text-text">{{ $t('Full day')}}</p>
                                 </div>
                             </div>
                         </div>
@@ -205,7 +205,7 @@
                                   :class="[eventForm.is_series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                             </Switch>
                             <SwitchLabel as="span" class="ml-3 text-sm">
-                            <span :class="[eventForm.is_series ? 'xsDark' : 'xsLight', 'text-sm']">
+                            <span :class="[eventForm.is_series ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm']">
                                 {{ $t('Repeat event') }}
                             </span>
                             </SwitchLabel>
@@ -219,7 +219,7 @@
                                             <div class="block truncate">{{ selectedFrequency.name }}</div>
                                             <span
                                                 class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
+                                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text"
                                                               aria-hidden="true"/>
                                         </span>
                                         </ListboxButton>
@@ -261,8 +261,8 @@
                             </div>
                         </div>
                     </div>
-                    <div v-else-if="eventToEdit?.is_series" class="xsLight mt-2">{{ $t('Event is part of a repeat event') }}</div>
-                    <div v-if="eventToEdit?.is_series" class="xsLight mb-2">
+                    <div v-else-if="eventToEdit?.is_series" class="text-sm/5 font-bold text-text-subtle mt-2">{{ $t('Event is part of a repeat event') }}</div>
+                    <div v-if="eventToEdit?.is_series" class="text-sm/5 font-bold text-text-subtle mb-2">
                         {{ $t('Cycle: {0} to {1}', [selectedFrequency.name, convertDateFormat(seriesEndDate)]) }}
                     </div>
                 </div>
@@ -273,18 +273,18 @@
                         <span v-if="!selectedRoom">
                             {{ $t('Select room') }}*
                         </span>
-                            <div class="flex-grow flex text-left xsDark" v-else>
+                            <div class="flex-grow flex text-left text-sm/5 font-semibold text-text" v-else>
                                 {{ selectedRoom?.name }}
                             </div>
-                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                         </ListboxButton>
-                        <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                        <ListboxOptions class="w-full rounded-lg bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between"
+                                           class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
                                     {{ room.name }}
                                     <IconAlertTriangle stroke-width="1.5" class="h-4 w-4 mx-2" aria-hidden="true" v-if="roomCollisionArray[room.id] > 0"/>
                                 </div>
@@ -297,17 +297,17 @@
                 <div class="px-6 py-2 bg-surface-sunken my-5">
                     <div class="my-3">
                         <input type="checkbox" v-model="showProjectInfo" class="input-checklist">
-                        <span :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{ $t('Assign event to a project') }}</span>
+                        <span :class="[showProjectInfo ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm ml-2']">{{ $t('Assign event to a project') }}</span>
                     </div>
                    <div v-if="showProjectInfo">
-                       <div class="xsLight flex" v-if="!creatingProject">
+                       <div class="text-sm/5 font-bold text-text-subtle flex" v-if="!creatingProject">
                            {{ $t('Currently assigned to:') }}
                            <a v-if="selectedProject?.id"
                               :href="route('projects.tab', {project: selectedProject.id, projectTab: 1})"
-                              class="ml-3 flex xsDark">
+                              class="ml-3 flex text-sm/5 font-semibold text-text">
                                {{ selectedProject?.name }}
                            </a>
-                           <div v-else class="xsDark ml-2">
+                           <div v-else class="text-sm/5 font-semibold text-text ml-2">
                                {{ selectedProject?.name ?? 'Keinem Projekt' }}
                            </div>
                            <div v-if="selectedProject?.id"
@@ -315,11 +315,11 @@
                                <button type="button"
                                        @click="selectedProject = null">
                                    <IconCircleX stroke-width="1.5"
-                                                class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                                                class="pl-2 h-6 w-6 hover:text-danger text-text"/>
                                </button>
                            </div>
                        </div>
-                       <div class="xsLight" v-if="creatingProject">
+                       <div class="text-sm/5 font-bold text-text-subtle" v-if="creatingProject">
                            {{ $t('The project is created when it is saved.') }}
                        </div>
 
@@ -329,7 +329,7 @@
                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="creatingProject ? 'font-bold' : 'text-text-subtle'">
                                        {{ $t('New project') }}
                                    </SwitchLabel>
-                                   <Switch v-model="creatingProject" :class="[creatingProject ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                                   <Switch v-model="creatingProject" :class="[creatingProject ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                                        <span aria-hidden="true" :class="[!creatingProject  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                    </Switch>
                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="!creatingProject? 'font-bold' : 'text-text-subtle'">
@@ -344,11 +344,11 @@
                                    v-model="projectName"
                                />
                                <div v-if="projectSearchResults.length > 0 && !creatingProject"
-                                    class="absolute bg-primary truncate sm:text-sm w-full z-10">
+                                    class="absolute bg-surface-inverse truncate sm:text-sm w-full z-10">
                                    <div v-for="(project, index) in projectSearchResults"
                                         :key="index"
                                         @click="chooseProject(project)"
-                                        class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                        class="p-4 text-sm/5 font-bold text-white border-l-4 hover:border-l-success border-l-surface-inverse cursor-pointer">
                                        {{ project.name }}
                                    </div>
                                </div>
@@ -364,11 +364,11 @@
                                     <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
                                 </div>
                                 <div class="mx-2">
-                                    <p class="xsDark group-hover:text-text">{{ groupProject.name}}</p>
+                                    <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ groupProject.name}}</p>
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="deleteProjectFromProjectGroup(index)">
-                                        <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
+                                        <XIcon class="h-4 w-4 text-text-subtle hover:text-danger" />
                                     </button>
                                 </div>
                             </div>

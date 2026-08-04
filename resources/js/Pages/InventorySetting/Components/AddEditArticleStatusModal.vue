@@ -32,7 +32,6 @@
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import {useForm} from "@inertiajs/vue3";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({

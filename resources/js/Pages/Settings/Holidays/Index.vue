@@ -328,7 +328,7 @@
                                         </SwitchLabel>
                                         <Switch
                                             v-model="customHolidayForm.yearly"
-                                            :class="[ customHolidayForm.yearly ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create',
+                                            :class="[ customHolidayForm.yearly ? 'bg-accent-600' : 'bg-accent-600',
                                                 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none'
                                             ]"
                                         >
@@ -503,7 +503,7 @@
                                                 :icon="IconEdit"
                                                 :tooltip-text="$t('Edit')"
                                                 icon-size="h-5 w-5"
-                                                class="cursor-pointer text-text-subtle hover:text-artwork-buttons-hover transition-colors"
+                                                class="cursor-pointer text-text-subtle hover:text-accent-700 transition-colors"
                                                 aria-hidden="true"
                                             />
                                             <ToolTipComponent

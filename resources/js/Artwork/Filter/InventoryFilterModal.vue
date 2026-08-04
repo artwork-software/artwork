@@ -30,7 +30,7 @@
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(f, 'category')">
-                    <XIcon class="size-4 text-accent-600 hover:text-error" />
+                    <IconX class="size-4 text-accent-600 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -48,7 +48,7 @@
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(f, 'subcategory')">
-                    <XIcon class="size-4 text-accent-600 hover:text-error" />
+                    <IconX class="size-4 text-accent-600 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -68,7 +68,7 @@
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(f, 'property')">
-                    <XIcon class="size-4 text-accent-600 hover:text-error" />
+                    <IconX class="size-4 text-accent-600 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(tag, 'tag')">
-                    <XIcon class="size-4 hover:text-error" />
+                    <IconX class="size-4 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -110,7 +110,7 @@
           </div>
 
           <div class="space-y-2 mt-2">
-            <div class="card white px-4">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4">
               <div
                 class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                 @click="sections.categories.open = !sections.categories.open"
@@ -170,7 +170,7 @@
             </div>
 
             <!-- SUB-CATEGORIES (pro Kategorie einklappbar) -->
-            <div class="card white px-4" v-if="Object.keys(ui.subCategoriesByCategory).length">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4" v-if="Object.keys(ui.subCategoriesByCategory).length">
               <div
                 class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                 @click="sections.subCategories.open = !sections.subCategories.open"
@@ -266,7 +266,7 @@
               </div>
 
               <div class="space-y-2 mt-2">
-                  <div class="card white px-4">
+                  <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4">
                       <div
                           class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                           @click="sections.properties.open = !sections.properties.open"
@@ -372,7 +372,7 @@
           </div>
 
           <div class="space-y-2 mt-2">
-            <div class="card white px-4">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4">
               <div
                 class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                 @click="sections.tags.open = !sections.tags.open"
@@ -437,7 +437,7 @@
       <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
         {{ $t('Highlight projects') }}
       </div>
-      <div class="card white px-4 mt-2">
+      <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
         <div
           class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
           @click="projectHighlightOpen = !projectHighlightOpen"
@@ -484,7 +484,7 @@
         <div>
           <div
             @click="resetFilter"
-            class="underline text-artwork-buttons-create text-xs underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out"
+            class="underline text-accent-600 text-xs underline-offset-2 cursor-pointer hover:text-accent-700 duration-200 ease-in-out"
           >
             {{ $t('Reset') }}
           </div>
@@ -501,13 +501,11 @@
 import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
-import { XIcon } from '@heroicons/vue/outline'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
-import {IconChevronDown} from "@tabler/icons-vue";
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

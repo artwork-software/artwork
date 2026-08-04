@@ -102,10 +102,10 @@
                         <button
                             type="button"
                             @click="deleteUserFromProjectTeam(user)"
-                            class="flex-shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-error"
+                            class="flex-shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-danger"
                         >
                             <span class="sr-only">{{ $t('Remove user from team') }}</span>
-                            <XCircleIcon class="h-5 w-5" />
+                            <IconCircleX class="h-5 w-5" />
                         </button>
                     </div>
                 </section>
@@ -134,10 +134,10 @@
                         <button
                             type="button"
                             @click="deleteDepartmentFromProjectTeam(department)"
-                            class="flex items-center text-text-subtle hover:text-error transition"
+                            class="flex items-center text-text-subtle hover:text-danger transition"
                         >
                             <span class="sr-only">{{ $t('Remove team from the project') }}</span>
-                            <XCircleIcon class="h-5 w-5" />
+                            <IconCircleX class="h-5 w-5" />
                         </button>
                     </div>
                 </section>
@@ -223,10 +223,10 @@
                             <button
                                 type="button"
                                 @click="deleteCrmContactFromProjectTeam(contact)"
-                                class="flex-shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-error"
+                                class="flex-shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-danger"
                             >
                                 <span class="sr-only">{{ $t('Remove CRM contact from team') }}</span>
-                                <XCircleIcon class="h-5 w-5" />
+                                <IconCircleX class="h-5 w-5" />
                             </button>
                         </div>
                     </div>
@@ -247,6 +247,7 @@
 </template>
 
 <script setup>
+import {IconCircleX} from "@tabler/icons-vue";
 import { ref, reactive, watch, computed } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
@@ -260,7 +261,6 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ProjectTeamPermissionsDropdown from '@/Pages/Projects/Components/ProjectTeamPermissionsDropdown.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
-import { XCircleIcon } from '@heroicons/vue/solid'
 import {is} from "laravel-permission-to-vuejs";
 
 defineOptions({

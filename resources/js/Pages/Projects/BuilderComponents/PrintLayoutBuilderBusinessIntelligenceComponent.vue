@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Business Intelligence') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('Business Intelligence') }}</h3>
         <div v-if="biData">
             <div class="mb-4">
                 <h4 class="text-[10px] font-semibold text-text-muted mb-1">{{ $t('Production data') }}</h4>
@@ -24,7 +24,7 @@
                 </div>
             </div>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No BI data available') }}
         </div>
     </div>

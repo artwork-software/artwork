@@ -6,7 +6,7 @@
         @close="$emit('close')"
     >
         <div class="mt-4">
-            <div v-if="maskLoading" class="text-xs text-secondary py-4">
+            <div v-if="maskLoading" class="text-xs text-text-subtle py-4">
                 {{ $t('Loading data...') }}
             </div>
             <div v-else-if="maskError" class="text-xs text-danger py-4">

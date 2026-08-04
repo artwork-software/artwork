@@ -1,7 +1,7 @@
 <template>
     <div>
         <div :id="team.name" role="tooltip"
-             class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-artwork-navigation-background shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+             class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-text-subtle bg-surface-inverse shadow-sm opacity-0 transition-opacity duration-300 tooltip">
             <div class="flex flex-wrap">
                 <div class="flex w-full mb-4">
                     <TeamIconCollection class="ml-2  h-14 w-14" :iconName="team.svg_name"/>
@@ -18,8 +18,8 @@
                          :src="user.profile_photo_url"
                          alt=""/>
                     <div v-if="team.users.length > 9" class="flex items-center rounded-full">
-                        <ChevronDownIcon
-                            class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-artwork-navigation-background"></ChevronDownIcon>
+                        <IconChevronDown
+                            class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-surface-inverse"></IconChevronDown>
                     </div>
                 </div>
 
@@ -30,15 +30,15 @@
 </template>
 
 <script>
+import {IconChevronDown} from "@tabler/icons-vue";
 
-import {ChevronDownIcon} from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {
     name: "TeamTooltip",
     components: {
         TeamIconCollection,
-        ChevronDownIcon
+        IconChevronDown
     },
     props: ['team'],
     data() {

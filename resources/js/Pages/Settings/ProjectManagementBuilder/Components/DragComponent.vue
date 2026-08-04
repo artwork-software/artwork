@@ -4,10 +4,10 @@
          @dragend="onDragEnd"
          class="bg-surface-sunken rounded-lg px-4 py-3 h-32 flex items-center justify-center w-full">
         <div>
-            <div class="xsDark">
+            <div class="text-sm/5 font-semibold text-text">
                 {{ $t(component.name) ?? component.name }}
             </div>
-            <div class="xsLight">
+            <div class="text-sm/5 font-bold text-text-subtle">
                 {{ $t(component.type) ?? component.type }}
             </div>
         </div>

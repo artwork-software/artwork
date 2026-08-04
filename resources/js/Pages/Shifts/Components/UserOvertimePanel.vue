@@ -52,7 +52,7 @@
                 </div>
                 <button type="button"
                         :disabled="submitting || totalMinutes < 1 || totalMinutes > local.payable_minutes"
-                        class="rounded-lg bg-artwork-buttons-create px-4 py-2 text-sm font-medium text-white disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
+                        class="rounded-lg bg-accent-600 px-4 py-2 text-sm font-medium text-white disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                         @click="submitPayout">
                     {{ $t('Pay out') }}
                 </button>

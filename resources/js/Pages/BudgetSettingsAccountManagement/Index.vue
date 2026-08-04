@@ -26,7 +26,7 @@
                 />
             </Switch>
             <SwitchLabel as="span">
-                <span class="pl-1" :class="[budgetAccountManagementGlobal ? 'xsDark' : 'xsLight', 'text-sm']">
+                <span class="pl-1" :class="[budgetAccountManagementGlobal ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle', 'text-sm']">
                     {{ $t('Accounts and cost units are used in each project budget for column 1 and column 2') }}
                 </span>
             </SwitchLabel>
@@ -39,7 +39,7 @@
         />
         <hr class="mb-5"/>
         <div class="mb-5 space-y-1">
-            <div class="headline3 mb-5">{{ $t('Selectable accounts') }}</div>
+            <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text mb-5">{{ $t('Selectable accounts') }}</div>
             <div class="flex flex-row space-x-5 items-center">
                 <div class="w-96">
                     <BaseInput
@@ -71,13 +71,13 @@
                            @click="this.saveAccount()"
                 />
             </div>
-            <div class="errorText" v-if="this.accountFormHelpText">{{ this.accountFormHelpText }}</div>
+            <div class="text-sm/5 text-danger" v-if="this.accountFormHelpText">{{ this.accountFormHelpText }}</div>
             <p class="text-xs text-text-subtle pt-1">
                 {{ $t('The expense or revenue setting determines where the account is sorted in.') }}
             </p>
         </div>
         <div class="mb-5 space-y-1">
-            <div class="headline3 mb-5">{{ $t('Selectable cost units') }}</div>
+            <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text mb-5">{{ $t('Selectable cost units') }}</div>
             <div class="flex flex-row space-x-5 items-center">
                 <div class="w-96">
                     <BaseInput
@@ -98,7 +98,7 @@
                            @click="this.saveCostUnit()"
                 />
             </div>
-            <div class="errorText" v-if="this.costUnitFormHelpText">{{ this.costUnitFormHelpText }}</div>
+            <div class="text-sm/5 text-danger" v-if="this.costUnitFormHelpText">{{ this.costUnitFormHelpText }}</div>
         </div>
         <hr class="mb-5"/>
         <SettingsGuideBanner
@@ -109,7 +109,7 @@
         <div class="space-y-5">
             <div class="flex flex-col">
                 <div class="flex flex-row space-x-5 items-center">
-                    <div class="headline3 w-56">{{ $t('Selectable accounts') }}</div>
+                    <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text w-56">{{ $t('Selectable accounts') }}</div>
                     <div class="flex justify-end w-96 h-12 items-center">
                         <div v-if="!this.showAccountSearch"
                              @click="this.showAccountSearch = !this.showAccountSearch"
@@ -131,9 +131,9 @@
                     </div>
                 </div>
                 <div class="flex flex-row">
-                    <span class="w-56 xsLight mr-2">{{ $t('Account number') }}</span>
-                    <span class="w-96 xsLight mr-2">{{ $t('Description') }}</span>
-                    <span class="w-72 xsLight">{{ $t('Account type') }}</span>
+                    <span class="w-56 text-sm/5 font-bold text-text-subtle mr-2">{{ $t('Account number') }}</span>
+                    <span class="w-96 text-sm/5 font-bold text-text-subtle mr-2">{{ $t('Description') }}</span>
+                    <span class="w-72 text-sm/5 font-bold text-text-subtle">{{ $t('Account type') }}</span>
                 </div>
                 <div class="flex flex-col"
                      v-for="account in this.filteredAccounts">
@@ -179,31 +179,31 @@
                         <!-- only display edit/trash icons if no account is edited currently -->
                         <div v-if="this.accountIdToEdit === null"
                              class="flex flex-row items-center">
-                            <PropertyIcon name="IconEdit" class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconEdit" class="w-5 h-5 hover:text-danger cursor-pointer"
                                       @click="this.initAccountEdit(account)"/>
-                            <PropertyIcon name="IconTrash" class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconTrash" class="w-5 h-5 hover:text-danger cursor-pointer"
                                        @click="this.showRemoveConfirmModal(account, 'account')"
                             />
                         </div>
                         <!-- only display save/x icons if current account is edited -->
                         <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center">
                             <PropertyIcon name="IconDeviceFloppy" @click="this.saveAccountEdit()"
-                                              class="w-5 h-5 hover:text-error cursor-pointer"
+                                              class="w-5 h-5 hover:text-danger cursor-pointer"
                             />
                             <PropertyIcon name="IconX" @click="this.resetAccountEdit();"
-                                   class="w-5 h-5 hover:text-error cursor-pointer"
+                                   class="w-5 h-5 hover:text-danger cursor-pointer"
                             />
                         </div>
                     </div>
                     <div v-if="this.accountIdToEdit === account.id && this.editAccountFormHelpText"
-                         class="errorText">
+                         class="text-sm/5 text-danger">
                         {{ this.editAccountFormHelpText }}
                     </div>
                 </div>
             </div>
             <div class="flex flex-col">
                 <div class="flex flex-row space-x-5 items-center">
-                    <div class="headline3 w-72">{{ $t('Selectable cost units') }}</div>
+                    <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text w-72">{{ $t('Selectable cost units') }}</div>
                     <div class="flex justify-end w-80 h-12 items-center">
                         <div v-if="!this.showCostUnitSearch"
                              @click="this.showCostUnitSearch = !this.showCostUnitSearch"
@@ -225,8 +225,8 @@
                     </div>
                 </div>
                 <div class="flex flex-row">
-                    <span class="w-56 xsLight mr-2">{{ $t('Cost unit number') }}</span>
-                    <span class="w-96 xsLight">{{ $t('Description') }}</span>
+                    <span class="w-56 text-sm/5 font-bold text-text-subtle mr-2">{{ $t('Cost unit number') }}</span>
+                    <span class="w-96 text-sm/5 font-bold text-text-subtle">{{ $t('Description') }}</span>
                 </div>
                 <div class="flex flex-col"
                      v-for="cost_unit in this.filteredCostUnits">
@@ -256,24 +256,24 @@
                         <!-- only display edit/trash icons if no cost_unit is edited currently -->
                         <div v-if="this.costUnitIdToEdit === null"
                              class="flex flex-row items-center">
-                            <PropertyIcon name="IconEdit" class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconEdit" class="w-5 h-5 hover:text-danger cursor-pointer"
                                       @click="this.initCostUnitEdit(cost_unit)"/>
-                            <PropertyIcon name="IconTrash" class="w-5 h-5 hover:text-error cursor-pointer"
+                            <PropertyIcon name="IconTrash" class="w-5 h-5 hover:text-danger cursor-pointer"
                                        @click="this.showRemoveConfirmModal(cost_unit, 'cost_unit')"
                             />
                         </div>
                         <!-- only display save/x icons if current cost_unit is edited -->
                         <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center ml-2">
                             <PropertyIcon name="IconDeviceFloppy" @click="this.saveCostUnitEdit()"
-                                              class="w-5 h-5 hover:text-error cursor-pointer"
+                                              class="w-5 h-5 hover:text-danger cursor-pointer"
                             />
                             <PropertyIcon name="IconX" @click="this.resetCostUnitEdit();"
-                                   class="w-5 h-5 hover:text-error cursor-pointer"
+                                   class="w-5 h-5 hover:text-danger cursor-pointer"
                             />
                         </div>
                     </div>
                     <div v-if="this.costUnitIdToEdit === cost_unit.id && this.editCostUnitFormHelpText"
-                         class="errorText">
+                         class="text-sm/5 text-danger">
                         {{ this.editCostUnitFormHelpText }}
                     </div>
                 </div>

@@ -4,7 +4,7 @@
         <div v-if="loadMaterialsError" class="mb-2 text-xs text-danger">
             {{ loadMaterialsError }}
         </div>
-        <div v-else-if="isLoadingMaterials" class="mb-2 text-xs text-secondary">
+        <div v-else-if="isLoadingMaterials" class="mb-2 text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
         <!-- Top-Bar -->

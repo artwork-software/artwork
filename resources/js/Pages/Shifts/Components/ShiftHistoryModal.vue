@@ -72,7 +72,7 @@
                         </p>
                     </div>
 
-                    <div v-if="error" class="rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-artwork-messages-error">
+                    <div v-if="error" class="rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-danger">
                         {{ error }}
                     </div>
                 </div>

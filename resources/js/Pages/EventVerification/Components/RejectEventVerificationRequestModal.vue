@@ -19,7 +19,7 @@
                     @click="rejectRequest()"
                     :text="$t('Reject Request')"
                 />
-                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="$emit('close')">
+                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="$emit('close')">
                     {{ $t('No, not really') }}
                 </p>
             </div>

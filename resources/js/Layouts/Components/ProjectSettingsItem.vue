@@ -1,5 +1,5 @@
 <template>
-    <div class="card white p-5">
+    <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
         <div class="">
             <BasePageTitle :title="title" :description="description" />
         </div>
@@ -30,8 +30,6 @@
 </template>
 
 <script>
-import {XIcon, XCircleIcon, PencilIcon} from "@heroicons/vue/outline"
-import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {ref} from "vue";
 import draggable from "vuedraggable";
 import {useForm} from "@inertiajs/vue3";
@@ -39,25 +37,23 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import {IconCheck, IconCirclePlus} from "@tabler/icons-vue";
+import {IconCheck, IconCirclePlus, IconCircleX, IconDotsVertical, IconPencil, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
 export default {
     name: "ProjectSettingsItem",
     components: {
         BasePageTitle,
-        GlassyIconButton,
         BaseInput,
         TextInputComponent,
         EditableTagComponent,
         ColorPickerComponent,
         draggable,
-        XIcon,
-        XCircleIcon,
-        PencilIcon,
-        CheckIcon,
-        DotsVerticalIcon
+        IconX,
+        IconCircleX,
+        IconPencil,
+        IconCheck,
+        IconDotsVertical
     },
     props: {
         title: String,

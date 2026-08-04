@@ -3,7 +3,7 @@
         <div class="inline-flex items-stretch bg-surface border border-border-subtle rounded-xl shadow-raised overflow-hidden">
             <button v-if="showNavigation"
                     type="button"
-                    class="w-7 flex items-center justify-center text-artwork-context-dark hover:bg-surface-sunken transition duration-200 border-r border-border-subtle"
+                    class="w-7 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200 border-r border-border-subtle"
                     :title="$t('Time range back')"
                     @click="shiftRange(-1)">
                 <IconChevronLeft class="h-4 w-4" stroke-width="2"/>
@@ -15,17 +15,17 @@
                         aria-haspopup="dialog"
                         :aria-expanded="open"
                         @click="togglePopover()">
-                    <IconCalendar class="h-4 w-4 text-artwork-buttons-create" stroke-width="1.8"/>
+                    <IconCalendar class="h-4 w-4 text-accent-600" stroke-width="1.8"/>
                 </button>
-                <span class="text-xs text-secondary shrink-0">{{ weekdayShort(appliedStart) }}</span>
+                <span class="text-xs text-text-subtle shrink-0">{{ weekdayShort(appliedStart) }}</span>
                 <input v-model="inlineStart"
                        type="date"
                        class="drc-date-input w-[5.9rem] border-0 bg-transparent p-0 text-sm font-semibold tabular-nums cursor-text rounded"
                        :aria-label="$t('Start date')"
                        @focusout="onInlineFocusOut"
                        @keydown.enter.prevent="$event.target.blur()"/>
-                <span class="text-secondary shrink-0">–</span>
-                <span class="text-xs text-secondary shrink-0">{{ weekdayShort(appliedEnd) }}</span>
+                <span class="text-text-subtle shrink-0">–</span>
+                <span class="text-xs text-text-subtle shrink-0">{{ weekdayShort(appliedEnd) }}</span>
                 <input v-model="inlineEnd"
                        type="date"
                        class="drc-date-input w-[5.9rem] border-0 bg-transparent p-0 text-sm font-semibold tabular-nums cursor-text rounded"
@@ -38,14 +38,14 @@
                         aria-haspopup="dialog"
                         :aria-expanded="open"
                         @click="togglePopover()">
-                    <span class="text-xs text-secondary whitespace-nowrap tabular-nums">{{ rangeMeta }}</span>
-                    <IconChevronDown class="h-3.5 w-3.5 text-secondary transition-transform duration-150"
+                    <span class="text-xs text-text-subtle whitespace-nowrap tabular-nums">{{ rangeMeta }}</span>
+                    <IconChevronDown class="h-3.5 w-3.5 text-text-subtle transition-transform duration-150"
                                      :class="open ? 'rotate-180' : ''" stroke-width="2.2"/>
                 </button>
             </div>
             <button v-if="showNavigation"
                     type="button"
-                    class="w-7 flex items-center justify-center text-artwork-context-dark hover:bg-surface-sunken transition duration-200 border-l border-border-subtle"
+                    class="w-7 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200 border-l border-border-subtle"
                     :title="$t('Time range forward')"
                     @click="shiftRange(1)">
                 <IconChevronRight class="h-4 w-4" stroke-width="2"/>
@@ -54,7 +54,7 @@
         <button v-if="showToday"
                 type="button"
                 class="ml-1.5 px-2.5 py-2 rounded-xl border border-border-subtle bg-surface shadow-raised text-sm font-medium transition duration-200"
-                :class="todayInRange ? 'text-text-subtle cursor-default' : 'text-artwork-buttons-create hover:bg-artwork-buttons-create/5'"
+                :class="todayInRange ? 'text-text-subtle cursor-default' : 'text-accent-600 hover:bg-accent-600/5'"
                 :disabled="todayInRange"
                 @click="jumpToToday">
             {{ $t('Today') }}
@@ -63,7 +63,7 @@
         <Teleport to="body">
             <div v-if="open"
                  ref="popEl"
-                 class="fixed z-[100] w-[740px] bg-surface border border-border-subtle rounded-2xl shadow-overlay text-primary"
+                 class="fixed z-[100] w-[740px] bg-surface border border-border-subtle rounded-2xl shadow-overlay text-text"
                  :style="popStyle"
                  role="dialog"
                  :aria-label="$t('Select period')"
@@ -74,8 +74,8 @@
                             type="button"
                             class="px-3 py-1 rounded-full text-xs border transition duration-150"
                             :class="snapMode === chip.key
-                                ? 'bg-artwork-buttons-create/10 border-artwork-buttons-create/40 text-artwork-buttons-create font-semibold'
-                                : 'border-border-subtle text-artwork-context-dark hover:bg-surface-sunken'"
+                                ? 'bg-accent-600/10 border-accent-600/40 text-accent-600 font-semibold'
+                                : 'border-border-subtle text-text-muted hover:bg-surface-sunken'"
                             @click="setSnapMode(chip.key)">
                         {{ chip.label }}
                     </button>
@@ -87,7 +87,7 @@
                                 type="button"
                                 class="text-left px-2.5 py-1.5 rounded-lg text-[13px] transition duration-100 whitespace-nowrap"
                                 :class="isActivePreset(preset)
-                                    ? 'bg-artwork-buttons-create/10 text-artwork-buttons-create font-semibold'
+                                    ? 'bg-accent-600/10 text-accent-600 font-semibold'
                                     : 'text-text-muted hover:bg-surface-sunken'"
                                 @click="applyPreset(preset)">
                             {{ preset.label }}
@@ -98,7 +98,7 @@
                             <div class="flex items-center justify-between mb-1.5">
                                 <button v-if="offset === 0"
                                         type="button"
-                                        class="w-7 h-7 rounded-lg flex items-center justify-center text-artwork-context-dark hover:bg-surface-sunken"
+                                        class="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:bg-surface-sunken"
                                         :title="$t('Time range back')"
                                         @click="viewMonth = addMonths(viewMonth, -1)">
                                     <IconChevronLeft class="h-3.5 w-3.5" stroke-width="2"/>
@@ -107,7 +107,7 @@
                                 <span class="text-[13px] font-semibold">{{ monthTitle(addMonths(viewMonth, offset)) }}</span>
                                 <button v-if="offset === 1"
                                         type="button"
-                                        class="w-7 h-7 rounded-lg flex items-center justify-center text-artwork-context-dark hover:bg-surface-sunken"
+                                        class="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:bg-surface-sunken"
                                         :title="$t('Time range forward')"
                                         @click="viewMonth = addMonths(viewMonth, 1)">
                                     <IconChevronRight class="h-3.5 w-3.5" stroke-width="2"/>
@@ -118,7 +118,7 @@
                                 <thead>
                                 <tr>
                                     <th class="w-6 pr-1.5 text-right text-[10px] font-semibold text-text-subtle">{{ weekAbbrev }}</th>
-                                    <th v-for="wd in weekdayHeads" :key="wd" class="py-0.5 text-[10.5px] font-semibold text-secondary uppercase tracking-wide">
+                                    <th v-for="wd in weekdayHeads" :key="wd" class="py-0.5 text-[10.5px] font-semibold text-text-subtle uppercase tracking-wide">
                                         {{ wd }}
                                     </th>
                                 </tr>
@@ -127,7 +127,7 @@
                                 <tr v-for="week in monthGrid(addMonths(viewMonth, offset))" :key="week.iso">
                                     <td class="pr-1.5 text-right">
                                         <button type="button"
-                                                class="text-[10px] text-text-subtle hover:text-artwork-buttons-create tabular-nums"
+                                                class="text-[10px] text-text-subtle hover:text-accent-600 tabular-nums"
                                                 :title="$t('Calendar week') + ' ' + week.kw"
                                                 @click="selectWeek(week.monday)">
                                             {{ week.kw }}
@@ -142,7 +142,7 @@
                                             {{ cell.date.getDate() }}
                                             <span v-if="cell.isToday"
                                                   class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                                                  :class="isEndpoint(cell.date) ? 'bg-white' : 'bg-artwork-buttons-create'"></span>
+                                                  :class="isEndpoint(cell.date) ? 'bg-white' : 'bg-accent-600'"></span>
                                         </button>
                                     </td>
                                 </tr>
@@ -154,28 +154,28 @@
                 <div class="flex items-center gap-x-2.5 px-4 py-3.5 mt-3 border-t border-border-subtle">
                     <input v-model="inputStart"
                            type="text"
-                           class="w-28 px-2.5 py-1.5 text-[13px] border rounded-lg tabular-nums focus:ring-artwork-buttons-hover"
-                           :class="inputStartValid ? 'border-border' : 'border-artwork-messages-error'"
+                           class="w-28 px-2.5 py-1.5 text-[13px] border rounded-lg tabular-nums focus:ring-accent-700"
+                           :class="inputStartValid ? 'border-border' : 'border-danger'"
                            :placeholder="datePlaceholder"
                            :aria-label="$t('Start date')"
                            @change="applyInputs"
                            @keydown.enter.prevent="applyInputs(); applyDraft()"/>
-                    <span class="text-secondary">–</span>
+                    <span class="text-text-subtle">–</span>
                     <input v-model="inputEnd"
                            type="text"
-                           class="w-28 px-2.5 py-1.5 text-[13px] border rounded-lg tabular-nums focus:ring-artwork-buttons-hover"
-                           :class="inputEndValid ? 'border-border' : 'border-artwork-messages-error'"
+                           class="w-28 px-2.5 py-1.5 text-[13px] border rounded-lg tabular-nums focus:ring-accent-700"
+                           :class="inputEndValid ? 'border-border' : 'border-danger'"
                            :placeholder="datePlaceholder"
                            :aria-label="$t('End date')"
                            @change="applyInputs"
                            @keydown.enter.prevent="applyInputs(); applyDraft()"/>
-                    <span class="text-xs text-secondary ml-1 tabular-nums">{{ draftDayCount }}</span>
+                    <span class="text-xs text-text-subtle ml-1 tabular-nums">{{ draftDayCount }}</span>
                     <span class="flex-1"></span>
-                    <button type="button" class="px-3.5 py-2 rounded-lg text-[13px] text-artwork-context-dark hover:bg-surface-sunken" @click="closePopover">
+                    <button type="button" class="px-3.5 py-2 rounded-lg text-[13px] text-text-muted hover:bg-surface-sunken" @click="closePopover">
                         {{ $t('Cancel') }}
                     </button>
                     <button type="button"
-                            class="px-4 py-2 rounded-lg text-[13px] font-semibold bg-artwork-buttons-create text-white hover:bg-artwork-buttons-hover transition duration-150"
+                            class="px-4 py-2 rounded-lg text-[13px] font-semibold bg-accent-600 text-white hover:bg-accent-700 transition duration-150"
                             @click="applyDraft">
                         {{ $t('Apply') }}
                     </button>
@@ -613,10 +613,10 @@ function dayClasses(cell, monthBase) {
     const [lo, hi] = previewRange.value;
     const inRange = cell.date >= lo && cell.date <= hi;
     if (isEndpoint(cell.date)) {
-        return 'bg-artwork-buttons-create text-white font-semibold rounded-lg';
+        return 'bg-accent-600 text-white font-semibold rounded-lg';
     }
     if (inRange) {
-        return 'bg-artwork-buttons-create/10 text-text-muted';
+        return 'bg-accent-600/10 text-text-muted';
     }
     if (cell.date.getMonth() !== monthBase.getMonth()) {
         return 'text-text-subtle hover:bg-surface-sunken rounded-lg';

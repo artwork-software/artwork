@@ -98,8 +98,8 @@
               <!-- Team erstellen Modal -->
               <BaseModal v-if="addingTeam" @closed="closeAddTeamModal" modal-image="/Svgs/Overlays/illu_team_new.svg">
                   <div class="mx-4">
-                      <div class="headline1 my-2">{{ $t('Create New Team') }}</div>
-                      <div class="xsLight subpixel-antialiased mt-4">{{ $t('Create a fixed team/department.') }}</div>
+                      <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">{{ $t('Create New Team') }}</div>
+                      <div class="text-sm/5 font-bold text-text-subtle subpixel-antialiased mt-4">{{ $t('Create a fixed team/department.') }}</div>
 
                       <div class="mt-12">
                           <div class="flex">
@@ -141,8 +141,8 @@
                           <span v-if="form.svg_name === ''" class="text-danger text-xs mt-2">Icon auswählen notwendig*</span>
 
                           <div class="mt-12">
-                              <div class="headline2 my-2">{{ $t('Add users') }}</div>
-                              <div class="xsLight subpixel-antialiased">{{ $t('Enter the name of the user you want to add to the team.') }}</div>
+                              <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{ $t('Add users') }}</div>
+                              <div class="text-sm/5 font-bold text-text-subtle subpixel-antialiased">{{ $t('Enter the name of the user you want to add to the team.') }}</div>
 
                               <div class="mt-6 relative">
                                   <div class="my-auto w-full">
@@ -175,7 +175,7 @@
 
                           <div class="mt-4 space-y-3">
                               <div v-for="(user,index) in form.assigned_users" :key="user.id"
-                                   class="flex items-center text-primary">
+                                   class="flex items-center text-text">
                                   <img class="h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
                                   <span class="ml-4">{{ user.first_name }} {{ user.last_name }}</span>
                                   <button type="button" class="ml-2" @click="deleteUserFromTeam(index)">
@@ -195,8 +195,8 @@
               <!-- Alle Mitglieder aus Team löschen Modal -->
               <BaseModal v-if="deletingAllTeamMembers" @closed="closeDeleteAllTeamMembersModal" modal-image="/Svgs/Overlays/illu_warning.svg">
                   <div class="mx-4">
-                      <div class="headline1 my-2">{{ $t('Delete all team members') }}</div>
-                      <div class="errorText mt-4">
+                      <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">{{ $t('Delete all team members') }}</div>
+                      <div class="text-sm/5 text-danger mt-4">
                           {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers?.name }) }}
                       </div>
                       <div class="flex justify-between mt-6">
@@ -205,7 +205,7 @@
                               {{ $t('Delete') }}
                           </button>
                           <div class="flex my-auto">
-                              <span @click="closeDeleteAllTeamMembersModal" class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>
+                              <span @click="closeDeleteAllTeamMembersModal" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
                           </div>
                       </div>
                   </div>
@@ -214,8 +214,8 @@
               <!-- Team löschen Modal -->
               <BaseModal v-if="deletingTeam" @closed="closeDeleteTeamModal" modal-image="/Svgs/Overlays/illu_warning.svg">
                   <div class="mx-4">
-                      <div class="headline1 mt-6 my-2">{{ $t('Delete Team') }}</div>
-                      <div class="errorText">
+                      <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mt-6 my-2">{{ $t('Delete Team') }}</div>
+                      <div class="text-sm/5 text-danger">
                           {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete?.name }) }}
                       </div>
                       <div class="flex justify-between mt-6">
@@ -224,7 +224,7 @@
                               {{ $t('Delete Team') }}
                           </button>
                           <div class="flex my-auto">
-                              <span @click="closeDeleteTeamModal" class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>
+                              <span @click="closeDeleteTeamModal" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
                           </div>
                       </div>
                   </div>

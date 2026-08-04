@@ -10,7 +10,7 @@
                     <p class="text-xs">{{ bookingForm.user.position }}</p>
                 </div>
             </div>
-            <div class="text-right text-xs font-lexend text-artwork-buttons-create underline cursor-pointer">
+            <div class="text-right text-xs font-lexend text-accent-600 underline cursor-pointer">
                 <div @click="bookingForm.user = null">{{ $t('Select another user') }}</div>
             </div>
         </div>
@@ -74,7 +74,6 @@ import {useForm} from "@inertiajs/vue3";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {IconChevronDown} from "@tabler/icons-vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

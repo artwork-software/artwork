@@ -13,21 +13,21 @@
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closed">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
+                                    <IconX class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
                             <div class="relative z-40">
-                                <div class="font-black font-lexend text-primary text-3xl my-2">
+                                <div class="font-black font-lexend text-text text-3xl my-2">
                                     {{ $t('Delete shift staffing') }}
                                 </div>
-                                <p class="xsLight">
+                                <p class="text-sm/5 font-bold text-text-subtle">
                                     {{ $t('You want to delete the occupation of a repeat shift. Specify whether this only applies to one or all further shifts.') }}
                                 </p>
                                 <SwitchGroup as="div" class="flex items-center mt-4">
                                     <SwitchLabel as="span" class="mr-3 text-sm" :class="this.removeFromSingleShift ? 'text-text-subtle' : 'font-bold'">
                                         {{ $t('For this and all subsequent shifts') }}
                                     </SwitchLabel>
-                                    <Switch v-model="this.removeFromSingleShift" :class="[this.removeFromSingleShift ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                                    <Switch v-model="this.removeFromSingleShift" :class="[this.removeFromSingleShift ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                                         <span aria-hidden="true" :class="[this.removeFromSingleShift  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                     </Switch>
                                     <SwitchLabel as="span" class="ml-3 text-sm" :class="this.removeFromSingleShift ? 'font-bold' : 'text-text-subtle'">
@@ -47,6 +47,7 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import {
     Dialog,
     DialogPanel,
@@ -57,7 +58,6 @@ import {
     SwitchGroup,
     SwitchLabel
 } from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
@@ -73,7 +73,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon,
+        IconX,
         Switch,
         SwitchGroup,
         SwitchLabel

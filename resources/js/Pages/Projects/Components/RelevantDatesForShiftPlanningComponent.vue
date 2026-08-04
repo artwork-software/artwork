@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-5">
             <BasePageTitle title="Relevant dates for shift planning" :white-text="inSidebar" />
             <div v-if="this.canEditComponent">
-                <PencilAltIcon class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
+                <IconEdit class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-text-muted'"
                                @click="openShiftRelevantEventTypeModal"/>
             </div>
         </div>
@@ -22,9 +22,9 @@
 </template>
 
 <script>
+import {IconEdit} from "@tabler/icons-vue";
 import {defineComponent} from "vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import {PencilAltIcon} from "@heroicons/vue/outline";
 import ShiftRelevantEventTypeModal from "@/Layouts/Components/ShiftRelevantEventTypeModal.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
@@ -32,7 +32,7 @@ export default defineComponent({
     components: {
         BasePageTitle,
         ShiftRelevantEventTypeModal,
-        PencilAltIcon,
+        IconEdit,
         TagComponent
     },
     props: [

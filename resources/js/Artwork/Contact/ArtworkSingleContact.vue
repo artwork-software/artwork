@@ -1,6 +1,6 @@
 <template>
     <div class="flex items-center gap-x-4 border-b border-border-subtle bg-surface-sunken p-6">
-        <img :src="route('generate-avatar-image', contact?.name?.[0] ?? 'A')" :alt="contact.name" class="size-12 flex-none rounded-full bg-surface object-cover border-2 border-white shadow-glass" />
+        <img :src="route('generate-avatar-image', contact?.name?.[0] ?? 'A')" :alt="contact.name" class="size-12 flex-none rounded-full bg-surface object-cover border-2 border-white shadow-overlay" />
         <div class="w-full">
             <div class="font-lexend font-medium text-text">{{ contact.name }}</div>
             <div class="text-xs font-medium text-text">{{ contact.street }}</div>

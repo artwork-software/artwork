@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Comments') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('Comments') }}</h3>
         <div v-if="project.comments_all?.length > 0" class="space-y-3">
             <div v-for="comment in project.comments_all" :key="comment.id" class="border-b border-border-subtle pb-2">
                 <div class="flex items-center gap-2 mb-1">
@@ -10,7 +10,7 @@
                 <div class="text-sm text-text-muted">{{ comment.text }}</div>
             </div>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

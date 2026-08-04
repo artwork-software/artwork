@@ -6,7 +6,7 @@
         </span>
 
         <button type="button" @click="showConfirmation = true">
-            <XIcon class="ml-1 h-4 w-4 hover:text-error" />
+            <IconX class="ml-1 h-4 w-4 hover:text-danger" />
         </button>
     </span>
 
@@ -27,20 +27,22 @@
 </template>
 
 <script>
-import { XIcon } from "@heroicons/vue/outline";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ProjectStateModal from "@/Layouts/Components/ProjectStateModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {IconCalendarCog} from "@tabler/icons-vue";
+import {IconCalendarCog, IconX} from "@tabler/icons-vue";
 
 export default {
     name: "ProjectStateTagComponent",
     components: {
         ProjectStateModal,
         ConfirmationComponent,
-        XIcon,
+        IconX,
     },
-    mixins: [ColorHelper],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
+        return {backgroundColorWithOpacity, TextColorWithDarken};
+    },
     emits: ['delete', 'update'],
     props: {
         item: {

@@ -7,10 +7,10 @@
             </h3>
             <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-artwork-buttons-create px-3 py-1.5 text-sm font-medium text-white hover:bg-artwork-buttons-hover transition"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-700 transition"
                 @click="$emit('create')"
             >
-                <PlusIcon class="h-4 w-4" />
+                <IconPlus class="h-4 w-4" />
                 {{ $t('New entry') }}
             </button>
         </div>
@@ -95,9 +95,9 @@
 </template>
 
 <script setup>
+import {IconPlus} from "@tabler/icons-vue";
 import { computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
-import { PlusIcon } from '@heroicons/vue/outline'
 import dayjs from 'dayjs'
 import axios from 'axios'
 import SingleUserVacation from '@/Pages/Users/Components/SingleUserVacation.vue'

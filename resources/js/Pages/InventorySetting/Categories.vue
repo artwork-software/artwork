@@ -19,7 +19,7 @@
                 'Caution: deleting a category also irrevocably deletes all articles in it.',
             ]"
         />
-        <div class="mb-10 card white p-5">
+        <div class="mb-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
 
             <div class="my-8 flow-root">
                 <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">

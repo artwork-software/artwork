@@ -9,84 +9,84 @@
                 <img src="/Svgs/Logos/artwork_logo_big.svg"/>
             </div>
             <div class="flex items-center">
-                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Create administrator')}}</h2>
+                <h2 class="mt-6 text-3xl font-lexend font-bold text-text">{{$t('Create administrator')}}</h2>
                 <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
             </div>
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
-                    <label for="first_name" class="text-sm font-bold text-secondary">{{ $t('First name')}}</label>
+                    <label for="first_name" class="text-sm font-bold text-text-subtle">{{ $t('First name')}}</label>
                     <input
                         v-model="form.first_name"
                         id="first_name"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
+                        class="focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="last_name" class="text-sm font-bold text-secondary">{{  $t('name') }}</label>
+                    <label for="last_name" class="text-sm font-bold text-text-subtle">{{  $t('name') }}</label>
                     <input
                         v-model="form.last_name"
                         id="last_name"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
+                        class="focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="email" class="text-sm font-bold text-secondary">{{  $t('Email') }}</label>
+                    <label for="email" class="text-sm font-bold text-text-subtle">{{  $t('Email') }}</label>
                     <input
                         v-model="form.email"
                         id="email"
                         type="email"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
+                        class="focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="phoneNumber" class="text-sm font-bold text-secondary">{{ $t('Phone number') }}</label>
+                    <label for="phoneNumber" class="text-sm font-bold text-text-subtle">{{ $t('Phone number') }}</label>
                     <input
                         v-model="form.phone_number"
                         id="phoneNumber"
                         type="text"
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
+                        class="focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="business" class="text-sm font-bold text-secondary">{{ $t('Company')}}</label>
+                    <label for="business" class="text-sm font-bold text-text-subtle">{{ $t('Company')}}</label>
                     <input
                         v-model="form.business"
                         id="business"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
+                        class="focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
 
                 <div class="sm:col-span-3 mt-1">
-                    <label for="position" class="text-sm font-bold text-secondary">{{ $t('Position')}}</label>
+                    <label for="position" class="text-sm font-bold text-text-subtle">{{ $t('Position')}}</label>
                     <input
                         v-model="form.position"
                         id="position"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
+                        class="focus:ring-black focus:border-accent-600 border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
-                    <label for="password" class="text-sm font-bold text-secondary">{{ $t('Password')}}</label>
+                    <label for="password" class="text-sm font-bold text-text-subtle">{{ $t('Password')}}</label>
                     <input
                         v-model="form.password"
                         id="password"
                         type="password"
                         required
-                        :class="[form.hasErrors ? 'border-error' : 'border-border-subtle', 'focus:ring-black focus:border-black border-2 w-full sm:text-sm']"/>
+                        :class="[form.hasErrors ? 'border-danger' : 'border-border-subtle', 'focus:ring-black focus:border-black border-2 w-full sm:text-sm']"/>
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
                 </div>
 
                 <div v-if="form.password.length>0" class="sm:col-span-3 flex items-center">
 
-                    <span class="text-xs text-secondary">{{$t('Weak')}}</span>
+                    <span class="text-xs text-text-subtle">{{$t('Weak')}}</span>
 
                     <div class="mx-6 mt-1 w-full bg-border-subtle h-1 ">
-                        <div :class="[pw_feedback < 1 ? 'bg-error'
+                        <div :class="[pw_feedback < 1 ? 'bg-danger'
                                 : pw_feedback < 3
                                 ? 'bg-warning' :
                                 'bg-success' ,
@@ -97,16 +97,16 @@
                     <span class="text-xs">{{ $t('Strong')}}</span>
                 </div>
             </div>
-            <div class="flex items-center text-secondary">
+            <div class="flex items-center text-text-subtle">
                 <SvgCollection svgName="arrowTopLeft" class="m-3"/>
 
-                <div class="hind w-full">
+                <div class="w-full">
                     {{ $t('The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.')}}
                 </div>
             </div>
 
             <button type="submit"
-                class="px-28 py-3 mt-5 bg-artwork-buttons-create hover:bg-secondary text-xl uppercase text-white disabled:bg-secondary disabled:cursor-not-allowed"
+                class="px-28 py-3 mt-5 bg-accent-600 hover:bg-text-subtle text-xl uppercase text-white disabled:bg-text-subtle disabled:cursor-not-allowed"
                 :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''">
                 {{$t('Register')}}
             </button>
@@ -115,6 +115,7 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import JetButton from '@/Jetstream/Button.vue'
 import JetInput from '@/Jetstream/Input.vue'
@@ -124,7 +125,6 @@ import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/vue3';
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 
 
@@ -140,7 +140,7 @@ export default defineComponent({
         Link,
         SvgCollection,
         JetInputError,
-        XIcon
+        IconX
     },
     data() {
         return {

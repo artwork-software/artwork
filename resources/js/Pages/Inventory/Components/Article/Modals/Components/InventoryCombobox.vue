@@ -126,11 +126,11 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
 
     /** Klassen – auf deine Styles abgestimmt, überschreibbar */
-    labelClass: { type: String, default: 'xsDark' },
+    labelClass: { type: String, default: 'text-sm/5 font-semibold text-text' },
     wrapperClass: {
         type: String,
         default:
-            'relative px-3 py-3 text-sm block w-full font-lexend bg-white shadow-sm border border-border-subtle rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
+            'relative px-3 py-3 text-sm block w-full font-lexend bg-white shadow-sm border border-border-subtle rounded-md focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600',
     },
     inputClass: {
         type: String,

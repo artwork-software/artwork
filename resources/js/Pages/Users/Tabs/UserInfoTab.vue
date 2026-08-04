@@ -173,7 +173,7 @@
                                 >
                                     <span class="block truncate">{{ selectedLanguage?.name }}</span>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true" />
+                    <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                   </span>
                                 </ListboxButton>
 
@@ -204,7 +204,7 @@
                                                     v-if="selected"
                                                     :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                                 >
-                          <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                          <IconCheck class="h-5 w-5" aria-hidden="true" />
                         </span>
                                             </li>
                                         </ListboxOption>
@@ -363,7 +363,7 @@
                     @click="deleteFromAllDepartments"
                     class="inline-flex items-center gap-2 rounded-xl border border-danger-border bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-surface"
                 >
-                    <TrashIcon class="h-4 w-4" />
+                    <IconTrash class="h-4 w-4" />
                     {{ $t('Remove user from all teams') }}
                 </button>
             </div>
@@ -476,7 +476,6 @@ import {router, useForm, usePage} from '@inertiajs/vue3'
 import {
     Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from '@headlessui/vue'
-import { CheckIcon, ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon } from '@heroicons/vue/outline'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
@@ -489,7 +488,7 @@ import BaseMenuItem from '@/Components/Menu/BaseMenuItem.vue'
 import SaveChatKeyButton from '@/Pages/Users/Components/SaveChatKeyButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
-import { IconEdit, IconTrash } from '@tabler/icons-vue'
+import {IconCheck, IconChevronDown, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue"
 import {is, can} from "laravel-permission-to-vuejs";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

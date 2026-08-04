@@ -1,7 +1,7 @@
 <template>
     <div class="my-2" @click="openTextField" v-if="!showTextField" :class="canEditDescription ? '' : 'cursor-default'">
         <div v-if="event.description?.length === 0 || event.description === null">
-            <PropertyIcon v-if="canEditDescription" name="IconNote" class="w-4 h-4 text-artwork-buttons-context"/>
+            <PropertyIcon v-if="canEditDescription" name="IconNote" class="w-4 h-4 text-text-muted"/>
         </div>
         <p v-else class="text-xs">
             {{ cutDescription }}
@@ -10,9 +10,9 @@
     <div v-if="showTextField">
         <div>
             <textarea ref="descriptionField" v-model="eventDescription.description"
-                      class="w-[95%] h-20 p-1 text-sm border-artwork-buttons-context/30 rounded-lg" maxlength="250"
+                      class="w-[95%] h-20 p-1 text-sm border-text-muted/30 rounded-lg" maxlength="250"
                       @focusout="updateDescription"/>
-            <div class="text-xs text-end text-artwork-buttons-context">
+            <div class="text-xs text-end text-text-muted">
                 {{ eventDescription.description.length }} / 250
             </div>
         </div>

@@ -183,11 +183,11 @@ const instructions = computed(() => ([
                         @click="$event.target.select()"
                         id="calendar-url"
                         name="calendar-url"
-                        class="block w-full rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create"
+                        class="block w-full rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600"
                     />
                     <button
                         type="button"
-                        class="absolute right-1 top-1 bottom-1 my-auto inline-flex items-center gap-2 rounded-md bg-artwork-buttons-create px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create"
+                        class="absolute right-1 top-1 bottom-1 my-auto inline-flex items-center gap-2 rounded-md bg-accent-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-600"
                         @click="copyAboUrlToClipboard"
                     >
                         <PropertyIcon name="IconCircleCheck" class="h-4 w-4" v-if="copyText" />
@@ -195,7 +195,7 @@ const instructions = computed(() => ([
                     </button>
                 </div>
 
-                <div class="mt-2 text-xs text-artwork-buttons-create flex items-center gap-1">
+                <div class="mt-2 text-xs text-accent-600 flex items-center gap-1">
                     <PropertyIcon name="IconInfoCircle" class="h-4 w-4" />
                     {{ $t('Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.') }}
                 </div>
@@ -209,12 +209,12 @@ const instructions = computed(() => ([
                     </p>
                     <button
                         type="button"
-                        class="text-sm text-artwork-buttons-hover underline"
+                        class="text-sm text-accent-700 underline"
                         @click="downloadICSFile"
                     >
                         {{ $t('Download ICS file') }}
                     </button>
-                    <div class="mt-2 text-xs text-artwork-messages-error">
+                    <div class="mt-2 text-xs text-danger">
                         {{ $t('Attention - The ICS file is not updated automatically. You must re-import the file regularly to keep it up to date.') }}
                     </div>
                 </div>

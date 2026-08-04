@@ -25,7 +25,7 @@
 
             <button
                 type="button"
-                class="text-xs text-text-subtle underline underline-offset-2 hover:text-artwork-messages-error transition-colors"
+                class="text-xs text-text-subtle underline underline-offset-2 hover:text-danger transition-colors"
                 @click="onResetAll"
             >
                 {{ $t('Reset all filters') }}

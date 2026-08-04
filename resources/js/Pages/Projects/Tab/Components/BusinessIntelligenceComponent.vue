@@ -3,7 +3,7 @@
         <div v-if="loadError" class="mb-2 text-xs text-danger">
             {{ $t(loadError) }}
         </div>
-        <div v-else-if="isLoading" class="mb-2 text-xs text-secondary">
+        <div v-else-if="isLoading" class="mb-2 text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
         <template v-else>

@@ -32,19 +32,19 @@ export default {
 
 <template>
     <BaseModal @closed="$emit('close')">
-        <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
+        <div class="font-black font-lexend text-text text-3xl my-2 mb-6">
             {{ title }}
         </div>
-        <p class="text-artwork-buttons-context subpixel-antialiased">{{ description }}</p>
+        <p class="text-text-muted subpixel-antialiased">{{ description }}</p>
 
         <div class="my-5 flex items-center w-full">
             <ColorPickerComponent class="w-fit" @update-color="UpdateColor" :color="itemCopy.color"  />
-            <input type="text" v-model="itemCopy.name" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border" />
+            <input type="text" v-model="itemCopy.name" class="h-12 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border" />
         </div>
         <div class="flex justify-between mt-6">
             <FormButton :text="$t('Save')" @click="update" />
             <div class="flex my-auto">
-                <span @click="$emit('close')" class="xsLight cursor-pointer">{{ $t('No, not really') }}</span>
+                <span @click="$emit('close')" class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really') }}</span>
             </div>
         </div>
     </BaseModal>

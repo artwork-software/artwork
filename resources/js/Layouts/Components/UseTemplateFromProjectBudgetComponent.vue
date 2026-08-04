@@ -4,19 +4,19 @@
                 <!--   Heading   -->
                 <div>
                     <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
+                        <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                             {{ $t('Read from project') }}
                         </div>
                     </h1>
-                    <h2 class="xsLight mb-2 mt-8">
+                    <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-8">
                         {{ $t('To make your work easier, use an existing calculation from another project.') }}
                     </h2>
-                    <div v-if="selectedProject !== null" class="flex items-center my-3 xsDark">
+                    <div v-if="selectedProject !== null" class="flex items-center my-3 text-sm/5 font-semibold text-text">
                         {{ $t('Currently selected project template') }}: {{ this.selectedProject?.name }}
                         <div v-if="this.selectedProject" class="flex items-center my-auto">
                             <button type="button"
                                     @click="selectedProject = null">
-                                <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                                <IconCircleX class="pl-2 h-6 w-6 hover:text-danger text-text"/>
                             </button>
                         </div>
                     </div>
@@ -25,11 +25,11 @@
                             <inputComponent v-model="this.project_query" :placeholder="$t('From which project?*')"/>
                             <div
                                 v-if="project_search_results.length > 0"
-                                class="bg-primary truncate sm:text-sm">
+                                class="bg-surface-inverse truncate sm:text-sm">
                                 <div v-for="(project, index) in project_search_results"
                                      :key="index"
                                      @click="this.selectedProject = project;"
-                                     class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                     class="p-4 text-white border-l-4 hover:border-l-success border-l-surface-inverse cursor-pointer">
                                     {{ project.name }}
                                 </div>
                             </div>
@@ -47,11 +47,10 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -63,11 +62,11 @@ export default {
         BaseModal,
         FormButton,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon,
+        IconX,
+        IconCheck,
+        IconChevronDown,
         InputComponent,
-        XCircleIcon
+        IconCircleX
     },
     data() {
         return {

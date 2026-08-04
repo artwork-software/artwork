@@ -10,7 +10,7 @@
                         <SwitchLabel as="span" class="mr-3 text-xs" :class="automaticMode ? 'font-bold' : 'text-text-subtle'">
                             {{ $t('Automatic mode')}}
                         </SwitchLabel>
-                        <Switch v-model="automaticMode" :class="[automaticMode ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out']">
+                        <Switch v-model="automaticMode" :class="[automaticMode ? 'bg-accent-600' : 'bg-accent-600', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out']">
                             <span aria-hidden="true" :class="[!automaticMode  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 text-xs" :class="!automaticMode? 'font-bold' : 'text-text-subtle'">
@@ -52,7 +52,7 @@
                 <div class="mt-2"  @click="openCloseDescriptionEditor(true)">
                     <div v-if="!editDescription">
                         <div v-if="!timeLineForm.description">
-                            <IconNote  class="h-5 w-5 cursor-pointer text-artwork-buttons-context hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" stroke-width="2" />
+                            <IconNote  class="h-5 w-5 cursor-pointer text-text-muted hover:text-accent-700 transition-all duration-150 ease-in-out" stroke-width="2" />
                         </div>
                         <div v-else>
                             <p class="text-xs" v-html="timeLineForm.description"></p>
@@ -62,13 +62,13 @@
                         <BaseTextarea is-dark :id="'editTimeLineDescription_' + timeLineForm.id" v-model="timeLineForm.description" label="Comment" />
                     </div>
                 </div>
-                <div class="text-xs text-artwork-messages-error mt-2" v-if="helpText">
+                <div class="text-xs text-danger mt-2" v-if="helpText">
                     {{ helpText }}
                 </div>
                 <div v-if="time.clicked || editDescription" class="pt-4 flex items-center justify-between">
                     <!-- tiny cancel button -->
                     <button class="bg-surface-inverse text-text-inverse text-[9px] rounded-lg px-2.5 py-0.5" @click="resetForm">{{ $t('Cancel') }}</button>
-                    <button class="bg-artwork-buttons-create text-white text-[9px] rounded-lg px-2.5 py-0.5" @click="saveTimeline">{{ $t('Save') }}</button>
+                    <button class="bg-accent-600 text-white text-[9px] rounded-lg px-2.5 py-0.5" @click="saveTimeline">{{ $t('Save') }}</button>
                 </div>
 
 

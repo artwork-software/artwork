@@ -26,8 +26,8 @@
                     <Menu as="div" class="relative">
                         <div>
                             <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                <ChevronDownIcon
-                                    class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                <IconChevronDown
+                                    class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></IconChevronDown>
                             </MenuButton>
                         </div>
                         <transition enter-active-class="transition-enter-active"
@@ -37,10 +37,10 @@
                                     leave-from-class="transition-leave-from"
                                     leave-to-class="transition-leave-to">
                             <MenuItems
-                                class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <MenuItem v-for="department in project.departments" v-slot="{ active }">
                                     <div
-                                        :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        :class="[active ? 'bg-text-inverse/10 text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TeamIconCollection
                                             class="h-9 w-9 rounded-full ring-2 ring-white"
                                             :iconName="department.svg_name"
@@ -64,8 +64,8 @@
                         <Menu as="div" class="relative">
                             <div>
                                 <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                    <ChevronDownIcon
-                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                    <IconChevronDown
+                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></IconChevronDown>
                                 </MenuButton>
                             </div>
                             <transition enter-active-class="transition-enter-active"
@@ -75,10 +75,10 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems
-                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <MenuItem v-for="user in project.users" v-slot="{ active }">
                                         <div
-                                            :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-text-inverse/10 text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <img class="h-9 w-9 rounded-full"
                                                  :src="user.profile_photo_url"
                                                  alt=""/>
@@ -97,11 +97,11 @@
                     <MenuItem v-slot="{ active }">
                         <Link as="button" method="patch"
                               :href="route('projects.restore', { id: project.id })"
-                              :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                              :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                            <RefreshIcon
-                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                            <IconRefresh
+                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                 aria-hidden="true"/>
                             {{  $t('Restore') }}
                         </Link>
@@ -109,11 +109,11 @@
                     <MenuItem v-slot="{ active }">
                         <Link as="button" method="delete"
                               :href="route('projects.force', { id: project.id })"
-                              :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                              :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                            <TrashIcon
-                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                            <IconTrash
+                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                 aria-hidden="true"/>
                             {{ $t('Delete permanently')}}
                         </Link>
@@ -122,7 +122,7 @@
             </div>
 
         </div>
-        <div class="mb-4 subpixel-antialiased text-secondary text-xs flex items-center"
+        <div class="mb-4 subpixel-antialiased text-text-subtle text-xs flex items-center"
              v-if="project.project_history.length">
             <div>
                 {{ $t('last modified') }}:
@@ -135,10 +135,10 @@
             <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0]?.created_at }}
                     </span>
-            <button class="ml-4 subpixel-antialiased text-artwork-buttons-create flex items-center cursor-pointer"
+            <button class="ml-4 subpixel-antialiased text-accent-600 flex items-center cursor-pointer"
                     @click="openProjectHistoryModal(project)">
-                <ChevronRightIcon
-                    class="-mr-0.5 h-4 w-4  group-hover:text-artwork-buttons-hover"
+                <IconChevronRight
+                    class="-mr-0.5 h-4 w-4  group-hover:text-accent-700"
                     aria-hidden="true"/>
                 {{ $t('View history') }}
             </button>
@@ -172,19 +172,11 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronRight, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
-import {
-    ChevronDownIcon,
-    DotsVerticalIcon,
-    ChevronRightIcon,
-    XIcon,
-    RefreshIcon,
-    SearchIcon
-} from "@heroicons/vue/solid";
-import {TrashIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Link} from "@inertiajs/vue3";
@@ -231,16 +223,16 @@ export default {
         TrashSearchAndActions,
         ConfirmDeleteModal,
         UserPopoverTooltip,
-        Input, SearchIcon,
+        Input, IconSearch,
         ProjectHistoryComponent,
-        TrashIcon,
+        IconTrash,
         TeamIconCollection,
         MenuButton,
-        ChevronDownIcon,
-        Menu, MenuItems, MenuItem, DotsVerticalIcon,
-        SvgCollection, ChevronRightIcon, JetDialogModal,
-        XIcon,
-        RefreshIcon,
+        IconChevronDown,
+        Menu, MenuItems, MenuItem, IconDotsVertical,
+        SvgCollection, IconChevronRight, JetDialogModal,
+        IconX,
+        IconRefresh,
         Link,
         UserTooltip
     }

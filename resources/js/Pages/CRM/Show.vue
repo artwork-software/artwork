@@ -3,7 +3,7 @@
         <div class="mt-5 mx-auto container pb-20">
             <!-- Back link -->
             <div class="mb-4">
-                <Link :href="route('crm.index', { type: contact.contact_type?.slug })" class="inline-flex items-center text-sm font-medium text-artwork-buttons-hover hover:text-artwork-buttons-hover/80">
+                <Link :href="route('crm.index', { type: contact.contact_type?.slug })" class="inline-flex items-center text-sm font-medium text-accent-700 hover:text-accent-700/80">
                     <component :is="IconArrowLeft" class="h-4 w-4 mr-2" />
                     {{ $t('Back to CRM') }}
                 </Link>
@@ -96,7 +96,7 @@
                     <button
                         type="button"
                         class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors"
-                        :class="activeTab === 'info' ? 'border-artwork-buttons-create text-artwork-buttons-create'
+                        :class="activeTab === 'info' ? 'border-accent-600 text-accent-600'
                             : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border'"
                         @click="activeTab = 'info'"
                     >
@@ -105,7 +105,7 @@
                     <button
                         type="button"
                         class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors"
-                        :class="activeTab === 'projects' ? 'border-artwork-buttons-create text-artwork-buttons-create'
+                        :class="activeTab === 'projects' ? 'border-accent-600 text-accent-600'
                             : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border'"
                         @click="activeTab = 'projects'"
                     >
@@ -134,7 +134,7 @@
                                 <Link
                                     v-if="firstProjectTabId"
                                     :href="route('projects.tab', { project: project.id, projectTab: firstProjectTabId })"
-                                    class="font-medium text-artwork-buttons-create hover:underline"
+                                    class="font-medium text-accent-600 hover:underline"
                                 >
                                     {{ project.name }}
                                 </Link>

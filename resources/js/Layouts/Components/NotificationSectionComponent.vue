@@ -1,20 +1,20 @@
 <template>
     <div class="flex w-full mb-5 gap-2">
         <button class="bg-text-subtle rounded-lg flex relative w-6" @click="showSection = !showSection">
-            <ChevronUpIcon v-if="showSection" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-            <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+            <IconChevronUp v-if="showSection" class="h-6 w-6 text-white my-auto"></IconChevronUp>
+            <IconChevronDown v-else class="h-6 w-6 text-white my-auto"></IconChevronDown>
         </button>
         <div class="border-2 border-border rounded-lg px-10 w-full">
             <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
-                <div class="flex headline2 ">
+                <div class="flex font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text ">
                     {{ name }}
                     <div v-if="!showSection && displayUnreadCount > 0"
-                         class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue xxsLight rounded-lg">
+                         class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue text-xs/[18px] text-text-subtle rounded-lg">
                         {{ displayUnreadCount }}
                     </div>
                 </div>
                 <div @click="setAllOnRead()"
-                     class="flex cursor-pointer items-center justify-end linkText mr-8">
+                     class="flex cursor-pointer items-center justify-end text-xs/[18px] text-accent-600 mr-8">
                     <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
                          alt="Archive icon"
                          class="h-4 w-4 mr-2"
@@ -44,23 +44,23 @@
                 />
             </div>
             <div v-if="showSection && unread.loading && unread.items.length === 0"
-                 class="ml-12 my-6 xsLight">
+                 class="ml-12 my-6 text-sm/5 font-bold text-text-subtle">
                 {{ $t('Loading...') }}
             </div>
             <div v-if="showSection && !unread.loading && unread.items.length === 0 && displayUnreadCount === 0"
-                 class="ml-12 my-6 xsLight">
+                 class="ml-12 my-6 text-sm/5 font-bold text-text-subtle">
                 {{ $t('No new notifications') }}
             </div>
             <div v-if="showSection && unread.items.length < unread.total"
                  @click="loadMoreUnread"
-                 class="ml-12 my-4 linkText cursor-pointer">
+                 class="ml-12 my-4 text-xs/[18px] text-accent-600 cursor-pointer">
                 {{ $t('Show more') }} ({{ unread.items.length }}/{{ unread.total }})
             </div>
             <div @click="openArchive" v-if="showSection && !showReadSection"
-                 class="ml-12 my-6 linkText cursor-pointer">
+                 class="ml-12 my-6 text-xs/[18px] text-accent-600 cursor-pointer">
                 {{ $t('View old notifications')}}
             </div>
-            <div class="flex justify-between items-center w-full mt-8 xsDark border-t-2 pt-4 pl-4 pr-4" v-if="showReadSection">
+            <div class="flex justify-between items-center w-full mt-8 text-sm/5 font-semibold text-text border-t-2 pt-4 pl-4 pr-4" v-if="showReadSection">
                 <div :class="archived.items.length === 0 ? 'mb-12' : ''" class="flex items-center">
                     <img src="/Svgs/IconSvgs/icon_archive_black.svg"
                          alt="Archive icon black"
@@ -68,7 +68,7 @@
                          aria-hidden="true"/>
                     {{$t('Archive')}}
                 </div>
-                <div @click="showReadSection = false" v-if="showReadSection" class="linkText cursor-pointer">
+                <div @click="showReadSection = false" v-if="showReadSection" class="text-xs/[18px] text-accent-600 cursor-pointer">
                     {{$t('Close archive')}}
                 </div>
             </div>
@@ -92,16 +92,16 @@
                 />
             </div>
             <div v-if="showReadSection && archived.loading && archived.items.length === 0"
-                 class="ml-12 my-4 xsLight">
+                 class="ml-12 my-4 text-sm/5 font-bold text-text-subtle">
                 {{ $t('Loading...') }}
             </div>
             <div v-if="showReadSection && !archived.loading && archived.items.length === 0"
-                 class="ml-12 my-4 xsLight">
+                 class="ml-12 my-4 text-sm/5 font-bold text-text-subtle">
                 {{ $t('No archived notifications') }}
             </div>
             <div v-if="showReadSection && archived.items.length < archived.total"
                  @click="loadMoreArchived"
-                 class="ml-12 my-4 linkText cursor-pointer">
+                 class="ml-12 my-4 text-xs/[18px] text-accent-600 cursor-pointer">
                 {{ $t('Show more') }} ({{ archived.items.length }}/{{ archived.total }})
             </div>
         </div>
@@ -147,8 +147,7 @@
 </template>
 
 <script>
-import {ChevronDownIcon} from '@heroicons/vue/outline';
-import {ChevronRightIcon, ChevronUpIcon} from "@heroicons/vue/solid";
+import {IconChevronDown, IconChevronRight, IconChevronUp} from "@tabler/icons-vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow.vue";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
@@ -170,11 +169,11 @@ export default  {
         NotificationBlock,
         NotificationPublicChangesInfo,
         TeamIconCollection,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconChevronDown,
+        IconChevronUp,
         ConfirmationComponent,
         NotificationEventInfoRow,
-        ChevronRightIcon,
+        IconChevronRight,
         NotificationUserIcon,
         Link,
         AnswerEventRequestComponent,

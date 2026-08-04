@@ -18,7 +18,7 @@
             <div v-if="loadCommentsError" class="px-6 py-2 text-xs text-danger">
                 {{ loadCommentsError }}
             </div>
-            <div v-else-if="isLoadingComments" class="px-6 py-2 text-xs text-secondary">
+            <div v-else-if="isLoadingComments" class="px-6 py-2 text-xs text-text-subtle">
                 {{ $t('Loading data...') }}
             </div>
 

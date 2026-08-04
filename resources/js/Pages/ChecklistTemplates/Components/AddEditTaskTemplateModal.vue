@@ -26,7 +26,7 @@
                         min="0"
                         :label="$t('Deadline: days after checklist creation')"
                     />
-                    <p class="xxsLight mt-1 text-secondary">
+                    <p class="text-xs/[18px] text-text-subtle mt-1 text-text-subtle">
                         {{ $t('Leave empty for no deadline. The deadline is set automatically when a checklist is created from this template.') }}
                     </p>
                 </div>

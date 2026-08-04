@@ -159,7 +159,7 @@
                     <template v-if="selectedProject?.id">
                         <div class="ui-project-chip">
                             <div class="min-w-0">
-                                <span class="truncate xsDark text-text">{{ selectedProject?.name }}</span>
+                                <span class="truncate text-sm/5 font-semibold text-text text-text">{{ selectedProject?.name }}</span>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <button type="button" class="ui-icon-btn" @click="selectedProject = null" :aria-label="$t('Remove project')">

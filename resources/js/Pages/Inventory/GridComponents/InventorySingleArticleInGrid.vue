@@ -9,10 +9,10 @@
 
         <div :class="hideImage ? '' : 'mt-4'">
             <div class="flex items-center">
-                <h3 class="xsDark break-words min-w-0">
+                <h3 class="text-sm/5 font-semibold text-text break-words min-w-0">
                     {{ item.name }}
                 </h3>
-                <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 xsDark ml-2 shrink-0" />
+                <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-sm/5 font-semibold text-text ml-2 shrink-0" />
             </div>
 
             <p v-if="item?.inventory_number" class="text-xs text-text-subtle font-mono break-words">
@@ -50,7 +50,7 @@
                     <div class="text-text-subtle">
                         {{ $t('Quantity') }}
                     </div>
-                    <div :class="item.quantity === 0 ? 'text-danger' : 'text-artwork-buttons-create'">
+                    <div :class="item.quantity === 0 ? 'text-danger' : 'text-accent-600'">
                         {{ formatQuantity(item.quantity) }}
                     </div>
                 </div>
@@ -64,7 +64,7 @@
                             <template v-if="property.type === 'file'">
                                 <a v-if="property.file"
                                    :href="route('inventory-management.articles.property-file.download', { path: property.file.path })"
-                                   class="text-artwork-buttons-create hover:text-artwork-buttons-hover underline cursor-pointer">
+                                   class="text-accent-600 hover:text-accent-700 underline cursor-pointer">
                                     {{ property.file.name }}
                                 </a>
                                 <span v-else>-</span>

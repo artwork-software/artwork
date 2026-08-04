@@ -62,7 +62,7 @@
             </div>
         </div>
         <div class="my-10">
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
 
                     <div class="flex items-center justify-between">
                         <span class="flex grow flex-col">
@@ -101,11 +101,11 @@
                                             <img class="inline-block size-9 rounded-full object-cover" :src="object.user.profile_photo_url" alt="" />
                                         </div>
                                         <div class="mx-2">
-                                            <p class="xsDark group-hover:text-text">{{ object.user.full_name }}</p>
+                                            <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ object.user.full_name }}</p>
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
-                                                <PropertyIcon name="IconX" class="h-4 w-4 text-text-subtle hover:text-error" />
+                                                <PropertyIcon name="IconX" class="h-4 w-4 text-text-subtle hover:text-danger" />
                                             </button>
                                         </div>
                                     </div>
@@ -118,7 +118,7 @@
             </div>
 
 
-            <div class="card white p-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <div class="flex items-center justify-between gap-x-3">
                     <div class="w-1/2">
                         <BasePageTitle
@@ -264,7 +264,7 @@
                     </template>
                 </draggable>
             </div>
-            <!--<div class="mt-10 card white p-5">
+            <!--<div class="mt-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <BasePageTitle
                     :title="$t('Shift-relevant Event Types')"
                     :description="$t('Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the \'shifts\' tab of the project. You can also define additional events as shift-relevant for each project.')"
@@ -275,16 +275,16 @@
                             <ListboxButton class="menu-button">
                                 <span class="block truncate text-left pl-3">{{$t('Select Event Types')}}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                    <IconChevronDown  stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <IconChevronDown  stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
 
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="type in notRelevantEventTypes" :key="type.id" :value="type" v-slot="{ active, selected }">
-                                        <li @click="addRelevantEventType(type)" :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li @click="addRelevantEventType(type)" :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ type.name }}</span>
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
                                             </span>
                                         </li>
@@ -417,7 +417,7 @@
                 </div>
             </div>
         </section>
-            <div class="card white p-5 mt-10">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-10">
                 <div class="flex items-center justify-between">
                     <BasePageTitle
                         class=""
@@ -444,11 +444,11 @@
                         icon-size="h-6 w-6"
                         v-if="shiftTimePresets.length === 0"
                         :text="$t('No time presets for shifts have been created yet.')"
-                        text-size="xsLight"
+                        text-size="text-sm/5 font-bold text-text-subtle"
                     />
                     <ul v-else role="list" class="w-full">
                         <li v-for="(shiftTimePreset) in shiftTimePresets" :key="shiftTimePreset.id" class="py-4 pr-4 flex justify-between items-center border-b border-border-subtle">
-                            <div class="sDark">
+                            <div class="text-base/5 font-semibold text-text">
                                 <div>
                                     {{ shiftTimePreset.name }}
                                 </div>
@@ -467,7 +467,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="flex flex-col my-10 gap-2 card white p-5">
+            <div class="flex flex-col my-10 gap-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                 <BasePageTitle :title="$t('Sort settings')"
                                   :description="$t('Configure the behaviour of shift plans sort opportunity.')"/>
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
@@ -478,7 +478,7 @@
                             @update:model-value="this.updateShiftSettingUseFirstNameSort"
                             :class="[
                                 shiftSettings.use_first_name_for_sort ?
-                                    'bg-artwork-buttons-create' :
+                                    'bg-accent-600' :
                                     'bg-border-subtle',
                                 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                             ]">
@@ -490,7 +490,7 @@
                 </SwitchGroup>
             </div>
 
-            <div class="flex flex-col gap-2 card white p-5 mb-10">
+            <div class="flex flex-col gap-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mb-10">
                 <BasePageTitle
                     :title="$t('Shifts in shift plan subscription')"
                     :description="$t('When a user subscribes to their own shift plan, the following shifts should appear:')"
@@ -515,7 +515,7 @@
                             @update:model-value="updateCalendarAboShowAllShifts"
                             :class="[
                                 shiftSettings.calendar_abo_show_all_shifts ?
-                                    'bg-artwork-buttons-create' :
+                                    'bg-accent-600' :
                                     'bg-border-subtle',
                                 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                             ]">
@@ -529,7 +529,7 @@
                 </SwitchGroup>
             </div>
 
-            <div class="flex flex-col gap-2 card white p-5 mb-10">
+            <div class="flex flex-col gap-2 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mb-10">
                 <BasePageTitle
                     :title="$t('Overbooking of shifts')"
                     :description="$t('If activated, planners can assign more people to a shift than the defined demand. Overbooked positions are marked separately and the demand remains unchanged.')"
@@ -544,7 +544,7 @@
                             @update:model-value="updateAllowShiftOverbooking"
                             :class="[
                                 shiftSettings.allow_shift_overbooking ?
-                                    'bg-artwork-buttons-create' :
+                                    'bg-accent-600' :
                                     'bg-border-subtle',
                                 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                             ]">
@@ -586,8 +586,6 @@
 <script>
 import {defineComponent} from 'vue'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
-import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {
     Listbox,
     ListboxButton,
@@ -612,17 +610,15 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import IconLib from "@/Mixins/IconLib.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTimePreset.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import draggable from "vuedraggable";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import Button from "@/Jetstream/Button.vue";
-import {IconCheck, IconEdit, IconGripVertical, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconCirclePlus, IconCopy, IconDotsVertical, IconEdit, IconGripVertical, IconTrash, IconX} from "@tabler/icons-vue";
 import BaseTabs from "@/Artwork/Tabs/BaseTabs.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
@@ -638,7 +634,7 @@ import {can, is} from 'laravel-permission-to-vuejs';
 
 export default defineComponent({
     name: "ShiftSettings",
-    mixins: [IconLib, ColorHelper],
+    mixins: [IconLib],
     components: {
         GlobalQualificationsSettingsCard,
         SettingsGuideBanner,
@@ -652,9 +648,8 @@ export default defineComponent({
         ShiftSettingsHeader,
         ShiftTabs,
         BaseTabs,
-        Button, XIcon,
+        Button, IconX,
         UserSearch,
-        GlassyIconButton,
         ShiftQualificationIconCollection,
         SwitchLabel,
         Switch,
@@ -672,21 +667,21 @@ export default defineComponent({
         ConfirmDeleteModal,
         TagComponent,
         AddCraftsModal,
-        ChevronDownIcon,
-        CheckIcon,
+        IconChevronDown,
+        IconCheck,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
         Listbox,
-        PencilAltIcon,
+        IconEdit,
         MenuItem,
         Menu,
         MenuButton,
         SvgCollection,
         MenuItems,
-        DuplicateIcon,
-        TrashIcon,
-        DotsVerticalIcon
+        IconCopy,
+        IconTrash,
+        IconDotsVertical
     },
     props: [
         'crafts',

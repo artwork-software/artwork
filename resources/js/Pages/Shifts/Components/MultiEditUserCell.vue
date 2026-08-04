@@ -60,14 +60,17 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     name: "MultiEditUserCell",
     components: {PropertyIcon, ToolTipComponent},
-    mixins: [ColorHelper],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity} = useColorHelper();
+        return {backgroundColorWithOpacity};
+    },
     props: [
         'item',
         'type',

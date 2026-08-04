@@ -12,7 +12,7 @@
                 :key="day.date"
                 class="rounded-lg border px-2 py-2 text-center text-[11px] transition-all"
                 :class="day.is_selected
-                    ? 'ring-2 ring-artwork-buttons-hover bg-accent-50 border-accent-200'
+                    ? 'ring-2 ring-accent-700 bg-accent-50 border-accent-200'
                     : 'border-border-subtle bg-white'"
             >
                 <div class="font-semibold text-text-muted">{{ day.day_name }}</div>

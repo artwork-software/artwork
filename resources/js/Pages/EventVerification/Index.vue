@@ -13,7 +13,7 @@
                 <h2 class="text-lg font-lexend font-bold text-text">
                     {{ $t('Room booking requests') }}
                 </h2>
-                <p class="text-sm text-secondary mt-1">
+                <p class="text-sm text-text-subtle mt-1">
                     <template v-if="roomRequestScope === 'all'">
                         {{ $t('You can see all room booking requests.') }}
                     </template>
@@ -29,7 +29,7 @@
                             {{ requests[0]?.room?.name }}
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <WhiteInnerCard v-for="req in requests" :key="req.id">
+                            <BaseCard elevation="raised" class="w-full" v-for="req in requests" :key="req.id">
                                 <div class="p-4">
                                     <div class="flex items-center gap-x-2">
                                         <div
@@ -66,7 +66,7 @@
                                         <span>{{ $t('assigned to') }}</span>
                                         <Link
                                             :href="route('projects.tab', { project: req.project.id, projectTab: 1 })"
-                                            class="text-secondary font-bold hover:underline"
+                                            class="text-text-subtle font-bold hover:underline"
                                         >
                                             {{ req.project?.name }}
                                         </Link>
@@ -99,23 +99,31 @@
                                     </Link>
 
                                     <div class="flex items-center gap-x-2 mt-3">
-                                        <BaseCardButton
-                                            text="Accept"
+                                        <BaseUIButton
+                                            variant="secondary"
+                                            hide-icon
                                             class="!bg-success-surface !text-success !border !border-success hover:!bg-success-surface capitalize text-xs font-lexend"
                                             @click="openApproveModal(req)"
                                         >
-                                            <component :is="IconCheck" class="size-4" aria-hidden="true" />
-                                        </BaseCardButton>
-                                        <BaseCardButton
-                                            text="Decline"
+                                            <span class="flex items-center gap-x-2">
+                                                <component :is="IconCheck" class="size-4" aria-hidden="true" />
+                                                {{ $t('Accept') }}
+                                            </span>
+                                        </BaseUIButton>
+                                        <BaseUIButton
+                                            variant="secondary"
+                                            hide-icon
                                             class="!bg-danger-surface !text-danger !border !border-danger hover:!bg-danger-surface capitalize text-xs font-lexend"
                                             @click="openDeclineModal(req)"
                                         >
-                                            <component :is="IconX" class="size-4" aria-hidden="true" />
-                                        </BaseCardButton>
+                                            <span class="flex items-center gap-x-2">
+                                                <component :is="IconX" class="size-4" aria-hidden="true" />
+                                                {{ $t('Decline') }}
+                                            </span>
+                                        </BaseUIButton>
                                     </div>
                                 </div>
-                            </WhiteInnerCard>
+                            </BaseCard>
                         </div>
                     </div>
                 </div>
@@ -129,7 +137,7 @@
                 <h2 class="text-lg font-lexend font-bold text-text">
                     {{ $t('Verification requests for planned events') }}
                 </h2>
-                <p class="text-sm text-secondary mt-1">
+                <p class="text-sm text-text-subtle mt-1">
                     <template v-if="verificationScope === 'all'">
                         {{ $t('You can see all verification requests for planned events.') }}
                     </template>
@@ -168,10 +176,10 @@
     <!-- Approve Room Request Modal -->
     <BaseModal v-if="showApproveModal" modal-image="/Svgs/Overlays/illu_success.svg" @closed="closeApproveModal">
         <div class="mx-4">
-            <div class="headline1 my-2">
+            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                 {{ $t('Confirm room occupancy') }}
             </div>
-            <div class="successText">
+            <div class="text-sm/5 text-success">
                 {{ $t('Are you sure you want to accept the room allocation?') }}
             </div>
             <div v-if="selectedRequest" class="mt-4">
@@ -197,7 +205,7 @@
                     @click="approveRequest"
                 />
                 <div class="flex my-auto">
-                    <span class="xsLight cursor-pointer" @click="closeApproveModal">
+                    <span class="text-sm/5 font-bold text-text-subtle cursor-pointer" @click="closeApproveModal">
                         {{ $t('No, not really') }}
                     </span>
                 </div>
@@ -208,10 +216,10 @@
     <!-- Decline Room Request Modal -->
     <BaseModal v-if="showDeclineModal" modal-image="/Svgs/Overlays/illu_warning.svg" @closed="closeDeclineModal">
         <div class="mx-4">
-            <div class="headline1 my-2">
+            <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                 {{ $t('Cancel room reservation') }}
             </div>
-            <div class="errorText">
+            <div class="text-sm/5 text-danger">
                 {{ $t('Are you sure you want to cancel the room reservation?') }}
             </div>
             <div v-if="selectedRequest" class="mt-4">
@@ -240,7 +248,7 @@
                     @click="declineRequest"
                 />
                 <div class="flex my-auto">
-                    <span class="xsLight cursor-pointer" @click="closeDeclineModal">
+                    <span class="text-sm/5 font-bold text-text-subtle cursor-pointer" @click="closeDeclineModal">
                         {{ $t('No, not really') }}
                     </span>
                 </div>
@@ -255,9 +263,8 @@ import {router, Link, useForm} from "@inertiajs/vue3";
 import {IconCheck, IconX, IconCalendar} from "@tabler/icons-vue";
 import BaseEventVerificationLayout from "@/Pages/EventVerification/BaseEventVerificationLayout.vue";
 import PageTitle from "@/Artwork/Titles/PageTitle.vue";
-import WhiteInnerCard from "@/Artwork/Cards/WhiteInnerCard.vue";
+import BaseCard from "@/Artwork/Cards/BaseCard.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

@@ -17,7 +17,7 @@
                         {{ tasks.length }}
                     </span>
                     <IconCirclePlus
-                        class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
+                        class="h-6 w-6 cursor-pointer hover:text-accent-700 transition-all duration-150 ease-in-out"
                         @click.stop="openAddTaskModal = true"
                     />
                     <BaseMenu has-no-offset white-menu-background>

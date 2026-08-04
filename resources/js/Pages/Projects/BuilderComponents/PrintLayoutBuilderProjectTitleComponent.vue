@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center font-lexend font-black tracking-wide text-sm text-primary">
+    <div class="flex items-center font-lexend font-black tracking-wide text-sm text-text">
         <!-- Avatar / Key Visual / Icon -->
         <div class="relative mr-2">
             <!-- Gruppen-Badge -->
@@ -59,7 +59,7 @@
         </div>
 
         <!-- Titel -->
-        <div class="flex items-center gap-x-1 text-dark transition-colors duration-300 ease-in-out group-hover/project:text-artwork-buttons-create">
+        <div class="flex items-center gap-x-1 text-dark transition-colors duration-300 ease-in-out group-hover/project:text-accent-600">
             {{ project.title }}
         </div>
     </div>

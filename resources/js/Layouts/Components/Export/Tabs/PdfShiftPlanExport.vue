@@ -69,7 +69,7 @@
                             {{ preset.label }}
                         </button>
                     </div>
-                    <p v-if="dateRangeError" class="text-xs text-artwork-messages-error">{{ dateRangeError }}</p>
+                    <p v-if="dateRangeError" class="text-xs text-danger">{{ dateRangeError }}</p>
                     <p v-else class="text-xs text-text-subtle">{{ $t('A maximum of six months can be exported in one PDF.') }}</p>
                 </div>
 
@@ -94,10 +94,10 @@
                             :label="$t('To calendar week')"
                         />
                     </div>
-                    <p v-if="kwSelectionInvalid" class="text-xs text-artwork-messages-error">
+                    <p v-if="kwSelectionInvalid" class="text-xs text-danger">
                         {{ $t('Please select a valid calendar week range.') }} (KW 1–{{ weeksInSelectedYear }})
                     </p>
-                    <p v-else-if="dateRangeError" class="text-xs text-artwork-messages-error">
+                    <p v-else-if="dateRangeError" class="text-xs text-danger">
                         {{ dateRangeError }}
                     </p>
                     <p v-else class="text-xs text-text-subtle">
@@ -105,7 +105,7 @@
                     </p>
                 </div>
 
-                <p v-if="workerMatrixRangeTooLong" class="text-xs text-artwork-messages-error">
+                <p v-if="workerMatrixRangeTooLong" class="text-xs text-danger">
                     {{ $t('Days are shown as columns and workers as rows. The maximum export period is 31 days.') }}
                 </p>
             </section>
@@ -231,7 +231,7 @@
                         {{ craft.name }}
                     </label>
                 </div>
-                <p v-if="selectedCraftIds.length === 0" class="text-xs text-artwork-messages-error">
+                <p v-if="selectedCraftIds.length === 0" class="text-xs text-danger">
                     {{ $t('Please select at least one craft.') }}
                 </p>
             </section>
@@ -361,7 +361,7 @@
                                         :for="`shiftplan-${paperOrientation.id}`"
                                         class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
                                         peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-white
-                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-primary">
+                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-text">
                                         {{ paperOrientation.title }}
                                     </label>
                                 </div>

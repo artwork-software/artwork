@@ -19,7 +19,7 @@
             :href="url"
             target="_blank"
             rel="noopener noreferrer"
-            class="mt-2 inline-block text-sm text-artwork-buttons-create underline break-all"
+            class="mt-2 inline-block text-sm text-accent-600 underline break-all"
         >
             {{ url }}
         </a>

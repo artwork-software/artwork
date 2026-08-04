@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import {PencilAltIcon} from "@heroicons/vue/outline";
+import {IconEdit} from "@tabler/icons-vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
 import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
@@ -54,7 +54,7 @@ export default {
         TeamIconCollection,
         UserTooltip,
         SidebarTagComponent,
-        PencilAltIcon,
+        IconEdit,
         TagComponent,
         ProjectAttributeEditModal,
         ProjectTeamComponent,

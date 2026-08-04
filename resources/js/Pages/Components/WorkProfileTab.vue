@@ -72,7 +72,7 @@
                                 </template>
                                 <span v-else class="text-text-subtle">{{ $t('Select project roles') }}</span>
                             </span>
-                            <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true" />
+                            <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                         </ListboxButton>
 
                         <ListboxOptions
@@ -89,7 +89,7 @@
                                     <span :class="selected ? 'font-medium' : 'font-normal'">
                                         {{ role.name }}
                                     </span>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-accent-600" aria-hidden="true" />
+                                    <IconCheck v-if="selected" class="h-5 w-5 text-accent-600" aria-hidden="true" />
                                 </li>
                             </ListboxOption>
                         </ListboxOptions>
@@ -103,7 +103,7 @@
                         >
                             <span class="text-sm text-text">{{ role.name }}</span>
                             <button type="button" @click="removeDefaultProjectRole(role.id)" class="rounded-full p-1 hover:bg-surface-sunken">
-                                <XIcon class="h-4 w-4 text-text-subtle hover:text-danger" />
+                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -208,7 +208,7 @@
                   </template>
                   <span v-else class="text-text-subtle">{{ $t('Select crafts') }}</span>
                 </span>
-                                <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true" />
+                                <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                             </ListboxButton>
 
                             <ListboxOptions
@@ -251,7 +251,7 @@
                       <span :class="selected ? 'font-medium' : 'font-normal'">
                         {{ assignableCraft.name }}
                       </span>
-                                            <CheckIcon
+                                            <IconCheck
                                                 v-if="selected"
                                                 class="h-5 w-5"
                                                 :class="active ? 'text-white' : 'text-accent-600'"
@@ -284,7 +284,7 @@
               />
                             <span class="text-sm text-text">{{ craft.name }}</span>
                             <button type="button" @click="removeCraft(craft.id)" class="rounded-full p-1 hover:bg-surface-sunken">
-                                <XIcon class="h-4 w-4 text-text-subtle hover:text-danger" />
+                                <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                             </button>
                         </div>
                     </div>
@@ -381,15 +381,13 @@ import {
     Listbox, ListboxButton, ListboxOption, ListboxOptions,
     Switch, SwitchGroup, SwitchLabel
 } from '@headlessui/vue'
-import { CheckIcon } from '@heroicons/vue/solid'
-import { ChevronDownIcon, XIcon } from '@heroicons/vue/outline'
 
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import AddButtonSmall from '@/Layouts/Components/General/Buttons/AddButtonSmall.vue'
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
-import {IconCheck, IconLayoutGrid, IconLayoutList, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconLayoutGrid, IconLayoutList, IconX} from "@tabler/icons-vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 
 const props = defineProps({

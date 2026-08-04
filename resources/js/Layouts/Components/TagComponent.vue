@@ -1,11 +1,11 @@
 <template>
     <div v-if="type === 'gray'"
-         class="rounded-full items-center font-medium text-secondary border bg-tagBgGray border-border-strong px-3 text-sm mr-1 mb-1 min-h-8 inline-flex">
+         class="rounded-full items-center font-medium text-text-subtle border bg-tagBgGray border-border-strong px-3 text-sm mr-1 mb-1 min-h-8 inline-flex">
         <img v-if="icon === 'audience'" src="/Svgs/IconSvgs/icon_public.svg" class=" h-6 w-6 mx-2"
              alt="audienceIcon"/>
         {{ displayedText }}
         <button v-if="!hideX" type="button" @click="this.method(property)">
-            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+            <IconX class="ml-1 h-4 w-4 hover:text-danger "/>
         </button>
     </div>
     <div v-else
@@ -16,20 +16,23 @@
              alt="audienceIcon"/>
         {{ displayedText }}
         <button v-if="!hideX" type="button" @click="this.method(property)">
-            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+            <IconX class="ml-1 h-4 w-4 hover:text-danger "/>
         </button>
     </div>
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 
-import {XIcon} from "@heroicons/vue/outline";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 
 export default {
     name: "TagComponent",
-    components: {XIcon},
-    mixins: [ColorHelper],
+    components: {IconX},
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
+        return {backgroundColorWithOpacity, TextColorWithDarken};
+    },
     props: {
         property: {
             type: [Object, String, Number],

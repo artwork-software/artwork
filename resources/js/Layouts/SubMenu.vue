@@ -77,13 +77,13 @@
         class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
         :class="isFullSideBar ? 'lg:w-88' : 'lg:w-16'"
     >
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-hidden bg-artwork-navigation-background">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-hidden bg-surface-inverse">
             <!-- Brand -->
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
                     <div class="group relative">
                         <div
-                            class="absolute inset-0 hidden cursor-pointer bg-artwork-navigation-background/70 group-hover:block z-10"
+                            class="absolute inset-0 hidden cursor-pointer bg-surface-inverse/70 group-hover:block z-10"
                             @click="isFullSideBar = !isFullSideBar"
                         >
                             <div class="flex h-full w-full items-center justify-center">

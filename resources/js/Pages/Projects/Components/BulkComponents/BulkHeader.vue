@@ -9,7 +9,7 @@
         <div
             class="px-6 sm:px-4 mt-2 mb-3"
         >
-            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-text-muted print:xsDark">
+            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-text-muted print:text-sm/5 font-semibold text-text">
                 <!-- left spacer when multiEdit -->
                 <div v-if="multiEdit" class="w-8 h-4 shrink-0"></div>
 
@@ -58,8 +58,8 @@
                   v-model="localShowEndDate"
                   @change="$emit('update:showEndDate', localShowEndDate)"
                   :class="[
-                    localShowEndDate ? 'bg-artwork-buttons-hover' : 'bg-border-subtle',
-                    'relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-artwork-buttons-create/50'
+                    localShowEndDate ? 'bg-accent-700' : 'bg-border-subtle',
+                    'relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-accent-600/50'
                   ]"
                   :aria-label="$t('Toggle end date column')"
               >

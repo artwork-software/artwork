@@ -2,7 +2,7 @@
     <BaseModal @closed="$emit('close')" modal-size="sm:max-w-3xl">
         <div class="flex items-center justify-between mt-4">
             <div>
-                <div class="headline1">
+                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                     {{ item.properties.find(property => property.id === 'title')?.plainText }}
                 </div>
             </div>
@@ -36,7 +36,7 @@
                         />
                     </div>
                     <div class="mx-2">
-                        <p class="xsDark group-hover:text-text"> {{ item.properties.find(property => property.title === 'Author')?.rawContent[0]?.name }}</p>
+                        <p class="text-sm/5 font-semibold text-text group-hover:text-text"> {{ item.properties.find(property => property.title === 'Author')?.rawContent[0]?.name }}</p>
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
         </div>
         <div class="mt-3">
             <div v-if="item.properties.some(property => property.title === 'Update Datum')">
-                <div class="xsDark">
+                <div class="text-sm/5 font-semibold text-text">
                     <span>Update Datum: </span>
                     <span>{{ convertDate(item.properties.find(property => property.title === 'Update Datum')?.rawContent?.start) }} </span>
                     <span v-if="item.properties.find(property => property.title === 'Update Datum')?.rawContent?.end"> - {{ convertDate(item.properties.find(property => property.title === 'Update Datum')?.rawContent?.end) }} </span>

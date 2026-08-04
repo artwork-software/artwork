@@ -27,7 +27,7 @@
                     :whiteIcon="whiteIcon"
                     :grayIcon="grayIcon"
                     icon-size="size-6"
-                    :classes-button="useFullButton ? 'ui-button' : 'ui-button-small hover:!bg-white text-artwork-buttons-context'"
+                    :classes-button="useFullButton ? 'ui-button' : 'ui-button-small hover:!bg-white text-text-muted'"
                 />
             </MenuButton>
         </div>

@@ -48,7 +48,7 @@
                         <div
                             v-if="!saveFilterOption"
                             @click="startSaveFilter"
-                            class="underline text-artwork-buttons-create text-sm underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out"
+                            class="underline text-accent-600 text-sm underline-offset-2 cursor-pointer hover:text-accent-700 duration-200 ease-in-out"
                         >
                             {{ $t('Save') }}
                         </div>
@@ -161,7 +161,7 @@
                             <input
                                 v-model="filterProperty.value"
                                 :type="inputTypeFor(filterProperty.type)"
-                                class="h-[42px] w-full min-w-0 rounded-md border border-border-subtle bg-white shadow-sm px-3 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create"
+                                class="h-[42px] w-full min-w-0 rounded-md border border-border-subtle bg-white shadow-sm px-3 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600"
                                 :placeholder="filterProperty.name"
                                 @input="debouncedSubmit()"
                                 @keydown.enter.prevent="applyNow()"
@@ -276,7 +276,7 @@
             <div class="mt-4 flex items-center justify-start" v-if="checkIfAnyFilterIsSet">
                 <button
                     type="button"
-                    class="text-xs text-text-subtle underline underline-offset-2 hover:text-artwork-messages-error transition-colors"
+                    class="text-xs text-text-subtle underline underline-offset-2 hover:text-danger transition-colors"
                     @click="resetPanelFilters"
                 >
                     {{ $t('Reset all filters') }}

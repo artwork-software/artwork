@@ -16,7 +16,7 @@
                 :use-translations="true"
                 :placeholder="$t('Please select')"
             />
-            <p v-if="form.errors.type" class="mt-1 text-xs text-artwork-messages-error">{{ form.errors.type }}</p>
+            <p v-if="form.errors.type" class="mt-1 text-xs text-danger">{{ form.errors.type }}</p>
             <BaseInput id="prop_tooltip" v-model="form.tooltip_text" :label="$t('Tooltip text')" />
 
             <!-- Select values input -->

@@ -14,8 +14,8 @@ const props = defineProps({
 
 <template>
     <div>
-        <h3 class="headline2 mb-2 print:headline3">{{ title }}</h3>
-        <p class="xsLight print:hidden">
+        <h3 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mb-2 print:font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ title }}</h3>
+        <p class="text-sm/5 font-bold text-text-subtle print:hidden">
             {{ description }}
         </p>
     </div>

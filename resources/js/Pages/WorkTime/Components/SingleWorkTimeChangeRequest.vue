@@ -89,7 +89,6 @@
 <script setup>
 
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import {router} from "@inertiajs/vue3";
 import DeclineWorkTimeRequest from "@/Pages/WorkTime/Components/DeclineWorkTimeRequest.vue";
 import {ref} from "vue";

@@ -10,7 +10,7 @@
             ]"
         />
 
-        <div class="card white p-5 mt-10">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-10">
             <div class="flex items-center justify-between">
                 <BasePageTitle class=""
                                :title="$t('Waring on multiple shift assignments')"
@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <div class="card white p-5 mt-10">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-10">
             <div class="flex items-center justify-between">
                 <BasePageTitle class=""
                                :title="$t('shift groups')"
@@ -37,7 +37,7 @@
                 <BaseUIButton @click="showCreateOrUpdateShiftGroupModal = true" label="New shift group" use-translation is-add-button />
             </div>
             <div class="mt-5">
-                <div class="mb-5 xsLight" v-if="shiftGroups.length === 0">
+                <div class="mb-5 text-sm/5 font-bold text-text-subtle" v-if="shiftGroups.length === 0">
                     {{$t('No shift groups found.')}}
                 </div>
                 <ul v-else role="list" class="w-full">

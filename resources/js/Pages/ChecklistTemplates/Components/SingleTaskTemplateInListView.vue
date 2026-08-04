@@ -9,10 +9,10 @@
                     <IconGripVertical class="h-5 w-5" />
                 </div>
                 <div class="min-w-0">
-                    <h3 class="xsDark mb-0.5 break-words text-text">
+                    <h3 class="text-sm/5 font-semibold text-text mb-0.5 break-words text-text">
                         {{ task.name }}
                     </h3>
-                    <p v-if="task.description" class="xxsLight break-words text-text-muted">
+                    <p v-if="task.description" class="text-xs/[18px] text-text-subtle break-words text-text-muted">
                         {{ task.description }}
                     </p>
                 </div>

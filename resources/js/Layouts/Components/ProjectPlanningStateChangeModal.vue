@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="$emit('close')">
         <div class="space-y-6">
-            <div class="font-black font-lexend text-primary text-2xl mb-4">
+            <div class="font-black font-lexend text-text text-2xl mb-4">
                 {{ $t('Project status change') }}
             </div>
 
@@ -13,7 +13,7 @@
                 <button type="button" @click="$emit('close')" class="inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
                     {{ $t('No') }}
                 </button>
-                <button type="button" @click="convertToPlanning" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
+                <button type="button" @click="convertToPlanning" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:text-sm">
                     {{ $t('Convert to planning events') }}
                 </button>
             </div>

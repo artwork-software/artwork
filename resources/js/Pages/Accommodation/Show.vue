@@ -3,7 +3,7 @@
         <div class="mt-5 mx-auto container pb-20">
             <div>
                 <div class="mb-4">
-                    <Link :href="route('accommodation.index')" class="inline-flex items-center text-sm font-medium text-artwork-buttons-hover hover:text-artwork-buttons-hover/80">
+                    <Link :href="route('accommodation.index')" class="inline-flex items-center text-sm font-medium text-accent-700 hover:text-accent-700/80">
                         <component :is="IconArrowLeft" class="h-4 w-4 mr-2" />
                         {{ $t('Back to accommodations overview') }}
                     </Link>
@@ -169,7 +169,7 @@
 
                         <div v-if="accommodation.contacts.length > 0">
                             <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-                                <li v-for="contact in accommodation.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-border-subtle shadow-glass">
+                                <li v-for="contact in accommodation.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-border-subtle shadow-overlay">
                                     <ArtworkSingleContact :contact="contact" />
                                 </li>
                             </ul>
@@ -205,10 +205,8 @@ import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import {useForm, Link} from "@inertiajs/vue3";
 import {computed, defineAsyncComponent, ref, watch} from "vue";
-import ArtworkBaseButton from "@/Artwork/Buttons/ArtworkBaseButton.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import ArtworkSingleContact from "@/Artwork/Contact/ArtworkSingleContact.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconArrowLeft, IconHome, IconInfoCircle, IconCirclePlus} from "@tabler/icons-vue";

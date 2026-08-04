@@ -12,18 +12,18 @@
                                 </label>
 
                                 <ShiftQualificationIconCollection v-if="this.shiftQualificationForm.icon !== null" class="h-12 w-12 p-2" :iconName=this.shiftQualificationForm.icon alt="Qualifikation-Icon"/>
-                                <ChevronDownIcon class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
+                                <IconChevronDown class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
                             </MenuButton>
                         </div>
                         <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
-                            <MenuItems class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <MenuItems class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <MenuItem v-for="shiftQualificationIcon in this.shiftQualificationIcons"
                                           v-slot="{ active }">
                                     <div @click="this.shiftQualificationForm.icon = shiftQualificationIcon.iconName"
                                          :class="[
                                              active ?
                                              'bg-primaryHover text-secondaryHover' :
-                                             'text-secondary',
+                                             'text-text-subtle',
                                              'group px-3 py-2 text-sm subpixel-antialiased flex items-center justify-center'
                                          ]">
                                         <ShiftQualificationIconCollection
@@ -45,13 +45,13 @@
                         />
                     </div>
                 </div>
-                <div class="mt-5 -mx-9 px-10 py-6 bg-lightBackgroundGray">
+                <div class="mt-5 -mx-9 px-10 py-6 bg-surface-canvas">
                     <div class="flex gap-2 items-center">
                         <input type="checkbox"
                                v-model="this.shiftQualificationForm.available"
                                class="input-checklist"
                         />
-                        <p :class="[this.shiftQualificationForm.available ? 'xsDark' : 'xsLight']"
+                        <p :class="[this.shiftQualificationForm.available ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
                            class="my-auto text-sm">
                             {{ $t('Is taken into account for new shifts')}}
                         </p>
@@ -70,9 +70,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import {useForm} from "@inertiajs/vue3";
 import {defineComponent} from "vue";
-import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
@@ -117,8 +117,8 @@ export default defineComponent({
         MenuButton,
         MenuItem,
         MenuItems,
-        ChevronDownIcon,
-        XIcon,
+        IconChevronDown,
+        IconX,
         JetDialogModal
     },
     props: [

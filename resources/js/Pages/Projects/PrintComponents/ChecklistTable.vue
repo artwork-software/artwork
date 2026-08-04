@@ -1,13 +1,13 @@
 <template>
     <div>
-        <h3 class="headline3">{{ $t('All Checklists') }}</h3>
+        <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t('All Checklists') }}</h3>
     </div>
 
     <div class="mt-2" v-for="checklist in project.public_all_checklists">
         <div>
-            <h3 class="xsDark">{{ checklist.name }}</h3>
+            <h3 class="text-sm/5 font-semibold text-text">{{ checklist.name }}</h3>
         </div>
-        <div class="xsDark">
+        <div class="text-sm/5 font-semibold text-text">
             <div class="">
                 <table class="min-w-full divide-y divide-border">
                     <thead>
@@ -33,9 +33,9 @@
 
     <div class="mt-2" v-for="checklist in project.private_all_checklists">
         <div>
-            <h3 class="xsDark">{{ checklist.name }}</h3>
+            <h3 class="text-sm/5 font-semibold text-text">{{ checklist.name }}</h3>
         </div>
-        <div class="xsDark">
+        <div class="text-sm/5 font-semibold text-text">
             <div class="">
                 <table class="min-w-full divide-y divide-border">
                     <thead>

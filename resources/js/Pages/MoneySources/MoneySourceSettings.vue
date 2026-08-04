@@ -7,7 +7,7 @@
             class="mb-6"
         />
         <div>
-            <h2 class="mt-10 headline2 w-full">{{$t('Source categories')}}</h2>
+            <h2 class="mt-10 font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text w-full">{{$t('Source categories')}}</h2>
             <div v-if="showInvalidCategoryNameErrorText" class="text-danger text-sm mt-4">
                 {{ $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
             </div>
@@ -26,7 +26,7 @@
 
                     <div class="">
                         <button
-                            :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
+                            :class="[moneySourceCategoryInput === '' ? 'bg-text-subtle': 'bg-accent-600 hover:bg-accent-700 focus:outline-none', 'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                             @click="addMoneySourceCategory" :disabled="!moneySourceCategoryInput">
                             <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5" />
                         </button>
@@ -39,7 +39,7 @@
                         border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                         {{ category.name }}
                         <button type="button" @click="this.showCategoryDeleteModal(category)">
-                            <PropertyIcon name="IconX"  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            <PropertyIcon name="IconX"  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                         </button>
                     </span>
                 </div>
@@ -56,13 +56,10 @@
 </template>
 
 <script>
+import {IconCheck, IconX} from "@tabler/icons-vue";
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Button from "@/Jetstream/Button.vue";
-import {
-    XIcon
-} from "@heroicons/vue/outline";
-import {CheckIcon} from "@heroicons/vue/solid";
 import {defineComponent} from 'vue'
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -87,8 +84,8 @@ export default defineComponent({
         JetDialogModal,
         Button,
         AppLayout,
-        CheckIcon,
-        XIcon
+        IconCheck,
+        IconX
     },
     name: 'MoneySourceSettings',
     props: ['moneySourceCategories'],

@@ -30,7 +30,7 @@
                     without-translation
                     name="email"
                     id="email"
-                    :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-white/20 !text-text-inverse' : ''"
+                    :input-classes="inSidebar ? '!bg-surface-inverse !border-white/20 !text-text-inverse' : ''"
                 />
             </div>
 

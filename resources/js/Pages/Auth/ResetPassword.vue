@@ -14,7 +14,7 @@
                         <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                     </div>
                     <div class="flex items-center mb-12">
-                        <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{ $t('Reset Password')}}</h2>
+                        <h2 class="mt-6 text-3xl font-lexend font-bold text-text">{{ $t('Reset Password')}}</h2>
                         <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
                     </div>
                 </div>
@@ -33,7 +33,7 @@
                                 <jet-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" required autocomplete="new-password" />
                             </div>
                             <div class="flex items-center justify-end mt-4">
-                                <jet-button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                                <jet-button class="bg-accent-600 hover:bg-accent-700" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                                     {{ $t('Reset Password')}}
                                 </jet-button>
                             </div>
@@ -41,7 +41,7 @@
 
                     </div>
                 </div>
-                <div class=" absolute bottom-0 mb-20 text-secondary subpixel-antialiased text-sm tracking-wide">
+                <div class=" absolute bottom-0 mb-20 text-text-subtle subpixel-antialiased text-sm tracking-wide">
                     <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                         {{$t('Imprint')}}
                     </a>

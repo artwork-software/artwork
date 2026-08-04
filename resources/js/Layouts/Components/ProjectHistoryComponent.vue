@@ -16,14 +16,14 @@
                         :aria-selected="currentTab === tab.id"
                         :class="[ 'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase transition',
               currentTab === tab.id
-                ? 'bg-white text-artwork-buttons-hover shadow-sm'
+                ? 'bg-white text-accent-700 shadow-sm'
                 : 'text-text-muted hover:text-text'
             ]"
                     >
                         <span>{{ $t(tab.name) }}</span>
                         <span
                             class="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] tabular-nums"
-                            :class="currentTab === tab.id ? 'border-artwork-navigation-color/30 text-artwork-buttons-hover bg-artwork-navigation-color/10'
+                            :class="currentTab === tab.id ? 'border-text-inverse/30 text-accent-700 bg-text-inverse/10'
                 : 'border-border text-text-muted bg-white/70'"
                         >
               {{ tab.id === 'project' ? (projectItems?.length || 0) : (budgetItems?.length || 0) }}
@@ -36,7 +36,7 @@
                 <!-- Loading State -->
                 <div v-if="loading" class="mt-2 flex items-center justify-center py-12">
                     <div class="text-center">
-                        <svg class="mx-auto h-8 w-8 animate-spin text-artwork-buttons-hover" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg class="mx-auto h-8 w-8 animate-spin text-accent-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -54,19 +54,19 @@
                         v-else
                         role="list"
                         class="relative pl-8 space-y-2 before:content-[''] before:absolute before:left-3 before:top-0 before:bottom-0 before:w-px
-           before:bg-artwork-buttons-hover/60 before:z-0"
+           before:bg-accent-700/60 before:z-0"
                     >
                         <li v-for="(historyItem, index) in projectItems" :key="index" class="relative">
                             <!-- Dot exakt auf der Linie (Linie bei 12px = left-3, Dot-Radius 5px => 12-5 = 7px) -->
                             <span
-                                class="absolute -left-6 top-5 block h-2.5 w-2.5 rounded-full bg-artwork-buttons-hover ring-2 ring-white z-10"
+                                class="absolute -left-6 top-5 block h-2.5 w-2.5 rounded-full bg-accent-700 ring-2 ring-white z-10"
                                 aria-hidden="true"
                             ></span>
 
                             <!-- Card rechts der Linie (weggerückt) -->
                             <div class="rounded-xl border border-border-subtle bg-white/85 p-3">
                                 <div class="flex flex-wrap items-center gap-2">
-                                      <span class="inline-flex h-6 items-center rounded-full border border-artwork-navigation-color/25 bg-artwork-navigation-color/10 px-2 text-[11px] font-medium text-artwork-buttons-hover tabular-nums">
+                                      <span class="inline-flex h-6 items-center rounded-full border border-text-inverse/25 bg-text-inverse/10 px-2 text-[11px] font-medium text-accent-700 tabular-nums">
                                         {{ historyItem.created_at }}
                                       </span>
 

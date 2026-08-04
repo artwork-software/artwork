@@ -3,8 +3,8 @@
         class="bg-surface-sunken rounded-lg px-4 py-3 cursor-grab flex items-center justify-center w-fit" :key="element.id">
         <div class="flex items-center gap-x-5">
             <div>
-                <div class="xsDark">{{ $t(element.name) }}</div>
-                <div class="xsLight">{{ $t(element.type) }}</div>
+                <div class="text-sm/5 font-semibold text-text">{{ $t(element.name) }}</div>
+                <div class="text-sm/5 font-bold text-text-subtle">{{ $t(element.type) }}</div>
             </div>
 
             <div class="flex items-center" v-if="element.deletable">

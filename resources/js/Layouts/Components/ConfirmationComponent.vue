@@ -14,9 +14,8 @@
 </template>
 
 <script>
+import {IconCheck, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon} from '@heroicons/vue/outline';
-import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -35,8 +34,8 @@ export default {
         BaseModal,
         FormButton,
         JetDialogModal,
-        XIcon,
-        CheckIcon
+        IconX,
+        IconCheck
     },
     props: {
         titel: String,

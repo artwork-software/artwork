@@ -5,7 +5,7 @@
             <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                 {{ $t('Contract options') }}
             </div>
-            <div class="card white px-4 mt-2">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-3">
                     <!-- KSK-pflichtig -->
                     <div class="flex items-center gap-x-2">
@@ -54,7 +54,7 @@
             <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                 {{ $t('Deadline period') }}
             </div>
-            <div class="card white px-4 mt-2">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-3">
                     <div>
                         <BaseInput
@@ -87,7 +87,7 @@
                     <component :is="IconChevronDown" class="w-4 h-4 text-white/70" :class="openSections.legalForms ? 'rotate-180' : ''" />
                 </div>
             </div>
-            <div v-if="openSections.legalForms" class="card white px-4 mt-2">
+            <div v-if="openSections.legalForms" class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
                     <div v-for="legalForm in localFilters.legalForms" :key="legalForm.id" class="flex items-center gap-x-2">
                         <div class="flex h-6 shrink-0 items-center">
@@ -122,7 +122,7 @@
                     <component :is="IconChevronDown" class="w-4 h-4 text-white/70" :class="openSections.contractTypes ? 'rotate-180' : ''" />
                 </div>
             </div>
-            <div v-if="openSections.contractTypes" class="card white px-4 mt-2">
+            <div v-if="openSections.contractTypes" class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
                     <div v-for="contractType in localFilters.contractTypes" :key="contractType.id" class="flex items-center gap-x-2">
                         <div class="flex h-6 shrink-0 items-center">

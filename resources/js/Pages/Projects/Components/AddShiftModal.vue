@@ -6,7 +6,6 @@ import { useI18n } from 'vue-i18n'
 import { useLegalBreak} from "@/Composeables/useLegalBreak";
 // Artwork / UI
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import AlertComponent from '@/Components/Alerts/AlertComponent.vue'
@@ -1041,7 +1040,7 @@ const lockOrUnlockShift = (commit = false) => {
                 <div v-if="edit && shift && openShiftHistory" class="flex justify-end">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1.5 text-xs text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1.5 text-xs text-text-muted hover:border-accent-700 hover:text-accent-700 transition-colors"
                         :title="$t('Show shift history for this shift')"
                         @click="openShiftHistory(shift)"
                     >
@@ -1621,7 +1620,7 @@ const lockOrUnlockShift = (commit = false) => {
                                 id="comment"
                                 maxlength="250"
                             />
-                            <div class="text-xs text-end mt-1 text-artwork-buttons-context">
+                            <div class="text-xs text-end mt-1 text-text-muted">
                                 {{ shiftForm.description?.length ?? 0 }} / 250
                             </div>
                         </div>

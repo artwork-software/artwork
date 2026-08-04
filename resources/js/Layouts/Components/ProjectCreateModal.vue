@@ -44,7 +44,7 @@
                                         />
                                     </div>
                                 </div>
-                                <div v-if="showInvalidProjectNameHelpText" class="text-error text-xs mt-1">
+                                <div v-if="showInvalidProjectNameHelpText" class="text-danger text-xs mt-1">
                                     {{ t('Project name is a required field.')}}
                                 </div>
                             </div>
@@ -53,7 +53,7 @@
                                     <div>
                                         <MenuButton class="menu-button">
                                             <span>{{ t('Select properties') }}</span>
-                                            <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"
+                                            <IconChevronDown class="ml-2 -mr-1 h-5 w-5 text-text float-right" aria-hidden="true"
                                             />
                                         </MenuButton>
                                     </div>
@@ -64,17 +64,17 @@
                                         leave-active-class="transition duration-75 ease-in"
                                         leave-from-class="transform scale-100 opacity-100"
                                         leave-to-class="transform scale-95 opacity-0">
-                                        <MenuItems class="absolute overflow-y-auto h-48 w-full origin-top-left divide-y divide-border-subtle bg-primary ring-1 ring-black text-white opacity-100 z-50 rounded-lg">
-                                            <div class="mx-auto w-full p-3 bg-primary border-none mt-2">
+                                        <MenuItems class="absolute overflow-y-auto h-48 w-full origin-top-left divide-y divide-border-subtle bg-surface-inverse ring-1 ring-black text-white opacity-100 z-50 rounded-lg">
+                                            <div class="mx-auto w-full p-3 bg-surface-inverse border-none mt-2">
                                                 <Disclosure v-if="categories.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                     >
                                                         <span
-                                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                            :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                                             {{ t('Category') }}
                                                         </span>
-                                                        <ChevronDownIcon
+                                                        <IconChevronDown
                                                             :class="open ? 'rotate-180 transform' : ''"
                                                             class="h-4 w-4 mt-0.5 text-white"
                                                         />
@@ -89,12 +89,12 @@
                                                                    :value="category.id"
                                                                    class="input-checklist-dark"/>
                                                             <p :class="[createProjectForm.assignedCategoryIds.includes(category.id)
-                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                            ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ category.name }}
                                                             </p>
                                                         </div>
-                                                        <div v-else class="text-secondary">
+                                                        <div v-else class="text-text-subtle">
                                                             {{ t('No categories created yet') }}
                                                         </div>
                                                     </DisclosurePanel>
@@ -102,13 +102,13 @@
                                                 <hr v-if="categories.length > 0 && genres.length > 0" class="border-border-strong mt-2 mb-2">
                                                 <Disclosure v-if="genres.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                     >
                                                         <span
-                                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                            :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                                             {{ t('Genre') }}
                                                         </span>
-                                                        <ChevronDownIcon
+                                                        <IconChevronDown
                                                             :class="open ? 'rotate-180 transform' : ''"
                                                             class="h-4 w-4 mt-0.5 text-white"
                                                         />
@@ -123,12 +123,12 @@
                                                                    :value="genre.id"
                                                                    class="input-checklist-dark"/>
                                                             <p :class="[createProjectForm.assignedGenreIds.includes(genre.id)
-                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                            ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ genre.name }}
                                                             </p>
                                                         </div>
-                                                        <div v-else class="text-secondary">
+                                                        <div v-else class="text-text-subtle">
                                                             {{ t('No genres created yet') }}
                                                         </div>
                                                     </DisclosurePanel>
@@ -136,13 +136,13 @@
                                                 <hr v-if="genres.length > 0 && sectors.length > 0" class="border-border-strong mt-2 mb-2">
                                                 <Disclosure v-if="sectors.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                     >
                                                         <span
-                                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                            :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                                             {{ t('Area') }}
                                                         </span>
-                                                        <ChevronDownIcon
+                                                        <IconChevronDown
                                                             :class="open ? 'rotate-180 transform' : ''"
                                                             class="h-4 w-4 mt-0.5 text-white"
                                                         />
@@ -156,7 +156,7 @@
                                                                    :value="sector.id"
                                                                    class="input-checklist-dark"/>
                                                             <p :class="[createProjectForm.assignedSectorIds.includes(sector.id)
-                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                            ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ sector.name }}
                                                             </p>
@@ -216,7 +216,7 @@
                                             <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
                                         </span>
                                         <button type="button" @click="selectedState = null" class="ml-1">
-                                            <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
+                                            <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                                         </button>
                                     </div>
                                 </div>
@@ -235,30 +235,30 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                                     </ListboxButton>
                                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions class="absolute w-full z-10 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOptions class="absolute w-full z-10 bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
                                                 v-for="state in states"
                                                 :key="state.id"
                                                 :value="state"
                                                 v-slot="{ active, selected }">
-                                                <li :class="[active ? 'text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                <li :class="[active ? 'text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                     <div class="flex items-center">
                                                         <div>
                                                             <div class="block w-3 h-3 rounded-full"
                                                                 :style="{'backgroundColor' : state?.color }"/>
                                                         </div>
                                                         <span
-                                                            :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
+                                                            :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
                                                             {{ state.name }}
                                                             <IconCalendarMonth v-if="state.is_planning === true || state.is_planning === 1" class="w-4 h-4" />
                                                         </span>
                                                     </div>
                                                     <span
-                                                        :class="[active ? 'text-white' : 'text-secondary', 'group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                        <CheckIcon v-if="selected"
+                                                        :class="[active ? 'text-white' : 'text-text-subtle', 'group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                        <IconCheck v-if="selected"
                                                             class="h-5 w-5 flex text-success"
                                                             aria-hidden="true"/>
                                                     </span>
@@ -269,7 +269,7 @@
                                 </Listbox>
                             </div>
 
-                            <div class="px-11 py-6 -mx-5 bg-lightBackgroundGray" v-if="createSettings.managers">
+                            <div class="px-11 py-6 -mx-5 bg-surface-canvas" v-if="createSettings.managers">
                                 <div class="font-semibold text-sm pb-2">{{ t('Project management')}}</div>
                                 <UserSearch @user-selected="addUserToProject" only-manager label="Search for users" />
 
@@ -280,11 +280,11 @@
                                                 <img class="inline-block size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                                             </div>
                                             <div class="mx-2">
-                                                <p class="xsDark group-hover:text-text">{{ user.name}}</p>
+                                                <p class="text-sm/5 font-semibold text-text group-hover:text-text">{{ user.name}}</p>
                                             </div>
                                             <div class="flex items-center">
                                                 <button type="button" @click="removeUserFromProject(index)">
-                                                    <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
+                                                    <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                                                 </button>
                                             </div>
                                         </div>
@@ -379,7 +379,7 @@
                                 </div>
                             </div>
                             <div v-if="project" class="px-6 py-2">
-                                <div class="xsDark mb-1">{{ $t('Key Visual') }}</div>
+                                <div class="text-sm/5 font-semibold text-text mb-1">{{ $t('Key Visual') }}</div>
                                 <KeyVisual :project="project" />
                             </div>
                         </div>
@@ -450,7 +450,7 @@
                                             <span>
                                                 {{ t('Select properties') }}
                                             </span>
-                                        <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
+                                        <IconChevronDown class="ml-2 -mr-1 h-5 w-5 text-text float-right" aria-hidden="true"/>
                                     </MenuButton>
                                 </div>
                                 <transition
@@ -460,12 +460,12 @@
                                     leave-active-class="transition duration-75 ease-in"
                                     leave-from-class="transform scale-100 opacity-100"
                                     leave-to-class="transform scale-95 opacity-0">
-                                    <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-full origin-top-left divide-y divide-border-subtle rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
+                                    <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-full origin-top-left divide-y divide-border-subtle rounded-lg bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                        <div class="mx-auto w-full rounded-2xl bg-surface-inverse border-none mt-2">
                                             <Disclosure v-if="categories.length > 0" v-slot="{ open }">
-                                                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Category') }}</span>
-                                                    <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
+                                                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ t('Category') }}</span>
+                                                    <IconChevronDown :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                                     <div v-if="categories.length > 0"
@@ -477,12 +477,12 @@
                                                                :value="category.id"
                                                                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                         <p :class="[createProjectForm.assignedCategoryIds.includes(category.id)
-                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                            ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                             {{ category.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">
+                                                    <div v-else class="text-text-subtle">
                                                         {{ t('No categories created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
@@ -490,11 +490,11 @@
                                             <hr v-if="categories.length > 0 && genres.length > 0" class="border-border-strong mt-2 mb-2">
                                             <Disclosure v-if="genres.length > 0" v-slot="{ open }">
                                                 <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Genre') }}</span>
-                                                    <ChevronDownIcon
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ t('Genre') }}</span>
+                                                    <IconChevronDown
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
@@ -509,12 +509,12 @@
                                                                :value="genre.id"
                                                                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                         <p :class="[createProjectForm.assignedGenreIds.includes(genre.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                             {{ genre.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">
+                                                    <div v-else class="text-text-subtle">
                                                         {{ t('No genres created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
@@ -522,11 +522,11 @@
                                             <hr v-if="genres.length > 0 && sectors.length > 0" class="border-border-strong mt-2 mb-2">
                                             <Disclosure v-if="sectors.length > 0" v-slot="{ open }">
                                                 <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ t('Area') }}</span>
-                                                    <ChevronDownIcon
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ t('Area') }}</span>
+                                                    <IconChevronDown
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
@@ -541,12 +541,12 @@
                                                                :value="sector.id"
                                                                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                         <p :class="[createProjectForm.assignedSectorIds.includes(sector.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                             {{ sector.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">
+                                                    <div v-else class="text-text-subtle">
                                                         {{ t('No areas created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
@@ -597,7 +597,7 @@
                                 <div v-for="(groupProject, index) in projectGroupProjects" :key="groupProject.id" class="inline-flex items-center gap-x-1.5 px-3 py-1.5 rounded-full border border-border bg-surface-sunken text-sm">
                                     <span>{{ groupProject.name }}</span>
                                     <button type="button" @click="deleteProjectFromProjectGroup(index)">
-                                        <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
+                                        <IconX class="h-4 w-4 text-text-subtle hover:text-danger" />
                                     </button>
                                 </div>
                             </div>
@@ -628,8 +628,6 @@
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import {CheckIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/vue3";
 import {
     Disclosure,
@@ -654,7 +652,7 @@ import { ref, reactive, computed, defineProps, defineEmits } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { usePermission } from '@/Composeables/Permission.js';
 import { useTranslation } from '@/Composeables/Translation.js';
-import {IconCalendarMonth, IconCirclePlus, IconX} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconCheck, IconChevronDown, IconCirclePlus, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import SwitchDualLabel from "@/Artwork/Toggles/SwitchDualLabel.vue";

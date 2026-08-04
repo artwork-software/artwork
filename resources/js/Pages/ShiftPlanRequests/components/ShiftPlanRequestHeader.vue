@@ -52,7 +52,7 @@
 
                 <div
                     v-if="request.review_comment"
-                    :class="request.status === 'rejected' ? 'text-artwork-error' : (request.status === 'approved' ? 'text-success' : 'text-text-subtle')"
+                    :class="request.status === 'rejected' ? 'text-danger' : (request.status === 'approved' ? 'text-success' : 'text-text-subtle')"
                     class="max-w-xs text-right text-[11px]"
                 >{{ (request.status === 'rejected' ? $t('Rejection Reason') : $t('Note')) + ': ' }}{{ request.review_comment }}</div>
 

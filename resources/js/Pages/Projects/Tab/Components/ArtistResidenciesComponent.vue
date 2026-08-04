@@ -3,7 +3,7 @@
         <div v-if="loadResidenciesError" class="mb-2 text-xs text-danger">
             {{ $t(loadResidenciesError) }}
         </div>
-        <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-secondary">
+        <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
         <div class="sm:flex sm:items-center ">
@@ -110,7 +110,6 @@ import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ExportArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/ExportArtistResidenciesModal.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

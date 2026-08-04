@@ -10,7 +10,7 @@
                         ref="nameInputRef"
                         v-model="editableName"
                         type="text"
-                        class="rounded border-border text-sm px-2 py-1 focus:border-artwork-buttons-hover focus:ring-artwork-buttons-hover w-40"
+                        class="rounded border-border text-sm px-2 py-1 focus:border-accent-700 focus:ring-accent-700 w-40"
                         @blur="saveName"
                         @keyup.enter="$event.target.blur()"
                     />

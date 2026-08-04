@@ -25,7 +25,7 @@
                     </div>
                     <button
                         type="button"
-                        class="mt-1 text-xs font-medium text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                        class="mt-1 text-xs font-medium text-accent-600 hover:text-accent-700"
                         @click.stop="$emit('click')"
                     >
                         Öffnen

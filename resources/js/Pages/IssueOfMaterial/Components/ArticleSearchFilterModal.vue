@@ -12,7 +12,7 @@
         </div>
 
         <Listbox as="div" v-model="selectedCategory">
-            <ListboxLabel class="xsDark">
+            <ListboxLabel class="text-sm/5 font-semibold text-text">
                 {{ $t('Select Category') }}
             </ListboxLabel>
             <div class="relative mt-2">

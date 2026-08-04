@@ -12,7 +12,7 @@
                 v-if="canEditBasicData"
                 name="IconEdit"
                 class="w-5 h-5 rounded-full cursor-pointer"
-                :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
+                :class="inSidebar ? 'text-white' : 'text-text-muted'"
                 @click="openEditProjectModal"
             />
         </div>
@@ -21,7 +21,7 @@
             <div v-for="row in rows" :key="row.key" class="space-y-0.5">
                 <div
                     class="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5"
-                    :class="inSidebar ? 'text-text-subtle' : 'text-secondary'"
+                    :class="inSidebar ? 'text-text-subtle' : 'text-text-subtle'"
                 >
                     {{ row.label }}
                     <ToolTipComponent

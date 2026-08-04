@@ -140,7 +140,7 @@
                                   />
                                   <span
                                       class="absolute right-0 bottom-0 block size-2 rounded-full ring-2 ring-white"
-                                      :class="{ 'bg-danger': status === 'offline', 'bg-orange-400': status === 'away', 'bg-success': status === 'online'}"
+                                      :class="{ 'bg-danger': status === 'offline', 'bg-special-orange': status === 'away', 'bg-success': status === 'online'}"
                                   />
                                 </span>
                                 <div class="min-w-0">

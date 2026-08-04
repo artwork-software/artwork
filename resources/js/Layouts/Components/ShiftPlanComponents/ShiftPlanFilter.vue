@@ -16,7 +16,7 @@
             <!-- Save Filter Section -->
             <Disclosure v-slot="{ open }" default-open>
                 <DisclosureButton
-                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                 >
                     <span
                         :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Saved filters')}}</span>
@@ -54,7 +54,7 @@
             <Disclosure v-slot="{ open }" v-if="showRoomFilters">
                 <hr class="border-text-subtle rounded-full border-2 mt-2 mb-2">
                 <DisclosureButton
-                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                 >
                                     <span
                                         :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Rooms')}}</span>
@@ -81,7 +81,7 @@
             <!-- Event Filter Section -->
             <Disclosure v-slot="{ open }">
                 <DisclosureButton
-                    class="flex w-full py-2 justify-between rounded-lg text-left text-sm focus:outline-none focus-visible:ring-purple-500"
+                    class="flex w-full py-2 justify-between rounded-lg text-left text-sm focus:outline-none focus-visible:ring-accent-600"
                 >
                                 <span
                                     :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Events')}}</span>
@@ -93,7 +93,7 @@
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                         >
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{$t('Event type')}}</span>
                             <IconChevronDown stroke-width="1.5"

@@ -67,7 +67,7 @@
                                     class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
                                     type="button"
                                 >
-                                    <span class="size-2 rounded-full bg-pink-500"></span>{{ $t('shared') }}
+                                    <span class="size-2 rounded-full bg-special-pink"></span>{{ $t('shared') }}
                                 </button>
                             </div>
 
@@ -94,7 +94,7 @@
                                 class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
                                 type="button"
                             >
-                                <span class="size-2 rounded-full bg-cyan-500"></span>{{ $t('Show empty lists') }}
+                                <span class="size-2 rounded-full bg-special-teal"></span>{{ $t('Show empty lists') }}
                             </button>
                         </div>
                     </div>

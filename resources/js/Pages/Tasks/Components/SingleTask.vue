@@ -75,7 +75,7 @@ export default {
     },
     mounted() {
         if(parseInt(this.$page.props.urlParameters.taskId) === this.task.id){
-            this.highlight = 'border-2 border-orange-300 rounded-md p-1';
+            this.highlight = 'border-2 border-special-orange-border rounded-md p-1';
 
             setTimeout(() => {
                 this.highlight = null;

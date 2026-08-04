@@ -40,7 +40,7 @@
                 <p v-if="notification.data?.description[5]" class="mt-2 text-xs/[18px] text-text-subtle">
                     {{ notification.data?.description[5]?.title }}
                 </p>
-                <span v-if="notification.data.isModified" class="text-orange-700 bg-orange-50 px-2 py-1 rounded text-xs font-medium">
+                <span v-if="notification.data.isModified" class="text-special-orange bg-special-orange-surface px-2 py-1 rounded text-xs font-medium">
                     {{ $t('modified') }}
                 </span>
                 <div v-if="notification.data.handledStatus" class="mt-2 text-xs font-medium">

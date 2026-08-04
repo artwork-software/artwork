@@ -223,7 +223,7 @@
                     <div class="my-4">
                         <div class="w-full">
                             <Disclosure v-for="(subCategory, index) in subCategories" v-slot="{ open }" as="div" class="mt-1">
-                                <DisclosureButton class="flex w-full justify-between bg-surface-sunken px-2 py-3 rounded-lg text-left text-sm font-medium hover:bg-border-subtle focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75">
+                                <DisclosureButton class="flex w-full justify-between bg-surface-sunken px-2 py-3 rounded-lg text-left text-sm font-medium hover:bg-border-subtle focus:outline-none focus-visible:ring focus-visible:ring-accent-600">
                                     <div class="flex items-center gap-x-2 justify-between w-full pr-5">
                                         <span v-if="subCategory.name">{{ subCategory.name }}</span>
                                         <span v-else>{{ $t('Sub-Category without name. Please add a name')}}</span>

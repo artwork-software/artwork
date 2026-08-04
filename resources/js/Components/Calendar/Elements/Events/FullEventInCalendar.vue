@@ -48,7 +48,7 @@
         <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
             {{ $t('Planned Event') }}
         </div>
-        <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-orange-500 px-2 py-1 text-[10px] font-lexend text-white select-none">
+        <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
             {{ $t('Verification requested') }}
         </div>
 
@@ -511,7 +511,7 @@
                             <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
                                 {{ $t('Planned Event') }}
                             </div>
-                            <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-orange-500 px-2 py-1 text-[10px] font-lexend text-white select-none">
+                            <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
                                 {{ $t('Verification requested') }}
                             </div>
 

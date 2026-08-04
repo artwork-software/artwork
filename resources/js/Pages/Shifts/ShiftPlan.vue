@@ -337,7 +337,7 @@
                                                     class="rounded-lg border duration-200 ease-in-out"
                                                     :class="[
                                                         group.project ? 'border-info-border bg-info-surface/80' : 'border-border-subtle bg-surface-sunken',
-                                                        isGroupProjectHighlighted(group) ? '!border-2 !border-pink-500' : '',
+                                                        isGroupProjectHighlighted(group) ? '!border-2 !border-special-pink' : '',
                                                         isGroupProjectDimmed(group) ? 'opacity-30' : ''
                                                     ]"
                                                 >

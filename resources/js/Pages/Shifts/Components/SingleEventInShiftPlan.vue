@@ -2,7 +2,7 @@
     <div>
         <div>
             <div class="text-surface rounded-lg flex flex-col"
-                 :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-pink-500' : '']"
+                 :class="[shiftPlanSettings.time_period_project_id === project?.id && shiftPlanSettings.use_project_time_period ? 'border-[3px] border-dashed !border-special-pink' : '']"
                  :style="{backgroundColor: backgroundColorWithOpacity(eventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage)),
                  borderColor: eventType.hex_code}">
 

@@ -3,7 +3,7 @@
         <!-- Dropzone, wenn kein Key-Visual vorhanden -->
         <div
             v-if="!hasKeyVisual"
-            class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
+            class="flex col-span-2 w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
             @dragover.prevent
             @drop.stop.prevent="uploadDraggedKeyVisual($event)"
             @click="selectNewKeyVisual"
@@ -34,7 +34,7 @@
                     v-if="originalKeyVisualNotDefault"
                     @click="downloadKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-orange-500"
+                    class="ui-button bg-white hover:text-special-orange"
                 >
                     <IconDownload class="h-5 w-5" aria-hidden="true" />
                 </button>
@@ -64,7 +64,7 @@
                         :src="currentPreviewSrc"
                         alt="Aktuelles Key-Visual"
                         @error="(e) => (e.target.src = page.props.big_logo)"
-                        class="rounded-md w-full max-h-96 object-contain bg-stone-50"
+                        class="rounded-md w-full max-h-96 object-contain bg-surface-sunken"
                     />
                     <input
                         id="keyVisual-upload"

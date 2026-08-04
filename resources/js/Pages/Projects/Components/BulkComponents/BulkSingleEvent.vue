@@ -2,7 +2,7 @@
     <div ref="rowRootEl" class="print:w-full group w-full">
         <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
         <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
-            :class="[ event?.isNew ? 'outline-2 outline-pink-400/60 outline-dashed' : '',
+            :class="[ event?.isNew ? 'outline-2 outline-special-pink outline-dashed' : '',
                 lastEditEventIds.includes(event.id)
                   ? 'outline-2 outline-accent-600 outline-dashed' : '',
                 (event.isSelectedForMultiEdit && effectiveMultiEdit) ? 'ring-2 ring-success-border' : ''

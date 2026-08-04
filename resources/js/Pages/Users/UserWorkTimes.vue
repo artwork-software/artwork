@@ -72,7 +72,7 @@
                             <div v-if="entry.is_special_day" class="text-xs text-warning bg-warning-surface px-2 py-0.5 rounded inline-block mt-2">
                                 {{ $t('Special Day') }}
                             </div>
-                            <div v-if="entry.is_compensation_day_off" class="text-xs text-teal-700 bg-teal-100 px-2 py-0.5 rounded inline-block mt-2">
+                            <div v-if="entry.is_compensation_day_off" class="text-xs text-special-teal bg-special-teal-surface px-2 py-0.5 rounded inline-block mt-2">
                                 <span v-for="(comp, idx) in entry.compensation_day_off_info" :key="idx">
                                     {{ comp.value >= 1 ? $t('Compensation day off') : $t('Half compensation day off') }}
                                     <template v-if="comp.rule_name"> — {{ comp.rule_name }}</template>
@@ -143,7 +143,7 @@
                             <div class="flex flex-wrap gap-3 text-xs text-text-muted mt-1">
                                 <div>
                                     <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h
-                                    <span v-if="entry.is_compensation_day_off" class="text-teal-600 text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
+                                    <span v-if="entry.is_compensation_day_off" class="text-special-teal text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
                                 </div>
                                 <div><strong>{{ $t('Planned') }}: </strong>
                                     <span v-if="!entry.worked_hours">{{ entry.planned_hours }}h</span>

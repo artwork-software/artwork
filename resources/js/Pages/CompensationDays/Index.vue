@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconCalendarOff"
                 :title="$t('Compensation days overview')"
-                icon-bg-class="bg-teal-600/10 text-teal-700"
+                icon-bg-class="bg-special-teal text-special-teal"
                 :description="$t('Overview of all compensation days across all users.')"
                 :search-enabled="false"
             />

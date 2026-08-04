@@ -46,7 +46,7 @@
                             <IconAlertTriangle class="h-3 w-3" />
                             {{ $t('Changed') }}
                         </span>
-                        <span v-if="entry.has_changes_after_workflow" class="inline-flex items-center gap-1 text-[10px] text-orange-500">
+                        <span v-if="entry.has_changes_after_workflow" class="inline-flex items-center gap-1 text-[10px] text-special-orange">
                             <IconAlertTriangle class="h-3 w-3" />
                             {{ $t('Change requested') }}
                         </span>

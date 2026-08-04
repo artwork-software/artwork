@@ -155,7 +155,7 @@
                         <div class="flex items-center gap-2" role="listitem">
                             <span
                                 aria-hidden="true"
-                                class="h-4 w-10 rounded-full border-2 border-dashed border-pink-500/70 bg-pink-50/40"
+                                class="h-4 w-10 rounded-full border-2 border-dashed border-special-pink bg-special-pink-surface"
                             ></span>
                             <span class="uppercase tracking-wide font-medium">
                                 {{ $t('Most recently created events') }}

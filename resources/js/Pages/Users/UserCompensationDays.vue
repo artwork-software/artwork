@@ -103,7 +103,7 @@
                                 <td class="px-3 py-2.5">
                                     <span
                                         v-if="dayOff.for_holiday"
-                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700"
+                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-special-violet-surface text-special-violet"
                                     >
                                         {{ $t('Public holiday') }}
                                     </span>
@@ -191,7 +191,7 @@
                                 <td class="px-3 py-2.5">
                                     <span
                                         v-if="dayOff.for_holiday"
-                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700"
+                                        class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-special-violet-surface text-special-violet"
                                     >
                                         {{ $t('Public holiday') }}
                                     </span>

@@ -30,9 +30,9 @@
                                         'bg-success': property.rawContent.color === 'green',
                                         'bg-accent-600': property.rawContent.color === 'blue',
                                         'bg-warning': property.rawContent.color === 'yellow',
-                                        'bg-purple-500': property.rawContent.color === 'purple',
-                                        'bg-pink-500': property.rawContent.color === 'pink',
-                                        'bg-orange-500': property.rawContent.color === 'orange',
+                                        'bg-special-violet': property.rawContent.color === 'purple',
+                                        'bg-special-pink': property.rawContent.color === 'pink',
+                                        'bg-special-orange': property.rawContent.color === 'orange',
                                         'bg-brown-500': property.rawContent.color === 'brown',
                                     }">
                                     {{ property.rawContent?.name }}

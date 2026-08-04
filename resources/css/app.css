@@ -57,6 +57,24 @@
     --font-sans:    Inter, system-ui, sans-serif;
     --font-lexend:  Lexend, system-ui, sans-serif;
 
+    /* ---------- Gelernte Sonderfarben (feste Marker, AA auf Weiß) ----------
+       Für etablierte Spezialfälle: violet = Lifecycle/BI-Chips, pink =
+       "zuletzt angelegt"-Marker (Bulk), orange = Verifizierung/Nachträglich,
+       teal = Ausgleichstage/Sonder-Marker. Nutzergepflegte Farben (Terminarten,
+       Inventar-Status, Räume, Gewerke) kommen weiterhin dynamisch aus der DB. */
+    --color-special-violet:         #6D28D9;
+    --color-special-violet-surface: #F2EEFA;
+    --color-special-violet-border:  #D6C9F0;
+    --color-special-pink:           #B03578;
+    --color-special-pink-surface:   #F9ECF3;
+    --color-special-pink-border:    #EDC2DA;
+    --color-special-orange:         #B04A0A;
+    --color-special-orange-surface: #FAF0E6;
+    --color-special-orange-border:  #F0CBA4;
+    --color-special-teal:           #0F766E;
+    --color-special-teal-surface:   #E7F4F2;
+    --color-special-teal-border:    #A9D8D2;
+
     /* ---------- Sonstiges (Bestand, weiter genutzt) ---------- */
     --z-100: 100;
 }

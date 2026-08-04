@@ -68,7 +68,7 @@
                                             <div class="mx-auto w-full p-3 bg-surface-inverse border-none mt-2">
                                                 <Disclosure v-if="categories.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                                                     >
                                                         <span
                                                             :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
@@ -102,7 +102,7 @@
                                                 <hr v-if="categories.length > 0 && genres.length > 0" class="border-border-strong mt-2 mb-2">
                                                 <Disclosure v-if="genres.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                                                     >
                                                         <span
                                                             :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
@@ -136,7 +136,7 @@
                                                 <hr v-if="genres.length > 0 && sectors.length > 0" class="border-border-strong mt-2 mb-2">
                                                 <Disclosure v-if="sectors.length > 0" v-slot="{ open }">
                                                     <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                                                     >
                                                         <span
                                                             :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
@@ -463,7 +463,7 @@
                                     <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-full origin-top-left divide-y divide-border-subtle rounded-lg bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
                                         <div class="mx-auto w-full rounded-2xl bg-surface-inverse border-none mt-2">
                                             <Disclosure v-if="categories.length > 0" v-slot="{ open }">
-                                                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                                                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                                                     <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ t('Category') }}</span>
                                                     <IconChevronDown :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
                                                 </DisclosureButton>
@@ -490,7 +490,7 @@
                                             <hr v-if="categories.length > 0 && genres.length > 0" class="border-border-strong mt-2 mb-2">
                                             <Disclosure v-if="genres.length > 0" v-slot="{ open }">
                                                 <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                                                 >
                                                     <span
                                                         :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ t('Genre') }}</span>
@@ -522,7 +522,7 @@
                                             <hr v-if="genres.length > 0 && sectors.length > 0" class="border-border-strong mt-2 mb-2">
                                             <Disclosure v-if="sectors.length > 0" v-slot="{ open }">
                                                 <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
                                                 >
                                                     <span
                                                         :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ t('Area') }}</span>

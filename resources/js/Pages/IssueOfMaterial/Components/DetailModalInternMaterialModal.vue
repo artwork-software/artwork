@@ -14,7 +14,7 @@
                 <span class="inline-flex items-center rounded-full bg-success-surface px-2.5 py-1 text-[11px] font-medium text-success ring-1 ring-inset ring-success-border">
           {{ issue?.files?.length || 0 }} {{ $t('files') }}
         </span>
-                <span v-if="issue?.special_items?.length" class="inline-flex items-center rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-medium text-violet-700 ring-1 ring-inset ring-violet-200">
+                <span v-if="issue?.special_items?.length" class="inline-flex items-center rounded-full bg-special-violet-surface px-2.5 py-1 text-[11px] font-medium text-special-violet ring-1 ring-inset ring-special-violet-border">
           {{ issue?.special_items?.length }} {{ $t('Special article') }}
         </span>
             </div>
@@ -116,9 +116,9 @@
 
             <!-- Sonderartikel -->
             <section v-if="issue.special_items?.length" class="rounded-2xl border border-border-subtle bg-white shadow-sm">
-                <div class="border-b border-border-subtle bg-gradient-to-r from-violet-50 via-violet-50/60 to-transparent px-5 py-3 rounded-t-2xl">
+                <div class="border-b border-border-subtle bg-gradient-to-r from-special-violet-surface via-special-violet-surface to-transparent px-5 py-3 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-text flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-violet-500"></span>
+                        <span class="inline-block size-2 rounded-full bg-special-violet"></span>
                         {{ $t('Special article') }}
                     </h3>
                 </div>
@@ -126,7 +126,7 @@
                     <div class="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-sunken overflow-hidden">
                         <div v-for="s in issue.special_items" :key="s.id" class="flex items-center justify-between gap-3 p-3">
                             <span class="font-medium text-text truncate">{{ s.name }}</span>
-                            <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800">
+                            <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-special-violet-border bg-special-violet-surface px-2 py-0.5 text-[11px] font-medium text-special-violet">
                                 <span>{{ $t('Quantity') }}:</span>
                                 <span class="tabular-nums">{{ s.quantity }}</span>
                             </div>

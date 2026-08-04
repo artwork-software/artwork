@@ -13,7 +13,7 @@
         <div class="mx-auto w-full max-w-md rounded-2xl bg-surface-inverse border-none mt-2">
             <!-- Save Filter Section -->
             <Disclosure v-slot="{ open }" default-open>
-                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                     <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Saved filters') }}</span>
                     <IconChevronDown stroke-width="1.5"
                                      :class="open ? 'rotate-180 transform' : ''"
@@ -57,7 +57,7 @@
             <!-- Room Filter Section -->
             <Disclosure v-slot="{ open }" v-if="showRoomFilters">
                 <hr class="border-text-subtle rounded-full border-2 mt-2 mb-2">
-                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                     <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Rooms') }}</span>
                     <IconChevronDown stroke-width="1.5"
                                      :class="open ? 'rotate-180 transform' : ''"
@@ -82,7 +82,7 @@
                         <hr class="border-border-strong mt-2 mb-2">
                     </div>
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Room categories') }}
                             </span>
@@ -109,7 +109,7 @@
                     <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Areas ') }}
                             </span>
@@ -132,7 +132,7 @@
                     </Disclosure>
                     <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Room properties') }}
                             </span>
@@ -157,7 +157,7 @@
                     </Disclosure>
                     <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Rooms') }}
                             </span>
@@ -188,7 +188,7 @@
             <!-- Event Filter Section -->
             <Disclosure v-if="filterArray.eventTypes.length > 0 || filterArray.eventProperties.length > 0" v-slot="{ open }">
                 <DisclosureButton
-                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm focus:outline-none focus-visible:ring-purple-500">
+                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm focus:outline-none focus-visible:ring-accent-600">
                     <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                         {{ $t('Events') }}
                     </span>
@@ -200,7 +200,7 @@
                     <hr v-if="filterArray.eventTypes.length > 0" class="border-border-strong mt-2 mb-2">
                     <Disclosure v-if="filterArray.eventTypes.length > 0" v-slot="{ open }">
                         <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Event type') }}
                             </span>
@@ -222,7 +222,7 @@
                     </Disclosure>
                     <hr v-if="filterArray.eventProperties.length > 0" class="border-border-strong mt-2 mb-2">
                     <Disclosure v-if="filterArray.eventProperties.length > 0" v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm focus:outline-none focus-visible:ring-purple-500">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm focus:outline-none focus-visible:ring-accent-600">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Event properties') }}
                             </span>

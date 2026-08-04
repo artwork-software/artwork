@@ -142,7 +142,7 @@
                 <div class="mt-4 group">
                     <div class="text-sm/5 font-semibold text-text mb-1">{{ $t('Key Visual') }}</div>
                     <div
-                        class="flex w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
+                        class="flex w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
                         @dragover.prevent
                         @drop.stop.prevent="uploadDraggedKeyVisual($event)"
                         @click="selectNewKeyVisual"
@@ -177,7 +177,7 @@
                             <div class="cursor-pointer">
                                 <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
                                      alt="Aktuelles Key-Visual"
-                                     class="rounded-md w-full max-h-96 object-contain bg-stone-50">
+                                     class="rounded-md w-full max-h-96 object-contain bg-surface-sunken">
                                 <input id="keyVisual-upload" ref="keyVisual"
                                        name="file-upload" type="file" class="sr-only"
                                        @change="updateKeyVisual"/>

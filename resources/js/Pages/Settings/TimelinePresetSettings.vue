@@ -25,7 +25,7 @@
                     class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-5 py-4"
                 >
                     <div class="flex items-center gap-x-4 flex-1 min-w-0">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-semibold text-sm">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-special-orange-surface text-special-orange font-semibold text-sm">
                             {{ preset.times_count }}
                         </div>
                         <div class="min-w-0">

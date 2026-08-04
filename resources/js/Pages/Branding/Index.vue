@@ -21,7 +21,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-border bg-stone-50 border-dashed rounded-md p-2"
+                    class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-border bg-surface-sunken border-dashed rounded-md p-2"
                     @click="selectNewBigLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBigLogo($event)">
@@ -52,7 +52,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 justify-center border-2 bg-stone-50 w-80 border-border cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 justify-center border-2 bg-surface-sunken w-80 border-border cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewSmallLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedSmallLogo($event)">
@@ -83,7 +83,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewBanner"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBanner($event)">

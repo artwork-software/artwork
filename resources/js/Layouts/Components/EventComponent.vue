@@ -347,7 +347,7 @@
                 <!-- Notes / Booking -->
                 <section class="ui-card">
                     <header class="ui-card-header">
-                        <span class="ui-dot bg-violet-400"></span>
+                        <span class="ui-dot bg-special-violet"></span>
                         <h3 class="ui-card-title">{{ $t('Description') }}</h3>
                         <ToolTipComponent
                             :tooltip-text="$t('Other users can see this description in the project\'s event list and in the calendar.')"
@@ -414,7 +414,7 @@
                 <!-- Properties -->
                 <section v-if="(event_properties?.length || 0) > 0" class="ui-card">
                     <header class="ui-card-header">
-                        <span class="ui-dot bg-cyan-400"></span>
+                        <span class="ui-dot bg-special-teal"></span>
                         <h3 class="ui-card-title">{{ $t('Properties') }}</h3>
                     </header>
 

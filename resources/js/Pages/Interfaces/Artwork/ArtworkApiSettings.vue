@@ -465,7 +465,7 @@ export default defineComponent({
     },
     getStatusClass(token) {
       if (token.revoked) return 'bg-danger-surface text-danger';
-      if (this.isExpired(token)) return 'bg-orange-100 text-orange-800';
+      if (this.isExpired(token)) return 'bg-special-orange-surface text-special-orange';
       return 'bg-success-surface text-success';
     },
     showLogs(token) {
@@ -509,7 +509,7 @@ export default defineComponent({
         'GET': 'bg-accent-100 text-accent-700',
         'POST': 'bg-success-surface text-success',
         'PUT': 'bg-warning-surface text-warning',
-        'PATCH': 'bg-orange-100 text-orange-800',
+        'PATCH': 'bg-special-orange-surface text-special-orange',
         'DELETE': 'bg-danger-surface text-danger'
       };
       return classes[method] || 'bg-surface-sunken text-text';
@@ -520,7 +520,7 @@ export default defineComponent({
       } else if (statusCode >= 300 && statusCode < 400) {
         return 'bg-accent-100 text-accent-700';
       } else if (statusCode >= 400 && statusCode < 500) {
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-special-orange-surface text-special-orange';
       } else if (statusCode >= 500) {
         return 'bg-danger-surface text-danger';
       }

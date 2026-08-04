@@ -27,7 +27,7 @@
                     <div v-if="this.validationMessages.warnings.shift_start.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.shift_start"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
@@ -46,7 +46,7 @@
                     <div v-if="this.validationMessages.warnings.shift_end.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.shift_end"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
@@ -81,7 +81,7 @@
                     <div v-if="this.validationMessages.warnings.break_length.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.break_length"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
@@ -100,7 +100,7 @@
                     <div v-if="this.validationMessages.warnings.craft.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.craft"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>

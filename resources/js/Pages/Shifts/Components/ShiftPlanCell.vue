@@ -28,7 +28,7 @@
                 </span>
             </template>
 
-            <span v-if="compensationDayToday" class="text-teal-400">
+            <span v-if="compensationDayToday" class="text-special-teal">
                 {{ compensationDayToday === 'full' ? t('Compensation day off') : t('Half compensation day off') }}<template v-if="compensationDayToday === 'half' && compensationHalfPeriod"> ({{ compensationHalfPeriod === 'morning' ? t('Morning') : t('Afternoon') }})</template><template v-if="cellParts.length">, </template>
             </span>
 

@@ -95,7 +95,7 @@ function toHHMM(val: any): string | null {
 const accentSet = [
     { bar: 'bg-accent-600', chip: 'bg-accent-50 text-accent-700 border-accent-200' },
     { bar: 'bg-success', chip: 'bg-success-surface text-success border-success-border' },
-    { bar: 'bg-violet-500', chip: 'bg-violet-50 text-violet-700 border-violet-200' },
+    { bar: 'bg-special-violet', chip: 'bg-special-violet-surface text-special-violet border-special-violet-border' },
     { bar: 'bg-warning', chip: 'bg-warning-surface text-warning border-warning-border' },
 ]
 function accentByIndex(i: number) { return accentSet[i % accentSet.length] }

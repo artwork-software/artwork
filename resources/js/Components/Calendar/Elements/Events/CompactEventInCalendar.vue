@@ -35,7 +35,7 @@
         >
             <div class="w-64 rounded-lg bg-surface-inverse px-3 py-2 text-white shadow-xl text-xs space-y-0.5">
                 <div v-if="event.isPlanning && !event.hasVerification" class="font-semibold text-blue-300">{{ $t('Planned Event') }}</div>
-                <div v-else-if="event.hasVerification" class="font-semibold text-orange-300">{{ $t('Verification requested') }}</div>
+                <div v-else-if="event.hasVerification" class="font-semibold text-special-orange-border">{{ $t('Verification requested') }}</div>
                 <div v-if="effectiveEventName" class="font-semibold">{{ effectiveEventName }}</div>
                 <div v-if="event.project?.artistNames" class="font-semibold">{{ event.project.artistNames }}</div>
                 <div v-if="event.project?.name">{{ $t('Project') }}: {{ event.project.name }}</div>

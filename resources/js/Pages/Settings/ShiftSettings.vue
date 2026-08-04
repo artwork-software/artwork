@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-violet-200 bg-violet-50/60 p-5">
+            <div class="rounded-2xl border border-special-violet-border bg-special-violet-surface p-5">
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Uncommitted shifts in own roster')"
@@ -51,7 +51,7 @@
                         @change="updateOwnRosterUncommittedShiftVisibility"
                     />
                 </div>
-                <div class="mt-4 rounded-xl border border-violet-200 bg-white/80 px-4 py-3 text-xs leading-5 text-violet-900">
+                <div class="mt-4 rounded-xl border border-special-violet-border bg-white/80 px-4 py-3 text-xs leading-5 text-special-violet">
                     <p v-if="shiftSettings.hide_uncommitted_shifts_from_own_roster">
                         {{ $t('Active: uncommitted shifts are hidden from a person in their own roster. The individual permission “View own uncommitted shifts” can be granted as an exception.') }}
                     </p>

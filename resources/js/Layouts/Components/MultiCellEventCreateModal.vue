@@ -181,7 +181,7 @@
             <!-- Beschreibung -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-violet-400"></span>
+                    <span class="ui-dot bg-special-violet"></span>
                     <h3 class="ui-card-title">{{ $t('Description') }}</h3>
                 </header>
 

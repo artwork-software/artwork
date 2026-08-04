@@ -1,5 +1,5 @@
 <template>
-    <div :class="[usePage().props.auth.user.calendar_settings?.time_period_project_id === resolvedProject?.id ? 'border-[3px] border-dashed !border-pink-500' : '']">
+    <div :class="[usePage().props.auth.user.calendar_settings?.time_period_project_id === resolvedProject?.id ? 'border-[3px] border-dashed !border-special-pink' : '']">
         <div>
             <div class="text-secondaryHover text-sm/5 font-bold text-white px-1 py-1 flex justify-between items-center rounded-t-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(resolvedEventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(resolvedEventType.hex_code, percentage))}">

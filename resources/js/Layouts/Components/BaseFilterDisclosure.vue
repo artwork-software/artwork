@@ -1,7 +1,7 @@
 <template>
     <Disclosure v-slot="{ open }">
         <DisclosureButton
-            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600"
         >
             <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ title }}</span>
             <IconChevronDown stroke-width="1.5"

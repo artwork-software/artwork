@@ -36,7 +36,7 @@
                                         </label>
                                         <div class="items-center">
                                             <div
-                                                class="flex w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
+                                                class="flex w-full justify-center border-2 bg-surface-sunken border-border cursor-pointer border-dashed rounded-md p-2"
                                                 @click="selectNewNotificationImage"
                                                 @dragover.prevent
                                                 @drop.stop.prevent="uploadDraggedImage($event)">

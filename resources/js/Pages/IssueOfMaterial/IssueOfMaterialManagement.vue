@@ -510,9 +510,9 @@
                       <button class="ml-1 text-accent-600 hover:text-accent-700" @click="clearResponsible">&times;</button>
                     </span>
                     <span v-if="filters.q"
-                          class="inline-flex items-center rounded-full border border-violet-200 bg-violet-50/70 px-2.5 py-0.5 text-xs text-violet-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-special-violet-border bg-special-violet-surface px-2.5 py-0.5 text-xs text-special-violet shrink-0">
                       {{ $t('Search') }}: <span class="mx-1 font-medium">"{{ filters.q }}"</span>
-                      <button class="ml-1 text-violet-500 hover:text-violet-700"
+                      <button class="ml-1 text-special-violet hover:text-special-violet"
                               @click="filters.q = ''">&times;</button>
                     </span>
                     <button

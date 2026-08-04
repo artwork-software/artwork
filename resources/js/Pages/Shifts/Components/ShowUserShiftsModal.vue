@@ -509,28 +509,28 @@
                     <div
                         v-for="compDay in compensationDayForDate"
                         :key="compDay.id"
-                        class="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 mb-2"
+                        class="rounded-xl border border-special-teal-border bg-special-teal-surface px-4 py-3 mb-2"
                     >
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="inline-block h-2 w-2 rounded-full bg-teal-500"></span>
-                            <span class="text-xs font-semibold text-teal-800">
+                            <span class="inline-block h-2 w-2 rounded-full bg-special-teal"></span>
+                            <span class="text-xs font-semibold text-special-teal">
                                 {{ compDay.value >= 1.0 ? t('Compensation day off') : t('Half compensation day off') }}
                                 <template v-if="compDay.half_day_period === 'morning' || compDay.half_day_period === 'afternoon'">
                                     ({{ compDay.half_day_period === 'morning' ? t('Morning') : t('Afternoon') }})
                                 </template>
                             </span>
                         </div>
-                        <div class="text-xs text-teal-700">
+                        <div class="text-xs text-special-teal">
                             <span class="font-medium">{{ t('Compensation day off for:') }}</span>
                             {{ compDay.violation?.shift_rule?.name || t('Manual') }}
                         </div>
-                        <div v-if="compDay.granted_by_user" class="text-xs text-teal-600 mt-0.5">
+                        <div v-if="compDay.granted_by_user" class="text-xs text-special-teal mt-0.5">
                             <span class="font-medium">{{ t('Assigned by') }}:</span>
                             {{ compDay.granted_by_user.first_name }} {{ compDay.granted_by_user.last_name }}
                         </div>
                         <button
                             type="button"
-                            class="mt-1 text-[11px] text-teal-600 hover:text-teal-800 underline"
+                            class="mt-1 text-[11px] text-special-teal hover:text-special-teal underline"
                             @click="revokeCompensationDay(compDay.id)"
                         >
                             {{ t('Revoke') }}
@@ -545,7 +545,7 @@
                 >
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2.5 py-1 text-[11px] text-teal-700 hover:border-teal-400 hover:text-teal-800 transition-colors"
+                        class="inline-flex items-center gap-1 rounded-full border border-special-teal-border bg-white px-2.5 py-1 text-[11px] text-special-teal hover:border-special-teal hover:text-special-teal transition-colors"
                         @click="showGrantCompensationModal = true"
                     >
                         <PropertyIcon name="IconCalendarPlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -558,7 +558,7 @@
                     <!-- Info: Availability locked by compensation day -->
                     <section
                         v-if="compensationDayForDate.length && (user.type === 0 || user.type === 1)"
-                        class="rounded-xl border border-teal-200 bg-teal-50/60 px-3.5 py-3 text-xs text-teal-700"
+                        class="rounded-xl border border-special-teal-border bg-special-teal-surface px-3.5 py-3 text-xs text-special-teal"
                     >
                         {{ t('Availability cannot be changed — compensation day off granted.') }}
                     </section>
@@ -1204,7 +1204,7 @@ const currentSeriesSubject = computed(() => {
 // Badge-Klasse für Typ
 const badgeClassForType = computed(() => {
     if (props.user.element.type === 'service_provider') {
-        return 'bg-purple-50 text-purple-700 border-purple-100';
+        return 'bg-special-violet-surface text-special-violet border-special-violet-border';
     }
     if (props.user.element.type === 'freelancer') {
         return 'bg-warning-surface text-warning border-warning-border';

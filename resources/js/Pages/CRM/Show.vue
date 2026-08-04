@@ -142,7 +142,7 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-text-subtle">
                                 <div class="flex flex-col gap-1.5">
-                                    <span v-if="(project.sources ?? []).includes('artist')" class="inline-flex w-fit items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                                    <span v-if="(project.sources ?? []).includes('artist')" class="inline-flex w-fit items-center rounded-full bg-special-violet-surface px-2.5 py-0.5 text-xs font-medium text-special-violet">
                                         {{ $t('Artist linking') }}
                                     </span>
                                     <span v-if="(project.sources ?? []).includes('team')" class="inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-medium text-accent-700">

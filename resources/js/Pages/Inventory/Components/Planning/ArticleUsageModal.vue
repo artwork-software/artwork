@@ -344,7 +344,7 @@ const getAvailableQuantity = () => {
 
 const getSegmentColorClass = (available) => {
     if (available < 0) return 'bg-danger-surface text-danger'
-    if (available === 0) return 'bg-orange-50 text-orange-900'
+    if (available === 0) return 'bg-special-orange-surface text-special-orange'
     if (available <= 2) return 'bg-warning-surface text-warning'
     return 'bg-success-surface text-success'
 }

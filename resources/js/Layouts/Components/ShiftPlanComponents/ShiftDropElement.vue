@@ -4,8 +4,8 @@
             :class="[
               'px-1',
               (highlightMode && hasAnyHighlightSelection && !matchesAnyHighlight) ? 'opacity-30' : '',
-              (highlightMode && matchesAnyHighlight) ? 'bg-pink-500 ring-2 ring-pink-500 ring-offset-1 ring-offset-white !text-white' : '',
-              (highlightMode && isThisShiftHighlighted) ? 'ring-2 ring-pink-500 ring-offset-1 ring-offset-white' : '',
+              (highlightMode && matchesAnyHighlight) ? 'bg-special-pink ring-2 ring-special-pink ring-offset-1 ring-offset-white !text-white' : '',
+              (highlightMode && isThisShiftHighlighted) ? 'ring-2 ring-special-pink ring-offset-1 ring-offset-white' : '',
 
               multiEditMode ? 'text-[10px]' : 'text-[11px]'
             ]"

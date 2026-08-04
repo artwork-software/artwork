@@ -18,7 +18,7 @@
                 <div class="font-semibold text-text-muted">{{ day.day_name }}</div>
                 <div class="text-text-subtle text-[10px]">{{ day.day_short }}</div>
 
-                <div v-if="day.vacation_type" class="mt-1.5 text-[10px] text-orange-500 font-medium">
+                <div v-if="day.vacation_type" class="mt-1.5 text-[10px] text-special-orange font-medium">
                     {{ day.vacation_type }}
                 </div>
 
@@ -26,7 +26,7 @@
                     <div v-for="(shift, si) in day.shifts" :key="'s'+si" class="mt-1 text-[10px] text-text-muted leading-tight">
                         {{ shift.start }}-{{ shift.end }}
                     </div>
-                    <div v-for="(it, ii) in day.individual_times" :key="'i'+ii" class="mt-1 text-[10px] text-teal-600 leading-tight">
+                    <div v-for="(it, ii) in day.individual_times" :key="'i'+ii" class="mt-1 text-[10px] text-special-teal leading-tight">
                         {{ it.start_time }}-{{ it.end_time }}
                         <span v-if="it.title" class="block text-text-subtle truncate">{{ it.title }}</span>
                     </div>

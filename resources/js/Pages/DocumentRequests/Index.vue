@@ -51,13 +51,13 @@
                         @click="activeTab = 'unassigned'"
                         :class="[
                             activeTab === 'unassigned'
-                                ? 'border-orange-500 text-orange-600'
+                                ? 'border-special-orange text-special-orange'
                                 : 'border-transparent text-text-subtle hover:border-border hover:text-text-muted',
                             'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium'
                         ]"
                     >
                         {{ $t('Unassigned') }}
-                        <span class="ml-2 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-600">
+                        <span class="ml-2 rounded-full bg-special-orange-surface px-2.5 py-0.5 text-xs font-medium text-special-orange">
                             {{ openUnassignedRequests.length }}
                         </span>
                     </button>

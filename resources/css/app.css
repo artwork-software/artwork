@@ -1,96 +1,110 @@
 @import "tailwindcss";
+
+/* ============================================================
+   Design-Basis v1 — semantische Token-Ebene (design-basis.md §1)
+   ============================================================ */
 @theme {
-    /* Farben */
-    --color-primary: #222;
-    --color-primary-hover: #372F60;
-    --color-success: #1FC687;
-    --color-error: #FD6D73;
-    --color-secondary: #A7A6B1;
-    --color-calendar-text: #333;
-    --color-secondary-hover: #FCFCFB;
-    --color-dark-input-bg: rgba(252,252,251,0.15);
-    --color-dark-input-text: #D8D7DE;
-    --color-help: #93929D;
-    --color-dark-gray: #616069;
-    --color-dark-gray-bg: rgba(255,255,255,0.15);
-    --color-background-gray: #F5F5F3;
-    --color-background-gray2: #e3e3e3;
-    --color-button-blue: #3017AD;
-    --color-button-hover: #2D1FDE;
-    --color-tag-bg: rgba(48,23,173,0.1);
-    --color-tag-bg-gray: rgba(94,92,102,1);
-    --color-tag-bg-green: rgba(48,217,0,0.1);
-    --color-tag: rgba(48,23,173,0.3);
-    --color-tag-text: rgba(48,23,173,1);
-    --color-tag-text-green: rgba(48,80,0,1);
-    --color-background-blue: #3017AD34;
-    --color-light-background-gray: #F4F4F3;
-    --color-lightBackgroundGray: #F4F4F3;
-    --color-checkbox-bg: #474459;
-    --color-silver-gray: #CECDD8;
-    --color-user-bg: #EDEDEC;
-    --color-action: #e4eef5;
-    --color-menu-button-blue: #3017AD;
-    --color-shift-text: #82818A;
-    --color-link-on-dark: #BDB6F0;
+    /* ---------- Flächen ---------- */
+    --color-surface-canvas:  #F6F6F4;   /* Seitenhintergrund (Erbe #F5F5F3) */
+    --color-surface:         #FFFFFF;   /* Karten, Tabellen, Modal */
+    --color-surface-sunken:  #F1F1EE;   /* Tabellenkopf, Zebra, Footer */
+    --color-surface-inverse: #222831;   /* Navigation, Kalenderkopf (Bestand) */
 
-    /* Artwork Farben */
-    --color-artwork-navigation-background: #222831;
-    --color-artwork-navigation-color: #eee;
-    --color-artwork-success: #25cd0e;
-    --color-artwork-warning: #ecce00;
-    --color-artwork-error: #ef4444;
-    --color-artwork-info: #a7a6b1;
-    --color-artwork-buttons-context: #6f6f6f;
-    --color-artwork-buttons-create: #3073ae;
-    --color-artwork-buttons-default: #2a3d75;
-    --color-artwork-buttons-hover: #1c77d7;
-    --color-artwork-buttons-update: #2a3d75;
-    --color-artwork-context-light: #e8e8e8;
-    --color-artwork-context-dark: #6f6f6f;
-    --color-artwork-project-bg: #eee;
-    --color-icon-default-bg: rgba(48,115,174,0.1);
-    --color-icon-default-color: #3073ae;
-    --color-icon-darkgreen-bg: rgba(56,173,23,0.1);
-    --color-icon-darkgreen-color: #21ad17;
+    /* ---------- Rahmen ---------- */
+    --color-border-subtle:   #E7E7E3;   /* Karten, Trennlinien */
+    --color-border:          #D6D6D0;   /* Eingaben, Buttons */
+    --color-border-strong:   #A9A9A1;   /* Datenraster, 3:1-Pflicht */
 
-    /* Schrift */
-    --font-size-header: 30px;
-    --font-family-sans: Inter, system-ui, sans-serif;
-    --font-family-nanum: "Nanum Pen Script";
-    --font-family-lexend: "Lexend";
-    --font-weight-header: 900;
-    --font-lexend: "Lexend", sans-serif;
+    /* ---------- Text (Kontrast auf --color-surface) ---------- */
+    --color-text:            #1C1F24;   /* 15,1:1 */
+    --color-text-muted:      #5F6169;   /*  6,3:1 */
+    --color-text-subtle:     #74767E;   /*  4,6:1 — Minimum für Text */
+    --color-text-inverse:    #F4F4F2;
 
-    /* Schatten */
-    --shadow-button-blue: 0 35px 60px -15px #2D1FDE;
-    --shadow-card: 0px 4px 25px #27233c47;
-    --shadow-artwork-card: 0 3px 10px rgba(0,0,0,0.2);
-    /*--shadow-glass: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
-    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
-    0px 0.5px 2px rgba(0, 0, 0, 0.08),
-    0px 2px 16px -4px rgba(0, 0, 0, 0.1);*/
-    --shadow-glass: inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2), inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12), 0px 0.5px 2px 0px rgba(0, 0, 0, 0.08), 0px 2px 16px -4px rgba(0, 0, 0, 0.1);
-    --shadow-glass-small: inset 0px 0.5px 0px 0px hsla(0, 0%, 100%, 0.2),
-    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
-    0px 0.5px 2px 0px rgba(0, 0, 0, 0.08),
-    0px 2px 12px -4px rgba(0, 0, 0, 0.1);
-    --shadow-elevation-two: inset 0px 0.5px 0px hsla(0, 0%, 100%, 0.2),
-    inset 0px 0px 8px 2px hsla(0, 0%, 100%, 0.12),
-    0px 0.5px 2px rgba(0, 0, 0, 0.08),
-    0px 2px 16px -4px rgba(0, 0, 0, 0.1);
-    --shadow-button-glow-light: 0 0 6px 2px rgba(255, 255, 255, 0.6);
+    /* ---------- Akzent (abgeleitet aus Bestands-#3073ae) ---------- */
+    --color-accent-50:       #EEF4FA;
+    --color-accent-100:      #D9E7F4;
+    --color-accent-200:      #B7D0E8;
+    --color-accent-500:      #3073AE;   /* Flächen, Icons — NICHT für Text auf Weiß */
+    --color-accent-600:      #276293;   /* Primär, Links, Fokus — 4,6:1 */
+    --color-accent-700:      #1E4E77;   /* Hover / Aktiv */
+    --color-accent-900:      #14314A;
 
-    /* Flex / Z-Index / Blur */
-    --flex-tags: 1 1 30%;
+    /* ---------- Status ---------- */
+    --color-success:         #157F4F;  --color-success-surface: #E8F5EE;  --color-success-border: #A8D8BF;
+    --color-warning:         #8A5A00;  --color-warning-surface: #FCF3E1;  --color-warning-border: #E8CE92;
+    --color-danger:          #B3261E;  --color-danger-surface:  #FDEDEC;  --color-danger-border:  #F0B9B4;
+    --color-info:            #276293;  --color-info-surface:    #EEF4FA;  --color-info-border:    #B7D0E8;
+
+    /* ---------- Radien ---------- */
+    --radius-sm:   4px;   /* Kalenderkacheln, Zellen */
+    --radius-md:   6px;   /* alle Steuerelemente */
+    --radius-lg:  10px;   /* Karten, Modale */
+    --radius-pill: 999px; /* Chips, Zähler */
+
+    /* ---------- Elevation ---------- */
+    --shadow-raised:  0 1px 2px rgba(28,31,36,.06), 0 1px 1px rgba(28,31,36,.04);
+    --shadow-overlay: 0 8px 24px -8px rgba(28,31,36,.18), 0 2px 6px rgba(28,31,36,.06);
+
+    /* ---------- Steuerhöhen ---------- */
+    --control-h-sm: 28px;
+    --control-h-md: 32px;
+    --control-h-lg: 40px;
+
+    /* ---------- Typografie ---------- */
+    --font-heading: Lexend, system-ui, sans-serif;
+    --font-body:    Inter, system-ui, sans-serif;
+    --font-sans:    Inter, system-ui, sans-serif;
+    --font-lexend:  Lexend, system-ui, sans-serif;
+
+    /* ---------- Sonstiges (Bestand, weiter genutzt) ---------- */
     --z-100: 100;
-    --blur-27: 27px;
-    --blur-2xl: 40px;
+}
 
-    --bg:#f8fafc;
-    --surface:#ffffff;
-    --text:#0f172a;
-    --accent:#4f46e5;
+/* ------------------------------------------------------------
+   Alias-Layer (Welle 1) — alte Tokennamen bleiben gültig,
+   zeigen aber auf die neuen Werte. Wird in Welle 4 schrittweise
+   entfernt. Nur hier dürfen Alt-Namen existieren.
+   ------------------------------------------------------------ */
+@theme {
+    --color-primary:                  var(--color-text);
+    --color-secondary:                var(--color-text-subtle);
+    --color-help:                     var(--color-text-subtle);
+    --color-secondary-hover:          #FCFCFB;
+    --color-silver-gray:              var(--color-border);
+    --color-background-gray:          var(--color-surface-canvas);
+    --color-background-gray2:         #E3E3E3;
+    --color-light-background-gray:    var(--color-surface-canvas);
+    --color-lightBackgroundGray:      var(--color-surface-canvas);
+    --color-user-bg:                  var(--color-surface-sunken);
+    --color-button-blue:              var(--color-accent-600);
+    --color-menu-button-blue:         var(--color-accent-600);
+    --color-button-hover:             var(--color-accent-700);
+    --color-error:                    var(--color-danger);
+    --color-artwork-buttons-create:   var(--color-accent-600);
+    --color-artwork-buttons-default:  var(--color-accent-600);
+    --color-artwork-buttons-update:   var(--color-accent-600);
+    --color-artwork-buttons-hover:    var(--color-accent-700);
+    --color-artwork-buttons-context:  var(--color-text-muted);
+    --color-artwork-navigation-background: var(--color-surface-inverse);
+    --color-artwork-navigation-color: var(--color-text-inverse);
+    --color-artwork-context-light:    var(--color-border-subtle);
+    --color-artwork-context-dark:     var(--color-text-muted);
+    --color-artwork-error:            var(--color-danger);
+    --color-artwork-warning:          var(--color-warning);
+    --color-artwork-success:          var(--color-success);
+    --color-artwork-info:             var(--color-text-subtle);
+    --shadow-glass:                   var(--shadow-overlay);
+    --shadow-glass-small:             var(--shadow-raised);
+    --shadow-elevation-two:           var(--shadow-overlay);
+    --shadow-card:                    var(--shadow-overlay);
+    --shadow-artwork-card:            var(--shadow-raised);
+}
+
+/* Fokus — verbindlich, nie überschreiben */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
 }
 
 :root {
@@ -140,13 +154,6 @@
 }
 
 @font-face {
-    /* Deko-Handschrift-Font (ex-NanumPenScript), auf Latein subsettet: 3,4 MB TTF -> ~50 KB woff2 */
-    font-family: 'artwork Pen';
-    src: local('artworkPen'), url('../fonts/artworkPen.woff2') format('woff2');
-    font-display: swap;
-}
-
-@font-face {
     font-family: 'Lexend';
     src: local('Lexend-Regular'), url('../fonts/Lexend-Regular.woff2') format('woff2');
     font-display: swap;
@@ -189,49 +196,45 @@
         }
     }
 
-    .stripes {
-        background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+');
-    }
-
     .headline1{
         font: normal normal 900 30px/34px Lexend;
         letter-spacing: -0.15px;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .headline2{
         font: normal normal 600 20px/25px Lexend;
         letter-spacing: 0.4px;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .headline3{
         font: normal normal 600 18px/21px Lexend;
         letter-spacing: 0.4px;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .headline3Light{
         font: normal normal 18px/21px Inter;
         letter-spacing: 0;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
     .headline4{
         font: normal normal 600 20px/25px Lexend;
         letter-spacing: -0.1px;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .headline6Light{
         font: normal normal 600 10px/19px Inter;
         letter-spacing: 0.5px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         text-transform: uppercase;
         opacity: 1;
     }
@@ -239,35 +242,35 @@
     .xxsLight{
         font: normal normal 12px/18px Inter;
         letter-spacing: -0.18px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
     .xxsDark{
         font: normal normal 12px/15px Inter;
         letter-spacing: 0;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .xxsDarkBold{
         font: normal normal 600 12px/15px Inter;
         letter-spacing: 0;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .sLight{
         font: normal normal 16px/19px Inter;
         letter-spacing: 0.14px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
     .xsLighter{
         font: normal normal 14px/20px Inter;
         letter-spacing: 0.14px;
-        color: #CECDD8;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
@@ -281,28 +284,28 @@
     .xWhiteBold{
         font: normal normal bold 18px/20px Inter;
         letter-spacing: -0.07px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
     .xsLight{
         font: normal normal bold 14px/20px Inter;
         letter-spacing: -0.07px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
     .xxsLightSidebar{
         font: normal normal 600 10px/20px Inter;
         letter-spacing: -0.07px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         opacity: 1;
     }
 
     .xsDark{
         font: normal normal 600 14px/20px Inter;
         letter-spacing: -0.07px;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
@@ -311,46 +314,39 @@
         font-size: 0.875rem;
         line-height: 1.5rem;
         font-weight: 700;
-        color: #111827;
+        color: var(--color-text);
     }
 
     .sDark{
         font: normal normal 600 16px/20px Inter;
         letter-spacing: 0;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .mDark{
         font: normal normal 600 18px/21px Inter;
         letter-spacing: 0;
-        color: #27233C;
-        opacity: 1;
-    }
-
-    .hind{
-        font: normal normal normal 18px/18px "artwork Pen";
-        letter-spacing: -0.54px;
-        color: #A7A6B1;
+        color: var(--color-text);
         opacity: 1;
     }
 
     .errorText{
         font: normal normal 14px/20px Inter;
         letter-spacing: -0.07px;
-        color: #FD6D73;
+        color: var(--color-danger);
         opacity: 1;
     }
 
     .successText{
         font: normal normal 14px/20px Inter;
         letter-spacing: -0.07px;
-        color: #1FC687;
+        color: var(--color-success);
         opacity: 1;
     }
 
     .inputMain{
-        border: 1px solid #CECDD8;
+        border: 1px solid var(--color-border);
         opacity: 1;
     }
 
@@ -363,7 +359,7 @@
     }
 
     .eventBorder{
-        border: 1px solid #D8D7DE;
+        border: 1px solid var(--color-border);
         opacity: 1;
     }
 
@@ -382,7 +378,7 @@
 
     .bigNumber{
         font: normal normal 40px/48px Lexend;
-        color: #27233C;
+        color: var(--color-text);
         opacity: 1;
     }
 
@@ -390,14 +386,14 @@
         text-align: left;
         font: normal normal 12px/18px Inter;
         letter-spacing: -0.18px;
-        color: #3017AD;
+        color: var(--color-accent-600);
         opacity: 1;
     }
 
     .columnSubName {
         font: normal normal 600 10px/19px Inter;
         letter-spacing: 0.5px;
-        color: #A7A6B1;
+        color: var(--color-text-subtle);
         text-transform: uppercase;
         opacity: 1;
     }
@@ -548,10 +544,6 @@
             font: normal normal 600 16px/21px Inter;
         }
 
-        .hind{
-            font: normal normal normal 16px/18px "artwork Pen";
-        }
-
         .errorText{
             font: normal normal 12px/20px Inter;
         }
@@ -646,10 +638,6 @@
             font: normal normal 600 18px/21px Inter;
         }
 
-        .hind{
-            font: normal normal normal 18px/18px "artwork Pen";
-        }
-
         .errorText{
             font: normal normal 14px/20px Inter;
         }
@@ -741,18 +729,6 @@
 
     .background-color {
         @apply bg-white;
-
-        &.soft-green {
-            @apply bg-gradient-to-br from-[#fcfefd] to-[#f6fbf8];
-        }
-
-        &.soft-red {
-            @apply bg-gradient-to-br from-[#fefcfc] to-[#fbf3f3];
-        }
-
-        &.soft-yellow {
-            @apply bg-gradient-to-br from-[#fffef9] to-[#fefcf2];
-        }
     }
 
     /* Layout Helpers */
@@ -883,10 +859,10 @@
     }
 
     .text-color {
-        color: #27233C;
+        color: var(--color-text);
 
         &.light {
-            color: #A7A6B1;
+            color: var(--color-text-subtle);
         }
 
         &.success {

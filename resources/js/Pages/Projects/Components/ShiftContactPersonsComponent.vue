@@ -7,7 +7,7 @@
                                @click="openContactModal"/>
             </div>
         </div>
-        <div v-if="loadError" class="text-xs text-rose-600 mt-2">
+        <div v-if="loadError" class="text-xs text-danger mt-2">
             {{ loadError }}
         </div>
         <div v-else-if="loading" class="text-xs text-secondary mt-2">

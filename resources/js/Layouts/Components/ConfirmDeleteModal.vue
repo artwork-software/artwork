@@ -3,7 +3,7 @@
     <ArtworkBaseModal @close="closeModal(false)" :title="title" :description="description">
         <div>
             <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
-                <FormButton class="bg-red-500 hover:bg-red-600"
+                <FormButton class="bg-danger hover:bg-danger"
                     @click="deleteElement(true)"
                     :text="buttonText"
                     :disabled="loading" />

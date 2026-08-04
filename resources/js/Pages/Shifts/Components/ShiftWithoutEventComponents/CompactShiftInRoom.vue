@@ -25,10 +25,10 @@
             <span
                 class="ml-1 inline-block h-2 w-2 rounded-full"
                 :class="{
-                    'bg-red-500': usedWorkerCount === 0 && maxWorkerCount !== 0,
-                    'bg-yellow-500': usedWorkerCount !== 0 && usedWorkerCount < maxWorkerCount,
-                    'bg-green-500': usedWorkerCount === maxWorkerCount,
-                    'bg-amber-500': usedWorkerCount > maxWorkerCount,
+                    'bg-danger': usedWorkerCount === 0 && maxWorkerCount !== 0,
+                    'bg-warning': usedWorkerCount !== 0 && usedWorkerCount < maxWorkerCount,
+                    'bg-success': usedWorkerCount === maxWorkerCount,
+                    'bg-warning': usedWorkerCount > maxWorkerCount,
                 }"
             ></span>
         </span>

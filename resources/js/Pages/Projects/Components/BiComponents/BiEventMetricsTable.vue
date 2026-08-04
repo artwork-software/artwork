@@ -2,15 +2,15 @@
     <div>
         <!-- Toolbar: collapse + filter -->
         <div class="flex items-center justify-between mb-2">
-            <button type="button" @click="expanded = !expanded" class="flex items-center gap-2 text-sm font-medium text-gray-700 print:hidden">
+            <button type="button" @click="expanded = !expanded" class="flex items-center gap-2 text-sm font-medium text-text-muted print:hidden">
                 <IconChevronDown class="size-4 transition-transform" :class="{ '-rotate-90': !expanded }" />
-                {{ $t('Entries per event') }} <span class="text-gray-400">({{ displayedEvents.length }})</span>
+                {{ $t('Entries per event') }} <span class="text-text-subtle">({{ displayedEvents.length }})</span>
             </button>
             <button
                 type="button"
                 @click="showFilters = !showFilters"
-                class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-50 transition print:hidden"
-                :class="{ 'bg-gray-100 border-gray-300': showFilters || hasActiveFilter }"
+                class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs text-text-muted hover:bg-surface-sunken transition print:hidden"
+                :class="{ 'bg-surface-sunken border-border': showFilters || hasActiveFilter }"
             >
                 <IconFilter class="size-4" />
                 {{ $t('Filter') }}
@@ -19,7 +19,7 @@
 
         <div v-show="expanded" class="print:!block">
             <!-- Filter bar -->
-            <div v-if="showFilters" class="mb-3 flex flex-wrap items-end gap-3 rounded-md bg-gray-50 p-3 print:hidden">
+            <div v-if="showFilters" class="mb-3 flex flex-wrap items-end gap-3 rounded-md bg-surface-sunken p-3 print:hidden">
                 <ArtworkBaseListbox
                     class="w-56"
                     :model-value="selectedRoom"
@@ -31,7 +31,7 @@
                     :placeholder="$t('All rooms')"
                 />
                 <BaseInput id="bi_event_search" v-model="search" :label="$t('Search event')" class="w-56" />
-                <button v-if="hasActiveFilter" type="button" @click="clearFilters" class="pb-2 text-xs text-gray-500 hover:text-gray-700">
+                <button v-if="hasActiveFilter" type="button" @click="clearFilters" class="pb-2 text-xs text-text-subtle hover:text-text-muted">
                     {{ $t('Reset') }}
                 </button>
             </div>
@@ -39,9 +39,9 @@
             <!-- Ausfüllhilfe: Werte auf ausgewählte Termine anwenden -->
             <div
                 v-if="canEdit && (selectedIds.size > 0 || hasBulkInput)"
-                class="mb-3 flex flex-wrap items-end gap-3 rounded-md border border-indigo-200 bg-indigo-50/60 p-3 print:hidden"
+                class="mb-3 flex flex-wrap items-end gap-3 rounded-md border border-accent-200 bg-accent-50 p-3 print:hidden"
             >
-                <span class="pb-2 text-xs font-medium text-indigo-800 whitespace-nowrap">
+                <span class="pb-2 text-xs font-medium text-accent-700 whitespace-nowrap">
                     {{ selectedIds.size }} {{ $t('events selected') }}
                 </span>
                 <BaseInput
@@ -61,16 +61,16 @@
                     hide-icon
                     @click="applyBulk"
                 />
-                <button type="button" class="pb-2 text-xs text-gray-500 hover:text-gray-700" @click="clearSelection">
+                <button type="button" class="pb-2 text-xs text-text-subtle hover:text-text-muted" @click="clearSelection">
                     {{ $t('Clear selection') }}
                 </button>
-                <p class="w-full text-[11px] text-indigo-700/70 -mt-1">
+                <p class="w-full text-[11px] text-accent-700 -mt-1">
                     {{ $t('Empty fields are skipped. Tip: use the copy icon in a row to take over its values.') }}
                 </p>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="min-w-full divide-y divide-border-subtle text-sm">
                     <thead>
                         <tr>
                             <th v-if="canEdit" class="py-2 pr-2 w-8 print:hidden">
@@ -84,26 +84,25 @@
                             <th
                                 v-for="col in columns"
                                 :key="col.key"
-                                class="py-2 px-3 text-left font-semibold text-gray-900 cursor-pointer select-none whitespace-nowrap first:pl-0"
+                                class="py-2 px-3 text-left font-semibold text-text cursor-pointer select-none whitespace-nowrap first:pl-0"
                                 @click="sortByColumn(col.key)"
                             >
                                 <span class="inline-flex items-center gap-1">
                                     {{ col.translate ? $t(col.label) : col.label }}
                                     <IconChevronUp v-if="sortKey === col.key && sortAsc" class="size-3.5" />
                                     <IconChevronDown v-else-if="sortKey === col.key" class="size-3.5" />
-                                    <IconArrowsSort v-else class="size-3.5 text-gray-300" />
+                                    <IconArrowsSort v-else class="size-3.5 text-text-subtle" />
                                 </span>
                             </th>
                             <th v-if="canEdit" class="w-8 print:hidden"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-border-subtle">
                         <tr
                             v-for="event in displayedEvents"
                             :key="event.id"
-                            class="hover:bg-gray-50"
-                            :class="{
-                                'bg-indigo-50/60': event.id === latestPastEventId,
+                            class="hover:bg-surface-sunken"
+                            :class="{ 'bg-accent-50': event.id === latestPastEventId,
                                 'opacity-50': isFutureEvent(event),
                             }"
                         >
@@ -115,25 +114,25 @@
                                     @change="toggleRow(event.id, $event.target.checked)"
                                 />
                             </td>
-                            <td class="py-2 pl-0 pr-3 text-gray-700">
+                            <td class="py-2 pl-0 pr-3 text-text-muted">
                                 <span class="inline-flex items-center gap-2">
                                     {{ event.name }}
                                     <span
                                         v-if="event.id === latestPastEventId"
-                                        class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 whitespace-nowrap print:hidden"
+                                        class="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-medium text-accent-700 whitespace-nowrap print:hidden"
                                         v-tooltip.top="{ value: $t('The most recent event that already took place — the usual starting point for entering figures after a performance.'), appendTo: 'body', class: 'aw-tooltip' }"
                                     >
                                         {{ $t('Most recent event') }}
                                     </span>
                                 </span>
                             </td>
-                            <td class="py-2 px-3 text-gray-500 whitespace-nowrap">{{ event.start_time }}</td>
-                            <td class="py-2 px-3 text-gray-500">{{ event.room_name }}</td>
+                            <td class="py-2 px-3 text-text-subtle whitespace-nowrap">{{ event.start_time }}</td>
+                            <td class="py-2 px-3 text-text-subtle">{{ event.room_name }}</td>
                             <td v-for="field in fields" :key="field.key" class="py-2 px-3">
                                 <input
                                     v-if="canEdit"
                                     type="number"
-                                    class="w-24 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
+                                    class="w-24 rounded-md border border-border bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
                                     :min="0"
                                     :step="field.key === 'revenue' ? 0.01 : 1"
                                     :data-bi-cell="field.key"
@@ -142,25 +141,25 @@
                                     @change="saveEventValue(event.id, field.key, $event.target.value)"
                                     @keydown.enter.prevent="focusNextRow(event.id, field.key)"
                                 />
-                                <span v-else class="text-gray-700">{{ getEventValue(event.id, field.key) ?? '–' }}</span>
+                                <span v-else class="text-text-muted">{{ getEventValue(event.id, field.key) ?? '–' }}</span>
                             </td>
                             <td v-if="showOccupancy" class="py-2 px-3">
                                 <div v-if="occupancyFor(event) !== null" class="flex items-center gap-2 min-w-28">
-                                    <div class="h-1.5 w-16 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                                    <div class="h-1.5 w-16 rounded-full bg-surface-sunken overflow-hidden shrink-0">
                                         <div
                                             class="h-full rounded-full"
                                             :class="occupancyBarClass(occupancyFor(event))"
                                             :style="{ width: Math.min(occupancyFor(event), 100) + '%' }"
                                         ></div>
                                     </div>
-                                    <span class="text-xs text-gray-600 whitespace-nowrap">{{ occupancyFor(event).toFixed(0) }} %</span>
+                                    <span class="text-xs text-text-muted whitespace-nowrap">{{ occupancyFor(event).toFixed(0) }} %</span>
                                 </div>
-                                <span v-else class="text-gray-300">–</span>
+                                <span v-else class="text-text-subtle">–</span>
                             </td>
                             <td v-if="canEdit" class="py-2 px-1 text-right print:hidden">
                                 <button
                                     type="button"
-                                    class="text-gray-300 hover:text-indigo-600 transition"
+                                    class="text-text-subtle hover:text-accent-600 transition"
                                     v-tooltip.top="{ value: $t('Copy values of this row into the fill helper'), appendTo: 'body', class: 'aw-tooltip' }"
                                     @click="copyRowToBulk(event)"
                                 >
@@ -169,14 +168,14 @@
                             </td>
                         </tr>
                         <tr v-if="displayedEvents.length === 0">
-                            <td :colspan="totalColumnCount" class="py-4 text-center text-gray-400">{{ $t('No events found.') }}</td>
+                            <td :colspan="totalColumnCount" class="py-4 text-center text-text-subtle">{{ $t('No events found.') }}</td>
                         </tr>
                     </tbody>
                     <tfoot v-if="displayedEvents.length > 0">
-                        <tr class="border-t-2 border-gray-300">
+                        <tr class="border-t-2 border-border">
                             <td v-if="canEdit" class="print:hidden"></td>
-                            <td colspan="3" class="py-2 pl-0 pr-3 font-semibold text-gray-900">{{ $t('Sum') }}</td>
-                            <td v-for="field in fields" :key="field.key" class="py-2 px-3 font-semibold text-gray-900">
+                            <td colspan="3" class="py-2 pl-0 pr-3 font-semibold text-text">{{ $t('Sum') }}</td>
+                            <td v-for="field in fields" :key="field.key" class="py-2 px-3 font-semibold text-text">
                                 {{ formatSum(field, sums[field.key]) }}
                             </td>
                             <td v-if="showOccupancy" class="py-2 px-3"></td>
@@ -342,9 +341,9 @@ const occupancyFor = (event) => {
 };
 
 const occupancyBarClass = (value) => {
-    if (value >= 90) return 'bg-emerald-500';
-    if (value >= 50) return 'bg-indigo-500';
-    return 'bg-amber-500';
+    if (value >= 90) return 'bg-success';
+    if (value >= 50) return 'bg-accent-600';
+    return 'bg-warning';
 };
 
 const sortValue = (event, key) => {

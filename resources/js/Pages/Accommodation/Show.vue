@@ -40,19 +40,19 @@
                 <div>
                     <div class="my-4">
                         <h2 class="text-md font-semibold mb-2">{{ $t('Room types')}}</h2>
-                        <p class="text-sm text-zinc-600 mb-3">{{ $t('Manage room types and their costs for this accommodation.') }}</p>
+                        <p class="text-sm text-text-muted mb-3">{{ $t('Manage room types and their costs for this accommodation.') }}</p>
                     </div>
 
                     <!-- Room Types Table -->
                     <div v-if="selectedRoomTypes.length > 0" class="mt-4">
                         <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead class="bg-gray-50">
+                            <table class="min-w-full divide-y divide-border">
+                                <thead class="bg-surface-sunken">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                             {{ $t('Room type') }}
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                             <div class="flex items-center gap-2">
                                                 {{ $t('Cost per night') }}
                                                 <ToolTipComponent
@@ -68,10 +68,10 @@
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="roomType in selectedRoomTypes" :key="roomType.id" class="hover:bg-gray-50">
+                                <tbody class="bg-white divide-y divide-border-subtle">
+                                    <tr v-for="roomType in selectedRoomTypes" :key="roomType.id" class="hover:bg-surface-sunken">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="text-sm font-medium text-gray-900">{{ $t(roomType.name) }}</span>
+                                            <span class="text-sm font-medium text-text">{{ $t(roomType.name) }}</span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="w-32">
@@ -113,7 +113,7 @@
                         </div>
 
                         <!-- Add Room Type Dropdown -->
-                        <div v-if="showAddRoomType" class="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div v-if="showAddRoomType" class="mt-4 p-4 border border-border-subtle rounded-lg bg-surface-sunken">
                             <div class="flex items-center gap-4">
                                 <div class="flex-1">
                                     <ArtworkBaseListbox
@@ -144,10 +144,10 @@
                     </div>
 
                     <!-- Empty State -->
-                    <div v-if="selectedRoomTypes.length === 0" class="mt-4 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                        <component :is="IconHome" class="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 class="mt-2 text-sm font-medium text-gray-900">{{ $t('No room types') }}</h3>
-                        <p class="mt-1 text-sm text-gray-500">{{ $t('Get started by adding a room type to this accommodation.') }}</p>
+                    <div v-if="selectedRoomTypes.length === 0" class="mt-4 text-center py-8 border-2 border-dashed border-border rounded-lg">
+                        <component :is="IconHome" class="mx-auto h-12 w-12 text-text-subtle" />
+                        <h3 class="mt-2 text-sm font-medium text-text">{{ $t('No room types') }}</h3>
+                        <p class="mt-1 text-sm text-text-subtle">{{ $t('Get started by adding a room type to this accommodation.') }}</p>
                         <div class="mt-6">
                             <BaseUIButton
                                 :label="$t('Add room type') "
@@ -169,7 +169,7 @@
 
                         <div v-if="accommodation.contacts.length > 0">
                             <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-                                <li v-for="contact in accommodation.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-gray-200 shadow-glass">
+                                <li v-for="contact in accommodation.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-border-subtle shadow-glass">
                                     <ArtworkSingleContact :contact="contact" />
                                 </li>
                             </ul>

@@ -19,7 +19,7 @@
                         :enable-search="true"
                         :search-keys="['name']"
                     />
-                    <p class="mt-1.5 text-xs text-gray-500">
+                    <p class="mt-1.5 text-xs text-text-subtle">
                         {{ $t('The type cannot be changed once the component has been created.') }}
                     </p>
                 </div>
@@ -31,14 +31,14 @@
                         v-model="componentName"
                         id="componentName"
                     />
-                    <span v-if="helpTexts.name" class="mt-1 text-xs text-red-500">
+                    <span v-if="helpTexts.name" class="mt-1 text-xs text-danger">
             {{ helpTexts.name }}
           </span>
                 </div>
 
                 <!-- Basisdaten (aus availableFields / data) -->
                 <div v-if="!componentToEdit?.special" class="grid grid-cols-1 gap-5">
-                    <div class="text-sm font-semibold text-gray-900">
+                    <div class="text-sm font-semibold text-text">
                         {{ isCreateMode ? $t('Enter basic data') : $t('Edit basic data') }}
                     </div>
 
@@ -74,7 +74,7 @@
 
                     <!-- Max Items -->
                     <div v-if="'max_items' in textData">
-                        <label for="max_items" class="text-xs text-gray-500">
+                        <label for="max_items" class="text-xs text-text-subtle">
                             {{ $t('Max links') }}
                         </label>
                         <input
@@ -83,13 +83,13 @@
                             min="1"
                             max="200"
                             v-model.number="textData.max_items"
-                            class="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                            class="mt-2 w-full rounded-lg border border-border-subtle px-3 py-2 text-sm"
                         />
                     </div>
 
                     <!-- Höhe (Range) -->
                     <div v-if="'height' in textData">
-                        <label for="height" class="text-xs text-gray-500">
+                        <label for="height" class="text-xs text-text-subtle">
                             {{ $t('Height - ({0} pixels)', [textData.height]) }}
                         </label>
                         <input
@@ -98,13 +98,13 @@
                             v-model.number="textData.height"
                             min="0"
                             max="150"
-                            class="mt-2 h-2 w-full rounded-lg accent-indigo-600"
+                            class="mt-2 h-2 w-full rounded-lg accent-accent-600"
                         />
                     </div>
 
                     <!-- Titelgröße (Range) -->
                     <div v-if="'title_size' in textData">
-                        <label for="title_size" class="text-xs text-gray-500">
+                        <label for="title_size" class="text-xs text-text-subtle">
                             {{ $t('Font Size - ({0} pixels)', [textData.title_size]) }}
                         </label>
                         <input
@@ -113,20 +113,20 @@
                             v-model.number="textData.title_size"
                             min="10"
                             max="35"
-                            class="mt-2 h-2 w-full rounded-lg accent-indigo-600"
+                            class="mt-2 h-2 w-full rounded-lg accent-accent-600"
                         />
                     </div>
 
                     <!-- Show line -->
                     <label v-if="'showLine' in textData" class="flex items-center gap-2">
                         <input v-model="textData.showLine" type="checkbox" class="input-checklist" />
-                        <span class="text-sm text-gray-700">{{ $t('Show a separator line') }}</span>
+                        <span class="text-sm text-text-muted">{{ $t('Show a separator line') }}</span>
                     </label>
 
                     <!-- Checked (default) -->
                     <label v-if="'checked' in textData" class="flex items-center gap-2">
                         <input v-model="textData.checked" type="checkbox" class="input-checklist" />
-                        <span class="text-sm text-gray-700">{{ $t('This checkbox is activated by default') }}</span>
+                        <span class="text-sm text-text-muted">{{ $t('This checkbox is activated by default') }}</span>
                     </label>
 
                     <!-- Optionen -->
@@ -135,7 +135,7 @@
                             <div
                                 v-for="(opt, idx) in textData.options"
                                 :key="`opt-${idx}`"
-                                class="rounded-lg border border-gray-200 p-3 bg-white"
+                                class="rounded-lg border border-border-subtle p-3 bg-white"
                             >
                                 <BaseInput
                                     v-model="textData.options[idx].value"
@@ -146,7 +146,7 @@
                                     <button
                                         v-if="idx !== 0"
                                         type="button"
-                                        class="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                                        class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
                                         @click="removeOption(idx)"
                                     >
                                         {{ $t('Remove') }}
@@ -157,7 +157,7 @@
 
                         <div class="mt-2 flex items-center justify-end">
                             <button
-                                class="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                                class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
                                 type="button"
                                 @click="addMoreOneOption"
                             >
@@ -180,7 +180,7 @@
 
                             <div class="mt-3 text-right">
                                 <button
-                                    class="text-xs text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                                    class="text-xs text-accent-600 hover:text-accent-700 underline underline-offset-2"
                                     type="button"
                                     @click="textData.selected = ''"
                                 >
@@ -192,8 +192,8 @@
                 </div>
 
                 <!-- Berechtigungen -->
-                <div v-if="isQualifiedForPermissions" class="rounded-xl border border-gray-200 bg-white p-4">
-                    <div class="mb-3 text-sm font-bold text-gray-900">
+                <div v-if="isQualifiedForPermissions" class="rounded-xl border border-border-subtle bg-white p-4">
+                    <div class="mb-3 text-sm font-bold text-text">
                         {{ $t('Configure component permissions') }}
                     </div>
 
@@ -204,7 +204,7 @@
                             value="allSeeAndEdit"
                             v-model="modulePermissions.permission_type"
                         />
-                        <span class="text-sm text-gray-700">
+                        <span class="text-sm text-text-muted">
               {{ $t('Everyone can see and edit') }}
             </span>
                     </label>
@@ -217,7 +217,7 @@
                                 value="allSeeSomeEdit"
                                 v-model="modulePermissions.permission_type"
                             />
-                            <span class="text-sm text-gray-700">
+                            <span class="text-sm text-text-muted">
                 {{ $t('Everyone can see, but editing is just allowed for:') }}
               </span>
                         </label>
@@ -233,13 +233,13 @@
                             <!-- Search dropdown -->
                             <div
                                 v-if="hasSearchResults"
-                                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white text-sm shadow-lg"
+                                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-border-subtle bg-white text-sm shadow-lg"
                             >
-                                <div class="divide-y divide-gray-100">
+                                <div class="divide-y divide-border-subtle">
                                     <div
                                         v-for="(user, idx) in userAndTeamsSearchResult.users"
                                         :key="'u_' + idx"
-                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        class="px-4 py-2 hover:bg-surface-sunken cursor-pointer flex items-center gap-2"
                                         @click="addUser(user)"
                                     >
                                         <img :src="user.profile_photo_url" :alt="user.name" class="h-8 w-8 rounded-full object-cover" />
@@ -248,7 +248,7 @@
                                     <div
                                         v-for="(department, idx) in userAndTeamsSearchResult.departments"
                                         :key="'d_' + idx"
-                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        class="px-4 py-2 hover:bg-surface-sunken cursor-pointer flex items-center gap-2"
                                         @click="addDepartment(department)"
                                     >
                                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-8 w-8" />
@@ -262,15 +262,15 @@
                                 <div
                                     v-for="user in modulePermissions.users"
                                     :key="'sel_u_' + user.id"
-                                    class="flex items-center justify-between rounded-lg border-b border-gray-100 pb-2"
+                                    class="flex items-center justify-between rounded-lg border-b border-border-subtle pb-2"
                                 >
                                     <div class="flex items-center gap-3">
                                         <img class="h-10 w-10 rounded-full" :src="user.profile_photo_url" alt="" />
-                                        <span class="text-sm font-medium text-gray-800">
+                                        <span class="text-sm font-medium text-text">
                       {{ user.first_name }} {{ user.last_name }}
                     </span>
                                     </div>
-                                    <button type="button" @click="removeUser(user)" class="text-gray-400 hover:text-red-500">
+                                    <button type="button" @click="removeUser(user)" class="text-text-subtle hover:text-danger">
                                         <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
@@ -278,13 +278,13 @@
                                 <div
                                     v-for="department in modulePermissions.departments"
                                     :key="'sel_d_' + department.id"
-                                    class="flex items-center justify-between rounded-lg border-b border-gray-100 pb-2"
+                                    class="flex items-center justify-between rounded-lg border-b border-border-subtle pb-2"
                                 >
                                     <div class="flex items-center gap-3">
                                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-10 w-10" />
-                                        <span class="text-sm font-medium text-gray-800">{{ department.name }}</span>
+                                        <span class="text-sm font-medium text-text">{{ department.name }}</span>
                                     </div>
-                                    <button type="button" @click="removeDepartment(department)" class="text-gray-400 hover:text-red-500">
+                                    <button type="button" @click="removeDepartment(department)" class="text-text-subtle hover:text-danger">
                                         <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
@@ -300,7 +300,7 @@
                                 value="someSeeSomeEdit"
                                 v-model="modulePermissions.permission_type"
                             />
-                            <span class="text-sm text-gray-700">
+                            <span class="text-sm text-text-muted">
                 {{ $t('Only visible to:') }}
               </span>
                         </label>
@@ -316,13 +316,13 @@
                             <!-- Search dropdown -->
                             <div
                                 v-if="hasSearchResults"
-                                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white text-sm shadow-lg"
+                                class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-border-subtle bg-white text-sm shadow-lg"
                             >
-                                <div class="divide-y divide-gray-100">
+                                <div class="divide-y divide-border-subtle">
                                     <div
                                         v-for="(user, idx) in userAndTeamsSearchResult.users"
                                         :key="'su_' + idx"
-                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        class="px-4 py-2 hover:bg-surface-sunken cursor-pointer flex items-center gap-2"
                                         @click="addUser(user)"
                                     >
                                         <img :src="user.profile_photo_url" :alt="user.name" class="h-8 w-8 rounded-full object-cover" />
@@ -331,7 +331,7 @@
                                     <div
                                         v-for="(department, idx) in userAndTeamsSearchResult.departments"
                                         :key="'sd_' + idx"
-                                        class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                        class="px-4 py-2 hover:bg-surface-sunken cursor-pointer flex items-center gap-2"
                                         @click="addDepartment(department)"
                                     >
                                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-8 w-8" />
@@ -345,21 +345,21 @@
                                 <div
                                     v-for="user in modulePermissions.users"
                                     :key="'ss_u_' + user.id"
-                                    class="flex items-center justify-between border-b border-gray-100 pb-3"
+                                    class="flex items-center justify-between border-b border-border-subtle pb-3"
                                 >
                                     <div class="flex items-center gap-3">
                                         <img class="h-10 w-10 rounded-full" :src="user.profile_photo_url" alt="" />
-                                        <span class="text-sm font-medium text-gray-800">
+                                        <span class="text-sm font-medium text-text">
                       {{ user.first_name }} {{ user.last_name }}
                     </span>
                                         <label class="ml-2 flex items-center gap-2">
                                             <input v-model="(user.pivot || (user.pivot = { can_write: false })).can_write" type="checkbox" class="input-checklist" />
-                                            <span :class="[user.pivot?.can_write ? 'text-indigo-600 font-semibold' : 'text-gray-500']" class="text-sm">
+                                            <span :class="[user.pivot?.can_write ? 'text-accent-600 font-semibold' : 'text-text-subtle']" class="text-sm">
                         {{ $t('Write permission') }}
                       </span>
                                         </label>
                                     </div>
-                                    <button type="button" @click="removeUser(user)" class="text-gray-400 hover:text-red-500">
+                                    <button type="button" @click="removeUser(user)" class="text-text-subtle hover:text-danger">
                                         <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
@@ -367,19 +367,19 @@
                                 <div
                                     v-for="department in modulePermissions.departments"
                                     :key="'ss_d_' + department.id"
-                                    class="flex items-center justify-between border-b border-gray-100 pb-3"
+                                    class="flex items-center justify-between border-b border-border-subtle pb-3"
                                 >
                                     <div class="flex items-center gap-3">
                                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-10 w-10" />
-                                        <span class="text-sm font-medium text-gray-800">{{ department.name }}</span>
+                                        <span class="text-sm font-medium text-text">{{ department.name }}</span>
                                         <label class="ml-2 flex items-center gap-2">
                                             <input v-model="(department.pivot || (department.pivot = { can_write: false })).can_write" type="checkbox" class="input-checklist" />
-                                            <span :class="[department.pivot?.can_write ? 'text-indigo-600 font-semibold' : 'text-gray-500']" class="text-sm">
+                                            <span :class="[department.pivot?.can_write ? 'text-accent-600 font-semibold' : 'text-text-subtle']" class="text-sm">
                         {{ $t('Write permission') }}
                       </span>
                                         </label>
                                     </div>
-                                    <button type="button" @click="removeDepartment(department)" class="text-gray-400 hover:text-red-500">
+                                    <button type="button" @click="removeDepartment(department)" class="text-text-subtle hover:text-danger">
                                         <IconX class="h-5 w-5" />
                                     </button>
                                 </div>
@@ -391,7 +391,7 @@
                 <!-- Hinweis, wenn keine Permissions konfigurierbar -->
                 <div
                     v-else-if="!isQualifiedForPermissions && componentToEdit?.type !== 'Title'"
-                    class="text-xs text-gray-500"
+                    class="text-xs text-text-subtle"
                 >
                     {{ $t('The permissions for this component are administered via the user settings and the project.') }}
                 </div>
@@ -403,7 +403,7 @@
                     @click="updateOrSaveComponent"
                     :label="isCreateMode ? $t('Create') : $t('Save')" is-add-button
                 />
-                <button class="text-sm text-gray-500 hover:text-gray-700" @click="closeModal">
+                <button class="text-sm text-text-subtle hover:text-text-muted" @click="closeModal">
                     {{ $t('No, not really') }}
                 </button>
             </div>

@@ -1,10 +1,10 @@
 <template>
     <div>
         <div>
-            <div class="border-gray-200">
+            <div class="border-border-subtle">
                 <nav class="-mb-px uppercase text-xs tracking-wide flex space-x-4" aria-label="Tabs">
                     <a v-for="tab in tabs" :href="tab.href" :key="tab.name"
-                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-gray-950 hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-1 px-1 border-b-2 font-lexend']"
+                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-text hover:text-text-muted hover:border-border', 'whitespace-nowrap py-1 px-1 border-b-2 font-lexend']"
                        :aria-current="tab.current ? 'page' : undefined">
                         {{ tab.name }}
                     </a>

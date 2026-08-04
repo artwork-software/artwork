@@ -6,16 +6,16 @@
       '--event-contrast-color': eventTextColor,
       zoom: contentZoom,
       lineHeight: innerLineHeight,
-      /* Auswahl im Multi-Edit: grüner Ring + dunkle Außenlinie, damit die
-         Markierung auch auf hellen Kachelfarben nicht untergeht */
-      boxShadow: multiEdit && event.considerOnMultiEdit
-          ? '0 0 0 2px #22c55e, 0 0 0 3.5px rgba(0,0,0,0.85)'
-          : undefined
+      /* Multi-Edit-Auswahlring (accent + dunkle Außenlinie) und/oder
+         Hervorhebungs-Innenring — kombiniert in containerBoxShadow */
+      boxShadow: containerBoxShadow
     }"
-        class="group/singleEvent rounded-lg border border-black/5 transition-[border,background-color] duration-150"
+        class="group/singleEvent rounded-lg border transition-[border,background-color] duration-150"
         :class="[
       event.occupancy_option ? 'event-disabled' : '',
-      calSettings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
+      // Zustandsdarstellung statt Deckkraft: hervorgehoben = Außenrahmen (Innenring
+      // via boxShadow), nicht relevant = 7%-Fläche + gestrichelter Rahmen + fixe Textfarbe
+      isEmphasized ? 'border-[rgba(0,0,0,0.18)]' : (isDimmed ? 'border-dashed border-border text-[#3F424A]' : 'border-black/5'),
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
       multiEdit ? 'relative' : ''
@@ -26,10 +26,10 @@
         <div
             v-if="checkIfMultiEditIsEnabled"
             class="absolute inset-0 z-10 rounded-lg hidden group-hover/singleEvent:flex items-center justify-center"
-            :class="event.considerOnMultiEdit ? '!flex bg-green-200/50' : 'bg-artwork-buttons-create/35'"
+            :class="event.considerOnMultiEdit ? '!flex bg-accent-200/50' : 'bg-artwork-buttons-create/35'"
         >
             <div v-if="event.considerOnMultiEdit" class="bg-white rounded-md p-0.5">
-                <component :is="IconSquareCheckFilled" class="size-6 text-green-600" />
+                <component :is="IconSquareCheckFilled" class="size-6 text-accent-600" />
             </div>
 
             <!-- wirkliche Checkbox bleibt, nur optisch versteckt -->
@@ -740,7 +740,7 @@
                         :class="[subEvent.class]"
                         :style="{
               height: (totalHeight - heightSubtraction(subEvent)) * heightZoom + 10 + 'px',
-              backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, highContrastPercent)
+              backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, eventBgPercent)
             }"
                         class="rounded-r-lg px-2 py-1.5"
                     >
@@ -1018,6 +1018,46 @@ const isHighlighted = computed(() => {
     return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
 });
 
+// --- Zustandsdarstellung Highlight/Multi-Edit (ersetzt frühere Deckkraft-Dimmung) ---
+// HERVORGEHOBEN: Projektzeitraum-Projekt oder highlightEventId-URL-Parameter.
+const isEmphasized = computed(() =>
+    (!!calSettings.value.time_period_project_id
+        && calSettings.value.time_period_project_id === props.event?.project?.id)
+    || isHighlighted.value
+);
+
+// Ein Highlight-Modus ist aktiv, sobald ein Termin/Projekt hervorgehoben wird —
+// alle übrigen Termine gelten dann als "nicht relevant".
+const highlightModeActive = computed(() =>
+    Boolean(pageProps.urlParameters.highlightEventId)
+    || Boolean(calSettings.value.use_project_time_period && calSettings.value.time_period_project_id)
+);
+
+// Multi-Edit im Planungskalender: nicht auswählbare Termine (weder Planungs-
+// noch Verifizierungstermin) sind nicht relevant.
+const isMultiEditIrrelevant = computed(() =>
+    props.multiEdit && props.isPlanning && !(props.event.hasVerification || props.event.isPlanning)
+);
+
+// NICHT RELEVANT: kein opacity auf dem Container — stattdessen 7%-Fläche,
+// gestrichelter Rahmen und fixe Textfarbe (siehe Template/eventTextColor).
+const isDimmed = computed(() =>
+    !isEmphasized.value && (highlightModeActive.value || isMultiEditIrrelevant.value)
+);
+
+// Multi-Edit-Auswahlring (accent-600 + dunkle Außenlinie) und Hervorhebungs-
+// Innenring können gleichzeitig auftreten — daher kombiniert.
+const containerBoxShadow = computed(() => {
+    const shadows = [];
+    if (props.multiEdit && props.event.considerOnMultiEdit) {
+        shadows.push('0 0 0 2px #276293, 0 0 0 3.5px rgba(0,0,0,0.85)');
+    }
+    if (isEmphasized.value) {
+        shadows.push('inset 0 0 0 2px #276293');
+    }
+    return shadows.length ? shadows.join(', ') : undefined;
+});
+
 // Consider project name long when it exceeds a reasonable character threshold
 const isProjectNameLong = computed(() => {
     const name = props.event?.project?.name ?? '';
@@ -1234,14 +1274,24 @@ const getColorBasedOnUserSettings = computed(() => {
     return props.event.eventType.hex_code;
 });
 
+// Flächensättigung je Zustand: gedimmt 7 %, hervorgehoben 100 %, sonst Setting (15/75)
+const eventBgPercent = computed(() => {
+    if (isDimmed.value) return 7;
+    if (isEmphasized.value) return 100;
+    return highContrastPercent.value;
+});
 const eventBgColor = computed(() =>
-    backgroundColorWithOpacity(getColorBasedOnUserSettings.value, highContrastPercent.value)
+    backgroundColorWithOpacity(getColorBasedOnUserSettings.value, eventBgPercent.value)
 );
-const eventTextColor = computed(() => getTextColorBasedOnBackground(eventBgColor.value));
+const eventTextColor = computed(() =>
+    isDimmed.value ? '#3F424A' : getTextColorBasedOnBackground(eventBgColor.value)
+);
 const eventTypeBgColor = computed(() =>
-    backgroundColorWithOpacity(props.event.event_type_color, highContrastPercent.value)
+    backgroundColorWithOpacity(props.event.event_type_color, eventBgPercent.value)
 );
-const eventTypeTextColor = computed(() => getTextColorBasedOnBackground(eventTypeBgColor.value));
+const eventTypeTextColor = computed(() =>
+    isDimmed.value ? '#3F424A' : getTextColorBasedOnBackground(eventTypeBgColor.value)
+);
 
 const totalHeight = computed(() => {
     let height = 42;
@@ -1337,7 +1387,7 @@ const closeTimelineModal = () => {
 /* Barrierearme Fokussierung für interaktive Elemente (wenn Tailwind focus:ring nicht überall greift) */
 a:focus-visible,
 button:focus-visible {
-    outline: 2px solid rgba(59, 130, 246, 0.7); /* blau */
+    outline: 2px solid var(--color-accent-600);
     outline-offset: 2px;
 }
 

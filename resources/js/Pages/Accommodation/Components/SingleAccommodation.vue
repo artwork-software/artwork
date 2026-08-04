@@ -8,11 +8,11 @@
                 <Link :href="route('accommodation.show', accommodation.id)"
                       class="mr-3 sDark">
                     <div class="w-full space-y-1">
-                        <div class="font-lexend font-medium text-gray-900">{{ accommodation.name }}</div>
-                        <div class="text-xs font-medium text-gray-900">{{ accommodation.street }}</div>
-                        <div class="text-xs font-medium text-gray-900" v-if="accommodation.zip_code && accommodation.location">{{ accommodation.zip_code }}, {{ accommodation.location }}</div>
-                        <div class="text-xs font-medium text-gray-900" v-if="accommodation.phone_number">{{ $t('Phone number')}}: {{ accommodation.phone_number }}</div>
-                        <div class="text-xs font-medium text-gray-900" v-if="accommodation.email">{{ $t('Email')}}: {{ accommodation.email }}</div>
+                        <div class="font-lexend font-medium text-text">{{ accommodation.name }}</div>
+                        <div class="text-xs font-medium text-text">{{ accommodation.street }}</div>
+                        <div class="text-xs font-medium text-text" v-if="accommodation.zip_code && accommodation.location">{{ accommodation.zip_code }}, {{ accommodation.location }}</div>
+                        <div class="text-xs font-medium text-text" v-if="accommodation.phone_number">{{ $t('Phone number')}}: {{ accommodation.phone_number }}</div>
+                        <div class="text-xs font-medium text-text" v-if="accommodation.email">{{ $t('Email')}}: {{ accommodation.email }}</div>
                     </div>
                 </Link>
             </div>

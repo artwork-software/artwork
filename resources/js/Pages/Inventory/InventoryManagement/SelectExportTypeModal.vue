@@ -23,7 +23,7 @@
             </div>
             <div class="button-container">
                 <button :disabled="type.length === 0" type="button"
-                        :class="[type.length === 0 ? 'cursor-not-allowed !bg-gray-600 !hover:bg-gray-800' : 'cursor-pointer', 'export-button']"
+                        :class="[type.length === 0 ? 'cursor-not-allowed !bg-border-strong !hover:bg-border-strong' : 'cursor-pointer', 'export-button']"
                         @click="close(true)">
                     <IconFileExport stroke-width="2" class="icon"/>
                     <p class="text-sm">{{ $t('Export') }}</p>

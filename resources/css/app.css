@@ -711,9 +711,6 @@
         @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset
         bg-white/10 ring-white/20;
     }
-    .chip-strong {
-        @apply bg-white/15 ring-white/30;
-    }
 
     /* Alias auf BaseUIButton variant="secondary" (Design-Basis v1) */
     .new-button {
@@ -749,16 +746,7 @@
     .ui-button-delete { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-8 px-3 text-[13px] font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
     .ui-button-add-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-accent-600 text-white border border-accent-600 min-h-7 px-2.5 text-xs font-medium cursor-pointer hover:bg-accent-700 hover:border-accent-700 transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
     .ui-button-delete-small { @apply select-none inline-flex items-center gap-x-1.5 justify-center rounded-md bg-surface text-danger border border-danger-border min-h-7 px-2.5 text-xs font-medium cursor-pointer hover:bg-danger-surface transition-[background-color,border-color] duration-150 ease-out disabled:bg-surface-canvas disabled:text-text-subtle disabled:border-border-subtle disabled:cursor-not-allowed;}
-    /* Listbox Trigger (kompakt) */
-    .ui-lb-trigger { @apply flex w-full items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 h-10 shadow-sm; }
-    .ui-lb-trigger-text { @apply min-w-0; }
-    .ui-lb-label { @apply text-[11px] text-zinc-500 leading-none mb-0.5; }
-    .ui-lb-value { @apply flex items-center gap-2 text-[13px] text-zinc-900 min-w-0; }
-    .ui-lb-icon { @apply size-4 text-zinc-400; }
 
-    .dashboard-chip {
-        @apply flex items-center justify-center gap-2 rounded-md border border-border bg-surface px-2.5 py-2 text-xs hover:bg-surface-sunken transition-[background-color,border-color] duration-150 ease-out;
-    }
 
     /* Inputs kompakt */
     .ui-input :deep(input),
@@ -786,14 +774,8 @@
     }
 
     /* Buttons */
-    .ui-link-btn {
-        @apply text-[12.5px] text-accent-600 hover:text-accent-700 underline-offset-2 hover:underline;
-    }
     .ui-icon-btn {
         @apply inline-flex items-center justify-center rounded-md border border-transparent text-text-subtle hover:text-danger;
-    }
-    .ui-btn-primary {
-        @apply inline-flex items-center justify-center rounded-md bg-accent-600 min-h-8 px-3 text-[13px] font-medium text-white hover:bg-accent-700 transition-[background-color,border-color] duration-150 ease-out;
     }
 
     /* Transition */
@@ -813,10 +795,6 @@
     .ui-lb-btn { /* placeholder, falls extern benötigt */ }
 
 
-    /* --- Cards / Sections --- */
-    .card-event-container {
-        @apply rounded-xl border border-zinc-200/70 bg-white/90 shadow-sm p-4 space-y-3;
-    }
     .card-header {
         @apply flex items-center gap-2 -mt-1;
     }
@@ -831,18 +809,7 @@
     .hint { @apply text-[12px] text-zinc-500; }
     .err  { @apply text-[12px] text-rose-600; }
 
-    /* --- Consistent field grids --- */
-    .form-grid-2 { @apply grid grid-cols-1 md:grid-cols-2 gap-3; }
-    .form-grid-3 { @apply grid grid-cols-1 md:grid-cols-3 gap-3; }
 
-    /* --- Listbox button (compact) --- */
-    .lbb {
-        @apply grid grid-cols-[1fr_auto] items-center h-11 px-3 py-2  text-left;
-    }
-    .lbb-text { @apply truncate pr-6; }
-    .lbb-label { @apply text-[11px] text-zinc-500; }
-    .lbb-value { @apply mt-0.5 flex items-center gap-2 text-sm text-zinc-900; }
-    .lbb-icon { @apply size-5 text-zinc-400 sm:size-4; }
 
     /* --- Listbox default classes via props (keine globalen Änderungen nötig) --- */
 
@@ -860,25 +827,6 @@
         }
     }
 
-    .text-color {
-        color: var(--color-text);
-
-        &.light {
-            color: var(--color-text-subtle);
-        }
-
-        &.success {
-            @apply text-green-500;
-        }
-
-        &.danger {
-            @apply text-red-500;
-        }
-
-        &.warning {
-            @apply text-yellow-500;
-        }
-    }
 
     .headline {
         &.h1 {
@@ -912,14 +860,6 @@
         }
     }
 
-    .sub-line {
-        &.light {
-            font: normal normal bold 14px/20px Inter;
-            letter-spacing: -0.07px;
-            opacity: 1;
-            @apply mt-1;
-        }
-    }
 
     .aw-checklist-input {
         @apply col-start-1 row-start-1 size-4 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border-subtle disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto
@@ -1233,15 +1173,6 @@
     @apply !font-lexend !px-4 !py-4
 }
 
-.kpi {
-    @apply rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-right;
-}
-.kpi-label {
-    @apply text-[11px] font-medium text-zinc-500;
-}
-.kpi-value {
-    @apply text-xl font-semibold text-zinc-900;
-}
 .badge {
     @apply inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200;
 }

@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconCategory"
                 :title="$t('Map type values')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="$t('{count} rows to import', { count: totalRows })"
             >
                 <template #actions>
@@ -31,7 +31,7 @@
             </div>
 
             <!-- Loading -->
-            <div v-if="loadingValues" class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+            <div v-if="loadingValues" class="flex items-center gap-2 text-sm text-text-subtle mb-6">
                 <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -41,26 +41,26 @@
 
             <!-- Value Mapping Table -->
             <div v-if="uniqueValues.length > 0 && !loadingValues" class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-border-subtle">
+                    <thead class="bg-surface-sunken">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Value in file') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Rows') }}
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Assign to contact type') }}
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-border-subtle">
                         <tr v-for="(entry, idx) in uniqueValues" :key="entry.value">
-                            <td class="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            <td class="px-4 py-3 text-sm font-medium text-text whitespace-nowrap">
                                 {{ entry.value }}
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-500">
+                            <td class="px-4 py-3 text-sm text-text-subtle">
                                 {{ entry.count }}
                             </td>
                             <td class="px-4 py-3 min-w-[280px]">
@@ -78,11 +78,11 @@
                                                     <span>{{ $t(getContactType(valueMapping[idx])?.name ?? '') }}</span>
                                                 </template>
                                                 <template v-else>
-                                                    <span class="text-gray-400">{{ $t('Skip these rows') }}</span>
+                                                    <span class="text-text-subtle">{{ $t('Skip these rows') }}</span>
                                                 </template>
                                             </div>
                                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                                <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                                             </span>
                                         </ListboxButton>
 
@@ -96,12 +96,12 @@
                                             >
                                                 <!-- Skip option -->
                                                 <ListboxOption as="template" :value="null" v-slot="{ active, selected: isSelected }">
-                                                    <li :class="[active ? 'bg-indigo-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                                        <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate text-gray-400']">{{ $t('Skip these rows') }}</span>
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                        <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate text-text-subtle']">{{ $t('Skip these rows') }}</span>
                                                     </li>
                                                 </ListboxOption>
 
-                                                <li class="border-t border-gray-100 my-1"></li>
+                                                <li class="border-t border-border-subtle my-1"></li>
 
                                                 <!-- Contact types -->
                                                 <ListboxOption
@@ -111,7 +111,7 @@
                                                     :value="type.id"
                                                     v-slot="{ active, selected: isSelected }"
                                                 >
-                                                    <li :class="[active ? 'bg-indigo-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : isSelected ? '!bg-artwork-action-buttons/10' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                         <div class="flex items-center gap-2">
                                                             <PropertyIcon v-if="type.icon" :name="type.icon" class="size-5 flex-shrink-0" :style="type.color ? { color: active ? 'white' : type.color } : {}" />
                                                             <span
@@ -123,7 +123,7 @@
                                                                 {{ $t(type.name) }}
                                                             </span>
                                                         </div>
-                                                        <span v-if="isSelected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                        <span v-if="isSelected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                             <IconCheck class="h-5 w-5" aria-hidden="true" />
                                                         </span>
                                                     </li>
@@ -139,14 +139,14 @@
             </div>
 
             <!-- No column selected info -->
-            <div v-if="!selectedColumn && !loadingValues" class="text-sm text-gray-500 bg-gray-50 rounded-md p-6 text-center">
+            <div v-if="!selectedColumn && !loadingValues" class="text-sm text-text-subtle bg-surface-sunken rounded-md p-6 text-center">
                 {{ $t('Select a column above to see the unique values.') }}
             </div>
 
             <!-- Missing contact type hint -->
-            <div v-if="selectedColumn && !loadingValues" class="mt-4 text-xs text-gray-500">
+            <div v-if="selectedColumn && !loadingValues" class="mt-4 text-xs text-text-subtle">
                 {{ $t('Contact type missing?') }}
-                <a :href="route('crm.settings.index')" target="_blank" class="font-medium text-indigo-600 hover:text-indigo-500">
+                <a :href="route('crm.settings.index')" target="_blank" class="font-medium text-accent-600 hover:text-accent-600">
                     {{ $t('Create it in the CRM settings (opens in a new tab)') }}
                 </a>
                 — {{ $t('then restart the import so the new type appears here.') }}
@@ -159,7 +159,7 @@
                 </button>
                 <button
                     :disabled="!canSubmit || form.processing"
-                    class="ui-button-add disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="ui-button-add disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                     @click="submit"
                 >
                     <span v-if="form.processing" class="flex items-center gap-2">

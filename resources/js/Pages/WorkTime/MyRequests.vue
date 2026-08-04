@@ -12,10 +12,10 @@
                     <button
                         v-if="request.status === 'pending'"
                         @click="deleteRequest(request.id)"
-                        class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        class="absolute top-4 right-4 p-2 hover:bg-surface-sunken rounded-lg transition-colors"
                         :title="$t('Delete request')"
                     >
-                        <IconTrash class="h-5 w-5 text-red-600" />
+                        <IconTrash class="h-5 w-5 text-danger" />
                     </button>
                     <SingleWorkTimeChangeRequest :request="request" :need-approval="false" />
                 </div>

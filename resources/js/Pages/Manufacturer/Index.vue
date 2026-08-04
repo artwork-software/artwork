@@ -8,7 +8,7 @@
             <ToolbarHeader
                 :icon="IconBuildingFactory2"
                 title="Manufacturers"
-                icon-bg-class="bg-yellow-600/10 text-yellow-700"
+                icon-bg-class="bg-warning text-warning"
                 v-model="searchManufacturerInput"
                 :description="manufacturers?.data?.length ? `${manufacturers?.data?.length} ${$t('Manufacturer')}` : ''"
                 :search-enabled="true"
@@ -47,8 +47,8 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.name }}</div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="font-medium text-text">{{ row.name }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </div>
                 </template>

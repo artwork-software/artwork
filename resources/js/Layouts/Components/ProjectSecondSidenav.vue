@@ -1,9 +1,9 @@
 <template>
     <div class="w-full mt-24">
-        <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
+        <div class="w-full pb-10 mb-5 border-b-2 border-border-strong">
             <ProjectTeamComponent :project="this.project" :project-id="this.project?.id"/>
         </div>
-        <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
+        <div class="w-full pb-10 mb-5 border-b-2 border-border-strong">
             <ProjectAttributesComponent :project="this.project"
                                         :project-categories="this.projectCategories"
                                         :project-genres="this.projectGenres"

@@ -18,8 +18,8 @@
                                type="text"
                                :class="[
                                    $page.props.errors.name ?
-                                   'border-red-600 focus:border-red-600' :
-                                   'border-gray-300 focus:border-primary',
+                                   'border-danger focus:border-danger' :
+                                   'border-border focus:border-primary',
                                    'mb-3 peer pl-0 h-12 w-full focus:border-t-transparent focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 text-primary placeholder-secondary placeholder-transparent'
                                ]"
                                placeholder="placeholder"

@@ -20,10 +20,10 @@
             />
 
             <div class="flex items-center gap-x-2">
-                <Switch v-model="settingsForm.enable_status" :class="[settingsForm.enable_status ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                <Switch v-model="settingsForm.enable_status" :class="[settingsForm.enable_status ? 'bg-artwork-buttons-create' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
                     <span :class="[settingsForm.enable_status ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                       <span :class="[settingsForm.enable_status ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                        <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                        <svg class="size-3 text-text-subtle" fill="none" viewBox="0 0 12 12">
                           <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                       </span>
@@ -66,10 +66,10 @@
                             <div :key="element" class="flex justify-between gap-x-6 py-3" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                 <div class="flex gap-x-4">
                                     <div class="min-w-0 flex-auto">
-                                        <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
+                                        <p class="text-sm font-semibold leading-6 text-text flex items-center gap-x-2">
                                             <span class="h-14 w-14 block rounded-full border" :style="{'backgroundColor' : element.color }"/>
                                             {{ element.name }}
-                                            <span v-if="element.default" class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 ml-10">{{ $t('Default') }}</span>
+                                            <span v-if="element.default" class="inline-flex items-center rounded-md bg-surface-sunken px-2 py-1 text-xs font-medium text-text-muted ring-1 ring-inset border-border-subtle ml-10">{{ $t('Default') }}</span>
                                         </p>
                                     </div>
                                 </div>

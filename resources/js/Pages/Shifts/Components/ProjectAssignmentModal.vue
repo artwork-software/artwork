@@ -9,18 +9,18 @@
     >
         <div class="space-y-5 text-sm">
             <!-- Projekt-Auswahl -->
-            <section class="space-y-2 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3.5 py-3">
-                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+            <section class="space-y-2 rounded-xl border border-border-subtle bg-surface-sunken px-3.5 py-3">
+                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                     {{ $t('Project') }}
                 </h3>
 
-                <div v-if="selectedProject" class="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                <div v-if="selectedProject" class="flex items-center justify-between gap-2 rounded-lg border border-border-subtle bg-white px-3 py-2">
                     <div class="min-w-0">
                         <div class="flex items-center gap-2">
                             <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: colorForProjectId(selectedProject.id) }"></span>
-                            <span class="truncate font-medium text-zinc-800">{{ selectedProject.name }}</span>
+                            <span class="truncate font-medium text-text">{{ selectedProject.name }}</span>
                         </div>
-                        <div class="text-[11px] text-zinc-400 mt-0.5">
+                        <div class="text-[11px] text-text-subtle mt-0.5">
                             <template v-if="selectedProject.period_start">
                                 {{ formatAssignmentDate(selectedProject.period_start) }} - {{ formatAssignmentDate(selectedProject.period_end) }}
                             </template>
@@ -30,7 +30,7 @@
                     </div>
                     <button
                         type="button"
-                        class="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        class="inline-flex items-center justify-center rounded-md p-1.5 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
                         @click="selectedProject = null"
                     >
                         <PropertyIcon name="IconX" class="h-4 w-4" stroke-width="1.5" />
@@ -46,29 +46,29 @@
                         :placeholder="$t('Search project')"
                         no-margin-top
                     />
-                    <p class="text-[11px] text-zinc-400">
+                    <p class="text-[11px] text-text-subtle">
                         {{ $t('Projects whose period includes the selected days are suggested first. Use the search to find all projects.') }}
                     </p>
-                    <div class="max-h-56 overflow-y-auto rounded-lg border border-zinc-100 bg-white divide-y divide-zinc-50">
-                        <div v-if="loadingProjects" class="px-3 py-3 text-xs text-zinc-400">
+                    <div class="max-h-56 overflow-y-auto rounded-lg border border-border-subtle bg-white divide-y divide-border-subtle">
+                        <div v-if="loadingProjects" class="px-3 py-3 text-xs text-text-subtle">
                             {{ $t('Loading...') }}
                         </div>
-                        <div v-else-if="!projectOptions.length" class="px-3 py-3 text-xs text-zinc-400">
+                        <div v-else-if="!projectOptions.length" class="px-3 py-3 text-xs text-text-subtle">
                             {{ $t('No projects found') }}
                         </div>
                         <button
                             v-for="project in projectOptions"
                             :key="project.id"
                             type="button"
-                            class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-zinc-50 transition-colors"
+                            class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-surface-sunken transition-colors"
                             @click="selectProject(project)"
                         >
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="inline-block h-2.5 w-2.5 shrink-0 rounded-full" :style="{ backgroundColor: colorForProjectId(project.id) }"></span>
-                                    <span class="truncate text-zinc-800">{{ project.name }}</span>
+                                    <span class="truncate text-text">{{ project.name }}</span>
                                 </div>
-                                <div class="text-[11px] text-zinc-400 mt-0.5">
+                                <div class="text-[11px] text-text-subtle mt-0.5">
                                     <template v-if="project.period_start">
                                         {{ formatAssignmentDate(project.period_start) }} - {{ formatAssignmentDate(project.period_end) }}
                                     </template>
@@ -78,7 +78,7 @@
                             </div>
                             <span
                                 v-if="project.covers_all_days"
-                                class="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700 border border-emerald-100"
+                                class="shrink-0 rounded-full bg-success-surface px-2 py-0.5 text-[10px] text-success border border-success-border"
                             >
                                 {{ $t('In period') }}
                             </span>
@@ -88,8 +88,8 @@
             </section>
 
             <!-- Zeitraum: ganzer Projektzeitraum oder einzelne Tage -->
-            <section class="space-y-3 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
-                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+            <section class="space-y-3 rounded-xl border border-border-subtle bg-white px-3.5 py-3">
+                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                     {{ $t('Period') }}
                 </h3>
 
@@ -99,11 +99,11 @@
                             type="radio"
                             value="full_period"
                             v-model="periodMode"
-                            class="mt-0.5 h-4 w-4 border-zinc-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"
+                            class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"
                         />
                         <span>
-                            <span class="text-zinc-800">{{ $t('Entire project period') }}</span>
-                            <span v-if="selectedProject?.period_start" class="block text-[11px] text-zinc-400">
+                            <span class="text-text">{{ $t('Entire project period') }}</span>
+                            <span v-if="selectedProject?.period_start" class="block text-[11px] text-text-subtle">
                                 {{ formatAssignmentDate(selectedProject.period_start) }} - {{ formatAssignmentDate(selectedProject.period_end) }}
                                 &middot; {{ $t('Moves along if the project is rescheduled.') }}
                             </span>
@@ -114,9 +114,9 @@
                             type="radio"
                             value="days"
                             v-model="periodMode"
-                            class="mt-0.5 h-4 w-4 border-zinc-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"
+                            class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"
                         />
-                        <span class="text-zinc-800">{{ $t('Single day(s)') }}</span>
+                        <span class="text-text">{{ $t('Single day(s)') }}</span>
                     </label>
                 </div>
 
@@ -125,14 +125,14 @@
                         <span
                             v-for="day in selectedDays"
                             :key="day"
-                            class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-700"
+                            class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted"
                         >
                             {{ formatAssignmentDate(day) }}
-                            <button type="button" class="text-zinc-400 hover:text-red-500" @click="removeDay(day)">
+                            <button type="button" class="text-text-subtle hover:text-danger" @click="removeDay(day)">
                                 <PropertyIcon name="IconX" class="h-3 w-3" stroke-width="2" />
                             </button>
                         </span>
-                        <span v-if="!selectedDays.length" class="text-[11px] text-zinc-400">
+                        <span v-if="!selectedDays.length" class="text-[11px] text-text-subtle">
                             {{ $t('No days selected yet') }}
                         </span>
                     </div>
@@ -157,13 +157,13 @@
             <!-- Warnung (z. B. Wunsch auf Abwesenheitstag) -->
             <div
                 v-if="warningMessage"
-                class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                class="rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
             >
                 {{ warningMessage }}
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-end pt-2 border-t border-zinc-100">
+            <div class="flex justify-end pt-2 border-t border-border-subtle">
                 <BaseUIButton
                     :label="mode === 'wish' ? $t('Enter wish') : $t('Assign')"
                     is-add-button

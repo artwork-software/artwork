@@ -21,7 +21,7 @@
             <div v-for="row in rows" :key="row.key" class="space-y-0.5">
                 <div
                     class="text-[11px] font-semibold uppercase tracking-wide flex items-center gap-1.5"
-                    :class="inSidebar ? 'text-zinc-200' : 'text-secondary'"
+                    :class="inSidebar ? 'text-text-subtle' : 'text-secondary'"
                 >
                     {{ row.label }}
                     <ToolTipComponent
@@ -49,7 +49,7 @@
                         :item="property"
                         :property="property"
                         :hide-x="true"
-                        :class="{'ring-2 ring-amber-400 rounded-full': property.is_main}"
+                        :class="{'ring-2 ring-warning-border rounded-full': property.is_main}"
                     />
                 </div>
 

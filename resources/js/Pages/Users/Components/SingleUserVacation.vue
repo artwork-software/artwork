@@ -2,41 +2,41 @@
     <div
         class="rounded-lg border text-sm mb-2 overflow-hidden"
         :class="entry.hasConflicts
-            ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700'
-            : 'bg-white border-zinc-200 dark:bg-zinc-800 dark:border-zinc-700'"
+            ? 'bg-warning-surface border-warning-border'
+            : 'bg-white border-border-subtle'"
     >
         <div class="flex items-stretch">
             <!-- Farbbalken nach Typ -->
-            <div class="w-1.5 shrink-0" :class="entry.type === 'available' ? 'bg-emerald-500' : 'bg-rose-500'"></div>
+            <div class="w-1.5 shrink-0" :class="entry.type === 'available' ? 'bg-success' : 'bg-danger'"></div>
 
             <div class="flex-1 py-3 px-3 min-w-0">
                 <div class="flex items-center gap-2">
                     <span class="font-semibold" :class="entry.type === 'available'
-                        ? 'text-emerald-800 dark:text-emerald-300'
-                        : 'text-rose-800 dark:text-rose-300'">
+                        ? 'text-success'
+                        : 'text-danger'">
                         {{ entry.type === 'available' ? $t('Available') : $t('Absent') }}
                     </span>
-                    <IconRepeat v-if="entry.kind === 'weekly'" class="h-4 w-4 text-zinc-500" />
+                    <IconRepeat v-if="entry.kind === 'weekly'" class="h-4 w-4 text-text-subtle" />
                     <span
                         v-if="entry.hasConflicts"
-                        class="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-200"
+                        class="inline-flex items-center gap-1 rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning"
                     >
                         <IconAlertTriangle class="h-3.5 w-3.5" />
                         {{ $t('Conflict with your shift!') }}
                     </span>
                 </div>
 
-                <div class="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                <div class="mt-0.5 text-text-muted">
                     {{ dateLabel }}
                     <span v-if="!entry.fullDay">, {{ entry.startTime }} - {{ entry.endTime }}</span>
                 </div>
 
-                <p v-if="entry.comment" class="mt-1 text-zinc-500 dark:text-zinc-400 truncate">
+                <p v-if="entry.comment" class="mt-1 text-text-subtle truncate">
                     &bdquo;{{ translatedComment }}&rdquo;
                 </p>
 
                 <!-- Konflikt-Details -->
-                <div v-if="entry.hasConflicts" class="mt-2 text-xs text-zinc-600 dark:text-zinc-400 space-y-0.5">
+                <div v-if="entry.hasConflicts" class="mt-2 text-xs text-text-muted space-y-0.5">
                     <p v-for="conflict in entry.conflicts" :key="conflictKey(conflict)">
                         {{ $t('{username} has scheduled you on {date} {start} - {end}, contrary to your original entry.', { username: conflict.user_name, date: conflict.date_casted, start: conflict.start_time, end: conflict.end_time }) }}
                     </p>
@@ -59,7 +59,7 @@
                     :aria-label="$t('Delete')"
                     @click="showDeleteConfirmModal = true"
                 >
-                    <IconTrash class="w-4 h-4 text-red-500" />
+                    <IconTrash class="w-4 h-4 text-danger" />
                 </button>
             </div>
         </div>

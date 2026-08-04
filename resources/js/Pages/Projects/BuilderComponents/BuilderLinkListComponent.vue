@@ -1,13 +1,13 @@
 <template>
     <div class="space-y-1">
-        <div v-if="component.data?.label" class="text-sm font-bold text-gray-900">{{ component.data.label }}</div>
+        <div v-if="component.data?.label" class="text-sm font-bold text-text">{{ component.data.label }}</div>
         <div v-if="links.length > 0" class="space-y-0.5">
             <div v-for="(link, index) in links" :key="index">
                 <a
                     v-if="link.url"
                     :href="link.url"
                     target="_blank"
-                    class="text-sm text-blue-600 hover:underline"
+                    class="text-sm text-accent-600 hover:underline"
                 >
                     {{ link.label || link.url }}
                 </a>

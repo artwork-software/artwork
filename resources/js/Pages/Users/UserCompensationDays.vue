@@ -3,15 +3,15 @@
         <div class="space-y-8">
             <div>
                 <h2 class="text-lg font-semibold mb-1">{{ $t('Substitute days off') }}</h2>
-                <p class="text-sm text-gray-600">{{ $t('Overview of substitute days off for this user.') }}</p>
+                <p class="text-sm text-text-muted">{{ $t('Overview of substitute days off for this user.') }}</p>
             </div>
 
             <!-- Open compensation days -->
             <section>
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-accent-600"></span>
                     {{ $t('Open compensation days') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ openCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ openCompensations.length }})</span>
                     <BaseUIButton
                         :label="$t('Add compensation day')"
                         is-add-button
@@ -22,14 +22,14 @@
                 </h3>
 
                 <!-- Manual create form -->
-                <div v-if="showCreateForm" class="mb-4 rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-3">
-                    <h4 class="text-xs font-semibold text-zinc-700">{{ $t('Add compensation day') }}</h4>
+                <div v-if="showCreateForm" class="mb-4 rounded-lg border border-accent-200 bg-accent-50 p-4 space-y-3">
+                    <h4 class="text-xs font-semibold text-text-muted">{{ $t('Add compensation day') }}</h4>
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-500 mb-1">{{ $t('Value') }}</label>
+                            <label class="block text-[11px] font-medium text-text-subtle mb-1">{{ $t('Value') }}</label>
                             <select
                                 v-model="newCompDay.value"
-                                class="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-md border border-border bg-white px-2 py-1.5 text-xs focus:border-accent-600 focus:ring-1 focus:ring-accent-600"
                             >
                                 <option value="1.0">{{ $t('Full day (1.0)') }}</option>
                                 <option value="0.5">{{ $t('Half day (0.5)') }}</option>
@@ -73,29 +73,29 @@
                     </div>
                 </div>
 
-                <div v-if="openCompensations.length" class="overflow-hidden rounded-lg border border-zinc-200">
+                <div v-if="openCompensations.length" class="overflow-hidden rounded-lg border border-border-subtle">
                     <table class="min-w-full text-xs">
-                        <thead class="bg-zinc-50">
+                        <thead class="bg-surface-sunken">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Value') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Type') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Deadline') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Rule') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Reason') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-zinc-500">{{ $t('Actions') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Value') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Type') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Deadline') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Rule') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Reason') }}</th>
+                                <th class="px-3 py-2 text-right font-medium text-text-subtle">{{ $t('Actions') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-100">
+                        <tbody class="divide-y divide-border-subtle">
                             <tr
                                 v-for="dayOff in openCompensations"
                                 :key="dayOff.id"
-                                class="hover:bg-zinc-50/50"
-                                :class="isOverdue(dayOff) ? 'bg-red-50/50' : ''"
+                                class="hover:bg-surface-sunken"
+                                :class="isOverdue(dayOff) ? 'bg-danger-surface' : ''"
                             >
-                                <td class="px-3 py-2.5 font-medium text-zinc-900">
+                                <td class="px-3 py-2.5 font-medium text-text">
                                     <span
                                         class="inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                                        :class="dayOff.value >= 1.0 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'"
+                                        :class="dayOff.value >= 1.0 ? 'bg-accent-100 text-accent-700' : 'bg-warning-surface text-warning'"
                                     >
                                         {{ dayOff.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                                     </span>
@@ -107,11 +107,11 @@
                                     >
                                         {{ $t('Public holiday') }}
                                     </span>
-                                    <span v-else class="text-zinc-400">-</span>
+                                    <span v-else class="text-text-subtle">-</span>
                                 </td>
-                                <td class="px-3 py-2.5" :class="isOverdue(dayOff) ? 'text-red-600 font-medium' : 'text-zinc-700'">
+                                <td class="px-3 py-2.5" :class="isOverdue(dayOff) ? 'text-danger font-medium' : 'text-text-muted'">
                                     {{ formatDate(dayOff.deadline) }}
-                                    <span v-if="isOverdue(dayOff)" class="ml-1 text-[10px] text-red-500 font-medium">
+                                    <span v-if="isOverdue(dayOff)" class="ml-1 text-[10px] text-danger font-medium">
                                         ({{ $t('Deadline expired') }})
                                     </span>
                                 </td>
@@ -125,7 +125,7 @@
                                         {{ dayOff.violation?.shift_rule?.name || $t('Manual') }}
                                     </div>
                                 </td>
-                                <td class="px-3 py-2.5 text-zinc-600 max-w-[200px] truncate">
+                                <td class="px-3 py-2.5 text-text-muted max-w-[200px] truncate">
                                     {{ dayOff.reason || '-' }}
                                 </td>
                                 <td class="px-3 py-2.5 text-right">
@@ -148,42 +148,42 @@
                         </tbody>
                     </table>
                 </div>
-                <div v-else class="text-xs text-zinc-500 italic py-3">
+                <div v-else class="text-xs text-text-subtle italic py-3">
                     {{ $t('No open compensation days.') }}
                 </div>
             </section>
 
             <!-- Granted compensation days -->
             <section>
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-success"></span>
                     {{ $t('Granted compensation days') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ grantedCompensations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ grantedCompensations.length }})</span>
                 </h3>
 
-                <div v-if="grantedCompensations.length" class="overflow-hidden rounded-lg border border-zinc-200">
+                <div v-if="grantedCompensations.length" class="overflow-hidden rounded-lg border border-border-subtle">
                     <table class="min-w-full text-xs">
-                        <thead class="bg-zinc-50">
+                        <thead class="bg-surface-sunken">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Value') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Type') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted on') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted by') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Rule') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Reason') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-zinc-500">{{ $t('Actions') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Value') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Type') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Granted on') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Granted by') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Rule') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Reason') }}</th>
+                                <th class="px-3 py-2 text-right font-medium text-text-subtle">{{ $t('Actions') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-100">
+                        <tbody class="divide-y divide-border-subtle">
                             <tr
                                 v-for="dayOff in grantedCompensations"
                                 :key="dayOff.id"
-                                class="hover:bg-zinc-50/50"
+                                class="hover:bg-surface-sunken"
                             >
-                                <td class="px-3 py-2.5 font-medium text-zinc-900">
+                                <td class="px-3 py-2.5 font-medium text-text">
                                     <span
                                         class="inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                                        :class="dayOff.value >= 1.0 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'"
+                                        :class="dayOff.value >= 1.0 ? 'bg-accent-100 text-accent-700' : 'bg-warning-surface text-warning'"
                                     >
                                         {{ dayOff.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                                     </span>
@@ -195,10 +195,10 @@
                                     >
                                         {{ $t('Public holiday') }}
                                     </span>
-                                    <span v-else class="text-zinc-400">-</span>
+                                    <span v-else class="text-text-subtle">-</span>
                                 </td>
-                                <td class="px-3 py-2.5 text-zinc-700">{{ formatDate(dayOff.granted_date) }}</td>
-                                <td class="px-3 py-2.5 text-zinc-600">
+                                <td class="px-3 py-2.5 text-text-muted">{{ formatDate(dayOff.granted_date) }}</td>
+                                <td class="px-3 py-2.5 text-text-muted">
                                     <template v-if="dayOff.granted_by_user">
                                         {{ dayOff.granted_by_user.first_name }} {{ dayOff.granted_by_user.last_name }}
                                     </template>
@@ -214,7 +214,7 @@
                                         {{ dayOff.violation?.shift_rule?.name || $t('Manual') }}
                                     </div>
                                 </td>
-                                <td class="px-3 py-2.5 text-zinc-600 max-w-[200px] truncate">
+                                <td class="px-3 py-2.5 text-text-muted max-w-[200px] truncate">
                                     {{ dayOff.reason || '-' }}
                                 </td>
                                 <td class="px-3 py-2.5 text-right">
@@ -236,36 +236,36 @@
                         </tbody>
                     </table>
                 </div>
-                <div v-else class="text-xs text-zinc-500 italic py-3">
+                <div v-else class="text-xs text-text-subtle italic py-3">
                     {{ $t('No granted compensation days.') }}
                 </div>
             </section>
 
             <!-- Unprocessed violations -->
             <section>
-                <h3 class="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-                    <span class="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
+                <h3 class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                    <span class="inline-block h-2 w-2 rounded-full bg-warning"></span>
                     {{ $t('Unprocessed violations') }}
-                    <span class="text-xs font-normal text-zinc-400">({{ unprocessedViolations.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ unprocessedViolations.length }})</span>
                 </h3>
 
-                <div v-if="unprocessedViolations.length" class="overflow-hidden rounded-lg border border-zinc-200">
+                <div v-if="unprocessedViolations.length" class="overflow-hidden rounded-lg border border-border-subtle">
                     <table class="min-w-full text-xs">
-                        <thead class="bg-zinc-50">
+                        <thead class="bg-surface-sunken">
                             <tr>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Date') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Rule') }}</th>
-                                <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Severity') }}</th>
-                                <th class="px-3 py-2 text-right font-medium text-zinc-500">{{ $t('Actions') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Date') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Rule') }}</th>
+                                <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Severity') }}</th>
+                                <th class="px-3 py-2 text-right font-medium text-text-subtle">{{ $t('Actions') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-100">
+                        <tbody class="divide-y divide-border-subtle">
                             <tr
                                 v-for="violation in unprocessedViolations"
                                 :key="violation.id"
-                                class="hover:bg-zinc-50/50"
+                                class="hover:bg-surface-sunken"
                             >
-                                <td class="px-3 py-2.5 text-zinc-700">{{ formatDate(violation.violation_date) }}</td>
+                                <td class="px-3 py-2.5 text-text-muted">{{ formatDate(violation.violation_date) }}</td>
                                 <td class="px-3 py-2.5">
                                     <div class="flex items-center gap-1.5">
                                         <span
@@ -277,7 +277,7 @@
                                 </td>
                                 <td class="px-3 py-2.5">
                                     <span
-                                        :class="violation.severity === 'error' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
+                                        :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
                                         class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
                                     >
                                         {{ violation.severity === 'error' ? $t('Error') : $t('Warning') }}
@@ -294,7 +294,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div v-else class="text-xs text-zinc-500 italic py-3">
+                <div v-else class="text-xs text-text-subtle italic py-3">
                     {{ $t('No unprocessed violations.') }}
                 </div>
             </section>

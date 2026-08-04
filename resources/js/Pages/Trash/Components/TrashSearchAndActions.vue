@@ -4,11 +4,11 @@
             <input type="text"
                    :placeholder="$t('Search')"
                    v-model="search"
-                   class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                   class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"/>
             <XIcon v-if="search" class="ml-2 cursor-pointer h-5 w-5" @click="clearSearch()"/>
         </div>
         <button v-if="total > 0" @click="$emit('delete-all')"
-                class="cursor-pointer text-red-500 hover:text-red-700">
+                class="cursor-pointer text-danger hover:text-danger">
             <TrashIcon class="h-5 w-5" aria-hidden="true"/>
         </button>
     </div>

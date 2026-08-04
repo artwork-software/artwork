@@ -15,7 +15,7 @@
                 v-model="comment"
             />
 
-            <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-border-subtle">
                 <BaseUIButton type="button" :label="$t('Cancel')" is-cancel-button @click="$emit('close')" />
                 <BaseUIButton
                     type="button"

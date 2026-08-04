@@ -103,7 +103,7 @@ export default {
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
             </TransitionChild>
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -111,7 +111,7 @@ export default {
                         <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:max-w-4xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
                                     <span class="sr-only">Close</span>
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
@@ -143,7 +143,7 @@ export default {
                                     <div class="flex items-center my-2" v-for="data in cellData.sage_assigned_data">
                                         <div class="relative flex items-start mr-3">
                                             <div class="flex h-6 items-center">
-                                                <input id="candidates" v-model="data.checked" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                                <input id="candidates" v-model="data.checked" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-0" />
                                             </div>
                                         </div>
                                         <div class="w-28">

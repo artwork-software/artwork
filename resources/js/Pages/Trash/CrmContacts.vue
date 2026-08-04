@@ -8,11 +8,11 @@
     <div
         v-for="contact in trashed_contacts.data"
         :key="contact.id"
-        class="flex items-center w-full bg-white my-2 border border-gray-200 rounded-lg px-4 py-3"
+        class="flex items-center w-full bg-white my-2 border border-border-subtle rounded-lg px-4 py-3"
     >
         <img :src="contact.profile_photo_url" alt="" class="size-10 rounded-full object-cover shrink-0" />
         <div class="ml-4 min-w-0">
-            <div class="font-medium text-gray-900 truncate">{{ contact.display_name }}</div>
+            <div class="font-medium text-text truncate">{{ contact.display_name }}</div>
             <div class="flex items-center gap-2 mt-0.5">
                 <span
                     v-if="contact.contact_type"
@@ -23,7 +23,7 @@
                 >
                     {{ $t(contact.contact_type.name) }}
                 </span>
-                <span class="text-xs text-gray-400">{{ $t('Deleted on') }} {{ contact.deleted_at }}</span>
+                <span class="text-xs text-text-subtle">{{ $t('Deleted on') }} {{ contact.deleted_at }}</span>
             </div>
         </div>
         <div class="ml-auto flex items-center">

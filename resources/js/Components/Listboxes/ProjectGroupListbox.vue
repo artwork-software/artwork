@@ -34,7 +34,7 @@ const emit = defineEmits(['update:selectedProjectGroup'])
             </div>
             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
         </ListboxButton>
-        <ListboxOptions class="absolute w-[88%] z-10 bg-artwork-navigation-background shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+        <ListboxOptions class="absolute w-[88%] z-10 bg-artwork-navigation-background shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
             <ListboxOption v-if="projectGroups.length === 0"
                            class="w-full text-secondary cursor-pointer p-2 flex justify-between"
                            :value="null">

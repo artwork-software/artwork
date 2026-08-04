@@ -24,7 +24,7 @@
                 <div
                     v-for="ds in dayServices"
                     :key="ds.id ?? ds.name"
-                    class="group flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3 shadow-xs transition hover:shadow-sm"
+                    class="group flex items-center justify-between rounded-xl border border-border-subtle bg-white p-3 shadow-xs transition hover:shadow-sm"
                 >
                     <div class="flex min-w-0 items-center gap-3">
                         <!-- Icon Badge mit Farb-Tint -->
@@ -37,7 +37,7 @@
                         </span>
 
                         <div class="min-w-0">
-                            <div class="truncate text-sm font-medium text-gray-900">
+                            <div class="truncate text-sm font-medium text-text">
                                 {{ ds.name }}
                             </div>
                             <div class="mt-1 flex items-center gap-2">
@@ -45,7 +45,7 @@
                                     class="inline-flex size-2.5 rounded-full"
                                     :style="{ backgroundColor: ds.hex_color }"
                                 />
-                                <code class="text-[11px] text-gray-500">{{ ds.hex_color }}</code>
+                                <code class="text-[11px] text-text-subtle">{{ ds.hex_color }}</code>
                             </div>
                         </div>
                     </div>
@@ -53,12 +53,12 @@
                     <div class="flex items-center gap-2">
                         <div class="flex items-center gap-x-2">
                             <IconEdit class="h-6 w-6 cursor-pointer flex items-center" @click="editDayService(ds)" />
-                            <IconTrash class="h-6 w-6 cursor-pointer flex items-center text-red-500" @click="openDeleteDayServiceModal(ds)" />
+                            <IconTrash class="h-6 w-6 cursor-pointer flex items-center text-danger" @click="openDeleteDayServiceModal(ds)" />
                         </div>
 
                         <button
                             type="button"
-                            class="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300"
+                            class="inline-flex items-center justify-center rounded-full p-1.5 text-text-subtle transition hover:bg-surface-sunken hover:text-text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border"
                             @click="editDayService(ds)"
                         >
                             <IconEdit class="size-5" />
@@ -68,15 +68,15 @@
             </div>
 
             <!-- Empty state -->
-            <div v-else class="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
+            <div v-else class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken p-10 text-center">
                 <div class="mx-auto max-w-md">
-                    <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-white text-gray-400 shadow-inner">
+                    <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-white text-text-subtle shadow-inner">
                         <IconCirclePlus class="size-5" />
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800">
+                    <h3 class="text-sm font-semibold text-text">
                         {{ $t('No day services yet') }}
                     </h3>
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Create your first day service to get started.') }}
                     </p>
                     <div class="mt-5">

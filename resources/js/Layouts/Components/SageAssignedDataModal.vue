@@ -11,7 +11,7 @@
                 <PropertyIcon
                     name="IconTrash"
                     v-if="currentSageAssignedData && this.$canAny(['can view project sage data', 'can view global sage data'])"
-                    class="w-6 h-6 hover:text-red-600 cursor-pointer"
+                    class="w-6 h-6 hover:text-danger cursor-pointer"
                     @click="showDeleteConfirmation"
                 />
             </div>
@@ -21,20 +21,20 @@
                 </div>
                 <div v-else class="flex flex-col w-full">
                     <!-- index change -->
-                    <nav class="w-full h-10 flex items-center border-t border-gray-200 mb-5">
+                    <nav class="w-full h-10 flex items-center border-t border-border-subtle mb-5">
                         <div class="w-1/6 h-10 flex">
                             <div v-show="currentIndex > 0"
                                  @click="currentIndex--"
-                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
-                                <IconChevronLeft class="h-4 w-4 text-gray-400" aria-hidden="true" />
+                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-text-subtle hover:border-border hover:text-text-muted cursor-pointer">
+                                <IconChevronLeft class="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                 <span>{{ $t('Previous') }}</span>
                             </div>
                         </div>
                         <div v-if="this.cell.sage_assigned_data.length <= 9" class="w-4/6 h-10 flex justify-center">
                                 <span v-for="(index) in maxIndex"
                                       @click="currentIndex = (index - 1)"
-                                      class="cursor-pointer inline-flex items-center justify-center border-t-2 px-4 text-sm  text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                                      :class="currentIndex === (index - 1) ? 'border-gray-300 text-gray-700 font-bold' : 'border-transparent text-gray-500 font-medium'">
+                                      class="cursor-pointer inline-flex items-center justify-center border-t-2 px-4 text-sm  text-text-subtle hover:border-border hover:text-text-muted"
+                                      :class="currentIndex === (index - 1) ? 'border-border text-text-muted font-bold' : 'border-transparent text-text-subtle font-medium'">
                                     {{ index }}
                                 </span>
                         </div>
@@ -48,9 +48,9 @@
                         <div class="w-1/6 h-10 flex">
                             <div v-show="currentIndex < (maxIndex - 1)"
                                  @click="currentIndex++"
-                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
+                                 class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-text-subtle hover:border-border hover:text-text-muted cursor-pointer">
                                 <span>{{ $t('Next')}}</span>
-                                <IconChevronRight class="h-4 w-4 text-gray-400" aria-hidden="true"/>
+                                <IconChevronRight class="h-4 w-4 text-text-subtle" aria-hidden="true"/>
                             </div>
                         </div>
                     </nav>
@@ -63,10 +63,10 @@
                             <div
                                 v-for="(childBooking, index) in currentSageAssignedData.find_children"
                                 :key="childBooking.id"
-                                class="ml-6 border-l-2 border-gray-200 pl-4 rounded"
+                                class="ml-6 border-l-2 border-border-subtle pl-4 rounded"
                             >
                                 <div
-                                    class="flex items-center justify-between cursor-pointer p-2 bg-gray-50 hover:bg-gray-100 rounded"
+                                    class="flex items-center justify-between cursor-pointer p-2 bg-surface-sunken hover:bg-surface-sunken rounded"
                                     @click="toggleChild(childBooking.id)"
                                 >
                                   <span class="font-medium">
@@ -76,12 +76,12 @@
                                         <PropertyIcon
                                             name="IconChevronUp"
                                             v-if="isOpen(childBooking.id)"
-                                            class="w-5 h-5 text-gray-500"
+                                            class="w-5 h-5 text-text-subtle"
                                         />
                                         <PropertyIcon
                                             name="IconChevronDown"
                                             v-else
-                                            class="w-5 h-5 text-gray-500"
+                                            class="w-5 h-5 text-text-subtle"
                                         />
                                     </template>
                                 </div>
@@ -100,7 +100,7 @@
                   v-model="bookingDataCommentForm.comment"
                   rows="5"
                   :placeholder="$t('Enter comment')"
-                  class="resize-none border-2 border-gray-300 text-md p-4"
+                  class="resize-none border-2 border-border text-md p-4"
               />
                             <div class="flex justify-center mt-6">
                                 <FormButton
@@ -118,7 +118,7 @@
                                 :key="comment.id"
                                 class="my-2"
                             >
-                                <div class="flex items-center mb-2 text-xs text-gray-500 justify-between">
+                                <div class="flex items-center mb-2 text-xs text-text-subtle justify-between">
                                     <div class="flex items-center">
                                         <UserPopoverTooltip
                                             class="mr-1"
@@ -131,7 +131,7 @@
                                     <PropertyIcon
                                         name="IconTrash"
                                         v-if="$page.props.auth.user.id === comment.user.id"
-                                        class="w-6 h-6 hover:text-red-600 cursor-pointer"
+                                        class="w-6 h-6 hover:text-danger cursor-pointer"
                                         @click="removeComment(comment.id)"
                                     />
                                 </div>

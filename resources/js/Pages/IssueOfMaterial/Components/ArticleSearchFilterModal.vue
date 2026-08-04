@@ -5,7 +5,7 @@
         @close="$emit('close')"
     >
         <div class="mb-4 flex items-center justify-between">
-            <div class="text-sm font-medium text-gray-700">
+            <div class="text-sm font-medium text-text-muted">
                 {{ $t('Filter articles') }}
             </div>
             <InventoryFunctionBarFilter @close="handleFilterClose" />
@@ -21,7 +21,7 @@
                         {{ selectedCategory?.name ?? $t('Please select a Category') }}
                     </div>
                     <component :is="IconChevronUp"
-                               class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                               class="col-start-1 row-start-1 size-5 self-center justify-self-end text-text-subtle sm:size-4"
                                aria-hidden="true"/>
                 </ListboxButton>
 
@@ -31,14 +31,14 @@
                         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
                         <ListboxOption as="template" v-for="category in categories" :key="category.id"
                                        :value="category" v-slot="{ active, selected }">
-                            <li :class="[active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900', 'relative cursor-default py-2 pr-9 pl-3 select-none']">
+                            <li :class="[active ? 'bg-accent-600 text-white outline-hidden' : 'text-text', 'relative cursor-default py-2 pr-9 pl-3 select-none']">
                                             <span
                                                 :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{
                                                     category.name
                                                 }}</span>
 
                                 <span v-if="selected"
-                                      :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                      :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                 <component :is="IconCheck" class="size-5" aria-hidden="true"/>
                                             </span>
                             </li>
@@ -50,7 +50,7 @@
 
 
         <div class="my-5">
-            <div class="flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer border-dashed hover:bg-gray-50" v-for="(article, index) in selectedCategory?.articles" :key="index">
+            <div class="flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer border-dashed hover:bg-surface-sunken" v-for="(article, index) in selectedCategory?.articles" :key="index">
                 <div @click="$emit('add-article', article)">
                     <h2 class="text-sm font-bold">{{ article.name }}</h2>
                     <p class="text-xs">{{ article.description }}</p>

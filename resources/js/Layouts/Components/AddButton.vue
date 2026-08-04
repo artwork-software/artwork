@@ -10,7 +10,7 @@
         <p class="text-sm capitalize">{{ text }}</p>
     </button>
     <button v-else-if="type === 'delete'" type="button" :disabled="disabled"
-            class="flex py-2 px-8 mt-1 ml-6 items-center border-2 border-red-600 rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 hover:text-white focus:outline-none">
+            class="flex py-2 px-8 mt-1 ml-6 items-center border-2 border-danger rounded-full shadow-sm text-white bg-danger hover:bg-danger hover:text-white focus:outline-none">
         <p class="text-sm capitalize">{{ text }}</p>
     </button>
     <button v-else-if="type === 'save'" type="button" :disabled="disabled"

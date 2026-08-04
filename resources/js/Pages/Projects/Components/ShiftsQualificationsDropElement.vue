@@ -1,9 +1,9 @@
 <template>
-    <div class="flex items-center pl-1 py-1 hover:bg-gray-50/40 rounded cursor-pointer w-full h-6" @dragover="onDragOver" @drop="onDrop">
+    <div class="flex items-center pl-1 py-1 hover:bg-surface-sunken rounded cursor-pointer w-full h-6" @dragover="onDragOver" @drop="onDrop">
         <SelectUserForShiftMenu :can-edit-component="canEditComponent" :crafts-with-entities="craftsWithAllEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-2">
-                    <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
+                    <span class="h-4 w-4 rounded-full block bg-text-subtle"></span>
                     <span class="text-xs">{{ $t('Unoccupied') }}</span>
                 </div>
                 <PropertyIcon stroke-width="1.5" class="size-4" :name="this.shiftQualification.icon"/>

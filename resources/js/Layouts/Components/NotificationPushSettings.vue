@@ -12,7 +12,7 @@
 
             <div class="flex items-start">
                 <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-artwork-buttons-create' :
-                                    'bg-gray-300',
+                                    'bg-border',
             'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                 <span aria-hidden="true"
                       :class="[!groupDisabled(settings) ? 'translate-x-3' : 'translate-x-0',
@@ -28,7 +28,7 @@
                 <div v-for="type in settings">
                     <div class="flex justify-between mt-6 ml-9 items-start">
                         <Switch @click="togglePush(type)" :class="[type.enabled_push ? 'bg-artwork-buttons-create' :
-                                                'bg-gray-300',
+                                                'bg-border',
                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                             <span aria-hidden="true"
                                   :class="[type.enabled_push ? 'translate-x-3' : 'translate-x-0',

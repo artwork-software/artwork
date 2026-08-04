@@ -4,13 +4,13 @@
             <input v-model="item.checked" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist-dark" />
         </div>
     </div>
-    <div class="drag-item w-48 p-2 bg-gray-50/10 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart">
+    <div class="drag-item w-48 p-2 bg-surface-sunken text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart">
         <div class="cursor-pointer w-full">
             <div class="w-full flex items-center justify-between h-8">
                 <div>
                     {{ item?.name }}
                 </div>
-                <div class="text-[9px] bg-gray-100/10 rounded-full px-2 py-1">
+                <div class="text-[9px] bg-surface-sunken rounded-full px-2 py-1">
                     {{ item?.count }}
                 </div>
             </div>

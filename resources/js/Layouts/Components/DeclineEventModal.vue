@@ -15,7 +15,7 @@
                                          :style="{'backgroundColor' : eventTypes[requestToDecline?.eventTypeId]?.hex_code }"/>
                                 </div>
                                 <div
-                                    class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                    class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                     {{ requestToDecline?.eventTypeName }}
                                     <span class="mx-2" v-if="requestToDecline?.eventName">
                                          -

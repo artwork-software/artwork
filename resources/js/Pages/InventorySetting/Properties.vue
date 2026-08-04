@@ -39,16 +39,16 @@
                         <div class="table-container">
                             <div class="overflow-x-auto">
                                 <div class="inline-flex w-full">
-                                    <table class="min-w-full divide-y divide-gray-300 flex-grow">
+                                    <table class="min-w-full divide-y divide-border flex-grow">
                                         <thead>
-                                        <tr class="divide-x divide-gray-200">
+                                        <tr class="divide-x divide-border-subtle">
                                             <th scope="col" class="w-8 py-3.5 pl-4 sm:pl-0"></th>
-                                            <th scope="col" class="py-3.5 pr-4 pl-6 text-left text-sm font-semibold text-gray-900">{{ $t('Name') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Tooltip Text') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Type') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Filterable') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('In article overview') }}</th>
-                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Required field') }}</th>
+                                            <th scope="col" class="py-3.5 pr-4 pl-6 text-left text-sm font-semibold text-text">{{ $t('Name') }}</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Tooltip Text') }}</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Type') }}</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Filterable') }}</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('In article overview') }}</th>
+                                            <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Required field') }}</th>
                                         </tr>
                                         </thead>
                                         <draggable
@@ -57,12 +57,12 @@
                                             item-key="id"
                                             handle=".drag-handle"
                                             ghost-class="opacity-50"
-                                            class="divide-y divide-gray-200 bg-white"
+                                            class="divide-y divide-border-subtle bg-white"
                                             @end="persistOrder"
                                         >
                                             <template #item="{ element: property }">
-                                                <tr :key="property?.id" class="divide-x divide-gray-200">
-                                                    <td class="py-4 pl-4 sm:pl-0 text-gray-400 align-middle">
+                                                <tr :key="property?.id" class="divide-x divide-border-subtle">
+                                                    <td class="py-4 pl-4 sm:pl-0 text-text-subtle align-middle">
                                                         <component :is="IconGripVertical" class="size-4 cursor-grab drag-handle" />
                                                     </td>
                                                     <SinglePropertyInSettings :property="property" :show-actions="false" />
@@ -73,13 +73,13 @@
 
                                     <!-- Fixed Actions Column -->
                                     <div class="fixed-actions-column">
-                                        <table class="h-full divide-y divide-gray-300">
+                                        <table class="h-full divide-y divide-border">
                                             <thead>
                                             <tr>
-                                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 bg-white">{{ $t('Actions') }}</th>
+                                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0 bg-white">{{ $t('Actions') }}</th>
                                             </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-200 bg-white">
+                                            <tbody class="divide-y divide-border-subtle bg-white">
                                             <tr v-for="property in localProperties" :key="property?.id">
                                                 <SinglePropertyInSettings :property="property" :show-only-actions="true" />
                                             </tr>

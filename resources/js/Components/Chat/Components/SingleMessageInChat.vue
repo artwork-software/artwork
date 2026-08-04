@@ -2,8 +2,8 @@
     <div class="flex items-start gap-2.5 my-4" v-if="message.sender_id !== currentUserId">
        <!-- <img class="size-8 rounded-full object-cover" :src="message.sender?.profile_photo_url" alt="avatar">-->
         <div class="flex flex-col gap-1">
-            <div class="text-[9px] text-gray-900" v-if="chat.is_group">{{ message.sender.full_name }}</div>
-            <div class="px-4 py-2 bg-white text-gray-950 rounded-e-md rounded-es-md">
+            <div class="text-[9px] text-text" v-if="chat.is_group">{{ message.sender.full_name }}</div>
+            <div class="px-4 py-2 bg-white text-text rounded-e-md rounded-es-md">
                 <p class="text-xs" v-html="plainText"></p>
                 <span class="text-[9px]">{{ timeOnly }}</span>
             </div>
@@ -13,7 +13,7 @@
 
     <div class="flex items-start justify-end gap-2.5 my-4" v-else>
         <div class="flex flex-col gap-1">
-            <!--<div class="text-xs font-semibold text-gray-900 text-right">{{ $t('You') }}</div>-->
+            <!--<div class="text-xs font-semibold text-text text-right">{{ $t('You') }}</div>-->
             <div class="px-4 py-2 bg-[#015df2] text-white rounded-s-md rounded-ee-md">
                 <p class="text-xs" v-html="plainText"></p>
                 <div class="flex items-center justify-end gap-x-1">
@@ -24,7 +24,7 @@
                             icon-size="size-4"
                             white-icon
                             :icon="tooltipText ? 'IconChecks' : 'IconCheck'"
-                            :classes="tooltipText ? '!text-white-500' : '!text-gray-300'"
+                            :classes="tooltipText ? '!text-white-500' : '!text-text-subtle'"
                         />
                     </div>
                 </div>

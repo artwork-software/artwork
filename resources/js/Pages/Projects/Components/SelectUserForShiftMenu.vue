@@ -60,10 +60,10 @@
                                                     {{ $t('Search') }}
                                                 </label>
                                                 <div class="relative mt-2 rounded-md shadow-sm">
-                                                    <input v-model="userSearch" ref="searchFieldUserSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-gray-600 py-1.5 pr-10 text-white ring-0 bg-darkGrayBg placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 sm:text-sm sm:leading-6" />
+                                                    <input v-model="userSearch" ref="searchFieldUserSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-white/10 py-1.5 pr-10 text-white ring-0 bg-darkGrayBg placeholder:text-white/70 sm:text-sm sm:leading-6" />
                                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                                        <IconSearch class="h-5 w-5 text-gray-400" aria-hidden="true" v-if="userSearch.length === 0" />
-                                                        <IconX class="h-5 w-5 text-gray-400 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>
+                                                        <IconSearch class="h-5 w-5 text-white/70" aria-hidden="true" v-if="userSearch.length === 0" />
+                                                        <IconX class="h-5 w-5 text-white/70 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -97,7 +97,7 @@
                                                     icon-size="w-4 h-4"
                                                     tooltip-text="Freelancer*in"
                                                     direction="left"
-                                                    classes="text-gray-300"
+                                                    classes="text-white/70"
                                                 />
                                             </div>
                                         </div>

@@ -20,7 +20,7 @@
                             name="column-type"
                             type="radio"
                             :checked="checked"
-                            class="h-5 w-5 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create pointer-events-none"
+                            class="h-5 w-5 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create pointer-events-none"
                             tabindex="-1"
                             readonly
                         />
@@ -35,7 +35,7 @@
                 </div>
             </RadioGroup>
 
-            <div v-if="selectedType !== 'empty'" class="mt-6 rounded-lg bg-gray-50 border border-gray-200 p-4">
+            <div v-if="selectedType !== 'empty'" class="mt-6 rounded-lg bg-surface-sunken border border-border-subtle p-4">
                 <h2 class="xsLight mb-4">
                     {{ selectedType === 'sum' ? $t('What amount would you like to receive?') : $t('What difference do you want to get?') }}
                 </h2>

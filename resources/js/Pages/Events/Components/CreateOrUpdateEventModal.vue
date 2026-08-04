@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="$emit('closed')" full-modal>
 
-        <form @submit.prevent="UpdateOrCreateEvent" class="divide-y divide-dashed divide-gray-300 relative">
+        <form @submit.prevent="UpdateOrCreateEvent" class="divide-y divide-dashed divide-border relative">
             <div class=" absolute w-full h-full bg-white z-10 p-8 rounded-lg shadow-lg flex items-center justify-center flex-col gap-y-3" v-if="modalIsLoading">
                 <svg class="animate-spin h-8 w-8 text-artwork-buttons-create" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -135,10 +135,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-full">
                             <div class="flex items-center gap-x-2">
-                                <Switch v-model="eventForm.allDay" :class="[eventForm.allDay ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                                <Switch v-model="eventForm.allDay" :class="[eventForm.allDay ? 'bg-artwork-buttons-create' : 'bg-border-subtle', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
                                     <span :class="[eventForm.allDay ? 'translate-x-4' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span :class="[eventForm.allDay ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                        <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 12 12">
+                                        <svg class="size-4 text-text-subtle" fill="none" viewBox="0 0 12 12">
                                           <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                       </span>
@@ -200,7 +200,7 @@
                     <div v-if="!eventToEdit">
                         <SwitchGroup as="div" class="flex items-center mt-3 mb-1">
                             <Switch v-model="eventForm.is_series"
-                                    :class="[eventForm.is_series ? 'bg-indigo-600 cursor-pointer' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                    :class="[eventForm.is_series ? 'bg-accent-600 cursor-pointer' : 'bg-border-subtle', 'relative inline-flex h-3 w-8 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-accent-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[eventForm.is_series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                             </Switch>
@@ -231,14 +231,14 @@
                                                 <ListboxOption as="template" v-for="frequency in frequencies"
                                                                :key="frequency.id" :value="frequency"
                                                                v-slot="{ active, selected }">
-                                                    <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                     <span
                                                         :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{
                                                             frequency.name
                                                         }}</span>
 
                                                         <span v-if="selected"
-                                                              :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                              :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                         <IconCheck stroke-width="1.5" class="h-5 w-5"
                                                                    aria-hidden="true"/>
                                                     </span>
@@ -280,7 +280,7 @@
                         </ListboxButton>
                         <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                           class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
@@ -294,7 +294,7 @@
                     </Listbox>
                 </div>
 
-                <div class="px-6 py-2 bg-gray-100 my-5">
+                <div class="px-6 py-2 bg-surface-sunken my-5">
                     <div class="my-3">
                         <input type="checkbox" v-model="showProjectInfo" class="input-checklist">
                         <span :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{ $t('Assign event to a project') }}</span>
@@ -326,13 +326,13 @@
                        <div class="my-2">
                            <div class="flex pb-2">
                                <SwitchGroup as="div" class="flex items-center">
-                                   <SwitchLabel as="span" class="mr-3 text-sm" :class="creatingProject ? 'font-bold' : 'text-gray-400'">
+                                   <SwitchLabel as="span" class="mr-3 text-sm" :class="creatingProject ? 'font-bold' : 'text-text-subtle'">
                                        {{ $t('New project') }}
                                    </SwitchLabel>
                                    <Switch v-model="creatingProject" :class="[creatingProject ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                                        <span aria-hidden="true" :class="[!creatingProject  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                    </Switch>
-                                   <SwitchLabel as="span" class="ml-3 text-sm" :class="!creatingProject? 'font-bold' : 'text-gray-400'">
+                                   <SwitchLabel as="span" class="ml-3 text-sm" :class="!creatingProject? 'font-bold' : 'text-text-subtle'">
                                        {{ $t('Existing project') }}
                                    </SwitchLabel>
                                </SwitchGroup>
@@ -358,17 +358,17 @@
                        </div>
                    </div>
                     <!--<div v-if="projectGroupProjects.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-3">
-                        <div v-for="(groupProject, index) in projectGroupProjects" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                        <div v-for="(groupProject, index) in projectGroupProjects" class="group block shrink-0 bg-surface-sunken w-fit pr-3 rounded-full border border-border">
                             <div class="flex items-center">
                                 <div>
                                     <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
                                 </div>
                                 <div class="mx-2">
-                                    <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
+                                    <p class="xsDark group-hover:text-text">{{ groupProject.name}}</p>
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="deleteProjectFromProjectGroup(index)">
-                                        <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                        <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
                                     </button>
                                 </div>
                             </div>

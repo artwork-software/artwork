@@ -4,21 +4,21 @@
             <!-- Wenn kein Gewerk ausgewählt ist: Hinweis -->
             <div
                 v-if="!craft || !craft.id"
-                class="relative flex min-h-[40vh] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 px-6 py-10 text-center"
+                class="relative flex min-h-[40vh] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-gradient-to-br from-surface-sunken to-surface-sunken px-6 py-10 text-center"
             >
                 <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
                     <span class="text-xl">🧱</span>
                 </div>
-                <h1 class="text-lg font-semibold text-gray-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ t('Please select a craft') }}
                 </h1>
-                <p class="mt-2 max-w-md text-sm text-gray-500">
+                <p class="mt-2 max-w-md text-sm text-text-subtle">
                     {{ t('Select a craft to see all changes after commitment for this craft.') }}
                 </p>
 
                 <button
                     type="button"
-                    class="mt-6 inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    class="mt-6 inline-flex items-center rounded-full bg-accent-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2"
                     @click="openCraftSelector"
                 >
                     {{ t('Select craft') }}
@@ -28,20 +28,20 @@
             <!-- Wenn Gewerk vorhanden: Header + Liste -->
             <div v-else class="space-y-6">
                 <!-- Header-Karte mit Gewerk-Info & Kennzahlen -->
-                <div class="rounded-2xl border border-gray-200 bg-white/80 shadow-sm backdrop-blur-sm">
+                <div class="rounded-2xl border border-border-subtle bg-white/80 shadow-sm backdrop-blur-sm">
                     <div class="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                         <div class="space-y-2">
-                            <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1">
-                                <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-                                <span class="text-xs font-medium text-indigo-700">
+                            <div class="inline-flex items-center gap-2 rounded-full bg-accent-50 px-3 py-1">
+                                <span class="h-2 w-2 rounded-full bg-accent-600"></span>
+                                <span class="text-xs font-medium text-accent-700">
                                     {{ t('Change list') }} – {{ craft.name }}
                                 </span>
                             </div>
                             <div>
-                                <h1 class="text-lg font-semibold text-gray-900">
+                                <h1 class="text-lg font-semibold text-text">
                                     {{ t('Changes after commitment') }}
                                 </h1>
-                                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                <p class="mt-1 max-w-2xl text-sm text-text-subtle">
                                     {{ t('All changes are displayed per person. If a shift with multiple people is changed, each person appears as a separate entry.') }}
                                 </p>
                             </div>
@@ -50,21 +50,21 @@
                         <div class="flex flex-wrap items-center gap-8">
                             <div class="flex gap-3">
                                 <div class="flex flex-col text-right">
-                                    <span class="text-xs font-medium text-gray-500">
+                                    <span class="text-xs font-medium text-text-subtle">
                                         {{ t('Total changes') }}
                                     </span>
-                                    <span class="text-lg font-semibold text-gray-900">
+                                    <span class="text-lg font-semibold text-text">
                                         {{ totalChanges }}
                                     </span>
                                 </div>
-                                <div class="h-10 w-px self-center bg-gray-200"></div>
+                                <div class="h-10 w-px self-center bg-border-subtle"></div>
                                 <div class="flex flex-col text-right">
-                                    <span class="text-xs font-medium text-gray-500">
+                                    <span class="text-xs font-medium text-text-subtle">
                                         {{ t('Open changes') }}
                                     </span>
                                     <span
                                         class="text-lg font-semibold"
-                                        :class="pendingChanges > 0 ? 'text-amber-600' : 'text-emerald-600'"
+                                        :class="pendingChanges > 0 ? 'text-warning' : 'text-success'"
                                     >
                                         {{ pendingChanges }}
                                     </span>
@@ -94,7 +94,7 @@
                     </div>
 
                     <!-- Filterleiste -->
-                    <div class="border-t border-gray-100 px-4 py-3 sm:px-6">
+                    <div class="border-t border-border-subtle px-4 py-3 sm:px-6">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <button
@@ -102,9 +102,8 @@
                                     :key="filter.value"
                                     type="button"
                                     class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition"
-                                    :class="activeFilter === filter.value
-                                        ? 'bg-indigo-600 text-white shadow-sm'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    :class="activeFilter === filter.value ? 'bg-accent-600 text-white shadow-sm'
+                                        : 'bg-surface-sunken text-text-muted hover:bg-border-subtle'"
                                     @click="changeFilter(filter.value)"
                                 >
                                     <span>{{ t(filter.label) }}</span>
@@ -123,15 +122,14 @@
                                 </button>
 
                                 <!-- Intern/Extern-Filter über die betroffene Person -->
-                                <div class="flex flex-wrap gap-2 border-l border-gray-200 pl-2">
+                                <div class="flex flex-wrap gap-2 border-l border-border-subtle pl-2">
                                     <button
                                         v-for="wt in workerTypeFilters"
                                         :key="wt.value"
                                         type="button"
                                         class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition"
-                                        :class="activeWorkerType === wt.value
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                        :class="activeWorkerType === wt.value ? 'bg-accent-600 text-white shadow-sm'
+                                            : 'bg-surface-sunken text-text-muted hover:bg-border-subtle'"
                                         @click="changeWorkerType(wt.value)"
                                     >
                                         {{ t(wt.label) }}
@@ -141,7 +139,7 @@
 
                             <!-- Suche nach betroffener Einheit (serverseitig, über alle Seiten) -->
                             <div class="relative w-full sm:w-80">
-                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-text-subtle">
                                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="11" cy="11" r="7" />
                                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -151,12 +149,12 @@
                                     v-model="search"
                                     type="text"
                                     :placeholder="t('Search affected entity')"
-                                    class="w-full rounded-full border border-gray-200 bg-white py-1.5 pl-9 pr-9 text-xs text-gray-700 placeholder-gray-400 transition focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                    class="w-full rounded-full border border-border-subtle bg-white py-1.5 pl-9 pr-9 text-xs text-text-muted placeholder-text-subtle transition focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                                 >
                                 <button
                                     v-if="search"
                                     type="button"
-                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 transition hover:text-gray-600"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-text-subtle transition hover:text-text-muted"
                                     :aria-label="t('Reset')"
                                     @click="search = ''"
                                 >
@@ -168,7 +166,7 @@
                             </div>
                         </div>
 
-                        <p class="mt-2 text-xs text-gray-400">
+                        <p class="mt-2 text-xs text-text-subtle">
                             {{ t('Changes with pending approval are highlighted.') }}
                         </p>
                     </div>
@@ -176,56 +174,55 @@
 
                 <!-- Desktop: Tabelle -->
                 <div class="hidden md:block">
-                    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white/90 shadow-sm backdrop-blur-sm">
-                        <table class="min-w-full divide-y divide-gray-100">
-                            <thead class="bg-gray-50/80">
+                    <div class="overflow-hidden rounded-2xl border border-border-subtle bg-white/90 shadow-sm backdrop-blur-sm">
+                        <table class="min-w-full divide-y divide-border-subtle">
+                            <thead class="bg-surface-sunken">
                             <tr>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6"
+                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-subtle sm:px-6"
                                 >
                                     {{ t('Affected entity') }}
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6"
+                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-subtle sm:px-6"
                                 >
                                     {{ t('Working time before') }}
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6"
+                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-subtle sm:px-6"
                                 >
                                     {{ t('Working time after') }}
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6"
+                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-subtle sm:px-6"
                                 >
                                     {{ t('Changed by') }}
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6"
+                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-subtle sm:px-6"
                                 >
                                     {{ t('Changed at') }}
                                 </th>
                                 <th
                                     scope="col"
-                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:px-6"
+                                    class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-subtle sm:px-6"
                                 >
                                     {{ t('Status') }}
                                 </th>
                                 <th scope="col" class="px-4 py-3 sm:px-6"></th>
                             </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-border-subtle">
                             <tr
                                 v-for="change in pageChanges"
                                 :key="change.id"
-                                :class="[
-                                    !change.acknowledged ? 'bg-amber-50/60' : 'bg-white',
-                                    'transition hover:bg-indigo-50/40'
+                                :class="[ !change.acknowledged ? 'bg-warning-surface' : 'bg-white',
+                                    'transition hover:bg-accent-50'
                                 ]"
                             >
                                 <!-- Betroffene Entität (Person oder Schicht) -->
@@ -233,7 +230,7 @@
                                     <div class="flex items-center gap-3">
                                         <!-- Avatar (Bild oder Initialen) -->
                                         <div
-                                            class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-xs font-semibold text-white shadow-sm"
+                                            class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent-600 to-accent-600 text-xs font-semibold text-white shadow-sm"
                                         >
                                             <img
                                                 v-if="change.profile_picture_url"
@@ -246,10 +243,10 @@
                                             </span>
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-medium text-gray-900">
+                                            <span class="text-sm font-medium text-text">
                                                 {{ change.affected_name || t('Affects shift') }}
                                             </span>
-                                            <span class="text-xs text-gray-500">
+                                            <span class="text-xs text-text-subtle">
                                                 {{ describeChange(change) }}
                                             </span>
                                         </div>
@@ -257,36 +254,36 @@
                                 </td>
 
                                 <!-- Arbeitszeit vorher -->
-                                <td class="px-4 py-3 text-sm text-gray-700 sm:px-6">
-                                    <div class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs leading-none text-gray-700">
-                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400"></span>
+                                <td class="px-4 py-3 text-sm text-text-muted sm:px-6">
+                                    <div class="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-2.5 py-1 text-xs leading-none text-text-muted">
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-border-strong"></span>
                                         <span class="whitespace-nowrap">{{ change.before_label === 'free' ? $t('Free') : change.before_label }}</span>
                                     </div>
                                 </td>
 
                                 <!-- Arbeitszeit nachher -->
-                                <td class="px-4 py-3 text-sm text-gray-700 sm:px-6">
-                                    <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs leading-none text-emerald-700">
-                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                                <td class="px-4 py-3 text-sm text-text-muted sm:px-6">
+                                    <div class="inline-flex items-center gap-1.5 rounded-full bg-success-surface px-2.5 py-1 text-xs leading-none text-success">
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-success"></span>
                                         <span class="whitespace-nowrap">{{ change.after_label === 'free' ? $t('Free') : change.after_label }}</span>
                                     </div>
                                 </td>
 
                                 <!-- Geändert von -->
-                                <td class="px-4 py-3 text-sm text-gray-700 sm:px-6">
+                                <td class="px-4 py-3 text-sm text-text-muted sm:px-6">
                                     <div class="flex flex-col">
-                                        <span class="text-sm text-gray-900">
+                                        <span class="text-sm text-text">
                                             {{ change.changed_by_name || '–' }}
                                         </span>
-                                        <span class="text-xs text-gray-400">
+                                        <span class="text-xs text-text-subtle">
                                             {{ change.changed_at_formatted || '–' }}
                                         </span>
                                     </div>
                                 </td>
 
                                 <!-- Geändert am (nur Datum) -->
-                                <td class="px-4 py-3 text-sm text-gray-700 sm:px-6">
-                                    <span class="whitespace-nowrap text-sm text-gray-700">
+                                <td class="px-4 py-3 text-sm text-text-muted sm:px-6">
+                                    <span class="whitespace-nowrap text-sm text-text-muted">
                                         {{ change.changed_at_formatted || '–' }}
                                     </span>
                                 </td>
@@ -295,16 +292,16 @@
                                 <td class="px-4 py-3 sm:px-6">
                                     <span
                                         v-if="!change.acknowledged"
-                                        class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium leading-none text-amber-800"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-warning-surface px-2.5 py-1 text-xs font-medium leading-none text-warning"
                                     >
-                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"></span>
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"></span>
                                         <span class="whitespace-nowrap">{{ t('Changed after commitment') }}</span>
                                     </span>
                                     <span
                                         v-else
-                                        class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium leading-none text-emerald-800"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-success-surface px-2.5 py-1 text-xs font-medium leading-none text-success"
                                     >
-                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-success"></span>
                                         <span class="whitespace-nowrap">{{ t('Approval granted') }}</span>
                                     </span>
                                 </td>
@@ -320,14 +317,14 @@
                                         use-translation
                                         icon="IconCheck"
                                     />
-                                    <span v-else class="text-xs text-gray-400">
+                                    <span v-else class="text-xs text-text-subtle">
                                         –
                                     </span>
                                 </td>
                             </tr>
 
                             <tr v-if="pageChanges.length === 0">
-                                <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 sm:px-6">
+                                <td colspan="7" class="px-4 py-8 text-center text-sm text-text-subtle sm:px-6">
                                     {{ t('No changes found for the current filter.') }}
                                 </td>
                             </tr>
@@ -341,16 +338,15 @@
                     <div
                         v-for="change in pageChanges"
                         :key="change.id"
-                        :class="[
-                            'rounded-2xl border px-4 py-3 shadow-sm',
+                        :class="[ 'rounded-2xl border px-4 py-3 shadow-sm',
                             !change.acknowledged
-                                ? 'border-amber-200 bg-amber-50/60'
-                                : 'border-gray-200 bg-white'
+                                ? 'border-warning-border bg-warning-surface'
+                                : 'border-border-subtle bg-white'
                         ]"
                     >
                         <div class="flex items-center gap-3">
                             <div
-                                class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-xs font-semibold text-white shadow-sm"
+                                class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-accent-600 to-accent-600 text-xs font-semibold text-white shadow-sm"
                             >
                                 <img
                                     v-if="change.profile_picture_url"
@@ -364,52 +360,52 @@
                             </div>
                             <div class="flex flex-1 flex-col">
                                 <div class="flex items-center justify-between gap-2">
-                                    <p class="text-sm font-medium text-gray-900">
+                                    <p class="text-sm font-medium text-text">
                                         {{ change.affected_name || t('Affects shift') }}
                                     </p>
                                     <span
                                         v-if="!change.acknowledged"
-                                        class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium leading-none text-amber-800"
+                                        class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-warning-surface px-2 py-0.5 text-[10px] font-medium leading-none text-warning"
                                     >
                                         {{ t('Changed after commitment') }}
                                     </span>
                                     <span
                                         v-else
-                                        class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium leading-none text-emerald-800"
+                                        class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-success-surface px-2 py-0.5 text-[10px] font-medium leading-none text-success"
                                     >
                                         {{ t('Approval granted') }}
                                     </span>
                                 </div>
-                                <p class="mt-0.5 text-xs text-gray-500">
+                                <p class="mt-0.5 text-xs text-text-subtle">
                                     {{ describeChange(change) }}
                                 </p>
                             </div>
                         </div>
 
-                        <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-700">
+                        <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-text-muted">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                                <span class="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
                                     {{ t('Before') }}
                                 </span>
-                                <span class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 leading-none">
-                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400"></span>
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-2.5 py-1 leading-none">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-border-strong"></span>
                                     <span class="whitespace-nowrap">{{ change.before_label === 'free' ? $t('Free') : change.before_label }}</span>
                                 </span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                                <span class="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
                                     {{ t('After') }}
                                 </span>
-                                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 leading-none text-emerald-700">
-                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-success-surface px-2.5 py-1 leading-none text-success">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-success"></span>
                                     <span class="whitespace-nowrap">{{ change.after_label === 'free' ? $t('Free') : change.after_label }}</span>
                                 </span>
                             </div>
                         </div>
 
                         <div class="mt-3 flex items-center justify-between gap-2">
-                            <div class="flex flex-col text-xs text-gray-500">
-                                <span class="font-medium text-gray-700">
+                            <div class="flex flex-col text-xs text-text-subtle">
+                                <span class="font-medium text-text-muted">
                                     {{ change.changed_by_name || '–' }}
                                 </span>
                                 <span>
@@ -420,7 +416,7 @@
                             <button
                                 v-if="!change.acknowledged"
                                 type="button"
-                                class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                class="inline-flex items-center rounded-full bg-accent-600 px-3 py-1.5 text-[11px] font-medium text-white shadow-sm hover:bg-accent-700 focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-1"
                                 @click="acknowledge(change)"
                             >
                                 {{ t('Approve') }}
@@ -430,7 +426,7 @@
 
                     <div
                         v-if="pageChanges.length === 0"
-                        class="rounded-2xl border border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-500"
+                        class="rounded-2xl border border-border-subtle bg-white px-4 py-6 text-center text-sm text-text-subtle"
                     >
                         {{ t('No changes after commitment have been recorded for this craft yet.') }}
                     </div>
@@ -439,26 +435,26 @@
                 <!-- Pagination -->
                 <div
                     v-if="changes.last_page > 1"
-                    class="flex flex-col items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 shadow-sm sm:flex-row sm:px-6"
+                    class="flex flex-col items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-white/80 px-4 py-3 shadow-sm sm:flex-row sm:px-6"
                 >
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-text-subtle">
                         {{ t('Showing {0}–{1} of {2}', [changes.from || 0, changes.to || 0, changes.total || 0]) }}
                     </p>
                     <div class="flex items-center gap-2">
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                            class="inline-flex items-center rounded-full border border-border-subtle px-3 py-1 text-xs font-medium text-text-muted transition hover:bg-surface-sunken disabled:cursor-not-allowed disabled:text-text-subtle"
                             :disabled="changes.current_page <= 1"
                             @click="goToPage(changes.current_page - 1)"
                         >
                             {{ t('Previous') }}
                         </button>
-                        <span class="text-xs text-gray-500">
+                        <span class="text-xs text-text-subtle">
                             {{ t('Page {0} of {1}', [changes.current_page, changes.last_page]) }}
                         </span>
                         <button
                             type="button"
-                            class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                            class="inline-flex items-center rounded-full border border-border-subtle px-3 py-1 text-xs font-medium text-text-muted transition hover:bg-surface-sunken disabled:cursor-not-allowed disabled:text-text-subtle"
                             :disabled="changes.current_page >= changes.last_page"
                             @click="goToPage(changes.current_page + 1)"
                         >
@@ -479,7 +475,7 @@
             :description="t('All open changes matching the current filter selection will be approved.')"
             @close="showAcknowledgeAllConfirm = false"
         >
-            <div class="mt-4 text-sm text-gray-700">
+            <div class="mt-4 text-sm text-text-muted">
                 {{ t('Do you really want to approve all {0} open changes?', [pendingChanges]) }}
             </div>
             <div class="mt-6 flex justify-between">

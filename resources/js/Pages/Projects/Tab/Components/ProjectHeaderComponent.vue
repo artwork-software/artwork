@@ -7,8 +7,8 @@
                 v-show="showCopyUrl"
                 class="pointer-events-none fixed inset-x-0 top-5 z-50 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8"
             >
-                <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 shadow-lg ring-1 ring-white/10">
-                    <PropertyIcon name="IconClipboard" class="size-5 text-blue-400" aria-hidden="true" />
+                <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-surface-inverse px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 shadow-lg ring-1 ring-white/10">
+                    <PropertyIcon name="IconClipboard" class="size-5 text-accent-200" aria-hidden="true" />
                     <p class="text-sm/6 text-white">{{ $t('Project URL has been copied') }}</p>
                     <button type="button" class="-m-1.5 flex-none p-1.5" @click="showCopyUrl = false">
                         <span class="sr-only">Dismiss</span>
@@ -21,14 +21,14 @@
         <!-- ===== STICKY PROJECT NAVIGATOR ===== -->
         <div ref="stickyHeaderEl" class="sticky top-0 z-40 w-full inset-x-0 ">
             <!-- Glassy background layer -->
-            <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-zinc-200/70">
+            <div class="bg-white/80 backdrop-blur supports-backdrop-filter:backdrop-blur border-b border-border-subtle/70">
                 <div class="artwork-container pb-0! py-3">
                     <div class="flex items-center justify-between gap-3">
                         <!-- Left: Switcher trigger -->
                         <div class="min-w-0 flex items-center gap-3">
                             <button
                                 type="button"
-                                class="group flex items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-zinc-50/80 transition min-w-0"
+                                class="group flex items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-surface-sunken/80 transition min-w-0"
                                 @click="toggleProjectSwitcher"
                                 :aria-expanded="showProjectSwitcher ? 'true' : 'false'"
                             >
@@ -43,7 +43,7 @@
 
                                 <div class="min-w-0 text-left">
                                     <div class="flex items-center gap-2 min-w-0">
-                                        <div class="truncate font-lexend font-extrabold tracking-wide text-[15px] text-zinc-900">
+                                        <div class="truncate font-lexend font-extrabold tracking-wide text-[15px] text-text">
                                             {{ project?.name }}
                                         </div>
 
@@ -57,21 +57,21 @@
 
                                         <PropertyIcon
                                             name="IconChevronDown"
-                                            class="size-4 text-zinc-400 group-hover:text-zinc-600 transition shrink-0"
+                                            class="size-4 text-text-subtle group-hover:text-text-muted transition shrink-0"
                                             aria-hidden="true"
                                         />
                                     </div>
 
-                                    <div class="truncate text-[12px] text-zinc-600">
+                                    <div class="truncate text-[12px] text-text-muted">
                                         <span v-if="stickySubline">{{ stickySubline }}</span>
-                                        <span v-else class="text-zinc-400">{{ $t('No appointments within this project yet') }}</span>
+                                        <span v-else class="text-text-subtle">{{ $t('No appointments within this project yet') }}</span>
                                     </div>
                                 </div>
                             </button>
 
 
 
-                            <div class="mt-2 flex items-center text-[13px] text-zinc-600" v-if="headerObject.project_history.length > 0">
+                            <div class="mt-2 flex items-center text-[13px] text-text-muted" v-if="headerObject.project_history.length > 0">
                                 <span>{{ $t('last modified') }}:</span>
                                 <UserPopoverTooltip
                                     :user="headerObject.project_history[0]?.changer"
@@ -142,7 +142,7 @@
                     <!-- Compact project list (Group) -->
                     <div v-if="projectsOfGroup.length > 0" class="mt-1 mb-3">
                         <div class="flex items-center gap-2">
-                            <div class="text-[11px] font-semibold text-zinc-500 shrink-0">
+                            <div class="text-[11px] font-semibold text-text-subtle shrink-0">
                                 {{ $t('Projects in this group') }}
                             </div>
 
@@ -152,7 +152,7 @@
                                         v-for="gp in projectsOfGroup"
                                         :key="gp.id"
                                         :href="route('projects.tab', { project: gp.id, projectTab: first_project_tab_id })"
-                                        class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white/60 px-2 py-1 text-[12px] text-zinc-700 hover:bg-white hover:border-zinc-300 transition"
+                                        class="group inline-flex items-center gap-2 rounded-full border border-border-subtle/80 bg-white/60 px-2 py-1 text-[12px] text-text-muted hover:bg-white hover:border-border transition"
                                     >
                                         <img
                                             class="size-5 rounded-full object-cover ring-1 ring-white"
@@ -171,7 +171,7 @@
                     <!-- Project belongs to groups -->
                     <div v-if="project.groups && project.groups.length > 0" class="mt-1">
                         <div class="flex items-center gap-2">
-                            <div class="text-[11px] font-semibold text-zinc-500 shrink-0">
+                            <div class="text-[11px] font-semibold text-text-subtle shrink-0">
                                 {{ $t('Project is part of project group') }}:
                             </div>
 
@@ -181,7 +181,7 @@
                                         v-for="group in project.groups"
                                         :key="group.id"
                                         :href="route('projects.tab', { project: group.id, projectTab: first_project_tab_id })"
-                                        class="group inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white/60 px-2 py-1 text-[12px] text-zinc-700 hover:bg-white hover:border-zinc-300 transition"
+                                        class="group inline-flex items-center gap-2 rounded-full border border-border-subtle/80 bg-white/60 px-2 py-1 text-[12px] text-text-muted hover:bg-white hover:border-border transition"
                                     >
                                         <img
                                             class="size-5 rounded-full object-cover ring-1 ring-white"
@@ -213,17 +213,17 @@
                             <div class="fixed inset-0 z-60" @click="closeProjectSwitcher"></div>
 
                             <div
-                                class="absolute z-70 mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl border border-zinc-200/70 bg-white/95 backdrop-blur shadow-2xl ring-1 ring-black/5"
+                                class="absolute z-70 mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl border border-border-subtle/70 bg-white/95 backdrop-blur shadow-2xl ring-1 ring-black/5"
                             >
                                 <div class="p-3 sm:p-4">
                                     <div class="flex items-center gap-2">
-                                        <PropertyIcon name="IconSearch" class="size-4 text-zinc-400" aria-hidden="true" />
+                                        <PropertyIcon name="IconSearch" class="size-4 text-text-subtle" aria-hidden="true" />
                                         <input
                                             ref="switcherInput"
                                             v-model="switcherQuery"
                                             type="text"
-                                            class="h-10 w-full rounded-xl border border-zinc-200/70 bg-white px-3 text-sm text-zinc-900 shadow-sm outline-none
-                                                   focus:border-zinc-300 focus:shadow transition"
+                                            class="h-10 w-full rounded-xl border border-border-subtle/70 bg-white px-3 text-sm text-text shadow-sm
+                                                   focus:border-border focus:shadow transition"
                                             :placeholder="$t('Search project')"
                                             autocomplete="off"
                                         />
@@ -234,7 +234,7 @@
                                             v-for="p in filteredSwitcherProjects"
                                             :key="p.id"
                                             type="button"
-                                            class="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-2 py-2 hover:border-zinc-200 hover:bg-zinc-50 transition text-left"
+                                            class="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-2 py-2 hover:border-border-subtle hover:bg-surface-sunken transition text-left"
                                             @click="goToProject(p.id)"
                                         >
                                             <img
@@ -246,18 +246,18 @@
                                             />
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex items-center gap-2 min-w-0">
-                                                    <div class="truncate font-semibold text-sm text-zinc-900">
+                                                    <div class="truncate font-semibold text-sm text-text">
                                                         {{ p.name }}
                                                     </div>
                                                     <!-- Type Badge -->
-                                                    <span class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] font-semibold text-zinc-600">
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[11px] font-semibold text-text-muted">
                                                         <img
                                                             v-if="p.is_group"
                                                             alt=""
                                                             src="/Svgs/IconSvgs/icon_group_black.svg"
                                                             class="h-3 w-3 opacity-70"
                                                         />
-                                                        <span v-else class="h-2.5 w-2.5 rounded-[6px] bg-zinc-300"></span>
+                                                        <span v-else class="h-2.5 w-2.5 rounded-[6px] bg-border"></span>
                                                         <span>{{ p.is_group ? $t('Group') : $t('Project') }}</span>
                                                       </span>
 
@@ -269,21 +269,21 @@
                                                         {{ p._state.name }}
                                                     </span>
                                                 </div>
-                                                <div class="truncate text-[12px] text-zinc-500">
+                                                <div class="truncate text-[12px] text-text-subtle">
                                                     <span v-if="p.first_and_last_event_date">{{ p.first_and_last_event_date.first_event_date }} - {{ p.first_and_last_event_date.last_event_date }}</span>
-                                                    <span v-else class="text-zinc-400">{{ $t('No appointments yet') }}</span>
+                                                    <span v-else class="text-text-subtle">{{ $t('No appointments yet') }}</span>
                                                 </div>
                                             </div>
 
-                                            <PropertyIcon name="IconChevronRight" class="size-4 text-zinc-300 group-hover:text-zinc-500 transition" />
+                                            <PropertyIcon name="IconChevronRight" class="size-4 text-text-subtle group-hover:text-text-muted transition" />
                                         </button>
 
-                                        <div v-if="filteredSwitcherProjects.length === 0" class="py-10 text-center text-sm text-zinc-500">
+                                        <div v-if="filteredSwitcherProjects.length === 0" class="py-10 text-center text-sm text-text-subtle">
                                             {{ $t('No projects found') }}
                                         </div>
                                     </div>
 
-                                    <div class="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
+                                    <div class="mt-3 flex items-center justify-between text-[11px] text-text-subtle">
                                         <span>{{ $t('Tip') }}: Esc {{ $t('Close') }}</span>
                                         <span class="tabular-nums">{{ filteredSwitcherProjects.length }} / {{ switcherProjects.length }}</span>
                                     </div>

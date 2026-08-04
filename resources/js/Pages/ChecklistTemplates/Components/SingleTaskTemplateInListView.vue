@@ -1,18 +1,18 @@
 <template>
     <article
-        class="group my-3 rounded-xl border border-zinc-200 bg-white p-3 transition hover:shadow-xs focus-within:ring-2 focus-within:ring-blue-600 print:border print:shadow-none"
+        class="group my-3 rounded-xl border border-border-subtle bg-white p-3 transition hover:shadow-xs focus-within:ring-2 focus-within:ring-accent-600 print:border print:shadow-none"
     >
         <div class="flex items-start justify-between gap-4">
             <!-- Left: drag handle + title/desc -->
             <div class="flex min-w-0 flex-1 items-start gap-3">
-                <div class="drag-handle cursor-grab pt-0.5 text-zinc-300 hover:text-zinc-500 transition" :title="$t('Drag to reorder')">
+                <div class="drag-handle cursor-grab pt-0.5 text-text-subtle hover:text-text-subtle transition" :title="$t('Drag to reorder')">
                     <IconGripVertical class="h-5 w-5" />
                 </div>
                 <div class="min-w-0">
-                    <h3 class="xsDark mb-0.5 break-words text-zinc-900">
+                    <h3 class="xsDark mb-0.5 break-words text-text">
                         {{ task.name }}
                     </h3>
-                    <p v-if="task.description" class="xxsLight break-words text-zinc-600">
+                    <p v-if="task.description" class="xxsLight break-words text-text-muted">
                         {{ task.description }}
                     </p>
                 </div>
@@ -22,10 +22,10 @@
             <div class="flex shrink-0 items-center gap-3">
                 <span
                     v-if="hasDeadlineDays"
-                    class="flex items-center gap-x-1 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[12px] text-zinc-600"
+                    class="flex items-center gap-x-1 rounded-md bg-surface-sunken px-1.5 py-0.5 text-[12px] text-text-muted"
                     :title="$t('Deadline: days after checklist creation')"
                 >
-                    <IconCalendarClock class="h-4 w-4 text-zinc-400" />
+                    <IconCalendarClock class="h-4 w-4 text-text-subtle" />
                     {{ $t('in {0} days', [task.deadline_days_after_creation]) }}
                 </span>
                 <BaseMenu white-menu-background class="ml-1">

@@ -19,7 +19,7 @@
             />
 
             <!-- Users -->
-            <div class="mt-8 bg-gray-50 rounded-xl p-5">
+            <div class="mt-8 bg-surface-sunken rounded-xl p-5">
                 <div class="flex items-center justify-between">
                     <h3 class="headline4">{{ $t('Checklist users') }}</h3>
                     <BaseUIButton
@@ -61,7 +61,7 @@
                     />
                 </div>
 
-                <div v-if="form.task_templates.length === 0" class="text-center text-sm text-zinc-400 py-6 border border-dashed border-zinc-200 rounded-xl">
+                <div v-if="form.task_templates.length === 0" class="text-center text-sm text-text-subtle py-6 border border-dashed border-border-subtle rounded-xl">
                     {{ $t('No tasks added yet') }}
                 </div>
                 <draggable
@@ -110,7 +110,7 @@
         >
             <div class="mt-6">
                 <UserSearch @user-selected="addUser" />
-                <div v-if="form.users.length > 0" class="mt-6 bg-gray-50 rounded-xl p-4 grid grid-cols-1 gap-3">
+                <div v-if="form.users.length > 0" class="mt-6 bg-surface-sunken rounded-xl p-4 grid grid-cols-1 gap-3">
                     <div
                         v-for="user in form.users"
                         :key="user.id"

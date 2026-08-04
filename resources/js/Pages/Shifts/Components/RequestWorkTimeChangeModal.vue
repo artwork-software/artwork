@@ -7,41 +7,41 @@
         <form @submit.prevent="submit" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 <div>
-                    <label class="block font-medium text-gray-700 font-lexend">Datum</label>
-                    <div class="mt-1 text-gray-900">{{ shiftDate }}</div>
+                    <label class="block font-medium text-text-muted font-lexend">Datum</label>
+                    <div class="mt-1 text-text">{{ shiftDate }}</div>
                 </div>
 
                 <div class="flex gap-6">
                     <div class="flex-1">
-                        <label class="block font-medium text-gray-700 font-lexend">Beginn</label>
-                        <div class="mt-1 text-gray-900">{{ normalizeTime(shift.start) }}</div>
+                        <label class="block font-medium text-text-muted font-lexend">Beginn</label>
+                        <div class="mt-1 text-text">{{ normalizeTime(shift.start) }}</div>
                     </div>
                     <div class="flex-1">
-                        <label class="block font-medium text-gray-700 font-lexend">Ende</label>
-                        <div class="mt-1 text-gray-900">{{ normalizeTime(shift.end) }}</div>
+                        <label class="block font-medium text-text-muted font-lexend">Ende</label>
+                        <div class="mt-1 text-text">{{ normalizeTime(shift.end) }}</div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-medium text-gray-700 font-lexend">Raum</label>
-                    <div class="mt-1 text-gray-900">{{ shift.roomName ?? shift?.room?.name ?? '-' }}</div>
+                    <label class="block font-medium text-text-muted font-lexend">Raum</label>
+                    <div class="mt-1 text-text">{{ shift.roomName ?? shift?.room?.name ?? '-' }}</div>
                 </div>
 
                 <div>
-                    <label class="block font-medium text-gray-700 font-lexend">Firma</label>
-                    <div class="mt-1 text-gray-900" v-if="craft?.id">{{ craft.name }} [{{ craft.abbreviation }}]</div>
-                    <div class="mt-1 text-gray-900" v-else>-</div>
+                    <label class="block font-medium text-text-muted font-lexend">Firma</label>
+                    <div class="mt-1 text-text" v-if="craft?.id">{{ craft.name }} [{{ craft.abbreviation }}]</div>
+                    <div class="mt-1 text-text" v-else>-</div>
                 </div>
             </div>
 
             <div v-if="craft?.id">
-                <label class="block font-medium text-gray-700 mb-1 font-lexend">Zuständige Personen</label>
+                <label class="block font-medium text-text-muted mb-1 font-lexend">Zuständige Personen</label>
                 <ul class="space-y-2">
-                    <li v-for="person in craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg shadow border border-gray-200">
+                    <li v-for="person in craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-surface-sunken p-3 rounded-lg shadow border border-border-subtle">
                         <UserPopoverTooltip :user="person" width="10" height="10" />
                         <div>
-                            <div class="font-semibold text-gray-800 font-lexend">{{ person.full_name }}</div>
-                            <div class="text-xs text-gray-500 font-lexend">{{ person.position }} - {{ person.business }}</div>
+                            <div class="font-semibold text-text font-lexend">{{ person.full_name }}</div>
+                            <div class="text-xs text-text-subtle font-lexend">{{ person.position }} - {{ person.business }}</div>
                         </div>
                     </li>
                 </ul>

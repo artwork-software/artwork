@@ -9,13 +9,13 @@
         </div>
 
         <div v-if="multiEditForm.eventIds.length === 0">
-            <div class="rounded-md bg-red-50 p-4">
+            <div class="rounded-md bg-danger-surface p-4">
                 <div class="flex">
                     <div class="shrink-0">
-                        <component :is="IconMoodWrrr" class="size-5 text-red-400" aria-hidden="true"/>
+                        <component :is="IconMoodWrrr" class="size-5 text-danger" aria-hidden="true"/>
                     </div>
                     <div class="ml-3 flex-1 md:flex md:justify-between">
-                        <p class="text-sm text-red-700">
+                        <p class="text-sm text-danger">
                             {{ $t('No events selected') }}
                         </p>
                     </div>
@@ -24,8 +24,8 @@
         </div>
 
         <div v-if="validationErrors.length > 0" class="mb-4">
-            <div class="rounded-md bg-red-50 p-3">
-                <div class="text-sm text-red-700">
+            <div class="rounded-md bg-danger-surface p-3">
+                <div class="text-sm text-danger">
                     <div v-for="error in validationErrors" :key="error" class="mb-1 last:mb-0">
                         {{ $t(error) }}
                     </div>
@@ -59,7 +59,7 @@
                         <ListboxOptions
                             class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption
-                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between"
                                 v-for="status in eventStatuses"
                                 :key="status.name"
                                 :value="status"
@@ -103,7 +103,7 @@
                         <ListboxOptions
                             class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption
-                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between"
                                 v-for="eventType in eventTypes"
                                 :key="eventType.name"
                                 :value="eventType"
@@ -141,7 +141,7 @@
                         <ListboxOptions
                             class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                           class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
@@ -200,7 +200,7 @@
             </div>
 
             <div class="flex items-center justify-between mt-5">
-                <FormButton class="bg-red-500 hover:bg-red-600" @click="$emit('close')" type="button"
+                <FormButton class="bg-danger hover:bg-danger" @click="$emit('close')" type="button"
                             :text="$t('Cancel')"/>
                 <FormButton type="submit" :text="$t('Save')" :disabled="multiEditForm.eventIds.length === 0"/>
             </div>

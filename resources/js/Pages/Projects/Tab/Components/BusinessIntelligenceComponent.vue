@@ -1,6 +1,6 @@
 <template>
     <div class="print:break-before-auto">
-        <div v-if="loadError" class="mb-2 text-xs text-rose-600">
+        <div v-if="loadError" class="mb-2 text-xs text-danger">
             {{ $t(loadError) }}
         </div>
         <div v-else-if="isLoading" class="mb-2 text-xs text-secondary">
@@ -9,16 +9,16 @@
         <template v-else>
             <div class="sm:flex sm:items-center mb-6">
                 <div class="sm:flex-auto flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <span class="block text-2xl font-bold text-gray-900">{{ $t('Business Intelligence') }}</span>
+                    <span class="block text-2xl font-bold text-text">{{ $t('Business Intelligence') }}</span>
                     <!-- Ist/Plan-Umschalter -->
                     <div
                         v-if="canEditComponent || hasPlan"
-                        class="flex rounded-lg border border-gray-200 p-0.5 print:hidden"
+                        class="flex rounded-lg border border-border-subtle p-0.5 print:hidden"
                     >
                         <button
                             type="button"
                             class="rounded-md px-3 py-1 text-xs font-medium transition"
-                            :class="scope === 'actual' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                            :class="scope === 'actual' ? 'bg-accent-600 text-white' : 'text-text-muted hover:bg-surface-sunken'"
                             @click="scope = 'actual'"
                         >
                             {{ $t('Actual') }}
@@ -26,7 +26,7 @@
                         <button
                             type="button"
                             class="rounded-md px-3 py-1 text-xs font-medium transition"
-                            :class="scope === 'plan' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                            :class="scope === 'plan' ? 'bg-accent-600 text-white' : 'text-text-muted hover:bg-surface-sunken'"
                             @click="scope = 'plan'"
                         >
                             {{ $t('Plan') }}
@@ -40,19 +40,19 @@
 
             <!-- ================= PLAN-ANSICHT ================= -->
             <template v-if="scope === 'plan'">
-                <div class="mb-4 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 px-4 py-2.5 flex items-center gap-2">
-                    <span class="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                <div class="mb-4 rounded-xl border border-dashed border-accent-200 bg-accent-50 px-4 py-2.5 flex items-center gap-2">
+                    <span class="rounded-full bg-accent-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                         {{ $t('Plan') }}
                     </span>
-                    <span class="text-sm text-indigo-900">
+                    <span class="text-sm text-accent-700">
                         {{ $t('You are editing plan values. Actual figures stay untouched.') }}
                     </span>
                 </div>
 
                 <!-- Schnellstart, solange kein Plan-Datensatz existiert -->
-                <div v-if="!planData" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ $t('Record plan values') }}</h4>
-                    <p class="text-xs text-gray-500 mb-4 max-w-2xl">
+                <div v-if="!planData" class="rounded-xl border border-border-subtle bg-white p-6 shadow-sm">
+                    <h4 class="text-sm font-semibold text-text mb-1">{{ $t('Record plan values') }}</h4>
+                    <p class="text-xs text-text-subtle mb-4 max-w-2xl">
                         {{ $t('Plan values hold the expected visitors, tickets and revenue for this project. Once actuals come in, the plan-vs-actual comparison appears in the actual view.') }}
                     </p>
                     <div class="flex flex-wrap gap-2">
@@ -77,12 +77,12 @@
                             :label="$t('Search project')"
                             @update:model-value="searchPlanCopyProjects"
                         />
-                        <div v-if="planCopyResults.length > 0" class="mt-2 divide-y divide-gray-100 rounded-md border border-gray-200">
+                        <div v-if="planCopyResults.length > 0" class="mt-2 divide-y divide-border-subtle rounded-md border border-border-subtle">
                             <button
                                 v-for="result in planCopyResults"
                                 :key="result.id"
                                 type="button"
-                                class="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                class="block w-full px-3 py-2 text-left text-sm text-text-muted hover:bg-surface-sunken"
                                 @click="initializePlan('copy_project', result.id)"
                             >
                                 {{ result.name }}
@@ -116,7 +116,7 @@
                         />
                     </BiSectionCard>
 
-                    <p class="mt-4 text-xs text-gray-400">
+                    <p class="mt-4 text-xs text-text-subtle">
                         {{ $t('Production data, capacities, time effort and custom fields are maintained in the actual view — they apply to both.') }}
                     </p>
                 </template>
@@ -151,26 +151,26 @@
             <!-- Datenqualität: was fehlt für belastbare Auswertungen? -->
             <div
                 v-if="canEditComponent && dataQuality.missing.length > 0"
-                class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 print:hidden"
+                class="mb-6 rounded-xl border border-warning-border bg-warning-surface px-4 py-3 print:hidden"
             >
                 <div class="flex items-center justify-between gap-4 mb-2">
-                    <span class="text-sm font-medium text-amber-900">
+                    <span class="text-sm font-medium text-warning">
                         {{ $t('Data quality') }}: {{ dataQuality.filled }}/{{ dataQuality.total }} {{ $t('filled in') }}
                     </span>
-                    <div class="h-1.5 w-32 rounded-full bg-amber-200/70 overflow-hidden shrink-0">
+                    <div class="h-1.5 w-32 rounded-full bg-warning-surface overflow-hidden shrink-0">
                         <div
-                            class="h-full rounded-full bg-amber-500"
+                            class="h-full rounded-full bg-warning"
                             :style="{ width: (dataQuality.filled / dataQuality.total * 100) + '%' }"
                         ></div>
                     </div>
                 </div>
-                <p class="text-xs text-amber-800">
+                <p class="text-xs text-warning">
                     {{ $t('Still missing') }}:
                     <button
                         v-for="item in dataQuality.missing"
                         :key="item"
                         type="button"
-                        class="ml-1.5 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white/70 px-2 py-0.5 font-medium text-amber-900 hover:bg-white transition"
+                        class="ml-1.5 inline-flex items-center gap-1 rounded-full border border-warning-border bg-white/70 px-2 py-0.5 font-medium text-warning hover:bg-white transition"
                         @click="goToMissingItem(item)"
                     >
                         {{ $t(item) }}
@@ -183,10 +183,10 @@
             <!-- Positives Signal, wenn alles gepflegt ist -->
             <div
                 v-else-if="canEditComponent && dataQuality.total > 0"
-                class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 print:hidden flex items-center gap-2"
+                class="mb-6 rounded-xl border border-success-border bg-success-surface px-4 py-2.5 print:hidden flex items-center gap-2"
             >
-                <IconCircleCheck class="size-4 text-emerald-600 shrink-0" />
-                <span class="text-sm text-emerald-800">
+                <IconCircleCheck class="size-4 text-success shrink-0" />
+                <span class="text-sm text-success">
                     {{ $t('Data quality') }}: {{ $t('All key figures are recorded.') }}
                 </span>
             </div>

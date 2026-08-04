@@ -106,12 +106,10 @@ const usageTooltip = computed(() =>
         >
             <!-- Karte -->
             <div
-                class="flex items-center gap-3 rounded-2xl border bg-white/70 backdrop-blur px-3 py-3 shadow-sm transition
-               focus-within:ring-2 focus-within:ring-blue-400/50 active:scale-[0.99]"
-                :class="[
-          isDragging
-            ? 'ring-2 ring-emerald-400/40 border-emerald-300/60 bg-emerald-50/50 shadow rounded-lg'
-            : 'border-zinc-200/80'
+                class="flex items-center gap-3 rounded-2xl border bg-white/70 backdrop-blur px-3 py-3 shadow-sm transition focus-within:ring-2 focus-within:ring-accent-600 active:scale-[0.99]"
+                :class="[ isDragging
+            ? 'ring-2 ring-success-border border-success-border bg-success-surface shadow rounded-lg'
+            : 'border-border-subtle'
         ]"
                 role="button"
                 tabindex="0"
@@ -119,7 +117,7 @@ const usageTooltip = computed(() =>
                 <!-- Icon -->
                 <div
                     class="shrink-0 grid place-items-center size-10 rounded-xl border bg-white/60"
-                    :class="isDragging ? 'border-emerald-300/70' : 'border-zinc-200/80'"
+                    :class="isDragging ? 'border-success-border' : 'border-border-subtle'"
                     aria-hidden="true"
                 >
                     <ComponentIcons :type="component.type" />
@@ -134,10 +132,10 @@ const usageTooltip = computed(() =>
                     <!-- Ordner-Titel, wie er im Projekt erscheint -->
                     <div
                         v-if="isFolder && folderLabel"
-                        class="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-600 min-w-0"
+                        class="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted min-w-0"
                         :title="t('This title is displayed in the project')"
                     >
-                        <IconFolder class="size-3.5 shrink-0 text-zinc-500" />
+                        <IconFolder class="size-3.5 shrink-0 text-text-subtle" />
                         <span class="truncate font-medium">{{ folderLabel }}</span>
                     </div>
 
@@ -145,14 +143,14 @@ const usageTooltip = computed(() =>
                         <!-- Verwendung -->
                         <span
                             v-if="usages.length > 0"
-                            class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50/70 px-2 py-0.5 text-[10px] leading-4 text-emerald-700 whitespace-pre-line"
+                            class="inline-flex items-center rounded-full border border-success-border bg-success-surface px-2 py-0.5 text-[10px] leading-4 text-success whitespace-pre-line"
                             :title="usageTooltip"
                         >
                             {{ t('Used') }}: {{ usages.length }}
                         </span>
                         <span
                             v-else
-                            class="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50/70 px-2 py-0.5 text-[10px] leading-4 text-zinc-500"
+                            class="inline-flex items-center rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[10px] leading-4 text-text-subtle"
                         >
                             {{ t('Not used') }}
                         </span>
@@ -160,30 +158,30 @@ const usageTooltip = computed(() =>
                         <!-- Scope-Konfiguration nötig -->
                         <span
                             v-if="needsScope"
-                            class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50/70 px-2 py-0.5 text-[10px] leading-4 text-amber-700"
+                            class="inline-flex items-center rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[10px] leading-4 text-warning"
                             :title="t('When adding, you choose which tabs are included')"
                         >
                             {{ t('Requires configuration') }}
                         </span>
                         <!-- Höhe -->
                         <span v-if="hasHeight"
-                            class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-zinc-600"
-                            :class="isDragging ? 'border-emerald-300/70 bg-emerald-50/50' : 'border-zinc-200 bg-white/70'">
+                            class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-text-muted"
+                            :class="isDragging ? 'border-success-border bg-success-surface' : 'border-border-subtle bg-white/70'">
                           {{ component.data.height }} px
                         </span>
 
                         <!-- Separator -->
                         <span v-if="showLine"
-                            class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-zinc-600"
-                            :class="isDragging ? 'border-emerald-300/70 bg-emerald-50/50' : 'border-zinc-200 bg-white/70'">
+                            class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-text-muted"
+                            :class="isDragging ? 'border-success-border bg-success-surface' : 'border-border-subtle bg-white/70'">
                             {{ t('Show a separator line') }}
                         </span>
 
                         <!-- Title Size -->
                         <span
                             v-if="hasTitleSize"
-                            class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-zinc-600"
-                            :class="isDragging ? 'border-emerald-300/70 bg-emerald-50/50' : 'border-zinc-200 bg-white/70'">
+                            class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] leading-4 text-text-muted"
+                            :class="isDragging ? 'border-success-border bg-success-surface' : 'border-border-subtle bg-white/70'">
                           {{ component.data.title_size }} px
                         </span>
                     </div>
@@ -195,22 +193,22 @@ const usageTooltip = computed(() =>
                     <button
                         v-if="allTabs"
                         type="button"
-                        class="grid place-items-center size-8 rounded-md border border-zinc-200 bg-white/60 hover:bg-emerald-50 hover:border-emerald-300 transition"
+                        class="grid place-items-center size-8 rounded-md border border-border-subtle bg-white/60 hover:bg-success-surface hover:border-success-border transition"
                         :title="t('Add without drag and drop')"
                         :aria-label="t('Add component')"
                         draggable="false"
                         @mousedown.stop
                         @click.stop="showAddModal = true"
                     >
-                        <IconCirclePlus class="size-4 text-zinc-600" />
+                        <IconCirclePlus class="size-4 text-text-muted" />
                     </button>
 
                     <div
                         class="h-8 w-5 rounded-md border"
-                        :class="isDragging ? 'border-emerald-300/70 bg-emerald-50/50 rounded-lg' : 'border-zinc-200 bg-white/60'"
+                        :class="isDragging ? 'border-success-border bg-success-surface rounded-lg' : 'border-border-subtle bg-white/60'"
                         aria-hidden="true"
                     >
-                        <div class="h-full w-full grid place-items-center text-[10px] text-zinc-400">⋮⋮</div>
+                        <div class="h-full w-full grid place-items-center text-[10px] text-text-subtle">⋮⋮</div>
                     </div>
                 </div>
             </div>

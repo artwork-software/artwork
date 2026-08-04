@@ -24,13 +24,13 @@
         </div>
 
         <!-- Entwicklung über alle Snapshots -->
-        <div v-if="trendChart" class="mb-5 rounded-lg border border-gray-200 p-4 print:hidden">
-            <h4 class="text-xs font-medium text-gray-500 mb-2">{{ $t('Trend across snapshots') }}</h4>
+        <div v-if="trendChart" class="mb-5 rounded-lg border border-border-subtle p-4 print:hidden">
+            <h4 class="text-xs font-medium text-text-subtle mb-2">{{ $t('Trend across snapshots') }}</h4>
             <BiChart type="line" :data="trendChart" :options="trendOptions" height="220px" />
         </div>
 
         <!-- Vergleich Snapshot ↔ aktuell -->
-        <div v-if="snapshots.length > 0" class="mb-5 rounded-lg border border-gray-200 p-3 bg-gray-50/60">
+        <div v-if="snapshots.length > 0" class="mb-5 rounded-lg border border-border-subtle p-3 bg-surface-sunken">
             <div class="flex items-end gap-3 max-w-md">
                 <ArtworkBaseListbox
                     class="flex-1"
@@ -42,14 +42,14 @@
                     :label="$t('Compare snapshot with current values')"
                     :placeholder="$t('Select snapshot')"
                 />
-                <button v-if="compareId" @click="compareId = null" class="text-xs text-gray-500 hover:text-gray-700 pb-2">
+                <button v-if="compareId" @click="compareId = null" class="text-xs text-text-subtle hover:text-text-muted pb-2">
                     {{ $t('Reset') }}
                 </button>
             </div>
 
             <table v-if="comparison.length > 0" class="min-w-full text-sm mt-4">
                 <thead>
-                    <tr class="text-left text-xs text-gray-500 border-b border-gray-200">
+                    <tr class="text-left text-xs text-text-subtle border-b border-border-subtle">
                         <th class="px-2 py-1.5">{{ $t('Metric') }}</th>
                         <th class="px-2 py-1.5 text-right">{{ $t('Snapshot') }}</th>
                         <th class="px-2 py-1.5 text-right">{{ $t('Current') }}</th>
@@ -57,16 +57,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="metric in comparison" :key="metric.label" class="border-b border-gray-100">
-                        <td class="px-2 py-1.5 text-gray-700">{{ metric.translate ? $t(metric.label) : metric.label }}</td>
-                        <td class="px-2 py-1.5 text-right text-gray-500">{{ formatNumber(metric.snapshotValue) }}</td>
-                        <td class="px-2 py-1.5 text-right text-gray-900 font-medium">{{ formatNumber(metric.currentValue) }}</td>
+                    <tr v-for="metric in comparison" :key="metric.label" class="border-b border-border-subtle">
+                        <td class="px-2 py-1.5 text-text-muted">{{ metric.translate ? $t(metric.label) : metric.label }}</td>
+                        <td class="px-2 py-1.5 text-right text-text-subtle">{{ formatNumber(metric.snapshotValue) }}</td>
+                        <td class="px-2 py-1.5 text-right text-text font-medium">{{ formatNumber(metric.currentValue) }}</td>
                         <td class="px-2 py-1.5 text-right">
                             <span
                                 class="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium"
                                 :class="metric.delta > 0
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : (metric.delta < 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400')"
+                                    ? 'bg-success-surface text-success'
+                                    : (metric.delta < 0 ? 'bg-danger-surface text-danger' : 'bg-surface-sunken text-text-subtle')"
                             >
                                 <template v-if="metric.delta > 0">▲</template>
                                 <template v-else-if="metric.delta < 0">▼</template>
@@ -83,25 +83,25 @@
             <div
                 v-for="snapshot in snapshots"
                 :key="snapshot.id"
-                class="rounded-lg border border-gray-200 p-3"
+                class="rounded-lg border border-border-subtle p-3"
             >
                 <div class="flex items-center justify-between">
                     <div>
-                        <span class="font-medium text-sm text-gray-900">{{ snapshot.name }}</span>
+                        <span class="font-medium text-sm text-text">{{ snapshot.name }}</span>
                         <span
                             v-if="snapshot.scope === 'plan'"
-                            class="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700"
+                            class="ml-2 rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-700"
                         >
                             {{ $t('Plan') }}
                         </span>
-                        <span class="text-xs text-gray-400 ml-2">{{ formatDate(snapshot.snapshot_date) }}</span>
-                        <span class="text-xs text-gray-400 ml-2">{{ $t('by') }} {{ snapshot.creator?.first_name }} {{ snapshot.creator?.last_name }}</span>
+                        <span class="text-xs text-text-subtle ml-2">{{ formatDate(snapshot.snapshot_date) }}</span>
+                        <span class="text-xs text-text-subtle ml-2">{{ $t('by') }} {{ snapshot.creator?.first_name }} {{ snapshot.creator?.last_name }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button @click="toggleDetail(snapshot.id)" class="text-xs text-primary hover:underline print:hidden">
                             {{ expandedId === snapshot.id ? $t('Hide') : $t('Show') }}
                         </button>
-                        <button v-if="canEdit" @click="deleteSnapshot(snapshot.id)" class="text-xs text-red-500 hover:text-red-700 print:hidden">
+                        <button v-if="canEdit" @click="deleteSnapshot(snapshot.id)" class="text-xs text-danger hover:text-danger print:hidden">
                             {{ $t('Delete') }}
                         </button>
                     </div>
@@ -110,15 +110,15 @@
                     <div
                         v-for="metric in flattenList(snapshot.data)"
                         :key="metric.label"
-                        class="rounded-md bg-gray-50 px-2.5 py-2"
+                        class="rounded-md bg-surface-sunken px-2.5 py-2"
                     >
-                        <span class="block text-[11px] text-gray-500 truncate">{{ metric.translate ? $t(metric.label) : metric.label }}</span>
-                        <span class="text-sm font-semibold text-gray-900">{{ formatNumber(metric.value) }}</span>
+                        <span class="block text-[11px] text-text-subtle truncate">{{ metric.translate ? $t(metric.label) : metric.label }}</span>
+                        <span class="text-sm font-semibold text-text">{{ formatNumber(metric.value) }}</span>
                     </div>
                 </div>
             </div>
         </div>
-        <p v-else class="text-sm text-gray-400">{{ $t('No snapshots created yet.') }}</p>
+        <p v-else class="text-sm text-text-subtle">{{ $t('No snapshots created yet.') }}</p>
     </div>
 </template>
 

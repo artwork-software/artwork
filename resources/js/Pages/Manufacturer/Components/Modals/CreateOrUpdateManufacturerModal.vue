@@ -18,7 +18,7 @@
                         v-model="manufacturerForm.address"
                         :label="$t('Address')"
                     />
-                    <div class="text-xs text-blue-400 mt-1 px-1">
+                    <div class="text-xs text-accent-500 mt-1 px-1">
                         <p>
                             {{ $t('Please enter the address of the manufacturer, e.g: Maxmustermann Str. 1234, 12345 Musterdorf') }}
                         </p>

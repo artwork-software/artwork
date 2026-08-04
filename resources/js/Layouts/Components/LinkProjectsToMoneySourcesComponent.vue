@@ -13,7 +13,7 @@
                                         leave-to-class="opacity-0">
                                 <div v-if="project_search_results.length > 0 && project_query.length > 0"
                                      class="absolute w-full top-16 z-10 max-h-60 bg-primary shadow-lg rounded-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                    <div class="border-gray-200">
+                                    <div class="border-border-subtle">
                                         <div v-for="(project, index) in project_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
                                             <div class="flex-1 text-sm py-4">
@@ -37,7 +37,7 @@
                     <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
                         {{$t('Linked projects')}}:
                     </div>
-                    <div class="mb-4 divide-gray-200 divide-y divide-dashed mt-2">
+                    <div class="mb-4 divide-border-subtle divide-y divide-dashed mt-2">
                         <div v-for="project in linkedProjectsArray" class="xsDark py-3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">

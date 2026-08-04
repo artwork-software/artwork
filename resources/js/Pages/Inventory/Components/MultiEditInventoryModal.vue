@@ -11,7 +11,7 @@
             </p>
         </div>
 
-        <div class="bg-gray-100 py-4 px-6">
+        <div class="bg-surface-sunken py-4 px-6">
             <div class="flex items-center justify-between">
                 <AlertComponent classes="!text-artwork-buttons-create cursor-pointer" show-icon icon-size="h-5 w-5" :text="showInfoText ? $t('Hide help') : $t('Show help')" @click="openCloseShowInfoText" />
                 <div v-if="autoCloseInfoText < 15">
@@ -28,9 +28,9 @@
         </div>
 
         <div class="overflow-y-scroll px-6">
-            <div class="border-b border-gray-200">
+            <div class="border-b border-border-subtle">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                    <div v-for="event in addItemsToEvent" :key="event.name" @click="makeCurrent(event)" :class="[event.id === currentTab.id ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700', 'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium cursor-pointer']" :aria-current="event.current ? 'page' : undefined">
+                    <div v-for="event in addItemsToEvent" :key="event.name" @click="makeCurrent(event)" :class="[event.id === currentTab.id ? 'border-accent-600 text-accent-600' : 'border-transparent text-text-subtle hover:border-border hover:text-text-muted', 'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium cursor-pointer']" :aria-current="event.current ? 'page' : undefined">
                         {{ event.name }}
                         <p class="text-xs">
                             {{ event.projectName }}

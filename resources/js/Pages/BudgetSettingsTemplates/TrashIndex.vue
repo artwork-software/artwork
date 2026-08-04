@@ -12,7 +12,7 @@
             </div>
         </div>
     </div>
-    <div v-for="table in filteredTemplates" class="flex my-6 border-t-2 border-b-2 w-full border-gray-300">
+    <div v-for="table in filteredTemplates" class="flex my-6 border-t-2 border-b-2 w-full border-border">
         <button class="bg-artwork-buttons-create w-6"
                 @click="table.closed = !table.closed">
             <ChevronUpIcon v-if="table.closed"

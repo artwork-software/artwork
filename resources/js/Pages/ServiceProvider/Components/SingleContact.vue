@@ -18,8 +18,8 @@
         </div>
         <div class="col-span-1 hidden group-hover:block mx-auto">
            <div class="flex items-center justify-center gap-2">
-               <div class="rounded-full border-4 border-red-500 hover:bg-red-200 p-1 cursor-pointer">
-                   <XIcon class="h-5 w-5 cursor-pointer text-red-500" @click="deleteContact"/>
+               <div class="rounded-full border-4 border-danger hover:bg-danger-surface p-1 cursor-pointer">
+                   <XIcon class="h-5 w-5 cursor-pointer text-danger" @click="deleteContact"/>
                </div>
            </div>
         </div>

@@ -1,7 +1,7 @@
 <template>
     <ToolSettingsHeader :title="$t('Mail')">
         <div v-if="$page.props.flash && $page.props.flash.success"
-             class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
+             class="w-full font-bold text-sm border-1 border-success rounded bg-success p-2 text-white mb-3">
             {{ $page.props.flash.success }}
         </div>
 
@@ -18,7 +18,7 @@
         <div class="max-w-2xl">
             <!-- SMTP settings -->
             <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
-                <h3 class="text-sm font-semibold text-gray-900">{{ $t('SMTP server') }}</h3>
+                <h3 class="text-sm font-semibold text-text">{{ $t('SMTP server') }}</h3>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
@@ -37,11 +37,11 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <label for="mail_encryption" class="block text-xs font-medium text-gray-700 mb-1">
+                        <label for="mail_encryption" class="block text-xs font-medium text-text-muted mb-1">
                             {{ $t('Encryption') }}
                         </label>
                         <select id="mail_encryption" v-model="form.encryption"
-                                class="w-full rounded-lg border-gray-300 text-sm focus:border-artwork-buttons-create focus:ring-artwork-buttons-create">
+                                class="w-full rounded-lg border-border text-sm focus:border-artwork-buttons-create focus:ring-artwork-buttons-create">
                             <option value="">{{ $t('Fallback (.env)') }}</option>
                             <option value="tls">TLS</option>
                             <option value="ssl">SSL</option>
@@ -70,12 +70,12 @@
                     </p>
                     <label v-if="mailSettings.has_password" class="mt-2 flex items-center gap-2 text-xs text-secondary">
                         <input type="checkbox" v-model="form.clear_password"
-                               class="rounded border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
+                               class="rounded border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
                         {{ $t('Remove stored password (fall back to the server configuration)') }}
                     </label>
                 </div>
 
-                <h3 class="text-sm font-semibold text-gray-900 mt-4">{{ $t('Sender (From)') }}</h3>
+                <h3 class="text-sm font-semibold text-text mt-4">{{ $t('Sender (From)') }}</h3>
                 <SettingsGuideBanner
                     variant="static"
                     title="Interaction with Communication & Legal"
@@ -100,15 +100,15 @@
 
                 <div class="mt-2">
                     <button type="submit" :disabled="form.processing"
-                            class="rounded-full bg-artwork-buttons-create px-8 py-3 text-sm font-semibold text-white hover:bg-artwork-buttons-hover disabled:opacity-50">
+                            class="rounded-full bg-artwork-buttons-create px-8 py-3 text-sm font-semibold text-white hover:bg-artwork-buttons-hover disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed">
                         {{ $t('Save') }}
                     </button>
                 </div>
             </form>
 
             <!-- Test mail -->
-            <div class="mt-10 border-t border-gray-200 pt-6">
-                <h3 class="text-sm font-semibold text-gray-900">{{ $t('Test mail') }}</h3>
+            <div class="mt-10 border-t border-border-subtle pt-6">
+                <h3 class="text-sm font-semibold text-text">{{ $t('Test mail') }}</h3>
                 <p class="text-sm text-secondary mt-1 mb-4">
                     {{ $t('Send a test email using the saved settings. Save your changes first.') }}
                 </p>
@@ -118,7 +118,7 @@
                         <BaseInput id="mail_test_recipient" v-model="testRecipient" type="email" :label="$t('Recipient')"/>
                     </div>
                     <button type="button" @click="sendTestMail" :disabled="testing || !testRecipient"
-                            class="rounded-full border border-artwork-buttons-create px-8 py-3 text-sm font-semibold text-artwork-buttons-create hover:bg-artwork-buttons-create/10 disabled:opacity-50">
+                            class="rounded-full border border-artwork-buttons-create px-8 py-3 text-sm font-semibold text-artwork-buttons-create hover:bg-artwork-buttons-create/10 disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed">
                         {{ testing ? $t('Sending…') : $t('Test mail') }}
                     </button>
                 </div>
@@ -127,8 +127,8 @@
                      :class="[
                         'mt-4 rounded p-3 text-sm border-1 whitespace-pre-wrap break-words',
                         testResult.success
-                            ? 'border-green-600 bg-green-50 text-green-800'
-                            : 'border-red-600 bg-red-50 text-red-800'
+                            ? 'border-success bg-success-surface text-success'
+                            : 'border-danger bg-danger-surface text-danger'
                      ]">
                     {{ testResult.message }}
                 </div>

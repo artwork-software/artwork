@@ -14,7 +14,7 @@
                         <ListboxButton class="menu-button bg-white">
                             <div class="block truncate">{{ selectedTypeLabel }}</div>
                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                             </span>
                         </ListboxButton>
 
@@ -36,10 +36,10 @@
                                     <li
                                         :class="[
                                             active
-                                                ? 'bg-indigo-600 text-white'
+                                                ? 'bg-accent-600 text-white'
                                                 : isSelected
                                                     ? '!bg-artwork-action-buttons/10'
-                                                    : 'text-gray-900',
+                                                    : 'text-text',
                                             'relative cursor-default select-none py-2 pl-3 pr-9'
                                         ]"
                                     >
@@ -48,7 +48,7 @@
                                         </span>
                                         <span
                                             v-if="isSelected"
-                                            :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
+                                            :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                         >
                                             <IconCheck class="h-5 w-5" aria-hidden="true" />
                                         </span>
@@ -71,7 +71,7 @@
             />
 
             <!-- Property groups (collapsible, from the creation mask) -->
-            <div v-if="loadingMask" class="flex items-center gap-2 text-sm text-gray-500 py-2">
+            <div v-if="loadingMask" class="flex items-center gap-2 text-sm text-text-subtle py-2">
                 <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -80,24 +80,24 @@
             </div>
 
             <div v-else-if="maskGroups.length" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
-                <div v-for="group in maskGroups" :key="group.id" class="rounded-lg border border-gray-200">
+                <div v-for="group in maskGroups" :key="group.id" class="rounded-lg border border-border-subtle">
                     <button
                         type="button"
                         class="w-full px-4 py-3 flex items-center gap-3 text-left"
                         @click="toggleGroup(group.id)"
                     >
-                        <PropertyIcon v-if="group.icon" :name="group.icon" class="h-4 w-4 text-gray-500 shrink-0" />
-                        <span class="text-sm font-medium text-gray-900">{{ $t(group.name) }}</span>
-                        <span v-if="filledCount(group)" class="text-xs text-indigo-600 tabular-nums">
+                        <PropertyIcon v-if="group.icon" :name="group.icon" class="h-4 w-4 text-text-subtle shrink-0" />
+                        <span class="text-sm font-medium text-text">{{ $t(group.name) }}</span>
+                        <span v-if="filledCount(group)" class="text-xs text-accent-600 tabular-nums">
                             {{ filledCount(group) }} {{ $t('filled') }}
                         </span>
                         <component
                             :is="IconChevronDown"
-                            class="h-4 w-4 text-gray-400 ml-auto transition-transform shrink-0"
+                            class="h-4 w-4 text-text-subtle ml-auto transition-transform shrink-0"
                             :class="expandedGroupIds.has(group.id) ? 'rotate-180' : ''"
                         />
                     </button>
-                    <div v-if="expandedGroupIds.has(group.id)" class="border-t border-gray-100 px-4 py-3">
+                    <div v-if="expandedGroupIds.has(group.id)" class="border-t border-border-subtle px-4 py-3">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="property in group.properties" :key="property.id">
                                 <CrmPropertyValueInput

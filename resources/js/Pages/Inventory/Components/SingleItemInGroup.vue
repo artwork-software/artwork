@@ -4,15 +4,15 @@
             <ItemDragElement :inventory_planer_ids="inventory_planer_ids" :inventory_planned_by_all="inventory_planned_by_all" :multi-edit="multiEdit" :item="item" />
         </th>
         <td v-for="day in days" class="flex gap-x-0.5 relative">
-            <div class="p-2 bg-gray-50/10 text-white text-xs max-h-[48px] rounded-lg shiftCell cursor-pointer relative overflow-y-scroll" @click="showItemDetailModal(day)" :style="{width: '198px'}" >
+            <div class="p-2 bg-white/10 text-text-inverse text-xs max-h-[48px] rounded-lg shiftCell cursor-pointer relative overflow-y-scroll" @click="showItemDetailModal(day)" :style="{width: '198px'}" >
                 <div v-for="event in item.events">
                     <div v-if="event.period.includes(day.full_day)" class="flex items-center justify-between gap-x-1 mb-0.5">
                         <div class="truncate w-1/2">
                             {{ event.eventInfo.name ?? event.eventInfo.project_name }}
                         </div>
-                        <div class="stock-badge bg-gray-300/30">
+                        <div class="stock-badge bg-white/20">
                             {{ event.quantity }}
-                            <span v-if="event.overbooked > 0" class="text-red-300">
+                            <span v-if="event.overbooked > 0" class="text-danger-border">
                                 / {{ event.overbooked }}
                             </span>
                         </div>

@@ -1,21 +1,21 @@
 <template>
     <template v-if="!showOnlyActions">
-        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">{{ category?.name }}</td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize">
+        <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">{{ category?.name }}</td>
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize">
             {{ category.subcategories.map((category) => category.name).join(', ') }}
         </td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize">
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize">
             {{ category.properties.map((property) => property.name).join(', ') }}
         </td>
     </template>
 
     <template v-if="showActions || showOnlyActions">
-        <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 actions-column">
+        <td class="py-4 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
             <div class="flex items-center gap-x-4">
                 <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
                     <component :is="IconEdit" @click="showAddEditCategoryModal = true" class="h-5 w-5" aria-hidden="true" />
                 </button>
-                <button type="button" class="text-red-600 hover:text-red-900">
+                <button type="button" class="text-danger hover:text-danger">
                     <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
                 </button>
             </div>

@@ -1,10 +1,10 @@
 <template>
     <div class="flex w-full mb-5 gap-2">
-        <button class="bg-gray-500 rounded-lg flex relative w-6" @click="showSection = !showSection">
+        <button class="bg-text-subtle rounded-lg flex relative w-6" @click="showSection = !showSection">
             <ChevronUpIcon v-if="showSection" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
             <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
         </button>
-        <div class="border-2 border-gray-300 rounded-lg px-10 w-full">
+        <div class="border-2 border-border rounded-lg px-10 w-full">
             <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
                 <div class="flex headline2 ">
                     {{ name }}

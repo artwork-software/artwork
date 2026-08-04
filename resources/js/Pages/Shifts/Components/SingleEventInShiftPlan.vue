@@ -81,7 +81,7 @@
                                 @mouseleave="hideEventNameTooltip"
                             >
                                 <div v-if="project?.id">
-                                    <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                                    <a :href="route('projects.tab', {project: project?.id, projectTab: firstProjectShiftTabId})" class="cursor-pointer hover:text-text-muted transition-all duration-150 ease-in-out">
                                         <span ref="eventNameSpan" :class="[expandDays ? 'break-words' : 'truncate', 'block text-xs/4 font-semibold']">
                                             {{ eventType?.abbreviation }}: {{ event.eventName }}
                                         </span>
@@ -182,7 +182,7 @@
                         <IconTimeline
                             class="size-4"
                             stroke-width="1.5"
-                            :class="event.hasTimelines ? '' : 'text-gray-400'"
+                            :class="event.hasTimelines ? '' : 'text-text-subtle'"
                             :style="event.hasTimelines ? {
                                 color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType.hex_code, percentage))
                             } : {}"

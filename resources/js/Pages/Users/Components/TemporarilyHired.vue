@@ -4,8 +4,8 @@
         <Switch
             v-model="userEdit.temporary"
             :class="[
-        userEdit.temporary ? 'bg-blue-600' : 'bg-zinc-300',
-        'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2'
+        userEdit.temporary ? 'bg-accent-600' : 'bg-border',
+        'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
       ]"
         >
       <span
@@ -17,7 +17,7 @@
       />
         </Switch>
         <SwitchLabel as="span" class="ml-3 text-sm">
-            <span class="font-medium text-zinc-900">{{ $t('Temporarily employed') }}</span>
+            <span class="font-medium text-text">{{ $t('Temporarily employed') }}</span>
         </SwitchLabel>
     </SwitchGroup>
 
@@ -34,7 +34,7 @@
                     required
                     @change="checkChanges"
                 />
-                <div class="text-xs text-red-600 mt-1" v-show="employStartText.length > 0">{{ employStartText }}</div>
+                <div class="text-xs text-danger mt-1" v-show="employStartText.length > 0">{{ employStartText }}</div>
             </div>
 
             <div>
@@ -47,11 +47,11 @@
                     required
                     @change="checkChanges"
                 />
-                <div class="text-xs text-red-600 mt-1" v-show="employEndText.length > 0">{{ employEndText }}</div>
+                <div class="text-xs text-danger mt-1" v-show="employEndText.length > 0">{{ employEndText }}</div>
             </div>
         </div>
 
-        <div v-show="helpText.length > 0" class="text-xs text-red-600 mt-2">
+        <div v-show="helpText.length > 0" class="text-xs text-danger mt-2">
             {{ helpText }}
         </div>
     </div>

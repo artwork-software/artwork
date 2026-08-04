@@ -1,6 +1,6 @@
 <template>
     <SelectUserForShiftMenu :can-edit-component="canEditComponent" :crafts-with-entities="sortedCraftsWithEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
-        <div class="flex items-center p-1 hover:bg-gray-50/40 rounded cursor-pointer w-full h-full"  @dragover="onDragOver" @drop="onDrop">
+        <div class="flex items-center p-1 hover:bg-surface-sunken rounded cursor-pointer w-full h-full"  @dragover="onDragOver" @drop="onDrop">
             <div class="flex gap-1 items-center justify-between w-full h-full">
                 <div class="h-full">
                     <div class="flex items-center gap-1" v-if="type === 0 || type === 1">
@@ -12,7 +12,7 @@
                     </span>
                     </div>
                     <div v-else class="flex items-center gap-1">
-                        <img :src="user.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover" alt="profile-photo">
+                        <img :src="user.profile_photo_url" class="h-4 w-4 rounded-full block bg-text-subtle object-cover" alt="profile-photo">
                         <span class="text-xs flex items-center gap-1">
                              <span class="w-24 truncate">{{ user.provider_name }}</span>
                         <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
@@ -28,7 +28,7 @@
         <template #xButton>
             <div v-if="can('can plan shifts') || hasAdminRole()" class="hidden group-hover:block ml-1">
                 <span class="flex items-center justify-center">
-                    <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+                    <span class="rounded-full bg-danger p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
                         <IconX class="w-2 h-2 text-white cursor-pointer" @click="event.is_series ? openDeleteUserModal(user.pivot.id, type) : deleteUserFromShift(user.pivot.id, type)"/>
                     </span>
                 </span>
@@ -37,7 +37,7 @@
 
     </SelectUserForShiftMenu>
 
-    <div class="absolute w-full h-full bg-gray-300/10 top-0 left-0 rounded-lg z-50" v-show="isUpdateContainer">
+    <div class="absolute w-full h-full bg-border top-0 left-0 rounded-lg z-50" v-show="isUpdateContainer">
         <div class="flex items-center justify-center h-full w-full text-xs">
             <div class="bg-black text-white px-4 py-1 rounded-lg">
                 {{ $t('Updating...')}}

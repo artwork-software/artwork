@@ -2,12 +2,12 @@
     <div>
         <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Comments') }}</h3>
         <div v-if="project.comments_all?.length > 0" class="space-y-3">
-            <div v-for="comment in project.comments_all" :key="comment.id" class="border-b border-gray-100 pb-2">
+            <div v-for="comment in project.comments_all" :key="comment.id" class="border-b border-border-subtle pb-2">
                 <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs font-medium text-gray-900">{{ comment.user?.full_name || comment.user?.name || '-' }}</span>
-                    <span class="text-xs text-gray-400">{{ formatDate(comment.created_at) }}</span>
+                    <span class="text-xs font-medium text-text">{{ comment.user?.full_name || comment.user?.name || '-' }}</span>
+                    <span class="text-xs text-text-subtle">{{ formatDate(comment.created_at) }}</span>
                 </div>
-                <div class="text-sm text-gray-700">{{ comment.text }}</div>
+                <div class="text-sm text-text-muted">{{ comment.text }}</div>
             </div>
         </div>
         <div v-else class="text-sm text-secondary">

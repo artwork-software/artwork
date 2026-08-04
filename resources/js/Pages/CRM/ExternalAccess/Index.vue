@@ -10,7 +10,7 @@
                         @click="setStatus(opt.value)"
                         :class="[
                             'px-3 py-1.5 text-sm rounded-md border',
-                            statusFilter === opt.value ? 'bg-zinc-900 text-white border-zinc-900' : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50',
+                            statusFilter === opt.value ? 'bg-surface-inverse text-text-inverse border-surface-inverse' : 'border-border-subtle text-text-muted hover:bg-surface-sunken',
                         ]"
                     >
                         {{ $t(opt.label) }}
@@ -18,10 +18,10 @@
                 </div>
             </header>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+            <section class="rounded-2xl border border-border-subtle bg-white overflow-hidden">
                 <table class="w-full">
                     <thead>
-                        <tr class="text-left text-xs uppercase tracking-wider text-zinc-500 border-b border-zinc-200">
+                        <tr class="text-left text-xs uppercase tracking-wider text-text-subtle border-b border-border-subtle">
                             <th class="px-4 py-3">{{ $t('External') }}</th>
                             <th class="px-4 py-3">{{ $t('Linked to') }}</th>
                             <th class="px-4 py-3">{{ $t('Status') }}</th>
@@ -33,14 +33,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="access in accesses.data" :key="access.id" class="border-b border-zinc-100">
+                        <tr v-for="access in accesses.data" :key="access.id" class="border-b border-border-subtle">
                             <td class="px-4 py-3">
                                 <div class="font-medium">{{ access.crm_contact?.display_name }}</div>
-                                <div class="text-xs text-zinc-500">{{ access.email }}</div>
+                                <div class="text-xs text-text-subtle">{{ access.email }}</div>
                             </td>
                             <td class="px-4 py-3 text-sm">
                                 <div>{{ access.crm_contact?.display_name }}</div>
-                                <div class="text-xs text-zinc-500">{{ entityTypeLabel(access.crm_contact) }}</div>
+                                <div class="text-xs text-text-subtle">{{ entityTypeLabel(access.crm_contact) }}</div>
                             </td>
                             <td class="px-4 py-3"><StatusBadge :status="resolveStatus(access)" /></td>
                             <td class="px-4 py-3 text-sm">{{ formatDate(access.crm_access_expires_at) ?? '—' }}</td>
@@ -48,13 +48,13 @@
                             <td class="px-4 py-3 text-sm">{{ inviterLabel(access.invited_by) }}</td>
                             <td class="px-4 py-3 text-sm">{{ formatDate(access.last_login_at) ?? $t('Never') }}</td>
                             <td class="px-4 py-3">
-                                <Link :href="route('crm.external-access.show', access.id)" class="text-blue-600 hover:underline text-sm">
+                                <Link :href="route('crm.external-access.show', access.id)" class="text-accent-600 hover:underline text-sm">
                                     {{ $t('Details') }}
                                 </Link>
                             </td>
                         </tr>
                         <tr v-if="!accesses.data.length">
-                            <td colspan="8" class="px-4 py-10 text-center text-sm text-zinc-500">{{ $t('No activity yet.') }}</td>
+                            <td colspan="8" class="px-4 py-10 text-center text-sm text-text-subtle">{{ $t('No activity yet.') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -68,8 +68,8 @@
                     v-html="link.label"
                     :class="[
                         'px-3 py-1.5 text-sm rounded-md border',
-                        link.active ? 'bg-zinc-900 text-white border-zinc-900' : 'border-zinc-200 text-zinc-600',
-                        !link.url ? 'pointer-events-none opacity-40' : 'hover:bg-zinc-50',
+                        link.active ? 'bg-surface-inverse text-text-inverse border-surface-inverse' : 'border-border-subtle text-text-muted',
+                        !link.url ? 'pointer-events-none !text-text-subtle' : 'hover:bg-surface-sunken',
                     ]"
                     preserve-scroll
                 />

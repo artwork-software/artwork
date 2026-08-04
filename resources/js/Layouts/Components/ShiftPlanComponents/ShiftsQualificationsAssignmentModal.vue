@@ -50,7 +50,7 @@
                         :label="$t('Insert as {0}', [slot.name]) + (slot.isOverbooked ? ' (' + $t('Overbook') + ')' : '')"
                         :icon="slot.icon"
                         is-add-button
-                        :class="{ '!border-amber-500 !border-dashed': slot.isOverbooked }"
+                        :class="{ '!border-warning !border-dashed': slot.isOverbooked }"
                         @click="handleShift(currentShiftToAssign!.shift.id, slot.id, !!slot.isOverbooked)"
                     />
                 </div>

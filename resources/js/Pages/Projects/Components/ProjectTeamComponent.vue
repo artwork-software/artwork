@@ -16,14 +16,14 @@
                 <IconMail class="w-5 h-5"
                           :class="[
                               unmailableTeamMembers.length > 0
-                                  ? 'text-yellow-500'
+                                  ? 'text-warning'
                                   : (inSidebar ? 'text-white' : 'text-artwork-buttons-context'),
                               mailableTeamMembers.length > 0 ? 'cursor-pointer' : 'cursor-not-allowed'
                           ]"
                           @click="openTeamMail"
                 />
                 <span v-if="unmailableTeamMembers.length > 0"
-                      class="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-yellow-500 px-1 text-[10px] font-bold text-white pointer-events-none">
+                      class="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-white pointer-events-none">
                     {{ unmailableTeamMembers.length }}
                 </span>
             </div>
@@ -35,7 +35,7 @@
                 size="sm"
             />
         </div>
-        <div v-if="loadError" class="text-xs text-rose-600 mt-2">
+        <div v-if="loadError" class="text-xs text-danger mt-2">
             {{ loadError }}
         </div>
         <div v-else-if="loadingTeam" class="text-xs text-secondary mt-2">

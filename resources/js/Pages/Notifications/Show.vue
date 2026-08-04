@@ -10,23 +10,23 @@
                 </div>
             </div>
             <div class=" mt-8">
-                <div class="mb-4 border-gray-200 dark:border-gray-700">
+                <div class="mb-4 border-border-subtle ">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                         <li class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'notifications' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                                :class="[openTab === 'notifications' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                                 @click="openTab = 'notifications'">{{$t('Notifications')}}
                             </button>
                         </li>
                         <li class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'mailSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                                :class="[openTab === 'mailSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                                 @click="openTab = 'mailSettings'">{{$t('E-mail settings')}}
                             </button>
                         </li>
                         <li class="mr-2" role="presentation">
                             <button
-                                :class="[openTab === 'pushSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                                :class="[openTab === 'pushSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-text-muted hover:border-border', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                                 @click="openTab = 'pushSettings'">{{ $t('Push settings')}}
                             </button>
                         </li>
@@ -186,14 +186,14 @@
                         </div>
                     </div>
                     <div v-if="openTab === 'mailSettings'">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
+                        <p class="text-sm text-text-subtle dark:text-text-subtle mb-20">
                             <NotificationFrequencySettings :group-types="groupTypes"
                                                            :notification-frequencies="notificationFrequencies"
                                                            :notificationSettings="notificationSettings"/>
                         </p>
                     </div>
                     <div v-if="openTab === 'pushSettings'">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
+                        <p class="text-sm text-text-subtle dark:text-text-subtle mb-20">
                             <NotificationPushSettings :group-types="groupTypes"
                                                       :notificationSettings="notificationSettings"/>
                         </p>

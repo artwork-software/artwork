@@ -9,7 +9,7 @@
                         @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id, false, !!availableShiftQualificationSlot.isOverbooked)"
                         :icon="availableShiftQualificationSlot.icon"
                         is-add-button
-                        :class="{ '!border-amber-500 !border-dashed': availableShiftQualificationSlot.isOverbooked }"
+                        :class="{ '!border-warning !border-dashed': availableShiftQualificationSlot.isOverbooked }"
                     />
                 </div>
             </div>

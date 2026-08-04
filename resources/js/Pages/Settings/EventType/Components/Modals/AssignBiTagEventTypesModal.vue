@@ -7,7 +7,7 @@
         <div class="flex items-center gap-2 mb-4">
             <span v-if="tag.color" class="w-4 h-4 rounded-full shrink-0" :style="{ backgroundColor: tag.color }" />
             <span class="font-medium text-sm font-lexend">{{ tag.name_de }}</span>
-            <span class="text-xs text-gray-400">({{ tag.name }})</span>
+            <span class="text-xs text-text-subtle">({{ tag.name }})</span>
         </div>
 
         <BaseInput
@@ -22,19 +22,19 @@
             <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="selectAll">
                 {{ $t('Select all') }}
             </button>
-            <span class="text-gray-300">|</span>
+            <span class="text-text-subtle">|</span>
             <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover" @click="deselectAll">
                 {{ $t('Deselect all') }}
             </button>
-            <span class="ml-auto text-gray-400">{{ selectedIds.size }} / {{ eventTypes.length }}</span>
+            <span class="ml-auto text-text-subtle">{{ selectedIds.size }} / {{ eventTypes.length }}</span>
         </div>
 
-        <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 border border-gray-200 rounded-lg">
+        <div class="max-h-80 overflow-y-auto divide-y divide-border-subtle border border-border-subtle rounded-lg">
             <label
                 v-for="eventType in filteredEventTypes"
                 :key="eventType.id"
                 :for="'bi_tag_event_type_' + eventType.id"
-                class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-surface-sunken"
             >
                 <input
                     :id="'bi_tag_event_type_' + eventType.id"
@@ -44,10 +44,10 @@
                     @change="toggle(eventType.id)"
                 />
                 <span class="w-3.5 h-3.5 rounded-full shrink-0" :style="{ backgroundColor: eventType.hex_code }" />
-                <span class="text-sm font-lexend text-gray-900">{{ eventType.name }}</span>
-                <span class="text-xs text-gray-400">({{ eventType.abbreviation }})</span>
+                <span class="text-sm font-lexend text-text">{{ eventType.name }}</span>
+                <span class="text-xs text-text-subtle">({{ eventType.abbreviation }})</span>
             </label>
-            <p v-if="filteredEventTypes.length === 0" class="px-3 py-4 text-sm text-gray-400">
+            <p v-if="filteredEventTypes.length === 0" class="px-3 py-4 text-sm text-text-subtle">
                 {{ $t('No results found') }}
             </p>
         </div>

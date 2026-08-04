@@ -31,18 +31,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Project Section -->
                     <div class="col-span-full" v-if="!this.projectId">
-                        <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Project assignment') }}</div>
+                        <div class="text-sm font-medium text-text-muted mb-2">{{ $t('Project assignment') }}</div>
 
                         <!-- Selected Project Chip -->
-                        <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-3 mb-2">
-                            <span class="text-sm text-zinc-700">{{ $t('Connected project:') }}</span>
+                        <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken px-3 py-3 mb-2">
+                            <span class="text-sm text-text-muted">{{ $t('Connected project:') }}</span>
                             <a v-if="this.selectedProject?.id && this.first_project_calendar_tab_id"
                                :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
-                               class="font-medium text-indigo-600 hover:underline">
+                               class="font-medium text-accent-600 hover:underline">
                                 {{ this.selectedProject?.name }}
                             </a>
-                            <span v-else class="font-medium text-zinc-900">{{ this.selectedProject?.name }}</span>
-                            <button type="button" class="ml-auto text-zinc-400 hover:text-rose-600 transition" @click="removeProject">
+                            <span v-else class="font-medium text-text">{{ this.selectedProject?.name }}</span>
+                            <button type="button" class="ml-auto text-text-subtle hover:text-danger transition" @click="removeProject">
                                 <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -68,29 +68,29 @@
                         />
                         <!-- CRM Contact Link -->
                         <div class="mt-2">
-                            <div v-if="selectedCrmContact" class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                            <div v-if="selectedCrmContact" class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken px-3 py-2">
                                 <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
-                                <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
-                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
-                                <a :href="route('crm.contacts.show', selectedCrmContact.id)" class="ml-auto text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                                <span class="text-sm text-text truncate">{{ selectedCrmContact.display_name }}</span>
+                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-text-subtle">({{ selectedCrmContact.contact_type.name }})</span>
+                                <a :href="route('crm.contacts.show', selectedCrmContact.id)" class="ml-auto text-xs text-accent-600 hover:text-accent-700 hover:underline">
                                     {{ $t('View in CRM') }}
                                 </a>
-                                <button type="button" @click="toggleCrmDetails" class="text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
+                                <button type="button" @click="toggleCrmDetails" class="text-text-subtle hover:text-text-muted" :title="$t('Show CRM details')">
                                     <PropertyIcon :name="showCrmDetails ? 'IconChevronUp' : 'IconChevronDown'" stroke-width="1.5" class="h-4 w-4" />
                                 </button>
-                                <button type="button" @click="removeCrmContact" class="text-gray-400 hover:text-red-500">
+                                <button type="button" @click="removeCrmContact" class="text-text-subtle hover:text-danger">
                                     <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
                                 </button>
                             </div>
-                            <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                            <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-accent-600 hover:text-accent-700 hover:underline">
                                 {{ $t('Link CRM contact') }}
                             </button>
                         </div>
                     </div>
                     <!-- Collapsible CRM Details (full width) -->
-                    <div v-if="selectedCrmContact && showCrmDetails" class="col-span-full rounded-md border border-gray-200 bg-gray-50 overflow-hidden">
+                    <div v-if="selectedCrmContact && showCrmDetails" class="col-span-full rounded-md border border-border-subtle bg-surface-sunken overflow-hidden">
                         <div class="px-3 py-3">
-                            <div v-if="loadingCrmDetails" class="text-center text-sm text-gray-500 py-2">
+                            <div v-if="loadingCrmDetails" class="text-center text-sm text-text-subtle py-2">
                                 {{ $t('Loading...') }}
                             </div>
                             <div v-else-if="crmContactData && crmVisibleGroups.length > 0" class="space-y-3">
@@ -102,7 +102,7 @@
                                     :editing="false"
                                 />
                             </div>
-                            <div v-else class="text-sm text-gray-500 py-2">
+                            <div v-else class="text-sm text-text-subtle py-2">
                                 {{ $t('No CRM data available.') }}
                             </div>
                         </div>
@@ -121,7 +121,7 @@
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
@@ -137,7 +137,7 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                            <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-text-subtle hover:text-danger transition self-center">
                                 <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -164,7 +164,7 @@
                                     </span>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
@@ -180,7 +180,7 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                            <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-text-subtle hover:text-danger transition self-center">
                                 <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -199,7 +199,7 @@
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="currency in currencies"
                                                        :key="currency.id"
@@ -349,7 +349,7 @@
                         />
                     </div>
 
-                    <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-gray-300">
+                    <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-border">
                         <div class="relative w-full">
                             <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for')"/>
                         </div>
@@ -377,8 +377,8 @@
                                 class="w-full"
                                 @focus="department_query = ''"
                             />
-                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
+                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto sm:text-sm">
+                                <div class="border-white/10">
                                     <div v-for="(department, index) in department_search_results" :key="index" class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4" @click="addDepartmentToContractArray(department)">
                                             <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
@@ -418,7 +418,7 @@
                             <div class="items-center mb-2">
                                 <div v-for="task in tasks" class="mt-2">
                                     <input id="hasGroup" type="checkbox" v-model="task.checked"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <label for="hasGroup"
                                            :class="task.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                            class="ml-2">

@@ -106,7 +106,7 @@
         />
 
         <div v-show="multiEdit"
-             class="fixed z-30 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+             class="fixed z-30 w-full bg-white/70 bottom-0 h-20 shadow border-t border-border-subtle flex items-center justify-center gap-4">
             <FormButton :text="$t('Move events')"
                        @click="openMultiEditModal"/>
             <FormButton v-if="hasCheckedOccupancyEvents"
@@ -114,7 +114,7 @@
                        @click="acceptSelectedRequests"/>
             <FormButton v-if="hasCheckedOccupancyEvents"
                        @click="openDeclineSelectedRequestsModal = true"
-                       class="!border-2 !border-red-600 bg-transparent !text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-transparent resize-none"
+                       class="!border-2 !border-danger bg-transparent !text-danger hover:!text-white hover:!bg-danger hover:!border-transparent resize-none"
                        :text="$t('Decline selected requests')"/>
             <FormButton @click="openDeleteSelectedEventsModal = true"
                        class="!border-2 !border-artwork-buttons-create bg-transparent !text-artwork-buttons-create hover:!text-white hover:!bg-artwork-buttons-hover !hover:border-transparent resize-none"

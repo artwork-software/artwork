@@ -20,7 +20,7 @@
                         id="first_name"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="last_name" class="text-sm font-bold text-secondary">{{  $t('name') }}</label>
@@ -29,7 +29,7 @@
                         id="last_name"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="email" class="text-sm font-bold text-secondary">{{  $t('Email') }}</label>
@@ -38,7 +38,7 @@
                         id="email"
                         type="email"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="phoneNumber" class="text-sm font-bold text-secondary">{{ $t('Phone number') }}</label>
@@ -46,7 +46,7 @@
                         v-model="form.phone_number"
                         id="phoneNumber"
                         type="text"
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="business" class="text-sm font-bold text-secondary">{{ $t('Company')}}</label>
@@ -55,7 +55,7 @@
                         id="business"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
 
                 <div class="sm:col-span-3 mt-1">
@@ -65,7 +65,7 @@
                         id="position"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-border-subtle"/>
                 </div>
             </div>
 
@@ -77,8 +77,7 @@
                         id="password"
                         type="password"
                         required
-                        :class="[form.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'focus:ring-black focus:border-black border-2 w-full sm:text-sm']"/>
+                        :class="[form.hasErrors ? 'border-error' : 'border-border-subtle', 'focus:ring-black focus:border-black border-2 w-full sm:text-sm']"/>
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
                 </div>
 
@@ -86,11 +85,10 @@
 
                     <span class="text-xs text-secondary">{{$t('Weak')}}</span>
 
-                    <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
-                        <div :class="[pw_feedback < 1
-                                ? 'bg-error'
+                    <div class="mx-6 mt-1 w-full bg-border-subtle h-1 ">
+                        <div :class="[pw_feedback < 1 ? 'bg-error'
                                 : pw_feedback < 3
-                                ? 'bg-amber-400' :
+                                ? 'bg-warning' :
                                 'bg-success' ,
                                 'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}">
                         </div>

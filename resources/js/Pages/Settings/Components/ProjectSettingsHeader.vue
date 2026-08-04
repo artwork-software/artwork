@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconSettings"
                 :title="title || $t('Project Settings')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="description || $t('Define global settings for projects.')"
                 :search-enabled="false"
             >

@@ -86,7 +86,7 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute overflow-y-auto h-44 w-full rounded-lg origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute overflow-y-auto h-44 w-full rounded-lg origin-top-left divide-y divide-border-subtle bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                 <div class="w-full rounded-2xl bg-primary border-none mt-2 flex flex-col gap-y-2">
                                     <div v-for="eventProperty in this.event_properties" class="flex flex-row gap-x-1 w-full items-center">
@@ -105,13 +105,13 @@
                 </Menu>
 
                 <div v-if="subEvent?.eventProperties.length > 0" class="mt-3 mb-4 flex items-center flex-wrap gap-2">
-                    <div v-for="(eventProperty, index) in subEvent?.eventProperties" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                    <div v-for="(eventProperty, index) in subEvent?.eventProperties" class="group block shrink-0 bg-surface-sunken w-fit pr-3 rounded-full border border-border">
                         <div class="flex items-center">
                             <div class="rounded-full p-1 size-8 flex items-center justify-center">
                                 <component :is="eventProperty.icon" class="inline-block size-4"  />
                             </div>
                             <div class="mx-1">
-                                <p class="xxsDark group-hover:text-gray-900">{{ eventProperty.name}}</p>
+                                <p class="xxsDark group-hover:text-text">{{ eventProperty.name}}</p>
                             </div>
                         </div>
                     </div>
@@ -129,7 +129,7 @@
                 <div class="w-full">
                     <SwitchGroup as="div" class="flex items-center">
                         <Switch v-model="this.allDayEvent"
-                                :class="[this.allDayEvent ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                :class="[this.allDayEvent ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-accent-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[this.allDayEvent ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                         </Switch>
@@ -187,16 +187,16 @@
 
                 </div>
                 <div>
-                    <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
-                    <div class="text-red-500 text-xs" v-show="helpTextStart.length > 0">{{
+                    <div class="text-danger text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
+                    <div class="text-danger text-xs" v-show="helpTextStart.length > 0">{{
                             helpTextStart
                         }}
                     </div>
-                    <div class="text-red-500 text-xs" v-show="helpTextEnd.length > 0">{{
+                    <div class="text-danger text-xs" v-show="helpTextEnd.length > 0">{{
                             helpTextEnd
                         }}
                     </div>
-                    <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{
+                    <div class="text-danger text-xs" v-show="helpTextLength.length > 0">{{
                             helpTextLength
                         }}
                     </div>

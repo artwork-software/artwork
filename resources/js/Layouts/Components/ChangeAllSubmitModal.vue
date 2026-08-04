@@ -2,7 +2,7 @@
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closed">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
             </TransitionChild>
 
             <div class="fixed inset-0 z-50 overflow-y-auto">
@@ -11,7 +11,7 @@
                         <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_budget_access.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closed">
+                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closed">
                                     <span class="sr-only">Close</span>
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>

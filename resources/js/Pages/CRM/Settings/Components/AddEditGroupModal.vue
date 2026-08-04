@@ -15,8 +15,8 @@
                 </div>
             </div>
             <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" v-model="form.is_confidential" class="rounded border-gray-300 text-indigo-600" />
-                <span class="text-sm text-gray-700">{{ $t('Confidential') }}</span>
+                <input type="checkbox" v-model="form.is_confidential" class="rounded border-border text-accent-600" />
+                <span class="text-sm text-text-muted">{{ $t('Confidential') }}</span>
             </label>
 
             <!-- Effect of confidentiality -->
@@ -28,8 +28,8 @@
             />
 
             <!-- Permissions section when confidential -->
-            <div v-if="form.is_confidential" class="rounded-xl border border-gray-200 bg-white p-4">
-                <div class="mb-3 text-sm font-bold text-gray-900">
+            <div v-if="form.is_confidential" class="rounded-xl border border-border-subtle bg-white p-4">
+                <div class="mb-3 text-sm font-bold text-text">
                     {{ $t('Manage access') }}
                 </div>
 
@@ -43,13 +43,13 @@
 
                     <div
                         v-if="hasSearchResults"
-                        class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white text-sm shadow-lg"
+                        class="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-border-subtle bg-white text-sm shadow-lg"
                     >
-                        <div class="divide-y divide-gray-100">
+                        <div class="divide-y divide-border-subtle">
                             <div
                                 v-for="(user, idx) in searchResults.users"
                                 :key="'u_' + idx"
-                                class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                class="px-4 py-2 hover:bg-surface-sunken cursor-pointer flex items-center gap-2"
                                 @click="addUser(user)"
                             >
                                 <img :src="user.profile_photo_url" :alt="user.first_name" class="h-8 w-8 rounded-full object-cover" />
@@ -58,7 +58,7 @@
                             <div
                                 v-for="(department, idx) in searchResults.departments"
                                 :key="'d_' + idx"
-                                class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-2"
+                                class="px-4 py-2 hover:bg-surface-sunken cursor-pointer flex items-center gap-2"
                                 @click="addDepartment(department)"
                             >
                                 <TeamIconCollection :iconName="department.svg_name" :alt="department.name" class="h-8 w-8" />
@@ -73,7 +73,7 @@
                     <div
                         v-for="(perm, idx) in permissions"
                         :key="perm.permissionable_type + '_' + perm.permissionable_id"
-                        class="flex items-center justify-between rounded-lg border-b border-gray-100 pb-2"
+                        class="flex items-center justify-between rounded-lg border-b border-border-subtle pb-2"
                     >
                         <div class="flex items-center gap-3 min-w-0">
                             <img
@@ -88,18 +88,18 @@
                                 :alt="perm._display.name"
                                 class="h-10 w-10 flex-shrink-0"
                             />
-                            <span class="text-sm font-medium text-gray-800 truncate">{{ perm._display.name }}</span>
+                            <span class="text-sm font-medium text-text truncate">{{ perm._display.name }}</span>
                         </div>
                         <div class="flex items-center gap-4 flex-shrink-0">
                             <label class="flex items-center gap-1 cursor-pointer">
-                                <input type="checkbox" v-model="permissions[idx].can_view" class="rounded border-gray-300 text-indigo-600" />
-                                <span class="text-xs text-gray-600">{{ $t('Can view') }}</span>
+                                <input type="checkbox" v-model="permissions[idx].can_view" class="rounded border-border text-accent-600" />
+                                <span class="text-xs text-text-muted">{{ $t('Can view') }}</span>
                             </label>
                             <label class="flex items-center gap-1 cursor-pointer">
-                                <input type="checkbox" v-model="permissions[idx].can_edit" class="rounded border-gray-300 text-indigo-600" />
-                                <span class="text-xs text-gray-600">{{ $t('Can edit') }}</span>
+                                <input type="checkbox" v-model="permissions[idx].can_edit" class="rounded border-border text-accent-600" />
+                                <span class="text-xs text-text-muted">{{ $t('Can edit') }}</span>
                             </label>
-                            <button type="button" @click="removePermission(idx)" class="text-gray-400 hover:text-red-500">
+                            <button type="button" @click="removePermission(idx)" class="text-text-subtle hover:text-danger">
                                 <IconX class="h-5 w-5" />
                             </button>
                         </div>

@@ -1,20 +1,20 @@
 <template>
     <div class="-mx-2 sm:mx-0">
-        <div class="rounded-2xl border border-border-subtle bg-surface px-3 py-3 sm:px-5 sm:py-4 shadow-raised">
+        <div class="rounded-lg border border-border-subtle bg-surface px-3 py-3 sm:px-5 sm:py-4 shadow-raised">
             <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                 <!-- Brand/Icon + Titel -->
                 <div class="flex items-center gap-3 mr-auto min-w-0">
                     <div
-                        class="size-9 rounded-xl flex items-center justify-center shrink-0"
+                        class="size-9 rounded-lg flex items-center justify-center shrink-0"
                         :class="iconBgClass"
                     >
                         <component v-if="icon" :is="icon" class="size-6" />
                     </div>
                     <div class="min-w-0">
-                        <div class="text-text text-xl sm:text-2xl font-semibold tracking-tight truncate">
+                        <h1 class="font-lexend font-bold text-2xl text-text truncate">
                             {{ $t(title) }}
-                        </div>
-                        <div v-if="$slots.subtitle || description" class="text-xs text-text-subtle">
+                        </h1>
+                        <div v-if="$slots.subtitle || description" class="text-xs text-text-muted">
                             <slot name="subtitle">
                                 {{ $t(description) }}
                             </slot>
@@ -50,7 +50,7 @@
                         />
                         <button
                             type="button"
-                            class="shrink-0 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken transition"
+                            class="shrink-0 rounded-lg border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken transition"
                             @click="closeSearchbar"
                             aria-label="Close search"
                         >

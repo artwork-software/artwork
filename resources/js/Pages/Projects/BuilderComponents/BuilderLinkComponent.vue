@@ -1,11 +1,11 @@
 <template>
     <div class="xxsLight">
-        <div v-if="component.data?.label" class="text-sm font-bold text-gray-900 mb-0.5">{{ component.data.label }}</div>
+        <div v-if="component.data?.label" class="text-sm font-bold text-text mb-0.5">{{ component.data.label }}</div>
         <a
             v-if="linkText && linkText.length > 0"
             :href="linkText"
             target="_blank"
-            class="text-blue-600 hover:underline line-clamp-2 block"
+            class="text-accent-600 hover:underline line-clamp-2 block"
         >
             {{ linkText }}
         </a>

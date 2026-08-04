@@ -16,7 +16,7 @@
                 />
             </BaseFilterDisclosure>
 
-            <hr class="border-gray-500 rounded-full mt-2 mb-2">
+            <hr class="border-border-strong rounded-full mt-2 mb-2">
             <BaseFilterDisclosure :title="$t('Legal form')">
                 <BaseFilterCheckboxList
                     :list="companyTypes"
@@ -25,7 +25,7 @@
                     @changeFilterItems="updateFilter" />
             </BaseFilterDisclosure>
 
-            <hr class="border-gray-500 rounded-full mt-2 mb-2">
+            <hr class="border-border-strong rounded-full mt-2 mb-2">
             <BaseFilterDisclosure :title="$t('Contract type')">
                 <BaseFilterCheckboxList
                     :list="contractTypes"

@@ -25,7 +25,7 @@
                         <form @submit.prevent="submit">
                             <div>
                                 <jet-label for="email" value="Email" />
-                                <jet-input id="email" type="email" class="mt-1 block w-full bg-gray-50" v-model="form.email" readonly required autofocus disabled />
+                                <jet-input id="email" type="email" class="mt-1 block w-full bg-surface-sunken" v-model="form.email" readonly required autofocus disabled />
                             </div>
 
                             <div class="mt-4">

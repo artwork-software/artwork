@@ -184,7 +184,7 @@
                                         <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToApprove.eventType?.hex_code }" />
                                     </div>
                                     <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                         {{ requestToApprove.event_type.name }}
                                         <PropertyIcon name="AdjustmentsIcon" v-if="requestToApprove.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
@@ -247,7 +247,7 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest" :disabled="approveRequestForm.processing">
                             {{$t('Commitments')}}
@@ -273,7 +273,7 @@
                                         <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToDecline.eventType?.hex_code }" />
                                     </div>
                                     <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                         {{ requestToDecline.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>

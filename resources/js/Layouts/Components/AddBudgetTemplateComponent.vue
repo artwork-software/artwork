@@ -16,7 +16,7 @@
                         <input type="text"
                                :placeholder="$t('Name of the template*')"
                                v-model="this.templateName"
-                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"/>
                     </div>
                 </div>
                 <div class="flex justify-center">

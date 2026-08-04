@@ -27,12 +27,12 @@
                             <input id="is_planning" v-model="form.is_planning" type="checkbox" class="input-checklist" />
                         </div>
                         <div class="ml-3 text-sm leading-6 flex items-center">
-                            <label for="is_planning" class="font-medium text-gray-900">
+                            <label for="is_planning" class="font-medium text-text">
                                 {{ $t('Project counts as "in planning"') }}
                             </label>
                             <div class="relative ml-2 group">
-                                <InformationCircleIcon class="h-5 w-5 text-gray-400" />
-                                <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 w-64">
+                                <InformationCircleIcon class="h-5 w-5 text-text-subtle" />
+                                <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-surface-inverse text-text-inverse text-xs rounded p-2 w-64">
                                     {{ $t('When a project counts as "in planning", all appointments assigned to this project during creation are initially planned appointments instead of firmly scheduled ones.') }}
                                 </div>
                             </div>
@@ -43,10 +43,10 @@
 
             <!-- Buttons -->
             <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" @click="closeModal" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                <button type="button" @click="closeModal" class="inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken sm:text-sm">
                     {{ $t('Cancel') }}
                 </button>
-                <button type="button" @click="submit" :disabled="form.name === ''" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="button" @click="submit" :disabled="form.name === ''" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-hover sm:text-sm disabled:bg-border disabled:text-text-subtle disabled:cursor-not-allowed">
                     {{ $t('Save') }}
                 </button>
             </div>

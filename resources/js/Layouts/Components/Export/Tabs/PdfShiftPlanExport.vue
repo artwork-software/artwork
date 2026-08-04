@@ -3,16 +3,16 @@
         <div class="flex flex-col space-y-6">
             <!-- What this export does -->
             <section>
-                <h1 class="text-lg font-semibold text-zinc-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ $t('PDF_SHIFT_PLAN_EXPORT') }}
                 </h1>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('Exports the shift plan as a PDF without requiring a project – for a freely selectable period, filterable by calendar week and craft.') }}
                 </p>
             </section>
 
             <!-- Title + mode + period -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <BaseInput id="shiftPlanTitle" v-model="pdf.title" :label="$t('Heading')" />
 
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -22,8 +22,8 @@
                         type="button"
                         class="rounded-xl border p-4 text-left transition"
                         :class="pdf.exportMode === mode.id
-                            ? 'border-zinc-900 bg-zinc-900 text-white'
-                            : 'border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50'"
+                            ? 'border-surface-inverse bg-surface-inverse text-white'
+                            : 'border-border-subtle bg-white text-text hover:bg-surface-sunken'"
                         @click="selectExportMode(mode.id)"
                     >
                         <span class="block text-sm font-semibold">{{ mode.title }}</span>
@@ -33,7 +33,7 @@
 
                 <!-- Period: by date or by calendar week -->
                 <div>
-                    <div class="mb-2 text-sm font-medium text-zinc-700">{{ $t('Time period') }}</div>
+                    <div class="mb-2 text-sm font-medium text-text-muted">{{ $t('Time period') }}</div>
                     <div class="flex gap-2">
                         <button
                             v-for="mode in periodModes"
@@ -41,8 +41,8 @@
                             type="button"
                             class="rounded-full border px-3 py-1 text-xs transition-colors"
                             :class="periodMode === mode.id
-                                ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                                ? 'border-accent-200 bg-accent-50 text-accent-700'
+                                : 'border-border-subtle text-text-muted hover:bg-surface-sunken hover:text-text'"
                             @click="periodMode = mode.id"
                         >
                             {{ mode.title }}
@@ -62,15 +62,15 @@
                             type="button"
                             class="rounded-full border px-3 py-1 text-xs transition-colors"
                             :class="isActiveDatePreset(preset)
-                                ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                                ? 'border-accent-200 bg-accent-50 text-accent-700'
+                                : 'border-border-subtle text-text-muted hover:bg-surface-sunken hover:text-text'"
                             @click="applyDatePreset(preset)"
                         >
                             {{ preset.label }}
                         </button>
                     </div>
                     <p v-if="dateRangeError" class="text-xs text-artwork-messages-error">{{ dateRangeError }}</p>
-                    <p v-else class="text-xs text-zinc-500">{{ $t('A maximum of six months can be exported in one PDF.') }}</p>
+                    <p v-else class="text-xs text-text-subtle">{{ $t('A maximum of six months can be exported in one PDF.') }}</p>
                 </div>
 
                 <div v-else class="space-y-2">
@@ -100,7 +100,7 @@
                     <p v-else-if="dateRangeError" class="text-xs text-artwork-messages-error">
                         {{ dateRangeError }}
                     </p>
-                    <p v-else class="text-xs text-zinc-500">
+                    <p v-else class="text-xs text-text-subtle">
                         {{ $t('Period') }}: {{ formatDate(pdf.start) }} – {{ formatDate(pdf.end) }}
                     </p>
                 </div>
@@ -110,28 +110,28 @@
                 </p>
             </section>
 
-            <section class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
-                <h2 class="text-sm font-semibold text-zinc-900">{{ $t('This is how the PDF is structured') }}</h2>
-                <div class="mt-4 overflow-hidden rounded-lg border border-zinc-300 bg-white text-[11px] text-zinc-600 shadow-sm">
-                    <div class="border-b border-zinc-200 bg-zinc-100 px-3 py-2 font-semibold text-zinc-800">
+            <section class="rounded-2xl border border-accent-200 bg-accent-50/60 p-5">
+                <h2 class="text-sm font-semibold text-text">{{ $t('This is how the PDF is structured') }}</h2>
+                <div class="mt-4 overflow-hidden rounded-lg border border-border bg-white text-[11px] text-text-muted shadow-sm">
+                    <div class="border-b border-border-subtle bg-surface-sunken px-3 py-2 font-semibold text-text">
                         {{ pdf.title || $t('Shift plan') }} · {{ formatDate(pdf.start) }} – {{ formatDate(pdf.end) }}
                     </div>
                     <div class="grid grid-cols-[7rem_repeat(3,minmax(0,1fr))]">
-                        <div class="border-r border-zinc-200 bg-zinc-50 p-2 font-semibold">
+                        <div class="border-r border-border-subtle bg-surface-sunken p-2 font-semibold">
                             {{ pdf.exportMode === 'rooms' ? $t('Room / area') : $t('Person') }}
                         </div>
-                        <div v-for="day in previewDays" :key="day" class="border-r border-zinc-200 p-2 text-center font-semibold last:border-r-0">
+                        <div v-for="day in previewDays" :key="day" class="border-r border-border-subtle p-2 text-center font-semibold last:border-r-0">
                             {{ day }}
                         </div>
                         <template v-for="row in previewRows" :key="row.label">
-                            <div class="border-r border-t border-zinc-200 bg-zinc-50 p-2 font-medium">{{ row.label }}</div>
-                            <div v-for="(cell, cellIndex) in row.cells" :key="cellIndex" class="border-r border-t border-zinc-200 p-2 last:border-r-0">
+                            <div class="border-r border-t border-border-subtle bg-surface-sunken p-2 font-medium">{{ row.label }}</div>
+                            <div v-for="(cell, cellIndex) in row.cells" :key="cellIndex" class="border-r border-t border-border-subtle p-2 last:border-r-0">
                                 {{ cell }}
                             </div>
                         </template>
                     </div>
                 </div>
-                <ul class="mt-4 space-y-1 text-xs text-zinc-700">
+                <ul class="mt-4 space-y-1 text-xs text-text-muted">
                     <li><span class="font-semibold">{{ $t('Rows') }}:</span> {{ exportSummary.rows }}</li>
                     <li><span class="font-semibold">{{ $t('Columns') }}:</span> {{ exportSummary.columns }}</li>
                     <li><span class="font-semibold">{{ $t('Cells contain') }}:</span> {{ exportSummary.contents }}</li>
@@ -141,27 +141,27 @@
             <!-- Filters (room export): rooms, areas, event types, crafts -->
             <section
                 v-if="pdf.exportMode === 'rooms'"
-                class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-5"
+                class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-5"
             >
                 <div>
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Filter') }}</h2>
-                    <p class="mt-1 text-xs text-zinc-500">
+                    <h2 class="text-sm font-semibold text-text">{{ $t('Filter') }}</h2>
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('No selection in a group means it is not filtered by it.') }}
                     </p>
                 </div>
 
                 <div v-for="group in filterGroups" :key="group.key" class="space-y-2">
-                    <div class="flex items-center justify-between border-b border-zinc-100 pb-1">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-zinc-700">
+                    <div class="flex items-center justify-between border-b border-border-subtle pb-1">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-text-muted">
                             {{ group.label }}
-                            <span v-if="selections[group.key].length > 0" class="ml-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                            <span v-if="selections[group.key].length > 0" class="ml-1 rounded-full bg-accent-50 px-2 py-0.5 text-[10px] font-semibold text-accent-700">
                                 {{ selections[group.key].length }}
                             </span>
                         </span>
                         <button
                             v-if="group.options.length > 0"
                             type="button"
-                            class="text-xs text-zinc-500 hover:text-zinc-900"
+                            class="text-xs text-text-subtle hover:text-text"
                             @click="toggleGroup(group.key)"
                         >
                             {{ selections[group.key].length === group.options.length ? $t('Deselect all') : $t('Select all') }}
@@ -171,7 +171,7 @@
                         <label
                             v-for="option in group.options"
                             :key="option.id"
-                            class="flex cursor-pointer items-center gap-2 pr-2 text-xs text-zinc-700"
+                            class="flex cursor-pointer items-center gap-2 pr-2 text-xs text-text-muted"
                         >
                             <input
                                 type="checkbox"
@@ -182,14 +182,14 @@
                             <span class="truncate">{{ option.name }}</span>
                         </label>
                     </div>
-                    <p v-else class="text-xs text-zinc-400">–</p>
+                    <p v-else class="text-xs text-text-subtle">–</p>
                 </div>
 
-                <label class="flex cursor-pointer items-start gap-3 border-t border-zinc-100 pt-4">
+                <label class="flex cursor-pointer items-start gap-3 border-t border-border-subtle pt-4">
                     <input type="checkbox" v-model="pdf.hideEmptyRooms" class="input-checklist mt-0.5" />
                     <span>
-                        <span class="block text-sm font-medium text-zinc-800">{{ $t('Hide empty rooms') }}</span>
-                        <span class="block text-xs text-zinc-500">
+                        <span class="block text-sm font-medium text-text">{{ $t('Hide empty rooms') }}</span>
+                        <span class="block text-xs text-text-subtle">
                             {{ $t('Rooms without events or shifts in the selected period are omitted from the PDF.') }}
                         </span>
                     </span>
@@ -199,18 +199,18 @@
             <!-- Craft filter (personnel export) -->
             <section
                 v-if="pdf.exportMode === 'worker_matrix' && crafts.length > 0"
-                class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4"
+                class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4"
             >
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Which shifts should be included?') }}</h2>
-                        <p class="mt-1 text-xs text-zinc-500">
+                        <h2 class="text-sm font-semibold text-text">{{ $t('Which shifts should be included?') }}</h2>
+                        <p class="mt-1 text-xs text-text-subtle">
                             {{ $t('This filters the shifts printed for each person. Individual times and day services remain visible when enabled below.') }}
                         </p>
                     </div>
                     <button
                         type="button"
-                        class="text-sm text-zinc-600 hover:text-zinc-900"
+                        class="text-sm text-text-muted hover:text-text"
                         @click="toggleAllCrafts"
                     >
                         {{ allCraftsSelected ? $t('Deselect all') : $t('Select all') }}
@@ -220,7 +220,7 @@
                     <label
                         v-for="craft in crafts"
                         :key="craft.id"
-                        class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer"
+                        class="flex items-center gap-2 text-xs text-text-muted cursor-pointer"
                     >
                         <input
                             type="checkbox"
@@ -238,22 +238,22 @@
 
             <section
                 v-if="pdf.exportMode === 'worker_matrix'"
-                class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-5"
+                class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-5"
             >
                 <div>
-                    <h3 class="text-sm font-semibold text-zinc-900">{{ $t('Personnel overview') }}</h3>
-                    <p class="mt-1 text-xs text-zinc-500">
+                    <h3 class="text-sm font-semibold text-text">{{ $t('Personnel overview') }}</h3>
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Days are shown as columns and workers as rows. The maximum export period is 31 days.') }}
                     </p>
                 </div>
 
                 <div>
-                    <div class="mb-2 text-sm font-medium text-zinc-700">{{ $t('Worker types') }}</div>
-                    <p class="mb-3 text-xs text-zinc-500">
+                    <div class="mb-2 text-sm font-medium text-text-muted">{{ $t('Worker types') }}</div>
+                    <p class="mb-3 text-xs text-text-subtle">
                         {{ $t('This selection filters people: only the selected personnel groups become rows in the PDF.') }}
                     </p>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                        <label v-for="workerType in workerTypes" :key="workerType.id" class="flex items-center gap-2 text-sm text-zinc-700">
+                        <label v-for="workerType in workerTypes" :key="workerType.id" class="flex items-center gap-2 text-sm text-text-muted">
                             <input v-model="pdf.worker_types" :value="workerType.id" type="checkbox" class="input-checklist" />
                             {{ workerType.label }}
                         </label>
@@ -261,24 +261,24 @@
                 </div>
 
                 <div>
-                    <div class="mb-2 text-sm font-medium text-zinc-700">{{ $t('Contents') }}</div>
-                    <p class="mb-3 text-xs text-zinc-500">
+                    <div class="mb-2 text-sm font-medium text-text-muted">{{ $t('Contents') }}</div>
+                    <p class="mb-3 text-xs text-text-subtle">
                         {{ $t('These options control which kinds of entries are printed in each person/day cell.') }}
                     </p>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <label class="flex items-center gap-2 text-sm text-zinc-700">
+                        <label class="flex items-center gap-2 text-sm text-text-muted">
                             <input v-model="pdf.show_shifts" type="checkbox" class="input-checklist" />
                             {{ $t('Shifts with room and individual time') }}
                         </label>
-                        <label class="flex items-center gap-2 text-sm text-zinc-700">
+                        <label class="flex items-center gap-2 text-sm text-text-muted">
                             <input v-model="pdf.show_individual_times" type="checkbox" class="input-checklist" />
                             {{ $t('Individual times') }}
                         </label>
-                        <label class="flex items-center gap-2 text-sm text-zinc-700">
+                        <label class="flex items-center gap-2 text-sm text-text-muted">
                             <input v-model="pdf.show_day_services" type="checkbox" class="input-checklist" />
                             {{ $t('Day Services') }}
                         </label>
-                        <label class="flex items-center gap-2 text-sm text-zinc-700">
+                        <label class="flex items-center gap-2 text-sm text-text-muted">
                             <input v-model="pdf.include_empty_workers" type="checkbox" class="input-checklist" />
                             {{ $t('Show workers without entries') }}
                         </label>
@@ -286,10 +286,10 @@
                 </div>
             </section>
 
-            <div class="rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+            <div class="rounded-xl border border-accent-200 bg-accent-50/70 p-4">
                 <div class="flex items-start gap-x-3">
-                    <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-blue-500"/>
-                    <p class="text-sm text-blue-500">
+                    <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-accent-600"/>
+                    <p class="text-sm text-accent-600">
                         {{ pdf.exportMode === 'rooms'
                             ? $t('The export is prefilled with your current shift plan view. Time period and filters can be adjusted below before exporting. Each calendar week is placed on its own page.')
                             : $t('Personnel export creates one row per selected person. Craft filters affect shifts, worker types affect people, and the content options affect the entries shown in the cells.') }}
@@ -298,20 +298,20 @@
             </div>
 
             <!-- Paper format + orientation + DPI -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <!-- Paper size -->
                     <div class="space-y-2">
                         <Listbox as="div" v-model="selectedPaperSize">
-                            <ListboxLabel class="block text-sm font-medium text-zinc-700">
+                            <ListboxLabel class="block text-sm font-medium text-text-muted">
                                 {{ $t('Paper size') }}
                             </ListboxLabel>
                             <div class="relative mt-1">
                                 <ListboxButton
-                                    class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm hover:bg-zinc-50">
+                                    class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white px-4 py-3 text-left text-sm hover:bg-surface-sunken">
                                     <div class="block truncate">{{ selectedPaperSize.name }}</div>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <component :is="IconSelector" class="h-5 w-5 text-zinc-400" />
+                                        <component :is="IconSelector" class="h-5 w-5 text-text-subtle" />
                                     </span>
                                 </ListboxButton>
                                 <transition
@@ -326,11 +326,11 @@
                                             :value="paperSize"
                                             v-slot="{ active, selected }"
                                             as="template">
-                                            <li :class="['relative cursor-pointer select-none py-2 pl-3 pr-9', active ? 'bg-zinc-900 text-white' : 'text-zinc-900']">
+                                            <li :class="['relative cursor-pointer select-none py-2 pl-3 pr-9', active ? 'bg-surface-inverse text-white' : 'text-text']">
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
                                                     {{ paperSize.name }}
                                                 </span>
-                                                <span v-if="selected" :class="[active ? 'text-white' : 'text-zinc-900', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                <span v-if="selected" :class="[active ? 'text-white' : 'text-text', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                     <component :is="IconCheck" class="h-5 w-5" />
                                                 </span>
                                             </li>
@@ -343,7 +343,7 @@
 
                     <!-- Orientation -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-zinc-700">
+                        <label class="block text-sm font-medium text-text-muted">
                             {{ $t('Paper orientation') }}
                         </label>
                         <fieldset>
@@ -360,13 +360,13 @@
                                     <label
                                         :for="`shiftplan-${paperOrientation.id}`"
                                         class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                        peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
-                                        border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary">
+                                        peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-white
+                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-primary">
                                         {{ paperOrientation.title }}
                                     </label>
                                 </div>
                             </div>
-                            <span class="mt-2 block text-xs text-zinc-500">
+                            <span class="mt-2 block text-xs text-text-subtle">
                                 {{ $t('Landscape format is recommended so a whole calendar week fits on one page.') }}
                             </span>
                         </fieldset>

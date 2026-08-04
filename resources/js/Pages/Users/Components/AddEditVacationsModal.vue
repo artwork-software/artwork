@@ -19,16 +19,16 @@
                         leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     >
                         <DialogPanel
-                            class="relative transform bg-white shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg rounded-2xl border border-zinc-200 text-left"
+                            class="relative transform bg-white shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg rounded-2xl border border-border-subtle text-left"
                         >
                             <!-- Header -->
-                            <DialogTitle class="flex items-center justify-between px-6 py-4 border-b border-zinc-200">
-                                <div class="text-base font-semibold text-zinc-900">
+                            <DialogTitle class="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
+                                <div class="text-base font-semibold text-text">
                                     {{ isEdit ? $t('Edit entry') : $t('Create entry') }}
                                 </div>
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center rounded-full p-1.5 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 transition"
+                                    class="inline-flex items-center justify-center rounded-full p-1.5 text-text-subtle hover:text-text-muted hover:bg-surface-sunken transition"
                                     @click="closeModal"
                                 >
                                     <span class="sr-only">Close</span>
@@ -39,23 +39,21 @@
                             <!-- Body -->
                             <div class="px-6 py-5">
                                 <!-- Typ-Auswahl -->
-                                <div class="grid grid-cols-2 rounded-xl border border-zinc-300 overflow-hidden mb-5 text-sm font-medium">
+                                <div class="grid grid-cols-2 rounded-xl border border-border overflow-hidden mb-5 text-sm font-medium">
                                     <button
                                         type="button"
                                         class="px-3 py-2.5 transition"
-                                        :class="entry.type === 'available'
-                                            ? 'bg-emerald-600 text-white'
-                                            : 'bg-white text-zinc-600 hover:bg-zinc-50'"
+                                        :class="entry.type === 'available' ? 'bg-success text-white'
+                                            : 'bg-white text-text-muted hover:bg-surface-sunken'"
                                         @click="entry.type = 'available'"
                                     >
                                         {{ $t('Available') }}
                                     </button>
                                     <button
                                         type="button"
-                                        class="px-3 py-2.5 transition border-l border-zinc-300"
-                                        :class="entry.type === 'vacation'
-                                            ? 'bg-rose-600 text-white'
-                                            : 'bg-white text-zinc-600 hover:bg-zinc-50'"
+                                        class="px-3 py-2.5 transition border-l border-border"
+                                        :class="entry.type === 'vacation' ? 'bg-danger text-white'
+                                            : 'bg-white text-text-muted hover:bg-surface-sunken'"
                                         @click="entry.type = 'vacation'"
                                     >
                                         {{ $t('Absent') }}
@@ -66,14 +64,14 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
                                     <div>
                                         <BaseInput id="entry_start_date" type="date" v-model="entry.start_date" :label="$t('From')" />
-                                        <div v-show="errors.start_date" class="mt-1 text-red-600 text-xs">{{ errors.start_date }}</div>
+                                        <div v-show="errors.start_date" class="mt-1 text-danger text-xs">{{ errors.start_date }}</div>
                                     </div>
                                     <div>
                                         <BaseInput id="entry_end_date" type="date" v-model="entry.end_date" :label="$t('To')" />
-                                        <div v-show="errors.end_date" class="mt-1 text-red-600 text-xs">{{ errors.end_date }}</div>
+                                        <div v-show="errors.end_date" class="mt-1 text-danger text-xs">{{ errors.end_date }}</div>
                                     </div>
                                 </div>
-                                <p v-if="isRange" class="mb-4 text-xs text-zinc-500">
+                                <p v-if="isRange" class="mb-4 text-xs text-text-subtle">
                                     {{ $t('One entry is created for each day in the period.') }}
                                 </p>
                                 <div v-else class="mb-4"></div>
@@ -81,7 +79,7 @@
                                 <!-- Hinweis: Abwesenheit löst bestehende Projektwünsche auf -->
                                 <div
                                     v-if="entry.type === 'vacation' && conflictingWishDates.length"
-                                    class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                                    class="mb-4 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
                                 >
                                     {{ $t('There are project wishes on {0}. They will be dissolved by this absence.', [conflictingWishDates.join(', ')]) }}
                                 </div>
@@ -92,20 +90,20 @@
                                         id="entry_full_day"
                                         v-model="entry.full_day"
                                         type="checkbox"
-                                        class="h-5 w-5 border-blue-300 text-blue-600 focus:ring-0 ring-0"
+                                        class="h-5 w-5 border-accent-200 text-accent-600 focus:ring-0 ring-0"
                                     />
-                                    <label for="entry_full_day" class="text-sm font-medium text-zinc-900">{{ $t('All day') }}</label>
+                                    <label for="entry_full_day" class="text-sm font-medium text-text">{{ $t('All day') }}</label>
                                 </div>
 
                                 <!-- Zeiten -->
                                 <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4" v-if="!entry.full_day">
                                     <div>
                                         <BaseInput id="entry_start_time" type="time" v-model="entry.start_time" :label="$t('Start time')" />
-                                        <div v-show="errors.start_time" class="mt-1 text-red-600 text-xs">{{ errors.start_time }}</div>
+                                        <div v-show="errors.start_time" class="mt-1 text-danger text-xs">{{ errors.start_time }}</div>
                                     </div>
                                     <div>
                                         <BaseInput id="entry_end_time" type="time" v-model="entry.end_time" :label="$t('End time')" />
-                                        <div v-show="errors.end_time" class="mt-1 text-red-600 text-xs">{{ errors.end_time }}</div>
+                                        <div v-show="errors.end_time" class="mt-1 text-danger text-xs">{{ errors.end_time }}</div>
                                     </div>
                                 </div>
 
@@ -116,16 +114,16 @@
                                             id="entry_repeat"
                                             v-model="entry.repeat_weekly"
                                             type="checkbox"
-                                            class="h-5 w-5 border-blue-300 text-blue-600 focus:ring-0 ring-0"
+                                            class="h-5 w-5 border-accent-200 text-accent-600 focus:ring-0 ring-0"
                                         />
-                                        <label for="entry_repeat" class="text-sm font-medium text-zinc-900 inline-flex items-center gap-1.5">
-                                            <IconRepeat class="h-4 w-4 text-zinc-600" />
+                                        <label for="entry_repeat" class="text-sm font-medium text-text inline-flex items-center gap-1.5">
+                                            <IconRepeat class="h-4 w-4 text-text-muted" />
                                             {{ $t('Repeat weekly') }}
                                         </label>
                                     </div>
                                     <div v-if="entry.repeat_weekly" class="mt-3">
                                         <BaseInput id="entry_repeat_until" type="date" v-model="entry.repeat_until" :label="$t('Ends on')" />
-                                        <div v-show="errors.repeat_until" class="mt-1 text-red-600 text-xs">{{ errors.repeat_until }}</div>
+                                        <div v-show="errors.repeat_until" class="mt-1 text-danger text-xs">{{ errors.repeat_until }}</div>
                                     </div>
                                 </div>
 
@@ -137,15 +135,15 @@
                                         v-model="entry.comment"
                                         :label="$t('Note (optional)')"
                                     />
-                                    <div v-show="errors.comment" class="mt-1 text-red-600 text-xs">{{ errors.comment }}</div>
+                                    <div v-show="errors.comment" class="mt-1 text-danger text-xs">{{ errors.comment }}</div>
                                 </div>
                             </div>
 
                             <!-- Footer -->
-                            <div class="flex items-center justify-between px-6 py-4 border-t border-zinc-200">
+                            <div class="flex items-center justify-between px-6 py-4 border-t border-border-subtle">
                                 <button
                                     v-if="!isEdit"
-                                    class="text-blue-700 text-xs underline underline-offset-2 disabled:opacity-50"
+                                    class="text-accent-700 text-xs underline underline-offset-2 disabled:text-text-subtle disabled:cursor-not-allowed"
                                     :disabled="submitting"
                                     @click="save(true)"
                                 >
@@ -156,7 +154,7 @@
                                 <div class="flex items-center gap-2">
                                     <BaseButton
                                         :text="$t('Cancel')"
-                                        background-color="bg-zinc-200 hover:bg-zinc-300 !text-zinc-800"
+                                        background-color="bg-border-subtle hover:bg-border !text-text"
                                         @click="closeModal"
                                     />
                                     <BaseButton

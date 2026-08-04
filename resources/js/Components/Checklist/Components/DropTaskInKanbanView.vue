@@ -7,7 +7,7 @@
         class="rounded-lg duration-100 ease-in-out border-2 border-dashed w-full mb-4"
         :class="{
         'bg-artwork-buttons-create/10 border-artwork-buttons-create h-12 xsDark': dropOver,
-        'bg-gray-50 border-gray-400 h-12 xsLight': isDragging,
+        'bg-surface-sunken border-border-strong h-12 xsLight': isDragging,
         'border-transparent xsLight': !dropOver && !isDragging,
     }">
         <div class="flex items-center justify-center pointer-events-none h-full ">

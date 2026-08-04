@@ -29,17 +29,17 @@
 
         <!-- Pattern selected: read-only overview -->
         <div v-if="isPatternSelected" class="mt-5 space-y-4">
-            <div class="rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3">
+            <div class="rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
                 <div class="flex items-start gap-3">
-                    <component :is="IconClockCheck" class="size-5 shrink-0 text-blue-600 mt-0.5" stroke-width="1.5" />
+                    <component :is="IconClockCheck" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-blue-900 font-lexend">
+                        <p class="text-sm font-semibold text-accent-700 font-lexend">
                             {{ $t('Active work time pattern: {0}', [selectedWorkTimePattern?.name ?? '-']) }}
                         </p>
-                        <p v-if="selectedWorkTimePattern?.description" class="text-xs text-blue-800/80 mt-0.5">
+                        <p v-if="selectedWorkTimePattern?.description" class="text-xs text-accent-700 mt-0.5">
                             {{ selectedWorkTimePattern.description }}
                         </p>
-                        <p class="text-xs text-blue-800/80 mt-1">
+                        <p class="text-xs text-accent-700 mt-1">
                             {{ $t('Working times are defined by the pattern and cannot be edited. Remove the pattern to enter custom times.') }}
                         </p>
                     </div>
@@ -48,32 +48,32 @@
 
             <div class="card white p-5">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                        <component :is="IconCalendarWeek" class="size-4 text-gray-400" stroke-width="1.5" />
+                    <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                        <component :is="IconCalendarWeek" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Weekly working hours') }}
                     </h3>
-                    <p v-if="currentWorkTime?.valid_from" class="text-xs text-gray-500">
+                    <p v-if="currentWorkTime?.valid_from" class="text-xs text-text-subtle">
                         {{ $t('Valid from') }}: {{ formatDate(currentWorkTime.valid_from) }}
                         <template v-if="currentWorkTime?.valid_until"> &ndash; {{ formatDate(currentWorkTime.valid_until) }}</template>
                     </p>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-text-subtle mt-1">
                     {{ $t('The values show the working hours per day. They are used as the daily target, e.g. for the hours account and overtime calculation.') }}
                 </p>
 
                 <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                     <div v-for="day in weekDays" :key="day.key"
-                         class="rounded-md border border-gray-100 bg-gray-50/60 px-3 py-2.5 text-center">
-                        <p class="text-xs text-gray-500">{{ $t(day.label) }}</p>
-                        <p class="mt-0.5 text-sm font-semibold text-gray-900">
+                         class="rounded-md border border-border-subtle bg-surface-sunken px-3 py-2.5 text-center">
+                        <p class="text-xs text-text-subtle">{{ $t(day.label) }}</p>
+                        <p class="mt-0.5 text-sm font-semibold text-text">
                             {{ formatHours(currentWorkTime?.[`${day.key}_hours`]) }}
                         </p>
                     </div>
                 </div>
 
-                <div class="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-                    <span class="text-xs text-gray-500">{{ $t('Total hours') }}:</span>
-                    <span class="text-sm font-semibold text-gray-900">
+                <div class="mt-4 flex items-center justify-end gap-2 border-t border-border-subtle pt-3">
+                    <span class="text-xs text-text-subtle">{{ $t('Total hours') }}:</span>
+                    <span class="text-sm font-semibold text-text">
                         {{ formatHours(currentWorkTime?.full_work_time_in_hours) }}
                     </span>
                 </div>
@@ -85,19 +85,19 @@
             <form @submit.prevent="submit" class="space-y-4">
                 <div class="card white p-5">
                     <div class="flex items-center justify-between gap-4 flex-wrap">
-                        <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                            <component :is="IconCalendarWeek" class="size-4 text-gray-400" stroke-width="1.5" />
+                        <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                            <component :is="IconCalendarWeek" class="size-4 text-text-subtle" stroke-width="1.5" />
                             {{ $t('Weekly working hours') }}
                         </h3>
-                        <p class="text-xs text-gray-500">
+                        <p class="text-xs text-text-subtle">
                             {{ $t('Total hours') }}:
-                            <span class="font-semibold text-gray-900">{{ weeklyTotalFormatted }}</span>
+                            <span class="font-semibold text-text">{{ weeklyTotalFormatted }}</span>
                         </p>
                     </div>
 
-                    <div class="mt-3 rounded-md border border-blue-100 bg-blue-50/60 px-3 py-2 flex items-start gap-2">
-                        <component :is="IconInfoCircle" class="size-4 shrink-0 text-blue-600 mt-0.5" stroke-width="1.5" />
-                        <p class="text-xs text-blue-900">
+                    <div class="mt-3 rounded-md border border-accent-200 bg-accent-50 px-3 py-2 flex items-start gap-2">
+                        <component :is="IconInfoCircle" class="size-4 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
+                        <p class="text-xs text-accent-700">
                             {{ $t('Enter the number of working hours per day (e.g. 08:00 = 8 hours) – not a start time.') }}
                             {{ $t('These hours are the daily target and are used, for example, for the hours account and overtime calculation.') }}
                         </p>
@@ -110,17 +110,17 @@
                                 :label="day.label"
                                 type="time"
                                 :id="day.key" />
-                            <p v-if="workTimeForm.errors[day.key]" class="text-red-500 mt-0.5 text-xs">{{ workTimeForm.errors[day.key] }}</p>
+                            <p v-if="workTimeForm.errors[day.key]" class="text-danger mt-0.5 text-xs">{{ workTimeForm.errors[day.key] }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="card white p-5">
-                    <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                        <component :is="IconCalendarDue" class="size-4 text-gray-400" stroke-width="1.5" />
+                    <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                        <component :is="IconCalendarDue" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Validity period') }}
                     </h3>
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs text-text-subtle mt-1">
                         {{ $t('If no dates are set, the hours apply from today indefinitely as the daily target for all future days.') }}
                     </p>
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
@@ -131,7 +131,7 @@
                                 without-translation
                                 type="date"
                                 id="valid_from" />
-                            <p v-if="workTimeForm.errors.valid_from" class="text-red-500 mt-0.5 text-xs">{{ workTimeForm.errors.valid_from }}</p>
+                            <p v-if="workTimeForm.errors.valid_from" class="text-danger mt-0.5 text-xs">{{ workTimeForm.errors.valid_from }}</p>
                         </div>
                         <div>
                             <BaseInput
@@ -140,7 +140,7 @@
                                 without-translation
                                 type="date"
                                 id="valid_until" />
-                            <p v-if="workTimeForm.errors.valid_until" class="text-red-500 mt-0.5 text-xs">{{ workTimeForm.errors.valid_until }}</p>
+                            <p v-if="workTimeForm.errors.valid_until" class="text-danger mt-0.5 text-xs">{{ workTimeForm.errors.valid_until }}</p>
                         </div>
                     </div>
                 </div>

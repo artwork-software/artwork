@@ -1,7 +1,7 @@
 <template>
     <div class="relative w-72 max-w-72 mb-4">
         <div class="px-3">
-            <div class="mb-4 bg-blue-50 rounded-lg px-4 py-3">
+            <div class="mb-4 bg-accent-50 rounded-lg px-4 py-3">
                 <div class="flex items-center justify-between gap-x-2 mb-2">
                     <div class="flex items-center gap-x-1 min-w-0 flex-1">
                         <span v-if="checklist.private" class="shrink-0">
@@ -12,7 +12,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-x-2 print:hidden shrink-0">
-                        <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
+                        <span class="bg-accent-50 border border-accent-200 text-accent-600 text-xs px-2 py-0.5 rounded print:border print:bg-border-subtle print:text-text-subtle print:border-border-subtle print:rounded-lg">
                             {{ orderTasksByDeadline.filter(t => checkIfUserIsInTaskIfInOwnTaskManagement(t)).length }}
                         </span>
                         <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click="openAddTaskModal = true"/>

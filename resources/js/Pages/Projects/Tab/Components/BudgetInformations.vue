@@ -104,7 +104,7 @@
                 <section class="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                     <button
                         type="button"
-                        class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+                        class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                         :aria-expanded="showMoneySources"
                         aria-controls="linked-money-sources"
                         @click="showMoneySources = !showMoneySources"
@@ -128,7 +128,7 @@
                             <input
                                 v-model.trim="moneySourceSearch"
                                 type="search"
-                                class="w-full rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm text-secondary placeholder:text-secondary/50 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm text-secondary placeholder:text-secondary/50 focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                                 :placeholder="$t('Search funding sources')"
                             >
                         </label>

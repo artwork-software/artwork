@@ -14,10 +14,10 @@
                                 <span v-if="selectedRoom === null">{{ $t('No room displacement')}}</span>
                                 <div v-else> {{ selectedRoom?.name }}</div>
                                 <div class="mr-3">
-                                    <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                                 </div>
                             </ListboxButton>
-                            <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                            <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
                                 <ListboxOption as="template" class="p-2 text-sm"
                                                :value="null"
                                                v-slot="{ active, selected }">
@@ -55,10 +55,10 @@
                                 <ListboxButton class="menu-button">
                                     <div> {{ selectedCalculationType.type }}</div>
                                     <div class="mr-3">
-                                        <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
-                                <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                                <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
                                     <ListboxOption as="template" class="p-2 text-sm"
                                                    v-for="calculation in calculationTypes"
                                                    :key="calculation.id"
@@ -90,10 +90,10 @@
                                 <ListboxButton class="menu-button">
                                     <div> {{ selectedTimeType.value }}</div>
                                     <div class="mr-3">
-                                        <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                                     </div>
                                 </ListboxButton>
-                                <ListboxOptions class="absolute bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                                <ListboxOptions class="absolute bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md z-10">
                                     <ListboxOption as="template" class="p-2 text-sm"
                                                    v-for="time in timeTypes"
                                                    :key="time.id"

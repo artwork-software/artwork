@@ -41,10 +41,10 @@ const props = defineProps({
 });
 
 const pillClass = computed(() => ({
-    saving: 'bg-gray-900/90 text-white',
-    saved: 'bg-emerald-600 text-white',
-    error: 'bg-rose-600 text-white',
-}[props.status] ?? 'bg-gray-900/90 text-white'));
+    saving: 'bg-surface-inverse/90 text-text-inverse',
+    saved: 'bg-success text-white',
+    error: 'bg-danger text-white',
+}[props.status] ?? 'bg-surface-inverse/90 text-text-inverse'));
 
 const label = computed(() => ({
     saving: t('Saving...'),

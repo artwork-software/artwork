@@ -29,7 +29,7 @@
                     :text="$t('Assign')"
                     class="mt-8"
                 />
-                <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
+                <!-- <p v-if="error" class="text-danger text-xs">{{ error }}</p> -->
             </div>
     </BaseModal>
 </template>

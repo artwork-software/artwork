@@ -29,22 +29,22 @@
                 v-if="open"
                 id="room-search-listbox"
                 role="listbox"
-                class="absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-zinc-200 bg-white/95 shadow-lg ring-1 ring-black/5 backdrop-blur supports-[backdrop-filter]:bg-white"
+                class="absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-border-subtle bg-white/95 shadow-lg ring-1 ring-black/5 backdrop-blur supports-[backdrop-filter]:bg-white"
             >
                 <!-- Loading -->
-                <div v-if="loading" class="px-3 py-2 text-[13px] text-zinc-500">
+                <div v-if="loading" class="px-3 py-2 text-[13px] text-text-subtle">
                     {{ $t ? $t('Searching…') : 'Searching…' }}
                 </div>
 
                 <!-- Error -->
-                <div v-else-if="error" class="px-3 py-2 text-[13px] text-rose-600">
+                <div v-else-if="error" class="px-3 py-2 text-[13px] text-danger">
                     {{ error }}
                 </div>
 
                 <!-- Empty -->
                 <div
                     v-else-if="results.length === 0"
-                    class="px-3 py-2 text-[13px] text-zinc-500"
+                    class="px-3 py-2 text-[13px] text-text-subtle"
                 >
                     {{ $t ? $t('No rooms found') : 'No rooms found' }}
                 </div>
@@ -59,11 +59,11 @@
                         :aria-selected="idx === activeIndex"
                         @mouseenter="activeIndex = idx"
                         @mousedown.prevent="selectRoom(room)"
-                    class="cursor-pointer select-none px-3 py-2 text-[13px] text-zinc-800 flex items-center gap-2
-                    hover:bg-indigo-50/60 data-[active=true]:bg-indigo-50/60"
+                    class="cursor-pointer select-none px-3 py-2 text-[13px] text-text flex items-center gap-2
+                    hover:bg-accent-50 data-[active=true]:bg-accent-50"
                     :data-active="idx === activeIndex"
                     >
-                    <span class="inline-block size-1.5 rounded-full bg-indigo-400"></span>
+                    <span class="inline-block size-1.5 rounded-full bg-accent-500"></span>
                     <span class="truncate font-medium">{{ room.name }}</span>
                     </li>
                 </ul>

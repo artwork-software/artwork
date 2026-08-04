@@ -5,7 +5,7 @@
         @delete-all="showConfirmDeleteAll = true"
     />
     <div v-for="event in trashed_events.data" :key="event.id"
-         class="flex w-full bg-white my-2 border border-gray-200">
+         class="flex w-full bg-white my-2 border border-border-subtle">
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
@@ -29,7 +29,7 @@
                     <p class="xsLight subpixel-antialiased mt-2">
                         {{ event.start }} - {{ event.end }}
                     </p>
-                    <div class="text-sm leading-6 font-lexend text-gray-500 mt-2 flex items-center">
+                    <div class="text-sm leading-6 font-lexend text-text-subtle mt-2 flex items-center">
                         <div>
                             <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : event.event_type.hex_code }" />
                         </div>

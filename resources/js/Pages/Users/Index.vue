@@ -6,7 +6,7 @@
             <ToolbarHeader
                 :icon="IconUsers"
                 title="Users"
-                icon-bg-class="bg-amber-600/10 text-amber-700"
+                icon-bg-class="bg-warning-surface text-warning"
                 v-model="user_query"
                 :description="users?.length ? `${users.length} ${$t('Users')}` : ''"
                 :search-enabled="true"
@@ -17,16 +17,16 @@
                     <button
                         type="button"
                         class="ui-button"
-                        :class="authProviderFilter === 'sso' ? '!bg-blue-600 !text-white' : ''"
+                        :class="authProviderFilter === 'sso' ? '!bg-accent-600 !text-white' : ''"
                         @click="setAuthProviderFilter('sso')"
                     >
                         {{ $t('SSO only') }}
                     </button>
 
-                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-zinc-900" menu-width="w-72" classes="ui-button" menu-button-text="Sort">
+                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-text" menu-width="w-72" classes="ui-button" menu-button-text="Sort">
                         <div class="flex items-center justify-between py-1">
                             <span
-                                class="px-4 py-2 text-xs text-zinc-500 hover:text-zinc-900 cursor-pointer"
+                                class="px-4 py-2 text-xs text-text-subtle hover:text-text cursor-pointer"
                                 @click="resetSort()"
                             >
                               {{ $t('Reset') }}
@@ -36,12 +36,12 @@
                             <div
                                 @click="sortBy = userSortEnumName; applyFiltersAndSort()"
                                 :class="[
-                                active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600',
+                                active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                                 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-lg'
                               ]"
                             >
                                 {{ getSortEnumTranslation(userSortEnumName) }}
-                                <IconCheck v-if="getUserSortBySetting() === userSortEnumName" class="size-5 text-blue-600" />
+                                <IconCheck v-if="getUserSortBySetting() === userSortEnumName" class="size-5 text-accent-600" />
                             </div>
                         </MenuItem>
                     </BaseMenu>
@@ -73,16 +73,16 @@
                         </div>
                         <div class="ml-4">
                             <div class="flex items-center gap-2">
-                                <span class="font-medium text-gray-900">{{ row.first_name }} {{ row.last_name }}</span>
+                                <span class="font-medium text-text">{{ row.first_name }} {{ row.last_name }}</span>
                                 <span
                                     v-if="isSsoUser(row)"
-                                    class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200"
+                                    class="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-xs font-semibold text-accent-700 ring-1 ring-inset ring-accent-200"
                                     v-tooltip.top="{ value: ssoTooltip(row), appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
                                 >
                                     {{ $t('SSO') }}
                                 </span>
                             </div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </Link>
                 </template>
@@ -107,7 +107,7 @@
                         <div v-if="row.departments?.length >= 3" class="relative">
                             <Menu as="div" class="relative">
                                 <MenuButton
-                                    class="flex size-10 items-center justify-center rounded-full bg-zinc-900 text-white ring-2 ring-white hover:bg-zinc-800"
+                                    class="flex size-10 items-center justify-center rounded-full bg-surface-inverse text-text-inverse ring-2 ring-white hover:bg-surface-inverse/90"
                                 >
                                     <ChevronDownIcon class="size-5" />
                                 </MenuButton>
@@ -120,7 +120,7 @@
                                     leave-to-class="opacity-0 translate-y-1"
                                 >
                                     <MenuItems
-                                        class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-zinc-200 bg-white py-1 shadow-lg focus:outline-none"
+                                        class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-border-subtle bg-white py-1 shadow-overlay"
                                     >
                                         <MenuItem
                                             v-for="department in row.departments"
@@ -129,8 +129,8 @@
                                         >
                                             <div
                                                 :class="[
-                                            active ? 'bg-zinc-100' : '',
-                                            'flex items-center px-3 py-2 text-sm text-zinc-700'
+                                            active ? 'bg-surface-sunken' : '',
+                                            'flex items-center px-3 py-2 text-sm text-text-muted'
                                           ]"
                                             >
                                                 <TeamIconCollection class="size-8 rounded-full" :iconName="department.svg_name" />
@@ -175,7 +175,7 @@
     <!-- Delete Modal -->
     <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
         <div class="mx-4">
-            <div class="text-2xl font-bold text-zinc-900 my-2">
+            <div class="text-2xl font-bold text-text my-2">
         <span v-if="userToDelete?.type === 'user'">
           {{ $t('Delete user') }}
         </span>
@@ -187,7 +187,7 @@
         </span>
             </div>
 
-            <div class="text-sm text-red-600">
+            <div class="text-sm text-danger">
         <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
           {{
                 $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
@@ -207,7 +207,7 @@
 
             <div class="mt-6 flex items-center justify-between">
                 <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
-                <button @click="closeDeleteUserModal" class="text-sm text-zinc-500 hover:text-zinc-800">
+                <button @click="closeDeleteUserModal" class="text-sm text-text-subtle hover:text-text">
                     {{ $t('No, not really') }}
                 </button>
             </div>

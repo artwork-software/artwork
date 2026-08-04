@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconAddressBook"
                 :title="$t('CRM')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 v-model="searchInput"
                 :description="contacts?.total ? `${contacts.total} ${$t('Contacts')}` : ''"
                 :search-enabled="true"
@@ -43,12 +43,12 @@
                         />
                         <span
                             v-if="activeFilterCount > 0"
-                            class="absolute -top-1 -right-1 flex items-center justify-center size-4 rounded-full bg-blue-500 text-white text-[10px] font-bold pointer-events-none"
+                            class="absolute -top-1 -right-1 flex items-center justify-center size-4 rounded-full bg-accent-600 text-white text-[10px] font-bold pointer-events-none"
                         >
                             {{ activeFilterCount }}
                         </span>
                     </div>
-                    <span v-if="isMirroredType" class="text-xs text-gray-500">
+                    <span v-if="isMirroredType" class="text-xs text-text-subtle">
                         <template v-if="activeType?.slug === 'user'">{{ $t('Creation only possible in user management') }}</template>
                         <template v-else-if="activeType?.slug === 'freelancer'">{{ $t('Creation only possible in freelancer management') }}</template>
                         <template v-else-if="activeType?.slug === 'service_provider'">{{ $t('Creation only possible in service provider management') }}</template>
@@ -74,31 +74,31 @@
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-1"
             >
-                <div v-if="successMessage" class="mt-4 rounded-md bg-green-50 p-3">
-                    <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+                <div v-if="successMessage" class="mt-4 rounded-md bg-success-surface p-3">
+                    <p class="text-sm font-medium text-success">{{ successMessage }}</p>
                 </div>
             </Transition>
 
             <!-- Import Result Banner -->
             <div v-if="importResult" class="mt-4 space-y-2">
-                <div v-if="importResult.created > 0" class="rounded-md bg-green-50 p-3">
-                    <p class="text-sm font-medium text-green-800">
+                <div v-if="importResult.created > 0" class="rounded-md bg-success-surface p-3">
+                    <p class="text-sm font-medium text-success">
                         {{ $t('{count} contacts created', { count: importResult.created }) }}
                     </p>
                 </div>
-                <div v-if="importResult.updated > 0" class="rounded-md bg-blue-50 p-3">
-                    <p class="text-sm font-medium text-blue-800">
+                <div v-if="importResult.updated > 0" class="rounded-md bg-accent-50 p-3">
+                    <p class="text-sm font-medium text-accent-700">
                         {{ $t('{count} existing contacts updated', { count: importResult.updated }) }}
                     </p>
                 </div>
-                <div v-if="importResult.duplicates > 0" class="rounded-md bg-gray-50 border border-gray-200 p-3">
-                    <p class="text-sm font-medium text-gray-700">
+                <div v-if="importResult.duplicates > 0" class="rounded-md bg-surface-sunken border border-border-subtle p-3">
+                    <p class="text-sm font-medium text-text-muted">
                         {{ $t('{count} rows skipped as duplicates', { count: importResult.duplicates }) }}
                     </p>
                 </div>
-                <div v-if="importResult.skipped?.length > 0" class="rounded-md bg-yellow-50 border border-yellow-200 p-3">
+                <div v-if="importResult.skipped?.length > 0" class="rounded-md bg-warning-surface border border-warning-border p-3">
                     <button
-                        class="flex items-center gap-2 text-sm font-medium text-yellow-800 w-full text-left"
+                        class="flex items-center gap-2 text-sm font-medium text-warning w-full text-left"
                         @click="showSkipped = !showSkipped"
                     >
                         {{ $t('{count} rows skipped', { count: importResult.skipped.length }) }}
@@ -107,7 +107,7 @@
                         </svg>
                     </button>
                     <ul v-if="showSkipped" class="mt-2 space-y-1">
-                        <li v-for="(skip, i) in importResult.skipped" :key="i" class="text-xs text-yellow-700">
+                        <li v-for="(skip, i) in importResult.skipped" :key="i" class="text-xs text-warning">
                             {{ $t('Row') }} {{ skip.row }}: {{ skip.reason }}
                         </li>
                     </ul>
@@ -115,7 +115,7 @@
             </div>
 
             <!-- Contact Type Tabs -->
-            <div class="mt-4 border-b border-gray-200">
+            <div class="mt-4 border-b border-border-subtle">
                 <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
                     <button
                         v-for="type in contactTypes"
@@ -124,7 +124,7 @@
                         class="group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium whitespace-nowrap"
                         :class="type.id === activeType?.id
                             ? 'border-current'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+                            : 'border-transparent text-text-subtle hover:border-border hover:text-text-muted'"
                         :style="type.id === activeType?.id && type.color ? { color: type.color } : {}"
                     >
                         <PropertyIcon v-if="type.icon" :name="type.icon" class="mr-2 h-5 w-5" :style="type.color ? { color: type.color } : {}" />
@@ -141,15 +141,15 @@
             </div>
 
             <!-- Bulk action bar -->
-            <div v-if="selectedIds.size > 0" class="mt-4 flex items-center gap-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5">
-                <span class="text-sm font-medium text-indigo-900">{{ $t('{count} selected', { count: selectedIds.size }) }}</span>
-                <button type="button" class="text-sm text-indigo-600 hover:text-indigo-500" @click="toggleSelectPage">
+            <div v-if="selectedIds.size > 0" class="mt-4 flex items-center gap-4 rounded-lg border border-accent-200 bg-accent-50 px-4 py-2.5">
+                <span class="text-sm font-medium text-accent-700">{{ $t('{count} selected', { count: selectedIds.size }) }}</span>
+                <button type="button" class="text-sm text-accent-600 hover:text-accent-600" @click="toggleSelectPage">
                     {{ allOnPageSelected ? $t('Deselect all') : $t('Select all on this page') }}
                 </button>
-                <button type="button" class="text-sm text-gray-500 hover:text-gray-700" @click="selectedIds = new Set()">
+                <button type="button" class="text-sm text-text-subtle hover:text-text-muted" @click="selectedIds = new Set()">
                     {{ $t('Clear selection') }}
                 </button>
-                <button type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-500" @click="showBulkDeleteModal = true">
+                <button type="button" class="ml-auto flex items-center gap-1 text-sm font-medium text-danger hover:text-danger" @click="showBulkDeleteModal = true">
                     <component :is="IconTrash" class="size-4" />
                     {{ $t('Delete selection') }}
                 </button>
@@ -175,7 +175,7 @@
                     <template #cell-_select="{ row }">
                         <input
                             type="checkbox"
-                            class="rounded border-gray-300 text-indigo-600"
+                            class="rounded border-border text-accent-600"
                             :checked="selectedIds.has(row.id)"
                             @click.stop
                             @change="toggleSelect(row.id)"
@@ -183,12 +183,12 @@
                     </template>
 
                     <template #cell-display_name="{ row }">
-                        <Link :href="route('crm.contacts.show', row.id)" class="flex items-center hover:text-indigo-600">
+                        <Link :href="route('crm.contacts.show', row.id)" class="flex items-center hover:text-accent-600">
                             <div class="size-10 shrink-0">
                                 <img :src="row.profile_photo_url" alt="" class="size-10 rounded-full object-cover" />
                             </div>
                             <div class="ml-3">
-                                <div class="font-medium text-gray-900">{{ row.display_name }}</div>
+                                <div class="font-medium text-text">{{ row.display_name }}</div>
                             </div>
                         </Link>
                     </template>
@@ -202,15 +202,15 @@
                 </BaseTable>
 
                 <div v-else class="text-center py-12">
-                    <component :is="IconAddressBook" class="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">{{ $t('No contacts') }}</h3>
-                    <p v-if="isMirroredType" class="mt-1 text-sm text-gray-500">
+                    <component :is="IconAddressBook" class="mx-auto h-12 w-12 text-text-subtle" />
+                    <h3 class="mt-2 text-sm font-medium text-text">{{ $t('No contacts') }}</h3>
+                    <p v-if="isMirroredType" class="mt-1 text-sm text-text-subtle">
                         <template v-if="activeType?.slug === 'user'">{{ $t('Creation only possible in user management') }}</template>
                         <template v-else-if="activeType?.slug === 'freelancer'">{{ $t('Creation only possible in freelancer management') }}</template>
                         <template v-else-if="activeType?.slug === 'service_provider'">{{ $t('Creation only possible in service provider management') }}</template>
                     </p>
                     <template v-else>
-                        <p class="mt-1 text-sm text-gray-500">{{ $t('Get started by creating a new contact.') }}</p>
+                        <p class="mt-1 text-sm text-text-subtle">{{ $t('Get started by creating a new contact.') }}</p>
                         <div class="mt-6">
                             <button class="ui-button-add" @click="showCreateModal = true">
                                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />

@@ -1,6 +1,6 @@
 <template>
     <div class="py-10 px-20">
-        <div v-if="!isInOwnTaskManagement && loadChecklistsError" class="mb-2 text-xs text-rose-600">
+        <div v-if="!isInOwnTaskManagement && loadChecklistsError" class="mb-2 text-xs text-danger">
             {{ loadChecklistsError }}
         </div>
         <div v-else-if="!isInOwnTaskManagement && isLoadingChecklists" class="mb-2 text-xs text-secondary">
@@ -8,7 +8,7 @@
         </div>
 
         <!-- Filter bar for OwnTasksManagement mode -->
-        <section v-if="isInOwnTaskManagement" class="rounded-2xl border border-gray-100 bg-white shadow-sm px-5 py-4 mb-6">
+        <section v-if="isInOwnTaskManagement" class="rounded-2xl border border-border-subtle bg-white shadow-sm px-5 py-4 mb-6">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <!-- Search -->
                 <div class="relative w-full lg:w-96">
@@ -16,10 +16,10 @@
                         v-model="search"
                         type="search"
                         :placeholder="$t('Search lists & tasks...')"
-                        class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 transition"
+                        class="w-full rounded-xl border border-border-subtle px-3 py-2 text-sm placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-accent-600 focus:border-accent-600 transition"
                     />
                     <span v-if="search" class="absolute inset-y-0 right-0 flex items-center pr-2">
-                      <button @click="search=''" class="rounded-lg p-1 text-gray-400 hover:text-gray-600">
+                      <button @click="search=''" class="rounded-lg p-1 text-text-subtle hover:text-text-muted">
                         <IconX class="size-4" />
                       </button>
                     </span>
@@ -32,14 +32,14 @@
                         <!-- Row 1: Mutually-exclusive groups + Reset -->
                         <div class="flex flex-wrap items-center gap-2">
                             <!-- Project group: with/without project -->
-                            <div v-if="showProjectFilter" class="inline-flex items-center gap-1 rounded-xl border border-gray-200 p-1" role="group" :aria-label="$t('Project filter')">
+                            <div v-if="showProjectFilter" class="inline-flex items-center gap-1 rounded-xl border border-border-subtle p-1" role="group" :aria-label="$t('Project filter')">
                                 <button
                                     @click="toggleFlag('checklist_has_projects')"
                                     :class="groupedChipClass(user.checklist_has_projects)"
                                     class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
                                     type="button"
                                 >
-                                    <span class="size-2 rounded-full bg-emerald-500"></span>{{ $t('with project') }}
+                                    <span class="size-2 rounded-full bg-success"></span>{{ $t('with project') }}
                                 </button>
                                 <button
                                     @click="toggleFlag('checklist_no_projects')"
@@ -47,19 +47,19 @@
                                     class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
                                     type="button"
                                 >
-                                    <span class="size-2 rounded-full bg-amber-500"></span>{{ $t('without project') }}
+                                    <span class="size-2 rounded-full bg-warning"></span>{{ $t('without project') }}
                                 </button>
                             </div>
 
                             <!-- Privacy group: personal/shared -->
-                            <div class="inline-flex items-center gap-1 rounded-xl border border-gray-200 p-1" role="group" :aria-label="$t('Privacy filter')">
+                            <div class="inline-flex items-center gap-1 rounded-xl border border-border-subtle p-1" role="group" :aria-label="$t('Privacy filter')">
                                 <button
                                     @click="toggleFlag('checklist_private_checklists')"
                                     :class="groupedChipClass(user.checklist_private_checklists)"
                                     class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
                                     type="button"
                                 >
-                                    <span class="size-2 rounded-full bg-indigo-500"></span>{{ $t('private') }}
+                                    <span class="size-2 rounded-full bg-accent-600"></span>{{ $t('private') }}
                                 </button>
                                 <button
                                     @click="toggleFlag('checklist_no_private_checklists')"
@@ -72,7 +72,7 @@
                             </div>
 
                             <!-- Reset button -->
-                            <button @click="resetFilters" type="button" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+                            <button @click="resetFilters" type="button" class="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-sunken">
                                 <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 4h16M4 12h16M4 20h16"/></svg>
                                 {{ $t('Reset') }}
                             </button>
@@ -86,7 +86,7 @@
                                 class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs"
                                 type="button"
                             >
-                                <span class="size-2 rounded-full bg-slate-500"></span>{{ $t('Show completed') }}
+                                <span class="size-2 rounded-full bg-text-subtle"></span>{{ $t('Show completed') }}
                             </button>
                             <button
                                 @click="toggleFlag('checklist_show_without_tasks')"
@@ -103,15 +103,15 @@
                     <div class="flex items-center gap-2">
                         <!-- Sort -->
                         <div class="relative">
-                            <button @click="sortOpen = !sortOpen" type="button" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-xs hover:bg-gray-50">
+                            <button @click="sortOpen = !sortOpen" type="button" class="inline-flex items-center gap-2 rounded-xl border border-border-subtle px-3 py-2 text-xs hover:bg-surface-sunken">
                                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M3 7h14M3 12h10M3 17h6"/></svg>
                                 {{ sortLabel }}
                             </button>
-                            <div v-if="sortOpen" @click.outside="sortOpen=false" class="absolute right-0 mt-2 w-64 rounded-xl border border-gray-100 bg-white shadow-lg p-1 z-10">
-                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="sortTo(1)">{{ $t('Project timeframe ascending') }} <IconCheck v-if="currentSort===1" class="inline size-4 ml-1" /></button>
-                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="sortTo(2)">{{ $t('Project timeframe descending') }} <IconCheck v-if="currentSort===2" class="inline size-4 ml-1" /></button>
-                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="currentSort=3; sortOpen=false">{{ $t('List name ascending') }} <IconCheck v-if="currentSort===3" class="inline size-4 ml-1" /></button>
-                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-50" @click="currentSort=4; sortOpen=false">{{ $t('List name descending') }} <IconCheck v-if="currentSort===4" class="inline size-4 ml-1" /></button>
+                            <div v-if="sortOpen" @click.outside="sortOpen=false" class="absolute right-0 mt-2 w-64 rounded-xl border border-border-subtle bg-white shadow-lg p-1 z-10">
+                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="sortTo(1)">{{ $t('Project timeframe ascending') }} <IconCheck v-if="currentSort===1" class="inline size-4 ml-1" /></button>
+                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="sortTo(2)">{{ $t('Project timeframe descending') }} <IconCheck v-if="currentSort===2" class="inline size-4 ml-1" /></button>
+                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="currentSort=3; sortOpen=false">{{ $t('List name ascending') }} <IconCheck v-if="currentSort===3" class="inline size-4 ml-1" /></button>
+                                <button class="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-surface-sunken" @click="currentSort=4; sortOpen=false">{{ $t('List name descending') }} <IconCheck v-if="currentSort===4" class="inline size-4 ml-1" /></button>
                             </div>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
 
             <!-- Save notification -->
             <transition enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 -translate-y-1">
-                <div v-show="filterSaved" class="text-xs bg-emerald-600 text-white rounded-lg px-3 py-1.5 mt-5">
+                <div v-show="filterSaved" class="text-xs bg-success text-white rounded-lg px-3 py-1.5 mt-5">
                     {{ $t('Filter was saved') }}
                 </div>
             </transition>
@@ -181,18 +181,18 @@
 
         <!-- View switch for OwnTasksManagement -->
         <div v-if="isInOwnTaskManagement" class="flex justify-end mb-4">
-            <div class="inline-flex rounded-xl border border-gray-200 p-1">
-                <button @click="updateChecklistStyleLocal('list')" :class="checklistStyle==='list' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'" class="px-3 py-1.5 rounded-lg text-xs font-medium">
+            <div class="inline-flex rounded-xl border border-border-subtle p-1">
+                <button @click="updateChecklistStyleLocal('list')" :class="checklistStyle==='list' ? 'bg-surface-sunken text-text' : 'text-text-muted hover:bg-surface-sunken'" class="px-3 py-1.5 rounded-lg text-xs font-medium">
                     {{ $t('List') }}
                 </button>
-                <button @click="updateChecklistStyleLocal('kanban')" :class="checklistStyle==='kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'" class="px-3 py-1.5 rounded-lg text-xs font-medium">
+                <button @click="updateChecklistStyleLocal('kanban')" :class="checklistStyle==='kanban' ? 'bg-surface-sunken text-text' : 'text-text-muted hover:bg-surface-sunken'" class="px-3 py-1.5 rounded-lg text-xs font-medium">
                     {{ $t('Kanban') }}
                 </button>
             </div>
         </div>
         <!-- Empty state -->
-        <div v-if="finalChecklists.length === 0 && !isLoadingChecklists" class="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
-            <p class="text-sm text-gray-600">{{ $t('No fitting checklists found') }}</p>
+        <div v-if="finalChecklists.length === 0 && !isLoadingChecklists" class="rounded-2xl border border-dashed border-border-subtle bg-white p-8 text-center">
+            <p class="text-sm text-text-muted">{{ $t('No fitting checklists found') }}</p>
         </div>
 
         <div v-else-if="checklistStyle === 'list'">
@@ -492,14 +492,14 @@ function resetFilters() {
 
 function chipClass(active) {
     return active
-        ? 'border-indigo-300 bg-indigo-50/70 text-indigo-700'
-        : 'border-gray-200 text-gray-600 hover:bg-gray-50';
+        ? 'border-accent-200 bg-accent-50 text-accent-700'
+        : 'border-border-subtle text-text-muted hover:bg-surface-sunken';
 }
 
 function groupedChipClass(active) {
     return active
-        ? 'bg-indigo-50/80 text-indigo-700 ring-1 ring-inset ring-indigo-200'
-        : 'text-gray-600 hover:bg-gray-50';
+        ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-200'
+        : 'text-text-muted hover:bg-surface-sunken';
 }
 
 function saveFiltersNow() {

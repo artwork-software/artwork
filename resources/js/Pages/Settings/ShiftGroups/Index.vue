@@ -44,7 +44,7 @@
                     <li v-for="(shiftGroup) in shiftGroups"
                         :key="shiftGroup.id"
 
-                        class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b border-zinc-200"
+                        class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b border-border-subtle"
                     >
                         <SingleShiftGroup :shift-group="shiftGroup" />
 

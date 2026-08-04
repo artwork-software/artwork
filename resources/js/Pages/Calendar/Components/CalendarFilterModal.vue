@@ -17,20 +17,20 @@
                     </div>
                     <div class="select-none">
                         <div v-if="!saveFilterOption" @click="saveFilterOption = true" class="underline text-artwork-buttons-create text-sm underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out">{{ $t('Save') }}</div>
-                        <div v-else @click="saveFilterOption = false" class="underline text-red-500 text-sm underline-offset-2 cursor-pointer hover:text-red-600 duration-200 ease-in-out">{{ $t('Cancel') }}</div>
+                        <div v-else @click="saveFilterOption = false" class="underline text-danger text-sm underline-offset-2 cursor-pointer hover:text-danger/80 duration-200 ease-in-out">{{ $t('Cancel') }}</div>
                     </div>
                 </div>
 
-                <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+                <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div v-if="usePage().props.personalFilters?.length > 0 && !saveFilterOption" class="flex flex-wrap items-center gap-2 mt-3">
-                        <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
+                        <div v-for="(filter, index) in usePage().props.personalFilters" class="group block cursor-pointer shrink-0 bg-accent-50  w-fit px-2 py-1.5 rounded-full border border-accent-200">
                             <div class="flex items-center">
                                 <div class="mx-2" @click="activateFilter(filter)">
-                                    <p class="text-blue-500 text-xs group-hover:text-blue-600">{{ filter.name}}</p>
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ filter.name}}</p>
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeFilter(filter)">
-                                        <XIcon class="size-4 text-blue-500 hover:text-error" />
+                                        <XIcon class="size-4 text-accent-600 hover:text-error" />
                                     </button>
                                 </div>
                             </div>
@@ -59,19 +59,19 @@
                     </div>
                 </div>
 
-                <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+                <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div class="flex flex-wrap items-center gap-2 mt-3">
-                        <div v-for="(filter, index) in activeFilters" class="group block cursor-pointer shrink-0 bg-blue-50  w-fit px-2 py-1.5 rounded-full border border-blue-200">
+                        <div v-for="(filter, index) in activeFilters" class="group block cursor-pointer shrink-0 bg-accent-50  w-fit px-2 py-1.5 rounded-full border border-accent-200">
                             <div class="flex items-center">
                                 <div class="mx-2">
-                                    <p class="text-blue-500 text-xs group-hover:text-blue-600">
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">
                                         <span v-if="filter.id === 'adjoiningNoAudience' || filter.id === 'adjoiningNotLoud'">{{ $t(filter?.name)}}</span>
                                         <span v-else>{{ filter?.name }}</span>
                                     </p>
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeActiveFilter(filter)">
-                                        <XIcon class="size-4 text-blue-500 hover:text-error" />
+                                        <XIcon class="size-4 text-accent-600 hover:text-error" />
                                     </button>
                                 </div>
                             </div>
@@ -83,7 +83,7 @@
             <div class="space-y-1">
                 <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey"
                      v-show="Object.values(filterMainCategory).some(sub => sub.length > 0)" class="py-1">
-                    <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+                    <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                         {{ $t(mainKey) }}
                     </div>
 
@@ -92,15 +92,15 @@
                              v-show="filterSubCategory.length > 0">
                             <div class="card white px-4 ">
                                 <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
-                                    <div class="text-sm text-gray-900">
+                                    <div class="text-sm text-text">
                                         {{ $t(subKey) }}
                                     </div>
                                     <div class="flex items-center gap-5">
-                                        <span class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10" :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'">
+                                        <span class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border" :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'">
                                             <!-- count of checked filters in subcategory -->
                                             {{ filterSubCategory.filter(filter => filter.checked).length }} {{ $t('selected') }}
                                         </span>
-                                        <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
+                                        <component :is="IconChevronDown" class="w-4 h-4 text-text-subtle" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
                                     </div>
                                 </div>
 
@@ -112,8 +112,8 @@
                                                  :style="filter.color ? { backgroundColor: colorWithLightOpacity(filter.color) } : null">
                                                 <div class="flex h-6 shrink-0 items-center">
                                                     <div class="group grid size-4 grid-cols-1">
-                                                        <input v-model="filter.checked" :id="removeSpaceFromKey(filter.name)" :aria-describedby="removeSpaceFromKey(filter.name) + '-description'" :name="removeSpaceFromKey(filter.name)" type="checkbox" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
-                                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                                        <input v-model="filter.checked" :id="removeSpaceFromKey(filter.name)" :aria-describedby="removeSpaceFromKey(filter.name) + '-description'" :name="removeSpaceFromKey(filter.name)" type="checkbox" class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto" />
+                                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-border-strong" viewBox="0 0 14 14" fill="none">
                                                             <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                             <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                         </svg>
@@ -123,7 +123,7 @@
                                                     <div v-if="filter.icon" class="flex items-center gap-2">
                                                         <component :is="filter.icon" class="size-4" stroke-width="1.5"/>
                                                     </div>
-                                                    <label :for="removeSpaceFromKey(filter.name)" class="text-gray-900">
+                                                    <label :for="removeSpaceFromKey(filter.name)" class="text-text">
                                                         {{ filter.name }}
                                                     </label>
                                                 </div>

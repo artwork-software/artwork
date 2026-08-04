@@ -50,7 +50,7 @@ export default {
                 case 'reset':
                     return ''
                 case 'cancel':
-                    return 'bg-gray-300 hover:bg-gray-400 !text-gray-800'
+                    return 'bg-border hover:bg-border-strong !text-text'
                 default:
                     return ''
             }

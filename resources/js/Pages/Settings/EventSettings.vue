@@ -52,7 +52,7 @@
                                        }}
                                    </div>
                                </div>
-                               <div class="text-gray-400 font-lexend font-extralight text-xs">
+                               <div class="text-text-subtle font-lexend font-extralight text-xs">
                                    {{ $t('Verification mode')}}: {{ $t(eventType.verification_mode) }}<span v-if="eventType.users?.length > 0">: </span>
                                    <span>
                                         {{ eventType.users.map((user) => { return user.name }).join(', ') }}

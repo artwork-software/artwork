@@ -6,7 +6,7 @@
             <UserSearch v-model="user_query"
                         @user-selected="addUserToRoom"
                         :label="$t('Type in the names of users')"/>
-            <div class="divide-dashed divide-y divide-gray-200 w-full">
+            <div class="divide-dashed divide-y divide-border-subtle w-full">
                 <div v-for="(user) in room_users" class="grid grid-cols-1 md:grid-cols-4 py-3">
                     <div class="flex items-center col-span-2">
                         <div class="flex items-center">

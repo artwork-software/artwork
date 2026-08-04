@@ -1,39 +1,39 @@
 <template>
-    <div class="overflow-hidden rounded-lg border border-zinc-200">
+    <div class="overflow-hidden rounded-lg border border-border-subtle">
         <table class="min-w-full text-xs">
-            <thead class="bg-zinc-50">
+            <thead class="bg-surface-sunken">
                 <tr>
-                    <th v-if="showUser" class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Employee') }}</th>
-                    <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Value') }}</th>
-                    <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Type') }}</th>
-                    <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Deadline') }}</th>
-                    <th v-if="showGrantedInfo" class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted on') }}</th>
-                    <th v-if="showGrantedInfo" class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Granted by') }}</th>
-                    <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Rule') }}</th>
-                    <th class="px-3 py-2 text-left font-medium text-zinc-500">{{ $t('Reason') }}</th>
-                    <th class="px-3 py-2 text-right font-medium text-zinc-500">{{ $t('Actions') }}</th>
+                    <th v-if="showUser" class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Employee') }}</th>
+                    <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Value') }}</th>
+                    <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Type') }}</th>
+                    <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Deadline') }}</th>
+                    <th v-if="showGrantedInfo" class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Granted on') }}</th>
+                    <th v-if="showGrantedInfo" class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Granted by') }}</th>
+                    <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Rule') }}</th>
+                    <th class="px-3 py-2 text-left font-medium text-text-subtle">{{ $t('Reason') }}</th>
+                    <th class="px-3 py-2 text-right font-medium text-text-subtle">{{ $t('Actions') }}</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-100">
+            <tbody class="divide-y divide-border-subtle">
                 <tr
                     v-for="item in items"
                     :key="item.id"
-                    class="hover:bg-zinc-50/50"
-                    :class="overdueHighlight && isOverdue(item) ? 'bg-red-50/50' : ''"
+                    class="hover:bg-surface-sunken"
+                    :class="overdueHighlight && isOverdue(item) ? 'bg-danger-surface' : ''"
                 >
-                    <td v-if="showUser" class="px-3 py-2.5 text-zinc-900 font-medium">
+                    <td v-if="showUser" class="px-3 py-2.5 text-text font-medium">
                         {{ item.user?.first_name }} {{ item.user?.last_name }}
                     </td>
                     <td class="px-3 py-2.5">
                         <span
                             class="inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                            :class="item.value >= 1.0 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'"
+                            :class="item.value >= 1.0 ? 'bg-accent-100 text-accent-700' : 'bg-warning-surface text-warning'"
                         >
                             {{ item.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                         </span>
                         <span
                             v-if="item.half_day_period === 'morning' || item.half_day_period === 'afternoon'"
-                            class="ml-1 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-600"
+                            class="ml-1 inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold bg-warning-surface text-warning"
                         >
                             {{ item.half_day_period === 'morning' ? $t('Morning') : $t('Afternoon') }}
                         </span>
@@ -45,16 +45,16 @@
                         >
                             {{ $t('Public holiday') }}
                         </span>
-                        <span v-else class="text-zinc-400">-</span>
+                        <span v-else class="text-text-subtle">-</span>
                     </td>
-                    <td class="px-3 py-2.5" :class="isOverdue(item) ? 'text-red-600 font-medium' : 'text-zinc-700'">
+                    <td class="px-3 py-2.5" :class="isOverdue(item) ? 'text-danger font-medium' : 'text-text-muted'">
                         {{ formatDate(item.deadline) }}
-                        <span v-if="isOverdue(item)" class="ml-1 text-[10px] text-red-500 font-medium">
+                        <span v-if="isOverdue(item)" class="ml-1 text-[10px] text-danger font-medium">
                             ({{ $t('Deadline expired') }})
                         </span>
                     </td>
-                    <td v-if="showGrantedInfo" class="px-3 py-2.5 text-zinc-700">{{ formatDate(item.granted_date) }}</td>
-                    <td v-if="showGrantedInfo" class="px-3 py-2.5 text-zinc-600">
+                    <td v-if="showGrantedInfo" class="px-3 py-2.5 text-text-muted">{{ formatDate(item.granted_date) }}</td>
+                    <td v-if="showGrantedInfo" class="px-3 py-2.5 text-text-muted">
                         <template v-if="item.granted_by_user">
                             {{ item.granted_by_user.first_name }} {{ item.granted_by_user.last_name }}
                         </template>
@@ -70,7 +70,7 @@
                             {{ item.violation?.shift_rule?.name || $t('Manual') }}
                         </div>
                     </td>
-                    <td class="px-3 py-2.5 text-zinc-600 max-w-[200px] truncate">
+                    <td class="px-3 py-2.5 text-text-muted max-w-[200px] truncate">
                         {{ item.reason || '-' }}
                     </td>
                     <td class="px-3 py-2.5 text-right">

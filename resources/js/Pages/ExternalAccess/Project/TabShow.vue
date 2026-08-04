@@ -2,16 +2,16 @@
     <ExternalAppLayout :title="`${project.name} — ${tab.name}`">
         <div class="px-8 py-10 max-w-5xl mx-auto">
             <header class="mb-8">
-                <p class="text-sm text-zinc-500">{{ project.name }}</p>
-                <h1 class="text-2xl font-bold text-zinc-900 mt-1">{{ tab.name }}</h1>
-                <p class="text-xs text-zinc-500 mt-2">
+                <p class="text-sm text-text-subtle">{{ project.name }}</p>
+                <h1 class="text-2xl font-bold text-text mt-1">{{ tab.name }}</h1>
+                <p class="text-xs text-text-subtle mt-2">
                     <span v-if="scope.access_type === 'read'">{{ $t('Read only') }}</span>
                     <span v-else>{{ $t('You can edit components in this tab') }}</span>
                     <span> · {{ $t('Access valid until') }}: {{ formatDate(scope.valid_to) }}</span>
                 </p>
             </header>
 
-            <div v-if="components.length === 0" class="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-sm text-zinc-500">
+            <div v-if="components.length === 0" class="rounded-2xl border border-dashed border-border bg-white p-8 text-center text-sm text-text-subtle">
                 {{ $t('No externally available content') }}
             </div>
 

@@ -4,16 +4,16 @@
 
             <!-- Kopfbereich -->
             <section class="r">
-                <h1 class="text-lg font-semibold text-zinc-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ $t('EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT') }}
                 </h1>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('All project budgets whose budget key date is between the following dates are exported.') }}
                 </p>
             </section>
 
             <!-- Umschalter Aggregiert / Detailliert -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
 
                 <SwitchDualLabel
                     v-model="generateDetailedExport"
@@ -26,7 +26,7 @@
             </section>
 
             <!-- Zeitraum -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <BaseInput
                         type="date"
@@ -42,18 +42,18 @@
                     />
                 </div>
 
-                <p v-if="showMandatoryFieldsErrorText" class="mt-3 text-xs text-red-600 text-center">
+                <p v-if="showMandatoryFieldsErrorText" class="mt-3 text-xs text-danger text-center">
                     {{ $t('You must specify both the start and end date. Then start the export again.') }}
                 </p>
             </section>
 
             <!-- Spaltenauswahl -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Columns') }}</h2>
+                    <h2 class="text-sm font-semibold text-text">{{ $t('Columns') }}</h2>
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900"
+                        class="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text"
                         @click="showColumns = !showColumns"
                     >
                         <span v-if="!showColumns">{{ $t('Show') }}</span>
@@ -78,14 +78,14 @@
                         />
                         <label
                             :for="`budget-export-cb-${columnKey}`"
-                            class="text-xs text-zinc-700 cursor-pointer hover:text-green-600"
+                            class="text-xs text-text-muted cursor-pointer hover:text-success"
                         >
                             {{ $t(translationKey) }}
                         </label>
                     </div>
                 </div>
 
-                <p v-if="showNoColumnsErrorText" class="text-xs text-red-600 text-center">
+                <p v-if="showNoColumnsErrorText" class="text-xs text-danger text-center">
                     {{ $t('Please select at least one column for the export.') }}
                 </p>
             </section>

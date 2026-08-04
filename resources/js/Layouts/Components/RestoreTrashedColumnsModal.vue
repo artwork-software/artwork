@@ -11,7 +11,7 @@
             <div v-else-if="trashedColumns.length === 0" class="text-secondary text-sm py-4">
                 {{ $t('No deleted columns available.') }}
             </div>
-            <ul v-else class="divide-y divide-gray-200">
+            <ul v-else class="divide-y divide-border-subtle">
                 <li
                     v-for="column in trashedColumns"
                     :key="column.id"

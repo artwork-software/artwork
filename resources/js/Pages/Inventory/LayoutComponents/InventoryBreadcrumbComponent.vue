@@ -4,12 +4,12 @@
     <nav v-if="currentCategory?.id" class="flex font-lexend" aria-label="Breadcrumb">
         <ol role="list" class="flex items-center space-x-2">
             <li>
-                <Link preserve-scroll :href="route('inventory.category.show', { inventoryCategory: currentCategory?.id, ...linkQuery })" class="text-sm font-medium text-gray-500 hover:text-gray-700 first-letter:capitalize">{{ currentCategory.name }}</Link>
+                <Link preserve-scroll :href="route('inventory.category.show', { inventoryCategory: currentCategory?.id, ...linkQuery })" class="text-sm font-medium text-text-subtle hover:text-text-muted first-letter:capitalize">{{ currentCategory.name }}</Link>
             </li>
             <li v-if="currentSubCategory?.id">
                 <div class="flex items-center">
-                    <component :is="IconPointFilled" class="size-4 shrink-0 text-gray-300" aria-hidden="true" />
-                    <Link  preserve-scroll :href="route('inventory.sub.category.show', { inventoryCategory: currentCategory.id, inventorySubCategory: currentSubCategory.id, ...linkQuery })" class="ml-2 text-sm font-medium text-gray-500 hover:text-gray-700 first-letter:capitalize">
+                    <component :is="IconPointFilled" class="size-4 shrink-0 text-text-subtle" aria-hidden="true" />
+                    <Link  preserve-scroll :href="route('inventory.sub.category.show', { inventoryCategory: currentCategory.id, inventorySubCategory: currentSubCategory.id, ...linkQuery })" class="ml-2 text-sm font-medium text-text-subtle hover:text-text-muted first-letter:capitalize">
                         {{ currentSubCategory.name }}
                     </Link>
                 </div>

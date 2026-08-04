@@ -1,7 +1,7 @@
 <template>
     <tr class="cursor-pointer w-full xsLight pb-1" @click="group.closed = !group.closed">
         <td>
-            <div class="px-2 py-1.5 bg-gray-50/10 w-full" :class="group.closed ? 'rounded-b-lg' : ''">
+            <div class="px-2 py-1.5 bg-surface-sunken w-full" :class="group.closed ? 'rounded-b-lg' : ''">
                 <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
                     <component :is="IconCornerDownRight" class="h-4 w-4"/>
                     {{ group.name }}

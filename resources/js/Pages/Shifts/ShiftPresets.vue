@@ -11,7 +11,7 @@
                 <!-- Right now the templates are not divided in eventtypes so this is not needed
                 <Listbox as="div" class="flex w-72 ml-5" v-model="selectedFilter">
                     <ListboxButton
-                        class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
+                        class="bg-white w-full relative py-2 cursor-pointer">
                         <div class="flex items-center my-auto">
                             <h2 class="headline1">{{ selectedFilter.name }}</h2>
                             <span class="inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -20,7 +20,7 @@
                         </div>
                     </ListboxButton>
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                        <ListboxOptions class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                        <ListboxOptions class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
                             <ListboxOption as="template" class="max-h-8" key="0" :value="{name: 'Alle Vorlagen', id: 0}" v-slot="{ active, selected }">
                                 <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                 <span :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
@@ -58,7 +58,7 @@
                            type="text"
                            required
                            :placeholder="$t('Name of the template*')"
-                           class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none w-full h-12"/>
+                           class="border-border inputMain xsDark placeholder-secondary  disabled:border-none w-full h-12"/>
 
                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar"/>
                 </div>
@@ -75,8 +75,8 @@
                 </div>
             </div>
             <div v-else>
-                <div class="rounded-md bg-red-50 p-4 ml-5">
-                    <div class="flex text-sm text-red-700">
+                <div class="rounded-md bg-danger-surface p-4 ml-5">
+                    <div class="flex text-sm text-danger">
                         {{$t('No shift templates available.')}}
                     </div>
                 </div>

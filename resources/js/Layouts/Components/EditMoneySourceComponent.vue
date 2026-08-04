@@ -134,7 +134,7 @@
                                         </ListboxButton>
                                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                             <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
-                                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                           class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between "
                                                            :key="moneySourceGroup.id"
                                                            :value="moneySourceGroup"
                                                            v-slot="{ active, selected }">
@@ -214,7 +214,7 @@
                                          class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm rounded-lg">
-                                        <div class="border-gray-200">
+                                        <div class="border-border-subtle">
                                             <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
                                                  class="flex items-center cursor-pointer">
                                                 <div class="flex-1 text-sm py-4">

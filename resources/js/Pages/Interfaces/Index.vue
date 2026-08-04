@@ -12,7 +12,7 @@
         <div>
                 <div class="space-y-6">
                     <div @click="toggleSection(openSections.ARTWORK)"
-                         class="cursor-pointer flex items-center justify-between bg-gray-100 p-4 rounded">
+                         class="cursor-pointer flex items-center justify-between bg-surface-sunken p-4 rounded">
                         <span class="font-semibold">{{ $t('Artwork interface') }}</span>
                         <ChevronDownIcon :class="['transition-transform', { 'rotate-180': openSection === openSections.ARTWORK }]"
                                          class="w-5 h-5"/>
@@ -28,7 +28,7 @@
                 <!-- Sage API -->
                 <div class="space-y-6" v-if="sageSettings">
                     <div @click="toggleSection(openSections.SAGE)"
-                         class="cursor-pointer flex items-center justify-between bg-gray-100 p-4 rounded">
+                         class="cursor-pointer flex items-center justify-between bg-surface-sunken p-4 rounded">
                         <span class="font-semibold">{{ $t('Sage interface') }}</span>
                         <ChevronDownIcon :class="['transition-transform', { 'rotate-180': openSection === openSections.SAGE }]"
                                          class="w-5 h-5"/>

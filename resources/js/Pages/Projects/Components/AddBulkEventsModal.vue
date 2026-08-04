@@ -5,7 +5,7 @@
                 <div class="model-title">
                     {{ $t('Events') }}
                 </div>
-                <div class="model-title !text-gray-400 text-md">
+                <div class="model-title !text-text-subtle text-md">
                     ({{ project.name}})
                 </div>
             </div>

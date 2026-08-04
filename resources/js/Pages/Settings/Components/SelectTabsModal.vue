@@ -80,7 +80,7 @@ export default {
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
             </TransitionChild>
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -88,7 +88,7 @@ export default {
                         <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
                                     <span class="sr-only">Close</span>
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
@@ -104,31 +104,31 @@ export default {
                                 <div class="mb-3">
                                     <SwitchGroup as="div" class="flex items-center gap-x-4">
                                         <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-gray-900">{{ $t('Only include current tab') }}</span>
+                                            <span class="font-medium text-text">{{ $t('Only include current tab') }}</span>
                                         </SwitchLabel>
-                                        <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
+                                        <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-hover' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
                                             <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                         </Switch>
                                         <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-gray-900">{{ $t('Select tabs') }}</span>
+                                            <span class="font-medium text-text">{{ $t('Select tabs') }}</span>
                                         </SwitchLabel>
                                     </SwitchGroup>
                                 </div>
                                 <div v-if="enabled">
                                     <Listbox as="div" v-model="selected" multiple>
-                                        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Selected tabs') }}</ListboxLabel>
+                                        <ListboxLabel class="block text-sm font-medium leading-6 text-text">{{ $t('Selected tabs') }}</ListboxLabel>
                                         <div class="relative mt-2">
-                                            <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover sm:text-sm sm:leading-6">
+                                            <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-text shadow-sm ring-1 ring-inset ring-border focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover sm:text-sm sm:leading-6">
                                                 <span class="block truncate"> {{ selected.map((tab) => tab.name).join(', ') }}</span>
                                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                  <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                                  <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                                                 </span>
                                             </ListboxButton>
 
                                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                 <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                                     <ListboxOption as="template" v-for="tab in tabs" :key="tab.id" :value="tab" v-slot="{ active, selected }">
-                                                        <li :class="[active ? 'bg-artwork-buttons-hover text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                        <li :class="[active ? 'bg-artwork-buttons-hover text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ tab.name }}</span>
 
                                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-hover', 'absolute inset-y-0 right-0 flex items-center pr-4']">

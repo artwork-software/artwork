@@ -27,7 +27,7 @@
             />
 
             <!-- Toolbar -->
-            <div class="rounded-2xl border border-zinc-200 bg-white/80 p-4 shadow-sm backdrop-blur">
+            <div class="rounded-2xl border border-border-subtle bg-white/80 p-4 shadow-sm backdrop-blur">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <!-- Suche -->
                     <label class="relative block w-full md:max-w-md">
@@ -36,25 +36,25 @@
                             v-model.trim="search"
                             type="text"
                             :placeholder="$t('Search material sets…')"
-                            class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 pr-9 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                            class="w-full rounded-xl border border-border-subtle bg-white px-3 py-2 pr-9 text-sm text-text placeholder:text-text-subtle focus:border-accent-200 focus:outline-none focus:ring-2 focus:ring-accent-200"
                         />
-                        <IconSearch class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                        <IconSearch class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
                     </label>
 
                     <!-- rechts: Zähler + View Toggle -->
                     <div class="flex items-center justify-between gap-3">
             <span
-                class="inline-flex items-center gap-1 rounded-full bg-zinc-50 px-2.5 py-1 text-[11px] font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200"
+                class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted ring-1 ring-inset ring-border-subtle"
             >
-              <span class="inline-block size-2 rounded-full bg-indigo-500 ring-2 ring-indigo-200/60" />
+              <span class="inline-block size-2 rounded-full bg-accent-600 ring-2 ring-accent-200" />
               {{ $t('Found') }}: {{ filteredSets.length }}
             </span>
 
-                        <div class="inline-flex rounded-lg border border-zinc-200 bg-white p-1">
+                        <div class="inline-flex rounded-lg border border-border-subtle bg-white p-1">
                             <button
                                 type="button"
                                 class="rounded-md px-2 py-1 text-sm"
-                                :class="viewMode === 'table' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600'"
+                                :class="viewMode === 'table' ? 'bg-surface-sunken text-text' : 'text-text-muted'"
                                 @click="viewMode = 'table'"
                                 :aria-pressed="viewMode === 'table'"
                             >
@@ -63,7 +63,7 @@
                             <button
                                 type="button"
                                 class="rounded-md px-2 py-1 text-sm"
-                                :class="viewMode === 'cards' ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600'"
+                                :class="viewMode === 'cards' ? 'bg-surface-sunken text-text' : 'text-text-muted'"
                                 @click="viewMode = 'cards'"
                                 :aria-pressed="viewMode === 'cards'"
                             >
@@ -75,30 +75,30 @@
             </div>
 
             <!-- CONTENT -->
-            <div class="card white mt-2 rounded-2xl border border-zinc-200 bg-white/90 p-0 shadow-sm backdrop-blur">
+            <div class="card white mt-2 rounded-2xl border border-border-subtle bg-white/90 p-0 shadow-sm backdrop-blur">
                 <!-- TABLE VIEW -->
                 <div v-if="viewMode === 'table'" class="flow-root">
                     <div class="overflow-x-auto">
                         <div class="inline-block min-w-full align-middle p-5">
-                            <table class="min-w-full divide-y divide-zinc-200">
+                            <table class="min-w-full divide-y divide-border-subtle">
                                 <thead class="">
-                                <tr class="divide-x divide-zinc-200">
-                                    <th scope="col" class="py-3.5 pl-4 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600 sm:pl-0">
+                                <tr class="divide-x divide-border-subtle">
+                                    <th scope="col" class="py-3.5 pl-4 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-text-muted sm:pl-0">
                                         {{ $t('Name') }}
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">
                                         {{ $t('Description') }}
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                                    <th scope="col" class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">
                                         {{ $t('Articles') }}
                                     </th>
-                                    <th scope="col" class="py-3.5 pl-4 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-zinc-600 sm:pr-0">
+                                    <th scope="col" class="py-3.5 pl-4 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-text-muted sm:pr-0">
                                         {{ $t('Actions') }}
                                     </th>
                                 </tr>
                                 </thead>
 
-                                <tbody class="divide-y divide-zinc-100 bg-white">
+                                <tbody class="divide-y divide-border-subtle bg-white">
                                 <SingleMaterialSet
                                     v-for="set in filteredSets"
                                     :key="set.id"
@@ -126,19 +126,19 @@
                         <article
                             v-for="set in filteredSets"
                             :key="set.id"
-                            class="group rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition"
+                            class="group rounded-2xl border border-border-subtle bg-white p-4 shadow-sm transition"
                         >
                             <div class="flex items-start justify-between gap-3">
-                                <h3 class="truncate text-sm font-semibold text-zinc-900">
+                                <h3 class="truncate text-sm font-semibold text-text">
                                     {{ set.name }}
                                 </h3>
-                                <span class="inline-flex items-center gap-1 rounded-full bg-zinc-50 px-2 py-0.5 text-[11px] font-medium text-zinc-700 ring-1 ring-inset ring-zinc-200">
-                                  <IconStackForward class="h-3.5 w-3.5 text-zinc-500" />
+                                <span class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-text-muted ring-1 ring-inset ring-border-subtle">
+                                  <IconStackForward class="h-3.5 w-3.5 text-text-subtle" />
                                   {{ articlesCount(set) }}
                                 </span>
                             </div>
 
-                            <p v-if="set.description" class="mt-1 line-clamp-3 text-xs text-zinc-600">
+                            <p v-if="set.description" class="mt-1 line-clamp-3 text-xs text-text-muted">
                                 {{ set.description }}
                             </p>
 
@@ -146,13 +146,13 @@
                                 <button
                                     v-if="can('set.create_edit') || is('artwork admin')"
                                     type="button"
-                                    class="rounded-lg px-2.5 py-1.5 text-sm font-medium text-zinc-700 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                    class="rounded-lg px-2.5 py-1.5 text-sm font-medium text-text-muted ring-1 ring-inset ring-border focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                                     @click="openEdit(set)"
                                 >
                                     {{ $t('Edit') }}
                                 </button>
                                 <!-- Optional: Details/Route-Button falls vorhanden
-                                <Link :href="route('material-sets.show', set.id)" class="rounded-lg px-2.5 py-1.5 text-sm font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200">
+                                <Link :href="route('material-sets.show', set.id)" class="rounded-lg px-2.5 py-1.5 text-sm font-medium text-accent-700 ring-1 ring-inset ring-accent-200">
                                   {{ $t('Open') }}
                                 </Link>
                                 -->
@@ -160,7 +160,7 @@
                         </article>
                     </div>
 
-                    <div v-else class="rounded-xl border border-dashed border-zinc-300 bg-white/60 p-8 text-center">
+                    <div v-else class="rounded-xl border border-dashed border-border bg-white/60 p-8 text-center">
                         <BaseAlertComponent :message="$t('No material sets found.')" type="info" use-translation />
                     </div>
                 </div>

@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconSettings"
                 :title="$t('CRM Settings')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                icon-bg-class="bg-accent-100 text-accent-700"
                 :search-enabled="false"
             >
                 <template #actions>
@@ -34,8 +34,8 @@
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-1"
             >
-                <div v-if="successMessage" class="mt-4 rounded-md bg-green-50 p-3">
-                    <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+                <div v-if="successMessage" class="mt-4 rounded-md bg-success-surface p-3">
+                    <p class="text-sm font-medium text-success">{{ successMessage }}</p>
                 </div>
             </Transition>
 
@@ -44,7 +44,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="text-lg font-semibold">{{ $t('Property groups') }}</h2>
-                        <p class="text-sm text-gray-500">{{ $t('Organize properties into groups. Confidential groups require permissions to view.') }}</p>
+                        <p class="text-sm text-text-subtle">{{ $t('Organize properties into groups. Confidential groups require permissions to view.') }}</p>
                     </div>
                     <button class="ui-button-add" @click="showGroupModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
@@ -52,10 +52,10 @@
                     </button>
                 </div>
 
-                <div v-if="!localPropertyGroups.length" class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-10 text-center">
-                    <component :is="IconLayoutGrid" class="mx-auto h-10 w-10 text-gray-300" />
-                    <p class="mt-3 text-sm font-medium text-gray-900">{{ $t('No property groups yet') }}</p>
-                    <p class="mt-1 text-sm text-gray-500">{{ $t('Start here: property groups bundle the properties your contacts share, e.g. address or conditions.') }}</p>
+                <div v-if="!localPropertyGroups.length" class="rounded-lg border border-dashed border-border bg-surface-sunken p-10 text-center">
+                    <component :is="IconLayoutGrid" class="mx-auto h-10 w-10 text-text-subtle" />
+                    <p class="mt-3 text-sm font-medium text-text">{{ $t('No property groups yet') }}</p>
+                    <p class="mt-1 text-sm text-text-subtle">{{ $t('Start here: property groups bundle the properties your contacts share, e.g. address or conditions.') }}</p>
                     <button class="ui-button-add mx-auto mt-4" @click="showGroupModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New group') }}
@@ -74,37 +74,37 @@
                     @change="onGroupDragChange"
                 >
                     <template #item="{ element: group }">
-                        <div class="bg-white border border-gray-200 rounded-lg">
-                            <div class="px-4 py-4 flex items-center justify-between bg-gray-50 rounded-t-lg">
+                        <div class="bg-white border border-border-subtle rounded-lg">
+                            <div class="px-4 py-4 flex items-center justify-between bg-surface-sunken rounded-t-lg">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <component :is="IconGripVertical" class="group-drag-handle h-4 w-4 text-gray-300 hover:text-gray-500 shrink-0" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
+                                    <component :is="IconGripVertical" class="group-drag-handle h-4 w-4 text-text-subtle hover:text-text-muted shrink-0" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
                                     <span class="font-medium">{{ $t(group.name) }}</span>
-                                    <span v-if="group.is_confidential" class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                    <span v-if="group.is_confidential" class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning">
                                         {{ $t('Confidential') }}
                                     </span>
-                                    <span v-if="group.is_system" class="text-xs text-gray-400">({{ $t('System') }})</span>
+                                    <span v-if="group.is_system" class="text-xs text-text-subtle">({{ $t('System') }})</span>
                                     <!-- Which contact types use this group (max. 3 Chips, Rest im Hover-Tooltip) -->
                                     <div class="hidden lg:flex items-center gap-1.5 ml-3 min-w-0 overflow-hidden">
                                         <template v-if="typesUsingGroup(group).length">
-                                            <span class="text-xs text-gray-400 shrink-0">{{ $t('Used by') }}:</span>
+                                            <span class="text-xs text-text-subtle shrink-0">{{ $t('Used by') }}:</span>
                                             <span
                                                 v-for="type in typesUsingGroup(group).slice(0, maxVisibleTypeChips)"
                                                 :key="type.id"
-                                                class="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-2 py-0.5 text-xs text-gray-600 shrink-0 max-w-40"
+                                                class="inline-flex items-center gap-1 rounded-full bg-white border border-border-subtle px-2 py-0.5 text-xs text-text-muted shrink-0 max-w-40"
                                             >
                                                 <PropertyIcon v-if="type.icon" :name="type.icon" class="h-3 w-3 shrink-0" :style="type.color ? { color: type.color } : {}" />
                                                 <span class="truncate">{{ $t(type.name) }}</span>
                                             </span>
                                             <span
                                                 v-if="typesUsingGroup(group).length > maxVisibleTypeChips"
-                                                class="relative group/moretypes inline-flex items-center rounded-full bg-gray-100 border border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600 shrink-0 cursor-default"
+                                                class="relative group/moretypes inline-flex items-center rounded-full bg-surface-sunken border border-border-subtle px-2 py-0.5 text-xs font-medium text-text-muted shrink-0 cursor-default"
                                             >
                                                 +{{ typesUsingGroup(group).length - maxVisibleTypeChips }}
-                                                <span class="pointer-events-none absolute left-0 top-full z-20 mt-1.5 hidden group-hover/moretypes:block w-max max-w-xs rounded-lg bg-gray-900 px-3 py-2 shadow-lg">
+                                                <span class="pointer-events-none absolute left-0 top-full z-20 mt-1.5 hidden group-hover/moretypes:block w-max max-w-xs rounded-lg bg-surface-inverse px-3 py-2 shadow-lg">
                                                     <span
                                                         v-for="type in typesUsingGroup(group).slice(maxVisibleTypeChips)"
                                                         :key="type.id"
-                                                        class="flex items-center gap-1.5 text-xs text-white py-0.5"
+                                                        class="flex items-center gap-1.5 text-xs text-text-inverse py-0.5"
                                                     >
                                                         <PropertyIcon v-if="type.icon" :name="type.icon" class="h-3 w-3 shrink-0" :style="type.color ? { color: type.color } : {}" />
                                                         {{ $t(type.name) }}
@@ -112,14 +112,14 @@
                                                 </span>
                                             </span>
                                         </template>
-                                        <span v-else class="text-xs text-gray-400 italic truncate">{{ $t('Not assigned to any contact type yet') }}</span>
+                                        <span v-else class="text-xs text-text-subtle italic truncate">{{ $t('Not assigned to any contact type yet') }}</span>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <button @click="editingGroup = group; showGroupModal = true" class="text-gray-400 hover:text-gray-600">
+                                    <button @click="editingGroup = group; showGroupModal = true" class="text-text-subtle hover:text-text-muted">
                                         <component :is="IconEdit" class="h-4 w-4" />
                                     </button>
-                                    <button v-if="!group.is_system" @click="openDeleteGroupModal(group)" class="text-gray-400 hover:text-red-600">
+                                    <button v-if="!group.is_system" @click="openDeleteGroupModal(group)" class="text-text-subtle hover:text-danger">
                                         <component :is="IconTrash" class="h-4 w-4" />
                                     </button>
                                 </div>
@@ -140,15 +140,15 @@
                                 <template #item="{ element: property }">
                                     <div class="px-6 py-3 flex items-center justify-between group">
                                         <div class="flex items-center gap-3">
-                                            <component :is="IconGripVertical" class="drag-handle h-4 w-4 text-gray-300 hover:text-gray-500" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
+                                            <component :is="IconGripVertical" class="drag-handle h-4 w-4 text-text-subtle hover:text-text-muted" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
                                             <span class="text-sm">{{ property.name }}</span>
-                                            <span class="text-xs text-gray-400 bg-gray-100 rounded px-2 py-0.5">{{ $t(propertyTypeLabels[property.type] ?? property.type) }}</span>
+                                            <span class="text-xs text-text-subtle bg-surface-sunken rounded px-2 py-0.5">{{ $t(propertyTypeLabels[property.type] ?? property.type) }}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <button v-if="!property.is_system" @click="editingProperty = property; activeGroupForProperty = group; showPropertyModal = true" class="text-gray-400 hover:text-gray-600">
+                                            <button v-if="!property.is_system" @click="editingProperty = property; activeGroupForProperty = group; showPropertyModal = true" class="text-text-subtle hover:text-text-muted">
                                                 <component :is="IconEdit" class="h-4 w-4" />
                                             </button>
-                                            <button v-if="!property.is_system" @click="openDeletePropertyModal(property)" class="text-gray-400 hover:text-red-600">
+                                            <button v-if="!property.is_system" @click="openDeletePropertyModal(property)" class="text-text-subtle hover:text-danger">
                                                 <component :is="IconTrash" class="h-4 w-4" />
                                             </button>
                                         </div>
@@ -158,7 +158,7 @@
 
                             <!-- Add property button -->
                             <div class="px-6 py-3 border-t">
-                                <button @click="activeGroupForProperty = group; showPropertyModal = true" class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
+                                <button @click="activeGroupForProperty = group; showPropertyModal = true" class="text-sm text-accent-600 hover:text-accent-700 flex items-center gap-1">
                                     <component :is="IconCirclePlus" class="h-4 w-4" />
                                     {{ $t('Add property') }}
                                 </button>
@@ -173,7 +173,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="text-lg font-semibold">{{ $t('Contact types') }}</h2>
-                        <p class="text-sm text-gray-500">{{ $t('Manage the types of contacts in your CRM.') }}</p>
+                        <p class="text-sm text-text-subtle">{{ $t('Manage the types of contacts in your CRM.') }}</p>
                     </div>
                     <button class="ui-button-add" @click="showTypeModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
@@ -181,17 +181,17 @@
                     </button>
                 </div>
 
-                <div v-if="!localContactTypes.length" class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-10 text-center">
-                    <component :is="IconAddressBook" class="mx-auto h-10 w-10 text-gray-300" />
-                    <p class="mt-3 text-sm font-medium text-gray-900">{{ $t('No contact types yet') }}</p>
-                    <p class="mt-1 text-sm text-gray-500">{{ $t('Create your first contact type to categorize CRM contacts. You can assign property groups directly while creating it.') }}</p>
+                <div v-if="!localContactTypes.length" class="rounded-lg border border-dashed border-border bg-surface-sunken p-10 text-center">
+                    <component :is="IconAddressBook" class="mx-auto h-10 w-10 text-text-subtle" />
+                    <p class="mt-3 text-sm font-medium text-text">{{ $t('No contact types yet') }}</p>
+                    <p class="mt-1 text-sm text-text-subtle">{{ $t('Create your first contact type to categorize CRM contacts. You can assign property groups directly while creating it.') }}</p>
                     <button class="ui-button-add mx-auto mt-4" @click="showTypeModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New type') }}
                     </button>
                 </div>
 
-                <div v-else class="bg-white border border-gray-200 rounded-lg">
+                <div v-else class="bg-white border border-border-subtle rounded-lg">
                     <draggable
                         :list="localContactTypes"
                         item-key="id"
@@ -205,7 +205,7 @@
                         <template #item="{ element: type }">
                             <div class="px-4 py-4 flex items-center justify-between">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <component :is="IconGripVertical" class="type-drag-handle h-4 w-4 text-gray-300 hover:text-gray-500 shrink-0" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
+                                    <component :is="IconGripVertical" class="type-drag-handle h-4 w-4 text-text-subtle hover:text-text-muted shrink-0" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'" />
                                     <span
                                         v-if="type.icon"
                                         class="inline-flex size-7 items-center justify-center rounded shrink-0"
@@ -214,8 +214,8 @@
                                         <PropertyIcon :name="type.icon" class="h-5 w-5" />
                                     </span>
                                     <span class="font-medium">{{ $t(type.name) }}</span>
-                                    <span v-if="type.is_system" class="text-xs text-gray-400">({{ $t('System') }})</span>
-                                    <span class="text-xs text-gray-400 ml-2">
+                                    <span v-if="type.is_system" class="text-xs text-text-subtle">({{ $t('System') }})</span>
+                                    <span class="text-xs text-text-subtle ml-2">
                                         {{ $t('{groups} groups · {properties} properties', { groups: assignedGroupCount(type), properties: (type.properties?.length ?? 0) }) }}
                                     </span>
                                 </div>
@@ -227,7 +227,7 @@
                                         icon-size="h-4 w-4"
                                         @click="editingType = type; showTypeModal = true"
                                     />
-                                    <button v-if="!type.is_system" @click="openDeleteTypeModal(type)" class="text-gray-400 hover:text-red-600">
+                                    <button v-if="!type.is_system" @click="openDeleteTypeModal(type)" class="text-text-subtle hover:text-danger">
                                         <component :is="IconTrash" class="h-4 w-4" />
                                     </button>
                                 </div>

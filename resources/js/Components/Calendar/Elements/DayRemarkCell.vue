@@ -3,13 +3,13 @@
         ref="cellRef"
         :style="containerStyle"
         :class="[isFullscreen ? 'stickyRemarksNoMarginLeft' : 'stickyRemarks', editable ? 'cursor-pointer' : '']"
-        class="group/remark relative bg-amber-50 border-r border-amber-100 text-left overflow-hidden"
+        class="group/remark relative bg-warning-surface border-r border-warning-border text-left overflow-hidden"
         @click.stop="openEditor"
     >
         <div :style="stickyTop !== null ? { position: 'sticky', top: stickyTop + 'px' } : {}" class="px-1.5 py-1">
             <p
                 v-if="remark?.text"
-                class="text-[11px] leading-[14px] text-gray-800 whitespace-pre-line break-words remark-clamp"
+                class="text-[11px] leading-[14px] text-text whitespace-pre-line break-words remark-clamp"
                 :style="clampStyle"
                 :title="remarkTitle"
             >
@@ -18,7 +18,7 @@
             <!-- Leer + Editierrecht: dezente Hinzufügen-Affordanz erst bei Hover -->
             <div
                 v-else-if="editable"
-                class="flex items-center gap-x-1 text-gray-400 opacity-0 group-hover/remark:opacity-100 transition-opacity"
+                class="flex items-center gap-x-1 text-text-subtle opacity-0 group-hover/remark:opacity-100 transition-opacity"
             >
                 <component :is="IconPencilPlus" class="size-3.5 shrink-0" stroke-width="1.5" />
                 <span class="text-[10px] leading-tight">{{ $t('Add remark') }}</span>
@@ -27,7 +27,7 @@
         <!-- Stift-Overlay bei bestehendem Text und Editierrecht -->
         <div
             v-if="editable && remark?.text"
-            class="absolute top-0.5 right-0.5 rounded bg-white/80 p-0.5 text-gray-500 opacity-0 group-hover/remark:opacity-100 transition-opacity"
+            class="absolute top-0.5 right-0.5 rounded-sm bg-surface/80 p-0.5 text-text-muted opacity-0 group-hover/remark:opacity-100 transition-opacity"
         >
             <component :is="IconPencil" class="size-3" stroke-width="1.5" />
         </div>
@@ -40,13 +40,13 @@
         <div
             v-if="editing"
             ref="editorRef"
-            class="fixed z-[999] rounded-lg border border-amber-200 bg-white shadow-xl p-2 space-y-1.5"
+            class="fixed z-[999] rounded-lg border border-warning-border bg-surface shadow-overlay p-2 space-y-1.5"
             :style="editorStyle"
             @click.stop
         >
-            <div class="text-[11px] font-semibold text-gray-700 flex items-center justify-between gap-x-3">
-                <span>{{ $t('Day remark') }} · {{ day.fullDay }}</span>
-                <span class="font-normal text-gray-400" :class="{ 'text-red-500 font-semibold': draftText.length >= maxLength }">
+            <div class="text-[11px] font-semibold text-text flex items-center justify-between gap-x-3">
+                <span class="tabular-nums">{{ $t('Day remark') }} · {{ day.fullDay }}</span>
+                <span class="tabular-nums" :class="draftText.length >= maxLength ? 'font-semibold text-danger' : 'font-normal text-text-subtle'">
                     {{ draftText.length }}/{{ maxLength }}
                 </span>
             </div>
@@ -57,14 +57,14 @@
                 :placeholder="$t('Add remark')"
             />
             <div class="flex items-center justify-between">
-                <span v-if="remark?.updated_by" class="text-[10px] text-gray-400 truncate mr-2">
+                <span v-if="remark?.updated_by" class="text-[10px] text-text-subtle truncate mr-2">
                     {{ $t('Last edited by {0} on {1}', [remark.updated_by, remark.updated_at]) }}
                 </span>
                 <span v-else></span>
                 <div class="flex items-center gap-x-1.5 shrink-0">
                     <button
                         type="button"
-                        class="text-[11px] text-gray-500 hover:text-gray-700 px-1.5 py-0.5"
+                        class="text-[11px] text-text-muted hover:text-text px-1.5 py-0.5"
                         @click="closeEditor"
                     >
                         {{ $t('Cancel') }}

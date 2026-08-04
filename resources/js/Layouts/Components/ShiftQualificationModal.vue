@@ -6,8 +6,8 @@
                     <IconSelector @update:modelValue="addIconToForm" :current-icon="shiftQualificationForm ? shiftQualificationForm.icon : null" />
                     <!--<Menu as="div" class="relative col-span-1">
                         <div>
-                            <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button mt-5">
-                                <label v-if="this.shiftQualificationForm.icon === null" class="cursor-pointer text-gray-400 text-xs">
+                            <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-border-strong' : '']" class="menu-button mt-5">
+                                <label v-if="this.shiftQualificationForm.icon === null" class="cursor-pointer text-text-subtle text-xs">
                                     {{$t('Icon')}}*
                                 </label>
 

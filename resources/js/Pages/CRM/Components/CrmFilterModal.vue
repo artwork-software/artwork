@@ -8,7 +8,7 @@
     >
         <div>
             <!-- Active Filters Section -->
-            <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+            <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                 <div class="flex items-start justify-between mb-3">
                     <BasePageTitle
                         :title="$t('Active filters')"
@@ -19,27 +19,27 @@
                     <template v-for="prop in filterableProperties" :key="'tag-' + prop.id">
                         <div
                             v-if="isFilterActive(prop.id)"
-                            class="group block cursor-pointer shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border border-blue-200"
+                            class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200"
                             @click="removeFilter(prop.id)"
                         >
                             <div class="flex items-center">
                                 <div class="mx-2">
-                                    <p class="text-blue-500 text-xs group-hover:text-blue-600">
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-600">
                                         {{ prop.name }}: {{ $t(formatFilterLabel(prop)) }}
                                     </p>
                                 </div>
-                                <XIcon class="size-4 text-blue-500 hover:text-error" />
+                                <XIcon class="size-4 text-accent-600 hover:text-error" />
                             </div>
                         </div>
                     </template>
-                    <p v-if="!hasActiveFilters" class="text-gray-400 text-sm">{{ $t('No active filters') }}</p>
+                    <p v-if="!hasActiveFilters" class="text-text-subtle text-sm">{{ $t('No active filters') }}</p>
                 </div>
             </div>
 
             <!-- Filter Inputs -->
             <div class="space-y-4">
                 <div v-for="prop in filterableProperties" :key="prop.id">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ prop.name }}</label>
+                    <label class="block text-sm font-medium text-text-muted mb-1">{{ prop.name }}</label>
 
                     <!-- Text / Textarea / Link -->
                     <BaseInput
@@ -70,7 +70,7 @@
                     <select
                         v-else-if="prop.type === 'checkbox'"
                         v-model="localFilters[prop.id]"
-                        class="block w-full rounded-md border border-gray-200 shadow-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out text-sm"
+                        class="block w-full rounded-md border border-border-subtle shadow-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create transition-[box-shadow,border-color] duration-150 ease-in-out text-sm"
                     >
                         <option value="">{{ $t('All') }}</option>
                         <option value="1">{{ $t('Yes') }}</option>
@@ -88,7 +88,7 @@
                                 type="checkbox"
                                 :value="option"
                                 v-model="localFilters[prop.id]"
-                                class="rounded border-gray-300 text-indigo-600 h-4 w-4"
+                                class="rounded border-border text-accent-600 h-4 w-4"
                             />
                             {{ option }}
                         </label>

@@ -8,7 +8,7 @@
                 @click="openEditModal"
             />
         </div>
-        <div v-if="loadError" class="text-xs text-rose-600">
+        <div v-if="loadError" class="text-xs text-danger">
             {{ loadError }}
         </div>
         <div v-else-if="loading" class="text-xs text-secondary">
@@ -29,17 +29,17 @@
             <div class="px-6 pb-6">
                 <!-- Show tag when state is selected -->
                 <div v-if="selectedState" class="w-full">
-                    <div class="text-gray-500 text-xs mb-2">
+                    <div class="text-text-subtle text-xs mb-2">
                         {{ $t('Project status') }}
                     </div>
-                    <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-gray-300 bg-white">
+                    <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-border bg-white">
                         <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
                         <span class="text-sm flex items-center gap-x-1">
                             {{ selectedState.name }}
                             <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
                         </span>
                         <button type="button" @click="selectedState = null" class="ml-1">
-                            <IconCircleX class="h-4 w-4 text-gray-400 hover:text-error" />
+                            <IconCircleX class="h-4 w-4 text-text-subtle hover:text-error" />
                         </button>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                 <Listbox v-else as="div" class="w-full relative" v-model="selectedState">
                     <ListboxButton class="menu-button-no-padding relative">
                         <div class="truncate">
-                            <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                            <div class="top-2 left-4 absolute text-text-subtle text-xs">
                                 {{ $t('Project status') }}
                             </div>
                             <div class="pt-6 pb-2 flex items-center gap-x-2">
@@ -207,8 +207,8 @@ export default defineComponent({
                 return luminance > 0.5 ? '#000000' : '#ffffff';
             }
             const lightColors = [
-                'bg-white', 'bg-gray-50', 'bg-gray-100', 'bg-gray-200', 'bg-gray-300',
-                'bg-yellow-50', 'bg-yellow-100', 'bg-yellow-200', 'bg-yellow-300', 'bg-yellow-400',
+                'bg-white', 'bg-surface-sunken', 'bg-surface-sunken', 'bg-border-subtle', 'bg-border',
+                'bg-warning-surface', 'bg-warning-surface', 'bg-warning-surface', 'bg-warning', 'bg-warning',
                 'bg-lime-50', 'bg-lime-100', 'bg-lime-200', 'bg-lime-300', 'bg-lime-400'
             ];
             const isLight = lightColors.some(light => color.includes(light));

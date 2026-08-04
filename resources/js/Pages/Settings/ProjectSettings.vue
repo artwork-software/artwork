@@ -118,7 +118,7 @@
                 leave-from-class="opacity-100"
                 leave-to-class="transform opacity-0"
             >
-                <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+                <div class="my-3 text-xs bg-success px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
                     {{ $t('Saved. The changes have been successfully applied.') }}
                 </div>
             </transition>
@@ -129,10 +129,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="attributes" class="font-medium text-gray-900">
+                        <label for="attributes" class="font-medium text-text">
                             {{ $t('Project Attributes') }}
                         </label>
-                        <p id="attributes-description" class="text-gray-500 text-xs">
+                        <p id="attributes-description" class="text-text-subtle text-xs">
                             {{ $t('Should it be possible to add project attributes when creating a project?') }}
                         </p>
                     </div>
@@ -142,10 +142,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.state" id="state" aria-describedby="state-description" name="state" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="state" class="font-medium text-gray-900">
+                        <label for="state" class="font-medium text-text">
                             {{ $t('Project status') }}
                         </label>
-                        <p id="state-description" class="text-gray-500 text-xs">
+                        <p id="state-description" class="text-text-subtle text-xs">
                             {{ $t('Should it be possible to add a project status when creating a project?') }}
                         </p>
                     </div>
@@ -155,10 +155,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.managers" id="managers" aria-describedby="managers-description" name="managers" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="managers" class="font-medium text-gray-900">
+                        <label for="managers" class="font-medium text-text">
                             {{ $t('Project management') }}
                         </label>
-                        <p id="managers-description" class="text-gray-500 text-xs">
+                        <p id="managers-description" class="text-text-subtle text-xs">
                             {{ $t('Should it be possible to add the project management when creating a project?') }}
                         </p>
                     </div>
@@ -168,10 +168,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.cost_center" id="cost_center" aria-describedby="cost_center-description" name="cost_center" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="cost_center" class="font-medium text-gray-900">
+                        <label for="cost_center" class="font-medium text-text">
                             {{ $t('Cost bearer') }}
                         </label>
-                        <p id="cost_center-description" class="text-gray-500 text-xs">
+                        <p id="cost_center-description" class="text-text-subtle text-xs">
                            {{ $t('Do you want to add the cost unit of the project when creating it?') }}
                         </p>
                     </div>
@@ -182,7 +182,7 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <div class="flex items-center gap-1.5">
-                            <label for="budget_deadline" class="font-medium text-gray-900">
+                            <label for="budget_deadline" class="font-medium text-text">
                                 {{ $t('Budget deadline') }}
                             </label>
                             <ToolTipComponent
@@ -192,7 +192,7 @@
                                 icon-size="h-4 w-4"
                             />
                         </div>
-                        <p id="budget_deadline-description" class="text-gray-500 text-xs">
+                        <p id="budget_deadline-description" class="text-text-subtle text-xs">
                             {{ $t('Would you like to enter the project budget deadline when you create a project?') }}
                         </p>
                     </div>
@@ -202,10 +202,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.show_artists" id="show_artists" aria-describedby="show_artists-description" name="show_artists" type="checkbox" class="input-checklist"/>
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="budget_deadline" class="font-medium text-gray-900">
+                        <label for="budget_deadline" class="font-medium text-text">
                             {{ $t('Artists') }}
                         </label>
-                        <p id="budget_deadline-description" class="text-gray-500 text-xs">
+                        <p id="budget_deadline-description" class="text-text-subtle text-xs">
                             {{ $t('Would you like to add artists on project creation?') }}
                         </p>
                     </div>
@@ -215,10 +215,10 @@
                         <input @change="updateCreateSettings" v-model="createSettingsForm.crm_contacts_in_team" id="crm_contacts_in_team" aria-describedby="crm_contacts_in_team-description" name="crm_contacts_in_team" type="checkbox" class="input-checklist"/>
                     </div>
                     <div class="ml-3 text-sm leading-6">
-                        <label for="crm_contacts_in_team" class="font-medium text-gray-900">
+                        <label for="crm_contacts_in_team" class="font-medium text-text">
                             {{ $t('CRM contacts in project team') }}
                         </label>
-                        <p id="crm_contacts_in_team-description" class="text-gray-500 text-xs">
+                        <p id="crm_contacts_in_team-description" class="text-text-subtle text-xs">
                             {{ $t('Should it also be possible to link CRM contacts in the project team? This lets you show which external contacts are relevant for a project and assign them project roles.') }}
                         </p>
                     </div>

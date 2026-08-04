@@ -3,35 +3,35 @@
         class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoomFactor > 0.4"
              class="absolute z-50 w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
-             :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
+             :class="event.clicked ? 'block bg-success-surface' : 'hidden bg-artwork-buttons-create/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
-                   class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                   class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                     <PropertyIcon name="IconLink" stroke-width="1.5" class="h-4 w-4"/>
                 </a>
                 <button type="button" @click="openEditEventModal(event)"
-                        class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                     <PropertyIcon name="IconEdit" class="h-4 w-4" stroke-width="1.5"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal"
                         v-show="event.eventTypeId === 1" type="button"
-                        class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
                 <button v-if="event.occupancy_option && (isRoomAdmin || this.hasAdminRole())"
                         @click="acceptRoomRequest(event)" type="button"
-                        class="rounded-full bg-green-600 p-1 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+                        class="rounded-full bg-success p-1 text-white shadow-sm hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
                     <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))" type="button"
                         @click="showDeclineEventModal = true"
-                        class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                        class="rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                     <PropertyIcon name="IconX" stroke-width="1.5"
                            stroke="currentColor" class="w-4 h-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))"
                         @click="openConfirmModal(event.id, 'main')" type="button"
-                        class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                        class="rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                     <PropertyIcon name="IconTrash" stroke-width="1.5"
                                stroke="currentColor" class="w-4 h-4"/>
                 </button>
@@ -42,7 +42,7 @@
                         <input v-model="event.clicked" @click="$emit('checkEvent', event)" id="candidates"
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
-                               class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
+                               class="h-5 w-5 border-border text-success focus:ring-success"/>
                     </div>
                 </div>
             </div>
@@ -210,15 +210,15 @@
         <div v-for="subEvent in event.subEvents" class="mb-1">
             <div class="w-full relative group rounded-lg border-l-[6px] border-[#A7A6B115]">
                 <div
-                    class="bg-indigo-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
+                    class="bg-accent-500 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
                         <button @click="editSubEvent(subEvent)" type="button"
-                                class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                class="rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                             <PropertyIcon name="IconEdit" class="h-4 w-4" stroke-width="1.5"/>
                         </button>
                         <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                                 @click="openConfirmModal(subEvent.id, 'sub')" type="button"
-                                class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                                class="rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                             <PropertyIcon name="IconTrash" stroke-width="1.5"
                                        stroke="currentColor" class="w-4 h-4"/>
                         </button>

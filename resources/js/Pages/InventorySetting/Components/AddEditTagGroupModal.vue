@@ -29,7 +29,7 @@
                         :displayed-text="tag.name"
                         :method="removeTag"
                     />
-                    <span v-if="selectedTags.length === 0" class="text-xs text-gray-400">
+                    <span v-if="selectedTags.length === 0" class="text-xs text-text-subtle">
                         {{ $t('No tags in this group yet.') }}
                     </span>
                 </div>
@@ -56,7 +56,7 @@
                 </div>
             </div>-->
 
-            <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-between gap-3 pt-4 border-t border-border-subtle">
                 <BaseUIButton
                     is-cancel-button
                     :label="$t('Cancel')"

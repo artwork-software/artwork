@@ -3,16 +3,16 @@
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
             <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event.event_type.hex_code}"></div>
             <div class="w-full">
-                <p class="text-sm font-lexend font-semibold text-gray-900" :style="{color: event.event_type.hex_code}">
+                <p class="text-sm font-lexend font-semibold text-text" :style="{color: event.event_type.hex_code}">
                     {{ event.event_type.abbreviation }}: {{ event.eventName ?? event?.project?.name }}
                 </p>
-                <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
                     <span class="font-lexend">{{ event?.start_time }}</span>
                     <span class="font-lexend font-bold">{{ $t('End') }}:</span>
                     <span class="font-lexend">{{ event?.end_time }}</span>
                 </p>
-                <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
                     <span class="font-lexend">{{ event?.room?.name }}</span>
                 </p>

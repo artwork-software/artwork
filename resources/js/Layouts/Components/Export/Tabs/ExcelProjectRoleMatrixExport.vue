@@ -3,16 +3,16 @@
         <div class="flex flex-col space-y-6">
 
             <section>
-                <h1 class="text-lg font-semibold text-zinc-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ $t('EXCEL_PROJECT_ROLE_MATRIX_EXPORT') }}
                 </h1>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('Exports all productions overlapping the selected period as columns and all persons with a fixed project role as rows, showing the project role used in each production.') }}
                 </p>
             </section>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-                <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Time period') }}</h2>
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
+                <h2 class="text-sm font-semibold text-text">{{ $t('Time period') }}</h2>
                 <VueDatePicker
                     v-model="dateRange"
                     range
@@ -26,7 +26,7 @@
                     :cancelText="$t('Cancel')"
                     :selectText="$t('Apply')"
                     :locale="language"
-                    input-class-name="!rounded-lg !border-gray-300 !py-2 !text-sm"
+                    input-class-name="!rounded-lg !border-border !py-2 !text-sm"
                 />
                 <p v-if="rangeTooLong" class="text-xs text-artwork-messages-error">
                     {{ $t('The export range must not exceed 36 months.') }}
@@ -38,14 +38,14 @@
                         type="button"
                         class="rounded-full border px-3 py-1 text-xs transition-colors"
                         :class="isActivePreset(preset)
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                            ? 'border-accent-200 bg-accent-50 text-accent-700'
+                            : 'border-border-subtle text-text-muted hover:bg-surface-sunken hover:text-text'"
                         @click="dateRange = preset.value"
                     >
                         {{ preset.label }}
                     </button>
                 </div>
-                <p class="text-xs text-zinc-500">
+                <p class="text-xs text-text-subtle">
                     {{ $t('Included are persons with a fixed project role from the user settings who are assigned to a project role in at least one production in this period.') }}
                 </p>
             </section>

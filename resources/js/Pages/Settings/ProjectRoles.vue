@@ -17,7 +17,7 @@
                 ]"
             />
             <div v-for="role in projectRoles">
-                <div class="rounded-lg bg-gray-50 px-4 py-5 mb-3">
+                <div class="rounded-lg bg-surface-sunken px-4 py-5 mb-3">
                     <div class="flex items-center justify-between">
                         <div>
                             <div class="font-semibold text-lg">

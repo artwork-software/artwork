@@ -1,17 +1,17 @@
 <template>
     <div
         :style="containerStyle"
-        :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-gray-100' : '']"
-        class="text-calendarText text-right bg-gray-100"
+        :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-surface-sunken' : '']"
+        class="text-calendarText text-right bg-surface-sunken"
     >
         <!-- Sticky so the date stays visible when scrolling through very tall day rows (expand_days) -->
         <div :style="stickyTop !== null ? { position: 'sticky', top: stickyTop + 'px' } : {}" :class="isCompact ? 'mt-0.5 mr-2' : 'mt-2 mr-2'" v-if="day">
             <!-- Kompakt (33px-Zeilen): Wochentag + Datum in einer Zeile, minimal kleinere Schrift;
                  Feiertagssymbol inline, damit der Feiertag auch hier erkennbar bleibt -->
             <template v-if="isCompact">
-                <div class="flex items-center justify-end gap-x-0.5 text-xs font-semibold whitespace-nowrap leading-tight">
+                <div class="flex items-center justify-end gap-x-0.5 text-[11px] font-semibold tabular-nums whitespace-nowrap leading-tight">
                     <HolidayToolTip v-if="day?.holidays?.length > 0">
-                        <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
+                        <div class="space-y-1 divide-dashed divide-border divide-y">
                             <div v-for="holiday in day.holidays" class="pt-1">
                                 <div :style="{ color: holiday.color}">
                                     <div>{{ holiday.name }}</div>
@@ -28,31 +28,31 @@
                     <span>{{ day.dayString }} {{ day.day }}</span>
                     <span
                         v-if="showRemarkIndicator"
-                        class="size-1.5 rounded-full bg-amber-400 shrink-0"
+                        class="size-1.5 rounded-full bg-warning shrink-0"
                         :title="remarkIndicatorTitle"
                     ></span>
                 </div>
-                <div v-if="day.isMonday" class="text-[9px] font-normal leading-tight">(KW{{ day.weekNumber }})</div>
+                <div v-if="day.isMonday" class="text-[9px] font-normal tabular-nums leading-tight">(KW{{ day.weekNumber }})</div>
             </template>
             <!-- Normal (ab 80 %): Wochentag klein, Datum größer, Jahr klein daneben -->
             <template v-else>
                 <div class="text-[11px] leading-tight">
                     {{ day.dayString }}
                 </div>
-                <div class="text-sm font-semibold leading-snug whitespace-nowrap">
-                    {{ day.day }}<span class="text-[10px] font-normal text-gray-500 ml-0.5">{{ dayYear }}</span>
+                <div class="text-sm font-semibold tabular-nums leading-snug whitespace-nowrap">
+                    {{ day.day }}<span class="text-[10px] font-normal text-text-subtle ml-0.5">{{ dayYear }}</span>
                 </div>
-                <div v-if="day.isMonday" class="text-[10px] font-normal">(KW{{ day.weekNumber }})</div>
+                <div v-if="day.isMonday" class="text-[10px] font-normal tabular-nums">(KW{{ day.weekNumber }})</div>
                 <div
                     v-if="showRemarkIndicator"
                     class="flex justify-end mt-0.5"
                     :title="remarkIndicatorTitle"
                 >
-                    <span class="size-1.5 rounded-full bg-amber-400"></span>
+                    <span class="size-1.5 rounded-full bg-warning"></span>
                 </div>
             </template>
             <HolidayToolTip v-if="!isCompact && day?.holidays?.length > 0" class="mt-2">
-                <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
+                <div class="space-y-1 divide-dashed divide-border divide-y">
                     <div v-for="holiday in day.holidays" class="pt-1">
                         <div :style="{ color: holiday.color}">
                             <div>{{ holiday.name }}</div>

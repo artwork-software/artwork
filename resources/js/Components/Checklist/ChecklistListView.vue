@@ -1,5 +1,5 @@
 <template>
-    <div class="checklist-listview-container divide-y divide-gray-200 divide-dashed">
+    <div class="checklist-listview-container divide-y divide-border-subtle divide-dashed">
         <div v-for="checklist in checklists" :key="checklist.id">
             <SingleChecklistListView
                 :checklist="checklist"

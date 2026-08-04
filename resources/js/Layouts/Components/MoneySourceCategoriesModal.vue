@@ -23,7 +23,7 @@
                             leave-from-class="transform scale-100 opacity-100"
                             leave-to-class="transform scale-95 opacity-0"
                         >
-                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-white/10 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div v-if="moneySourceCategories.length > 0" class="grid grid-cols-1 gap-2">
                                     <div v-for="category in moneySourceCategories"
                                          :key="category.id"
@@ -38,7 +38,7 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div v-else class="text-sm text-gray-300">
+                                <div v-else class="text-sm text-white/70">
                                     {{ $t('No source categories have been created yet')}}
                                 </div>
                             </MenuItems>

@@ -1,18 +1,18 @@
 <template>
     <!-- Zeile -->
     <div
-        class="group grid grid-cols-12 gap-4 px-2 py-3 text-sm border-b border-gray-100 hover:bg-gradient-to-r hover:from-gray-50 hover:to-white relative"
-        :class="{ 'bg-yellow-50': usePage().props.urlParameters?.issue === String(issueOfMaterial.id) }"
+        class="group grid grid-cols-12 gap-4 px-2 py-3 text-sm border-b border-border-subtle hover:bg-gradient-to-r hover:from-surface-sunken hover:to-white relative"
+        :class="{ 'bg-warning-surface': usePage().props.urlParameters?.issue === String(issueOfMaterial.id) }"
     >
         <!-- Linke Akzent-Leiste bei Hover -->
-        <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-indigo-400/0 transition-all duration-200 group-hover:bg-indigo-400/70"></span>
+        <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500 transition-all duration-200 group-hover:bg-accent-500"></span>
 
         <!-- Name + Notes -->
         <div class="col-span-3">
-            <button class="text-left text-indigo-600 hover:text-indigo-700 hover:underline underline-offset-2" @click="showIssueOfMaterialModal = true">
+            <button class="text-left text-accent-600 hover:text-accent-700 hover:underline underline-offset-2" @click="showIssueOfMaterialModal = true">
                 {{ issueOfMaterial.name }}
             </button>
-            <p v-if="issueOfMaterial.notes" class="text-xs text-gray-500 line-clamp-2 mt-0.5">
+            <p v-if="issueOfMaterial.notes" class="text-xs text-text-subtle line-clamp-2 mt-0.5">
                 {{ issueOfMaterial.notes }}
             </p>
             <div v-if="issueOfMaterial.articles?.length" class="mt-2 flex items-center gap-2">
@@ -20,7 +20,7 @@
                     <div
                         v-for="article in issueOfMaterial.articles.slice(0, 3)"
                         :key="article.id"
-                        class="grid size-8 place-items-center overflow-hidden rounded-lg border-2 border-white bg-gray-100 text-[10px] font-semibold text-gray-500 shadow-sm"
+                        class="grid size-8 place-items-center overflow-hidden rounded-lg border-2 border-white bg-surface-sunken text-[10px] font-semibold text-text-subtle shadow-sm"
                         :title="article.name"
                     >
                         <img
@@ -33,34 +33,34 @@
                         <span v-else aria-hidden="true">{{ article.name?.slice(0, 2).toUpperCase() }}</span>
                     </div>
                 </div>
-                <span class="text-[11px] text-gray-500">
+                <span class="text-[11px] text-text-subtle">
                     {{ issueOfMaterial.articles.length }} {{ issueOfMaterial.articles.length === 1 ? $t('article') : $t('articles') }}
                 </span>
             </div>
         </div>
 
         <!-- Zeitraum -->
-        <div class="col-span-2 text-xs cursor-pointer text-gray-700" @click="showIssueOfMaterialDetailModal = true">
+        <div class="col-span-2 text-xs cursor-pointer text-text-muted" @click="showIssueOfMaterialDetailModal = true">
             {{ issueOfMaterial.start_date_time }} – {{ issueOfMaterial.end_date_time }}
         </div>
 
         <!-- Raum -->
-        <div class="col-span-1 text-xs text-gray-700">
+        <div class="col-span-1 text-xs text-text-muted">
             {{ issueOfMaterial.room?.name ?? '—' }}
         </div>
 
         <!-- Projekt -->
-        <div class="col-span-2 text-xs text-gray-700">
+        <div class="col-span-2 text-xs text-text-muted">
             {{ issueOfMaterial.project?.name ?? '—' }}
         </div>
 
         <!-- Files -->
         <div class="col-span-1 text-xs">
       <span v-if="issueOfMaterial.files?.length"
-            class="inline-flex items-center rounded-md bg-sky-50 px-1.5 py-0.5 text-sky-700 border border-sky-200 text-[11px]">
+            class="inline-flex items-center rounded-md bg-info-surface px-1.5 py-0.5 text-info border border-info-border text-[11px]">
         {{ issueOfMaterial.files.length }}
       </span>
-            <span v-else class="text-gray-400">{{ $t('No Files') }}</span>
+            <span v-else class="text-text-subtle">{{ $t('No Files') }}</span>
         </div>
 
         <!-- Responsible -->
@@ -72,7 +72,7 @@
                     :user="user"
                     width="8"
                     height="8"
-                    classes="border-2 border-white rounded-full ring-1 ring-indigo-100"
+                    classes="border-2 border-white rounded-full ring-1 ring-accent-200"
                 />
             </div>
         </div>
@@ -80,11 +80,11 @@
         <!-- Status + Menü -->
         <div class="col-span-1 flex items-center justify-end gap-2">
       <span v-if="!issueOfMaterial?.special_items_done && issueOfMaterial?.special_items?.length"
-            class="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] text-rose-700">
+            class="inline-flex items-center gap-1 rounded-md border border-danger-border bg-danger-surface px-1.5 py-0.5 text-[11px] text-danger">
         <component :is="IconAlertTriangle" class="size-3.5" />
         {{ $t('Status Open') }}
       </span>
-            <span v-else class="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-700">
+            <span v-else class="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-surface px-1.5 py-0.5 text-[11px] text-success">
         <component :is="IconCheck" class="size-3.5" />
         {{ $t('Completed') }}
       </span>

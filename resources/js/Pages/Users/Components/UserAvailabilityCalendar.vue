@@ -2,9 +2,9 @@
     <div class="w-full">
         <!-- Headbar -->
         <div class="w-full mb-3">
-            <div class="flex items-center justify-between rounded-2xl border border-zinc-200/70 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 backdrop-blur px-3 py-2 sm:px-4 sm:py-3">
+            <div class="flex items-center justify-between rounded-2xl border border-border-subtle bg-white/80 backdrop-blur px-3 py-2 sm:px-4 sm:py-3">
                 <!-- Monatstitel -->
-                <h2 class="text-lg sm:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 select-none">
+                <h2 class="text-lg sm:text-xl font-semibold tracking-tight text-text select-none">
                     {{ dateToShow[0] }}
                 </h2>
 
@@ -15,10 +15,10 @@
                         @click="previousMonth"
                         :aria-label="$t('Previous month')"
                     >
-                        <ChevronLeftIcon class="h-5 w-5 text-blue-600" />
+                        <ChevronLeftIcon class="h-5 w-5 text-accent-600" />
                     </button>
                     <button
-                        class="ui-button !px-2 text-sm text-blue-600"
+                        class="ui-button !px-2 text-sm text-accent-600"
                         @click="goToToday"
                     >
                         {{ $t('Today') }}
@@ -28,7 +28,7 @@
                         @click="nextMonth"
                         :aria-label="$t('Next month')"
                     >
-                        <ChevronRightIcon class="h-5 w-5 text-blue-600" />
+                        <ChevronRightIcon class="h-5 w-5 text-accent-600" />
                     </button>
                 </div>
             </div>
@@ -37,7 +37,7 @@
         <!-- Grid -->
         <table class="w-full border-separate border-spacing-y-1 select-none">
             <thead>
-            <tr class="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+            <tr class="text-xs font-semibold text-text-muted">
                 <th class="p-2 w-16"></th>
                 <th v-for="name in weekdayNames" :key="name" class="p-2 text-center">
                     {{ $t(name) }}
@@ -49,7 +49,7 @@
             <tr v-for="week in calendarData" :key="week.weekNumber" class="align-middle">
                 <!-- KW -->
                 <td class="px-2 py-3 text-center">
-                    <span class="inline-flex items-center rounded-xl bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs px-2 py-1">
+                    <span class="inline-flex items-center rounded-xl bg-surface-sunken text-text-muted text-xs px-2 py-1">
                       KW {{ week.weekNumber }}
                     </span>
                 </td>
@@ -69,7 +69,7 @@
                         {{ day.day }}
                         <span
                             v-if="day.hasConflict && !day.notInMonth"
-                            class="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500"
+                            class="absolute top-1 right-1 h-2 w-2 rounded-full bg-warning"
                         />
                         <!-- Projektwünsche: Streifen am unteren Zellrand, laufen über die Serie hinweg -->
                         <template v-if="!day.notInMonth">
@@ -92,29 +92,29 @@
         </table>
 
         <!-- Legende -->
-        <div class="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 px-2 text-xs text-zinc-500 dark:text-zinc-400">
+        <div class="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 px-2 text-xs text-text-subtle">
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-4 h-4 rounded bg-emerald-200 dark:bg-emerald-800"></span>
+                <span class="inline-block w-4 h-4 rounded bg-success-surface"></span>
                 <span>{{ $t('Available') }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-4 h-4 rounded bg-rose-200 dark:bg-rose-900"></span>
+                <span class="inline-block w-4 h-4 rounded bg-danger-surface"></span>
                 <span>{{ $t('Absent') }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-4 h-4 rounded border-b-4 border-zinc-400 bg-transparent"></span>
+                <span class="inline-block w-4 h-4 rounded border-b-4 border-border-strong bg-transparent"></span>
                 <span>{{ $t('Partial day') }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+                <span class="inline-block w-2 h-2 rounded-full bg-warning"></span>
                 <span>{{ $t('Conflict with your shift!') }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-4 h-[4px] rounded-full border border-emerald-400 border-dashed bg-emerald-100"></span>
+                <span class="inline-block w-4 h-[4px] rounded-full border border-success-border border-dashed bg-success-surface"></span>
                 <span>{{ $t('Project wish') }}</span>
             </div>
         </div>
-        <p v-if="interactive" class="mt-1.5 px-2 text-xs text-zinc-400 dark:text-zinc-500">
+        <p v-if="interactive" class="mt-1.5 px-2 text-xs text-text-subtle">
             {{ $t('Click a day or drag across several days to create an entry.') }}
         </p>
     </div>
@@ -235,7 +235,7 @@ const dayClasses = (day) => {
     const classes = []
 
     if (day.notInMonth) {
-        classes.push('text-zinc-300 dark:text-zinc-600 cursor-default')
+        classes.push('text-text-subtle cursor-default')
         return classes
     }
 
@@ -244,32 +244,32 @@ const dayClasses = (day) => {
     }
 
     if (inSelection(day)) {
-        classes.push('ring-2 ring-blue-500 bg-blue-100 text-blue-900 dark:bg-blue-900/50 dark:text-blue-100')
+        classes.push('ring-2 ring-accent-500 bg-accent-100 text-accent-900')
         return classes
     }
 
     if (day.isToday) {
-        classes.push('ring-1 ring-blue-500 font-semibold')
+        classes.push('ring-1 ring-accent-500 font-semibold')
     }
 
     const bothTypes = day.onVacation && day.hasAvailability
     if (bothTypes) {
         // Split-Hintergrund kommt aus dayStyle()
-        classes.push('text-zinc-800 dark:text-zinc-100')
+        classes.push('text-text')
     } else if (day.onVacation) {
         classes.push(
             day.vacationFullDay
-                ? 'bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-200'
-                : 'border-b-4 !rounded-b-none border-rose-500 text-rose-800 dark:text-rose-300'
+                ? 'bg-danger-surface text-danger'
+                : 'border-b-4 !rounded-b-none border-danger text-danger'
         )
     } else if (day.hasAvailability) {
         classes.push(
             day.availabilityFullDay
-                ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200'
-                : 'border-b-4 !rounded-b-none border-emerald-500 text-emerald-800 dark:text-emerald-300'
+                ? 'bg-success-surface text-success'
+                : 'border-b-4 !rounded-b-none border-success text-success'
         )
     } else {
-        classes.push('text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700/60')
+        classes.push('text-text-muted hover:bg-surface-sunken')
     }
 
     return classes

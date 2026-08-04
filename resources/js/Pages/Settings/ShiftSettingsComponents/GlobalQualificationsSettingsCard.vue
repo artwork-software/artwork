@@ -15,7 +15,7 @@
                 <li v-for="(globalQualification) in globalQualifications"
                     :key="globalQualification.id"
 
-                    class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b border-zinc-200"
+                    class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b border-border-subtle"
                 >
                     <SingleGlobalQualification :global-qualification="globalQualification" />
 

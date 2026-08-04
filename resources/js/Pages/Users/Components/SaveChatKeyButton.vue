@@ -9,7 +9,7 @@
         <!-- upload stored keypair form json  -->
         <form @submit.prevent="loadKeypair">
             <input type="file" id="keypairFile" accept=".json" @change="handleFileUpload" class="hidden" />
-            <label for="keypairFile" class="cursor-pointer text-sm text-blue-500 hover:underline">
+            <label for="keypairFile" class="cursor-pointer text-sm text-accent-600 hover:underline">
                 {{ $t('Upload a Backup keypair') }}
             </label>
         </form>

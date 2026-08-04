@@ -219,7 +219,7 @@ function updateComponentOrder(components) {
             <div class="col-span-1 card glassy p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <div class="card white p-5 space-y-3">
                     <!-- Suche bleibt beim Scrollen der Palette sichtbar -->
-                    <div class="sticky top-0 z-10 -mx-5 px-5 -mt-5 pt-5 pb-3 bg-white border-b border-zinc-100">
+                    <div class="sticky top-0 z-10 -mx-5 px-5 -mt-5 pt-5 pb-3 bg-white border-b border-border-subtle">
                         <div class="flex items-center justify-end w-full">
                             <div class="w-44 md:w-56 lg:w-72">
                                 <BaseInput
@@ -253,10 +253,10 @@ function updateComponentOrder(components) {
                             >
                                 <h2 class="text-md font-bold mb-2">
                                     {{ t(componentsArray.name) }}
-                                    <span class="text-zinc-400 font-normal">({{ componentsArray.components.length }})</span>
+                                    <span class="text-text-subtle font-normal">({{ componentsArray.components.length }})</span>
                                 </h2>
                                 <IconChevronDown
-                                    class="size-4 text-zinc-500 mb-2 transition-transform"
+                                    class="size-4 text-text-subtle mb-2 transition-transform"
                                     :class="{ '-rotate-90': isGroupClosed(componentsArray.name) }"
                                 />
                             </button>
@@ -280,10 +280,10 @@ function updateComponentOrder(components) {
                         >
                             <h2 class="text-md font-bold mb-2">
                                 {{ t('Special components') }}
-                                <span class="text-zinc-400 font-normal">({{ filteredSpecialComponents.length }})</span>
+                                <span class="text-text-subtle font-normal">({{ filteredSpecialComponents.length }})</span>
                             </h2>
                             <IconChevronDown
-                                class="size-4 text-zinc-500 mb-2 transition-transform"
+                                class="size-4 text-text-subtle mb-2 transition-transform"
                                 :class="{ '-rotate-90': isGroupClosed('__special') }"
                             />
                         </button>

@@ -12,7 +12,7 @@
                         leave-from-class=""
                         leave-to-class="opacity-0">
                         <div v-if="notice.show"
-                             class="pointer-events-auto w-full max-w-sm rounded-lg bg-white shadow-lg outline-1 outline-black/5 dark:bg-gray-800 dark:-outline-offset-1 dark:outline-white/10"
+                             class="pointer-events-auto w-full max-w-sm rounded-lg bg-white shadow-lg outline-1 outline-black/5"
                              role="status">
                             <div class="p-4">
                                 <div class="flex items-start">
@@ -21,16 +21,16 @@
                                                       aria-hidden="true"/>
                                     </div>
                                     <div class="ml-3 w-0 flex-1 pt-0.5">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-sm font-medium text-text">
                                             {{ notice.title }}
                                         </p>
-                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        <p class="mt-1 text-sm text-text-subtle">
                                             {{ notice.message }}
                                         </p>
                                     </div>
                                     <div class="ml-4 flex shrink-0">
                                         <button type="button" @click="hideNotice"
-                                                class="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500">
+                                                class="inline-flex rounded-md text-text-subtle hover:text-text-muted focus:outline-2 focus:outline-offset-2 focus:outline-accent-600">
                                             <span class="sr-only">Close</span>
                                             <PropertyIcon name="IconX" class="size-5" aria-hidden="true"/>
                                         </button>
@@ -46,8 +46,8 @@
                     class="pointer-events-none fixed inset-x-0 top-5 z-100 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8"
                     v-show="showCalendarWarning.length > 0">
                     <div
-                        class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                        <PropertyIcon name="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true"/>
+                        class="pointer-events-auto flex items-center justify-between gap-x-6 bg-surface-inverse px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                        <PropertyIcon name="IconAlertSquareRounded" class="size-5 text-warning-border" aria-hidden="true"/>
                         <p class="text-sm/6 text-white">
                             {{ showCalendarWarning }}
                         </p>
@@ -82,12 +82,12 @@
                             <div class="flex items-center justify-center gap-x-4">
                                 <button type="button" @click="initializeCalendarMultiEditSave"
                                         :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto"
-                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                     {{ $t('Create') }}
                                 </button>
                                 <button type="button" @click="openCellMultiEditCalendarDelete = true"
                                         :disabled="multiEditCalendarDays.length === 0" class="pointer-events-auto"
-                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
+                                        :class="[multiEditCalendarDays.length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90', 'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                     {{ $t('Delete') }}
                                 </button>
                             </div>
@@ -164,7 +164,7 @@
                                             >
                                                 {{ monthBadge(day) }}
                                             </span>
-                                      <span class="font-semibold truncate" :class="isTodayColumn(day) ? 'text-indigo-300' : ''">
+                                      <span class="font-semibold truncate" :class="isTodayColumn(day) ? 'text-accent-200' : ''">
                                         {{ day.dayString }}
                                       </span>
                                             <span class="opacity-70">·</span>
@@ -215,7 +215,7 @@
                                 <div v-if="dayRemarksColumnVisible" class="flex-1 min-h-0 px-1 pb-1 w-full">
                                     <div
                                         v-if="!day.isExtraRow"
-                                        class="h-full rounded bg-amber-50/90 text-gray-800 px-1.5 py-0.5 overflow-hidden"
+                                        class="h-full rounded bg-warning-surface/90 text-text px-1.5 py-0.5 overflow-hidden"
                                         :class="dayRemarksCanEdit ? 'cursor-pointer' : ''"
                                         :title="remarkForDay(day)?.text"
                                         @click.stop="dayRemarksCanEdit ? openDayRemarkModal(day) : null"
@@ -226,7 +226,7 @@
                                         >
                                             {{ remarkForDay(day)?.text }}
                                         </p>
-                                        <p v-else-if="dayRemarksCanEdit" class="text-[10px] leading-[13px] text-gray-400 italic">
+                                        <p v-else-if="dayRemarksCanEdit" class="text-[10px] leading-[13px] text-text-subtle italic">
                                             {{ $t('Add remark') }}
                                         </p>
                                     </div>
@@ -276,7 +276,7 @@
                                     class="absolute inset-0 z-100"
                                     :class="[
                                           multiEditModeCalendar && !checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId)
-                                            ? 'bg-gray-950 opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
+                                            ? 'bg-surface-inverse opacity-30 hover:bg-opacity-0 hover:border-opacity-100 hover:border-2 border-dashed transition-all duration-150 ease-in-out cursor-pointer border-artwork-buttons-create'
                                             : '',
                                           checkIfRoomAndDayIsInMultiEditCalendar(day.fullDay, room.roomId) ? 'border' : '',
                                     ]"
@@ -284,7 +284,7 @@
                                 ></div>
 
                                 <!-- ExtraRow -->
-                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-l-2 border-gray-400"></div>
+                                <div v-if="day.isExtraRow" class="mb-3 h-full w-full bg-background-gray2 border-l-2 border-border-strong"></div>
 
                                 <!-- Normal cell -->
                                 <div
@@ -336,7 +336,7 @@
                                                 <div
                                                     class="rounded-lg border duration-200 ease-in-out"
                                                     :class="[
-                                                        group.project ? 'border-sky-300 bg-sky-50/80' : 'border-gray-200 bg-gray-50',
+                                                        group.project ? 'border-info-border bg-info-surface/80' : 'border-border-subtle bg-surface-sunken',
                                                         isGroupProjectHighlighted(group) ? '!border-2 !border-pink-500' : '',
                                                         isGroupProjectDimmed(group) ? 'opacity-30' : ''
                                                     ]"
@@ -344,7 +344,7 @@
                                                     <div
                                                         v-if="group.project"
                                                         data-sp-shiftgroupheader
-                                                        class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-sky-800"
+                                                        class="flex justify-between items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-info"
                                                     >
                                                         <span class="flex items-center gap-1.5 min-w-0">
                                                             <!-- Personen-Multiedit: Person dem GESAMTEN Projekt (Zeitraum) zuweisen -->
@@ -360,19 +360,19 @@
                                                             />
                                                             <span class="truncate">{{ group.project.name }}</span>
                                                         </span>
-                                                        <span class="text-[10px] text-sky-600">({{ group.shifts.length }})</span>
+                                                        <span class="text-[10px] text-info">({{ group.shifts.length }})</span>
                                                     </div>
 
                                                     <div
                                                         class="space-y-0.5 px-1"
-                                                        :class="group.project ? 'divide-y divide-sky-100' : 'divide-y divide-gray-100'"
+                                                        :class="group.project ? 'divide-y divide-info-border' : 'divide-y divide-border-subtle'"
                                                     >
                                                         <div
                                                             v-for="shift in group.shifts"
                                                             :key="shift.id || shift.dwId || shift.uuid"
                                                             data-sp-shiftrow
                                                             class="rounded-lg duration-200 ease-in-out"
-                                                            :class="group.project ? 'hover:bg-sky-100' : 'hover:bg-gray-100'"
+                                                            :class="group.project ? 'hover:bg-info-surface' : 'hover:bg-surface-sunken'"
                                                         >
                                                             <!-- Kompaktkarte < 100 % Zoom: Zeit · Gewerk · Besetzung; Klick öffnet das
                                                                  Schicht-Modal. Bei Multi-Edit/Highlight bleibt die volle Karte aktiv
@@ -418,9 +418,9 @@
                                             icon-size="size-4"
                                             v-if="can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftByPresetOrGroup(day, room)"
-                                            classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
+                                            classes-button="pointer-events-auto -1 border border-border-subtle z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
-                    ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+                    bg-white/90 hover:bg-surface-sunken/90 transition duration-200 ease-in-out"
                                         />
 
                                         <ToolTipComponent
@@ -430,9 +430,9 @@
                                             icon-size="size-4"
                                             v-if="!multiEditModeCalendar && can('can plan shifts') || is('artwork admin')"
                                             @click="openAddShiftForRoomAndDay(day.withoutFormat, room.roomId)"
-                                            classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex
+                                            classes-button="pointer-events-auto -1 border border-border-subtle z-20 inline-flex
                     items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium
-                    ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+                    bg-white/90 hover:bg-surface-sunken/90 transition duration-200 ease-in-out"
                                         />
                                     </div>
 
@@ -449,7 +449,7 @@
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div class="pointer-events-auto relative mb-2">
                         <!-- Schweben + Shadow + Blur -->
-                        <div class="flex items-center justify-between gap-0.5 rounded-full bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/60 px-2.5 py-1.5 transition-all duration-300 ring-1 ring-white/5">
+                        <div class="flex items-center justify-between gap-0.5 rounded-full bg-surface-inverse/80 backdrop-blur-xl border border-white/10 px-2.5 py-1.5 transition-all duration-300 ring-1 ring-white/5">
                             <!-- TOGGLE: links -->
                             <button
                                 v-if="can('can plan shifts') || can('can view shift plan') || is('artwork admin')"
@@ -458,7 +458,7 @@
                                 :title="showUserOverview ? $t('Hide user overview') : $t('Show user overview')">
                                 <PropertyIcon
                                     name="IconChevronsDown"
-                                    class="h-4 w-4 text-zinc-100 transition-transform duration-400"
+                                    class="h-4 w-4 text-text-inverse transition-transform duration-400"
                                     :class="!showUserOverview ? 'rotate-180' : ''"
                                 />
                             </button>
@@ -475,8 +475,8 @@
                                 :title="$t('Hold and drag to change the size')">
                                 <!-- iOS-Grabber-Style -->
                                 <div class="flex flex-col items-center gap-0.5">
-                                    <span class="block h-0.5 w-5 rounded-full bg-zinc-300/80"></span>
-                                    <span class="block h-0.5 w-5 rounded-full bg-zinc-500/60"></span>
+                                    <span class="block h-0.5 w-5 rounded-full bg-white/70"></span>
+                                    <span class="block h-0.5 w-5 rounded-full bg-white/40"></span>
                                 </div>
                             </button>
                         </div>
@@ -514,14 +514,14 @@
                                     <button type="button" @click="showCellMultiEditModal = true"
                                             :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
                                             class="pointer-events-auto" :class="[
-                                           Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
+                                           Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
                                             'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                         {{ $t('Edit Entries') }}
                                     </button>
                                     <button type="button" @click="openCellMultiEditDelete = true"
                                             :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
                                             class="pointer-events-auto" :class="[
-                                            Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-gray-600' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
+                                            Object.keys(multiEditCellByDayAndUser).length === 0 ? 'bg-border-strong' : 'cursor-pointer bg-artwork-error hover:bg-artwork-error/90',
                                             'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create']">
                                         {{ $t('Delete Entries') }}
                                     </button>
@@ -595,7 +595,7 @@
                                     </div>
                                     <MenuItem v-slot="{ active }">
                                         <div @click="toggleSortWorkersByQualification"
-                                             :class="[active ? 'text-gray-500' : 'text-secondary','group flex cursor-pointer items-center justify-between gap-x-4 px-4 py-2 text-sm subpixel-antialiased']">
+                                             :class="[active ? 'text-text-muted' : 'text-secondary','group flex cursor-pointer items-center justify-between gap-x-4 px-4 py-2 text-sm subpixel-antialiased']">
                                             <span :class="sortWorkersByQualification ? 'font-bold' : ''">
                                                 {{ $t('Group by function') }}
                                             </span>
@@ -607,11 +607,11 @@
                                         v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                         :key="computedShiftPlanWorkerSortEnum" v-slot="{ active }">
                                         <div @click="applySort(computedShiftPlanWorkerSortEnum)"
-                                             :class="[active ? 'text-gray-500' : 'text-secondary','group flex cursor-pointer items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                             :class="[active ? 'text-text-muted' : 'text-secondary','group flex cursor-pointer items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             <template
                                                 v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
                                                 <span
-                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-accent-600' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowUp" class="h-5 w-5"/>
@@ -622,7 +622,7 @@
                                             <template
                                                 v-else-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
                                                 <span
-                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                    :class="authUser.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-accent-600' : ''">
                                                     {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
                                                 </span>
                                                 <PropertyIcon name="IconArrowDown" class="h-5 w-5"/>
@@ -672,7 +672,7 @@
                             <template #colHeader="{ day }">
                                 <div
                                     v-if="day.isExtraRow"
-                                    class="flex h-full items-center gap-1 border-l-2 border-gray-400 pl-2"
+                                    class="flex h-full items-center gap-1 border-l-2 border-white/40 pl-2"
                                 >
                                     <span class="text-[10px] font-semibold tracking-wide text-white/80">
                                         KW {{ day.weekNumber }}
@@ -691,10 +691,10 @@
                                             <span>{{ row.craft.name }}</span>
                                             <span
                                                 v-if="row.craft.users?.length > 0"
-                                                class="inline-flex items-center rounded-full bg-white/10 gap-x-2 px-2 py-0.5 text-[9px] font-normal text-gray-100"
+                                                class="inline-flex items-center rounded-full bg-white/10 gap-x-2 px-2 py-0.5 text-[9px] font-normal text-text-inverse"
                                             >
             {{ row.craft.users.length }}
-            <span class="inline-block h-2 w-2 rounded-full bg-gray-100"></span>
+            <span class="inline-block h-2 w-2 rounded-full bg-white"></span>
           </span>
                                         </div>
 
@@ -712,11 +712,11 @@
                                         @click="changeQualificationGroupVisibility(row.groupKey)"
                                     >
                                         <div class="flex items-center gap-2">
-                                            <span class="font-lexend text-[10px] uppercase tracking-wide text-gray-300">
+                                            <span class="font-lexend text-[10px] uppercase tracking-wide text-white/70">
                                                 {{ row.qualification ? row.qualification.name : $t('Without assigned function') }}
                                             </span>
                                             <span
-                                                class="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-normal text-gray-100"
+                                                class="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-normal text-text-inverse"
                                             >
                                                 {{ row.workerCount }}
                                             </span>
@@ -731,7 +731,7 @@
                                 </div>
 
                                 <div v-else-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center gap-x-2 px-2">
-                                    <span class="flex items-center gap-x-1 whitespace-nowrap font-lexend text-[10px] uppercase tracking-wide text-gray-300">
+                                    <span class="flex items-center gap-x-1 whitespace-nowrap font-lexend text-[10px] uppercase tracking-wide text-white/70">
                                         {{ $t('External') }}
                                         <PropertyIcon :name="row.externBelow ? 'IconArrowDown' : 'IconArrowUp'"
                                                       class="h-3 w-3 text-[#A7A6B1]"/>
@@ -782,27 +782,27 @@
 
                                 <!-- Intern/Extern-Trennzeile: durchgehende Linie -->
                                 <div v-if="row.kind === 'internExternDivider'" class="flex h-full w-full items-center"
-                                     :class="day.isExtraRow ? 'border-l-2 border-gray-400' : ''">
+                                     :class="day.isExtraRow ? 'border-l-2 border-white/40' : ''">
                                     <div class="w-full border-t border-white/30"></div>
                                 </div>
 
                                 <!-- Craft-/Funktionsgruppen-Row: keine Zellen, aber KW-Trennlinie durchziehen -->
                                 <div v-else-if="row.kind !== 'worker'" class="h-full w-full"
-                                     :class="day.isExtraRow ? 'border-l-2 border-gray-400' : ''"></div>
+                                     :class="day.isExtraRow ? 'border-l-2 border-white/40' : ''"></div>
 
                                 <!-- Worker row -->
                                 <div v-else class="relative h-full w-full">
                                     <!-- ExtraRow / Wochenarbeitszeit + Freigabe-Status (blau=angefragt, grün=festgeschrieben, gelb=Achtung) -->
                                     <div
                                         v-if="day.isExtraRow"
-                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white border-l-2 border-gray-400"
+                                        class="shiftCell flex h-full items-center justify-center overflow-hidden rounded-lg p-2 text-center text-white border-l-2 border-white/40"
                                         :class="[kwWorkflowStatusClass(row, day), cellWrapperClass(row, day)]"
                                         :title="kwWorkflowStatusTitle(row, day)"
                                     >
                                         <div
                                             class="font-lexend text-xs"
                                             :class="row.worker?.weeklyWorkingHours?.[day.weekNumber]
-                                                ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-red-100' : 'text-green-100')
+                                                ? (row.worker.weeklyWorkingHours[day.weekNumber].isMinus ? 'text-danger-surface' : 'text-success-surface')
                                                 : 'text-white/60'"
                                         >
                                             {{ row.worker?.weeklyWorkingHours?.[day.weekNumber]?.difference ?? '–' }}
@@ -2411,9 +2411,9 @@ const noticeIcon = computed(() => {
 })
 
 const noticeIconClass = computed(() => ({
-    'text-green-400': notice.kind === 'success',
-    'text-red-400': notice.kind === 'error',
-    'text-blue-400': notice.kind === 'info',
+    'text-success': notice.kind === 'success',
+    'text-danger': notice.kind === 'error',
+    'text-info': notice.kind === 'info',
 }))
 
 const {getSortEnumTranslation} = useSortEnumTranslation()
@@ -2735,13 +2735,13 @@ function kwWorkflowStatus(row: any, day: any): string | null {
 function kwWorkflowStatusClass(row: any, day: any): string {
     switch (kwWorkflowStatus(row, day)) {
         case 'attention':
-            return 'bg-yellow-500/50 ring-1 ring-inset ring-yellow-300/70'
+            return 'bg-warning/50 ring-1 ring-inset ring-warning-border/70'
         case 'requested':
-            return 'bg-blue-500/50 ring-1 ring-inset ring-blue-300/70'
+            return 'bg-accent-500/50 ring-1 ring-inset ring-accent-200/70'
         case 'committed':
-            return 'bg-green-500/50 ring-1 ring-inset ring-green-300/70'
+            return 'bg-success/50 ring-1 ring-inset ring-success-border/70'
         default:
-            return 'bg-gray-50/30'
+            return 'bg-white/10'
     }
 }
 

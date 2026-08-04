@@ -6,14 +6,14 @@
 <template>
     <div class="overflow-x-auto">
         <div class="flex items-center whitespace-nowrap gap-1.5 text-sm">
-            <span class="text-[11px] uppercase tracking-wide text-gray-400 mr-1">{{ $t('Status') }}</span>
+            <span class="text-[11px] uppercase tracking-wide text-text-subtle mr-1">{{ $t('Status') }}</span>
             <button
                 v-for="item in items"
                 :key="item.id"
                 type="button"
                 class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
                 :class="[
-                    isActive(item.id) ? '' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50',
+                    isActive(item.id) ? '' : 'bg-white border-border-subtle text-text-muted hover:bg-surface-sunken',
                     isReady(item.name) && !isActive(item.id) ? 'font-semibold ring-1 ring-artwork-buttons-create/40 bg-artwork-buttons-create/5' : ''
                 ]"
                 :style="isActive(item.id) ? activeStyle(item) : {}"
@@ -24,7 +24,7 @@
                     :style="{ backgroundColor: (item.color || fallbackColor(item.index)) + '55', borderColor: item.color || fallbackColor(item.index) }"
                 />
                 <span>{{ item.name }}</span>
-                <span class="tabular-nums text-gray-500">{{ item.count.toLocaleString('de-DE') }}</span>
+                <span class="tabular-nums text-text-subtle">{{ item.count.toLocaleString('de-DE') }}</span>
             </button>
         </div>
     </div>

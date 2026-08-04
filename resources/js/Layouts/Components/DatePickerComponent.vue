@@ -50,7 +50,7 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[0]"
                        @focusout="updateTimes"
@@ -60,7 +60,7 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
                     <PropertyIcon name="IconCalendar" class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                 </div>
@@ -78,7 +78,7 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <input v-else
                        v-model="dateValue[1]"
                        @focusout="updateTimes"
@@ -88,20 +88,20 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-gray-300 pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
+                       class="border-border pl-10 py-2 xsDark bg-white border shadow-sm disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1 flex items-center pl-4 bg-white z-40 h-8 top-1">
                     <PropertyIcon name="IconCalendar" class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                 </div>
             </div>
         </div>
     </div>
-    <div class="font-medium text-gray-900" v-else>
+    <div class="font-medium text-text" v-else>
         {{ $t('Project period') }}: {{ new Date(dateValue[0]).format("DD.MM.YYYY") }} - {{ new Date(dateValue[1]).format("DD.MM.YYYY") }}
     </div>
     <transition name="fade" appear>
         <div class="pointer-events-none fixed z-100 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="hasError">
-            <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                <PropertyIcon name="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+            <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-surface-inverse px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                <PropertyIcon name="IconAlertSquareRounded" class="size-5 text-warning-border" aria-hidden="true" />
                 <p class="text-sm/6 text-white"> {{ errorMessage }} </p>
                 <button type="button" class="-m-1.5 flex-none p-1.5">
                     <span class="sr-only">Dismiss</span>

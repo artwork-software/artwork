@@ -16,20 +16,20 @@
             <h1 class="headline2 mb-5">Updates</h1>
             <div class="space-y-4">
                 <div v-for="item in items">
-                    <div @click="openAndLoadUpdateDetailModal(item)" class="bg-white shadow-md rounded-lg border border-gray-200 hover:shadow-lg duration-200 ease-in-out cursor-pointer">
+                    <div @click="openAndLoadUpdateDetailModal(item)" class="bg-white shadow-md rounded-lg border border-border-subtle hover:shadow-lg duration-200 ease-in-out cursor-pointer">
                         <div class="p-4 flex items-center justify-between">
-                            <h2 class="text-xl font-semibold text-gray-800">{{ item.properties.find(property => property.id === 'title')?.plainText }}</h2>
+                            <h2 class="text-xl font-semibold text-text">{{ item.properties.find(property => property.id === 'title')?.plainText }}</h2>
                             <div v-if="item.properties.some(property => property.title === 'Status')">
                                 <div
                                     v-for="property in item.properties.filter(p => p.title === 'Status')"
                                     :key="property.id"
                                     class="inline-block px-3 py-1 text-white text-xs rounded-full"
                                     :class="{
-                                        'bg-gray-500': property.rawContent.color === 'gray',
-                                        'bg-red-500': property.rawContent.color === 'red',
-                                        'bg-green-500': property.rawContent.color === 'green',
-                                        'bg-blue-500': property.rawContent.color === 'blue',
-                                        'bg-yellow-500': property.rawContent.color === 'yellow',
+                                        'bg-text-subtle': property.rawContent.color === 'gray',
+                                        'bg-danger': property.rawContent.color === 'red',
+                                        'bg-success': property.rawContent.color === 'green',
+                                        'bg-accent-600': property.rawContent.color === 'blue',
+                                        'bg-warning': property.rawContent.color === 'yellow',
                                         'bg-purple-500': property.rawContent.color === 'purple',
                                         'bg-pink-500': property.rawContent.color === 'pink',
                                         'bg-orange-500': property.rawContent.color === 'orange',
@@ -39,7 +39,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center p-4 bg-gray-100">
+                        <div class="flex justify-between items-center p-4 bg-surface-sunken">
                             <div v-if="item.properties.some(property => property.title === 'Author')">
                                 <div class="flex items-center gap-x-2">
                                     <img

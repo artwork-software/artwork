@@ -7,10 +7,10 @@
                     <div class="space-y-4">
                         <WhiteInnerCard>
                             <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
-                                <div class="p-1 rounded-lg w-1 bg-gray-500"></div>
+                                <div class="p-1 rounded-lg w-1 bg-text-subtle"></div>
                                 <Link preserve-scroll :href="route('inventory.index', linkQuery)" class="group flex items-center justify-between w-full">
                                     <span class=" text-sm font-bold tracking-tight" :class="route().current('inventory.index') ? 'text-artwork-buttons-create' : ''">{{ $t('All articles') }}</span>
-                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ props.articlesCount }}</span>
+                                    <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600 ring-inset">{{ props.articlesCount }}</span>
                                 </Link>
                             </div>
 
@@ -30,7 +30,7 @@
                                                 <span v-if="category?.subcategories?.length > 0">
                                                     <component :is="IconChevronDown" class="size-5" stroke-width="1" aria-hidden="true"  :class="[category.id === currentCategory?.id ? 'rotate-180' : '']" />
                                                 </span>
-                                                <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ category.articles?.length || 0 }}</span>
+                                                <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600 ring-inset">{{ category.articles?.length || 0 }}</span>
                                             </div>
                                         </Link>
                                         <div v-if="category.id === currentCategory?.id" :class="currentCategory?.subcategories?.length > 0 ? 'mt-4' : ''">
@@ -39,8 +39,7 @@
                                                      inventoryCategory: category.id,
                                                            inventorySubCategory: subCategory.id,
                                                            ...linkQuery
-                                                        })" class="flex items-center justify-between" :class="[route().current('inventory.sub.category.show', {
-                                                            inventoryCategory: category.id,
+                                                        })" class="flex items-center justify-between" :class="[route().current('inventory.sub.category.show', { inventoryCategory: category.id,
                                                             inventorySubCategory: subCategory.id
                                                         }) ? 'text-artwork-buttons-create font-semibold' : '']">
                                                     <div class="first-letter:capitalize text-xs pl-2 py-1 flex items-center justify-between w-full">
@@ -50,7 +49,7 @@
                                                                 {{ subCategory.name }}
                                                             </span>
                                                         </div>
-                                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600 ring-1 ring-blue-500/10 ring-inset">{{ subCategory.articles?.length }}</span>
+                                                        <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600 ring-inset">{{ subCategory.articles?.length }}</span>
                                                     </div>
                                                 </Link>
                                             </div>

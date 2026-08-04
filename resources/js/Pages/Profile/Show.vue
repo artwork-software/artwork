@@ -22,22 +22,22 @@
 
                                             <div class="mt-1 ml-5 flex-grow relative">
                                                 <input id="first_name" v-model="userForm.first_name" type="text"
-                                                    class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                                    class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black border-l-0 border-t-0 border-r-0 border-b-2 border-border text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                     placeholder="placeholder"/>
                                                 <label for="first_name"
-                                                    class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('First name')}}</label>
+                                                    class="absolute left-0 -top-5 text-text-muted text-sm -top-3.5 transition-all text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('First name')}}</label>
                                             </div>
                                         </div>
 
                                         <div class="sm:col-span-3 flex items-end">
                                             <div class="relative mt-1 w-full">
                                                 <input id="last_name" v-model="userForm.last_name" type="text"
-                                                    class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
-                                                   border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                                    class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black border-l-0 border-t-0 border-r-0
+                                                   border-b-2 border-border text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                     placeholder="placeholder"/>
                                                 <label for="last_name"
-                                                    class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
+                                                    class="absolute left-0 -top-5 text-text-muted text-sm -top-3.5 transition-all subpixel-antialiased
+                                                   text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
                                             </div>
                                         </div>
 
@@ -51,7 +51,7 @@
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300">
+                                            <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-border">
                                                 {{ $page.props.businessName }}
                                             </div>
                                         </div>
@@ -60,14 +60,14 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position" :placeholder="$t('Position')"
-                                                class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300"/>
+                                                class="text-primary focus:border-secondary focus:border-1 border-2 w-full font-semibold border-border"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1 relative">
                                             <input type="email" v-model="userForm.email" :placeholder="$t('E-mail address')"
-                                                :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:outline-none focus:ring-0 focus:border-secondary focus:border-1']"/>
+                                                :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:border-secondary focus:border-1']"/>
 
                                             <div v-if="!email_validation.email"
                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -85,7 +85,7 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
                                                 :placeholder="$t('Phone number')"
-                                                class="text-primary border-2 w-full focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 font-semibold border-gray-300 "/>
+                                                class="text-primary border-2 w-full focus:border-secondary focus:border-1 font-semibold border-border "/>
                                         </div>
                                     </div>
 
@@ -95,7 +95,7 @@
                                             <textarea
                                                 :placeholder="$t('What should the other artwork users know about you?')"
                                                 v-model="userForm.description" rows="3"
-                                                class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-border "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">
@@ -142,7 +142,7 @@
                                             ? 'border-error'
                                             : passwordForm.current_password.length > 0 && passwordForm.hasErrors
                                             ? 'border-success' : '',
-                                    'placeholder-secondary border-gray-200 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
+                                    'placeholder-secondary border-border-subtle focus:border-secondary focus:border-1 border-2 block w-full']"/>
                                 <div v-if="passwordForm.hasErrors && passwordForm.errors.current_password"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
@@ -167,8 +167,8 @@
                                     ref="password"
                                     id="password" name="password" type="password"
                                     autocomplete="new-password" required :placeholder="$t('New Password')"
-                                    :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
+                                    :class="[passwordForm.hasErrors ? 'border-error' : 'border-border-subtle',
+                                    'placeholder-secondary focus:border-secondary focus:border-1 border-2 block w-full']"/>
                                 <div v-if="passwordForm.hasErrors"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
@@ -179,11 +179,11 @@
                         <div class="w-full md:w-1/2 flex items-center p-3">
                             <span class="text-xs text-secondary">{{$t('Weak')}}</span>
 
-                            <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
+                            <div class="mx-6 mt-1 w-full bg-border-subtle h-1">
                                 <div :class="[pw_feedback < 1
                                 ? 'bg-error'
                                 : pw_feedback < 3
-                                ? 'bg-amber-400' :
+                                ? 'bg-warning' :
                                 'bg-success' ,
                                 'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}"></div>
                             </div>
@@ -267,7 +267,7 @@
                         {{ $t('Are you sure you want to permanently delete your artwork account? All settings will be lost.')}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteUser">
                             {{$t('Delete account')}}
@@ -375,7 +375,7 @@ export default defineComponent({
                 if (this.email_validation.email.length > 0) {
                     return 'border-error';
                 } else {
-                    return 'border-gray-300'
+                    return 'border-border'
                 }
             } else {
                 return 'border-success';

@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white border-b border-zinc-200 shadow-sm py-2 sticky top-0 z-50 ">
+    <div class="bg-white border-b border-border-subtle shadow-sm py-2 sticky top-0 z-50 ">
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div v-if="!isCalendarUsingProjectTimePeriod" class="flex">
@@ -164,7 +164,7 @@
                          Zuweisen per Drag & Drop braucht 100 % (Klick öffnet weiterhin das Schicht-Modal) -->
                     <div
                         v-if="isCompactShiftZoom && !isDailyView"
-                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                        class="ui-button !bg-accent-50 !border-accent-200/80 !text-accent-700 text-xs !cursor-help"
                     >
                         <ToolTipWithTextComponent
                             direction="bottom"
@@ -191,7 +191,7 @@
                             leave-to-class="opacity-0 scale-95"
                         >
                             <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
-                                <div class="w-56 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                <div class="w-56 rounded-xl border border-border-subtle bg-white p-1.5 shadow-xl ring-1 ring-black/5">
                                     <BaseMenuItem
                                         v-for="step in shiftZoomSteps"
                                         :key="step"

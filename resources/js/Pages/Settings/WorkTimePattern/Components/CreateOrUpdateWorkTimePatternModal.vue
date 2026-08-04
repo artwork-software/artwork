@@ -17,7 +17,7 @@
                         label="Name"
                         required
                         id="name" />
-                     <p v-if="workPatternForm.errors.name" class="text-red-500 mt-0.5 text-xs"></p>
+                     <p v-if="workPatternForm.errors.name" class="text-danger mt-0.5 text-xs"></p>
                  </div>
 
                 <div>
@@ -25,11 +25,11 @@
                         v-model="workPatternForm.description"
                         label="Description"
                         id="description" />
-                    <p v-if="workPatternForm.errors.description" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.description" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ $t('Daily Target Hours') }}</h3>
+                    <h3 class="text-lg font-semibold text-text mb-4">{{ $t('Daily Target Hours') }}</h3>
                 </div>
 
                 <div>
@@ -39,7 +39,7 @@
                         type="time"
                         :step="1"
                         id="monday" />
-                    <p v-if="workPatternForm.errors.monday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.monday" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
@@ -49,7 +49,7 @@
                         type="time"
                         :step="1"
                         id="tuesday" />
-                    <p v-if="workPatternForm.errors.tuesday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.tuesday" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
@@ -59,7 +59,7 @@
                         type="time"
                         :step="1"
                         id="wednesday" />
-                    <p v-if="workPatternForm.errors.wednesday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.wednesday" class="text-danger mt-0.5 text-xs"></p>
 
                 </div>
 
@@ -70,7 +70,7 @@
                         type="time"
                         :step="1"
                         id="thursday" />
-                    <p v-if="workPatternForm.errors.thursday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.thursday" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
@@ -80,7 +80,7 @@
                         type="time"
                         :step="1"
                         id="friday" />
-                    <p v-if="workPatternForm.errors.friday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.friday" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
@@ -90,7 +90,7 @@
                         type="time"
                         :step="1"
                         id="saturday" />
-                    <p v-if="workPatternForm.errors.saturday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.saturday" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
@@ -100,7 +100,7 @@
                         type="time"
                         :step="1"
                         id="sunday" />
-                    <p v-if="workPatternForm.errors.sunday" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="workPatternForm.errors.sunday" class="text-danger mt-0.5 text-xs"></p>
                 </div>
             </div>
 

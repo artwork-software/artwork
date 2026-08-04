@@ -8,7 +8,7 @@
         />
         <div>
             <h2 class="mt-10 headline2 w-full">{{$t('Source categories')}}</h2>
-            <div v-if="showInvalidCategoryNameErrorText" class="text-red-600 text-sm mt-4">
+            <div v-if="showInvalidCategoryNameErrorText" class="text-danger text-sm mt-4">
                 {{ $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
             </div>
             <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">

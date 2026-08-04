@@ -48,7 +48,7 @@
 
             <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
                 <SwitchLabel as="span" class="text-sm">
-                    <span :class="[!tinyTimePeriod.day_remarks_enabled ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                    <span :class="[!tinyTimePeriod.day_remarks_enabled ? 'font-bold' : 'font-medium', 'text-text']">
                         {{ $t('Deactivated') }}
                     </span>
                 </SwitchLabel>
@@ -57,20 +57,20 @@
                         :class="[
                             tinyTimePeriod.day_remarks_enabled ?
                                 'bg-artwork-buttons-create' :
-                                'bg-gray-200',
-                            'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                                'bg-border-subtle',
+                            'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                         ]">
                     <span aria-hidden="true" :class="[tinyTimePeriod.day_remarks_enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <SwitchLabel as="span" class="text-sm">
-                    <span :class="[tinyTimePeriod.day_remarks_enabled ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                    <span :class="[tinyTimePeriod.day_remarks_enabled ? 'font-bold' : 'font-medium', 'text-text']">
                         {{ $t('Activate day remarks column') }}
                     </span>
                 </SwitchLabel>
             </SwitchGroup>
 
             <fieldset v-if="tinyTimePeriod.day_remarks_enabled" class="mt-5">
-                <legend class="text-sm font-semibold text-gray-900">{{ $t('Visibility of the column') }}</legend>
+                <legend class="text-sm font-semibold text-text">{{ $t('Visibility of the column') }}</legend>
                 <div class="mt-2 space-y-3">
                     <label class="flex items-start gap-x-2 cursor-pointer">
                         <input type="radio"
@@ -78,10 +78,10 @@
                                :value="false"
                                v-model="tinyTimePeriod.day_remarks_mandatory"
                                @change="saveDayRemarksSettings"
-                               class="mt-0.5 h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
-                        <span class="text-sm text-gray-900">
+                               class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
+                        <span class="text-sm text-text">
                             <span class="font-medium">{{ $t('Users decide themselves') }}</span>
-                            <span class="block text-xs text-gray-500">{{ $t('Users can show or hide the column via their display settings. It is shown by default.') }}</span>
+                            <span class="block text-xs text-text-subtle">{{ $t('Users can show or hide the column via their display settings. It is shown by default.') }}</span>
                         </span>
                     </label>
                     <label class="flex items-start gap-x-2 cursor-pointer">
@@ -90,10 +90,10 @@
                                :value="true"
                                v-model="tinyTimePeriod.day_remarks_mandatory"
                                @change="saveDayRemarksSettings"
-                               class="mt-0.5 h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
-                        <span class="text-sm text-gray-900">
+                               class="mt-0.5 h-4 w-4 border-border text-artwork-buttons-create focus:ring-artwork-buttons-create"/>
+                        <span class="text-sm text-text">
                             <span class="font-medium">{{ $t('Column is mandatory for all users') }}</span>
-                            <span class="block text-xs text-gray-500">{{ $t('The column is always shown and cannot be hidden via the display settings.') }}</span>
+                            <span class="block text-xs text-text-subtle">{{ $t('The column is always shown and cannot be hidden via the display settings.') }}</span>
                         </span>
                     </label>
                 </div>
@@ -131,7 +131,7 @@ const tinyTimePeriod = useForm({
 
 const showVisualFeedback = ref(false)
 const visualFeedbackText = ref('')
-const visualFeedbackBackgroundColor = ref('bg-green-600')
+const visualFeedbackBackgroundColor = ref('bg-success')
 const saveTinyCalendarSettings = () => {
     if(!tinyTimePeriod.isDirty) {
         return
@@ -140,11 +140,11 @@ const saveTinyCalendarSettings = () => {
 
     /*if ( tinyTimePeriod.end < tinyTimePeriod.start ) {
         visualFeedbackText.value = 'The end time must be greater than the start time.'
-        visualFeedbackBackgroundColor.value = 'bg-red-600'
+        visualFeedbackBackgroundColor.value = 'bg-danger'
         showVisualFeedback.value = true
         setTimeout(() => {
             showVisualFeedback.value = false
-            visualFeedbackBackgroundColor.value = 'bg-green-600'
+            visualFeedbackBackgroundColor.value = 'bg-success'
             visualFeedbackText.value = ''
         }, 3000)
         return
@@ -165,11 +165,11 @@ const postCalendarSettings = () => {
         preserveScroll: true,
         onSuccess: () => {
             visualFeedbackText.value = 'Saved. The changes have been successfully applied.'
-            visualFeedbackBackgroundColor.value = 'bg-green-600'
+            visualFeedbackBackgroundColor.value = 'bg-success'
             showVisualFeedback.value = true
             setTimeout(() => {
                 showVisualFeedback.value = false
-                visualFeedbackBackgroundColor.value = 'bg-green-600'
+                visualFeedbackBackgroundColor.value = 'bg-success'
                 visualFeedbackText.value = ''
             }, 3000)
         },

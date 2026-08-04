@@ -9,7 +9,7 @@
                 <!-- Leerer Zustand -->
                 <div
                     v-if="projectItems.length === 0"
-                    class="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-600"
+                    class="rounded-xl border border-border-subtle bg-surface-sunken p-4 text-sm text-text-muted"
                 >
                     {{ $t('No entries found') }}
                 </div>
@@ -34,7 +34,7 @@
                         ></span>
 
                         <!-- Card -->
-                        <div class="rounded-xl border border-zinc-200 bg-white/85 p-3">
+                        <div class="rounded-xl border border-border-subtle bg-white/85 p-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <!-- Datum / Zeit -->
                                 <span
@@ -52,7 +52,7 @@
                                 />
 
                                 <!-- Beschreibung -->
-                                <div class="min-w-0 grow text-xs text-zinc-700 subpixel-antialiased">
+                                <div class="min-w-0 grow text-xs text-text-muted subpixel-antialiased">
                                     {{
                                         $t(
                                             historyItem.changes[0].translationKey,

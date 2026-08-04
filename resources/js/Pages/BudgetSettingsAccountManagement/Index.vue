@@ -11,9 +11,9 @@
             <Switch v-model="budgetAccountManagementGlobal"
                     :class="[
                         budgetAccountManagementGlobal ?
-                            'bg-indigo-600' :
-                            'bg-gray-200',
-                        'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2'
+                            'bg-accent-600' :
+                            'bg-border-subtle',
+                        'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-accent-600 focus:ring-offset-2'
                     ]"
             >
                 <span aria-hidden="true"
@@ -56,13 +56,13 @@
                     />
                 </div>
                 <SwitchGroup as="div" class="flex items-center">
-                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'text-gray-400' : 'font-bold'">
+                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'text-text-subtle' : 'font-bold'">
                         {{ $t('Expense account') }}
                     </SwitchLabel>
-                    <Switch v-model="this.accountForm.is_account_for_revenue " class="bg-indigo-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                    <Switch v-model="this.accountForm.is_account_for_revenue " class="bg-accent-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
                         <span aria-hidden="true" :class="[this.accountForm.is_account_for_revenue  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                     </Switch>
-                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'font-bold' : 'text-gray-400'">
+                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'font-bold' : 'text-text-subtle'">
                         {{ $t('Revenue account') }}
                     </SwitchLabel>
                 </SwitchGroup>
@@ -72,7 +72,7 @@
                 />
             </div>
             <div class="errorText" v-if="this.accountFormHelpText">{{ this.accountFormHelpText }}</div>
-            <p class="text-xs text-gray-500 pt-1">
+            <p class="text-xs text-text-subtle pt-1">
                 {{ $t('The expense or revenue setting determines where the account is sorted in.') }}
             </p>
         </div>
@@ -164,13 +164,13 @@
                             </span>
                             <span class="w-72 flex justify-center">
                                 <SwitchGroup as="div" class="flex items-center">
-                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.editAccountForm.is_account_for_revenue ? 'text-gray-400' : 'font-bold'">
+                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.editAccountForm.is_account_for_revenue ? 'text-text-subtle' : 'font-bold'">
                                         {{ $t('Expense account') }}
                                     </SwitchLabel>
-                                    <Switch v-model="this.editAccountForm.is_account_for_revenue " class="bg-indigo-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                                    <Switch v-model="this.editAccountForm.is_account_for_revenue " class="bg-accent-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
                                         <span aria-hidden="true" :class="[this.editAccountForm.is_account_for_revenue  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                     </Switch>
-                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.editAccountForm.is_account_for_revenue ? 'font-bold' : 'text-gray-400'">
+                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.editAccountForm.is_account_for_revenue ? 'font-bold' : 'text-text-subtle'">
                                         {{ $t('Revenue account') }}
                                     </SwitchLabel>
                                 </SwitchGroup>

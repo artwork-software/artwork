@@ -6,9 +6,9 @@
                      @drop="onDrop"
                      @dragleave="dragLeave"
                      class="p-5 w-full rounded-lg border-2 cursor-pointer border-dashed flex items-center justify-center hover:border-artwork-buttons-create duration-200 ease-in-out group"
-                     :class="[isDragging ? 'border-artwork-buttons-create' : 'border-gray-300', dropOver ? 'bg-artwork-buttons-create/10' : '']">
+                     :class="[isDragging ? 'border-artwork-buttons-create' : 'border-border', dropOver ? 'bg-artwork-buttons-create/10' : '']">
                     <div class="flex flex-col items-center justify-between">
-                        <component :is="IconCircleDashedPlus" class="h-8 w-8 group-hover:text-artwork-buttons-create duration-200 ease-in-out" :class="[isDragging ? 'text-artwork-buttons-create' : 'text-gray-300']" stroke-width="1.5" />
+                        <component :is="IconCircleDashedPlus" class="h-8 w-8 group-hover:text-artwork-buttons-create duration-200 ease-in-out" :class="[isDragging ? 'text-artwork-buttons-create' : 'text-text-subtle']" stroke-width="1.5" />
                         <p v-if="isDragging" class="xsDark mt-1">{{ $t('Drop here') }}</p>
                     </div>
                 </div>
@@ -33,10 +33,10 @@
                                         <div class="text-sm font-bold">
                                             <div class="w-full">
                                                 {{ $t(component.name) }}
-                                                <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
+                                                <div class="text-[10px] text-text-subtle font-light" v-if="component.data.height">
                                                     {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
                                                 </div>
-                                                <div class="text-[10px] text-gray-500 font-light" v-if="component.data.title_size">
+                                                <div class="text-[10px] text-text-subtle font-light" v-if="component.data.title_size">
                                                     {{ component.data.title_size }} Pixel
                                                 </div>
                                             </div>

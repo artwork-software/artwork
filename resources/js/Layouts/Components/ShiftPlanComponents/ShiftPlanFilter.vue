@@ -37,7 +37,7 @@
                                        class="cursor-pointer text-white text-xs">{{ $t('Save')}}</label>
                             </button>
                         </div>
-                        <hr class="border-gray-500 mt-4 mb-4">
+                        <hr class="border-border-strong mt-4 mb-4">
                     </div>
                     <button
                         class="rounded-full bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1"
@@ -91,7 +91,7 @@
                     />
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton class="flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >

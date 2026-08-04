@@ -1,31 +1,31 @@
 <template>
     <!-- Regular columns (all except Actions) -->
     <template v-if="!showOnlyActions">
-        <td class="py-4 pr-4 pl-6 text-sm font-medium whitespace-nowrap text-gray-900 first-letter:capitalize max-w-name truncate" :title="property?.name">{{ property?.name }}</td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500 max-w-tooltip truncate" :title="property.tooltip_text ?? $t('No tooltip text')">{{ property.tooltip_text ?? $t('No tooltip text') }}</td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500">{{ $t(capitalizeFirstLetter(property?.type)) }}</td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500">
-            <span v-if="property?.is_filterable" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset">{{ $t('Yes') }}</span>
-            <span v-else class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-600/20 ring-inset">{{ $t('No') }}</span>
+        <td class="py-4 pr-4 pl-6 text-sm font-medium whitespace-nowrap text-text first-letter:capitalize max-w-name truncate" :title="property?.name">{{ property?.name }}</td>
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle max-w-tooltip truncate" :title="property.tooltip_text ?? $t('No tooltip text')">{{ property.tooltip_text ?? $t('No tooltip text') }}</td>
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle">{{ $t(capitalizeFirstLetter(property?.type)) }}</td>
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle">
+            <span v-if="property?.is_filterable" class="inline-flex items-center rounded-md bg-success-surface px-2 py-1 text-xs font-medium text-success ring-1 ring-success ring-inset">{{ $t('Yes') }}</span>
+            <span v-else class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger ring-inset">{{ $t('No') }}</span>
         </td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500">
-            <span v-if="property?.show_in_list" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset">{{ $t('Yes') }}</span>
-            <span v-else class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-600/20 ring-inset">{{ $t('No') }}</span>
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle">
+            <span v-if="property?.show_in_list" class="inline-flex items-center rounded-md bg-success-surface px-2 py-1 text-xs font-medium text-success ring-1 ring-success ring-inset">{{ $t('Yes') }}</span>
+            <span v-else class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger ring-inset">{{ $t('No') }}</span>
         </td>
-        <td class="p-4 text-sm whitespace-nowrap text-gray-500">
-            <span v-if="property?.is_required" class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset">{{ $t('Yes') }}</span>
-            <span v-else class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-red-600/20 ring-inset">{{ $t('No') }}</span>
+        <td class="p-4 text-sm whitespace-nowrap text-text-subtle">
+            <span v-if="property?.is_required" class="inline-flex items-center rounded-md bg-success-surface px-2 py-1 text-xs font-medium text-success ring-1 ring-success ring-inset">{{ $t('Yes') }}</span>
+            <span v-else class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-danger ring-inset">{{ $t('No') }}</span>
         </td>
     </template>
 
     <!-- Actions column -->
     <template v-if="showActions || showOnlyActions">
-        <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-gray-500 sm:pr-0 actions-column">
+        <td class="py-5 pr-4 pl-4 text-sm whitespace-nowrap text-text-subtle sm:pr-0 actions-column">
             <div class="flex items-center gap-x-4">
                 <button type="button" class="text-artwork-buttons-create hover:text-artwork-buttons-hover">
                     <component :is="IconEdit" class="h-5 w-5" aria-hidden="true" @click="showAddEditPropertyModal = true" />
                 </button>
-                <button type="button" class="text-red-600 hover:text-red-900" v-if="property.is_deletable">
+                <button type="button" class="text-danger hover:text-danger" v-if="property.is_deletable">
                     <component :is="IconTrash" class="h-5 w-5" aria-hidden="true" @click="showDeleteConfirmation = true" />
                 </button>
             </div>

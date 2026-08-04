@@ -45,7 +45,7 @@
                         <div
                             v-for="(image, index) of article.images"
                             :key="index"
-                            class="col-span-4 border border-gray-300 rounded-lg shadow relative hover:shadow-lg transition duration-200 ease-in-out group"
+                            class="col-span-4 border border-border rounded-lg shadow relative hover:shadow-lg transition duration-200 ease-in-out group"
                         >
                             <!-- lupe icon -->
                             <div
@@ -80,7 +80,7 @@
                             </h1>
                             <div
                                 v-if="article.inventory_number"
-                                class="font-mono text-xs text-gray-400 mt-0.5"
+                                class="font-mono text-xs text-text-subtle mt-0.5"
                             >
                                 {{ formatInventoryNumber(article.inventory_number) }}
                             </div>
@@ -102,7 +102,7 @@
                                 <span
                                     v-for="tag in article.tags"
                                     :key="tag.id"
-                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border max-w-[130px] bg-gray-50"
+                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border max-w-[130px] bg-surface-sunken"
                                     :style="tagStyle(tag)"
                                 >
                                     <span
@@ -129,7 +129,7 @@
                             />
                             <component
                                 :is="IconTrash"
-                                class="w-5 h-5 rounded-full cursor-pointer hover:text-red-500 duration-200 ease-in-out"
+                                class="w-5 h-5 rounded-full cursor-pointer hover:text-danger duration-200 ease-in-out"
                                 @click="showConfirmDelete = true"
                                 v-if="canDeleteArticle"
                             />
@@ -155,7 +155,7 @@
                     <div>
                         <Disclosure v-slot="{ open }">
                             <DisclosureButton class="w-full">
-                                <div class="border-b border-gray-100">
+                                <div class="border-b border-border-subtle">
                                     <div class="pr-2 py-4 flex items-center justify-between">
                                         <dt
                                             class="text-sm font-bold text-primary font-lexend flex items-center gap-x-2"
@@ -164,7 +164,7 @@
                                             <component
                                                 :is="IconChevronDown"
                                                 :class="[open ? 'rotate-180' : '']"
-                                                class="size-5 text-gray-400 group-hover:text-gray-500"
+                                                class="size-5 text-text-subtle group-hover:text-text-subtle"
                                                 aria-hidden="true"
                                             />
                                         </dt>
@@ -177,20 +177,20 @@
                                     </div>
                                 </div>
                             </DisclosureButton>
-                            <DisclosurePanel class="relative pl-4 pb-2 pt-2 text-sm text-gray-500">
+                            <DisclosurePanel class="relative pl-4 pb-2 pt-2 text-sm text-text-subtle">
                                 <div
                                     v-for="status in article.status_values"
                                     :key="status.id"
                                     class=""
                                 >
                                     <div
-                                        class="border-b border-gray-100"
+                                        class="border-b border-border-subtle"
                                         v-if="status.id !== 5"
                                     >
                                         <div class="pr-2 py-4 flex items-center justify-between">
-                                            <div class="absolute top-0 left-0 w-px h-[85%] bg-gray-300"></div>
+                                            <div class="absolute top-0 left-0 w-px h-[85%] bg-border"></div>
                                             <div class="flex items-center">
-                                                <div class="w-5 -ml-4 h-px bg-gray-300" />
+                                                <div class="w-5 -ml-4 h-px bg-border" />
                                                 <dt
                                                     class="text-sm font-bold ml-2 text-primary font-lexend"
                                                 >
@@ -211,7 +211,7 @@
 
                         <div>
                             <dl
-                                class="divide-y divide-gray-100"
+                                class="divide-y divide-border-subtle"
                                 v-if="mergedProperties.length > 0"
                             >
                                 <div
@@ -244,17 +244,17 @@
                             </dl>
 
                             <div v-else>
-                                <div class="rounded-md bg-blue-50 p-4">
+                                <div class="rounded-md bg-accent-50 p-4">
                                     <div class="flex">
                                         <div class="shrink-0">
                                             <component
                                                 :is="IconAlertSquareRoundedFilled"
-                                                class="size-5 text-blue-400"
+                                                class="size-5 text-accent-500"
                                                 aria-hidden="true"
                                             />
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-sm font-medium text-blue-800">
+                                            <p class="text-sm font-medium text-accent-700">
                                                 {{ $t('No properties were specified for this article') }}
                                             </p>
                                         </div>
@@ -269,7 +269,7 @@
                 <div class="bg-backgroundGray -mx-4">
                     <section
                         aria-labelledby="details-heading"
-                        class="mt-8 mb-2 border-t-2 border-gray-100 pt-4 mx-6"
+                        class="mt-8 mb-2 border-t-2 border-border-subtle pt-4 mx-6"
                         v-if="article.is_detailed_quantity"
                     >
                         <div class="flex justify-between mb-4 py-3 border-b-2 border-dashed">
@@ -311,7 +311,7 @@
                                         >
                                             <template v-if="showInventoryNumberAsName && detailedArticle.inventory_number">
                                                 <span>{{ formatInventoryNumber(detailedArticle.inventory_number) }}</span>
-                                                <span class="text-xs font-normal text-gray-400">
+                                                <span class="text-xs font-normal text-text-subtle">
                                                     {{ detailedArticle.name }}
                                                 </span>
                                             </template>
@@ -319,7 +319,7 @@
                                                 <span>{{ detailedArticle.name }}</span>
                                                 <span
                                                     v-if="detailedArticle.inventory_number"
-                                                    class="font-mono text-xs font-normal text-gray-400"
+                                                    class="font-mono text-xs font-normal text-text-subtle"
                                                 >
                                                     {{ formatInventoryNumber(detailedArticle.inventory_number) }}
                                                 </span>
@@ -341,7 +341,7 @@
                                             <component
                                                 :is="IconChevronDown"
                                                 v-if="!open"
-                                                class="block size-6 text-gray-400 group-hover:text-gray-500"
+                                                class="block size-6 text-text-subtle group-hover:text-text-subtle"
                                                 aria-hidden="true"
                                             />
                                             <component
@@ -357,14 +357,14 @@
                                     as="div"
                                     class="shadow-lg rounded-b-xl p-4 bg-white"
                                 >
-                                    <div class="border-b pb-2 border-gray-100">
+                                    <div class="border-b pb-2 border-border-subtle">
                                         <div
-                                            class="space-y-6 text-sm italic text-gray-500 font-lexend font-extralight"
+                                            class="space-y-6 text-sm italic text-text-subtle font-lexend font-extralight"
                                             v-html="detailedArticle.description"
                                         />
                                     </div>
 
-                                    <dl class="border-b border-gray-100">
+                                    <dl class="border-b border-border-subtle">
                                         <div class="py-4 flex items-center justify-between">
                                             <dt class="text-sm font-bold text-primary font-lexend">
                                                 {{ $t('Quantity') }}
@@ -375,7 +375,7 @@
                                         </div>
                                     </dl>
                                     <dl
-                                        class="divide-y divide-gray-100"
+                                        class="divide-y divide-border-subtle"
                                         v-if="getMergedDetailedProperties(detailedArticle).length > 0"
                                     >
                                         <div
@@ -407,17 +407,17 @@
                                         </div>
                                     </dl>
                                     <div v-else>
-                                        <div class="rounded-md bg-blue-50 p-4">
+                                        <div class="rounded-md bg-accent-50 p-4">
                                             <div class="flex">
                                                 <div class="shrink-0">
                                                     <component
                                                         :is="IconAlertSquareRoundedFilled"
-                                                        class="size-5 text-blue-400"
+                                                        class="size-5 text-accent-500"
                                                         aria-hidden="true"
                                                     />
                                                 </div>
                                                 <div class="ml-3">
-                                                    <p class="text-sm font-medium text-blue-800">
+                                                    <p class="text-sm font-medium text-accent-700">
                                                         {{
                                                             $t(
                                                                 'No properties were specified for this article'

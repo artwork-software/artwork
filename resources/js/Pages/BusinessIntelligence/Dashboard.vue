@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconChartHistogram"
                 :title="$t('BI Dashboard')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="$t('Business intelligence overview')"
                 :search-enabled="false"
             >
@@ -16,9 +16,8 @@
                                 :key="preset.key"
                                 type="button"
                                 class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                                :class="activePreset === preset.key
-                                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                                :class="activePreset === preset.key ? 'border-accent-600 bg-accent-600 text-white'
+                                    : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
                                 @click="applyPreset(preset)"
                             >
                                 {{ $t(preset.label) }}
@@ -42,16 +41,15 @@
                         />
                         <!-- Vergleichszeitraum -->
                         <div class="w-full flex flex-wrap items-end gap-2 pt-1">
-                            <span class="pb-2 text-xs text-gray-500">{{ $t('Comparison') }}:</span>
+                            <span class="pb-2 text-xs text-text-subtle">{{ $t('Comparison') }}:</span>
                             <div class="flex items-center gap-1.5 pb-1.5">
                                 <button
                                     v-for="preset in comparePresets"
                                     :key="preset.key"
                                     type="button"
                                     class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                                    :class="comparePreset === preset.key
-                                        ? 'border-gray-700 bg-gray-700 text-white'
-                                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                                    :class="comparePreset === preset.key ? 'border-border-strong bg-text-subtle text-white'
+                                        : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
                                     @click="applyComparePreset(preset.key)"
                                 >
                                     {{ $t(preset.label) }}
@@ -62,7 +60,7 @@
                                 <BaseInput type="date" id="bi_dash_cmp_to" v-model="compareTo" :label="$t('To')" class="w-40" />
                                 <BaseUIButton :label="$t('Apply')" @click="reload(true)" :disabled="loading" hide-icon />
                             </template>
-                            <span v-if="comparisonLabel" class="pb-2 text-xs text-gray-400">{{ comparisonLabel }}</span>
+                            <span v-if="comparisonLabel" class="pb-2 text-xs text-text-subtle">{{ comparisonLabel }}</span>
                         </div>
                     </div>
                 </template>
@@ -86,24 +84,24 @@
             />
 
             <!-- Onboarding hint: BI component not placed in any project tab -->
-            <div v-if="!biComponentInTab" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
+            <div v-if="!biComponentInTab" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
                 <span>{{ $t('The BI component is not yet included in any project tab. Add it in the project settings under "Tab Settings" so BI figures can be entered on projects.') }}</span>
-                <Link :href="route('tab.index')" class="shrink-0 font-medium text-amber-900 hover:underline">
+                <Link :href="route('tab.index')" class="shrink-0 font-medium text-warning hover:underline">
                     {{ $t('Open tab settings') }}
                 </Link>
             </div>
 
             <!-- Onboarding hint: no tag linked to event types -->
-            <div v-if="!tagsLinked" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-4">
+            <div v-if="!tagsLinked" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3 text-sm text-warning flex items-center justify-between gap-4">
                 <span>{{ $t('No BI tags are linked to event types yet. Performances and event days will stay at zero until you assign them.') }}</span>
-                <Link :href="route('event_types.management')" class="shrink-0 font-medium text-amber-900 hover:underline">
+                <Link :href="route('event_types.management')" class="shrink-0 font-medium text-warning hover:underline">
                     {{ $t('Configure BI tags') }}
                 </Link>
             </div>
 
             <!-- Datenlücken: Projekte ohne erfasste BI-Zahlen -->
-            <div v-if="dataGaps.length > 0" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                <p class="text-sm font-medium text-amber-900 mb-1.5">
+            <div v-if="dataGaps.length > 0" class="rounded-2xl border border-warning-border bg-warning-surface px-4 py-3">
+                <p class="text-sm font-medium text-warning mb-1.5">
                     {{ dataGaps.length }} {{ $t('projects with events but no BI figures — they pull every total towards zero.') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
@@ -111,7 +109,7 @@
                         v-for="gap in visibleGaps"
                         :key="gap.project_id"
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full bg-white/80 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 hover:bg-white"
+                        class="inline-flex items-center gap-1 rounded-full bg-white/80 border border-warning-border px-2.5 py-0.5 text-xs text-warning hover:bg-white"
                         @click="quickEntryGap = gap"
                     >
                         <IconPencil class="size-3" />
@@ -120,7 +118,7 @@
                     <button
                         v-if="dataGaps.length > gapLimit"
                         type="button"
-                        class="rounded-full px-2.5 py-0.5 text-xs text-amber-700 hover:underline"
+                        class="rounded-full px-2.5 py-0.5 text-xs text-warning hover:underline"
                         @click="showAllGaps = !showAllGaps"
                     >
                         {{ showAllGaps ? $t('Show less') : `+${dataGaps.length - gapLimit} ${$t('more')}` }}
@@ -140,8 +138,8 @@
             <!-- KPI tiles -->
             <div>
                 <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-                    <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                        <p class="text-xs text-gray-500 inline-flex items-center gap-1">
+                    <div v-for="kpi in kpiTiles" :key="kpi.key" class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
+                        <p class="text-xs text-text-subtle inline-flex items-center gap-1">
                             {{ $t(kpi.label) }}
                             <ToolTipComponent
                                 v-if="kpi.tooltip"
@@ -151,15 +149,15 @@
                                 icon-size="h-3.5 w-3.5"
                             />
                         </p>
-                        <p class="text-xl font-semibold text-gray-900 mt-1">{{ kpi.value }}</p>
-                        <p v-if="kpi.delta !== null" :class="['text-xs mt-1', kpi.delta >= 0 ? 'text-emerald-600' : 'text-rose-600']">
+                        <p class="text-xl font-semibold text-text mt-1">{{ kpi.value }}</p>
+                        <p v-if="kpi.delta !== null" :class="['text-xs mt-1', kpi.delta >= 0 ? 'text-success' : 'text-danger']">
                             {{ kpi.delta >= 0 ? '▲' : '▼' }} {{ kpi.deltaText }} {{ compareShortLabel }}
                         </p>
-                        <p v-if="kpi.note" class="text-[10px] text-indigo-600 mt-0.5 leading-tight">{{ kpi.note }}</p>
-                        <p v-if="kpi.planLine" class="text-[10px] text-gray-500 mt-0.5 leading-tight">{{ kpi.planLine }}</p>
+                        <p v-if="kpi.note" class="text-[10px] text-accent-600 mt-0.5 leading-tight">{{ kpi.note }}</p>
+                        <p v-if="kpi.planLine" class="text-[10px] text-text-subtle mt-0.5 leading-tight">{{ kpi.planLine }}</p>
                     </div>
                 </div>
-                <p v-if="yoyExcludedCount > 0" class="text-xs text-gray-400 mt-1.5">
+                <p v-if="yoyExcludedCount > 0" class="text-xs text-text-subtle mt-1.5">
                     {{ yoyExcludedCount }} {{ $t('project(s) with time-neutral total figures are not part of the period comparison.') }}
                 </p>
 
@@ -169,15 +167,15 @@
                         <div
                             v-for="kpi in quotaTiles"
                             :key="kpi.key"
-                            class="rounded-2xl border border-gray-100 bg-gray-50/70 p-4"
+                            class="rounded-2xl border border-border-subtle bg-surface-sunken p-4"
                         >
-                            <p class="text-xs text-gray-500">{{ $t(kpi.label) }}</p>
-                            <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-800'">
+                            <p class="text-xs text-text-subtle">{{ $t(kpi.label) }}</p>
+                            <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-text-subtle' : 'text-text'">
                                 {{ kpi.value ?? '–' }}
                             </p>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-400 mt-1.5">
+                    <p class="text-xs text-text-subtle mt-1.5">
                         {{ audienceQuotas.projects_with_categories }}
                         {{ $t('project(s) with category breakdown in this period.') }}
                     </p>
@@ -185,49 +183,49 @@
             </div>
 
             <!-- Monatliche Entwicklung -->
-            <div v-if="monthlyChart" class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('Monthly trend (per-event figures)') }}</h4>
+            <div v-if="monthlyChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+                <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Monthly trend (per-event figures)') }}</h4>
                 <BiChart type="bar" :data="monthlyChart" :options="monthlyOptions" height="300px" />
             </div>
 
             <!-- Charts by category -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('Revenue by category') }}</h4>
+                <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+                    <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Revenue by category') }}</h4>
                     <BiChart v-if="hasCategoryData" type="doughnut" :data="revenueChart" :options="categoryChartOptions" />
-                    <p v-else class="text-sm text-gray-400 py-8 text-center">{{ $t('No data available.') }}</p>
+                    <p v-else class="text-sm text-text-subtle py-8 text-center">{{ $t('No data available.') }}</p>
                 </div>
-                <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('Visitors by category') }}</h4>
+                <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
+                    <h4 class="text-sm font-medium text-text-muted mb-3">{{ $t('Visitors by category') }}</h4>
                     <BiChart v-if="hasCategoryData" type="bar" :data="visitorsChart" :options="categoryChartOptions" />
-                    <p v-else class="text-sm text-gray-400 py-8 text-center">{{ $t('No data available.') }}</p>
+                    <p v-else class="text-sm text-text-subtle py-8 text-center">{{ $t('No data available.') }}</p>
                 </div>
             </div>
 
             <!-- Aufwand vs. Ertrag -->
-            <div v-if="scatterChart" class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div v-if="scatterChart" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-1">
-                    <h4 class="text-sm font-medium text-gray-700">{{ $t('Effort vs. output') }}</h4>
-                    <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-rose-500 inline-block"></span>{{ $t('High effort, low output') }}</span>
-                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-emerald-500 inline-block"></span>{{ $t('Low effort, high output') }}</span>
-                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-indigo-400 inline-block"></span>{{ $t('High effort, high output') }}</span>
-                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-gray-400 inline-block"></span>{{ $t('Low effort, low output') }}</span>
+                    <h4 class="text-sm font-medium text-text-muted">{{ $t('Effort vs. output') }}</h4>
+                    <div class="flex flex-wrap items-center gap-3 text-xs text-text-subtle">
+                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-danger inline-block"></span>{{ $t('High effort, low output') }}</span>
+                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-success inline-block"></span>{{ $t('Low effort, high output') }}</span>
+                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-accent-500 inline-block"></span>{{ $t('High effort, high output') }}</span>
+                        <span class="inline-flex items-center gap-1"><span class="size-2.5 rounded-full bg-border-strong inline-block"></span>{{ $t('Low effort, low output') }}</span>
                     </div>
                 </div>
-                <p class="text-xs text-gray-400 mb-3">{{ $t('Compared against the median of all productions in the period. Click a point to open the project.') }}</p>
+                <p class="text-xs text-text-subtle mb-3">{{ $t('Compared against the median of all productions in the period. Click a point to open the project.') }}</p>
                 <BiChart type="scatter" :data="scatterChart" :options="scatterOptions" height="320px" />
             </div>
 
             <!-- Drilldown table -->
-            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="flex items-center justify-between gap-3 mb-3">
-                    <h4 class="text-sm font-medium text-gray-700">{{ $t('Internal steering (effort vs. output)') }}</h4>
+                    <h4 class="text-sm font-medium text-text-muted">{{ $t('Internal steering (effort vs. output)') }}</h4>
                     <div class="flex items-center gap-2">
                         <button
                             v-if="categoryFilter"
                             type="button"
-                            class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                            class="inline-flex items-center gap-1.5 rounded-full bg-accent-50 border border-accent-200 px-3 py-1 text-xs font-medium text-accent-700 hover:bg-accent-100"
                             @click="categoryFilter = null"
                         >
                             {{ $t('Category (Sector)') }}: {{ categoryFilter }}
@@ -237,7 +235,7 @@
                         <button
                             v-if="exportOptions"
                             type="button"
-                            class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1 text-xs font-medium text-text-muted hover:bg-surface-sunken transition"
                             @click="openSteeringExport"
                         >
                             <IconFileExport class="size-3.5" />
@@ -248,7 +246,7 @@
                 <div class="overflow-x-auto max-h-[32rem] overflow-y-auto">
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 bg-white z-10 shadow-[0_1px_0_0_#e5e7eb]">
-                            <tr class="text-left text-xs text-gray-500">
+                            <tr class="text-left text-xs text-text-subtle">
                                 <th v-for="col in columns" :key="col.key" class="px-3 py-2 cursor-pointer whitespace-nowrap bg-white" @click="sortBy(col.key)">
                                     <span class="inline-flex items-center gap-1">
                                         {{ $t(col.label) }}
@@ -266,17 +264,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="row in sortedProjects" :key="row.project_id" class="border-b border-gray-50 hover:bg-gray-50">
+                            <tr v-for="row in sortedProjects" :key="row.project_id" class="border-b border-border-subtle hover:bg-surface-sunken">
                                 <td class="px-3 py-2">
-                                    <Link :href="route('projects.tab', { project: row.project_id, projectTab: firstProjectTabId })" class="text-indigo-600 hover:underline">
+                                    <Link :href="route('projects.tab', { project: row.project_id, projectTab: firstProjectTabId })" class="text-accent-600 hover:underline">
                                         {{ row.project_name }}
                                     </Link>
                                 </td>
-                                <td class="px-3 py-2 text-gray-600">{{ row.category || '—' }}</td>
+                                <td class="px-3 py-2 text-text-muted">{{ row.category || '—' }}</td>
                                 <td class="px-3 py-2">
                                     <span
                                         v-if="row.visitors_estimated"
-                                        class="text-indigo-700"
+                                        class="text-accent-700"
                                         v-tooltip.top="{ value: $t('Estimated from sold tickets'), appendTo: 'body', class: 'aw-tooltip' }"
                                     >≈ {{ formatInt(row.visitors) }}</span>
                                     <template v-else>{{ formatInt(row.visitors) }}</template>
@@ -284,7 +282,7 @@
                                 <td class="px-3 py-2">{{ formatCurrency(row.revenue) }}</td>
                                 <td class="px-3 py-2">
                                     <div v-if="row.occupancy !== null" class="flex items-center gap-2">
-                                        <div class="h-1.5 w-14 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                                        <div class="h-1.5 w-14 rounded-full bg-surface-sunken overflow-hidden shrink-0">
                                             <div
                                                 class="h-full rounded-full"
                                                 :class="occupancyBarClass(row.occupancy)"
@@ -293,7 +291,7 @@
                                         </div>
                                         <span class="text-xs whitespace-nowrap">{{ formatPercent(row.occupancy) }}</span>
                                     </div>
-                                    <span v-else class="text-gray-300">—</span>
+                                    <span v-else class="text-text-subtle">—</span>
                                 </td>
                                 <td class="px-3 py-2">{{ row.performances }}</td>
                                 <td class="px-3 py-2">{{ row.contracts_per_performance ?? '—' }}</td>
@@ -301,29 +299,29 @@
                                 <td class="px-3 py-2">{{ row.tasks_docs_per_production }}</td>
                                 <td class="px-3 py-2 font-medium">{{ row.effort_score }}</td>
                                 <template v-if="planSummary">
-                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_visitors !== null ? formatInt(row.plan_visitors) : '—' }}</td>
-                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_revenue !== null ? formatCurrency(row.plan_revenue) : '—' }}</td>
-                                    <td class="px-3 py-2 text-gray-600">{{ row.plan_costs !== null ? formatCurrency(row.plan_costs) : '—' }}</td>
+                                    <td class="px-3 py-2 text-text-muted">{{ row.plan_visitors !== null ? formatInt(row.plan_visitors) : '—' }}</td>
+                                    <td class="px-3 py-2 text-text-muted">{{ row.plan_revenue !== null ? formatCurrency(row.plan_revenue) : '—' }}</td>
+                                    <td class="px-3 py-2 text-text-muted">{{ row.plan_costs !== null ? formatCurrency(row.plan_costs) : '—' }}</td>
                                     <td class="px-3 py-2">
                                         <span
                                             v-if="row.costs_attainment !== null"
                                             class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                                            :class="row.costs_attainment <= 100 ? 'bg-emerald-100 text-emerald-700' : (row.costs_attainment <= 120 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')"
+                                            :class="row.costs_attainment <= 100 ? 'bg-success-surface text-success' : (row.costs_attainment <= 120 ? 'bg-warning-surface text-warning' : 'bg-danger-surface text-danger')"
                                         >{{ formatPercent(row.costs_attainment) }}</span>
-                                        <span v-else class="text-gray-300">—</span>
+                                        <span v-else class="text-text-subtle">—</span>
                                     </td>
                                     <td class="px-3 py-2">
                                         <span
                                             v-if="row.attainment !== null"
                                             class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                                            :class="row.attainment >= 100 ? 'bg-emerald-100 text-emerald-700' : (row.attainment >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')"
+                                            :class="row.attainment >= 100 ? 'bg-success-surface text-success' : (row.attainment >= 80 ? 'bg-warning-surface text-warning' : 'bg-danger-surface text-danger')"
                                         >{{ formatPercent(row.attainment) }}</span>
-                                        <span v-else class="text-gray-300">—</span>
+                                        <span v-else class="text-text-subtle">—</span>
                                     </td>
                                 </template>
                             </tr>
                             <tr v-if="sortedProjects.length === 0">
-                                <td :colspan="columns.length" class="px-3 py-8 text-center text-gray-400">{{ $t('No data available.') }}</td>
+                                <td :colspan="columns.length" class="px-3 py-8 text-center text-text-subtle">{{ $t('No data available.') }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -864,9 +862,9 @@ const scatterOptions = computed(() => ({
 // --- Drilldown-Tabelle ---
 
 const occupancyBarClass = (value) => {
-    if (value >= 90) return 'bg-emerald-500';
-    if (value >= 50) return 'bg-indigo-500';
-    return 'bg-amber-500';
+    if (value >= 90) return 'bg-success';
+    if (value >= 50) return 'bg-accent-600';
+    return 'bg-warning';
 };
 
 const planSummary = computed(() => props.dashboard.plan_summary ?? null);

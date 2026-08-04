@@ -1,6 +1,6 @@
 <template>
     <div class="print:break-before-auto">
-        <div v-if="loadResidenciesError" class="mb-2 text-xs text-rose-600">
+        <div v-if="loadResidenciesError" class="mb-2 text-xs text-danger">
             {{ $t(loadResidenciesError) }}
         </div>
         <div v-else-if="isLoadingResidencies" class="mb-2 text-xs text-secondary">
@@ -26,30 +26,29 @@
                 text="Saved. The Artist Residency has been successfully applied."
             />
         </div>
-        <div class="mt-8 flow-root border-b border-dashed border-gray-400">
+        <div class="mt-8 flow-root border-b border-dashed border-border-strong">
             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                    <table class="min-w-full divide-y divide-gray-300">
+                    <table class="min-w-full divide-y divide-border">
                         <thead>
                         <tr>
                             <th v-for="(column, columnIndex) in enabledNameColumns" :key="column.key" scope="col"
-                                :class="columnIndex === 0
-                                    ? 'py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0'
-                                    : 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900'">
+                                :class="columnIndex === 0 ? 'py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-text sm:pl-0'
+                                    : 'px-3 py-3.5 text-left text-sm font-semibold text-text'">
                                 {{ $t(nameColumnLabels[column.key] ?? column.key) }}
                             </th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Position') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('phone number') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Arrival date') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Date departure') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Accommodation') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Room type') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Total cost') }}</th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{{ $t('Description') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Position') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('phone number') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Arrival date') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Date departure') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Accommodation') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Room type') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Total cost') }}</th>
+                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Description') }}</th>
                             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"></th>
                         </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-border-subtle">
                             <SingleArtistResidency :project="project" v-for="artist_residency in localArtistResidencies" :artist_residency="artist_residency" :name-columns="enabledNameColumns" @edit-residency="editResidency" @deleted="fetchArtistResidencies" @duplicated="fetchArtistResidencies" :key="artist_residency.id"/>
                         </tbody>
                     </table>
@@ -59,14 +58,14 @@
         <div class="flex items-center justify-end mt-3 gap-x-3">
             <div class="flex items-center gap-x-1">
                 <component :is="IconBuildingSkyscraper" class="h-4 w-4"/>
-                <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostOfArtistResidencies }} €</span></span>
+                <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalCostOfArtistResidencies }} €</span></span>
             </div>
             <div class="flex items-center gap-x-1">
                 <component :is="IconMoneybag" class="h-4 w-4"/>
-                <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
+                <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
             </div>
             <div class="flex items-center gap-x-1 font-semibold">
-                <span class="text-xs">{{ $t('Total cost') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostAll }} €</span></span>
+                <span class="text-xs">{{ $t('Total cost') }}: <span class="underline decoration-double decoration-text-subtle underline-offset-2">{{ totalCostAll }} €</span></span>
             </div>
         </div>
     </div>

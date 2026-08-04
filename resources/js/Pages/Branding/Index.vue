@@ -2,7 +2,7 @@
     <ToolSettingsHeader :title="$t('Branding')">
         <form @submit.prevent="changeLogos">
             <div v-if="this.$page.props.flash.success"
-                 class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
+                 class="w-full font-bold text-sm border-1 border-success rounded bg-success p-2 text-white mb-3">
                 {{ this.$page.props.flash.success }}
             </div>
             <SettingsGuideBanner
@@ -21,7 +21,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 bg-stone-50 border-dashed rounded-md p-2"
+                    class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-border bg-stone-50 border-dashed rounded-md p-2"
                     @click="selectNewBigLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBigLogo($event)">
@@ -44,7 +44,7 @@
                     </span>
                 </div>
             </div>
-            <div v-if="form.errors?.bigLogo" class="mt-1 text-xs text-red-500">
+            <div v-if="form.errors?.bigLogo" class="mt-1 text-xs text-danger">
                 {{ $t(form.errors?.bigLogo) }}
             </div>
             <label class="block mt-12 mb-4 xsDark">
@@ -52,7 +52,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 justify-center border-2 bg-stone-50 w-80 border-border cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewSmallLogo"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedSmallLogo($event)">
@@ -75,7 +75,7 @@
                 </div>
 
             </div>
-            <div v-if="form.errors?.smallLogo" class="mt-1 text-xs text-red-500">
+            <div v-if="form.errors?.smallLogo" class="mt-1 text-xs text-danger">
                 {{ $t(form.errors?.smallLogo) }}
             </div>
             <label class="block mt-12 mb-4 xsDark">
@@ -83,7 +83,7 @@
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
-                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
                     @click="selectNewBanner"
                     @dragover.prevent
                     @drop.stop.prevent="uploadDraggedBanner($event)">
@@ -121,7 +121,7 @@
                     </span>
                 </div>
             </div>
-            <div v-if="form.errors?.banner" class="mt-1 text-xs text-red-500">
+            <div v-if="form.errors?.banner" class="mt-1 text-xs text-danger">
                 {{ $t(form.errors?.banner) }}
             </div>
         </form>

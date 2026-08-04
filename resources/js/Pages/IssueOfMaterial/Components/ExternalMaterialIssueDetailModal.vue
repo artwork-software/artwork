@@ -5,13 +5,13 @@
         @close="$emit('close')"
         modal-size="max-w-4xl"
     >
-        <div class="mt-4 space-y-6 text-sm text-zinc-800">
+        <div class="mt-4 space-y-6 text-sm text-text">
             <!-- Header Badges -->
             <div class="flex flex-wrap items-center gap-2">
-        <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
+        <span class="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-1 text-[11px] font-medium text-accent-700 ring-1 ring-inset ring-accent-200">
           {{ issue?.articles?.length || 0 }} {{ $t('articles') }}
         </span>
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                <span class="inline-flex items-center rounded-full bg-success-surface px-2.5 py-1 text-[11px] font-medium text-success ring-1 ring-inset ring-success-border">
           {{ issue?.files?.length || 0 }} {{ $t('files') }}
         </span>
                 <span v-if="issue?.special_items?.length" class="inline-flex items-center rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-medium text-violet-700 ring-1 ring-inset ring-violet-200">
@@ -20,31 +20,31 @@
             </div>
 
             <!-- Stammdaten -->
-            <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div class="border-b border-zinc-100 bg-gradient-to-r from-sky-50 via-sky-50/60 to-transparent px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-sky-500"></span>
+            <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                <div class="border-b border-border-subtle bg-gradient-to-r from-info-surface via-info-surface to-transparent px-5 py-3 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-text flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-info"></span>
                         {{ $t('Base data') }}
                     </h3>
-                    <p class="text-[11px] text-zinc-500">{{ $t('Value, period and persons involved.') }}</p>
+                    <p class="text-[11px] text-text-subtle">{{ $t('Value, period and persons involved.') }}</p>
                 </div>
                 <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <p class="text-zinc-500">{{ $t('Material value') }}</p>
-                        <p class="font-semibold text-zinc-900">{{ Number(issue.material_value).toFixed(2) }} €</p>
+                        <p class="text-text-subtle">{{ $t('Material value') }}</p>
+                        <p class="font-semibold text-text">{{ Number(issue.material_value).toFixed(2) }} €</p>
                     </div>
                     <div>
-                        <p class="text-zinc-500">{{ $t('Period') }}</p>
-                        <p class="font-semibold text-zinc-900">{{ issue.issue_date_formatted }} – {{ issue.return_date_formatted }}</p>
+                        <p class="text-text-subtle">{{ $t('Period') }}</p>
+                        <p class="font-semibold text-text">{{ issue.issue_date_formatted }} – {{ issue.return_date_formatted }}</p>
                     </div>
                     <div>
-                        <p class="text-zinc-500">{{ $t('Issued By') }}</p>
+                        <p class="text-text-subtle">{{ $t('Issued By') }}</p>
                         <div class="flex items-center mt-1">
                             <UserPopoverTooltip :user="issue.issued_by" width="8" height="8" classes="border-2 border-white rounded-full" />
                         </div>
                     </div>
                     <div v-if="issue.received_by">
-                        <p class="text-zinc-500">{{ $t('Received by') }}</p>
+                        <p class="text-text-subtle">{{ $t('Received by') }}</p>
                         <div class="flex items-center mt-1">
                             <UserPopoverTooltip :user="issue.received_by" width="8" height="8" classes="border-2 border-white rounded-full" />
                         </div>
@@ -53,61 +53,61 @@
             </section>
 
             <!-- Externer Kontakt -->
-            <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div class="border-b border-zinc-100 bg-gradient-to-r from-indigo-50 via-indigo-50/60 to-transparent px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+            <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                <div class="border-b border-border-subtle bg-gradient-to-r from-accent-50 via-accent-50 to-transparent px-5 py-3 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-text flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                         {{ $t('External contact person / company') }}
                     </h3>
                 </div>
                 <div class="p-5">
-                    <p class="font-medium text-zinc-900">
+                    <p class="font-medium text-text">
                         {{ issue.external_name }}<br />
-                        <span v-if="issue.external_address" class="text-zinc-700">{{ issue.external_address }}</span><br />
-                        <span v-if="issue.external_email" class="text-zinc-700">{{ issue.external_email }}</span><br />
-                        <span v-if="issue.external_phone" class="text-zinc-700">{{ issue.external_phone }}</span>
+                        <span v-if="issue.external_address" class="text-text-muted">{{ issue.external_address }}</span><br />
+                        <span v-if="issue.external_email" class="text-text-muted">{{ issue.external_email }}</span><br />
+                        <span v-if="issue.external_phone" class="text-text-muted">{{ issue.external_phone }}</span>
                     </p>
                 </div>
             </section>
 
             <!-- Artikel -->
-            <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div class="border-b border-zinc-100 bg-gradient-to-r from-indigo-50 via-indigo-50/60 to-transparent px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+            <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                <div class="border-b border-border-subtle bg-gradient-to-r from-accent-50 via-accent-50 to-transparent px-5 py-3 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-text flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                         {{ $t('Articles') }}
                     </h3>
-                    <p class="text-[11px] text-zinc-500" v-if="issue.articles?.length">{{ $t('Loaned inventory and quantities.') }}</p>
+                    <p class="text-[11px] text-text-subtle" v-if="issue.articles?.length">{{ $t('Loaned inventory and quantities.') }}</p>
                 </div>
                 <div class="p-5">
-                    <div v-if="issue.articles?.length" class="divide-y divide-zinc-200/80 rounded-xl border border-zinc-200 bg-zinc-50/40 overflow-hidden">
+                    <div v-if="issue.articles?.length" class="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-sunken overflow-hidden">
                         <div v-for="a in issue.articles" :key="a.id" class="flex items-center justify-between gap-3 p-3">
                             <div class="min-w-0 flex items-center gap-2">
-                                <span class="font-medium text-zinc-900 truncate">{{ a.name }}</span>
-                                <component :is="IconSearch" @click="openArticleDetailModal(a.id)" class="size-4 cursor-pointer text-zinc-400 hover:text-indigo-600 duration-200" />
+                                <span class="font-medium text-text truncate">{{ a.name }}</span>
+                                <component :is="IconSearch" @click="openArticleDetailModal(a.id)" class="size-4 cursor-pointer text-text-subtle hover:text-accent-600 duration-200" />
                             </div>
-                            <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-800">
+                            <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-accent-200 bg-accent-50 px-2 py-0.5 text-[11px] font-medium text-accent-700">
                                 <span>{{ $t('Quantity') }}:</span>
                                 <span class="tabular-nums">{{ a.pivot.quantity }}</span>
                             </div>
                         </div>
                     </div>
-                    <p v-else class="text-zinc-500 italic">{{ $t('No items assigned.') }}</p>
+                    <p v-else class="text-text-subtle italic">{{ $t('No items assigned.') }}</p>
                 </div>
             </section>
 
             <!-- Sonderartikel -->
-            <section v-if="issue.special_items?.length" class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div class="border-b border-zinc-100 bg-gradient-to-r from-violet-50 via-violet-50/60 to-transparent px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+            <section v-if="issue.special_items?.length" class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                <div class="border-b border-border-subtle bg-gradient-to-r from-violet-50 via-violet-50/60 to-transparent px-5 py-3 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-text flex items-center gap-2">
                         <span class="inline-block size-2 rounded-full bg-violet-500"></span>
                         {{ $t('Special article') }}
                     </h3>
                 </div>
                 <div class="p-5">
-                    <div class="divide-y divide-zinc-200/80 rounded-xl border border-zinc-200 bg-zinc-50/40 overflow-hidden">
+                    <div class="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-sunken overflow-hidden">
                         <div v-for="s in issue.special_items" :key="s.id" class="flex items-center justify-between gap-3 p-3">
-                            <span class="font-medium text-zinc-900 truncate">{{ s.name }}</span>
+                            <span class="font-medium text-text truncate">{{ s.name }}</span>
                             <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800">
                                 <span>{{ $t('Quantity') }}:</span>
                                 <span class="tabular-nums">{{ s.quantity }}</span>
@@ -118,30 +118,30 @@
             </section>
 
             <!-- Rückgabe-Mängel -->
-            <section v-if="issue.return_remarks" class="rounded-2xl border border-amber-200 bg-amber-50/60">
-                <div class="border-b border-amber-100 px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-amber-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-amber-500"></span>
+            <section v-if="issue.return_remarks" class="rounded-2xl border border-warning-border bg-warning-surface">
+                <div class="border-b border-warning-border px-5 py-3 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-warning flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-warning"></span>
                         {{ $t('Defects after return') }}
                     </h3>
                 </div>
                 <div class="p-5">
-                    <p class="whitespace-pre-line font-medium text-amber-900">{{ issue.return_remarks }}</p>
+                    <p class="whitespace-pre-line font-medium text-warning">{{ issue.return_remarks }}</p>
                 </div>
             </section>
 
             <!-- Dateien -->
-            <section v-if="issue.files?.length" class="rounded-2xl border border-emerald-200 bg-white shadow-sm">
-                <div class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 via-emerald-50/60 to-transparent px-5 py-3 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-emerald-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-emerald-500"></span>
+            <section v-if="issue.files?.length" class="rounded-2xl border border-success-border bg-white shadow-sm">
+                <div class="border-b border-success-border bg-gradient-to-r from-success-surface via-success-surface to-transparent px-5 py-3 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-success flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-success"></span>
                         {{ $t('Files') }}
                     </h3>
                 </div>
                 <div class="p-5">
                     <ul class="space-y-2">
-                        <li v-for="file in issue.files" :key="file.id" class="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-                            <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
+                        <li v-for="file in issue.files" :key="file.id" class="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2">
+                            <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
                                 {{ file.original_name }}
                             </a>
                         </li>

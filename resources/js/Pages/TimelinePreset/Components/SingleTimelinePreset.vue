@@ -1,11 +1,11 @@
 <template>
     <div>
-        <div class="rounded-lg w-full bg-gray-500 px-4 py-2 mb-2 flex items-center justify-between shadow-md">
+        <div class="rounded-lg w-full bg-text-subtle px-4 py-2 mb-2 flex items-center justify-between shadow-md">
             <div class="text-sm text-white truncate">
                 {{ timelinePreset.name }}
             </div>
             <div class="flex items-center gap-x-2">
-                <component :is="IconWand" class="h-4 w-4 rounded-full text-white hover:text-gray-300 transition-colors duration-300 ease-in-out cursor-pointer hidden" stroke-width="1.5"/>
+                <component :is="IconWand" class="h-4 w-4 rounded-full text-white hover:text-text-subtle transition-colors duration-300 ease-in-out cursor-pointer hidden" stroke-width="1.5"/>
                 <BaseMenu white-icon dots-size="h-4 w-4" has-no-offset>
                     <BaseMenuItem title="Edit" :icon="IconEdit" @click="showEditTimelinePresetModal = true" />
                     <BaseMenuItem title="Duplicate" :icon="IconCopy" @click="copyTimelinePreset" />
@@ -13,7 +13,7 @@
                 </BaseMenu>
             </div>
         </div>
-        <div class="rounded-lg w-full bg-gray-100 px-4 py-2">
+        <div class="rounded-lg w-full bg-surface-sunken px-4 py-2">
             <div class="divide-y divide-dashed h-72 overflow-x-auto">
                 <div v-for="time in timelinePreset.times">
                     <SingleTimesInPreset :time="time" />

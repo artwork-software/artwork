@@ -11,8 +11,8 @@
             />
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-fromÏ-class="opacity-100" leave-to-class="opacity-0">
-            <div v-if="users?.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                <div class="border-gray-200">
+            <div v-if="users?.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto sm:text-sm">
+                <div class="border-white/10">
                     <div v-for="(user, index) in users" :key="index" class="flex items-center cursor-pointer">
                         <div class="flex-1 text-sm py-4" @click="selectUser(user)" v-if="checkIfOnlyProp(user)">
                             <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">

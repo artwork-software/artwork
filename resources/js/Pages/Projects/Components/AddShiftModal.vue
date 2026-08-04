@@ -1041,7 +1041,7 @@ const lockOrUnlockShift = (commit = false) => {
                 <div v-if="edit && shift && openShiftHistory" class="flex justify-end">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1.5 text-xs text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                         :title="$t('Show shift history for this shift')"
                         @click="openShiftHistory(shift)"
                     >
@@ -1050,12 +1050,12 @@ const lockOrUnlockShift = (commit = false) => {
                     </button>
                 </div>
                 <!-- REPLACE: Sektion Schichtvorlagen -->
-                <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
+                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
                     <div class="flex items-center justify-between gap-3 p-4">
-                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('shift templates') }}</h3>
+                        <h3 class="text-sm font-semibold text-text">{{ $t('shift templates') }}</h3>
                         <div class="flex items-center gap-2">
-                          <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
+                          <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
                             {{ filteredSingleShiftPresets.length }}
                           </span>
                             <button type="button" class="ui-button !text-xs" @click="showShiftPresetBox = !showShiftPresetBox">
@@ -1082,7 +1082,7 @@ const lockOrUnlockShift = (commit = false) => {
                                     v-model="searchShiftPreset"
                                     :label="$t('Browse shift templates')"
                                 />
-                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-gray-500 hover:text-gray-700" @click="closeShiftSearchbar" />
+                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-text-subtle hover:text-text-muted" @click="closeShiftSearchbar" />
                             </div>
                         </div>
                         <div v-else>
@@ -1115,38 +1115,38 @@ const lockOrUnlockShift = (commit = false) => {
                                         class="text-left"
                                     >
                                         <div
-                                            class="rounded-xl bg-white ring-1 ring-gray-200 p-3 hover:shadow-md transition-all duration-200"
-                                            :class="[preset.active ? 'ring-2 !ring-blue-500 shadow-md' : '']"
+                                            class="rounded-xl bg-white ring-1 ring-border-subtle p-3 hover:shadow-md transition-all duration-200"
+                                            :class="[preset.active ? 'ring-2 !ring-accent-600 shadow-md' : '']"
                                         >
                                             <!-- Kopf: Name + Total -->
                                             <div class="flex items-center justify-between gap-2">
-                                                <div class="min-w-0 truncate text-[13px] font-semibold text-gray-900">
+                                                <div class="min-w-0 truncate text-[13px] font-semibold text-text">
                                                     {{ preset.name }}
                                                 </div>
                                                 <span
                                                     v-if="(preset.shifts_qualifications?.length || preset.shift_qualifications?.length)"
-                                                    class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700"
+                                                    class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-medium text-text-muted"
                                                 >
                                                   {{ qualStats(preset).total }}
                                                 </span>
                                             </div>
 
                                             <!-- Zeiten + Pause (Badges) -->
-                                            <div class="mt-1 flex items-center gap-1.5 text-[12px] text-gray-700">
-                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
-                                                <span class="shrink-0 text-gray-400">→</span>
-                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
-                                                <span class="ml-auto shrink-0 rounded bg-gray-50 px-1.5 py-0.5">
+                                            <div class="mt-1 flex items-center gap-1.5 text-[12px] text-text-muted">
+                                                <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
+                                                <span class="shrink-0 text-text-subtle">→</span>
+                                                <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
+                                                <span class="ml-auto shrink-0 rounded bg-surface-sunken px-1.5 py-0.5">
                                                   {{ preset.break_duration ?? 0 }} {{ $t('min') }}
                                                 </span>
                                             </div>
 
                                             <!-- Gewerk + Anzahl Qualis -->
                                             <div class="mt-1 flex items-center justify-between gap-2">
-                                                <span class="shrink-0 rounded border border-gray-200 px-1.5 py-0.5 text-[11px] font-semibold text-gray-700">
+                                                <span class="shrink-0 rounded border border-border-subtle px-1.5 py-0.5 text-[11px] font-semibold text-text-muted">
                                                   {{ craftAbbrById(preset.craft_id) || '—' }}
                                                 </span>
-                                                                                <span class="truncate text-[11px] text-gray-500">
+                                                                                <span class="truncate text-[11px] text-text-subtle">
                                                   {{ qualStats(preset).count }} {{ $t('Qualis') }}
                                                 </span>
                                             </div>
@@ -1169,12 +1169,12 @@ const lockOrUnlockShift = (commit = false) => {
                 </section>
 
                 <!-- Sektion: Zeitvorgaben -->
-                <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
+                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
                     <div class="flex items-center justify-between gap-3 p-4">
-                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('Time presets') }}</h3>
+                        <h3 class="text-sm font-semibold text-text">{{ $t('Time presets') }}</h3>
                         <div class="flex items-center gap-2">
-                              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
+                              <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
                                 {{ filteredShiftTimePresets.length }}
                               </span>
                             <button type="button" class="ui-button !text-xs" @click="toggleTimePresetBox()">
@@ -1201,7 +1201,7 @@ const lockOrUnlockShift = (commit = false) => {
                                     v-model="searchTimePreset"
                                     :label="$t('Search time specifications')"
                                 />
-                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-gray-500 hover:text-gray-700" @click="closeTimeSearchbar" />
+                                <PropertyIcon name="IconX" class="cursor-pointer h-5 w-5 text-text-subtle hover:text-text-muted" @click="closeTimeSearchbar" />
                             </div>
                         </div>
                         <div v-else>
@@ -1231,17 +1231,17 @@ const lockOrUnlockShift = (commit = false) => {
                                         class="cursor-pointer group"
                                     >
                                         <div
-                                            class="rounded-lg bg-white ring-1 ring-gray-200 p-2.5 hover:shadow-sm transition-all duration-150 group-hover:-translate-y-0.5"
-                                            :class="[preset.active ? 'ring-2 ring-emerald-500 shadow-sm' : '']"
+                                            class="rounded-lg bg-white ring-1 ring-border-subtle p-2.5 hover:shadow-sm transition-all duration-150 group-hover:-translate-y-0.5"
+                                            :class="[preset.active ? 'ring-2 ring-success shadow-sm' : '']"
                                         >
-                                            <div class="text-[12px] font-semibold truncate text-gray-900">
+                                            <div class="text-[12px] font-semibold truncate text-text">
                                                 {{ preset.name }}
                                             </div>
-                                            <div class="mt-1 text-[11px] text-gray-600 flex items-center gap-1.5">
-                                                <span class="rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
-                                                <span class="text-gray-400">→</span>
-                                                <span class="rounded border border-gray-200 px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
-                                                <span class="ml-auto rounded bg-gray-50 px-1.5 py-0.5">
+                                            <div class="mt-1 text-[11px] text-text-muted flex items-center gap-1.5">
+                                                <span class="rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.start_time) }}</span>
+                                                <span class="text-text-subtle">→</span>
+                                                <span class="rounded border border-border-subtle px-1.5 py-0.5">{{ toHHMM(preset.end_time) }}</span>
+                                                <span class="ml-auto rounded bg-surface-sunken px-1.5 py-0.5">
                                                   {{ preset.break_time }} {{ $t('min') }}
                                                 </span>
                                             </div>
@@ -1264,12 +1264,12 @@ const lockOrUnlockShift = (commit = false) => {
                 </section>
 
                 <!-- Sektion: Zeitvorgaben -->
-                <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-0 shadow-sm overflow-hidden">
+                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
                     <div class="flex items-center justify-between gap-3 p-4">
-                        <h3 class="text-sm font-semibold text-gray-900">{{ $t('Global qualifications') }}</h3>
+                        <h3 class="text-sm font-semibold text-text">{{ $t('Global qualifications') }}</h3>
                         <div class="flex items-center gap-2">
-                              <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700">
+                              <span class="rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted">
                                 {{ globalQualifications?.length }}
                               </span>
                             <button type="button" class="ui-button !text-xs" @click="toggleGlobalQualificationBox()">
@@ -1289,7 +1289,7 @@ const lockOrUnlockShift = (commit = false) => {
                     >
                         <div v-if="showGlobalQualificationBox" class="px-4 sm:px-5 pb-4">
                             <div v-if="globalQualifications?.length > 0" class="max-h-[240px] md:max-h-[280px] overflow-y-auto pr-1 py-1">
-                                <div class="space-y-3 divide-y divide-zinc-200 divide-dashed">
+                                <div class="space-y-3 divide-y divide-border-subtle divide-dashed">
                                     <div
                                         v-for="globalQualification in globalQualifications"
                                         :key="'globalQualification-' + globalQualification.id"
@@ -1329,11 +1329,11 @@ const lockOrUnlockShift = (commit = false) => {
                     </transition>
                 </section>
                 <!-- Sektion: Basisdaten -->
-                <section class="rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
+                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-4 sm:p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3 mb-3">
                         <div>
-                            <h3 class="text-sm font-semibold text-gray-900">{{ $t('basic data') }}</h3>
-                            <p class="text-xs text-gray-500">
+                            <h3 class="text-sm font-semibold text-text">{{ $t('basic data') }}</h3>
+                            <p class="text-xs text-text-subtle">
                                 {{ $t('Fine-tune times, breaks, trade, qualifications, and description.') }}
                             </p>
                         </div>
@@ -1343,9 +1343,9 @@ const lockOrUnlockShift = (commit = false) => {
                         <div class="grid grid-cols-1 my-4 gap-2" v-if="!multiAddMode">
                             <RoomSearch v-if="!selectedRoom" :label="$t('Search for Rooms')" @room-selected="onRoomSelected" />
                             <div v-else
-                                 class="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-4">
+                                 class="flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-4">
                                 <span class="truncate">{{ selectedRoom?.name ?? selectedRoom?.roomName }}</span>
-                                <button class="ml-0.5 text-zinc-400 transition hover:text-rose-600" @click="selectedRoom = null" type="button">
+                                <button class="ml-0.5 text-text-subtle transition hover:text-danger" @click="selectedRoom = null" type="button">
                                     <PropertyIcon name="IconX" class="size-4" />
                                 </button>
                             </div>
@@ -1422,24 +1422,24 @@ const lockOrUnlockShift = (commit = false) => {
                                 class="sm:col-span-2 space-y-2"
                                 aria-live="polite"
                             >
-                                <div v-if="validationMessages.warnings.shift_start.length" class="rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
-                                    <ul class="text-xs text-amber-800 list-disc list-inside">
+                                <div v-if="validationMessages.warnings.shift_start.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                    <ul class="text-xs text-warning list-disc list-inside">
                                         <li v-for="(w, i) in validationMessages.warnings.shift_start" :key="'ws-'+i">{{ w }}</li>
                                     </ul>
                                 </div>
-                                <div v-if="validationMessages.errors.shift_start.length" class="rounded-md bg-rose-50 ring-1 ring-rose-200 px-3 py-2">
-                                    <ul class="text-xs text-rose-800 list-disc list-inside">
+                                <div v-if="validationMessages.errors.shift_start.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                    <ul class="text-xs text-danger list-disc list-inside">
                                         <li v-for="(e, i) in validationMessages.errors.shift_start" :key="'es-'+i">{{ e }}</li>
                                     </ul>
                                 </div>
 
-                                <div v-if="validationMessages.warnings.shift_end.length" class="rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
-                                    <ul class="text-xs text-amber-800 list-disc list-inside">
+                                <div v-if="validationMessages.warnings.shift_end.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                    <ul class="text-xs text-warning list-disc list-inside">
                                         <li v-for="(w, i) in validationMessages.warnings.shift_end" :key="'we-'+i">{{ w }}</li>
                                     </ul>
                                 </div>
-                                <div v-if="validationMessages.errors.shift_end.length" class="rounded-md bg-rose-50 ring-1 ring-rose-200 px-3 py-2">
-                                    <ul class="text-xs text-rose-800 list-disc list-inside">
+                                <div v-if="validationMessages.errors.shift_end.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                    <ul class="text-xs text-danger list-disc list-inside">
                                         <li v-for="(e, i) in validationMessages.errors.shift_end" :key="'ee-'+i">{{ e }}</li>
                                     </ul>
                                 </div>
@@ -1490,7 +1490,7 @@ const lockOrUnlockShift = (commit = false) => {
                                 :getter-for-options-to-display="(option) => option.name"
                             />
                             <div class="flex items-center justify-end">
-                                <button type="button" @click="selectedShiftGroup = null" class="text-xs text-zinc-500 hover:text-blue-500 mt-0.5 duration-200 ease-in-out cursor-pointer">{{ $t('Remove Shift group') }}</button>
+                                <button type="button" @click="selectedShiftGroup = null" class="text-xs text-text-subtle hover:text-accent-600 mt-0.5 duration-200 ease-in-out cursor-pointer">{{ $t('Remove Shift group') }}</button>
                             </div>
                         </div>
 
@@ -1505,16 +1505,16 @@ const lockOrUnlockShift = (commit = false) => {
                             </div>
 
                             <div v-else>
-                                <div class="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                                <div class="flex items-center justify-between gap-3 p-3 rounded-lg bg-surface-sunken border border-border-subtle">
                                     <div class="min-w-0 flex items-center gap-3">
-                                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">
+                                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-border-subtle flex items-center justify-center text-text-subtle font-semibold">
                                             {{ selectedProject.name.charAt(0).toUpperCase() }}
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="text-sm font-medium text-gray-900 truncate">
+                                            <div class="text-sm font-medium text-text truncate">
                                                 {{ selectedProject.name }}
                                             </div>
-                                            <div v-if="selectedProject.first_and_last_event_date" class="text-[11px] text-gray-500 mt-0.5">
+                                            <div v-if="selectedProject.first_and_last_event_date" class="text-[11px] text-text-subtle mt-0.5">
                                                 {{ $t('Project period') }}: {{ selectedProject.first_and_last_event_date.first_event_date?.split(' ')[0] }} - {{ selectedProject.first_and_last_event_date.last_event_date?.split(' ')[0] }}
                                             </div>
                                         </div>
@@ -1523,8 +1523,8 @@ const lockOrUnlockShift = (commit = false) => {
                                         {{ $t('Change') }}
                                     </button>
                                 </div>
-                                <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
-                                    <p class="text-xs text-amber-800 inline-flex items-center gap-0.5 flex-wrap">
+                                <div v-if="shiftOutsideProjectPeriod" class="mt-2 rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                    <p class="text-xs text-warning inline-flex items-center gap-0.5 flex-wrap">
                                         <span>{{ $t('Shift is outside the project period') }}</span>
                                         <ToolTipComponent
                                             icon="IconInfoCircle"
@@ -1547,24 +1547,24 @@ const lockOrUnlockShift = (commit = false) => {
                             leave-to-class="opacity-0 -translate-y-1"
                         >
                             <div v-if="validationMessages.warnings.break_length.length || validationMessages.errors.break_length.length || validationMessages.warnings.craft.length || validationMessages.errors.craft.length" class="sm:col-span-2 space-y-2" aria-live="polite">
-                                <div v-if="validationMessages.warnings.break_length.length" class="rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
-                                    <ul class="text-xs text-amber-800 list-disc list-inside">
+                                <div v-if="validationMessages.warnings.break_length.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                    <ul class="text-xs text-warning list-disc list-inside">
                                         <li v-for="(w, i) in validationMessages.warnings.break_length" :key="'wb-'+i">{{ w }}</li>
                                     </ul>
                                 </div>
-                                <div v-if="validationMessages.errors.break_length.length" class="rounded-md bg-rose-50 ring-1 ring-rose-200 px-3 py-2">
-                                    <ul class="text-xs text-rose-800 list-disc list-inside">
+                                <div v-if="validationMessages.errors.break_length.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                    <ul class="text-xs text-danger list-disc list-inside">
                                         <li v-for="(e, i) in validationMessages.errors.break_length" :key="'eb-'+i">{{ e }}</li>
                                     </ul>
                                 </div>
 
-                                <div v-if="validationMessages.warnings.craft.length" class="rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-2">
-                                    <ul class="text-xs text-amber-800 list-disc list-inside">
+                                <div v-if="validationMessages.warnings.craft.length" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-2">
+                                    <ul class="text-xs text-warning list-disc list-inside">
                                         <li v-for="(w, i) in validationMessages.warnings.craft" :key="'wc-'+i">{{ w }}</li>
                                     </ul>
                                 </div>
-                                <div v-if="validationMessages.errors.craft.length" class="rounded-md bg-rose-50 ring-1 ring-rose-200 px-3 py-2">
-                                    <ul class="text-xs text-rose-800 list-disc list-inside">
+                                <div v-if="validationMessages.errors.craft.length" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-2">
+                                    <ul class="text-xs text-danger list-disc list-inside">
                                         <li v-for="(e, i) in validationMessages.errors.craft" :key="'ec-'+i">{{ e }}</li>
                                     </ul>
                                 </div>
@@ -1600,10 +1600,10 @@ const lockOrUnlockShift = (commit = false) => {
                                         without-translation
                                     />
                                     <div v-if="computedShiftQualification.warning || computedShiftQualification.error" class="mt-2 space-y-2">
-                                        <div v-if="computedShiftQualification.warning" class="rounded-md bg-amber-50 ring-1 ring-amber-200 px-3 py-1.5 text-xs text-amber-800">
+                                        <div v-if="computedShiftQualification.warning" class="rounded-md bg-warning-surface ring-1 ring-warning-border px-3 py-1.5 text-xs text-warning">
                                             {{ computedShiftQualification.warning }}
                                         </div>
-                                        <div v-if="computedShiftQualification.error" class="rounded-md bg-rose-50 ring-1 ring-rose-200 px-3 py-1.5 text-xs text-rose-800">
+                                        <div v-if="computedShiftQualification.error" class="rounded-md bg-danger-surface ring-1 ring-danger-border px-3 py-1.5 text-xs text-danger">
                                             {{ computedShiftQualification.error }}
                                         </div>
                                     </div>
@@ -1628,7 +1628,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </div>
                 </section>
 
-                <div v-if="shift?.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-gray-200/70 bg-white/70 p-4 sm:p-5 shadow-sm">
+                <div v-if="shift?.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-border-subtle bg-white/70 p-4 sm:p-5 shadow-sm">
                     <AlertComponent
                         type="error"
                         show-icon

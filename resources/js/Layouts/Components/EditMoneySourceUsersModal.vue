@@ -10,7 +10,7 @@
                         <UserSearch v-model="user_query" @userSelected="addUserToMoneySourceUserArray" />
                     </div>
                 </div>
-                <div class="mt-4 divide-y divide-gray-200 divide-dashed mb-5">
+                <div class="mt-4 divide-y divide-border-subtle divide-dashed mb-5">
                     <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full py-3 " v-for="user in assignedUsers">
                         <div class="flex col-span-2">
                             <div class="flex items-center">
@@ -31,14 +31,14 @@
                                 <div class="flex">
                                     <input v-model="user.pivot.competent"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <p :class="[user.pivot.competent ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
                                 </div>
                                 <div class="flex ml-8">
                                     <input v-model="user.pivot.write_access"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
                                 </div>
@@ -47,14 +47,14 @@
                                 <div class="flex">
                                     <input v-model="user.competent"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
                                 </div>
                                 <div class="flex ml-8">
                                     <input v-model="user.write_access"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
                                 </div>

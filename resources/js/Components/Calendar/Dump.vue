@@ -77,13 +77,13 @@
         <!-- Hinweis, wenn Projektzeitraum aktiv & leer -->
         <!--<div v-if="!checkIfAnyRoomHasAnEventOrShift && settings.use_project_time_period">
             <div class="mt-24 ml-4">
-                <div class="border-l-4 border-red-400 bg-red-50 p-4 w-fit">
+                <div class="border-l-4 border-danger-border bg-danger-surface p-4 w-fit">
                     <div class="flex">
                         <div class="shrink-0">
-                            <IconExclamationCircle class="h-5 w-5 text-red-400" stroke-width="2" aria-hidden="true" />
+                            <IconExclamationCircle class="h-5 w-5 text-danger" stroke-width="2" aria-hidden="true" />
                         </div>
                         <div class="ml-1">
-                            <p class="text-sm text-red-700 font-bold">
+                            <p class="text-sm text-danger font-bold">
                                 {{ $t('The selected project has no dates') }}
                             </p>
                         </div>

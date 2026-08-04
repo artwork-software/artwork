@@ -3,16 +3,16 @@
         <div class="flex flex-col space-y-6">
 
             <section>
-                <h1 class="text-lg font-semibold text-zinc-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ $t('EXCEL_WORK_TIME_OVERVIEW_EXPORT') }}
                 </h1>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('Exports a monthly matrix of target and actual hours per craft, split into internal and external workers, with sums per year.') }}
                 </p>
             </section>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-                <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Time period') }}</h2>
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
+                <h2 class="text-sm font-semibold text-text">{{ $t('Time period') }}</h2>
                 <VueDatePicker
                     v-model="monthRange"
                     month-picker
@@ -27,7 +27,7 @@
                     :cancelText="$t('Cancel')"
                     :selectText="$t('Apply')"
                     :locale="language"
-                    input-class-name="!rounded-lg !border-gray-300 !py-2 !text-sm"
+                    input-class-name="!rounded-lg !border-border !py-2 !text-sm"
                 />
                 <p v-if="rangeTooLong" class="text-xs text-artwork-messages-error">
                     {{ $t('The export range must not exceed 36 months.') }}
@@ -39,8 +39,8 @@
                         type="button"
                         class="rounded-full border px-3 py-1 text-xs transition-colors"
                         :class="isActivePreset(preset)
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                            ? 'border-accent-200 bg-accent-50 text-accent-700'
+                            : 'border-border-subtle text-text-muted hover:bg-surface-sunken hover:text-text'"
                         @click="monthRange = preset.value"
                     >
                         {{ preset.label }}
@@ -48,12 +48,12 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Crafts') }}</h2>
+                    <h2 class="text-sm font-semibold text-text">{{ $t('Crafts') }}</h2>
                     <button
                         type="button"
-                        class="text-sm text-zinc-600 hover:text-zinc-900"
+                        class="text-sm text-text-muted hover:text-text"
                         @click="toggleAllCrafts"
                     >
                         {{ allCraftsSelected ? $t('Deselect all') : $t('Select all') }}
@@ -63,7 +63,7 @@
                     <label
                         v-for="craft in props.crafts"
                         :key="craft.id"
-                        class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer"
+                        class="flex items-center gap-2 text-xs text-text-muted cursor-pointer"
                     >
                         <input
                             type="checkbox"

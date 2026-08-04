@@ -21,7 +21,7 @@
         <div class="mt-4 space-y-6">
             <BiAudienceCategoryManager />
 
-            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs">
                 <SettingsGuideBanner
                     class="mb-4"
                     variant="inline"
@@ -33,7 +33,7 @@
                         'Only simple field types are available on purpose, so the values stay exportable.',
                     ]"
                 />
-                <div v-if="biFields.length === 0" class="text-center text-sm text-gray-500 py-8">
+                <div v-if="biFields.length === 0" class="text-center text-sm text-text-subtle py-8">
                     {{ $t('No BI fields created yet.') }}
                 </div>
 
@@ -47,30 +47,30 @@
                     class="space-y-2"
                 >
                     <template #item="{ element }">
-                        <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 transition">
-                            <IconGripVertical class="drag-handle size-5 text-gray-400 cursor-grab flex-shrink-0" />
+                        <div class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white p-3 hover:border-border transition">
+                            <IconGripVertical class="drag-handle size-5 text-text-subtle cursor-grab flex-shrink-0" />
 
                             <ComponentIcons :type="element.type" class="flex-shrink-0" />
 
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 truncate">{{ element.name }}</p>
-                                <p class="text-xs text-gray-500">{{ $t(element.type) }}</p>
+                                <p class="text-sm font-medium text-text truncate">{{ element.name }}</p>
+                                <p class="text-xs text-text-subtle">{{ $t(element.type) }}</p>
                             </div>
 
                             <div class="flex items-center gap-2 flex-shrink-0">
                                 <button
                                     type="button"
-                                    class="ui-button bg-white hover:bg-gray-50 transition"
+                                    class="ui-button bg-white hover:bg-surface-sunken transition"
                                     @click="openEditModal(element)"
                                 >
-                                    <IconEdit class="size-4 text-blue-600" />
+                                    <IconEdit class="size-4 text-accent-600" />
                                 </button>
                                 <button
                                     type="button"
-                                    class="ui-button bg-red-50 hover:bg-red-100 transition"
+                                    class="ui-button bg-danger-surface hover:bg-danger-surface transition"
                                     @click="confirmDelete(element)"
                                 >
-                                    <IconTrash class="size-4 text-red-600" />
+                                    <IconTrash class="size-4 text-danger" />
                                 </button>
                             </div>
                         </div>

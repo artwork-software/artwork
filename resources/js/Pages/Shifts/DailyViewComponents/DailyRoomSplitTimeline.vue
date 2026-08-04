@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3 select-none">
-      <div v-if="shouldCompressCalendarHours" class="flex xxsDark items-center px-4 mt-1.5 text-xs text-gray-500">
+      <div v-if="shouldCompressCalendarHours" class="flex xxsDark items-center px-4 mt-1.5 text-xs text-text-subtle">
           {{ $t('Hours between {start} - {end} are hidden', {
               start: calendarHoursRange.start,
               end: calendarHoursRange.end
@@ -13,7 +13,7 @@
         <div v-if="layoutBlocks.length" class="overflow-x-auto">
           <div>
             <div v-for="(block, bIdx) in layoutBlocks" :key="'ev-block-' + bIdx" class="">
-              <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getEventBlockStyle(block)">
+              <div class="relative w-full border-l border-border-subtle rounded bg-white/50" :style="getEventBlockStyle(block)">
                 <template v-for="item in block.eventItems" :key="item.key">
 
                     <div class="absolute rounded-b-lg" :style="getEventItemStyle(item, block)" :ref="(el) => setItemRef(el, item.key)">
@@ -24,11 +24,11 @@
                   </div>
                 </template>
               </div>
-              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-gray-500 py-1 bg-white">~{{ block.gapAfter.human }} {{ $t('Abstand') }}</div>
+              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-text-subtle py-1 bg-white">~{{ block.gapAfter.human }} {{ $t('Abstand') }}</div>
             </div>
           </div>
         </div>
-        <div v-if="!hasAny" class="text-gray-300 text-center mt-2">{{ $t('No events for this day') }}</div>
+        <div v-if="!hasAny" class="text-text-subtle text-center mt-2">{{ $t('No events for this day') }}</div>
 
         <div class="mt-3">
           <BaseUIButton :label="$t('Add Event')" is-add-button :icon="IconCalendarPlus" @click="$emit('addEvent')" />
@@ -41,18 +41,18 @@
         <div v-if="layoutBlocks.length" class="overflow-x-auto">
           <div>
             <div v-for="(block, bIdx) in layoutBlocks" :key="'sh-block-' + bIdx" class="">
-              <div class="relative w-full border-l border-gray-200 rounded bg-white/50" :style="getShiftBlockStyle(block)">
+              <div class="relative w-full border-l border-border-subtle rounded bg-white/50" :style="getShiftBlockStyle(block)">
                 <template v-for="item in block.shiftItems" :key="item.key">
                   <div class="absolute rounded-b-lg" :style="getShiftItemStyle(item, block)" :ref="(el) => setItemRef(el, item.key)">
                     <SingleShiftInDailyShiftView v-bind="item.props" @toggle="onShiftToggle(item.id, $event)" />
                   </div>
                 </template>
               </div>
-              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-gray-500 py-1 bg-white">~{{ block.gapAfter.human }} Abstand</div>
+              <div v-if="block.gapAfter" class="relative z-10 text-center text-[11px] text-text-subtle py-1 bg-white">~{{ block.gapAfter.human }} Abstand</div>
             </div>
           </div>
         </div>
-        <div v-if="!hasAny" class="text-gray-300 text-center mt-2">{{ $t('No shifts for this day') }}</div>
+        <div v-if="!hasAny" class="text-text-subtle text-center mt-2">{{ $t('No shifts for this day') }}</div>
 
         <div v-if="can('can plan shifts') || is('artwork admin')" class="mt-3 flex items-center gap-2">
           <BaseUIButton :label="$t('Add Shift')" is-add-button :icon="IconCalendarUser" @click="$emit('addShift')" />
@@ -63,7 +63,7 @@
             :icon="IconCopyPlus"
             icon-size="size-4"
             @click="$emit('addShiftByPresetOrGroup')"
-            classes-button="pointer-events-auto -1 border border-zinc-200 z-20 inline-flex items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-gray-50/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+            classes-button="pointer-events-auto -1 border border-border-subtle z-20 inline-flex items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-surface-sunken focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
           />
         </div>
       </div>

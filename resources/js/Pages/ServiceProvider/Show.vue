@@ -20,7 +20,7 @@
                     <div class="hidden sm:block">
                         <div class="">
                             <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                                <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-artwork-buttons-create text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
+                                <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-artwork-buttons-create text-accent-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
                             </nav>
                         </div>
                     </div>
@@ -73,7 +73,7 @@
                         </div>
                         <div class="col-span-7">
                             <div>
-                                <BaseInput v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Company name')" />
+                                <BaseInput v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Company name')" />
                             </div>
                         </div>
                     </div>
@@ -84,22 +84,22 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Street')" />
+                            <BaseInput type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Street')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Zip code')" />
+                            <BaseInput type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Zip code')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Location')" />
+                            <BaseInput type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Location')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Email')" />
+                            <BaseInput type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Email')" />
                         </div>
                         <div class="col-span-1">
-                            <BaseInput type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Phone number')" />
+                            <BaseInput type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-border-subtle' : ''" :label="$t('Phone number')" />
                         </div>
                         <div class="col-span-full">
-                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :class="checkCanEdit ? 'bg-gray-200' : ''" />
+                            <BaseTextarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :class="checkCanEdit ? 'bg-border-subtle' : ''" />
                         </div>
                     </div>
 
@@ -115,7 +115,7 @@
 
                             <div v-if="serviceProvider.contacts.length > 0">
                                 <ul role="list" class="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-                                    <li v-for="contact in serviceProvider.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-gray-200 shadow-glass">
+                                    <li v-for="contact in serviceProvider.contacts" :key="contact.id" class="overflow-hidden rounded-xl border border-border-subtle shadow-glass">
                                         <ArtworkSingleContact :contact="contact" />
                                     </li>
                                 </ul>

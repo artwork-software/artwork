@@ -1,7 +1,7 @@
 <template>
     <tr class="pl-2 cursor-pointer w-full xsLight pb-1" @click="folder.closed = !folder.closed">
         <td>
-            <div class="px-2 py-1.5 bg-gray-50/10 w-full" :class="folder.closed ? 'rounded-b-lg' : ''">
+            <div class="px-2 py-1.5 bg-surface-sunken w-full" :class="folder.closed ? 'rounded-b-lg' : ''">
                 <div class="ml-5 stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
                     <component :is="IconFolderSymlink" class="h-4 w-4"/>
                     {{ folder.name }}

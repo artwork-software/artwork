@@ -22,10 +22,10 @@
             </div>
 
             <div class="flex items-center gap-x-2 mt-4">
-                <Switch v-model="eventStatus.default" :class="[eventStatus.default ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                <Switch v-model="eventStatus.default" :class="[eventStatus.default ? 'bg-artwork-buttons-create' : 'bg-border-subtle', 'relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
                     <span :class="[eventStatus.default ? 'translate-x-4' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                       <span :class="[eventStatus.default ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                        <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 12 12">
+                        <svg class="size-4 text-text-subtle" fill="none" viewBox="0 0 12 12">
                           <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                       </span>

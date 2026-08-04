@@ -9,17 +9,17 @@
             <div class="">
 
                 <div>
-                    <div class="text-lg font-semibold text-gray-800">
+                    <div class="text-lg font-semibold text-text">
                         {{ request.user.first_name }} {{ request.user.last_name }}
                     </div>
-                    <div class="text-sm text-gray-500">
+                    <div class="text-sm text-text-subtle">
                         Eingereicht am {{ request.created_at }}
                     </div>
                 </div>
             </div>
 
             <!-- Schichtinformationen -->
-            <div class="grid md:grid-cols-2 gap-y-1 text-sm text-gray-700">
+            <div class="grid md:grid-cols-2 gap-y-1 text-sm text-text-muted">
                 <div>
                     <span class="font-medium">{{ $t('Date') }}:</span> {{ request.shift?.formatted_dates?.start }}
                 </div>
@@ -31,7 +31,7 @@
                 </div>
                 <div class="flex items-center justify-end gap-x-0.5">
                     <span class="font-medium">Status: </span>
-                    <span :class="{'text-yellow-600': request.status === 'pending', 'text-green-600': request.status === 'approved', 'text-red-600': request.status === 'rejected'}" class="font-semibold capitalize">
+                    <span :class="{'text-warning': request.status === 'pending', 'text-success': request.status === 'approved', 'text-danger': request.status === 'rejected'}" class="font-semibold capitalize">
                         {{ $t(request.status) }}
                     </span>
                 </div>
@@ -40,29 +40,29 @@
             <!-- Kommentar -->
             <div v-if="request.request_comment || request.request_start_time" class="flex items-center justify-between text-sm">
                 <div>
-                    <div class="font-semibold text-blue-700">{{ $t('Comment') }}:</div>
+                    <div class="font-semibold text-accent-700">{{ $t('Comment') }}:</div>
                     <div v-if="request.request_comment" class="">{{ request.request_comment }}</div>
                 </div>
                 <div v-if="request.request_start_time && request.request_end_time">
-                    <div class="font-semibold text-blue-700 mt-2">Angefragte Zeitänderung:</div>
+                    <div class="font-semibold text-accent-700 mt-2">Angefragte Zeitänderung:</div>
                     <div class="">
                         {{ request.request_start_time }} – {{ request.request_end_time }}
-                        <span v-if="request.request_end_date" class="text-xs text-gray-500">(+{{ $t('1 day') }})</span>
+                        <span v-if="request.request_end_date" class="text-xs text-text-subtle">(+{{ $t('1 day') }})</span>
                     </div>
                 </div>
             </div>
 
             <!-- Zuständige Person(en) -->
             <div v-if="!needApproval">
-                <div v-if="request.craft.craft_shift_planer?.length" class="text-sm text-gray-700">
+                <div v-if="request.craft.craft_shift_planer?.length" class="text-sm text-text-muted">
                     <div>
-                        <label class="block font-medium text-gray-700 mb-1 font-lexend">Zuständige Personen</label>
+                        <label class="block font-medium text-text-muted mb-1 font-lexend">Zuständige Personen</label>
                         <ul class="space-y-2">
-                            <li v-for="person in request.craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg shadow border border-gray-200">
+                            <li v-for="person in request.craft.craft_shift_planer" :key="person.id" class="flex items-center space-x-3 bg-surface-sunken p-3 rounded-lg shadow border border-border-subtle">
                                 <UserPopoverTooltip :user="person" width="10" height="10" />
                                 <div>
-                                    <div class="font-semibold text-gray-800 font-lexend">{{ person.full_name }}</div>
-                                    <div class="text-xs text-gray-500 font-lexend">{{ person.position }} - {{ person.business }}</div>
+                                    <div class="font-semibold text-text font-lexend">{{ person.full_name }}</div>
+                                    <div class="text-xs text-text-subtle font-lexend">{{ person.position }} - {{ person.business }}</div>
                                 </div>
                             </li>
                         </ul>

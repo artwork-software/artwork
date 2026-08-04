@@ -58,8 +58,8 @@
                                             v-model="form.password"
                                             :label="getRequiredFieldLabel($t('Password'))"/>
                         <div class="absolute top-3.5 right-8   z-10 group">
-                            <IconEye class="w-6 h-6 text-gray-800 cursor-pointer" v-if="passwordType === 'password'" @click="showPassword"/>
-                            <IconEyeClosed class="w-6 h-6 text-gray-800 cursor-pointer" v-else @click="showPassword"/>
+                            <IconEye class="w-6 h-6 text-text cursor-pointer" v-if="passwordType === 'password'" @click="showPassword"/>
+                            <IconEyeClosed class="w-6 h-6 text-text cursor-pointer" v-else @click="showPassword"/>
                         </div>
                     </div>
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
@@ -77,8 +77,8 @@
                                             v-model="form.password_confirmation"
                                             :label="getRequiredFieldLabel($t('Confirm Password'))"/>
                         <div class="absolute top-3.5 right-8  z-10 group">
-                            <IconEye class="w-6 h-6 text-gray-800 cursor-pointer" v-if="passwordType === 'password'" @click="showPassword"/>
-                            <IconEyeClosed class="w-6 h-6 text-gray-800 cursor-pointer" v-else @click="showPassword"/>
+                            <IconEye class="w-6 h-6 text-text cursor-pointer" v-if="passwordType === 'password'" @click="showPassword"/>
+                            <IconEyeClosed class="w-6 h-6 text-text cursor-pointer" v-else @click="showPassword"/>
                         </div>
                     </div>
                     <jet-input-error :message="form.errors.password_confirmation" class="mt-2"/>
@@ -90,7 +90,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-xs text-gray-500">
+            <div class="text-xs text-text-subtle">
                 {{ $t('Input fields marked with * are mandatory') }}
             </div>
             <BaseButton :disabled="form.email === '' || form.password === '' || form.password_confirmation === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.password === '' || form.password_confirmation === '' || form.first_name === '' || form.last_name === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"

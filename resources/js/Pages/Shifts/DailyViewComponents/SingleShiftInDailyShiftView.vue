@@ -31,11 +31,11 @@
                         black-icon
                         classes-button="ml-1"
                     />
-                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-gray-600" :class="subtitleTextClass">
+                    <div v-if="shiftGroupResolved && ($page.props.shift_plan_daily_settings ?? $page.props.shift_plan_settings ?? $page.props.auth.user.calendar_settings).show_shift_group_tag" class="text-text-muted" :class="subtitleTextClass">
                         ({{ shiftGroupResolved.name }})
                     </div>
                     <span
-                        :class="['ml-1 block truncate text-gray-800 cursor-pointer', titleTextClass]"
+                        :class="['ml-1 block truncate text-text cursor-pointer', titleTextClass]"
                         v-tooltip.bottom="{ value: craftTitleFull, class: 'aw-tooltip' }"
                         :aria-label="craftTitleFull"
                         @click.stop="toggleShiftDetails"
@@ -64,9 +64,9 @@
             <div class="flex justify-between flex-wrap items-center gap-1 ml-2">
                 <div class="flex gap-x-2">
                 <div v-for="qualification in shift.shifts_qualifications" :key="qualification.shift_qualification_id">
-                    <div class="text-gray-500 text-[10px] flex items-center gap-x-1 ">
+                    <div class="text-text-subtle text-[10px] flex items-center gap-x-1 ">
 
-                        <div :class="{ 'text-amber-600 font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
+                        <div :class="{ 'text-warning font-semibold': getAssignedCountForQualification(qualification.shift_qualification_id) > (qualification.value ?? 0) }">
                             {{ getAssignedCountForQualification(qualification.shift_qualification_id) }}/{{ qualification.value ? qualification.value : '0' }}
                         </div>
                         <ToolTipComponent
@@ -84,7 +84,7 @@
                 <!-- Globale Qualifikationen (nur Zahlen z.B. 0/2 + Icon mit Tooltip) -->
                 <div class="flex gap-x-2 pr-4">
                     <div v-for="gq in demandedGlobalQualifications" :key="'gq-' + gq.id">
-                        <div class="text-gray-500 text-[10px] flex items-center gap-x-1">
+                        <div class="text-text-subtle text-[10px] flex items-center gap-x-1">
                             <div>
                                 {{ countAssignedForGlobalQualification(gq.id) }}/{{ getGlobalQuantity(gq) }}
                             </div>
@@ -104,18 +104,18 @@
             <!-- Shift Description (Anzeigeeinstellung "Notizen einblenden") -->
             <div v-if="showNotes" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
                 <template v-if="shift.description">
-                    <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
+                    <span class="text-xs text-text-muted truncate" v-tooltip.bottom="{ value: shift.description, class: 'aw-tooltip' }">{{ shift.description }}</span>
                     <component
                         v-if="!isFollowUpDay"
                         :is="IconEdit"
-                        class="size-4 shrink-0 text-gray-500 hover:text-gray-700 cursor-pointer"
+                        class="size-4 shrink-0 text-text-subtle hover:text-text-muted cursor-pointer"
                         @click.stop="openDescriptionModal"
                     />
                 </template>
                 <template v-else-if="!isFollowUpDay">
                     <component
                         :is="IconNote"
-                        class="size-4 shrink-0 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        class="size-4 shrink-0 text-text-subtle hover:text-text-muted cursor-pointer"
                         @click.stop="openDescriptionModal"
                     />
                 </template>
@@ -125,12 +125,12 @@
 
         <div v-if="showShiftDetails && !isFollowUpDay" class="mt-1 ml-2 space-y-1">
             <!-- Shift description (im detailsOnly-Modus hier anzeigen, da Header-Card ausgeblendet) -->
-            <div v-if="detailsOnly && shift.description" class="text-xs text-gray-500 italic mb-1 pl-1">
+            <div v-if="detailsOnly && shift.description" class="text-xs text-text-subtle italic mb-1 pl-1">
                 {{ shift.description }}
             </div>
 
             <template v-for="group in shiftGroups" :key="group.label">
-                <div v-for="person in group.items" :key="person.id" class="flex items-center w-full min-w-0 gap-x-2 font-lexend rounded-lg" :class="{ 'border border-dashed border-amber-500': person.pivot?.is_overbooked }" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
+                <div v-for="person in group.items" :key="person.id" class="flex items-center w-full min-w-0 gap-x-2 font-lexend rounded-lg" :class="{ 'border border-dashed border-warning': person.pivot?.is_overbooked }" :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }">
                     <SingleEntityInShift
                         :person="person"
                         :shift="shift"
@@ -144,21 +144,21 @@
                 </div>
             </template>
 
-            <div v-for="drop in computedShiftQualificationDropElements" :key="`${drop.shift_qualification_id}-${drop.isOverbooked ? 'overbooked' : 'regular'}`" class="flex items-center w-full gap-x-2 font-lexend rounded-lg" :class="drop.isOverbooked ? 'bg-amber-50 border border-dashed border-amber-500' : 'bg-red-100'">
+            <div v-for="drop in computedShiftQualificationDropElements" :key="`${drop.shift_qualification_id}-${drop.isOverbooked ? 'overbooked' : 'regular'}`" class="flex items-center w-full gap-x-2 font-lexend rounded-lg" :class="drop.isOverbooked ? 'bg-warning-surface border border-dashed border-warning' : 'bg-danger-surface'">
                 <Menu as="div" class="relative w-full">
                     <Float auto-placement portal :offset="{ mainAxis: 5, crossAxis: 25}">
                         <MenuButton class="flex cursor-pointer items-center gap-x-2 font-lexend rounded-lg w-full" @click="checkShiftCollision(drop.shift_qualification_id, true); loadShiftProjectAssignees()">
                             <!-- Unbesetzt-Balken: gleiche Breite wie Zeit-Pill der zugewiesenen Entity -->
                             <div
                                 class="py-1.5 pl-1 pr-0.75 rounded-l-lg"
-                                :class="drop.isOverbooked ? 'bg-amber-200' : 'bg-red-200'"
+                                :class="drop.isOverbooked ? 'bg-warning-surface' : 'bg-danger-surface'"
                             >
                                 <div
                                     class="text-xs text-left flex items-center gap-x-1 min-w-0 overflow-hidden"
                                     v-tooltip.bottom="{ value: drop.isOverbooked ? $t('Overbooking') : $t('Unoccupied'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
                                 >
-                                    <span v-if="prependCraftAbbreviation && fullCraft?.abbreviation" class="font-semibold shrink-0" :class="drop.isOverbooked ? 'text-amber-800' : 'text-red-800'">{{ fullCraft.abbreviation }}</span>
-                                    <component :is="IconInfoTriangle" class="size-4 shrink-0" :class="drop.isOverbooked ? 'text-amber-600' : 'text-red-600'" />
+                                    <span v-if="prependCraftAbbreviation && fullCraft?.abbreviation" class="font-semibold shrink-0" :class="drop.isOverbooked ? 'text-warning' : 'text-danger'">{{ fullCraft.abbreviation }}</span>
+                                    <component :is="IconInfoTriangle" class="size-4 shrink-0" :class="drop.isOverbooked ? 'text-warning' : 'text-danger'" />
                                     <span class="truncate block">{{ drop.isOverbooked ? $t('Overbooking') : $t('Unoccupied') }}</span>
                                 </div>
                             </div>
@@ -173,8 +173,8 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-gray-200 ring-opacity-5 focus:outline-none bg-white max-h-72 flex flex-col">
-                                <div class="px-3 py-2 border-b border-gray-200 shrink-0">
+                            <MenuItems class="z-50 rounded-lg shadow-xl ring-1 ring-border-subtle ring-opacity-5 focus:outline-none bg-white max-h-72 flex flex-col">
+                                <div class="px-3 py-2 border-b border-border-subtle shrink-0">
                                     <input
                                         type="text"
                                         :value="dropSearchQueries[drop.shift_qualification_id] || ''"
@@ -182,21 +182,21 @@
                                         @click.stop
                                         @keydown.stop
                                         :placeholder="$t('Search')"
-                                        class="w-full text-xs border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:border-gray-500 focus:ring-0"
+                                        class="w-full text-xs border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong focus:ring-0"
                                     />
                                 </div>
                                 <div class="overflow-y-auto">
-                                <MenuItem as="div" v-slot="{ active }" v-for="user in filteredAssignablePeople(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <MenuItem as="div" v-slot="{ active }" v-for="user in filteredAssignablePeople(drop.shift_qualification_id)" :key="user.id" class="px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken cursor-pointer">
                                     <div class="flex justify-between items-center gap-x-2 w-48" @click="createOnDropElementAndSave(user, user.originCraft, drop.shift_qualification_id, drop.isOverbooked) ">
                                         <span class="text-xs truncate w-36" :class="projectAssignmentFor(user) === 'wish' ? 'italic' : ''">{{ user.name || user.full_name }}</span>
-                                        <div class="text-xs text-gray-500 flex items-center gap-x-1">
+                                        <div class="text-xs text-text-subtle flex items-center gap-x-1">
                                             <ToolTipComponent
                                                 v-if="projectAssignmentFor(user) === 'binding'"
                                                 :icon="IconUserCheck"
                                                 icon-size="w-4 h-4"
                                                 :tooltip-text="$t('Bindingly assigned to this project')"
                                                 direction="top"
-                                                classes="text-emerald-600 w-fit"
+                                                classes="text-success w-fit"
                                             />
                                             <ToolTipComponent
                                                 v-else-if="projectAssignmentFor(user) === 'wish'"
@@ -204,14 +204,14 @@
                                                 icon-size="w-4 h-4"
                                                 :tooltip-text="$t('Has entered a wish for this project')"
                                                 direction="top"
-                                                classes="text-emerald-500 w-fit"
+                                                classes="text-success w-fit"
                                             />
                                             <ToolTipComponent
                                                 :icon="IconId"
                                                 icon-size="w-4 h-4"
                                                 tooltip-text="Freelancer"
                                                 direction="top"
-                                                classes="text-gray-800 w-fit"
+                                                classes="text-text w-fit"
                                                 v-if="user.type === 'freelancer'"
                                                 use-translation
                                             />
@@ -220,7 +220,7 @@
                                                 icon-size="w-4 h-4"
                                                 tooltip-text="ServiceProvider"
                                                 direction="top"
-                                                classes="text-gray-800 w-fit"
+                                                classes="text-text w-fit"
                                                 v-if="user.type === 'service_provider'"
                                                 use-translation
                                             />
@@ -229,7 +229,7 @@
                                                 icon-size="w-4 h-4"
                                                 :tooltip-text="$t('User already assigned as {0}', [user.qualification])"
                                                 direction="top"
-                                                classes="text-red-500 w-fit"
+                                                classes="text-danger w-fit"
                                                 v-if="user.alreadyAssigned"
                                             />
                                             <ToolTipComponent
@@ -238,7 +238,7 @@
                                                 icon-size="w-4 h-4"
                                                 :tooltip-text="getCollisionTooltip(user)"
                                                 direction="top"
-                                                classes="text-red-500 w-fit"
+                                                classes="text-danger w-fit"
                                                 tooltip-css-class="w-72"
                                             />
                                             <span v-if="user.pivot?.craft_id" class="font-semibold">{{ user.originCraft?.abbreviation || 'N/A' }}</span>
@@ -253,7 +253,7 @@
                 <component
                     v-if="drop.isOverbooked && canPlanShifts"
                     :is="IconX"
-                    class="size-4 mr-2 shrink-0 text-amber-700 hover:text-amber-900 cursor-pointer"
+                    class="size-4 mr-2 shrink-0 text-warning hover:text-warning cursor-pointer"
                     v-tooltip.bottom="{ value: $t('Remove overbooking slot'), appendTo: 'body', class: 'aw-tooltip', position: 'bottom', useTranslation: true }"
                     @click.stop="removeOverbookedSlot(drop.shift_qualification_id)"
                 />
@@ -263,21 +263,21 @@
             <div v-if="canPlanShifts" class="flex items-center w-full gap-x-1">
                 <div
                     v-if="allowOverbooking"
-                    class="flex items-center w-1/2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-amber-500 bg-amber-50"
+                    class="flex items-center w-1/2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-warning bg-warning-surface"
                     @click="showAddOverbookingModal = true"
                 >
-                    <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-amber-700">
+                    <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-warning">
                         <component :is="IconCirclePlus" class="size-4 shrink-0" />
                         <span class="text-xs font-medium truncate">{{ $t('Overbooking') }}</span>
                     </div>
                 </div>
                 <div
-                    class="flex items-center gap-x-2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-gray-400"
+                    class="flex items-center gap-x-2 font-lexend rounded-lg cursor-pointer hover:bg-opacity-80 transition-colors border border-dashed border-border-strong"
                     :class="allowOverbooking ? 'w-1/2' : 'w-full'"
                     :style="{ backgroundColor: `${fullCraft.color ?? '#999999'}20` }"
                     @click="showAddFunctionModal = true"
                 >
-                    <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-gray-700">
+                    <div class="py-1.5 px-2 flex items-center gap-x-2 w-full text-text-muted">
                         <component :is="IconCirclePlus" class="size-4 shrink-0" />
                         <span class="text-xs font-medium truncate">{{ $t('Add Function') }}</span>
                     </div>
@@ -329,7 +329,7 @@
         <div class="flex flex-col gap-y-3 mt-2">
             <textarea
                 v-model="descriptionDraft"
-                class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-gray-500 focus:ring-0"
+                class="w-full rounded-lg border border-border p-2 text-sm focus:border-border-strong focus:ring-0"
                 rows="4"
                 :placeholder="$t('Description')"
             />
@@ -1102,7 +1102,7 @@ const timePillPadding = computed(() => 'py-1 pr-2 pl-1 text-xs')
 // Konsistente Hierarchie wie bei Terminen
 const titleTextClass = computed(() => props.hasCollision ? 'text-sm font-semibold' : 'text-base font-semibold')
 const subtitleTextClass = computed(() => props.hasCollision ? 'text-xs' : 'text-sm')
-const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] border-gray-300 bg-white' : 'text-xs border-gray-300 bg-white')
+const functionBadgeClass = computed(() => props.hasCollision ? 'text-[10px] border-border bg-white' : 'text-xs border-border bg-white')
 const craftTitleFull = computed(() => `[${fullCraft.value?.abbreviation}] ${fullCraft.value?.name}`)
 const borderColor = computed(() => props.hasCollision ? `${fullCraft.value?.color ?? '#999999'}A0` : 'transparent')
 

@@ -6,8 +6,8 @@
     >
         <!-- Hinweis-Box -->
         <div class="mb-4" v-if="isShiftCommitWorkflowEnabled">
-            <div class="bg-yellow-50/80 border border-yellow-200 text-yellow-800 p-4 rounded-xl flex gap-3 items-start">
-                <div class="mt-0.5 h-6 w-6 min-w-6 min-h-6 rounded-full bg-yellow-100 flex items-center justify-center text-xs font-semibold">
+            <div class="bg-warning-surface border border-warning-border text-warning p-4 rounded-xl flex gap-3 items-start">
+                <div class="mt-0.5 h-6 w-6 min-w-6 min-h-6 rounded-full bg-warning-surface flex items-center justify-center text-xs font-semibold">
                     !
                 </div>
                 <p class="text-xs font-lexend leading-relaxed">
@@ -37,15 +37,15 @@
 
             <div class="col-span-full">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-900 font-lexend">
+                    <span class="text-sm font-medium text-text font-lexend">
                         {{ $t('Craft') }}
-                        <span v-if="selectedCrafts.length > 0" class="ml-1 text-xs font-normal text-gray-400">
+                        <span v-if="selectedCrafts.length > 0" class="ml-1 text-xs font-normal text-text-subtle">
                             ({{ selectedCrafts.length }}/{{ crafts.length }})
                         </span>
                     </span>
                     <button
                         type="button"
-                        class="text-xs font-lexend text-blue-500 hover:text-blue-600 transition-colors"
+                        class="text-xs font-lexend text-accent-600 hover:text-accent-600 transition-colors"
                         @click="toggleAllCrafts"
                     >
                         {{ allCraftsSelected ? $t('Deselect all crafts') : $t('Select all crafts') }}
@@ -60,9 +60,8 @@
                         type="button"
                         :aria-pressed="isCraftSelected(craft)"
                         class="group inline-flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full border text-xs font-lexend transition-colors"
-                        :class="isCraftSelected(craft)
-                            ? 'bg-blue-50 border-blue-300 text-blue-700'
-                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+                        :class="isCraftSelected(craft) ? 'bg-accent-50 border-accent-200 text-accent-700'
+                            : 'bg-white border-border-subtle text-text-muted hover:bg-surface-sunken hover:border-border'"
                         @click="toggleCraft(craft)"
                     >
                         <span
@@ -73,7 +72,7 @@
                         <span class="truncate max-w-40">{{ craft.name }}</span>
                         <svg
                             v-if="isCraftSelected(craft)"
-                            class="size-3.5 shrink-0 text-blue-500"
+                            class="size-3.5 shrink-0 text-accent-600"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                             stroke-linecap="round" stroke-linejoin="round"
                         >
@@ -82,10 +81,10 @@
                     </button>
                 </div>
 
-                <p v-if="craftError" class="mt-1 text-xs text-red-600 font-lexend">
+                <p v-if="craftError" class="mt-1 text-xs text-danger font-lexend">
                     {{ $t('Please select at least one craft.') }}
                 </p>
-                <p v-else-if="isShiftCommitWorkflowEnabled" class="mt-1 text-xs text-gray-400 font-lexend">
+                <p v-else-if="isShiftCommitWorkflowEnabled" class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ $t('One separate request per selected craft will be created.') }}
                 </p>
             </div>
@@ -95,10 +94,10 @@
         <div class="mt-5">
             <!-- Fester Container, damit nichts springt -->
             <div
-                class="rounded-2xl border border-gray-100 bg-gray-50/80 px-4 py-3 shadow-sm flex gap-3 items-start min-h-[3.25rem]"
+                class="rounded-2xl border border-border-subtle bg-surface-sunken px-4 py-3 shadow-sm flex gap-3 items-start min-h-[3.25rem]"
             >
                 <!-- kleines Icon / Badge -->
-                <div class="mt-0.5 h-7 w-7 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-500">
+                <div class="mt-0.5 h-7 w-7 rounded-full bg-surface-sunken flex items-center justify-center text-[10px] font-semibold text-text-subtle">
                     KW
                 </div>
 
@@ -110,15 +109,15 @@
                             key="loading"
                             class="flex flex-col gap-1"
                         >
-                            <p class="text-xs text-gray-500 font-lexend">
+                            <p class="text-xs text-text-subtle font-lexend">
                                 {{ $t('Loading date range for the selected calendar week...') }}
                             </p>
 
                             <!-- animierte Punkte -->
                             <div class="flex items-center gap-1 mt-1">
-                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce"></span>
-                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.12s]"></span>
-                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.24s]"></span>
+                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-border-strong animate-bounce"></span>
+                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-border-strong animate-bounce [animation-delay:0.12s]"></span>
+                                <span class="inline-block h-1.5 w-1.5 rounded-full bg-border-strong animate-bounce [animation-delay:0.24s]"></span>
                             </div>
                         </div>
 
@@ -128,10 +127,10 @@
                             key="range"
                             class="flex flex-col gap-1"
                         >
-                            <p class="text-xs text-gray-500 font-lexend">
+                            <p class="text-xs text-text-subtle font-lexend">
                                 {{ $t('This calendar week covers the following period:') }}
                             </p>
-                            <p class="text-sm font-medium text-gray-900 mt-0.5">
+                            <p class="text-sm font-medium text-text mt-0.5">
                                 {{ dateRange.start_date }} – {{ dateRange.end_date }}
                             </p>
                         </div>
@@ -142,7 +141,7 @@
                             key="error"
                             class="flex flex-col gap-1"
                         >
-                            <p class="text-xs text-red-600 font-lexend">
+                            <p class="text-xs text-danger font-lexend">
                                 {{ $t(dateRangeError) }}
                             </p>
                         </div>
@@ -153,7 +152,7 @@
                             key="empty"
                             class="flex flex-col gap-1"
                         >
-                            <p class="text-xs text-gray-500 font-lexend">
+                            <p class="text-xs text-text-subtle font-lexend">
                                 {{ $t('Select a calendar week and year to see the corresponding date range.') }}
                             </p>
                         </div>

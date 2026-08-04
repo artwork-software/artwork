@@ -5,11 +5,11 @@
                 <div>
                     <div class="mb-8">
                         <div class="hidden sm:block">
-                            <div class="border-gray-200">
+                            <div class="border-border-subtle">
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
+                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-text-muted hover:border-border', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -120,7 +120,7 @@
                                     </ListboxButton>
                                     <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                                         <ListboxOption v-if="this.moneySourceGroups.length > 0" v-for="moneySourceGroup in this.moneySourceGroups"
-                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                       class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between "
                                                        :key="moneySourceGroup.id"
                                                        :value="moneySourceGroup"
                                                        v-slot="{ active, selected }">
@@ -300,7 +300,7 @@
                                              class="absolute rounded-lg z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
-                                            <div class="border-gray-200">
+                                            <div class="border-border-subtle">
                                                 <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
                                                      class="flex items-center cursor-pointer">
                                                     <div class="flex-1 text-sm py-4">

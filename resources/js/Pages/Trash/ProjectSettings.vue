@@ -3,7 +3,7 @@
         <div></div>
         <div class="flex justify-end items-center ml-8 -mt-14">
             <button v-if="hasAnyTrashedItems" @click="showConfirmDeleteAll = true"
-                    class="cursor-pointer text-red-500 hover:text-red-700 mr-3">
+                    class="cursor-pointer text-danger hover:text-danger mr-3">
                 <TrashIcon class="h-5 w-5" aria-hidden="true"/>
             </button>
         </div>

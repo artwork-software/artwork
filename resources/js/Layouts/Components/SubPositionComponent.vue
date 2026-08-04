@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex w-full">
-                <input class="my-2 ml-1 xxsDark rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                <input class="my-2 ml-1 xxsDark rounded-md border border-border px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create"
                        type="text" v-model="subPosition.name"
                        @keyup.enter="$event.target.blur()"
                        @keyup.esc="subPosition.name = editedNameOriginalValue ?? subPosition.name; subPosition.clicked = false"
@@ -88,7 +88,7 @@
                         <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
                             :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
                             @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                            class="bg-secondary-hover flex justify-between items-center border border-gray-200 group">
+                            class="bg-secondary-hover flex justify-between items-center border border-border-subtle group">
                             <div class="flex items-center">
                                 <td v-for="(cell,index) in row.cells"
                                     :key="cell.id"
@@ -103,7 +103,7 @@
                                     </div>
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
                                     <div class="flex items-center cell-button">
@@ -122,14 +122,14 @@
                                             <span
                                                 v-if="isTruncated[cell.id]"
                                                 class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
-                                                       rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                       rounded-xl border border-border-subtle bg-white/95 px-3 py-2 text-xs text-text shadow-lg
                                                        opacity-0 translate-y-1 transition-all duration-150
                                                        group-hover/tt:opacity-100 group-hover/tt:translate-y-0
                                                        whitespace-normal wrap-break-word"
                                             >
                                                 <span
                                                     class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
-                                                           border-l border-t border-gray-200"
+                                                           border-l border-t border-border-subtle"
                                                 />
                                                 {{ String(userShowAccountName ? (cell.display_value ?? cell.value) : (cell.value ?? '')) }}
                                             </span>
@@ -137,7 +137,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
@@ -209,7 +209,7 @@
                             <div v-else class="group">
                                 <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
                                     index <= 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
-                                    cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div
                                         v-if="cell.column.type !== 'subprojects_column_for_group'"
@@ -285,14 +285,14 @@
                                                 <span
                                                     v-if="index < 3 && isTruncated[cell.id]"
                                                     class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
-                                                           rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                           rounded-xl border border-border-subtle bg-white/95 px-3 py-2 text-xs text-text shadow-lg
                                                            opacity-0 translate-y-1 transition-all duration-150
                                                            group-hover/tt:opacity-100 group-hover/tt:translate-y-0
                                                            whitespace-normal wrap-break-word"
                                                 >
                                                     <span
                                                         class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
-                                                               border-l border-t border-gray-200"
+                                                               border-l border-t border-border-subtle"
                                                     />
                                                     {{ String(cell.display_value ?? cell.value ?? '') }}
                                                 </span>
@@ -312,7 +312,7 @@
                                      v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                     <input :ref="`cell-${cell.id}`"
                                            :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                           class="my-2 xsDark appearance-none z-10 rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                                           class="my-2 xsDark appearance-none z-10 rounded-md border border-border px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create"
                                            type="text"
                                            :disabled="!this.$can('edit budget templates') && table.is_template"
                                            v-model="cell.value"
@@ -321,7 +321,7 @@
 
                                 </div>
                                 <div
-                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '', savingCellIds[cell.id] ? 'opacity-50 animate-pulse' : '']"
+                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-danger' : '', savingCellIds[cell.id] ? 'opacity-50 animate-pulse' : '']"
                                     class="my-4 h-6 flex items-center justify-end group"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
@@ -418,7 +418,7 @@
                     :key="column.id"
                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1"
-                         :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : ''">
+                         :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-danger' : ''">
                         <div class="flex group relative justify-end items-center">
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
                                  v-if="subPosition.columnSums?.[column.id]?.hasComments && subPosition.columnSums?.[column.id]?.hasMoneySource"
@@ -1158,7 +1158,7 @@ export default {
             if (cell.value !== cell.verified_value) {
                 if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
                     || mainPosition.is_fixed || subPosition.is_fixed) {
-                    cssString += ' bg-red-300 '
+                    cssString += ' bg-danger '
                     cssString += ' xsWhiteBold '
                 } else {
                     if (cell.column.color !== 'whiteColumn') {

@@ -15,13 +15,13 @@
                 <div class="flex flex-row gap-1">
                     <RefreshIcon :class="[
                         !sageInterfaceIsConfigured() || importProcessing
-                            ? 'bg-gray-600 cursor-not-allowed'
+                            ? 'bg-text-subtle cursor-not-allowed'
                             : 'bg-artwork-buttons-create cursor-pointer',
                         'w-10 h-10 rounded-full text-white p-2'
                     ]" @click="initializeSageImport()" />
                     <TrashIcon :class="[
                         !sageInterfaceIsConfigured() || importProcessing
-                            ? 'bg-gray-600 cursor-not-allowed'
+                            ? 'bg-text-subtle cursor-not-allowed'
                             : 'bg-artwork-buttons-create cursor-pointer',
                         'w-10 h-10 rounded-full text-white p-2'
                     ]" @click="deleteSageData()" />
@@ -31,15 +31,15 @@
 
         <div class="w-1/2 mt-4 grid grid-cols-1 gap-4">
             <BaseInput v-model="sageForm.host" :label="$t('Host')" id="host"/>
-            <div class="text-red-500 text-xs mt-1" v-if="showHostErrorText">
+            <div class="text-danger text-xs mt-1" v-if="showHostErrorText">
                 {{ $t('The host must be specified.') }}
             </div>
             <BaseInput v-model="sageForm.endpoint" id="endpoint" :label="$t('Endpoint')"/>
-            <div class="text-red-500 text-xs mt-1" v-if="showEndpointErrorText">
+            <div class="text-danger text-xs mt-1" v-if="showEndpointErrorText">
                 {{ $t('The end point must be specified.') }}
             </div>
             <BaseInput v-model="sageForm.user" id="user" :label="$t('User')"/>
-            <div class="text-red-500 text-xs mt-1" v-if="showUserErrorText">
+            <div class="text-danger text-xs mt-1" v-if="showUserErrorText">
                 {{ $t('The user must be specified.') }}
             </div>
             <BaseInput type="password" v-model="sageForm.password" :label="$t('Password')" id="password"/>
@@ -51,7 +51,7 @@
                 <div class="flex items-center justify-end w-full h-full">
                     <div class="group relative">
                         <InformationCircleIcon class="w-5 h-5 mr-1"/>
-                        <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-gray-600 text-white p-2">
+                        <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-text-subtle text-white p-2">
                             {{
                                 $t('Is automatically adjusted to the last posting date of the data already imported after the data has been imported.')
                             }}
@@ -120,7 +120,7 @@
                     importProcessing ||
                     ((specificDayImportDateFrom === null || specificDayImportDateFrom === '') &&
                     (!specificDayImportKtr || specificDayImportKtr.trim() === ''))
-                        ? 'bg-gray-600 cursor-not-allowed'
+                        ? 'bg-text-subtle cursor-not-allowed'
                         : 'bg-artwork-buttons-create cursor-pointer',
                     'w-10 h-10 rounded-full text-white p-2'
                 ]" @click="initializeSageImportForSpecificDay()" />
@@ -167,7 +167,7 @@
                 importProcessing ||
                 ((deleteBookingDaysDateFrom === null || deleteBookingDaysDateFrom === '') &&
                 (!deleteBookingDaysKtr || deleteBookingDaysKtr.trim() === ''))
-                    ? 'bg-gray-600 cursor-not-allowed'
+                    ? 'bg-text-subtle cursor-not-allowed'
                     : 'bg-artwork-buttons-create cursor-pointer',
                 'w-10 h-10 rounded-full text-white p-2'
             ]" @click="showDeleteBookingDaysConfirmation = true" />

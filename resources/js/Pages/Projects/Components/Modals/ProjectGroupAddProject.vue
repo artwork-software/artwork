@@ -7,17 +7,17 @@
             </div>
 
             <div class="my-5 flex items-center flex-wrap gap-3">
-                <div v-for="(groupProject, index) in projectGroupForm.projectIdsToAdd" class="group block shrink-0 bg-gray-50 w-fit pr-3 rounded-full border border-gray-300">
+                <div v-for="(groupProject, index) in projectGroupForm.projectIdsToAdd" class="group block shrink-0 bg-surface-sunken w-fit pr-3 rounded-full border border-border">
                     <div class="flex items-center">
                         <div>
                             <img class="inline-block size-9 rounded-full object-cover" :src="groupProject?.key_visual_path ? '/storage/keyVisual/' + groupProject?.key_visual_path : '/storage/logo/artwork_logo_small.svg'" alt="" />
                         </div>
                         <div class="mx-2">
-                            <p class="xsDark group-hover:text-gray-900">{{ groupProject.name}}</p>
+                            <p class="xsDark group-hover:text-text">{{ groupProject.name}}</p>
                         </div>
                         <div class="flex items-center">
                             <button type="button" @click="deleteGroupFormListByIndex(index)">
-                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
                             </button>
                         </div>
                     </div>

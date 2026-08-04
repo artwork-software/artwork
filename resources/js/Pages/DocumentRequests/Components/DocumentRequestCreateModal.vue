@@ -7,24 +7,24 @@
                     <UserSearch v-model="user_query" @userSelected="selectUser" :label="$t('Assign to user')" />
                     <div v-if="selectedUser" class="mt-2 flex items-center">
                         <img class="h-8 w-8 rounded-full object-cover" :src="selectedUser.profile_photo_url" alt="" />
-                        <span class="ml-3 text-sm font-medium text-gray-900">
+                        <span class="ml-3 text-sm font-medium text-text">
                             {{ selectedUser.first_name }} {{ selectedUser.last_name }}
                         </span>
                         <button type="button" @click="selectedUser = null" class="ml-2">
-                            <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4 text-gray-400 hover:text-red-500" />
+                            <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4 text-text-subtle hover:text-danger" />
                         </button>
                     </div>
                 </div>
 
                 <!-- Project -->
                 <div class="col-span-full relative">
-                    <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Project assignment') }}</div>
+                    <div class="text-sm font-medium text-text-muted mb-2">{{ $t('Project assignment') }}</div>
 
                     <!-- Selected Project Chip -->
-                    <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-3 mb-2">
-                        <span class="text-sm text-zinc-700">{{ $t('Connected project:') }}</span>
-                        <span class="font-medium text-zinc-900">{{ selectedProject.name }}</span>
-                        <button type="button" class="ml-auto text-zinc-400 hover:text-rose-600 transition" @click="selectedProject = null">
+                    <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken px-3 py-3 mb-2">
+                        <span class="text-sm text-text-muted">{{ $t('Connected project:') }}</span>
+                        <span class="font-medium text-text">{{ selectedProject.name }}</span>
+                        <button type="button" class="ml-auto text-text-subtle hover:text-danger transition" @click="selectedProject = null">
                             <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                         </button>
                     </div>
@@ -42,9 +42,9 @@
                     </template>
                 </div>
 
-                <hr class="col-span-full border-gray-200">
+                <hr class="col-span-full border-border-subtle">
 
-                <div class="col-span-full text-sm font-medium text-gray-700 mb-2">
+                <div class="col-span-full text-sm font-medium text-text-muted mb-2">
                     {{ $t('Pre-filled document metadata (optional)') }}
                 </div>
 
@@ -57,21 +57,21 @@
                     />
                     <!-- CRM Contact Link -->
                     <div class="mt-2">
-                        <div v-if="selectedCrmContact" class="rounded-md border border-gray-200 bg-gray-50 overflow-hidden">
+                        <div v-if="selectedCrmContact" class="rounded-md border border-border-subtle bg-surface-sunken overflow-hidden">
                             <div class="flex items-center gap-2 px-3 py-2">
                                 <img v-if="selectedCrmContact.profile_photo_url" :src="selectedCrmContact.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover" />
-                                <span class="text-sm text-gray-900 truncate">{{ selectedCrmContact.display_name }}</span>
-                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-gray-500">({{ selectedCrmContact.contact_type.name }})</span>
-                                <button type="button" @click="toggleCrmDetails" class="ml-auto text-gray-400 hover:text-gray-600" :title="$t('Show CRM details')">
+                                <span class="text-sm text-text truncate">{{ selectedCrmContact.display_name }}</span>
+                                <span v-if="selectedCrmContact.contact_type" class="text-xs text-text-subtle">({{ selectedCrmContact.contact_type.name }})</span>
+                                <button type="button" @click="toggleCrmDetails" class="ml-auto text-text-subtle hover:text-text-muted" :title="$t('Show CRM details')">
                                     <PropertyIcon :name="showCrmDetails ? 'IconChevronUp' : 'IconChevronDown'" stroke-width="1.5" class="h-4 w-4" />
                                 </button>
-                                <button type="button" @click="removeCrmContact" class="text-gray-400 hover:text-red-500">
+                                <button type="button" @click="removeCrmContact" class="text-text-subtle hover:text-danger">
                                     <PropertyIcon name="IconX" stroke-width="1.5" class="h-4 w-4" />
                                 </button>
                             </div>
                             <!-- Collapsible CRM Details -->
-                            <div v-if="showCrmDetails" class="border-t border-gray-200 px-3 py-3">
-                                <div v-if="loadingCrmDetails" class="text-center text-sm text-gray-500 py-2">
+                            <div v-if="showCrmDetails" class="border-t border-border-subtle px-3 py-3">
+                                <div v-if="loadingCrmDetails" class="text-center text-sm text-text-subtle py-2">
                                     {{ $t('Loading...') }}
                                 </div>
                                 <div v-else-if="crmContactData && crmVisibleGroups.length > 0" class="space-y-3">
@@ -83,12 +83,12 @@
                                         :editing="false"
                                     />
                                 </div>
-                                <div v-else class="text-sm text-gray-500 py-2">
+                                <div v-else class="text-sm text-text-subtle py-2">
                                     {{ $t('No CRM data available.') }}
                                 </div>
                             </div>
                         </div>
-                        <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                        <button v-else type="button" @click="showCrmSearch = true" class="text-xs text-accent-600 hover:text-accent-700 hover:underline">
                             {{ $t('Link CRM contact') }}
                         </button>
                     </div>
@@ -132,7 +132,7 @@
                                 </ListboxOptions>
                             </transition>
                         </Listbox>
-                        <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                        <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-text-subtle hover:text-danger transition self-center">
                             <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                         </button>
                     </div>
@@ -165,7 +165,7 @@
                                 </ListboxOptions>
                             </transition>
                         </Listbox>
-                        <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                        <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-text-subtle hover:text-danger transition self-center">
                             <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                         </button>
                     </div>

@@ -10,7 +10,7 @@
         <div class="px-6 pb-6 space-y-5">
             <!-- Zeitraum (Projektzeitraum-Bezug) -->
             <div>
-                <p class="text-xs font-medium text-gray-500 mb-1.5">
+                <p class="text-xs font-medium text-text-subtle mb-1.5">
                     {{ $t('Period (projects with events in this range)') }}
                 </p>
                 <div class="flex items-end gap-3">
@@ -21,7 +21,7 @@
 
             <!-- KTO/KST-Freitextfilter mit Live-Trefferzahl -->
             <div>
-                <p class="text-xs font-medium text-gray-500 mb-1.5">
+                <p class="text-xs font-medium text-text-subtle mb-1.5">
                     {{ $t('Filter by account number (prefix match)') }}
                 </p>
                 <BaseInput
@@ -34,35 +34,35 @@
                 <div v-if="prefixInput && matchCounts" class="mt-2 flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                        class="rounded-md border border-accent-200 bg-accent-50 px-2.5 py-1 text-xs font-medium text-accent-700 hover:bg-accent-100 transition"
                         @click="addChip('kto')"
                     >
                         {{ options.ktoColumnName }}: {{ matchCounts.kto }} {{ $t('rows') }}
                     </button>
                     <button
                         type="button"
-                        class="rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                        class="rounded-md border border-accent-200 bg-accent-50 px-2.5 py-1 text-xs font-medium text-accent-700 hover:bg-accent-100 transition"
                         @click="addChip('kst')"
                     >
                         {{ options.kstColumnName }}: {{ matchCounts.kst }} {{ $t('rows') }}
                     </button>
-                    <span class="py-1 text-[11px] text-gray-400">{{ $t('Click to add as filter') }}</span>
+                    <span class="py-1 text-[11px] text-text-subtle">{{ $t('Click to add as filter') }}</span>
                 </div>
 
                 <div v-if="chips.length > 0" class="mt-2 flex flex-wrap gap-1.5">
                     <span
                         v-for="(chip, index) in chips"
                         :key="chip.column + chip.prefix"
-                        class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 border border-gray-200 px-2.5 py-0.5 text-xs text-gray-700"
+                        class="inline-flex items-center gap-1.5 rounded-full bg-surface-sunken border border-border-subtle px-2.5 py-0.5 text-xs text-text-muted"
                     >
                         {{ chip.column === 'kto' ? options.ktoColumnName : options.kstColumnName }}
                         {{ $t('starts with') }} {{ chip.prefix }}
-                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="chips.splice(index, 1)">
+                        <button type="button" class="text-text-subtle hover:text-text-muted" @click="chips.splice(index, 1)">
                             <IconX class="size-3" />
                         </button>
                     </span>
                 </div>
-                <p v-if="chips.length > 1" class="mt-1 text-[11px] text-gray-400">
+                <p v-if="chips.length > 1" class="mt-1 text-[11px] text-text-subtle">
                     {{ $t('Chips of the same column are OR-combined, different columns AND-combined.') }}
                 </p>
             </div>
@@ -85,13 +85,13 @@
             <!-- Sage-Optionen nur mit aktiver Schnittstelle -->
             <label
                 v-if="options?.sageApiEnabled"
-                class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none"
+                class="flex items-center gap-2 text-sm text-text-muted cursor-pointer select-none"
             >
                 <input type="checkbox" class="input-checklist !h-3.5 !w-3.5" v-model="restrictBookings" />
                 {{ $t('Restrict Sage bookings additionally to the document date within the period') }}
             </label>
 
-            <p v-if="exportError" class="text-sm text-rose-600">
+            <p v-if="exportError" class="text-sm text-danger">
                 {{ $t('Export failed. Please try again.') }}
             </p>
 

@@ -33,17 +33,17 @@
         </template>
     </Galleria>
 
-    <td v-if="enableAddArticleToBasket" class="absolute inset-0 bg-zinc-500/30 opacity-0 hover:opacity-100 duration-200 cursor-pointer z-10 pointer-events-none hover:pointer-events-auto">
+    <td v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle opacity-0 hover:opacity-100 duration-200 cursor-pointer z-10 pointer-events-none hover:pointer-events-auto">
         <div class="flex items-center justify-center h-full w-full">
             <div class="relative pointer-events-auto">
-                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-2 ring-white text-blue-500 text-xs flex items-center justify-center">
+                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-2 ring-white text-accent-600 text-xs flex items-center justify-center">
                     {{ findBasketForArticle(item.id) ? findBasketForArticle(item.id).quantity : 0 }}
                 </span>
                 <BaseUIButton :label="$t('Add to Basket')" use-translation icon="IconBasketPlus" @click="$emit('add-to-basket', item.id)" />
             </div>
         </div>
     </td>
-    <td v-if="!hideImage" class="sticky left-0 z-10 bg-inherit p-3 text-sm font-medium whitespace-nowrap text-gray-900 first-letter:capitalize">
+    <td v-if="!hideImage" class="sticky left-0 z-10 bg-inherit p-3 text-sm font-medium whitespace-nowrap text-text first-letter:capitalize">
         <div class="flex justify-center">
             <img
                 :src="getMainImageInImage.image"
@@ -61,15 +61,14 @@
             <span class="truncate">{{ item?.name }}</span>
             <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 text-secondary font-semibold ml-2 shrink-0" />
         </div>
-        <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-gray-400">
+        <div v-if="item?.inventory_number" class="text-xs font-mono font-normal text-text-subtle">
             {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
         </div>
     </td>
-    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap" :class="[hideImage ? 'left-[256px]' : 'left-[336px]', item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create']">{{ formatQuantity(item?.quantity) }}</td>
+    <td class="sticky z-10 bg-inherit p-3 text-sm whitespace-nowrap" :class="[hideImage ? 'left-[256px]' : 'left-[336px]', item.quantity === 0 ? 'text-danger' : 'text-artwork-buttons-create']">{{ formatQuantity(item?.quantity) }}</td>
     <td class="p-3 text-sm whitespace-nowrap font-semibold truncate"
-        :class="[
-            isNumericProperty(property) ? 'text-right tabular-nums' : '',
-            isEmptyProperty(property) ? 'text-gray-300 font-normal' : 'text-secondary'
+        :class="[ isNumericProperty(property) ? 'text-right tabular-nums' : '',
+            isEmptyProperty(property) ? 'text-text-subtle font-normal' : 'text-secondary'
         ]"
         v-for="property in columnProperties" :key="property.id">
         <template v-if="cellDisplays[property.id].type === 'file'">

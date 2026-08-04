@@ -2,7 +2,7 @@
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
             </TransitionChild>
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -10,7 +10,7 @@
                         <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
                                     <span class="sr-only">Close</span>
                                     <XIcon class="h-6 w-6" aria-hidden="true" />
                                 </button>
@@ -33,7 +33,7 @@
                                                        onfocus="(this.type='time')"
                                                        :placeholder="$t('Start*')"
                                                        v-model="addTimeLineForm.start"
-                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"
                                                        required
                                                        @focusout="checkTime()"
                                                 />
@@ -45,18 +45,18 @@
                                                        v-model="addTimeLineForm.end"
                                                        maxlength="3"
                                                        required
-                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"
                                                        @focusout="checkTime()"
                                                 />
                                             </div>
-                                            <span class="mt-2 text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
+                                            <span class="mt-2 text-danger text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
                                             <div class="mt-2 col-span-2">
                                                 <textarea
                                                     v-model="addTimeLineForm.description"
                                                     rows="4"
                                                     name="comment"
                                                     id="comment"
-                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
+                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-border"
                                                 />
                                             </div>
                                         </div>

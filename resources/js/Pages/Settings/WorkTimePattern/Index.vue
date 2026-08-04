@@ -17,7 +17,7 @@
         />
 
             <div class="card white p-5 mt-5">
-                <ul role="list" class="divide-y divide-gray-100" v-if="workTimePatterns.length > 0">
+                <ul role="list" class="divide-y divide-border-subtle" v-if="workTimePatterns.length > 0">
                     <li v-for="workTime in workTimePatterns" :key="workTime.id" class="flex justify-between gap-x-6 py-5">
                         <SingleWorkTimePattern :work-time-pattern="workTime" />
                     </li>

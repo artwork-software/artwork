@@ -2,16 +2,16 @@
     <div class="mx-auto w-full max-w-4xl">
         <div class="flex flex-col space-y-6">
             <!-- Titel + Hinweis -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <BaseInput id="monthly-title" v-model="pdf.title" :label="$t('Heading')" :placeholder="$t('Monthly overview')" />
 
                 <div
                     v-if="showModalInformation"
-                    class="rounded-xl border border-blue-200 bg-blue-50/70 p-4"
+                    class="rounded-xl border border-info-border bg-info-surface/70 p-4"
                 >
                     <div class="flex items-start gap-x-3">
-                        <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-blue-500"/>
-                        <p class="text-sm text-blue-500">
+                        <PropertyIcon name="IconExclamationCircle" class="size-5 min-h-5 min-w-5 text-info"/>
+                        <p class="text-sm text-info">
                             {{
                                 $t(
                                     'If a project is specified, the months in which the project takes place are automatically determined and one page per month is created. If no project is specified, you can select start and end month yourself.'
@@ -21,7 +21,7 @@
                     </div>
                     <button
                         type="button"
-                        class="mt-2 block w-fit text-xs text-red-500 underline"
+                        class="mt-2 block w-fit text-xs text-danger underline"
                         @click="showModalInformation = false"
                     >
                         {{ $t('Close note') }}
@@ -30,8 +30,8 @@
             </section>
 
             <!-- Projektwahl / Zeitraum -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-                <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-4" :class="pdfSelectedProject ? 'pt-3' : 'pt-8'">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
+                <div class="rounded-xl border border-border-subtle bg-surface-sunken px-4" :class="pdfSelectedProject ? 'pt-3' : 'pt-8'">
                     <ProjectSearch
                         v-if="!pdfSelectedProject"
                         @project-selected="addProjectToPdf"
@@ -39,35 +39,35 @@
                         get-first-last-event
                     />
                     <div v-else class="flex flex-col gap-2">
-                        <h3 class="text-base font-semibold text-zinc-900">
+                        <h3 class="text-base font-semibold text-text">
                             {{ pdfSelectedProject.name }}
                         </h3>
                         <p
-                            class="text-sm text-zinc-700"
+                            class="text-sm text-text-muted"
                             v-if="pdfSelectedProject?.first_event && pdfSelectedProject?.last_event"
                         >
                             {{ $t('Project period') }}:
-                            <span class="text-blue-700" v-if="pdfSelectedProject.first_event.start_time">
+                            <span class="text-accent-700" v-if="pdfSelectedProject.first_event.start_time">
                               {{ pdfSelectedProject.first_event.start_time }}
                             </span>
                             –
-                            <span class="text-blue-700" v-if="pdfSelectedProject.last_event.end_time">
+                            <span class="text-accent-700" v-if="pdfSelectedProject.last_event.end_time">
                               {{ pdfSelectedProject.last_event.end_time }}
                             </span>
                         </p>
-                        <p v-else class="text-sm text-zinc-700">
+                        <p v-else class="text-sm text-text-muted">
                             {{ $t('Project period') }}:
-                            <span class="text-blue-700" v-if="pdfSelectedProject.firstEventStart">
+                            <span class="text-accent-700" v-if="pdfSelectedProject.firstEventStart">
                               {{ pdfSelectedProject.firstEventStart }}
                             </span>
                             –
-                            <span class="text-blue-700" v-if="pdfSelectedProject.lastEventEnd">
+                            <span class="text-accent-700" v-if="pdfSelectedProject.lastEventEnd">
                               {{ pdfSelectedProject.lastEventEnd }}
                             </span>
                         </p>
                         <button
                             type="button"
-                            class="w-fit text-left text-xs text-blue-700 underline"
+                            class="w-fit text-left text-xs text-accent-700 underline"
                             @click="pdfSelectedProject = null"
                         >
                             {{ $t('Cancel project selection') }}
@@ -83,12 +83,12 @@
                 <div v-if="!pdfSelectedProject" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <div class="flex items-center gap-1.5 mb-0.5">
-                            <label class="text-sm font-medium text-zinc-700" for="startMonth">
+                            <label class="text-sm font-medium text-text-muted" for="startMonth">
                                 {{ $t('Day of start month') }}
                             </label>
                             <div class="group/info relative">
-                                <IconInfoCircle class="size-4 text-zinc-400 cursor-help" />
-                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white shadow-lg">
+                                <IconInfoCircle class="size-4 text-text-subtle cursor-help" />
+                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-surface-inverse px-3 py-2 text-xs text-text-inverse shadow-lg">
                                     {{ $t('Select a day of the month in which the export should start. The entire month of the selected day will be used for the export.') }}
                                 </span>
                             </div>
@@ -97,12 +97,12 @@
                     </div>
                     <div>
                         <div class="flex items-center gap-1.5 mb-0.5">
-                            <label class="text-sm font-medium text-zinc-700" for="endMonth">
+                            <label class="text-sm font-medium text-text-muted" for="endMonth">
                                 {{ $t('Day of end month') }}
                             </label>
                             <div class="group/info relative">
-                                <IconInfoCircle class="size-4 text-zinc-400 cursor-help" />
-                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-zinc-800 px-3 py-2 text-xs text-white shadow-lg">
+                                <IconInfoCircle class="size-4 text-text-subtle cursor-help" />
+                                <span class="invisible group-hover/info:visible absolute left-5 bottom-0 z-10 w-max max-w-xs rounded-lg bg-surface-inverse px-3 py-2 text-xs text-text-inverse shadow-lg">
                                     {{ $t('Select a day of the month in which the export should end. The entire month of the selected day will be used for the export.') }}
                                 </span>
                             </div>
@@ -113,23 +113,23 @@
             </section>
 
             <!-- Filter -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                 <!-- Gespeicherte Filter Presets -->
-                <div v-if="savedFilterPresets.length > 0" class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
-                    <label class="block text-sm font-medium text-zinc-700 mb-2">
+                <div v-if="savedFilterPresets.length > 0" class="mb-4 pb-4 border-b-2 border-dashed border-border">
+                    <label class="block text-sm font-medium text-text-muted mb-2">
                         {{ $t('Saved filter presets') }}
                     </label>
                     <div class="flex flex-wrap items-center gap-2">
                         <div
                             v-for="preset in savedFilterPresets"
                             :key="preset.id"
-                            class="group flex items-center bg-green-50 px-3 py-1.5 rounded-full border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                            class="group flex items-center bg-success-surface px-3 py-1.5 rounded-full border border-success-border cursor-pointer hover:bg-success-border/40 transition-colors"
                             @click="applyFilterPreset(preset)"
                         >
-                            <span class="text-green-700 text-xs font-medium">{{ preset.name }}</span>
+                            <span class="text-success text-xs font-medium">{{ preset.name }}</span>
                             <button
                                 type="button"
-                                class="ml-2 text-green-500 hover:text-red-500 transition-colors"
+                                class="ml-2 text-success hover:text-danger transition-colors"
                                 @click.stop="confirmDeletePreset(preset)"
                             >
                                 <component :is="IconX" class="size-3.5" />
@@ -139,15 +139,15 @@
                 </div>
 
                 <!-- Aktive Filter + Speichern Button -->
-                <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+                <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-zinc-700">
+                        <label class="block text-sm font-medium text-text-muted">
                             {{ $t('Active filters') }}
                         </label>
                         <button
                             v-if="activeFilters.length > 0"
                             type="button"
-                            class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                            class="text-xs text-accent-600 hover:text-accent-700 font-medium"
                             @click="showSavePresetModal = true"
                         >
                             {{ $t('Save current filters as preset') }}
@@ -157,18 +157,18 @@
                         <div
                             v-for="(filter, index) in activeFilters"
                             :key="`${filter.id}-${filter.value ?? ''}-${index}`"
-                            class="group block cursor-pointer shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border border-blue-200"
+                            class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200"
                         >
                             <div class="flex items-center">
                                 <div class="mx-2">
-                                    <p class="text-blue-500 text-xs group-hover:text-blue-600">
+                                    <p class="text-accent-600 text-xs group-hover:text-accent-700">
                                         <span v-if="filter.id === 'adjoiningNoAudience' || filter.id === 'adjoiningNotLoud'">{{ $t(filter?.name)}}</span>
                                         <span v-else>{{ filter?.name }}</span>
                                     </p>
                                 </div>
                                 <div class="flex items-center">
                                     <button type="button" @click="removeActiveFilter(filter)">
-                                        <component :is="IconX" class="size-4 text-blue-500 hover:text-error" />
+                                        <component :is="IconX" class="size-4 text-accent-600 hover:text-error" />
                                     </button>
                                 </div>
                             </div>
@@ -178,7 +178,7 @@
 
                 <div class="space-y-1">
                     <div v-for="(filterMainCategory, mainKey) in filteredOptionsByCategories" :key="mainKey" class="py-1" v-show="hasNonEmptySubcategory(filterMainCategory)">
-                        <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+                        <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                             {{ $t(mainKey) }}
                         </div>
 
@@ -186,7 +186,7 @@
                             <div v-for="(filterSubCategory, subKey) in filterMainCategory" :key="subKey" v-show="filterSubCategory.length > 0">
                                 <div class="card white px-4 ">
                                     <div class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3" @click="toggleOpen(mainKey, subKey)">
-                                        <div class="text-sm text-gray-900">
+                                        <div class="text-sm text-text">
                                             {{ $t(subKey) }}
                                         </div>
                                         <div class="flex items-center gap-3">
@@ -198,7 +198,7 @@
                                                 >
                                                     {{ $t('Select all') }}
                                                 </button>
-                                                <span class="text-zinc-300 text-xs">•</span>
+                                                <span class="text-text-subtle text-xs">•</span>
                                                 <button
                                                     type="button"
                                                     class="text-[11px] text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
@@ -208,12 +208,12 @@
                                                 </button>
                                             </div>
                                             <span
-                                                class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                                                class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                                                 :class="filterSubCategory.filter(filter => filter.checked).length > 0 ? 'visible' : 'invisible'"
                                             >
                                                 {{ filterSubCategory.filter(filter => filter.checked).length }} {{ $t('selected') }}
                                             </span>
-                                            <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
+                                            <component :is="IconChevronDown" class="w-4 h-4 text-text-subtle" :class="isOpen(mainKey, subKey) ? 'rotate-180' : ''" />
                                         </div>
                                     </div>
 
@@ -229,9 +229,9 @@
                                                                 :aria-describedby="removeSpaceFromKey(filter.name) + '-description'"
                                                                 :name="removeSpaceFromKey(filter.name)"
                                                                 type="checkbox"
-                                                                class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                                                                class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto"
                                                             />
-                                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-border-strong" viewBox="0 0 14 14" fill="none">
                                                                 <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                                 <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                             </svg>
@@ -241,7 +241,7 @@
                                                         <div v-if="filter.icon" class="flex items-center gap-2">
                                                             <component :is="filter.icon" class="size-4" stroke-width="1.5"/>
                                                         </div>
-                                                        <label :for="removeSpaceFromKey(filter.name)" class="text-gray-900">
+                                                        <label :for="removeSpaceFromKey(filter.name)" class="text-text">
                                                             {{ filter.name }}
                                                         </label>
                                                     </div>
@@ -257,21 +257,21 @@
             </section>
 
             <!-- Papierformat + Orientierung + DPI -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <!-- Papierformat -->
                     <div class="space-y-2">
                         <Listbox as="div" v-model="selectedPaperSize">
-                            <ListboxLabel class="block text-sm font-medium text-zinc-700">
+                            <ListboxLabel class="block text-sm font-medium text-text-muted">
                                 {{ $t('Paper size') }}
                             </ListboxLabel>
                             <div class="relative mt-1">
                                 <ListboxButton
-                                    class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm hover:bg-zinc-50"
+                                    class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white px-4 py-3 text-left text-sm hover:bg-surface-sunken"
                                 >
                                     <div class="block truncate">{{ selectedPaperSize.name }}</div>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <svg class="h-5 w-5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <svg class="h-5 w-5 text-text-subtle" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                                   d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                         </svg>
@@ -283,7 +283,7 @@
                                     leave-to-class="opacity-0"
                                 >
                                     <ListboxOptions
-                                        class="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-2 text-sm shadow-lg ring-1 ring-black/10 focus:outline-none"
+                                        class="absolute z-10 mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-2 text-sm shadow-lg ring-1 ring-black/10"
                                     >
                                         <ListboxOption
                                             v-for="paperSize in paperSizes"
@@ -295,7 +295,7 @@
                                             <li
                                                 :class="[
                                                     'relative cursor-pointer select-none py-2 pl-3 pr-9',
-                                                    active ? 'bg-zinc-900 text-white' : 'text-zinc-900'
+                                                    active ? 'bg-surface-inverse text-text-inverse' : 'text-text'
                                                 ]"
                                             >
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
@@ -304,7 +304,7 @@
                                                 <span
                                                     v-if="selected"
                                                     :class="[
-                                                        active ? 'text-white' : 'text-zinc-900',
+                                                        active ? 'text-text-inverse' : 'text-text',
                                                         'absolute inset-y-0 right-0 flex items-center pr-4'
                                                     ]"
                                                 >
@@ -323,7 +323,7 @@
 
                     <!-- Orientierung -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-zinc-700">
+                        <label class="block text-sm font-medium text-text-muted">
                             {{ $t('Paper orientation') }}
                         </label>
                         <fieldset>
@@ -346,15 +346,15 @@
                                     <label
                                         :for="'monthly-' + paperOrientation.id"
                                         class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                        peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
-                                        border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
-                                        :class="orientationDisabled ? 'opacity-60 cursor-not-allowed' : ''"
+                                        peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
+                                        border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-primary"
+                                        :class="orientationDisabled ? 'text-text-subtle cursor-not-allowed' : ''"
                                     >
                                         {{ paperOrientation.title }}
                                     </label>
                                 </div>
                             </div>
-                            <span class="mt-2 block text-xs text-red-500" v-if="orientationDisabled">
+                            <span class="mt-2 block text-xs text-danger" v-if="orientationDisabled">
                                 {{ $t('The A6 format is only possible in landscape format.') }}
                             </span>
                         </fieldset>
@@ -362,7 +362,7 @@
 
                     <!-- Color Source Toggle -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-zinc-700">
+                        <label class="block text-sm font-medium text-text-muted">
                             {{ $t('Event color') }}
                         </label>
                         <fieldset class="flex gap-2">
@@ -385,8 +385,8 @@
                                 <label
                                     :for="`monthly-colorSource-${mode.id}`"
                                     class="block cursor-pointer rounded-xl border px-4 py-3 text-sm transition
-                                    peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white
-                                    border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50 hover:text-primary"
+                                    peer-checked:border-surface-inverse peer-checked:bg-surface-inverse peer-checked:text-text-inverse
+                                    border-border-subtle bg-white text-text hover:bg-surface-sunken hover:text-primary"
                                 >
                                     {{ mode.label }}
                                 </label>

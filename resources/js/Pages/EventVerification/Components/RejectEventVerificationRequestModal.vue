@@ -15,7 +15,7 @@
 
             <div class="flex items-center justify-between mt-5">
                 <FormButton
-                    class="bg-red-500 hover:bg-red-600"
+                    class="bg-danger hover:bg-danger"
                     @click="rejectRequest()"
                     :text="$t('Reject Request')"
                 />

@@ -22,7 +22,7 @@
                 />
                 <ComboboxButton :class="buttonClass">
                     <slot name="button-icon" :open="open">
-                        <IconSelector class="size-5 text-gray-400" aria-hidden="true" />
+                        <IconSelector class="size-5 text-text-subtle" aria-hidden="true" />
                     </slot>
                 </ComboboxButton>
             </div>
@@ -54,7 +54,7 @@
                   </span>
                                     <span
                                         v-if="selected"
-                                        :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']"
+                                        :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-accent-600']"
                                     >
                     <IconCheck class="size-5" aria-hidden="true" />
                   </span>
@@ -66,14 +66,14 @@
                     <!-- Loading / Empty States -->
                     <div
                         v-else-if="loading"
-                        class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-gray-500"
+                        class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-text-subtle"
                     >
                         <slot name="loading">Loading…</slot>
                     </div>
 
                     <div
                         v-else
-                        class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-gray-500"
+                        class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-text-subtle"
                     >
                         <slot name="empty">{{ emptyText }}</slot>
                     </div>
@@ -148,7 +148,7 @@ const props = defineProps({
     inputClass: {
         type: String,
         default:
-            'block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-gray-900 placeholder:text-gray-400',
+            'block w-full ring-0 border-none focus:ring-0 rounded-md bg-white py-1.5 pr-12 pl-3 text-xs text-text placeholder:text-text-subtle',
     },
     buttonClass: {
         type: String,
@@ -164,8 +164,8 @@ const props = defineProps({
         type: String,
         default: 'relative cursor-default py-2 pr-9 pl-3 select-none',
     },
-    activeClass: { type: String, default: 'bg-indigo-600 text-white outline-hidden' },
-    inactiveClass: { type: String, default: 'text-gray-900' },
+    activeClass: { type: String, default: 'bg-accent-600 text-white outline-hidden' },
+    inactiveClass: { type: String, default: 'text-text' },
 })
 
 const emit = defineEmits<{

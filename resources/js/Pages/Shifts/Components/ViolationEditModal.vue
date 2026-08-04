@@ -20,10 +20,10 @@
                         :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
                     ></span>
                     <div>
-                        <h4 class="font-semibold text-zinc-900">
+                        <h4 class="font-semibold text-text">
                             {{ violation.shift_rule?.name }}
                         </h4>
-                        <p class="mt-0.5 text-xs text-zinc-600">
+                        <p class="mt-0.5 text-xs text-text-muted">
                             {{ violation.shift_rule?.description }}
                         </p>
                     </div>
@@ -31,15 +31,15 @@
             </div>
 
             <!-- Violation details -->
-            <div class="grid grid-cols-2 gap-4 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-3">
+            <div class="grid grid-cols-2 gap-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
                 <div>
-                    <label class="block text-[11px] font-medium text-zinc-500 mb-0.5">{{ $t('Date') }}</label>
-                    <p class="text-sm text-zinc-900">{{ formatDate(violation.violation_date) }}</p>
+                    <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Date') }}</label>
+                    <p class="text-sm text-text">{{ formatDate(violation.violation_date) }}</p>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-medium text-zinc-500 mb-0.5">{{ $t('Severity') }}</label>
+                    <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Severity') }}</label>
                     <span
-                        :class="violation.severity === 'error' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'"
+                        :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
                         class="inline-flex px-2 py-0.5 text-[11px] font-semibold rounded-full"
                     >
                         {{ violation.severity === 'error' ? $t('Error') : $t('Warning') }}
@@ -48,40 +48,40 @@
             </div>
 
             <!-- Manual info -->
-            <div v-if="violation.is_manual" class="rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-3">
-                <label class="block text-[11px] font-medium text-zinc-500 mb-0.5">{{ $t('Manual violation') }}</label>
-                <p v-if="violation.created_by_user" class="text-xs text-zinc-700">
+            <div v-if="violation.is_manual" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+                <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Manual violation') }}</label>
+                <p v-if="violation.created_by_user" class="text-xs text-text-muted">
                     {{ $t('Created by') }}: {{ violation.created_by_user?.first_name }} {{ violation.created_by_user?.last_name }}
                 </p>
-                <p v-if="violation.reason" class="text-xs text-zinc-600 mt-1">
+                <p v-if="violation.reason" class="text-xs text-text-muted mt-1">
                     {{ $t('Reason') }}: {{ violation.reason }}
                 </p>
             </div>
 
             <!-- Violation data details -->
-            <div v-if="violationDetails.length" class="rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-3">
-                <label class="block text-[11px] font-medium text-zinc-500 mb-1">{{ $t('Details') }}</label>
-                <div v-for="detail in violationDetails" :key="detail.key" class="text-xs text-zinc-700">
+            <div v-if="violationDetails.length" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+                <label class="block text-[11px] font-medium text-text-subtle mb-1">{{ $t('Details') }}</label>
+                <div v-for="detail in violationDetails" :key="detail.key" class="text-xs text-text-muted">
                     <span class="font-medium">{{ detail.label }}:</span> {{ detail.value }}
                 </div>
             </div>
 
             <!-- Compensation days assigned -->
-            <div v-if="violation.compensation_days" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <div v-if="violation.compensation_days" class="rounded-xl border border-success-border bg-success-surface px-4 py-3">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
-                        <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-                        <span class="text-xs font-semibold text-emerald-800">{{ $t('Compensation days assigned to account') }}</span>
+                        <span class="inline-block h-2 w-2 rounded-full bg-success"></span>
+                        <span class="text-xs font-semibold text-success">{{ $t('Compensation days assigned to account') }}</span>
                     </div>
                     <button
                         type="button"
-                        class="text-[11px] text-emerald-600 hover:text-emerald-800 underline"
+                        class="text-[11px] text-success hover:text-success underline"
                         @click="isEditing = true"
                     >
                         {{ $t('Edit') }}
                     </button>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-xs text-emerald-700">
+                <div class="grid grid-cols-2 gap-2 text-xs text-success">
                     <div>
                         <span class="font-medium">{{ $t('Compensation days') }}:</span>
                         {{ violation.compensation_days }}
@@ -99,8 +99,8 @@
 
             <!-- Edit compensation form -->
             <template v-if="!violation.compensation_days || isEditing">
-                <div class="space-y-4 rounded-xl border border-zinc-200 px-4 py-3">
-                    <h4 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                <div class="space-y-4 rounded-xl border border-border-subtle px-4 py-3">
+                    <h4 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                         {{ $t('Compensation days') }}
                     </h4>
 
@@ -113,7 +113,7 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-500 mb-1">
+                            <label class="block text-[11px] font-medium text-text-subtle mb-1">
                                 {{ $t('Substitute days off') }}
                             </label>
                             <BaseInput
@@ -126,12 +126,12 @@
                                 :step="0.5"
                                 no-margin-top
                             />
-                            <p v-if="processForm.errors.compensation_days" class="mt-1 text-xs text-red-500">
+                            <p v-if="processForm.errors.compensation_days" class="mt-1 text-xs text-danger">
                                 {{ $t(processForm.errors.compensation_days) }}
                             </p>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-500 mb-1">
+                            <label class="block text-[11px] font-medium text-text-subtle mb-1">
                                 {{ $t('Deadline until granted') }}
                             </label>
                             <BaseInput
@@ -142,14 +142,14 @@
                                 :show-label="false"
                                 no-margin-top
                             />
-                            <p v-if="processForm.errors.compensation_deadline" class="mt-1 text-xs text-red-500">
+                            <p v-if="processForm.errors.compensation_deadline" class="mt-1 text-xs text-danger">
                                 {{ $t(processForm.errors.compensation_deadline) }}
                             </p>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-medium text-zinc-500 mb-1">
+                        <label class="block text-[11px] font-medium text-text-subtle mb-1">
                             {{ $t('Reason') }}
                         </label>
                         <BaseTextarea
@@ -171,23 +171,23 @@
             </template>
 
             <!-- Ignored info -->
-            <div v-if="violation.status === 'ignored'" class="rounded-lg border border-zinc-200 bg-zinc-50/70 px-3 py-3">
-                <label class="block text-[11px] font-medium text-zinc-500 mb-0.5">{{ $t('Ignore reason') }}</label>
-                <p class="text-xs text-zinc-700">{{ violation.ignore_reason || '-' }}</p>
-                <p v-if="violation.resolved_by_user" class="text-xs text-zinc-500 mt-1">
+            <div v-if="violation.status === 'ignored'" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+                <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Ignore reason') }}</label>
+                <p class="text-xs text-text-muted">{{ violation.ignore_reason || '-' }}</p>
+                <p v-if="violation.resolved_by_user" class="text-xs text-text-subtle mt-1">
                     {{ $t('Ignored by') }}: {{ violation.resolved_by_user?.first_name }} {{ violation.resolved_by_user?.last_name }}
                 </p>
             </div>
 
             <!-- Inline ignore reason input -->
-            <div v-if="showIgnoreInput" class="space-y-3 rounded-xl border border-red-200 bg-red-50/50 px-4 py-3">
-                <h4 class="text-xs font-semibold text-red-800">{{ $t('Ignore rule violation') }}</h4>
+            <div v-if="showIgnoreInput" class="space-y-3 rounded-xl border border-danger-border bg-danger-surface px-4 py-3">
+                <h4 class="text-xs font-semibold text-danger">{{ $t('Ignore rule violation') }}</h4>
                 <BaseTextarea
                     id="ignore_reason"
                     v-model="ignoreReason"
                     :label="$t('Reason for ignoring')"
                 />
-                <p v-if="ignoreError" class="text-xs text-red-500">{{ $t('Reason for ignoring') }}</p>
+                <p v-if="ignoreError" class="text-xs text-danger">{{ $t('Reason for ignoring') }}</p>
                 <div class="flex items-center gap-2">
                     <BaseUIButton
                         :label="$t('Confirm ignore')"
@@ -206,7 +206,7 @@
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-between pt-2 border-t border-zinc-100 mt-2">
+            <div class="flex justify-between pt-2 border-t border-border-subtle mt-2">
                 <div class="flex items-center gap-2">
                     <BaseUIButton
                         :label="$t('Cancel')"

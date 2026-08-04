@@ -18,7 +18,7 @@
                                 </div>
                                 <div v-else class="flex items-center w-60">
                                     <div>
-                                        <input type="text" ref="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        <input type="text" ref="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"/>
                                     </div>
                                     <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                 </div>
@@ -32,7 +32,7 @@
                                     </div>
                                     <SwitchGroup as="div" class="flex items-center">
                                         <Switch v-model="showOnlyMyProjects"
-                                                :class="[showOnlyMyProjects ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                                                :class="[showOnlyMyProjects ? 'bg-success' : 'bg-border-subtle', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
                                             <span class="sr-only">Use setting</span>
                                             <span aria-hidden="true"
                                                   :class="[showOnlyMyProjects ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
@@ -102,7 +102,7 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center justify-end py-1">
-                                        <div class="text-xs cursor-pointer hover:text-gray-200 transition-all duration-150 ease-in-out" @click="this.applyFiltersAndSort()">
+                                        <div class="text-xs cursor-pointer hover:text-text-subtle transition-all duration-150 ease-in-out" @click="this.applyFiltersAndSort()">
                                             {{ $t('Apply') }}
                                         </div>
                                     </div>
@@ -231,14 +231,14 @@
 
         <!-- Selection-mode action bar (mirrors the calendar multi-edit bottom bar) -->
         <div v-if="selectionMode"
-             class="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur px-6 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
+             class="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-white/95 backdrop-blur px-6 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
             <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
                 <label class="flex items-center gap-2 cursor-pointer text-sm text-secondary">
                     <input
                         type="checkbox"
                         :checked="allOnPageSelected"
                         @change="toggleSelectAllOnPage"
-                        class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                        class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
                     />
                     {{ $t('Select all on this page') }}
                     <span class="ml-2 text-secondary">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
@@ -250,7 +250,7 @@
                     <button
                         type="button"
                         class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
-                        :class="selectedProjectIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
+                        :class="selectedProjectIds.length === 0 ? 'bg-border cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover'"
                         :disabled="selectedProjectIds.length === 0"
                         @click="openBulkDeleteModal"
                     >

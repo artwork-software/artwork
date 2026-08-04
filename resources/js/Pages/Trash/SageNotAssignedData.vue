@@ -5,7 +5,7 @@
         @delete-all="showConfirmDeleteAll = true"
     />
     <div v-for="sageNotAssignedData in sageNotAssignedDataTrashed.data" :key="sageNotAssignedData.id"
-         class="flex w-full bg-white my-2 border border-gray-200">
+         class="flex w-full bg-white my-2 border border-border-subtle">
         <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="sageNotAssignedData.hidden = !sageNotAssignedData.hidden">
             <ChevronUpIcon v-if="sageNotAssignedData.hidden === true"
                            class="h-6 w-6 text-white my-auto"
@@ -17,7 +17,7 @@
         <div class="flex mt-8 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                    <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                    <span class="text-2xl leading-6 font-bold font-lexend text-text">
                     {{ sageNotAssignedData.buchungstext }}
                     </span>
                 </div>
@@ -39,7 +39,7 @@
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-surface-inverse ring-1 ring-black ring-opacity-5 divide-y divide-white/10">
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <Link method="patch"

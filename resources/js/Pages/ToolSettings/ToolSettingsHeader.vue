@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconSettings"
                 :title="$t('Toolsettings')"
-                icon-bg-class="bg-blue-600/10 text-blue-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="$t('Define global settings for your artwork.')"
                 :search-enabled="false"
             />

@@ -14,7 +14,7 @@
                 />
 
                 <!-- Users -->
-                <div class="bg-gray-50 rounded-xl p-5">
+                <div class="bg-surface-sunken rounded-xl p-5">
                     <h3 class="headline4">{{ $t('Checklist users') }}</h3>
                     <AlertComponent
                         class="mt-3"

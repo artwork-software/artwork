@@ -26,22 +26,22 @@
 
                     <div class="col-span-full" v-if="(property?.type !== 'room') && (property?.type !== 'manufacturer')">
                         <Listbox as="div" v-model="selectedType" v-slot="{ open }">
-                            <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
+                            <ListboxLabel class="block text-sm/6 font-medium text-text">
                                 {{ $t('Select a data type') }}
                             </ListboxLabel>
                             <div class="relative mt-2">
                                 <ListboxButton class="menu-button">
                                     <div class="col-start-1 row-start-1 xsDark truncate pr-6">{{ selectedType?.name ? $t(selectedType?.name) : '' }}</div>
-                                    <component :is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
+                                    <component :is="IconChevronDown" class="col-start-1 row-start-1 size-5 self-center justify-self-end text-text-subtle sm:size-4" :class="open ? 'rotate-180' : '' " aria-hidden="true" />
                                 </ListboxButton>
 
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm">
                                         <ListboxOption as="template" v-for="type in types" :key="type.type" :value="type" v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-indigo-600 text-white outline-hidden' : 'text-gray-900', 'relative cursor-default py-2 pr-9 pl-3 select-none']">
+                                            <li :class="[active ? 'bg-accent-600 text-white outline-hidden' : 'text-text', 'relative cursor-default py-2 pr-9 pl-3 select-none']">
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ $t(type.name) }}</span>
 
-                                                <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                     <component :is="IconCheck" class="size-5" aria-hidden="true" />
                                                 </span>
                                             </li>
@@ -59,14 +59,14 @@
                                 v-model="propertyForm.select_values[index]"
                                 :label="$t('Selection value {index}', {index: index + 1})"
                             />
-                            <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-red-500 hover:text-red-700">
+                            <button type="button" @click="propertyForm.select_values.splice(index, 1)" class="text-danger hover:text-danger">
                                 <component :is="IconX" class="size-5" aria-hidden="true" />
                             </button>
 
                         </div>
 
                         <div class="flex items-center justify-end">
-                            <button type="button" @click="propertyForm.select_values.push('')" class="text-gray-500 text-xs hover:text-gray-700 flex items-center font-lexend">
+                            <button type="button" @click="propertyForm.select_values.push('')" class="text-text-subtle text-xs hover:text-text-muted flex items-center font-lexend">
                                 <component :is="IconCirclePlus" class="size-4" aria-hidden="true" />
                                 {{ $t('Selection Add value') }}
                             </button>
@@ -86,7 +86,7 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="is_filterable" class="font-medium text-gray-900">{{ $t('Filterable') }}</label>
+                                    <label for="is_filterable" class="font-medium text-text">{{ $t('Filterable') }}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
@@ -111,7 +111,7 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="show_in_list" class="font-medium text-gray-900">{{ $t('Show in article overview') }}</label>
+                                    <label for="show_in_list" class="font-medium text-text">{{ $t('Show in article overview') }}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
@@ -136,7 +136,7 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="is_required" class="font-medium text-gray-900">{{ $t('Value required') }}</label>
+                                    <label for="is_required" class="font-medium text-text">{{ $t('Value required') }}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
@@ -161,7 +161,7 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="across_articles" class="font-medium text-gray-900">
+                                    <label for="across_articles" class="font-medium text-text">
                                         {{$t('across all articles')}}
                                     </label>
                                     <ToolTipComponent
@@ -188,7 +188,7 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="individual_value" class="font-medium text-gray-900">{{$t('individual value')}}</label>
+                                    <label for="individual_value" class="font-medium text-text">{{$t('individual value')}}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
@@ -203,7 +203,7 @@
                 </div>
 
                 <div class="flex items-center justify-center my-10">
-                    <FormButton type="submit" :text="property ? $t('Update') : $t('Create')" :disabled="propertyForm.processing || checkIfPropertyHasValues" :class="propertyForm.processing || checkIfPropertyHasValues ? 'bg-gray-200 hover:bg-gray-300' : ''" />
+                    <FormButton type="submit" :text="property ? $t('Update') : $t('Create')" :disabled="propertyForm.processing || checkIfPropertyHasValues" :class="propertyForm.processing || checkIfPropertyHasValues ? 'bg-border-subtle hover:bg-border' : ''" />
                 </div>
             </form>
         </div>

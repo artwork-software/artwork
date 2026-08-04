@@ -10,11 +10,11 @@
                     </h1>
                     <div class="mb-4">
                         <div class="hidden sm:block">
-                            <div class="border-gray-200">
+                            <div class="border-border-subtle">
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-text-muted hover:border-border', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -65,7 +65,7 @@
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isExcluded" type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                             <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
                                class="ml-4 my-auto text-sm"> {{$t('Exclude')}}</p>
                         </div>

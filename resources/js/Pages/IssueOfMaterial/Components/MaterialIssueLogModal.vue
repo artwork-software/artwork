@@ -7,18 +7,18 @@
         <div class="space-y-6">
             <!-- Stats -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="rounded-xl border border-gray-100 bg-white p-4">
-                    <div class="text-[10px] text-gray-500">{{ $t('Entries') }}</div>
-                    <div class="mt-1 text-lg text-gray-900">{{ meta.total }}</div>
+                <div class="rounded-xl border border-border-subtle bg-white p-4">
+                    <div class="text-[10px] text-text-subtle">{{ $t('Entries') }}</div>
+                    <div class="mt-1 text-lg text-text">{{ meta.total }}</div>
                 </div>
-                <div class="rounded-xl border border-gray-100 bg-white p-4">
-                    <div class="text-[10px] text-gray-500">{{ $t('Visible') }}</div>
-                    <div class="mt-1 text-lg text-gray-900">{{ filteredLogs.length }}</div>
+                <div class="rounded-xl border border-border-subtle bg-white p-4">
+                    <div class="text-[10px] text-text-subtle">{{ $t('Visible') }}</div>
+                    <div class="mt-1 text-lg text-text">{{ filteredLogs.length }}</div>
                 </div>
             </div>
 
             <!-- Controls -->
-            <div class="rounded-xl border border-gray-100 bg-white p-5 space-y-6">
+            <div class="rounded-xl border border-border-subtle bg-white p-5 space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                     <!-- Project filter -->
                     <div class="col-span-full">
@@ -38,7 +38,7 @@
 
                     <!-- Date range heading -->
                     <div class="col-span-full flex items-center gap-1">
-                        <span class="text-xs font-medium text-gray-700">{{ $t('Issue period') }}</span>
+                        <span class="text-xs font-medium text-text-muted">{{ $t('Issue period') }}</span>
                         <ToolTipComponent
                             direction="right"
                             :tooltip-text="$t('This period refers to the time range of the material issues. Only entries of material issues whose time range overlaps at least one day with the specified period are shown.')"
@@ -118,19 +118,19 @@
                     </div>
                 </div>
 
-                <div v-if="error" class="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-artwork-messages-error">
+                <div v-if="error" class="rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-artwork-messages-error">
                     {{ error }}
                 </div>
             </div>
 
             <!-- Empty state -->
-            <div v-if="!filteredLogs.length && !loading" class="rounded-xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
-                <div class="font-medium text-gray-900">{{ $t('No history entries available for this selection yet.') }}</div>
-                <div class="mt-1 text-gray-600">{{ $t('Try adjusting filters or expanding the date range.') }}</div>
+            <div v-if="!filteredLogs.length && !loading" class="rounded-xl border border-border-subtle bg-white p-5 text-sm text-text-muted">
+                <div class="font-medium text-text">{{ $t('No history entries available for this selection yet.') }}</div>
+                <div class="mt-1 text-text-muted">{{ $t('Try adjusting filters or expanding the date range.') }}</div>
             </div>
 
             <!-- Results -->
-            <div v-else class="rounded-xl border border-gray-100 bg-white">
+            <div v-else class="rounded-xl border border-border-subtle bg-white">
                 <div class="px-5 py-5 max-h-[60vh] overflow-y-auto pr-4 space-y-6">
                     <div v-for="group in groupedLogs" :key="group.dayKey" class="space-y-3">
                         <DividerChip :label="formatDisplayDate(group.dayKey)" variant="brand" />
@@ -139,58 +139,57 @@
                             <li
                                 v-for="entry in group.items"
                                 :key="entry.id"
-                                class="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:bg-gray-50/40 transition"
+                                class="flex gap-4 rounded-xl border border-border-subtle bg-white p-4 hover:bg-surface-sunken transition"
                             >
                                 <div class="flex-1 space-y-2">
                                     <!-- Message -->
                                     <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                                        <p class="text-sm leading-5 text-gray-900 whitespace-pre-wrap">
+                                        <p class="text-sm leading-5 text-text whitespace-pre-wrap">
                                             {{ entry.message }}
                                         </p>
                                     </div>
 
                                     <!-- Meta -->
-                                    <div class="flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-                                        <span class="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 border border-gray-100">
+                                    <div class="flex flex-wrap items-center gap-2 text-[11px] text-text-subtle">
+                                        <span class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-1 border border-border-subtle">
                                             {{ entry.createdAtFormatted }}
                                         </span>
 
                                         <span
                                             class="inline-flex items-center rounded-full px-2 py-1 text-[11px] border"
-                                            :class="entry.issueType === 'internal'
-                                                ? 'border-sky-200 bg-sky-50 text-sky-700'
-                                                : 'border-amber-200 bg-amber-50 text-amber-700'"
+                                            :class="entry.issueType === 'internal' ? 'border-info-border bg-info-surface text-info'
+                                                : 'border-warning-border bg-warning-surface text-warning'"
                                         >
                                             {{ entry.issueType === 'internal' ? $t('Internal') : $t('External') }}
                                         </span>
 
-                                        <span v-if="entry.issueName" class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] text-gray-700">
+                                        <span v-if="entry.issueName" class="inline-flex items-center rounded-full border border-border-subtle bg-surface-sunken px-2 py-1 text-[11px] text-text-muted">
                                             {{ entry.issueName }}
                                         </span>
 
                                         <span v-if="entry.causerName" class="inline-flex items-center gap-2">
-                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] text-gray-700">
+                                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-surface-sunken text-[10px] text-text-muted">
                                                 {{ entry.causerInitials }}
                                             </span>
-                                            <span class="text-gray-700">{{ entry.causerName }}</span>
+                                            <span class="text-text-muted">{{ entry.causerName }}</span>
                                         </span>
                                     </div>
 
                                     <!-- Field changes -->
-                                    <div v-if="entry.changes.length" class="mt-2 rounded-lg border border-gray-100 bg-gray-50/70 p-3">
+                                    <div v-if="entry.changes.length" class="mt-2 rounded-lg border border-border-subtle bg-surface-sunken p-3">
                                         <table class="w-full border-collapse text-[11px]">
                                             <thead>
-                                            <tr class="text-gray-500 text-[10px]">
+                                            <tr class="text-text-subtle text-[10px]">
                                                 <th class="text-left font-medium pb-2 pr-3">{{ $t('Field') }}</th>
                                                 <th class="text-left font-medium pb-2 pr-3">{{ $t('Before') }}</th>
                                                 <th class="text-left font-medium pb-2">{{ $t('After') }}</th>
                                             </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-100">
+                                            <tbody class="divide-y divide-border-subtle">
                                             <tr v-for="(change, idx) in entry.changes" :key="idx" class="align-top">
-                                                <td class="py-2 pr-3 text-gray-700">{{ fieldLabel(change.field) }}</td>
-                                                <td class="py-2 pr-3 text-gray-500">{{ change.oldValue ?? '-' }}</td>
-                                                <td class="py-2 text-gray-900">{{ change.newValue ?? '-' }}</td>
+                                                <td class="py-2 pr-3 text-text-muted">{{ fieldLabel(change.field) }}</td>
+                                                <td class="py-2 pr-3 text-text-subtle">{{ change.oldValue ?? '-' }}</td>
+                                                <td class="py-2 text-text">{{ change.newValue ?? '-' }}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -202,10 +201,9 @@
                                             v-for="(diff, idx) in entry.articleDiff"
                                             :key="idx"
                                             class="flex items-center gap-2 text-[11px] rounded-md px-2 py-1"
-                                            :class="{
-                                                'bg-emerald-50 text-emerald-700': diff.type === 'added',
-                                                'bg-rose-50 text-rose-700': diff.type === 'removed',
-                                                'bg-amber-50 text-amber-700': diff.type === 'changed',
+                                            :class="{ 'bg-success-surface text-success': diff.type === 'added',
+                                                'bg-danger-surface text-danger': diff.type === 'removed',
+                                                'bg-warning-surface text-warning': diff.type === 'changed',
                                             }"
                                         >
                                             <span v-if="diff.type === 'added'">+ {{ $t('Article added') }}: {{ diff.name }} ({{ diff.quantity }})</span>

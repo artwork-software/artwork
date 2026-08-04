@@ -159,19 +159,18 @@
                                             >
                                                 <ListboxOptions
                                                     :static="column.showColorMenu"
-                                                    class="absolute z-30 mt-12 w-56 overflow-hidden rounded-xl border border-gray-200
-                                                           bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+                                                    class="absolute z-30 mt-12 w-56 overflow-hidden rounded-xl border border-border-subtle bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
                                                 >
                                                     <!-- Header -->
-                                                    <div class="px-3 py-2 border-b border-gray-100">
+                                                    <div class="px-3 py-2 border-b border-border-subtle">
                                                         <div class="flex items-center justify-between">
-                                                            <span class="text-xs font-medium text-gray-500">
+                                                            <span class="text-xs font-medium text-text-subtle">
                                                                 {{ $t("Choose color") }}
                                                             </span>
 
                                                             <!-- kleiner Close-Icon-Click (kein Button-Element) -->
                                                             <span
-                                                                class="inline-flex cursor-pointer rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                                                                class="inline-flex cursor-pointer rounded-md p-1 text-text-subtle hover:bg-surface-sunken"
                                                                 @click="column.showColorMenu = false"
                                                                 aria-label="Close"
                                                                 role="button"
@@ -184,11 +183,11 @@
                                                         <!-- aktuelle Auswahl -->
                                                         <div class="mt-2 flex items-center gap-2">
                                                             <span
-                                                                class="h-5 w-5 rounded-full ring-1 ring-gray-200"
+                                                                class="h-5 w-5 rounded-full ring-1 ring-border-subtle"
                                                                 :class="column.color"
                                                                 aria-hidden="true"
                                                             />
-                                                            <span class="text-xs text-gray-600">
+                                                            <span class="text-xs text-text-muted">
                                                                 {{ $t("Current") }}
                                                             </span>
                                                         </div>
@@ -205,12 +204,10 @@
                                                             >
                                                                 <!-- kein Button: nur span -->
                                                                 <button
-                                                                    class="relative h-7 w-7 min-w-7 min-h-7 cursor-pointer rounded-full ring-1 ring-gray-200 transition
-                                                                           focus:outline-none"
-                                                                    :class="[
-                                                                        color,
+                                                                    class="relative h-7 w-7 min-w-7 min-h-7 cursor-pointer rounded-full ring-1 ring-border-subtle transition focus:outline-none"
+                                                                    :class="[ color,
                                                                         active ? 'scale-[1.03] ring-2 ring-primary/40' : '',
-                                                                        selected ? 'ring-2 ring-emerald-500/50' : ''
+                                                                        selected ? 'ring-2 ring-success' : ''
                                                                     ]"
                                                                     role="button"
                                                                     tabindex="0"
@@ -221,7 +218,7 @@
                                                                     <PropertyIcon
                                                                         v-if="selected"
                                                                         name="IconCheck"
-                                                                        class="absolute -right-1 -top-1 h-4 w-4 text-emerald-600 bg-white rounded-full p-[2px] shadow"
+                                                                        class="absolute -right-1 -top-1 h-4 w-4 text-success bg-white rounded-full p-[2px] shadow"
                                                                         aria-hidden="true"
                                                                     />
                                                                 </button>
@@ -230,8 +227,7 @@
 
                                                         <!-- Reset (ebenfalls kein Button) -->
                                                         <span
-                                                            class="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-gray-200
-                                                                   bg-white px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+                                                            class="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-border-subtle bg-white px-3 py-2 text-xs text-text-muted hover:bg-surface-sunken"
                                                             role="button"
                                                             tabindex="0"
                                                             @click="
@@ -254,7 +250,7 @@
                                 <div v-else>
                                     <input
                                         :class="index === 0 ? 'w-48' : index === 1 ? 'w-48' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="xsDark h-5 pr-1 mr-1 flex rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                                        class="xsDark h-5 pr-1 mr-1 flex rounded-md border border-border px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
                                         type="text"
                                         v-model="column.name"
                                         @keyup.enter="$event.target.blur()"
@@ -359,11 +355,11 @@
                              @remove-sage-not-assigned-data="this.showRemoveSageNotAssignedDataConfirmationModal"
         />
         <div class="w-full flex mb-6">
-            <div class="flex flex-wrap w-full bg-secondary-hover border-2 border-gray-300">
+            <div class="flex flex-wrap w-full bg-secondary-hover border-2 border-border">
                 <div class="w-full flex">
                     <div class="bg-secondary-hover ml-5 w-full" v-if="costsOpened">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
-                            <div class="headline4  flex">
+                            <div class="headline4 flex">
                                 {{ $t('Expenses') }}
                                 <button class="w-6" @click="costsOpened = !costsOpened">
                                     <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="costsOpened"
@@ -476,7 +472,7 @@
                                     :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="(summaryTotals.costSums[column.id] ?? 0) < 0 ? 'text-red-500' : ''">
+                                         :class="(summaryTotals.costSums[column.id] ?? 0) < 0 ? 'text-danger' : ''">
                                         <img @click="openBudgetSumDetailModal('COST', column, 'comment')"
                                              v-if="table.costSumDetails?.[column.id]?.hasComments && table.costSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
@@ -602,7 +598,7 @@
                                     :key="column.id"
                                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="(summaryTotals.earningSums[column.id] ?? 0) < 0 ? 'text-red-500' : ''">
+                                         :class="(summaryTotals.earningSums[column.id] ?? 0) < 0 ? 'text-danger' : ''">
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')"
                                              v-if="table.earningSumDetails?.[column.id]?.hasComments && table.earningSumDetails?.[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
@@ -687,7 +683,7 @@
                             :key="column.id"
                             v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                             <div class="w-48 my-2 p-1 flex justify-end items-center"
-                                 :class="differenceForColumn(column) < 0 ? 'text-red-500' : ''">
+                                 :class="differenceForColumn(column) < 0 ? 'text-danger' : ''">
                                 <span>{{ toCurrencyString(differenceForColumn(column)) }}</span>
                             </div>
                         </td>

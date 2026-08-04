@@ -109,7 +109,7 @@ const avatarStyle = computed(() => ({
 const avatarWrapperClass = computed(() =>
     hasKeyVisual.value
         ? 'bg-transparent border border-transparent'
-        : 'bg-zinc-50 border border-zinc-100'
+        : 'bg-surface-sunken border border-border-subtle'
 );
 
 const avatarAriaLabel = computed(() => {

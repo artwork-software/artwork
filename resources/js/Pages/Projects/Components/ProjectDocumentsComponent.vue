@@ -296,13 +296,13 @@ function closePreview() {
                         {{ $t('Documents') }}
                     </template>
                 </h3>
-                <p class="text-xs text-zinc-500 subpixel-antialiased mt-0.5">
+                <p class="text-xs text-text-subtle subpixel-antialiased mt-0.5">
                     {{ $t('Here you can upload and download documents for the project.') }}
                 </p>
             </div>
             <InfoButtonComponent :component="component" />
         </div>
-        <div v-if="loadDocumentsError" class="text-xs text-rose-600">
+        <div v-if="loadDocumentsError" class="text-xs text-danger">
             {{ loadDocumentsError }}
         </div>
         <div v-else-if="isLoadingDocuments" class="text-xs text-secondary">
@@ -325,16 +325,15 @@ function closePreview() {
                 @dragover.prevent="onDragOver"
                 @dragleave.prevent="onDragLeave"
                 @drop.prevent="onDrop"
-                :class="[
-                      'relative block w-full rounded-2xl border-2 border-dashed p-10 text-center transition',
-                      isDragging ? 'border-indigo-400 bg-indigo-50/60' : 'border-zinc-300 hover:border-zinc-400',
+                :class="[ 'relative block w-full rounded-2xl border-2 border-dashed p-10 text-center transition',
+                      isDragging ? 'border-accent-600 bg-accent-50' : 'border-border hover:border-border-strong',
                       isUploading ? 'opacity-60 cursor-progress' : 'cursor-pointer'
                     ]">
-                <component :is="IconFileUpload" class="mx-auto size-12 text-zinc-400" aria-hidden="true" />
-                <div class="mt-2 text-sm font-medium text-zinc-900">
+                <component :is="IconFileUpload" class="mx-auto size-12 text-text-subtle" aria-hidden="true" />
+                <div class="mt-2 text-sm font-medium text-text">
                     {{ $t('Drag document here to upload or click in the field') }}
                 </div>
-                <div v-if="isUploading" class="mt-3 text-xs text-zinc-600">
+                <div v-if="isUploading" class="mt-3 text-xs text-text-muted">
                     {{ $t('Uploading...') }} ({{ uploadedCount }}/{{ totalToUpload }})
                 </div>
                 <span class="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5" />
@@ -347,7 +346,7 @@ function closePreview() {
         <div>
             <ul v-if="documents.length > 0"
                 role="list"
-                class="divide-y divide-zinc-100 rounded-2xl border border-zinc-200 bg-white/60 backdrop-blur">
+                class="divide-y divide-border-subtle rounded-2xl border border-border-subtle bg-white/60 backdrop-blur">
                 <li v-for="file in documents" :key="file.id ?? file.name" class="group flex items-center justify-between gap-4 px-4 py-3">
                     <div class="flex min-w-0 flex-1 items-center gap-3">
                         <!-- Thumbnail -->
@@ -359,13 +358,13 @@ function closePreview() {
                             size="sm"
                             @open="openPreview(file)"
                         />
-                        <component v-else :is="IconFileText" class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
+                        <component v-else :is="IconFileText" class="size-5 shrink-0 text-text-subtle" aria-hidden="true" />
                         <!-- Name + Meta -->
                         <div class="min-w-0 flex-1">
-                            <div class="truncate text-sm font-medium text-zinc-900">{{ file.name }}</div>
-                            <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                            <div class="truncate text-sm font-medium text-text">{{ file.name }}</div>
+                            <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-text-subtle">
                                 <span v-if="isFileAvailable(file)">{{ file.file_size }}</span>
-                                <span v-else class="font-medium text-rose-600">
+                                <span v-else class="font-medium text-danger">
                                     {{ $t('File is unavailable in storage') }}
                                 </span>
                                 <span v-if="file.created_at" class="inline-flex items-center gap-1">
@@ -380,24 +379,24 @@ function closePreview() {
                         <button
                             v-if="isFileAvailable(file) && isInlinePrintableFile(file)"
                             type="button"
-                            class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-text ring-1 ring-inset ring-border focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                             :aria-label="`${$t('Print')}: ${file.name}`"
                             @click="printFile(file)"
                         >
                             <IconPrinter class="size-4" aria-hidden="true" />
                             {{ $t('Print') }}
                         </button>
-                        <button v-if="isFileAvailable(file)" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-zinc-800 ring-1 ring-inset ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" @click="downloadFile(file)">
+                        <button v-if="isFileAvailable(file)" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-text ring-1 ring-inset ring-border focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600" @click="downloadFile(file)">
                             {{ $t('Download') }}
                         </button>
-                        <button v-if="canEditFull" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500" @click="openConfirmDeleteModal(file)">
+                        <button v-if="canEditFull" type="button" class="rounded-lg px-2 py-1 text-sm font-medium text-danger ring-1 ring-inset ring-danger-border focus:outline-none focus-visible:ring-2 focus-visible:ring-danger" @click="openConfirmDeleteModal(file)">
                             {{ $t('Löschen') }}
                         </button>
                     </div>
                 </li>
             </ul>
 
-            <div v-else class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500">
+            <div v-else class="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-text-subtle">
                 {{ $t('No files available') }}
             </div>
         </div>
@@ -418,7 +417,7 @@ function closePreview() {
                 @click.self="closePreview">
                 <div class="relative w-[92vw] max-w-5xl rounded-2xl bg-white p-3 shadow-xl">
                     <button type="button"
-                        class="absolute right-3 top-3 rounded-full p-1.5 text-zinc-600 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        class="absolute right-3 top-3 rounded-full p-1.5 text-text-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                         @click="closePreview"
                         aria-label="Close preview">
                         ✕
@@ -435,18 +434,18 @@ function closePreview() {
                     <div v-else-if="lightboxType === 'pdf'" class="max-h-[80vh] overflow-auto">
                         <div class="mb-3 flex items-center justify-center gap-2">
                             <button type="button"
-                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-zinc-300 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-border disabled:text-text-subtle disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                                 :disabled="!canPrev"
                                 @click="prevPage">
                                 ‹ {{ $t('Prev') }}
                             </button>
 
-                            <span class="text-sm text-zinc-600">
+                            <span class="text-sm text-text-muted">
                               {{ currentPage }} / {{ totalPages }}
                             </span>
 
                             <button type="button"
-                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-zinc-300 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-border disabled:text-text-subtle disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                                 :disabled="!canNext"
                                 @click="nextPage">
                                 {{ $t('Next') }} ›

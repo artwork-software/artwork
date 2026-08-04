@@ -35,7 +35,7 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="project_mandatory" class="font-medium font-lexend" :class="eventTypeForm.project_mandatory ? 'text-gray-900' : 'text-gray-400'">{{$t('project assignment mandatory')}}</label>
+                            <label for="project_mandatory" class="font-medium font-lexend" :class="eventTypeForm.project_mandatory ? 'text-text' : 'text-text-subtle'">{{$t('project assignment mandatory')}}</label>
                         </div>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="individual_name" class="font-medium font-lexend" :class="eventTypeForm.individual_name ? 'text-gray-900' : 'text-gray-400'">{{$t('individual event name mandatory')}}</label>
+                            <label for="individual_name" class="font-medium font-lexend" :class="eventTypeForm.individual_name ? 'text-text' : 'text-text-subtle'">{{$t('individual event name mandatory')}}</label>
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="relevant_for_project_period" class="font-medium font-lexend" :class="eventTypeForm.relevant_for_project_period ? 'text-gray-900' : 'text-gray-400'">{{$t('Relevant for project period')}}</label>
+                            <label for="relevant_for_project_period" class="font-medium font-lexend" :class="eventTypeForm.relevant_for_project_period ? 'text-text' : 'text-text-subtle'">{{$t('Relevant for project period')}}</label>
                         </div>
                     </div>
                     <SettingsGuideBanner
@@ -73,10 +73,10 @@
                     />
                 </div>
 
-                <div class="col-span-full border-t border-gray-200 border-dashed">
+                <div class="col-span-full border-t border-border-subtle border-dashed">
                     <div class="mt-4">
-                        <h4 class="text-sm/6 font-semibold font-lexend text-gray-900">{{ $t('Verification mode') }}</h4>
-                        <p class="mt-1 text-sm/6 font-lexend text-gray-600">
+                        <h4 class="text-sm/6 font-semibold font-lexend text-text">{{ $t('Verification mode') }}</h4>
+                        <p class="mt-1 text-sm/6 font-lexend text-text-muted">
                             {{ $t('Choose the verification mode for the planning calendar') }}
                         </p>
                         <SettingsGuideBanner
@@ -95,16 +95,16 @@
                                     name="notification-method"
                                     type="radio"
                                     :checked="notificationMethod.id === eventTypeForm.verification_mode"
-                                    class="size-5 text-primary border-gray-300 focus:ring-primary"
+                                    class="size-5 text-primary border-border focus:ring-primary"
                                 />
-                                <label :for="notificationMethod.id" class="ml-3 block text-sm/6 font-medium text-gray-900">{{ $t(notificationMethod.title) }}</label>
+                                <label :for="notificationMethod.id" class="ml-3 block text-sm/6 font-medium text-text">{{ $t(notificationMethod.title) }}</label>
                             </div>
                         </div>
                     </div>
 
                     <div v-if="eventTypeForm.verification_mode !== 'none'" class="mt-6">
                         <div class="mt-4">
-                            <h4 class="text-sm font-bold  font-lexend text-gray-900">
+                            <h4 class="text-sm font-bold  font-lexend text-text">
                                 {{ $t('Choose users for the verification process in the planning calendar') }}
                             </h4>
                         </div>
@@ -114,7 +114,7 @@
 
                         <div v-if="eventTypeForm.users?.length > 0">
                             <div v-if="eventTypeForm.users?.length > 0" class="flex items-center gap-4 mt-3">
-                                <div v-for="(user, index) in eventTypeForm.users" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
+                                <div v-for="(user, index) in eventTypeForm.users" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-border-subtle">
                                     <div class="flex items-center">
                                         <div class="flex items-center cursor-pointer" @click="makeSpecificVerifier(user.id)">
                                             <div class="relative flex items-center">
@@ -126,7 +126,7 @@
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeUserFromEventType(index)">
-                                                <XIcon class="h-4 w-4 text-gray-400 hover:text-error" />
+                                                <XIcon class="h-4 w-4 text-text-subtle hover:text-error" />
                                             </button>
                                         </div>
                                     </div>

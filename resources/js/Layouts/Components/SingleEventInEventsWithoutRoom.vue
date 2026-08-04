@@ -1,6 +1,6 @@
 
 <template>
-    <div class="flex w-full border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div class="flex w-full border border-border-subtle rounded-lg bg-white shadow-sm">
         <div class="ml-2 w-full p-2">
             <!-- Event type + name row -->
             <div class="w-full flex cursor-pointer truncate">
@@ -70,7 +70,7 @@
                 <button
                     v-if="canEditEvent"
                     @click="$emit('editEvent', event)"
-                    class="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                    class="flex items-center gap-1 text-xs text-accent-600 hover:text-accent-700 cursor-pointer"
                     type="button"
                 >
                     <IconPencil class="h-4 w-4" />
@@ -78,7 +78,7 @@
                 </button>
                 <button
                     v-if="canEditEvent"
-                    class="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-600 cursor-pointer"
+                    class="flex items-center gap-1 text-xs text-text-subtle hover:text-danger cursor-pointer"
                     @click="openDeleteEventModal(event)"
                     type="button"
                 >

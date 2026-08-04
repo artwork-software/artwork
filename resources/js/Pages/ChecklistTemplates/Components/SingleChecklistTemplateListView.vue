@@ -1,19 +1,19 @@
 <template>
-    <div class="border border-gray-200 rounded-xl mb-4 bg-white">
+    <div class="border border-border-subtle rounded-xl mb-4 bg-white">
         <div class="p-5">
             <!-- Header -->
-            <div class="flex items-center justify-between bg-blue-50 rounded-lg px-4 py-3">
+            <div class="flex items-center justify-between bg-accent-50 rounded-lg px-4 py-3">
                 <div class="flex items-center gap-x-3 min-w-0">
                     <div class="truncate text-xs font-semibold flex items-center gap-x-2 min-w-0">
                         <span class="truncate">{{ checklist_template.name }}</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-x-2 print:hidden">
-                    <div class="hidden sm:flex items-center gap-x-2 text-zinc-400">
+                    <div class="hidden sm:flex items-center gap-x-2 text-text-subtle">
                         <UserPopoverTooltip v-if="checklist_template.user" :user="checklist_template.user" height="6" width="6" />
                         <span class="text-[11px]">{{ checklist_template.created_at }}</span>
                     </div>
-                    <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded">
+                    <span class="bg-accent-50 border border-accent-200 text-accent-600 text-xs px-2 py-0.5 rounded">
                         {{ tasks.length }}
                     </span>
                     <IconCirclePlus
@@ -32,8 +32,8 @@
             </div>
 
             <!-- Tasks -->
-            <div v-if="expanded" class="mt-4 border-b border-dashed border-gray-200 pb-3">
-                <div v-if="tasks.length === 0" class="text-center text-sm text-zinc-400 py-4">
+            <div v-if="expanded" class="mt-4 border-b border-dashed border-border-subtle pb-3">
+                <div v-if="tasks.length === 0" class="text-center text-sm text-text-subtle py-4">
                     {{ $t('No tasks added yet') }}
                 </div>
                 <draggable

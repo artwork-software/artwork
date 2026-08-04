@@ -1,6 +1,6 @@
 <template>
     <!-- Zusatz: Gelber Balken über dem Termin, wenn ganztägig -->
-    <div v-if="event.allDay" class="w-full rounded-t-lg bg-yellow-300 text-black text-[11px] font-lexend text-center py-0.5 mb-0.5">
+    <div v-if="event.allDay" class="w-full rounded-t-lg bg-warning text-black text-[11px] font-lexend text-center py-0.5 mb-0.5">
         {{$t('All day')}}
     </div>
     <!-- Hauptkarte: Einheitliches Styling (ehemals "bei Kollision") -->
@@ -102,7 +102,7 @@
 
         <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
         <div v-if="showNotes && event.description" class="flex items-center gap-x-1 ml-2 mb-1 min-w-0">
-            <span class="text-xs text-gray-600 truncate" v-tooltip.bottom="{ value: event.description, class: 'aw-tooltip' }">{{ event.description }}</span>
+            <span class="text-xs text-text-muted truncate" v-tooltip.bottom="{ value: event.description, class: 'aw-tooltip' }">{{ event.description }}</span>
         </div>
     </div>
 
@@ -133,7 +133,7 @@
             </div>
         </div>
 
-        <div class="w-full bg-gray-100 rounded-lg py-1.5 px-3 mt-1 border border-artwork-buttons-create">
+        <div class="w-full bg-surface-sunken rounded-lg py-1.5 px-3 mt-1 border border-artwork-buttons-create">
             <div class="text-artwork-buttons-create cursor-pointer flex items-center gap-x-1"
                 @click="showAddTimeLineModal = true">
                 <component :is="IconWand" class="size-4"/>

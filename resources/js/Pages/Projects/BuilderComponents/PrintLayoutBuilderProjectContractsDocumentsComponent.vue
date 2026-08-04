@@ -4,7 +4,7 @@
             {{ $t('Contracts') }}
         </div>
         <div v-if="contracts.length > 0" class="space-y-1.5">
-            <div v-for="contract in contracts" :key="contract.id" class="text-sm text-primaryText border-b border-gray-100 pb-1">
+            <div v-for="contract in contracts" :key="contract.id" class="text-sm text-primaryText border-b border-border-subtle pb-1">
                 <div class="font-medium">{{ contract.name || '-' }}</div>
                 <div v-if="contract.contract_type" class="text-xs text-secondary">{{ contract.contract_type.name }}</div>
             </div>

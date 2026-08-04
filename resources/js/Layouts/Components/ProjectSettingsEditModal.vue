@@ -16,7 +16,7 @@
                        id="title"
                        v-model="newName"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased
-                        focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                        focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"
                 />
 
                 <div class="flex justify-between mt-6">

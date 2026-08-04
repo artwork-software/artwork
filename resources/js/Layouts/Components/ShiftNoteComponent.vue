@@ -1,6 +1,6 @@
 <template>
     <div v-if="shouldRender" class="my-2 px-1">
-        <div v-if="showLabel" class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+        <div v-if="showLabel" class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-text-subtle">
             {{ labelText }}
         </div>
 

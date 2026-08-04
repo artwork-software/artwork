@@ -1,5 +1,5 @@
 <template>
-    <div class="card-accent group relative rounded-2xl border border-zinc-200 bg-white/90 p-4 shadow-sm ring-1 ring-black/5">
+    <div class="card-accent group relative rounded-2xl border border-border-subtle bg-white/90 p-4 shadow-sm ring-1 ring-black/5">
         <!-- Kopfzeile: Meta + Löschen -->
         <div class="mb-3 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
@@ -12,7 +12,7 @@
 
                 <span
                     v-if="summary"
-                    class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50/80 px-2 py-0.5 text-[11px] text-zinc-700"
+                    class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted"
                     :title="$t('Summary')"
                 >
           {{ summary }}
@@ -21,7 +21,7 @@
 
             <button
                 type="button"
-                class="invisible group-hover:visible rounded-full p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-red-600"
+                class="invisible group-hover:visible rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-danger"
                 @click="deleteTime"
                 :aria-label="$t('Delete row')"
             >
@@ -32,7 +32,7 @@
         <!-- Datum -->
         <div class="grid grid-cols-2 gap-3">
             <div class="relative">
-                <label class="block mb-1 text-[11px] font-medium text-zinc-600">{{ $t('Start date*') }}</label>
+                <label class="block mb-1 text-[11px] font-medium text-text-muted">{{ $t('Start date*') }}</label>
                 <span class="field-icon">
           <!-- calendar icon -->
           <svg viewBox="0 0 24 24" class="h-4 w-4"><path fill="currentColor" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1m13 8H4v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1zM5 7a1 1 0 0 0-1 1v2h16V8a1 1 0 0 0-1-1z"/></svg>
@@ -47,13 +47,13 @@
             hasDateError ? 'input-error' : 'input-ok'
           ]"
                 />
-                <p v-if="showDatesNotGivenErrorText" class="mt-1 text-[11px] text-red-600">
+                <p v-if="showDatesNotGivenErrorText" class="mt-1 text-[11px] text-danger">
                     {{ $t('Please fill in both fields.') }}
                 </p>
             </div>
 
             <div class="relative">
-                <label class="block mb-1 text-[11px] font-medium text-zinc-600">{{ $t('End date*') }}</label>
+                <label class="block mb-1 text-[11px] font-medium text-text-muted">{{ $t('End date*') }}</label>
                 <span class="field-icon">
           <svg viewBox="0 0 24 24" class="h-4 w-4"><path fill="currentColor" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1m13 8H4v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1zM5 7a1 1 0 0 0-1 1v2h16V8a1 1 0 0 0-1-1z"/></svg>
         </span>
@@ -67,7 +67,7 @@
             hasDateError ? 'input-error' : 'input-ok'
           ]"
                 />
-                <p v-if="showDatesStartGreaterThanEndText" class="mt-1 text-[11px] text-red-600">
+                <p v-if="showDatesStartGreaterThanEndText" class="mt-1 text-[11px] text-danger">
                     {{ $t('The start time must be before the end time.') }}
                 </p>
             </div>
@@ -76,7 +76,7 @@
         <!-- Zeit -->
         <div class="mt-3 grid grid-cols-2 gap-3">
             <div class="relative">
-                <label class="block mb-1 text-[11px] font-medium text-zinc-600">{{ $t('Start time*') }}</label>
+                <label class="block mb-1 text-[11px] font-medium text-text-muted">{{ $t('Start time*') }}</label>
                 <span class="field-icon">
           <!-- clock icon -->
           <svg viewBox="0 0 24 24" class="h-4 w-4"><path fill="currentColor" d="M12 1.75a10.25 10.25 0 1 0 0 20.5a10.25 10.25 0 0 0 0-20.5M12 3.5a8.5 8.5 0 1 1 0 17a8.5 8.5 0 0 1 0-17m-.75 3.75v5.25l4.5 2.625l.75-1.237l-3.75-2.188V7.25z"/></svg>
@@ -91,13 +91,13 @@
             hasTimeError ? 'input-error' : 'input-ok'
           ]"
                 />
-                <p v-if="showTimesNotGivenErrorText" class="mt-1 text-[11px] text-red-600">
+                <p v-if="showTimesNotGivenErrorText" class="mt-1 text-[11px] text-danger">
                     {{ $t('Please fill in both fields.') }}
                 </p>
             </div>
 
             <div class="relative">
-                <label class="block mb-1 text-[11px] font-medium text-zinc-600">{{ $t('End time*') }}</label>
+                <label class="block mb-1 text-[11px] font-medium text-text-muted">{{ $t('End time*') }}</label>
                 <span class="field-icon">
           <svg viewBox="0 0 24 24" class="h-4 w-4"><path fill="currentColor" d="M12 1.75a10.25 10.25 0 1 0 0 20.5a10.25 10.25 0 0 0 0-20.5M12 3.5a8.5 8.5 0 1 1 0 17a8.5 8.5 0 0 1 0-17m-.75 3.75v5.25l4.5 2.625l.75-1.237l-3.75-2.188V7.25z"/></svg>
         </span>
@@ -111,7 +111,7 @@
             hasTimeError ? 'input-error' : 'input-ok'
           ]"
                 />
-                <p v-if="showTimesStartGreaterThanEndText" class="mt-1 text-[11px] text-red-600">
+                <p v-if="showTimesStartGreaterThanEndText" class="mt-1 text-[11px] text-danger">
                     {{ $t('The start time must be before the end time.') }}
                 </p>
             </div>
@@ -119,7 +119,7 @@
 
         <!-- Kommentar -->
         <div class="mt-3">
-            <label class="block mb-1 text-[11px] font-medium text-zinc-600">{{ $t('Comment') }}</label>
+            <label class="block mb-1 text-[11px] font-medium text-text-muted">{{ $t('Comment') }}</label>
             <textarea
                 v-model="time.description_without_html"
                 rows="3"

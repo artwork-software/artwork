@@ -75,7 +75,7 @@
     />
 
     <div v-show="multiEdit"
-         class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+         class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-border-subtle flex items-center justify-center gap-4">
         <FormButton :text="$t('Move events')"
                     @click="openMultiEditModal"/>
         <FormButton @click="openDeleteSelectedEventsModal = true"

@@ -7,7 +7,7 @@
         class="rounded-lg duration-100 ease-in-out border-2 border-dashed w-full mb-4"
         :class="{
         'bg-artwork-buttons-create/10 border-artwork-buttons-create h-8 xsDark': dropOver,
-        'bg-gray-50 border-gray-400 h-8 xsLight': isDragging,
+        'bg-surface-sunken border-border-strong h-8 xsLight': isDragging,
         'border-transparent xsLight h-8': !dropOver && !isDragging,
     }"
        >

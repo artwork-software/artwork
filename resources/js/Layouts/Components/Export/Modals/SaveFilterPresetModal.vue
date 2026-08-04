@@ -8,22 +8,22 @@
         <div class="space-y-4">
             <!-- Ausgewählte Filter anzeigen -->
             <div v-if="activeFilters.length > 0">
-                <label class="block text-sm font-medium text-zinc-700 mb-2">
+                <label class="block text-sm font-medium text-text-muted mb-2">
                     {{ $t('Selected filters') }}
                 </label>
-                <div class="flex flex-wrap gap-2 p-3 bg-zinc-50 rounded-lg border border-zinc-200 max-h-40 overflow-y-auto">
+                <div class="flex flex-wrap gap-2 p-3 bg-surface-sunken rounded-lg border border-border-subtle max-h-40 overflow-y-auto">
                     <div
                         v-for="(filter, index) in activeFilters"
                         :key="`${filter.id}-${index}`"
-                        class="bg-blue-50 px-2 py-1 rounded-full border border-blue-200"
+                        class="bg-accent-50 px-2 py-1 rounded-full border border-accent-200"
                     >
-                        <span class="text-blue-500 text-xs">{{ filter.name }}</span>
+                        <span class="text-accent-600 text-xs">{{ filter.name }}</span>
                     </div>
                 </div>
             </div>
 
-            <div v-else class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                <p class="text-sm text-yellow-700">{{ $t('No filters selected') }}</p>
+            <div v-else class="p-3 bg-warning-surface rounded-lg border border-warning-border">
+                <p class="text-sm text-warning">{{ $t('No filters selected') }}</p>
             </div>
 
             <!-- Name Input -->
@@ -38,14 +38,14 @@
             <div class="flex justify-between items-center pt-4">
                 <button
                     type="button"
-                    class="text-sm text-zinc-500 hover:text-zinc-700"
+                    class="text-sm text-text-subtle hover:text-text-muted"
                     @click="$emit('close')"
                 >
                     {{ $t('Cancel') }}
                 </button>
                 <button
                     type="button"
-                    class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="px-4 py-2 bg-accent-600 text-white text-sm font-medium rounded-lg hover:bg-accent-700 disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:cursor-not-allowed"
                     :disabled="!canSave || saving"
                     @click="savePreset"
                 >

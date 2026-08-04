@@ -9,7 +9,7 @@
             ]"
         />
         <div class="my-10 grid gap-5 xl:grid-cols-2">
-            <div v-if="hasAdminRole()" class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
+            <div v-if="hasAdminRole()" class="rounded-2xl border border-accent-200 bg-accent-50 p-5">
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Permission model')"
@@ -23,7 +23,7 @@
                         @change="updateGranularPermissions"
                     />
                 </div>
-                <div class="mt-4 rounded-xl border border-blue-200 bg-white/80 px-4 py-3 text-xs leading-5 text-blue-900">
+                <div class="mt-4 rounded-xl border border-accent-200 bg-white/80 px-4 py-3 text-xs leading-5 text-accent-700">
                     <strong>{{ shiftSettings.granular_permissions_enabled ? $t('Granular mode active') : $t('Simple mode active') }}</strong>
                     <p class="mt-1">
                         {{ shiftSettings.granular_permissions_enabled
@@ -66,10 +66,10 @@
 
                     <div class="flex items-center justify-between">
                         <span class="flex grow flex-col">
-                            <label class="font-lexend font-bold mb-1 text-gray-900" id="availability-label">
+                            <label class="font-lexend font-bold mb-1 text-text" id="availability-label">
                                 {{ $t('Duty roster release workflow') }}
                             </label>
-                            <span class="text-sm text-gray-500 w-1/2" id="availability-description">
+                            <span class="text-sm text-text-subtle w-1/2" id="availability-description">
                                 {{ $t('Activates a two-stage approval process for schedules.If activated, authorized persons can send time periods (e.g. entire calendar weeks) to selected users for approval. They receive a notification and can approve or reject the schedule. If deactivated, authorized persons can approve schedules directly, without an additional approval process.') }}
                             </span>
                         </span>
@@ -95,17 +95,17 @@
 
                         <div>
                             <div v-if="shiftCommitWorkflowUsers?.length > 0" class="flex flex-wrap items-center gap-4 mt-3">
-                                <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-gray-100">
+                                <div v-for="(object, index) in shiftCommitWorkflowUsers" class="group block shrink-0 bg-white w-fit pr-3 rounded-full border border-border-subtle">
                                     <div class="flex items-center">
                                         <div>
                                             <img class="inline-block size-9 rounded-full object-cover" :src="object.user.profile_photo_url" alt="" />
                                         </div>
                                         <div class="mx-2">
-                                            <p class="xsDark group-hover:text-gray-900">{{ object.user.full_name }}</p>
+                                            <p class="xsDark group-hover:text-text">{{ object.user.full_name }}</p>
                                         </div>
                                         <div class="flex items-center">
                                             <button type="button" @click="removeUserFormShiftWorkFlow(object.id)">
-                                                <PropertyIcon name="IconX" class="h-4 w-4 text-gray-400 hover:text-error" />
+                                                <PropertyIcon name="IconX" class="h-4 w-4 text-text-subtle hover:text-error" />
                                             </button>
                                         </div>
                                     </div>
@@ -142,7 +142,7 @@
                 >
                     <template #item="{ element }">
                         <div
-                            class="group relative w-full rounded-2xl border border-zinc-200 bg-white transition hover:border-zinc-300"
+                            class="group relative w-full rounded-2xl border border-border-subtle bg-white transition hover:border-border"
                             :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
                         >
 
@@ -166,16 +166,16 @@
                                                 }"
                                                   aria-hidden="true"
                                               />
-                                                                            <h3 class="text-sm font-semibold text-zinc-900 leading-6">
+                                                                            <h3 class="text-sm font-semibold text-text leading-6">
                                                                                 {{ element.name }}
-                                                                                <span class="text-zinc-500">({{ element.abbreviation }})</span>
+                                                                                <span class="text-text-subtle">({{ element.abbreviation }})</span>
                                                                             </h3>
                                                                         </div>
 
                                                                         <span
                                                                             v-if="element.universally_applicable"
                                                                             class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring-1 ring-inset
-                                                     ring-zinc-200 bg-zinc-50 text-zinc-700"
+                                                     ring-border-subtle bg-surface-sunken text-text-muted"
                                                                         >
                                               <PropertyIcon name="IconShieldCheck" class="size-3.5" />
                                               {{ $t('Universally applicable') }}
@@ -183,7 +183,7 @@
 
                                                                         <span
                                                                             class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ring-1 ring-inset
-                                                     ring-zinc-200 bg-zinc-50 text-zinc-700"
+                                                     ring-border-subtle bg-surface-sunken text-text-muted"
                                                                         >
                                               <PropertyIcon name="IconUsersGroup" class="size-3.5" />
                                               <span v-if="element.assignable_by_all">
@@ -196,13 +196,13 @@
                                         </div>
 
                                         <!-- Subtext-Zeilen -->
-                                        <div class="mt-2 space-y-1.5 text-xs text-zinc-600">
+                                        <div class="mt-2 space-y-1.5 text-xs text-text-muted">
                                             <p v-if="element.assignable_by_all" class="leading-5">
                                                 {{ $t('Assignable by all schedulers') }}
                                             </p>
                                             <p v-else class="leading-5">
                                                 {{ $t('Can only be assigned by:') }}
-                                                <span class="text-zinc-800">
+                                                <span class="text-text">
                                             {{ (element.craft_shift_planer || []).map(u => u.full_name).join(', ') || '—' }}
                                           </span>
                                             </p>
@@ -212,7 +212,7 @@
                                             </p>
                                             <p v-else class="leading-5">
                                                 {{ $t('Inventory can only be planned by:') }}
-                                                <span class="text-zinc-800">
+                                                <span class="text-text">
                                                 {{ (element.craft_inventory_planer || []).map(u => u.full_name).join(', ') || '—' }}
                                               </span>
                                             </p>
@@ -233,7 +233,7 @@
                                             <span
                                                 v-for="q in element.qualifications"
                                                 :key="q.id"
-                                                class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-700"
+                                                class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2 py-1 text-xs text-text-muted"
                                             >
                                               <PropertyIcon :name="q.icon" class="size-3.5" />
                                               {{ q.name }}
@@ -282,7 +282,7 @@
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="type in notRelevantEventTypes" :key="type.id" :value="type" v-slot="{ active, selected }">
-                                        <li @click="addRelevantEventType(type)" :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li @click="addRelevantEventType(type)" :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ type.name }}</span>
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
@@ -303,7 +303,7 @@
 
         <section class="mt-10">
             <!-- Card -->
-            <div class="rounded-2xl border border-zinc-200 bg-white/95 shadow-sm backdrop-blur">
+            <div class="rounded-2xl border border-border-subtle bg-white/95 shadow-sm backdrop-blur">
                 <!-- Header -->
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between px-5 py-4">
                     <BasePageTitle
@@ -333,7 +333,7 @@
                         ]"
                     />
                     <!-- Empty state -->
-                    <div v-if="shiftQualifications.length === 0" class="flex items-center justify-between rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-8">
+                    <div v-if="shiftQualifications.length === 0" class="flex items-center justify-between rounded-xl border border-dashed border-border bg-surface-sunken px-5 py-8">
                         <div class="flex items-start gap-3">
                             <div class="rounded-xl bg-white p-3 shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -342,10 +342,10 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-zinc-900">
+                                <p class="text-sm font-medium text-text">
                                     {{ $t('No qualifications have been created yet.') }}
                                 </p>
-                                <p class="mt-1 text-xs text-zinc-600">
+                                <p class="mt-1 text-xs text-text-muted">
                                     {{ $t('Create your first qualification to use it in shifts and staffing rules.') }}
                                 </p>
                             </div>
@@ -364,28 +364,28 @@
                         <transition-group
                             name="list-fade"
                             tag="div"
-                            class="space-y-2 divide-y divide-zinc-200 divide-dashed">
+                            class="space-y-2 divide-y divide-border-subtle divide-dashed">
                             <li v-for="shiftQualification in shiftQualifications"
                                 :key="shiftQualification.id"
                                 class="group bg-white px-4 py-3 transition">
                                 <div class="flex items-center justify-between gap-4 pb-2">
                                     <!-- Left: Icon + name + meta -->
                                     <div class="min-w-0 flex items-center gap-3">
-                                        <div class="mt-0.5 rounded-lg bg-zinc-50 p-2 ring-1 ring-inset ring-zinc-200">
+                                        <div class="mt-0.5 rounded-lg bg-surface-sunken p-2 ring-1 ring-inset ring-border-subtle">
                                             <PropertyIcon
                                                 stroke-width="1.5"
-                                                class="text-zinc-900 size-7"
+                                                class="text-text size-7"
                                                 :name="shiftQualification.icon"
                                             />
                                         </div>
                                         <div class="min-w-0">
                                             <div class="">
-                                                <h3 class="truncate text-sm font-medium text-zinc-900">
+                                                <h3 class="truncate text-sm font-medium text-text">
                                                     {{ shiftQualification.name }}
                                                 </h3>
 
                                                 <!-- Availability badge -->
-                                                <span v-if="shiftQualification.available" class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                                                <span v-if="shiftQualification.available" class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-success-surface text-success ring-1 ring-inset ring-success-border">
                                                     {{ $t('Considered for new shifts') }}
                                                 </span>
                                             </div>
@@ -447,12 +447,12 @@
                         text-size="xsLight"
                     />
                     <ul v-else role="list" class="w-full">
-                        <li v-for="(shiftTimePreset) in shiftTimePresets" :key="shiftTimePreset.id" class="py-4 pr-4 flex justify-between items-center border-b border-zinc-200">
+                        <li v-for="(shiftTimePreset) in shiftTimePresets" :key="shiftTimePreset.id" class="py-4 pr-4 flex justify-between items-center border-b border-border-subtle">
                             <div class="sDark">
                                 <div>
                                     {{ shiftTimePreset.name }}
                                 </div>
-                                <div class="flex items-center gap-x-2 text-gray-500 text-xs">
+                                <div class="flex items-center gap-x-2 text-text-subtle text-xs">
                                     <div>{{ shiftTimePreset.start_time }} - {{ shiftTimePreset.end_time}} </div>
                                     <div v-if="shiftTimePreset.break_time !== 0">{{ $t('Break time')}}: {{ shiftTimePreset.break_time }}
                                         {{ $t('Minutes') }}</div>
@@ -461,7 +461,7 @@
                             <div class="flex items-center gap-x-3">
                                 <PropertyIcon name="IconEdit" stroke-width="1.5" class="h-5 w-5 cursor-pointer" aria-hidden="true" @click="openAddEditShiftPresetModal(shiftTimePreset)"/>
 
-                                <PropertyIcon name="IconTrash" stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteShiftTimePresetModal(shiftTimePreset)"/>
+                                <PropertyIcon name="IconTrash" stroke-width="1.5" class="h-5 w-5 text-danger cursor-pointer" aria-hidden="true" @click="openDeleteShiftTimePresetModal(shiftTimePreset)"/>
                             </div>
                         </li>
                     </ul>
@@ -472,20 +472,20 @@
                                   :description="$t('Configure the behaviour of shift plans sort opportunity.')"/>
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
                     <SwitchLabel as="span" class='text-sm'>
-                        <span :class="[!shiftSettings.use_first_name_for_sort ? 'font-bold' : 'font-medium', 'text-gray-900']">{{ $t('Sort by first name')}}</span>
+                        <span :class="[!shiftSettings.use_first_name_for_sort ? 'font-bold' : 'font-medium', 'text-text']">{{ $t('Sort by first name')}}</span>
                     </SwitchLabel>
                     <Switch v-model="shiftSettings.use_first_name_for_sort"
                             @update:model-value="this.updateShiftSettingUseFirstNameSort"
                             :class="[
                                 shiftSettings.use_first_name_for_sort ?
                                     'bg-artwork-buttons-create' :
-                                    'bg-gray-200',
-                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                                    'bg-border-subtle',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                             ]">
                         <span aria-hidden="true" :class="[shiftSettings.use_first_name_for_sort ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                     </Switch>
                     <SwitchLabel as="span" class="text-sm">
-                        <span :class="[shiftSettings.use_first_name_for_sort ? 'font-bold' : 'font-medium', 'text-gray-900']">{{ $t('Sort by last name')}}</span>
+                        <span :class="[shiftSettings.use_first_name_for_sort ? 'font-bold' : 'font-medium', 'text-text']">{{ $t('Sort by last name')}}</span>
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
@@ -498,7 +498,7 @@
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
                     <SwitchLabel as="span" class="text-sm">
                         <span class="flex items-center gap-x-1">
-                            <span :class="[!shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                            <span :class="[!shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-text']">
                                 {{ $t('Only committed shifts') }}
                             </span>
                             <ToolTipComponent
@@ -516,13 +516,13 @@
                             :class="[
                                 shiftSettings.calendar_abo_show_all_shifts ?
                                     'bg-artwork-buttons-create' :
-                                    'bg-gray-200',
-                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                                    'bg-border-subtle',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                             ]">
                         <span aria-hidden="true" :class="[shiftSettings.calendar_abo_show_all_shifts ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                     </Switch>
                     <SwitchLabel as="span" class="text-sm">
-                        <span :class="[shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                        <span :class="[shiftSettings.calendar_abo_show_all_shifts ? 'font-bold' : 'font-medium', 'text-text']">
                             {{ $t('All shifts') }}
                         </span>
                     </SwitchLabel>
@@ -536,7 +536,7 @@
                 />
                 <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer mt-4">
                     <SwitchLabel as="span" class="text-sm">
-                        <span :class="[!shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                        <span :class="[!shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-text']">
                             {{ $t('Deactivated') }}
                         </span>
                     </SwitchLabel>
@@ -545,13 +545,13 @@
                             :class="[
                                 shiftSettings.allow_shift_overbooking ?
                                     'bg-artwork-buttons-create' :
-                                    'bg-gray-200',
-                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                                    'bg-border-subtle',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2'
                             ]">
                         <span aria-hidden="true" :class="[shiftSettings.allow_shift_overbooking ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                     </Switch>
                     <SwitchLabel as="span" class="text-sm">
-                        <span :class="[shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-gray-900']">
+                        <span :class="[shiftSettings.allow_shift_overbooking ? 'font-bold' : 'font-medium', 'text-text']">
                             {{ $t('Allow overbooking') }}
                         </span>
                     </SwitchLabel>

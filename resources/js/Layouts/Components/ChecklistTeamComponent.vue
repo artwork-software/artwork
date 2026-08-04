@@ -15,7 +15,7 @@
                             v-model="departmentQuery"
                             type="text"
                             autocomplete="off"
-                            class="pl-2 h-12 w-10/12 focus:border-b-primary border-b-2 border-gray-300 text-primary focus:outline-none focus:ring-0 placeholder-secondary border-0"/>
+                            class="pl-2 h-12 w-10/12 focus:border-b-primary border-b-2 border-border text-primary focus:outline-none focus:ring-0 placeholder-secondary border-0"/>
                     </div>
 
                     <!--    Department Search Results    -->
@@ -52,7 +52,7 @@
                            :text="$t('Assign')"
                 />
 
-                <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
+                <!-- <p v-if="error" class="text-danger text-xs">{{ error }}</p> -->
             </div>
     </BaseModal>
 </template>

@@ -1,5 +1,5 @@
 <template>
-    <h2 class="font-bold text-zinc-900" :style="{ fontSize: titleSize + 'px' }">
+    <h2 class="font-bold text-text" :style="{ fontSize: titleSize + 'px' }">
         {{ title }}
     </h2>
 </template>

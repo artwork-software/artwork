@@ -5,7 +5,7 @@
         @delete-all="showConfirmDeleteAll = true"
     />
     <div v-for="area in trashed_areas.data" :key="area.id"
-         class="flex w-full bg-white my-2 border border-gray-200">
+         class="flex w-full bg-white my-2 border border-border-subtle">
         <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="area.hidden = !area.hidden">
             <ChevronUpIcon v-if="area.hidden !== true"
                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
@@ -15,7 +15,7 @@
         <div class="flex mt-8 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                                        <span class="text-2xl leading-6 font-bold font-lexend text-text">
                                         {{ area.name }}
                                         </span>
                 </div>

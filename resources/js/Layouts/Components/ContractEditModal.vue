@@ -32,18 +32,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Project Section -->
                     <div class="col-span-full">
-                        <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Project assignment') }}</div>
+                        <div class="text-sm font-medium text-text-muted mb-2">{{ $t('Project assignment') }}</div>
 
                         <!-- Selected Project Chip -->
-                        <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-3 mb-2">
-                            <span class="text-sm text-zinc-700">{{ $t('Connected project:') }}</span>
+                        <div v-if="selectedProject" class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken px-3 py-3 mb-2">
+                            <span class="text-sm text-text-muted">{{ $t('Connected project:') }}</span>
                             <a v-if="selectedProject?.id && first_project_calendar_tab_id"
                                :href="route('projects.tab', {project: selectedProject.id, projectTab: first_project_calendar_tab_id})"
-                               class="font-medium text-indigo-600 hover:underline">
+                               class="font-medium text-accent-600 hover:underline">
                                 {{ selectedProject?.name }}
                             </a>
-                            <span v-else class="font-medium text-zinc-900">{{ selectedProject?.name }}</span>
-                            <button type="button" class="ml-auto text-zinc-400 hover:text-rose-600 transition" @click="removeProject">
+                            <span v-else class="font-medium text-text">{{ selectedProject?.name }}</span>
+                            <button type="button" class="ml-auto text-text-subtle hover:text-danger transition" @click="removeProject">
                                 <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -82,7 +82,7 @@
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm.id" :value="legalForm" v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
@@ -98,7 +98,7 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                            <button v-if="selectedLegalForm !== null" type="button" @click="selectedLegalForm = null" class="ml-2 text-text-subtle hover:text-danger transition self-center">
                                 <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -125,7 +125,7 @@
                                     </span>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType.id" :value="contractType" v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
@@ -141,7 +141,7 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-zinc-400 hover:text-rose-600 transition self-center">
+                            <button v-if="selectedContractType !== null" type="button" @click="selectedContractType = null" class="ml-2 text-text-subtle hover:text-danger transition self-center">
                                 <PropertyIcon name="IconX" stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -160,7 +160,7 @@
                                     <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="currency in currencies"
                                                        :key="currency.id"
@@ -310,7 +310,7 @@
                         />
                     </div>
 
-                    <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-gray-300">
+                    <div class="-mx-5 bg-lightBackgroundGray px-5 py-5 col-span-full border-b border-dashed border-border">
                         <div class="relative w-full">
                             <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray" :label="$t('Document access for')"/>
                         </div>
@@ -338,8 +338,8 @@
                                 class="w-full"
                                 @focus="department_query = ''"
                             />
-                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
+                            <div v-if="department_search_results.length > 0" class="absolute rounded-lg z-30 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto sm:text-sm">
+                                <div class="border-border-subtle">
                                     <div v-for="(department, index) in department_search_results" :key="index" class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4" @click="addDepartmentToContractArray(department)">
                                             <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
@@ -379,7 +379,7 @@
                             <div class="items-center mb-2">
                                 <div v-for="task in tasks" class="mt-2">
                                     <input id="hasGroup" type="checkbox" v-model="task.done"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                                     <label for="hasGroup"
                                            :class="task.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                            class="ml-2">

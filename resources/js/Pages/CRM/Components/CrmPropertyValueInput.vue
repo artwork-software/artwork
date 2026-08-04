@@ -4,9 +4,9 @@
         <div v-if="uniformLabel && showExternalLabel" class="flex items-center mb-1">
             <label
                 :for="`prop_${property.id}`"
-                class="block text-sm font-medium text-gray-700"
+                class="block text-sm font-medium text-text-muted"
             >
-                {{ $t(property.name) }}<span v-if="required" class="text-red-500 ml-0.5">*</span>
+                {{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span>
             </label>
             <!-- tooltip_text ist Nutzerdaten-Text aus den CRM-Settings — bewusst ohne $t -->
             <ToolTipComponent
@@ -69,9 +69,9 @@
                     :checked="value === '1'"
                     @change="$emit('update:value', $event.target.checked ? '1' : '0')"
                     :disabled="disabled"
-                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                    class="rounded border-border text-accent-600 shadow-sm focus:ring-accent-600"
                 />
-                <span class="text-sm text-gray-700">{{ $t(property.name) }}<span v-if="required" class="text-red-500 ml-0.5">*</span></span>
+                <span class="text-sm text-text-muted">{{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span></span>
             </label>
         </template>
 
@@ -95,7 +95,7 @@
                     v-if="value && !disabled"
                     type="button"
                     @click="$emit('update:value', '')"
-                    class="mb-0.5 p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-gray-100"
+                    class="mb-0.5 p-1.5 text-text-subtle hover:text-danger rounded hover:bg-surface-sunken"
                     :title="$t('Clear selection')"
                 >
                     <IconX class="h-4 w-4" />
@@ -105,18 +105,18 @@
 
         <template v-else-if="property.type === 'upload'">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t(property.name) }}<span v-if="required" class="text-red-500 ml-0.5">*</span></label>
+                <label class="block text-sm font-medium text-text-muted mb-1">{{ $t(property.name) }}<span v-if="required" class="text-danger ml-0.5">*</span></label>
 
                 <!-- Existing file -->
-                <div v-if="value" class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 mb-2">
-                    <component :is="IconFile" class="h-5 w-5 text-gray-400 shrink-0" />
-                    <a :href="'/storage/' + value" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-blue-700 hover:underline">
+                <div v-if="value" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2 mb-2">
+                    <component :is="IconFile" class="h-5 w-5 text-text-subtle shrink-0" />
+                    <a :href="'/storage/' + value" target="_blank" download class="min-w-0 flex-1 truncate text-sm font-medium text-accent-700 hover:underline">
                         {{ fileName }}
                     </a>
                     <button
                         v-if="contactId"
                         type="button"
-                        class="rounded-md p-1 text-gray-400 hover:text-red-600"
+                        class="rounded-md p-1 text-text-subtle hover:text-danger"
                         @click="deleteFile"
                         :disabled="deleting"
                     >
@@ -129,11 +129,11 @@
                     <button
                         type="button"
                         @click="$refs.fileInput.click()"
-                        class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-4 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        :class="uploading ? 'opacity-50 pointer-events-none' : ''"
+                        class="relative block w-full rounded-lg border-2 border-dashed border-border p-4 text-center hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2"
+                        :class="uploading ? 'text-text-subtle pointer-events-none' : ''"
                     >
-                        <component :is="IconUpload" class="mx-auto h-8 w-8 text-gray-400" stroke-width="1" />
-                        <span class="mt-1 block text-sm text-gray-600">
+                        <component :is="IconUpload" class="mx-auto h-8 w-8 text-text-subtle" stroke-width="1" />
+                        <span class="mt-1 block text-sm text-text-muted">
                             {{ uploading ? $t('Uploading...') : $t('Select file') }}
                         </span>
                         <input
@@ -157,7 +157,7 @@
             />
         </template>
 
-        <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
+        <p v-if="error" class="mt-1 text-xs text-danger">{{ error }}</p>
     </div>
 </template>
 

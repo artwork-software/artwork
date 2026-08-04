@@ -3,17 +3,17 @@
          class="flex flex-col relative h-full mb-2"
          :class="{'cursor-pointer': can('can plan shifts') || hasAdminRole()}"
          v-if="timeLineForm.start !== null && timeLineForm.end !== null">
-        <div class="text-xs bg-zinc-100 border border-zinc-200 shadow-sm p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
+        <div class="text-xs bg-surface-sunken border border-border-subtle shadow-sm p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
             <div>
                 <div v-if="time.clicked" class="mb-3 mx-1">
                     <SwitchGroup as="div" class="flex items-center">
-                        <SwitchLabel as="span" class="mr-3 text-xs" :class="automaticMode ? 'font-bold' : 'text-gray-400'">
+                        <SwitchLabel as="span" class="mr-3 text-xs" :class="automaticMode ? 'font-bold' : 'text-text-subtle'">
                             {{ $t('Automatic mode')}}
                         </SwitchLabel>
-                        <Switch v-model="automaticMode" :class="[automaticMode ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                        <Switch v-model="automaticMode" :class="[automaticMode ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out']">
                             <span aria-hidden="true" :class="[!automaticMode  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
-                        <SwitchLabel as="span" class="ml-3 text-xs" :class="!automaticMode? 'font-bold' : 'text-gray-400'">
+                        <SwitchLabel as="span" class="ml-3 text-xs" :class="!automaticMode? 'font-bold' : 'text-text-subtle'">
                             {{ $t('Manual mode') }}
                         </SwitchLabel>
                     </SwitchGroup>
@@ -67,7 +67,7 @@
                 </div>
                 <div v-if="time.clicked || editDescription" class="pt-4 flex items-center justify-between">
                     <!-- tiny cancel button -->
-                    <button class="bg-gray-800 text-white text-[9px] rounded-lg px-2.5 py-0.5" @click="resetForm">{{ $t('Cancel') }}</button>
+                    <button class="bg-surface-inverse text-text-inverse text-[9px] rounded-lg px-2.5 py-0.5" @click="resetForm">{{ $t('Cancel') }}</button>
                     <button class="bg-artwork-buttons-create text-white text-[9px] rounded-lg px-2.5 py-0.5" @click="saveTimeline">{{ $t('Save') }}</button>
                 </div>
 

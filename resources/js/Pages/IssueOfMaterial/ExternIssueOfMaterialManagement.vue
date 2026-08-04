@@ -6,7 +6,7 @@
             <ToolbarHeader title="External material issues"
                            description="Track and filter external issues, returns and recipients."
                            :icon="IconMenu4"
-                           icon-bg-class="bg-blue-600/10 text-blue-700"
+                           icon-bg-class="bg-accent-50 text-accent-700"
             >
                 <template #actions>
                     <button class="ui-button-add"  @click="openIssueOfMaterialModal">
@@ -21,13 +21,13 @@
             <!--<div class="flex flex-wrap items-center justify-between gap-4 pt-6 pb-2 hidden">
                 <div class="min-w-0">
                     <div class="flex items-center gap-2">
-            <span class="inline-flex size-6 items-center justify-center rounded-md bg-indigo-600/10 text-indigo-700">
+            <span class="inline-flex size-6 items-center justify-center rounded-md bg-accent-50 text-accent-700">
               <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/></svg>
             </span>
                         <h1 class="text-2xl font-semibold tracking-tight">{{ $t('External material issues') }}</h1>
                     </div>
-                    <div class="mt-2 h-1 w-24 rounded-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400"></div>
-                    <p class="text-sm text-gray-500 mt-2">
+                    <div class="mt-2 h-1 w-24 rounded-full bg-gradient-to-r from-accent-600 via-info to-success"></div>
+                    <p class="text-sm text-text-subtle mt-2">
                         {{ $t('Track and filter external issues, returns and recipients.') }}
                     </p>
                 </div>
@@ -38,7 +38,7 @@
                         <button
                             type="button"
                             @click="filterIssueByArticleIds"
-                            class="p-4 inline-flex items-center justify-center rounded-md border border-gray-200 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            class="p-4 inline-flex items-center justify-center rounded-md border border-border-subtle bg-white hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-accent-600"
                         >
                             <component :is="IconSearch" class="size-5" stroke-width="1.5" />
                         </button>
@@ -48,7 +48,7 @@
                         v-if="can('inventory.disposition') || is('artwork admin')"
                         :text="$t('New issue of material')"
                         @click="openIssueOfMaterialModal"
-                        class="!bg-indigo-600 hover:!bg-indigo-700 !text-white !border-transparent"
+                        class="!bg-accent-600 hover:!bg-accent-700 !text-white !border-transparent"
                     >
                         <component :is="IconCopyPlus" class="size-5 mr-2" />
                     </BaseButton>
@@ -65,10 +65,10 @@
                     <div
                         v-for="(article, index) in articleNamesForFilter"
                         :key="index"
-                        class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50/70 px-2.5 py-0.5 text-sm text-sky-800 ring-1 ring-inset ring-sky-100"
+                        class="inline-flex items-center rounded-full border border-info-border bg-info-surface px-2.5 py-0.5 text-sm text-info ring-1 ring-inset ring-info-border"
                     >
                         <span class="truncate max-w-[220px]">{{ article.name }}</span>
-                        <button type="button" class="ml-2 text-sky-500 hover:text-sky-700" @click="articleNamesForFilter.splice(index, 1)">
+                        <button type="button" class="ml-2 text-info hover:text-info" @click="articleNamesForFilter.splice(index, 1)">
                             <component :is="IconX" class="size-4" />
                         </button>
                     </div>
@@ -88,7 +88,7 @@
                             }}
                         </div>
                         <IconChevronDown
-                            class="ml-3 text-lg text-gray-500 transition-transform duration-200 h-5 w-5"
+                            class="ml-3 text-lg text-text-subtle transition-transform duration-200 h-5 w-5"
                             :class="{ 'rotate-180': !filtersCollapsed }"
                             aria-hidden="true"
                         />
@@ -96,30 +96,30 @@
                     <div v-if="!filtersCollapsed">
                         <div class="glassy card px-4 pb-2 mb-2">
                             <!-- Zeile 1 -->
-                            <div class="pt-2 text-sm font-medium text-gray-900">
+                            <div class="pt-2 text-sm font-medium text-text">
                                 {{ $t('Time') }}
                             </div>
                             <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
                                 <!-- Time filters -->
                                 <div class="col-span-12 md:col-span-6 lg:col-span-3">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{
+                                    <label class="block text-xs font-medium text-text-muted mb-1">{{
                                             $t('Shortcuts')
                                         }}</label>
                                     <div class="flex flex-wrap gap-1.5">
                                         <button type="button"
-                                                class="rounded-md border border-indigo-200 bg-indigo-50/70 px-2.5 py-1 text-xs text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300"
+                                                class="rounded-md border border-accent-200 bg-accent-50 px-2.5 py-1 text-xs text-accent-700 hover:bg-accent-50 hover:border-accent-200"
                                                 @click="setRangeToday">{{ $t('Today') }}
                                         </button>
                                         <button type="button"
-                                                class="rounded-md border border-sky-200 bg-sky-50/70 px-2.5 py-1 text-xs text-sky-700 hover:bg-sky-50 hover:border-sky-300"
+                                                class="rounded-md border border-info-border bg-info-surface px-2.5 py-1 text-xs text-info hover:bg-info-surface hover:border-info-border"
                                                 @click="setRangeThisWeek">{{ $t('This week') }}
                                         </button>
                                         <button type="button"
-                                                class="rounded-md border border-emerald-200 bg-emerald-50/70 px-2.5 py-1 text-xs text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
+                                                class="rounded-md border border-success-border bg-success-surface px-2.5 py-1 text-xs text-success hover:bg-success-surface hover:border-success-border"
                                                 @click="setRangeThisMonth">{{ $t('This month') }}
                                         </button>
                                         <button type="button"
-                                                class="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                                                class="rounded-md border border-border-subtle bg-white px-2.5 py-1 text-xs text-text-muted hover:bg-surface-sunken"
                                                 @click="clearRange">{{ $t('All time') }}
                                         </button>
                                     </div>
@@ -127,7 +127,7 @@
 
                                 <!-- Zeitraum -->
                                 <div class="col-span-12 sm:col-span-6 lg:col-span-3">
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">{{
+                                    <label class="block text-xs font-medium text-text-muted mb-1">{{
                                             $t('Time range')
                                         }}</label>
                                     <div class="flex items-center gap-2">
@@ -135,14 +135,14 @@
                                             v-model="filters.date_from"
                                             type="date"
                                             :max="filters.date_to || undefined"
-                                            class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-md border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
                                         />
-                                        <span class="text-gray-400 text-xs">–</span>
+                                        <span class="text-text-subtle text-xs">–</span>
                                         <input
                                             v-model="filters.date_to"
                                             type="date"
                                             :min="filters.date_from || undefined"
-                                            class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            class="w-full rounded-md border border-border px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
                                         />
                                     </div>
                                 </div>
@@ -150,7 +150,7 @@
                         </div>
                     </div>
                     <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
-                        <div class="pt-2 pb-1 text-sm font-medium text-gray-900">
+                        <div class="pt-2 pb-1 text-sm font-medium text-text">
                             {{ $t('Issued by') }}
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
@@ -171,16 +171,16 @@
                             <input
                                 v-model="filters.overdue_only"
                                 type="checkbox"
-                                class="mt-0.5 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                class="mt-0.5 size-4 rounded border-border text-accent-600 focus:ring-accent-600"
                             >
                             <span>
-                                <span class="block text-sm font-medium text-gray-900">{{ $t('Only overdue returns') }}</span>
-                                <span class="block text-xs text-gray-500">{{ $t('Shows issues whose return date has passed and for which no return has been entered.') }}</span>
+                                <span class="block text-sm font-medium text-text">{{ $t('Only overdue returns') }}</span>
+                                <span class="block text-xs text-text-subtle">{{ $t('Shows issues whose return date has passed and for which no return has been entered.') }}</span>
                             </span>
                         </label>
                     </div>
                     <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
-                        <div class="pt-2 pb-1 text-sm font-medium text-gray-900">
+                        <div class="pt-2 pb-1 text-sm font-medium text-text">
                             {{ $t('Received by') }}
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
@@ -197,7 +197,7 @@
                         </div>
                     </div>
                     <div v-if="!filtersCollapsed" class="glassy card px-4 pb-2 mb-2">
-                        <div class="pt-2 pb-1 text-sm font-medium text-gray-900">
+                        <div class="pt-2 pb-1 text-sm font-medium text-text">
                             {{ $t('Name search') }}
                         </div>
                         <div class="grid grid-cols-12 lg:grid-cols-6 md:grid-cols-2 gap-3 items-end">
@@ -207,9 +207,9 @@
                                         v-model="filters.q"
                                         type="text"
                                         :placeholder="$t('Search issue/external name …')"
-                                        class="w-full rounded-md border border-gray-300 pl-8 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        class="w-full rounded-md border border-border pl-8 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
                                     />
-                                    <span class="pointer-events-none absolute left-2 top-1.5 text-gray-400">
+                                    <span class="pointer-events-none absolute left-2 top-1.5 text-text-subtle">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                           <circle cx="11" cy="11" r="7" stroke-width="1.5"></circle>
                                           <path d="M20 20l-3.5-3.5" stroke-width="1.5"></path>
@@ -218,7 +218,7 @@
                                     <button
                                         v-if="filters.q"
                                         type="button"
-                                        class="absolute right-1.5 top-1.5 rounded p-1 text-gray-400 hover:text-gray-600"
+                                        class="absolute right-1.5 top-1.5 rounded p-1 text-text-subtle hover:text-text-muted"
                                         @click="filters.q = ''"
                                         :aria-label="$t('Clear search')"
                                     >
@@ -241,26 +241,26 @@
                 </div>
                 <!-- Aktive Filter Zusammenfassung (immer sichtbar) -->
                 <div v-if="hasAnyFilter" class="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    <span v-if="filtersCollapsed" class="text-sm font-medium text-gray-900 shrink-0">{{ $t('Filter') }}:</span>
+                    <span v-if="filtersCollapsed" class="text-sm font-medium text-text shrink-0">{{ $t('Filter') }}:</span>
                     <span v-if="filters.date_from || filters.date_to"
-                          class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50/70 px-2.5 py-0.5 text-xs text-indigo-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 text-xs text-accent-700 shrink-0">
                       {{ $t('Range') }}:
                       <span class="mx-1 font-medium">{{
                               formatDate(filters.date_from) || '…'
                           }} – {{ formatDate(filters.date_to) || '…' }}</span>
-                      <button class="ml-1 text-indigo-500 hover:text-indigo-700"
+                      <button class="ml-1 text-accent-600 hover:text-accent-700"
                               @click="clearRange">&times;</button>
                     </span>
                     <span v-if="filters.issued_by_id"
-                          class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50/70 px-2.5 py-0.5 text-xs text-sky-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-info-border bg-info-surface px-2.5 py-0.5 text-xs text-info shrink-0">
                       {{ $t('Issued by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.issued_by_id) }}</span>
-                      <button class="ml-1 text-sky-500 hover:text-sky-700"
+                      <button class="ml-1 text-info hover:text-info"
                               @click="filters.issued_by_id = ''">&times;</button>
                     </span>
                     <span v-if="filters.received_by_id"
-                          class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50/70 px-2.5 py-0.5 text-xs text-emerald-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-success-border bg-success-surface px-2.5 py-0.5 text-xs text-success shrink-0">
                       {{ $t('Received by') }}: <span class="mx-1 font-medium">{{ userNameById(filters.received_by_id) }}</span>
-                      <button class="ml-1 text-emerald-500 hover:text-emerald-700"
+                      <button class="ml-1 text-success hover:text-success"
                               @click="filters.received_by_id = ''">&times;</button>
                     </span>
                     <span v-if="filters.q"
@@ -270,14 +270,14 @@
                               @click="filters.q = ''">&times;</button>
                     </span>
                     <span v-if="filters.overdue_only"
-                          class="inline-flex items-center rounded-full border border-rose-200 bg-rose-50/70 px-2.5 py-0.5 text-xs text-rose-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-danger-border bg-danger-surface px-2.5 py-0.5 text-xs text-danger shrink-0">
                       {{ $t('Overdue returns') }}
-                      <button class="ml-1 text-rose-500 hover:text-rose-700" @click="filters.overdue_only = false">&times;</button>
+                      <button class="ml-1 text-danger hover:text-danger" @click="filters.overdue_only = false">&times;</button>
                     </span>
                     <button
                         v-if="hasAnyFilter"
                         type="button"
-                        class="ml-auto inline-flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs hover:bg-gray-50 shrink-0"
+                        class="ml-auto inline-flex items-center rounded-md border border-border-subtle bg-white px-2.5 py-1 text-xs hover:bg-surface-sunken shrink-0"
                         @click="resetFilters"
                     >{{ $t('Clear all') }}
                     </button>
@@ -286,7 +286,7 @@
 
             <!-- Tabelle -->
             <div class="mt-5">
-                <div class="grid grid-cols-12 gap-4 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <div class="grid grid-cols-12 gap-4 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-text-subtle">
                     <div class="col-span-3">{{ $t('Name') }}</div>
                     <div class="col-span-1">{{ $t('Material value') }}</div>
                     <div class="col-span-2">{{ $t('Time range') }}</div>
@@ -296,7 +296,7 @@
                     <div class="col-span-1">{{ $t('Received by') }}</div>
                     <div class="col-span-1 text-right">{{ $t('Status') }}</div>
                 </div>
-                <div class="border-y border-gray-200"></div>
+                <div class="border-y border-border-subtle"></div>
             </div>
 
             <!-- Rows -->

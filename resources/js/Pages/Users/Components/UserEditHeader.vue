@@ -19,7 +19,7 @@
                                     {{ user_to_edit.last_name }}
                                 </div>
                             </div>
-                            <p class="text-gray-500 text-sm">{{ user_to_edit.email }}</p>
+                            <p class="text-text-subtle text-sm">{{ user_to_edit.email }}</p>
                         </div>
 
                         <div class="ml-auto">

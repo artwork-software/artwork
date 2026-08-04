@@ -11,7 +11,7 @@
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto border-collapse">
                     <thead>
-                    <tr class="bg-gray-100">
+                    <tr class="bg-surface-sunken">
                         <th class="px-4 py-2 text-left">KTO</th>
                         <th class="px-4 py-2 text-left">KST</th>
                         <th class="px-4 py-2 text-left">Buchungstext</th>

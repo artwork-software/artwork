@@ -2,7 +2,7 @@
     <AppLayout :title="$t('Inventory')">
         <div class="w-full px-10 min-h-screen">
             <!-- Sticky Funktionsleiste über die gesamte Breite -->
-            <div class="sticky top-0 z-40 -mx-10 px-10 bg-white border-b border-gray-200 pt-3 pb-2 shadow-sm">
+            <div class="sticky top-0 z-40 -mx-10 px-10 bg-white border-b border-border-subtle pt-3 pb-2 shadow-sm">
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
                     <div class="w-72">
                         <BaseInput
@@ -39,7 +39,7 @@
                                 classesButton="ui-button"
                                 @click="showProductBasketModal = true"
                             />
-                            <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-1 ring-blue-200 text-blue-500 text-xs flex items-center justify-center pointer-events-none">
+                            <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-1 ring-accent-200 text-accent-600 text-xs flex items-center justify-center pointer-events-none">
                                 {{ productBaskets?.basket_articles?.length ?? 0 }}
                             </span>
                         </div>
@@ -63,7 +63,7 @@
                                 @click="showDisplaySettingsModal = true"
                             />
                             <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="hideArticleImages">
-                                <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
+                                <span class="relative inline-flex size-2.5 rounded-full bg-accent-600"></span>
                             </span>
                         </div>
 
@@ -118,10 +118,10 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4 items-stretch" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
                                 <div class="relative">
-                                    <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-zinc-500/30 rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
+                                    <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
                                         <div class="flex items-center justify-center h-full w-full">
                                             <div class="relative">
-                                                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-blue-50 ring-2 ring-white text-blue-500 text-xs flex items-center justify-center">
+                                                <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-2 ring-white text-accent-600 text-xs flex items-center justify-center">
                                                     {{ findBasketForArticle(item.id) ? findBasketForArticle(item.id).quantity : 0 }}
                                                 </span>
                                                 <BaseUIButton :label="$t('Add to Basket')" use-translation icon="IconBasketPlus" @click="addArticleToBasket(item.id)" />
@@ -137,8 +137,8 @@
                             <!-- Loop through each category -->
                             <div v-for="(category, index) in groupedArticles" :key="category.id" class="space-y-3">
                                 <!-- Category Header -->
-                                <div class="border-b-2 border-gray-300 pb-2">
-                                    <h2 class="text-xl font-bold text-gray-900">{{ category.name }}</h2>
+                                <div class="border-b-2 border-border pb-2">
+                                    <h2 class="text-xl font-bold text-text">{{ category.name }}</h2>
                                 </div>
 
                                 <!--
@@ -155,7 +155,7 @@
                                     page-level scrolling a sticky header would have no reference point and scroll
                                     away. Short categories simply don't scroll internally.
                                 -->
-                                <div class="max-h-[75vh] overflow-auto border border-gray-200 rounded-lg">
+                                <div class="max-h-[75vh] overflow-auto border border-border-subtle rounded-lg">
                                     <!--
                                         NOTE: no `min-w-full` here. With `table-fixed`, a table narrower than
                                         its container would distribute the slack proportionally across ALL
@@ -164,7 +164,7 @@
                                         scrolling columns bleed through). Letting the table size to the sum of
                                         the fixed column widths keeps the sticky offsets exact.
                                     -->
-                                    <table class="w-max table-fixed divide-y divide-gray-200">
+                                    <table class="w-max table-fixed divide-y divide-border-subtle">
                                         <colgroup>
                                             <col v-if="!hideArticleImages" class="w-20" />
                                             <col class="w-64" />
@@ -172,46 +172,46 @@
                                             <col v-for="property in category.unionProperties" :key="property.id" class="w-44" />
                                             <col class="w-24" />
                                         </colgroup>
-                                        <thead class="bg-gray-50">
-                                            <tr class="divide-x divide-gray-200">
+                                        <thead class="bg-surface-sunken">
+                                            <tr class="divide-x divide-border-subtle">
                                                 <!-- Corner cells: pinned both top (header) and left (identity columns) -> higher z -->
-                                                <th v-if="!hideArticleImages" scope="col" class="sticky top-0 left-0 z-30 bg-gray-50 py-3.5 pr-4 pl-4 text-center text-sm font-semibold text-gray-900">
+                                                <th v-if="!hideArticleImages" scope="col" class="sticky top-0 left-0 z-30 bg-surface-sunken py-3.5 pr-4 pl-4 text-center text-sm font-semibold text-text">
                                                     {{ $t('Image') }}
                                                 </th>
-                                                <th scope="col" class="sticky top-0 z-30 bg-gray-50 px-4 py-3.5 text-left text-sm font-semibold text-gray-900" :class="hideArticleImages ? 'left-0' : 'left-20'">
+                                                <th scope="col" class="sticky top-0 z-30 bg-surface-sunken px-4 py-3.5 text-left text-sm font-semibold text-text" :class="hideArticleImages ? 'left-0' : 'left-20'">
                                                     {{ $t('Name') }}
                                                 </th>
-                                                <th scope="col" class="sticky top-0 z-30 bg-gray-50 px-4 py-3.5 text-left text-sm font-semibold text-gray-900" :class="hideArticleImages ? 'left-[256px]' : 'left-[336px]'">
+                                                <th scope="col" class="sticky top-0 z-30 bg-surface-sunken px-4 py-3.5 text-left text-sm font-semibold text-text" :class="hideArticleImages ? 'left-[256px]' : 'left-[336px]'">
                                                     {{ $t('Quantity') }}
                                                 </th>
                                                 <!-- Union of all properties across this category's subcategories (pinned top only) -->
-                                                <th scope="col" class="sticky top-0 z-20 bg-gray-50 px-4 py-3.5 text-left text-sm font-semibold text-gray-900 truncate"
+                                                <th scope="col" class="sticky top-0 z-20 bg-surface-sunken px-4 py-3.5 text-left text-sm font-semibold text-text truncate"
                                                     :class="isNumericProperty(property) ? 'text-right' : ''"
                                                     v-for="property in category.unionProperties"
                                                     :key="property.id"
                                                     :title="property?.name">
                                                     {{ property?.name }}
                                                 </th>
-                                                <th scope="col" class="sticky top-0 z-20 bg-gray-50 py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900">
+                                                <th scope="col" class="sticky top-0 z-20 bg-surface-sunken py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text">
                                                     {{ $t('Actions') }}
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                        <tbody class="divide-y divide-border-subtle bg-white">
                                             <template v-for="subcategory in category.subcategories" :key="subcategory.id">
                                                 <!-- Subcategory group row (spans the full width of the shared table) -->
-                                                <tr class="bg-gray-50/80">
+                                                <tr class="bg-surface-sunken">
                                                     <td :colspan="category.unionProperties.length + (hideArticleImages ? 3 : 4)" class="p-0">
                                                         <div class="sticky left-0 w-fit px-4 py-2 border-l-4 border-artwork-buttons-create flex items-center gap-x-2">
-                                                            <h3 class="text-sm font-semibold text-gray-800">{{ subcategory.name }}</h3>
-                                                            <span class="inline-flex items-center rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                            <h3 class="text-sm font-semibold text-text">{{ subcategory.name }}</h3>
+                                                            <span class="inline-flex items-center rounded-full bg-border-subtle px-2 py-0.5 text-xs font-medium text-text-muted">
                                                                 {{ subcategory.articles.length }}
                                                             </span>
                                                         </div>
                                                     </td>
                                                 </tr>
                                                 <!-- Article rows share the category-wide column layout -->
-                                                <tr v-for="item in subcategory.articles" :key="item?.id" class="divide-x divide-gray-200 relative bg-white hover:bg-gray-50">
+                                                <tr v-for="item in subcategory.articles" :key="item?.id" class="divide-x divide-border-subtle relative bg-white hover:bg-surface-sunken">
                                                     <InventorySingleArticleInTable
                                                         :item="item"
                                                         :column-properties="category.unionProperties"
@@ -235,9 +235,9 @@
                         <!-- Bei aktiven Filtern direkt anbieten, sie zurückzusetzen -->
                         <div
                             v-if="props.hasActiveFilter || props.activeStatusId"
-                            class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+                            class="rounded-lg border border-accent-200 bg-accent-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3"
                         >
-                            <span class="text-sm text-blue-700">
+                            <span class="text-sm text-accent-700">
                                 {{ $t('No articles match your search or filters.') }}
                             </span>
                             <BaseUIButton

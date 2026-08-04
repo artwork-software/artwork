@@ -4,7 +4,7 @@
             <div class="flex items-center gap-3">
                 <Link
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-white px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface-sunken"
                     :href="!isMyRequest ? route('shifts.approvals.review') : route('shifts.approvals.requests')"
                 >
                     <IconArrowLeft class="h-4 w-4"/>
@@ -44,7 +44,7 @@
                     @open-history="openHistoryDrawer"
                 />
 
-                <div v-if="!rows.length" class="text-center text-sm text-gray-500">
+                <div v-if="!rows.length" class="text-center text-sm text-text-subtle">
                     {{ $t('No shifts found for this request.') }}
                 </div>
             </div>

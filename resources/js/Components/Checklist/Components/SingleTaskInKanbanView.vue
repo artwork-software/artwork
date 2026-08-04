@@ -1,6 +1,6 @@
 <template>
     <article
-        class="group my-3 rounded-xl border border-zinc-200 bg-white p-3 transition hover:shadow-xs focus-within:ring-2 focus-within:ring-blue-600 print:border print:shadow-none"
+        class="group my-3 rounded-xl border border-border-subtle bg-white p-3 transition hover:shadow-xs focus-within:ring-2 focus-within:ring-accent-600 print:border print:shadow-none"
         draggable="true"
         @dragstart="onDragStart"
         @dragend="onDragEnd"
@@ -15,17 +15,17 @@
                         @change="updateTaskStatus"
                         v-model="localTaskDone"
                         type="checkbox"
-                        class="h-4 w-4 cursor-pointer rounded-full border-2 border-zinc-300 text-emerald-600 ring-0 focus:ring-0 focus:outline-none"
+                        class="h-4 w-4 cursor-pointer rounded-full border-2 border-border text-success ring-0 focus:ring-0 focus:outline-none"
                         :aria-labelledby="titleId"
                     />
                 </div>
 
                 <!-- Title + Description -->
                 <div class="min-w-0 flex-1">
-                    <div :id="titleId" class="mb-1  font-semibold text-sm text-zinc-900" :class="localTaskDone ? 'text-zinc-400 line-through' : ''">
+                    <div :id="titleId" class="mb-1  font-semibold text-sm text-text" :class="localTaskDone ? 'text-text-subtle line-through' : ''">
                         {{ task.name }}
                     </div>
-                    <p class="xxsLight mt-0.5 break-words text-zinc-600" :class="localTaskDone ? 'line-through text-zinc-400' : ''">
+                    <p class="xxsLight mt-0.5 break-words text-text-muted" :class="localTaskDone ? 'line-through text-text-subtle' : ''">
                         {{ task.description }}
                     </p>
                 </div>
@@ -60,10 +60,10 @@
                 <div class="flex items-center justify-end gap-2 text-xs">
                     <!-- Open / deadline -->
                     <template v-if="!localTaskDone">
-                        <IconCalendar class="h-6 w-6" :class="isOverdue ? 'text-rose-500' : 'text-zinc-400'" />
+                        <IconCalendar class="h-6 w-6" :class="isOverdue ? 'text-danger' : 'text-text-subtle'" />
                         <span
                             class="rounded-md px-1.5 py-0.5 text-sm font-semibold"
-                            :class="isOverdue ? 'bg-rose-500 text-white' : 'bg-zinc-100 text-zinc-700'"
+                            :class="isOverdue ? 'bg-danger text-white' : 'bg-surface-sunken text-text-muted'"
                         >
                           {{ task.formatted_dates?.deadline }}
                         </span>
@@ -80,7 +80,7 @@
                                 height="6"
                                 width="6"
                             />
-                            <span class="text-sm text-zinc-600">{{ task.formatted_dates?.done_at }}</span>
+                            <span class="text-sm text-text-muted">{{ task.formatted_dates?.done_at }}</span>
                             </div>
                         </div>
                     </template>

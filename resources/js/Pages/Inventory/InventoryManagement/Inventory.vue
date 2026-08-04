@@ -17,7 +17,7 @@
                             <span v-else>
                                 absteigend
                             </span>
-                            <component :is="IconX" class="h-4 w-4 cursor-pointer hover:text-red-600 transition-colors duration-300 ease-in-out" @click="updateSort({ id: null })"/>
+                            <component :is="IconX" class="h-4 w-4 cursor-pointer hover:text-danger transition-colors duration-300 ease-in-out" @click="updateSort({ id: null })"/>
                         </span>
 
                     </div>

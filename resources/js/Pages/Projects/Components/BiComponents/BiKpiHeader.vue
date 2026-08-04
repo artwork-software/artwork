@@ -4,20 +4,20 @@
             <div
                 v-for="kpi in kpiTiles"
                 :key="kpi.key"
-                class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+                class="rounded-xl border border-border-subtle bg-white p-3 shadow-sm"
             >
                 <div class="flex items-center gap-1.5">
-                    <component :is="kpi.icon" class="size-4 text-gray-400 shrink-0" />
-                    <span class="text-xs text-gray-500 truncate">{{ $t(kpi.label) }}</span>
+                    <component :is="kpi.icon" class="size-4 text-text-subtle shrink-0" />
+                    <span class="text-xs text-text-subtle truncate">{{ $t(kpi.label) }}</span>
                 </div>
-                <p v-if="kpi.notApplicable" class="text-xs text-gray-400 mt-2 italic">
+                <p v-if="kpi.notApplicable" class="text-xs text-text-subtle mt-2 italic">
                     {{ $t('Not relevant') }}
                 </p>
                 <template v-else>
-                    <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-900'">
+                    <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-text-subtle' : 'text-text'">
                         <template v-if="kpi.estimated">≈ </template>{{ kpi.value ?? '–' }}
                     </p>
-                    <p v-if="kpi.estimated" class="text-[10px] text-indigo-600 leading-tight">
+                    <p v-if="kpi.estimated" class="text-[10px] text-accent-600 leading-tight">
                         {{ $t('estimated from sold tickets') }}
                     </p>
                 </template>
@@ -29,18 +29,18 @@
             <div
                 v-for="kpi in quotaTiles"
                 :key="kpi.key"
-                class="rounded-xl border border-gray-100 bg-gray-50/60 p-3"
+                class="rounded-xl border border-border-subtle bg-surface-sunken p-3"
                 v-tooltip.top="kpi.tooltip ? { value: kpi.tooltip, appendTo: 'body', class: 'aw-tooltip' } : undefined"
             >
-                <span class="text-xs text-gray-500 truncate block">{{ $t(kpi.label) }}</span>
-                <p class="text-base font-semibold mt-1" :class="kpi.value === null ? 'text-gray-300' : 'text-gray-800'">
+                <span class="text-xs text-text-subtle truncate block">{{ $t(kpi.label) }}</span>
+                <p class="text-base font-semibold mt-1" :class="kpi.value === null ? 'text-text-subtle' : 'text-text'">
                     {{ kpi.value ?? '–' }}
                 </p>
             </div>
         </div>
 
-        <div v-if="chartData" class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm print:hidden">
-            <h4 class="text-xs font-medium text-gray-500 mb-2">{{ $t('Per-event trend') }}</h4>
+        <div v-if="chartData" class="mt-4 rounded-xl border border-border-subtle bg-white p-4 shadow-sm print:hidden">
+            <h4 class="text-xs font-medium text-text-subtle mb-2">{{ $t('Per-event trend') }}</h4>
             <BiChart type="bar" :data="chartData" :options="chartOptions" height="220px" />
         </div>
     </div>

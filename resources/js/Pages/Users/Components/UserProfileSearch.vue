@@ -22,7 +22,7 @@
                 class="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-md bg-white
                        shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
             >
-                <ul v-if="results.length > 0" class="divide-y divide-gray-100">
+                <ul v-if="results.length > 0" class="divide-y divide-border-subtle">
                     <li
                         v-for="(user, index) in results"
                         :key="user.id"
@@ -30,7 +30,7 @@
                         @mouseenter="highlightedIndex = index"
                         :class="[
                             'flex items-center gap-3 px-4 py-2 cursor-pointer',
-                            index === highlightedIndex ? 'bg-gray-100' : ''
+                            index === highlightedIndex ? 'bg-surface-sunken' : ''
                         ]"
                     >
                         <img
@@ -39,16 +39,16 @@
                             alt=""
                         />
                         <div class="min-w-0">
-                            <p class="truncate text-sm font-medium text-gray-900">
+                            <p class="truncate text-sm font-medium text-text">
                                 {{ user.first_name }} {{ user.last_name }}
                             </p>
-                            <p v-if="user.email" class="truncate text-xs text-gray-500">
+                            <p v-if="user.email" class="truncate text-xs text-text-subtle">
                                 {{ user.email }}
                             </p>
                         </div>
                     </li>
                 </ul>
-                <div v-else-if="!loading" class="px-4 py-3 text-sm text-gray-500">
+                <div v-else-if="!loading" class="px-4 py-3 text-sm text-text-subtle">
                     {{ $t('No results found') }}
                 </div>
             </div>

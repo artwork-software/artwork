@@ -5,7 +5,7 @@
                 <input @change="updateTaskStatus(task)"
                        v-model="task.done"
                        type="checkbox"
-                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-gray-300"/>
+                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-border"/>
                 <div class="ml-4 my-auto mDark"
                      :class="task.done ? 'text-secondary line-through' : 'text-primary'">
                     {{ task.name }}

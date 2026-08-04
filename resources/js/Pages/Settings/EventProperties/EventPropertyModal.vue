@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div v-if="eventPropertyForm.errors">
-                <div class="text-red-500 text-sm mt-2" v-for="error in eventPropertyForm.errors" :key="error">
+                <div class="text-danger text-sm mt-2" v-for="error in eventPropertyForm.errors" :key="error">
                     {{ error }}
                 </div>
             </div>

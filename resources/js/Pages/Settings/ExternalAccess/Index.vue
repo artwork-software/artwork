@@ -3,16 +3,16 @@
         <div class="mx-auto max-w-3xl mt-6 px-6 pb-20 space-y-8">
             <header>
                 <h1 class="text-xl font-semibold">{{ $t('External access settings') }}</h1>
-                <p class="mt-2 text-sm text-zinc-500">
+                <p class="mt-2 text-sm text-text-subtle">
                     {{ $t('Configure defaults and notification recipients for external access invitations.') }}
                 </p>
             </header>
 
             <form @submit.prevent="save" class="space-y-8">
                 <!-- Invitation wording -->
-                <section class="rounded-2xl border border-zinc-200 bg-white p-6">
+                <section class="rounded-2xl border border-border-subtle bg-white p-6">
                     <h2 class="text-lg font-semibold">{{ $t('Invitation wording') }}</h2>
-                    <p class="mt-1 text-sm text-zinc-500">{{ $t('The company name used in invitation emails.') }}</p>
+                    <p class="mt-1 text-sm text-text-subtle">{{ $t('The company name used in invitation emails.') }}</p>
                     <div class="mt-4">
                         <BaseInput
                             id="company_name_override"
@@ -20,14 +20,14 @@
                             :label="$t('Company name (override)')"
                             :placeholder="settings.effective_company_name_without_override"
                         />
-                        <p v-if="!form.company_name_override" class="text-xs text-zinc-500 mt-1">
+                        <p v-if="!form.company_name_override" class="text-xs text-text-subtle mt-1">
                             {{ $t('Will use:') }} <strong>{{ settings.effective_company_name_without_override }}</strong>
                         </p>
                     </div>
                 </section>
 
                 <!-- Default durations -->
-                <section class="rounded-2xl border border-zinc-200 bg-white p-6">
+                <section class="rounded-2xl border border-border-subtle bg-white p-6">
                     <h2 class="text-lg font-semibold">{{ $t('Default durations') }}</h2>
                     <div class="mt-4 grid grid-cols-2 gap-4">
                         <div>
@@ -50,13 +50,13 @@
                 </section>
 
                 <!-- Security -->
-                <section class="rounded-2xl border border-zinc-200 bg-white p-6">
+                <section class="rounded-2xl border border-border-subtle bg-white p-6">
                     <button type="button" class="flex w-full items-center justify-between" @click="securityOpen = !securityOpen">
                         <div class="text-left">
                             <h2 class="text-lg font-semibold">{{ $t('Security & rate limiting') }}</h2>
-                            <p class="text-sm text-zinc-500">{{ $t('Advanced settings — change with care.') }}</p>
+                            <p class="text-sm text-text-subtle">{{ $t('Advanced settings — change with care.') }}</p>
                         </div>
-                        <span class="text-zinc-400">{{ securityOpen ? '−' : '+' }}</span>
+                        <span class="text-text-subtle">{{ securityOpen ? '−' : '+' }}</span>
                     </button>
                     <div v-if="securityOpen" class="mt-4 grid grid-cols-2 gap-4">
                         <div>
@@ -110,11 +110,11 @@
             </form>
 
             <!-- Recipients -->
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6">
                 <header class="flex items-center justify-between">
                     <div>
                         <h2 class="text-lg font-semibold">{{ $t('Blanket notification recipients') }}</h2>
-                        <p class="mt-1 text-sm text-zinc-500">
+                        <p class="mt-1 text-sm text-text-subtle">
                             {{ $t('These recipients receive a copy of every external access notification.') }}
                         </p>
                     </div>
@@ -122,18 +122,18 @@
                 </header>
 
                 <ul v-if="notificationRecipients.length" class="mt-6 space-y-2">
-                    <li v-for="r in notificationRecipients" :key="r.id" class="flex items-center justify-between border border-zinc-100 rounded-lg px-4 py-3">
+                    <li v-for="r in notificationRecipients" :key="r.id" class="flex items-center justify-between border border-border-subtle rounded-lg px-4 py-3">
                         <div>
                             <div class="text-sm font-medium">{{ r.label }}</div>
-                            <div class="text-xs text-zinc-500 mt-0.5">{{ formatTypes(r.notification_types) }}</div>
+                            <div class="text-xs text-text-subtle mt-0.5">{{ formatTypes(r.notification_types) }}</div>
                         </div>
                         <div class="flex gap-2">
-                            <button class="text-xs text-blue-600 hover:underline" @click="openEdit(r)">{{ $t('Edit') }}</button>
-                            <button class="text-xs text-red-600 hover:underline" @click="remove(r)">{{ $t('Remove') }}</button>
+                            <button class="text-xs text-accent-600 hover:underline" @click="openEdit(r)">{{ $t('Edit') }}</button>
+                            <button class="text-xs text-danger hover:underline" @click="remove(r)">{{ $t('Remove') }}</button>
                         </div>
                     </li>
                 </ul>
-                <p v-else class="mt-6 text-sm text-zinc-500">
+                <p v-else class="mt-6 text-sm text-text-subtle">
                     {{ $t('No blanket recipients configured. Only inviters and project managers receive notifications.') }}
                 </p>
             </section>

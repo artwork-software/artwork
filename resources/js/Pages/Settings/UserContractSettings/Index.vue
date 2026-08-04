@@ -18,7 +18,7 @@
         />
 
             <div class="card white p-5 mt-5">
-                <ul role="list" class="divide-y divide-gray-100" v-if="contracts.length > 0">
+                <ul role="list" class="divide-y divide-border-subtle" v-if="contracts.length > 0">
                     <li v-for="contract in contracts" :key="contract.id" class="flex justify-between gap-x-6 py-5">
                         <SingleUserContractTemplate :contract="contract" />
                     </li>

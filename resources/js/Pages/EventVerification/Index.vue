@@ -10,7 +10,7 @@
         <template #body>
             <!-- Section 1: Room booking requests -->
             <section v-if="canSeeRoomRequests" class="mb-10">
-                <h2 class="text-lg font-lexend font-bold text-gray-900">
+                <h2 class="text-lg font-lexend font-bold text-text">
                     {{ $t('Room booking requests') }}
                 </h2>
                 <p class="text-sm text-secondary mt-1">
@@ -25,7 +25,7 @@
 
                 <div v-if="hasAnyRoomRequests" class="mt-4 space-y-6">
                     <div v-for="(requests, roomId) in roomBookingRequests" :key="roomId">
-                        <h3 class="text-base font-lexend font-semibold text-gray-700 mb-3">
+                        <h3 class="text-base font-lexend font-semibold text-text-muted mb-3">
                             {{ requests[0]?.room?.name }}
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -36,7 +36,7 @@
                                             class="w-5 h-5 rounded-full flex-shrink-0"
                                             :style="{ backgroundColor: req.event_type?.hex_code }"
                                         />
-                                        <span class="font-lexend font-bold text-gray-900 truncate">
+                                        <span class="font-lexend font-bold text-text truncate">
                                             {{ req.event_type?.name }}
                                         </span>
                                         <img
@@ -51,18 +51,18 @@
                                         />
                                     </div>
 
-                                    <p class="mt-1 text-xs text-gray-500 font-lexend">
+                                    <p class="mt-1 text-xs text-text-subtle font-lexend">
                                         {{ req.name }}
                                     </p>
 
-                                    <p class="mt-1 text-xs text-gray-500 font-lexend">
+                                    <p class="mt-1 text-xs text-text-subtle font-lexend">
                                         <span class="font-bold">{{ $t('Start') }}:</span>
                                         {{ req.start_time }}
                                         <span class="font-bold ml-2">{{ $t('End') }}:</span>
                                         {{ req.end_time }}
                                     </p>
 
-                                    <div v-if="req.project" class="mt-1 text-xs text-gray-500 font-lexend flex items-center gap-x-1">
+                                    <div v-if="req.project" class="mt-1 text-xs text-text-subtle font-lexend flex items-center gap-x-1">
                                         <span>{{ $t('assigned to') }}</span>
                                         <Link
                                             :href="route('projects.tab', { project: req.project.id, projectTab: 1 })"
@@ -71,11 +71,11 @@
                                             {{ req.project?.name }}
                                         </Link>
                                     </div>
-                                    <p v-else class="mt-1 text-xs text-gray-400 font-lexend">
+                                    <p v-else class="mt-1 text-xs text-text-subtle font-lexend">
                                         {{ $t('Not assigned to a project') }}
                                     </p>
 
-                                    <div v-if="req.created_by" class="mt-2 flex items-center gap-x-2 text-xs text-gray-400">
+                                    <div v-if="req.created_by" class="mt-2 flex items-center gap-x-2 text-xs text-text-subtle">
                                         <span>{{ $t('requested') }}:</span>
                                         <UserPopoverTooltip
                                             :user="req.created_by"
@@ -86,13 +86,13 @@
                                         <span>{{ req.created_at }}</span>
                                     </div>
 
-                                    <p v-if="req.description" class="mt-2 text-xs text-gray-500">
+                                    <p v-if="req.description" class="mt-2 text-xs text-text-subtle">
                                         {{ req.description }}
                                     </p>
 
                                     <Link
                                         :href="route('dashboard.redirect-to-calendar', { event: req.id })"
-                                        class="flex items-center gap-1 mt-2 text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                                        class="flex items-center gap-1 mt-2 text-xs text-accent-600 hover:text-accent-700 cursor-pointer"
                                     >
                                         <IconCalendar class="h-4 w-4" />
                                         {{ $t('Show in calendar') }}
@@ -101,14 +101,14 @@
                                     <div class="flex items-center gap-x-2 mt-3">
                                         <BaseCardButton
                                             text="Accept"
-                                            class="!bg-green-50 !text-green-600 !border !border-green-600 hover:!bg-green-100 capitalize text-xs font-lexend"
+                                            class="!bg-success-surface !text-success !border !border-success hover:!bg-success-surface capitalize text-xs font-lexend"
                                             @click="openApproveModal(req)"
                                         >
                                             <component :is="IconCheck" class="size-4" aria-hidden="true" />
                                         </BaseCardButton>
                                         <BaseCardButton
                                             text="Decline"
-                                            class="!bg-red-50 !text-red-600 !border !border-red-600 hover:!bg-red-100 capitalize text-xs font-lexend"
+                                            class="!bg-danger-surface !text-danger !border !border-danger hover:!bg-danger-surface capitalize text-xs font-lexend"
                                             @click="openDeclineModal(req)"
                                         >
                                             <component :is="IconX" class="size-4" aria-hidden="true" />
@@ -126,7 +126,7 @@
 
             <!-- Section 2: Verification requests -->
             <section v-if="canSeeVerifications">
-                <h2 class="text-lg font-lexend font-bold text-gray-900">
+                <h2 class="text-lg font-lexend font-bold text-text">
                     {{ $t('Verification requests for planned events') }}
                 </h2>
                 <p class="text-sm text-secondary mt-1">
@@ -141,7 +141,7 @@
 
                 <div v-if="hasAnyVerifications" class="mt-4 space-y-6">
                     <div v-for="(verifications, eventTypeId) in verificationRequests" :key="eventTypeId">
-                        <h3 class="text-base font-lexend font-semibold text-gray-700 mb-3">
+                        <h3 class="text-base font-lexend font-semibold text-text-muted mb-3">
                             {{ verifications[0]?.event?.event_type?.name }}
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,14 +180,14 @@
                         class="w-5 h-5 rounded-full flex-shrink-0"
                         :style="{ backgroundColor: selectedRequest.event_type?.hex_code }"
                     />
-                    <span class="font-lexend font-bold text-gray-900">
+                    <span class="font-lexend font-bold text-text">
                         {{ selectedRequest.event_type?.name }}
                     </span>
                 </div>
-                <p class="mt-1 text-xs text-gray-500 font-lexend">
+                <p class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ selectedRequest.start_time }} - {{ selectedRequest.end_time }}
                 </p>
-                <p class="mt-1 text-xs text-gray-500 font-lexend">
+                <p class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ selectedRequest.room?.name }}
                 </p>
             </div>
@@ -220,14 +220,14 @@
                         class="w-5 h-5 rounded-full flex-shrink-0"
                         :style="{ backgroundColor: selectedRequest.event_type?.hex_code }"
                     />
-                    <span class="font-lexend font-bold text-gray-900">
+                    <span class="font-lexend font-bold text-text">
                         {{ selectedRequest.event_type?.name }}
                     </span>
                 </div>
-                <p class="mt-1 text-xs text-gray-500 font-lexend">
+                <p class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ selectedRequest.start_time }} - {{ selectedRequest.end_time }}
                 </p>
-                <p class="mt-1 text-xs text-gray-500 font-lexend">
+                <p class="mt-1 text-xs text-text-subtle font-lexend">
                     {{ selectedRequest.room?.name }}
                 </p>
             </div>

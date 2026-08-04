@@ -1,6 +1,6 @@
 <template>
     <Disclosure as="div" class="my-2" v-slot="{ open }" >
-        <DisclosureButton class="py-2 px-4 bg-gray-200 text-gray-900 flex justify-between items-center w-full" :class="{ 'rounded-t-lg': open, 'rounded-lg': !open }">
+        <DisclosureButton class="py-2 px-4 bg-border-subtle text-text flex justify-between items-center w-full" :class="{ 'rounded-t-lg': open, 'rounded-lg': !open }">
             <div class="flex items-center h-full gap-x-2 xsDark font-bold">
                 {{ component.component.data.label }}
                 <InfoButtonComponent :component="component" />
@@ -17,7 +17,7 @@
                 <component :is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
             </div>
         </DisclosureButton>
-        <DisclosurePanel class="px-4 py-2 bg-gray-50 rounded-b-lg">
+        <DisclosurePanel class="px-4 py-2 bg-surface-sunken rounded-b-lg">
             <div v-for="(disclosureComponent, index) in component.disclosure_components" :key="disclosureComponent.id" class="">
                 <Component
                     v-if="disclosureComponent?.id && canSeeComponent(disclosureComponent.component) && componentMapping[disclosureComponent.component?.type]"

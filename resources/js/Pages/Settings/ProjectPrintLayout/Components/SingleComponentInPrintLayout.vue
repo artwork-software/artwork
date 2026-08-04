@@ -1,8 +1,8 @@
 <template>
-    <div class="relative p-5 rounded-lg border-2 h-full cursor-pointer flex items-center justify-center border-gray-300 hover:border-artwork-buttons-create duration-200 ease-in-out group">
+    <div class="relative p-5 rounded-lg border-2 h-full cursor-pointer flex items-center justify-center border-border hover:border-artwork-buttons-create duration-200 ease-in-out group">
         <div class="absolute bg-artwork-buttons-create/40 inset-0 rounded-md hidden group-hover:block">
             <div class="flex items-center justify-center gap-x-4 h-full">
-                <div class="rounded-full p-1 bg-red-500 shadow-md" @click="showDeleteModal = true">
+                <div class="rounded-full p-1 bg-danger shadow-md" @click="showDeleteModal = true">
                     <component :is="IconX" class="size-5 text-white" />
                 </div>
             </div>

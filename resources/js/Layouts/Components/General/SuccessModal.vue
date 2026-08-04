@@ -2,7 +2,7 @@
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                <div class="fixed inset-0 bg-text-subtle bg-opacity-75 transition-opacity" />
             </TransitionChild>
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -10,7 +10,7 @@
                         <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-text-subtle hover:text-text-subtle" @click="closeModal">
                                     <span class="sr-only">{{ $t('Close') }}</span>
                                     <PropertyIcon name="IconX" stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
@@ -19,7 +19,7 @@
                                 <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
                                     {{ title }}
                                 </div>
-                                <p class="text-green-500 subpixel-antialiased">{{ description }}</p>
+                                <p class="text-success subpixel-antialiased">{{ description }}</p>
                             </div>
                             <div class="flex justify-between mt-5 items-center pr-4">
                                 <FormButton @click="closeModal(true)"

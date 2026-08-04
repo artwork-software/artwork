@@ -39,7 +39,7 @@
                         <div v-if="this.hasInvalidFilterName" class="pt-2 errorText">
                             {{ $t('Enter filter name') }}
                         </div>
-                        <hr class="border-gray-500 mt-4 mb-4">
+                        <hr class="border-border-strong mt-4 mb-4">
                     </div>
                     <button
                         class="rounded-full bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1"
@@ -79,7 +79,7 @@
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                 {{ $t('without side event with audience') }}</p>
                         </div>
-                        <hr class="border-gray-500 mt-2 mb-2">
+                        <hr class="border-border-strong mt-2 mb-2">
                     </div>
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
@@ -106,7 +106,7 @@
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
@@ -130,7 +130,7 @@
                             <div v-else class="text-secondary">{{ $t('No areas created') }}</div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
@@ -155,7 +155,7 @@
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
@@ -197,7 +197,7 @@
                                      class="h-4 w-4 mt-0.5 text-white"/>
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                    <hr v-if="filterArray.eventTypes.length > 0" class="border-gray-500 mt-2 mb-2">
+                    <hr v-if="filterArray.eventTypes.length > 0" class="border-border-strong mt-2 mb-2">
                     <Disclosure v-if="filterArray.eventTypes.length > 0" v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
@@ -220,7 +220,7 @@
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr v-if="filterArray.eventProperties.length > 0" class="border-gray-500 mt-2 mb-2">
+                    <hr v-if="filterArray.eventProperties.length > 0" class="border-border-strong mt-2 mb-2">
                     <Disclosure v-if="filterArray.eventProperties.length > 0" v-slot="{ open }">
                         <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500">
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
@@ -253,7 +253,7 @@
                 </DisclosurePanel>
             </Disclosure>
             <div class="flex items-center justify-end py-1">
-                <div class="text-xs cursor-pointer hover:text-gray-200 transition-all duration-150 ease-in-out"
+                <div class="text-xs cursor-pointer hover:text-text-subtle transition-all duration-150 ease-in-out"
                      @click="reloadChanges">
                     {{ $t('Apply') }}
                 </div>

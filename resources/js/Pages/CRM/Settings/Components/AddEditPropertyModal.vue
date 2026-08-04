@@ -28,11 +28,11 @@
                         v-model="form.select_values[index]"
                         :label="$t('Selection value {index}', { index: index + 1 })"
                     />
-                    <button type="button" @click="form.select_values.splice(index, 1)" class="text-gray-400 hover:text-red-600">
+                    <button type="button" @click="form.select_values.splice(index, 1)" class="text-text-subtle hover:text-danger">
                         <IconX class="h-4 w-4" />
                     </button>
                 </div>
-                <button type="button" @click="form.select_values.push('')" class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
+                <button type="button" @click="form.select_values.push('')" class="text-sm text-accent-600 hover:text-accent-600 flex items-center gap-1">
                     <IconCirclePlus class="h-4 w-4" />
                     {{ $t('Add option') }}
                 </button>

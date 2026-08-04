@@ -24,7 +24,7 @@
                 leave-to-class="transform scale-95 opacity-0"
             >
                 <MenuItems
-                    class="absolute overflow-y-auto h-48 mt-2 rounded-lg w-full origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                    class="absolute overflow-y-auto h-48 mt-2 rounded-lg w-full origin-top-left divide-y divide-border-subtle bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                     <div class="mx-auto w-full bg-primary border-none mt-2">
                         <div class="flex w-full mb-4" v-for="eventType in accessibleEventTypes">
                             <input v-model="shiftRelevantEventTypeIds"

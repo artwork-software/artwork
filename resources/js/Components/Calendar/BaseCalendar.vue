@@ -122,12 +122,12 @@
                                                 v-if="multiEdit"
                                                 class="absolute inset-0 z-30 pointer-events-none"
                                                 :class="isCellSelected(day, room)
-                                                    ? 'border-2 border-dashed border-blue-500 bg-blue-500/10'
-                                                    : 'group-hover/container:border group-hover/container:border-dashed group-hover/container:border-blue-400/70'"
+                                                    ? 'border-2 border-dashed border-accent-600 bg-accent-600/10'
+                                                    : 'group-hover/container:border group-hover/container:border-dashed group-hover/container:border-accent-500/70'"
                                             >
                                                 <div
                                                     v-if="isCellSelected(day, room)"
-                                                    class="absolute top-0.5 right-0.5 rounded-full bg-blue-500 text-white p-0.5"
+                                                    class="absolute top-0.5 right-0.5 rounded-full bg-accent-600 text-white p-0.5"
                                                 >
                                                     <component :is="IconCirclePlus" class="size-3.5" stroke-width="2" />
                                                 </div>
@@ -382,7 +382,7 @@
                 </template>
                 <FormButton
                     v-if="hasSelectedRoomRequests"
-                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-success hover:bg-success/80 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="bulkAcceptRoomRequests"
                     :disabled="checkedCount === 0"
                     :text="checkedCount + ' ' + $t('Accept requests')"

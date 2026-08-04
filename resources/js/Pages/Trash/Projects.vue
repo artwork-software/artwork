@@ -5,12 +5,12 @@
         @delete-all="showConfirmDeleteAll = true"
     />
     <div v-for="project in trashed_projects.data" :key="project.id"
-         class="mt-5 border-b-2 border-gray-200 w-full">
+         class="mt-5 border-b-2 border-border-subtle w-full">
         <div class="py-5 flex justify-between">
             <div class="flex">
                 <div class="w-full mr-6">
                     <div class="flex my-auto">
-                        <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                        <p class="text-2xl subpixel-antialiased text-text">{{ project.name }}</p>
                         {{ project.access_budget }}
                     </div>
                 </div>

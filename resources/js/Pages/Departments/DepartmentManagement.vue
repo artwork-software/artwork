@@ -7,7 +7,7 @@
                     :icon="IconUsersGroup"
                     :title="$t('Departments')"
                     :description="`${totalDepartments} ${$t('Departments')}`"
-                    icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                    icon-bg-class="bg-accent-50 text-accent-700"
                     v-model="department_query"
                     :search-enabled="true"
                     :search-label="$t('Search for teams')"
@@ -40,7 +40,7 @@
                           <div class="flex items-center">
                               <TeamIconCollection class="h-12 w-12 shrink-0" :iconName="row.svg_name" alt="TeamIcon" />
                               <Link :href="getEditHref(row)" class="ml-4 my-auto">
-                                  <p class="font-medium text-gray-900">{{ row.name }}</p>
+                                  <p class="font-medium text-text">{{ row.name }}</p>
                               </Link>
                           </div>
                       </template>
@@ -70,9 +70,9 @@
                                               class="absolute right-0 mt-2 w-72 max-h-48 overflow-y-auto origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                           >
                                               <MenuItem v-for="user in row.users" :key="user.id" v-slot="{ active }">
-                                                  <div :class="[active ? 'bg-gray-50' : '', 'flex items-center px-4 py-2 text-sm cursor-default']">
+                                                  <div :class="[active ? 'bg-surface-sunken' : '', 'flex items-center px-4 py-2 text-sm cursor-default']">
                                                       <img class="h-9 w-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
-                                                      <span class="ml-4 text-gray-700">
+                                                      <span class="ml-4 text-text-muted">
                                                         {{ user.first_name }} {{ user.last_name }}
                                                       </span>
                                                   </div>
@@ -105,9 +105,9 @@
                           <div class="flex">
                               <Menu as="div" class="relative">
                                   <div>
-                                      <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']"
+                                      <MenuButton :class="[form.svg_name === '' ? 'border border-border-strong' : '']"
                                                   class="items-center rounded-full focus:outline-none h-12 w-12">
-                                          <label v-if="form.svg_name === ''" class="text-gray-400 text-xs">Icon*</label>
+                                          <label v-if="form.svg_name === ''" class="text-text-subtle text-xs">Icon*</label>
                                           <IconChevronDown v-if="form.svg_name === ''" class="h-4 w-4 mx-auto text-black" />
                                           <TeamIconCollection v-else class="h-12 w-12" :iconName="form.svg_name" alt="TeamIcon" />
                                       </MenuButton>
@@ -120,7 +120,7 @@
                                       >
                                           <MenuItem v-for="item in iconMenuItems" :key="item.iconName" v-slot="{ active }">
                                               <div @click="form.svg_name = item.iconName"
-                                                   :class="[active ? 'bg-gray-50' : '','px-3 py-2']">
+                                                   :class="[active ? 'bg-surface-sunken' : '','px-3 py-2']">
                                                   <TeamIconCollection class="h-14 w-14" :iconName="item.iconName" alt="TeamIcon" />
                                               </div>
                                           </MenuItem>
@@ -130,15 +130,15 @@
 
                               <div class="relative my-auto w-full ml-8 mr-12">
                                   <input id="name" v-model="form.name" type="text"
-                                         class="peer pl-0 h-12 w-full border-b-2 border-gray-300 focus:border-indigo-600 focus:ring-0"
+                                         class="peer pl-0 h-12 w-full border-b-2 border-border focus:border-accent-600 focus:ring-0"
                                          />
                                   <label for="name"
-                                         class="absolute left-0 -top-3.5 text-sm text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
+                                         class="absolute left-0 -top-3.5 text-sm text-text-muted transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
                                       {{ $t('Name of the team*') }}
                                   </label>
                               </div>
                           </div>
-                          <span v-if="form.svg_name === ''" class="text-red-500 text-xs mt-2">Icon auswählen notwendig*</span>
+                          <span v-if="form.svg_name === ''" class="text-danger text-xs mt-2">Icon auswählen notwendig*</span>
 
                           <div class="mt-12">
                               <div class="headline2 my-2">{{ $t('Add users') }}</div>
@@ -147,10 +147,10 @@
                               <div class="mt-6 relative">
                                   <div class="my-auto w-full">
                                       <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                             class="peer pl-0 h-12 w-full border-b-2 border-gray-300 focus:border-indigo-600 focus:ring-0"
+                                             class="peer pl-0 h-12 w-full border-b-2 border-border focus:border-accent-600 focus:ring-0"
                                              />
                                       <label for="userSearch"
-                                             class="absolute left-0 -top-3.5 text-sm text-gray-600 transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
+                                             class="absolute left-0 -top-3.5 text-sm text-text-muted transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-text-subtle peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
                                           {{ $t('Name') }}
                                       </label>
                                   </div>
@@ -159,7 +159,7 @@
                                               leave-from-class="opacity-100" leave-to-class="opacity-0">
                                       <div v-if="user_search_results.length > 0 && user_query.length > 0"
                                            class="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                          <div class="border-gray-200">
+                                          <div class="border-border-subtle">
                                               <div v-for="(user, index) in user_search_results" :key="index" class="flex items-center cursor-pointer">
                                                   <div class="flex-1 text-sm py-3">
                                                       <p @click="addUserToAssignedUsersArray(user)" class="font-bold px-4 hover:border-l-4 hover:border-l-emerald-500">
@@ -180,7 +180,7 @@
                                   <span class="ml-4">{{ user.first_name }} {{ user.last_name }}</span>
                                   <button type="button" class="ml-2" @click="deleteUserFromTeam(index)">
                                       <span class="sr-only">User aus Team entfernen</span>
-                                      <IconX class="h-5 w-5 hover:text-red-600"/>
+                                      <IconX class="h-5 w-5 hover:text-danger"/>
                                   </button>
                               </div>
                           </div>
@@ -200,7 +200,7 @@
                           {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers?.name }) }}
                       </div>
                       <div class="flex justify-between mt-6">
-                          <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-gray-800"
+                          <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-text"
                                   @click="deleteAllTeamMembers">
                               {{ $t('Delete') }}
                           </button>
@@ -219,7 +219,7 @@
                           {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete?.name }) }}
                       </div>
                       <div class="flex justify-between mt-6">
-                          <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-gray-800"
+                          <button class="bg-white inline-flex items-center px-6 py-3 border text-base font-bold shadow-sm text-text"
                                   @click="deleteTeam">
                               {{ $t('Delete Team') }}
                           </button>

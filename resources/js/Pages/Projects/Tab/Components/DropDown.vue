@@ -16,11 +16,11 @@
             <div class="relative mt-2">
                 <ListboxButton
                     class="menu-button"
-                    :class="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : 'bg-white'"
+                    :class="inSidebar ? '!bg-artwork-navigation-background !border-white/10 !text-white' : 'bg-white'"
                 >
                     <div class="block truncate">{{ selected }}</div>
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <IconChevronDown class="h-5 w-5" :class="inSidebar ? 'text-white/70' : 'text-text-subtle'" aria-hidden="true" />
                   </span>
                 </ListboxButton>
 
@@ -30,8 +30,8 @@
                     leave-to-class="opacity-0"
                 >
                     <ListboxOptions
-                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden sm:text-sm"
-                        :class="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600' : 'bg-white'"
+                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 sm:text-sm"
+                        :class="inSidebar ? '!bg-artwork-navigation-background !border-white/10' : 'bg-white'"
                     >
                         <ListboxOption
                             as="template"
@@ -44,11 +44,11 @@
                                 @click="updateTextData(item.value)"
                                 :class="[
                                     active
-                                        ? 'bg-indigo-600 text-white'
+                                        ? 'bg-accent-600 text-white'
                                         : isSelected
                                             ? '!bg-artwork-action-buttons/10'
                                             : '',
-                                    inSidebar ? 'text-white' : 'text-gray-900',
+                                    inSidebar ? 'text-white' : 'text-text',
                                     'relative cursor-default select-none py-2 pl-3 pr-9'
                                 ]"
                                         >
@@ -58,7 +58,7 @@
 
                                 <span
                                     v-if="isSelected"
-                                    :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
+                                    :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                 >
                                     <button
                                         type="button"
@@ -82,7 +82,7 @@
         <Teleport to="body">
             <div
                 v-if="clearTooltip.visible"
-                class="pointer-events-none fixed z-[9999] -translate-y-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white shadow-sm"
+                class="pointer-events-none fixed z-[9999] -translate-y-1/2 whitespace-nowrap rounded bg-surface-inverse px-2 py-1 text-xs text-text-inverse shadow-sm"
                 :style="{ left: clearTooltip.x + 'px', top: clearTooltip.y + 'px' }"
             >
                 Auswahl aufheben

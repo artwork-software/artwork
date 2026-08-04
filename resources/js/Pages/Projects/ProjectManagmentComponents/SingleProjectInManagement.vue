@@ -13,7 +13,7 @@
                     class="absolute left-2 -top-2"
                     v-if="fullProject?.pinned_by_users && fullProject?.pinned_by_users.includes($page.props.auth.user.id)"
                 >
-                    <div class="rounded-full p-0.5 bg-white border border-zinc-200 shadow-sm">
+                    <div class="rounded-full p-0.5 bg-white border border-border-subtle shadow-sm">
                         <component :is="IconPinned" class="h-5 w-5 text-artwork-buttons-create" />
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                             :checked="selected"
                             @click.stop
                             @change="$emit('toggle-selection', project.id)"
-                            class="mr-3 h-4 w-4 shrink-0 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                            class="mr-3 h-4 w-4 shrink-0 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
                             :aria-label="$t('Select project')"
                         />
 
@@ -101,15 +101,15 @@
         <!-- Delete Modal -->
         <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject">
             <div class="mx-4">
-                <div class="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-zinc-50 my-2">
+                <div class="text-2xl sm:text-3xl font-black text-text my-2">
                     {{ $t('Delete project') }}
                 </div>
-                <div class="text-sm text-rose-600 dark:text-rose-400">
+                <div class="text-sm text-danger ">
                     {{ $t('Are you sure you want to delete the project?', [project.name]) }}
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 justify-between mt-6">
                     <button
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
+                        class="bg-success hover:bg-success text-white rounded-full focus:outline-none inline-flex items-center px-8 py-3 text-sm font-semibold uppercase shadow-sm"
                         @click="deleteProject"
                     >
                         {{ $t('Delete') }}
@@ -117,7 +117,7 @@
                     <button
                         type="button"
                         @click="closeDeleteProjectModal()"
-                        class="text-sm text-zinc-600 dark:text-zinc-300 hover:underline underline-offset-4"
+                        class="text-sm text-text-muted dark:text-text-subtle hover:underline underline-offset-4"
                     >
                         {{ $t('No, not really') }}
                     </button>

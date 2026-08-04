@@ -3,12 +3,12 @@
         <h2 class=" leading-6 font-bold font-lexend text-primary" :class="project ? 'headline3' : 'headline1'">
             {{ $t(title) }}
         </h2>
-        <div class="bg-gray-200 text-sm text-gray-500 leading-none border-2 border-gray-200 rounded-full inline-flex print:hidden">
-            <button @click="updateChecklistStyle('kanban')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-blue-400 focus:text-blue-400 rounded-l-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'kanban' ? 'bg-white text-blue-400 rounded-full' : ''" id="grid">
+        <div class="bg-border-subtle text-sm text-text-subtle leading-none border-2 border-border-subtle rounded-full inline-flex print:hidden">
+            <button @click="updateChecklistStyle('kanban')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-accent-500 focus:text-accent-500 rounded-l-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'kanban' ? 'bg-white text-accent-500 rounded-full' : ''" id="grid">
                 <IconLayoutKanban class="w-4 h-4 mr-2" />
                 <span>{{ $t('Grid') }}</span>
             </button>
-            <button @click="updateChecklistStyle('list')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-blue-400 focus:text-blue-400 rounded-r-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'list' ? 'bg-white text-blue-400 rounded-full' : ''" id="list">
+            <button @click="updateChecklistStyle('list')" class="inline-flex items-center focus:outline-none focus:ring-0 hover:text-accent-500 focus:text-accent-500 rounded-r-full px-4 py-2" :class="$page.props.auth.user.checklist_style === 'list' ? 'bg-white text-accent-500 rounded-full' : ''" id="list">
                 <IconLayoutList class="w-4 h-4 mr-2" />
                 <span>{{ $t('List') }}</span>
             </button>

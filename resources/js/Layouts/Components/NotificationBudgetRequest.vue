@@ -2,7 +2,7 @@
     <div class="flex flex-row mt-2">
         <span class="xxsLight">{{ budget.requested_position.name }}</span>
         <span class="xxsLight ml-3">
-            <a :href="route('projects.tab', {project: this.budget.project.id, projectTab: this.first_project_budget_tab_id})" class="text-indigo-700">
+            <a :href="route('projects.tab', {project: this.budget.project.id, projectTab: this.first_project_budget_tab_id})" class="text-accent-700">
                 {{ budget.project.name }}
             </a>
         </span>

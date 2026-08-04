@@ -20,51 +20,51 @@
 
         <div class="card white p-5">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-border-subtle">
+                    <thead class="bg-surface-sunken">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Name') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Type') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Value') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Warning color') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Contracts') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Actions') }}
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-border-subtle">
                         <tr v-for="rule in rules" :key="rule.id">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
                                 {{ rule.name }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 {{ formatTriggerType(rule.trigger_type) }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 {{ rule.individual_number_value }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 <div
                                     class="w-6 h-6 rounded-full border"
                                     :style="{ backgroundColor: rule.warning_color }"
                                 ></div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 <span v-if="rule.contracts.length > 0">
                                     {{ rule.contracts.length }} {{ $t('Contract(s)')}}
                                 </span>
-                                <span v-else class="text-gray-400">{{ $t('No assignments') }}</span>
+                                <span v-else class="text-text-subtle">{{ $t('No assignments') }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium flex justify-end items-center">
                                 <BaseMenu white-menu-background has-no-offset >
@@ -101,8 +101,8 @@
                         </div>
 
                         <div v-if="editingRule" class="mb-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('Rule type') }}</label>
-                            <p class="text-sm text-gray-900">{{ formatTriggerType(form.trigger_type) }}</p>
+                            <label class="block text-sm font-medium text-text-muted mb-1">{{ $t('Rule type') }}</label>
+                            <p class="text-sm text-text">{{ formatTriggerType(form.trigger_type) }}</p>
                         </div>
 
                         <div v-if="!editingRule" class="relative">
@@ -110,7 +110,7 @@
                                 <ListboxButton v-if="form.trigger_type !== ''" class="menu-button">
                                     <div class="flex items-center justify-between w-full">
                                     <span class="truncate items-center flex">
-                                        <span class="!text-gray-900">{{ formatTriggerType(form.trigger_type) }}</span>
+                                        <span class="!text-text">{{ formatTriggerType(form.trigger_type) }}</span>
                                     </span>
                                         <span class="pointer-events-none">
                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -159,7 +159,7 @@
                                 type="number"
                                 id="individual_number_value"
                             />
-                            <p v-if="form.trigger_type === 'halfDayOffConflict'" class="mt-1 text-xs text-gray-500">
+                            <p v-if="form.trigger_type === 'halfDayOffConflict'" class="mt-1 text-xs text-text-subtle">
                                 {{ $t('Time as a decimal hour (14 = 14:00, 14.5 = 14:30).') }}
                             </p>
                         </div>
@@ -173,7 +173,7 @@
                                 :min="0.5"
                                 :step="0.5"
                             />
-                            <p class="mt-1 text-xs text-gray-500">{{ $t('Default number of substitute days off when a violation occurs') }}</p>
+                            <p class="mt-1 text-xs text-text-subtle">{{ $t('Default number of substitute days off when a violation occurs') }}</p>
                         </div>
 
                         <div>
@@ -185,12 +185,12 @@
                                 :min="1"
                                 :step="1"
                             />
-                            <p class="mt-1 text-xs text-gray-500">{{ $t('Number of days after violation date by which the compensation day must be granted') }}</p>
+                            <p class="mt-1 text-xs text-text-subtle">{{ $t('Number of days after violation date by which the compensation day must be granted') }}</p>
                         </div>
 
                         <div>
                             <div class="flex items-center mb-2">
-                                <label class="block text-sm font-medium text-gray-700 mr-2">{{ $t('Warning color')}}</label>
+                                <label class="block text-sm font-medium text-text-muted mr-2">{{ $t('Warning color')}}</label>
                             </div>
                             <ColorPickerComponent
                                 v-model="form.warning_color"
@@ -205,15 +205,15 @@
                             <div class="flex gap-3">
                                 <div class="flex h-6 shrink-0 items-center">
                                     <div class="group grid size-4 grid-cols-1">
-                                        <input v-model="form.notify_on_violation" id="notify_on_violation" aria-describedby="notify_on_violation-description" name="notify_on_violation" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 indeterminate:border-blue-600 indeterminate:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
-                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                        <input v-model="form.notify_on_violation" id="notify_on_violation" aria-describedby="notify_on_violation-description" name="notify_on_violation" type="checkbox" checked="" class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken forced-colors:appearance-auto" />
+                                        <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle" viewBox="0 0 14 14" fill="none">
                                             <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                             <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                     </div>
                                 </div>
                                 <div class="text-sm/6">
-                                    <label for="notify_on_violation" class="font-medium text-gray-900">{{ $t('Notification of rule violation') }}</label>
+                                    <label for="notify_on_violation" class="font-medium text-text">{{ $t('Notification of rule violation') }}</label>
                                 </div>
                             </div>
                         </div>
@@ -257,10 +257,10 @@
 
                             <!-- Display selected contracts -->
                             <div class="mt-2">
-                                <span v-if="form.contract_ids.length > 0" class="text-sm text-gray-600">
+                                <span v-if="form.contract_ids.length > 0" class="text-sm text-text-muted">
                                     {{ form.contract_ids.length }} {{ $t('Contract(s) selected')}}
                                 </span>
-                                <span v-else class="text-sm text-gray-400">{{ $t('No contracts selected')}}</span>
+                                <span v-else class="text-sm text-text-subtle">{{ $t('No contracts selected')}}</span>
                             </div>
 
                             <SettingsGuideBanner

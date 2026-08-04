@@ -2,7 +2,7 @@
     <div draggable="true"
          @dragstart="onDragStart"
          @dragend="onDragEnd"
-         class="bg-gray-100 rounded-lg px-4 py-3 h-32 flex items-center justify-center w-full">
+         class="bg-surface-sunken rounded-lg px-4 py-3 h-32 flex items-center justify-center w-full">
         <div>
             <div class="xsDark">
                 {{ $t(component.name) ?? component.name }}

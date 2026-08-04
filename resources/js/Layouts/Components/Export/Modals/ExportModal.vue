@@ -5,9 +5,8 @@
                 <li v-if="props.enums.length > 1"
                     v-for="(tab) in props.enums"
                     @click="activeTab = tab"
-                    :class="[activeTab === tab
-                ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+                    :class="[activeTab === tab ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-600'
+                : 'text-text-muted hover:text-text hover:bg-surface-sunken',
               'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer'
             ]">
                     {{ $t(tab) }}

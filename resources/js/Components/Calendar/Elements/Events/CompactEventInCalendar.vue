@@ -1,17 +1,16 @@
 <template>
     <div
-        class="flex items-center gap-x-1.5 rounded-md border border-black/10 px-1.5 h-6 cursor-pointer select-none overflow-hidden"
+        class="flex items-center gap-x-1.5 rounded-md border px-1.5 h-6 cursor-pointer select-none overflow-hidden"
+        :class="isEmphasized ? 'border-[rgba(0,0,0,0.18)]' : (isDimmed ? 'border-dashed border-border' : 'border-black/10')"
         :style="{
             backgroundColor: eventBgColor,
             color: eventTextColor,
             width: width + 'px',
             minWidth: width + 'px',
             maxWidth: width + 'px',
-            // Auswahl im Multi-Edit: grüner Ring + dunkle Außenlinie, damit die
-            // Markierung auch auf hellen/grünlichen Kachelfarben nicht untergeht
-            boxShadow: event.considerOnMultiEdit
-                ? '0 0 0 2px #22c55e, 0 0 0 3.5px rgba(0,0,0,0.85)'
-                : undefined
+            // Multi-Edit-Auswahlring (accent + dunkle Außenlinie) und/oder
+            // Hervorhebungs-Innenring — kombiniert in containerBoxShadow
+            boxShadow: containerBoxShadow
         }"
         @click="onClick"
         @mouseenter="showTooltip"
@@ -98,10 +97,49 @@ const baseColor = computed(() => {
     return props.event?.eventType?.hex_code ?? '#9E9E9E';
 });
 
-const eventBgColor = computed(() =>
-    backgroundColorWithOpacity(baseColor.value, highContrastPercent.value)
+// --- Zustandsdarstellung Highlight/Multi-Edit (ersetzt frühere Deckkraft-Dimmung) ---
+// HERVORGEHOBEN: Projektzeitraum-Projekt oder highlightEventId-URL-Parameter.
+const isEmphasized = computed(() =>
+    (!!calSettings.value.time_period_project_id
+        && calSettings.value.time_period_project_id === props.event?.project?.id)
+    || (!!pageProps.urlParameters?.highlightEventId
+        && parseInt(pageProps.urlParameters.highlightEventId) === parseInt(props.event.id))
 );
-const eventTextColor = computed(() => getTextColorBasedOnBackground(eventBgColor.value));
+
+// Ein Highlight-Modus ist aktiv, sobald ein Termin/Projekt hervorgehoben wird —
+// alle übrigen Termine gelten dann als "nicht relevant" (gedimmt, ohne opacity).
+const highlightModeActive = computed(() =>
+    Boolean(pageProps.urlParameters?.highlightEventId)
+    || Boolean(calSettings.value.use_project_time_period && calSettings.value.time_period_project_id)
+);
+const isDimmed = computed(() => !isEmphasized.value && highlightModeActive.value);
+
+// Flächensättigung je Zustand: gedimmt 7 %, hervorgehoben 100 %, sonst Setting (15/75)
+const eventBgPercent = computed(() => {
+    if (isDimmed.value) return 7;
+    if (isEmphasized.value) return 100;
+    return highContrastPercent.value;
+});
+
+const eventBgColor = computed(() =>
+    backgroundColorWithOpacity(baseColor.value, eventBgPercent.value)
+);
+const eventTextColor = computed(() =>
+    isDimmed.value ? '#3F424A' : getTextColorBasedOnBackground(eventBgColor.value)
+);
+
+// Multi-Edit-Auswahlring (accent-600 + dunkle Außenlinie) und Hervorhebungs-
+// Innenring können gleichzeitig auftreten — daher kombiniert.
+const containerBoxShadow = computed(() => {
+    const shadows = [];
+    if (props.event.considerOnMultiEdit) {
+        shadows.push('0 0 0 2px #276293, 0 0 0 3.5px rgba(0,0,0,0.85)');
+    }
+    if (isEmphasized.value) {
+        shadows.push('inset 0 0 0 2px #276293');
+    }
+    return shadows.length ? shadows.join(', ') : undefined;
+});
 
 // Nur die Anfangszeit im Format 00:00; ganztägig = "GT"
 const timeLabel = computed(() => {

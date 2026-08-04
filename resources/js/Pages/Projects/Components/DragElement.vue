@@ -157,8 +157,8 @@ const workTimeBalanceClass = computed(() => {
     const minutes = mMatch ? parseInt(mMatch[0], 10) : 0
     const total = sign * (Math.abs(hours) * 60 + Math.abs(minutes))
 
-    if (total > 0) return 'text-green-200'
-    if (total < 0) return 'text-red-200'
+    if (total > 0) return 'text-success'
+    if (total < 0) return 'text-danger'
     return 'text-white'
 })
 

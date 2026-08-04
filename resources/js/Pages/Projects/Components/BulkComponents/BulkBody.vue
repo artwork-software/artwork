@@ -23,7 +23,7 @@
         <div
             v-if="!isInModal"
             ref="bulkFunctionBarEl"
-            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-lg shadow-zinc-900/5 border-b border-zinc-200/80 w-fit mx-auto"
+            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-raised border-b border-border-subtle w-fit mx-auto"
         >
             <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
                 <MultiEditSwitch
@@ -63,7 +63,7 @@
                     :tooltip-text="$t('Customize column size')"
                     direction="bottom"
                     @click="hasCreateEventsPermission ? showIndividualColumnSizeConfigModal = true : null"
-                    :class="!hasCreateEventsPermission ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
+                    :class="!hasCreateEventsPermission ? 'text-text-subtle cursor-not-allowed' : 'cursor-pointer'"
                     classes-button="ui-button"
                 />
                 <ToolTipComponent
@@ -134,17 +134,17 @@
                 <!-- Legend row-->
                 <div
                     v-if="!isInModal"
-                    class="px-3 py-3 border-b border-zinc-200/70 bg-white"
+                    class="px-3 py-3 border-b border-border-subtle bg-white"
                 >
                     <div
-                        class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-zinc-600"
+                        class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-text-muted"
                         role="list"
                     >
                         <!-- Last edited -->
                         <div class="flex items-center gap-2" role="listitem">
                             <span
                                 aria-hidden="true"
-                                class="h-4 w-10 rounded-full border-2 border-dashed border-blue-500/70 bg-blue-50/40"
+                                class="h-4 w-10 rounded-full border-2 border-dashed border-accent-500/70 bg-accent-50/40"
                             ></span>
                             <span class="uppercase tracking-wide font-medium">
                                 {{ $t('Last edited events') }}
@@ -166,7 +166,7 @@
                         <div class="flex items-center gap-2" role="listitem">
                             <span
                                 aria-hidden="true"
-                                class="block h-4 w-1.5 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"
+                                class="block h-4 w-1.5 rounded-full bg-gradient-to-b from-accent-500 to-accent-700"
                             ></span>
                             <span class="uppercase tracking-wide font-medium">
                                 {{ $t('Planned Event') }}
@@ -312,17 +312,17 @@
 
                     <div
                         class="flex items-center justify-between gap-4
-               rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80
-               bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl
-               shadow-lg shadow-zinc-900/5
+               rounded-2xl border border-border-subtle
+               bg-white/80 backdrop-blur-xl
+               shadow-raised
                px-4 sm:px-6 py-3 sm:py-4">
                         <!-- left: label + selected count -->
                         <div class="flex items-center gap-3 min-w-0">
                           <span
-                              class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-200 dark:ring-zinc-700">
+                              class="inline-flex items-center rounded-full bg-surface-sunken px-2.5 py-1 text-xs font-medium text-text-muted ring-1 ring-inset ring-border-subtle">
                             {{ $t('Multi-Edit') }}
                           </span>
-                            <span class="text-sm text-zinc-600 dark:text-zinc-300 truncate">
+                            <span class="text-sm text-text-muted truncate">
                                 {{ selectedMultiEditIds.length }} {{ $t('selected') }}
                             </span>
                         </div>

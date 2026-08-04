@@ -11,7 +11,7 @@
             leave-from-class="opacity-100"
             leave-to-class="transform opacity-0"
         >
-            <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+            <div class="my-3 text-xs bg-success px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
                 {{ $t('Saved. The changes have been successfully applied.') }}
             </div>
         </transition>

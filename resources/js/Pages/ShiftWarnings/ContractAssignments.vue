@@ -4,34 +4,34 @@
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h1 class="text-2xl font-bold text-gray-900">Regelzuweisungen zu Verträgen</h1>
+                        <h1 class="text-2xl font-bold text-text">Regelzuweisungen zu Verträgen</h1>
                     </div>
 
                     <!-- Contracts Table -->
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-border-subtle">
+                            <thead class="bg-surface-sunken">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                         Vertragsname
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                         Aktiv für
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                         Zugewiesene Regeln
                                     </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                         Aktionen
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-border-subtle">
                                 <tr v-for="contract in contracts" :key="contract.id">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
                                         {{ contract.name }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                         <div class="flex items-center space-x-2">
                                             <div
                                                 v-for="(user, index) in contract.user_contract_assigns.slice(0, 3)"
@@ -46,7 +46,7 @@
                                                 />
                                                 <div
                                                     v-else
-                                                    class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs"
+                                                    class="w-8 h-8 rounded-full bg-border flex items-center justify-center text-xs"
                                                 >
                                                     {{ getUserInitials(user.user) }}
                                                 </div>
@@ -55,22 +55,22 @@
                                             <button
                                                 v-if="contract.user_contract_assigns.length > 3"
                                                 @click="showAllUsers(contract)"
-                                                class="text-blue-600 hover:text-blue-900 text-xs"
+                                                class="text-accent-600 hover:text-accent-700 text-xs"
                                             >
                                                 +{{ contract.user_contract_assigns.length - 3 }} weitere
                                             </button>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                         <div class="flex flex-wrap gap-1">
                                             <span
                                                 v-for="rule in contract.workflow_rules"
                                                 :key="rule.id"
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-100 text-accent-700"
                                             >
                                                 {{ rule.name }}
                                             </span>
-                                            <span v-if="contract.workflow_rules.length === 0" class="text-gray-400">
+                                            <span v-if="contract.workflow_rules.length === 0" class="text-text-subtle">
                                                 Keine Regeln zugewiesen
                                             </span>
                                         </div>
@@ -78,7 +78,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button
                                             @click="editAssignments(contract)"
-                                            class="text-indigo-600 hover:text-indigo-900"
+                                            class="text-accent-600 hover:text-accent-700"
                                             title="Regelzuweisung bearbeiten"
                                         >
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,17 +97,17 @@
         <!-- Assignment Modal -->
         <Modal :show="showAssignmentModal" @close="closeAssignmentModal" max-width="2xl">
             <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900 mb-4">
+                <h2 class="text-lg font-medium text-text mb-4">
                     Regelzuweisungen für "{{ selectedContract?.name }}"
                 </h2>
 
                 <div v-if="selectedContract" class="mb-4">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Vertrag aktiv für:</h3>
+                    <h3 class="text-sm font-medium text-text-muted mb-2">Vertrag aktiv für:</h3>
                     <div class="flex flex-wrap gap-2">
                         <div
                             v-for="user in selectedContract.user_contract_assigns"
                             :key="user.user.id"
-                            class="flex items-center bg-gray-100 rounded-lg px-3 py-1"
+                            class="flex items-center bg-surface-sunken rounded-lg px-3 py-1"
                         >
                             <img
                                 v-if="user.user.profile_photo_url"
@@ -117,7 +117,7 @@
                             />
                             <div
                                 v-else
-                                class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs mr-2"
+                                class="w-6 h-6 rounded-full bg-border flex items-center justify-center text-xs mr-2"
                             >
                                 {{ getUserInitials(user.user) }}
                             </div>
@@ -127,19 +127,19 @@
                 </div>
 
                 <div class="space-y-4">
-                    <h3 class="text-sm font-medium text-gray-700">Verfügbare Regeln:</h3>
+                    <h3 class="text-sm font-medium text-text-muted">Verfügbare Regeln:</h3>
                     <div class="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
                         <label
                             v-for="rule in rules"
                             :key="rule.id"
-                            class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                            :class="{ 'border-blue-500 bg-blue-50': assignmentForm.rule_ids.includes(rule.id) }"
+                            class="flex items-center p-3 border rounded-lg hover:bg-surface-sunken cursor-pointer"
+                            :class="{ 'border-accent-600 bg-accent-50': assignmentForm.rule_ids.includes(rule.id) }"
                         >
                             <input
                                 type="checkbox"
                                 v-model="assignmentForm.rule_ids"
                                 :value="rule.id"
-                                class="rounded border-gray-300 mr-3"
+                                class="rounded border-border mr-3"
                             />
                             <div class="flex-1">
                                 <div class="flex items-center justify-between">
@@ -149,7 +149,7 @@
                                         :style="{ backgroundColor: rule.warning_color }"
                                     ></div>
                                 </div>
-                                <p class="text-sm text-gray-500 mt-1">
+                                <p class="text-sm text-text-subtle mt-1">
                                     {{ formatTriggerType(rule.trigger_type) }} - Wert: {{ rule.individual_number_value }}
                                 </p>
                             </div>
@@ -161,13 +161,13 @@
                     <button
                         type="button"
                         @click="closeAssignmentModal"
-                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                        class="bg-border hover:bg-border-strong text-text font-bold py-2 px-4 rounded"
                     >
                         Abbrechen
                     </button>
                     <button
                         @click="saveAssignments"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-accent-600 hover:bg-accent-700 text-white font-bold py-2 px-4 rounded"
                     >
                         Speichern
                     </button>

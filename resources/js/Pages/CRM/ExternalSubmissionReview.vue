@@ -5,16 +5,16 @@
                 <h1 class="text-xl font-semibold">
                     {{ $t('Review submission from {name}', { name: submission.external_access.display_name ?? submission.external_access.email }) }}
                 </h1>
-                <p class="text-sm text-zinc-500 mt-1">
+                <p class="text-sm text-text-subtle mt-1">
                     {{ $t('Submitted on {date}', { date: formatDate(submission.submitted_at) }) }}
                     · {{ submission.external_access.email }}
                 </p>
             </header>
 
-            <section class="mt-8 rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+            <section class="mt-8 rounded-2xl border border-border-subtle bg-white overflow-hidden">
                 <table class="w-full">
                     <thead>
-                        <tr class="text-left text-xs uppercase tracking-wider text-zinc-500 border-b border-zinc-200">
+                        <tr class="text-left text-xs uppercase tracking-wider text-text-subtle border-b border-border-subtle">
                             <th class="px-4 py-3">{{ $t('Field') }}</th>
                             <th class="px-4 py-3">{{ $t('Current') }}</th>
                             <th class="px-4 py-3">{{ $t('Proposed') }}</th>
@@ -22,10 +22,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="change in submission.field_changes" :key="change.id" class="border-b border-zinc-100">
+                        <tr v-for="change in submission.field_changes" :key="change.id" class="border-b border-border-subtle">
                             <td class="px-4 py-3 text-sm font-medium">{{ change.field_label }}</td>
-                            <td class="px-4 py-3 text-sm text-zinc-600">{{ displayValue(change.old_value) }}</td>
-                            <td class="px-4 py-3 text-sm font-medium text-zinc-900">{{ displayValue(change.new_value) }}</td>
+                            <td class="px-4 py-3 text-sm text-text-muted">{{ displayValue(change.old_value) }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-text">{{ displayValue(change.new_value) }}</td>
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex gap-2" v-if="change.approval_status === 'pending' && submission.status === 'pending'">
                                     <button @click="setDecision(change.id, 'approved')" :class="decisionButtonClass(change.id, 'approved')">
@@ -35,7 +35,7 @@
                                         {{ $t('Reject') }}
                                     </button>
                                 </div>
-                                <span v-else class="text-xs uppercase text-zinc-500">{{ change.approval_status }}</span>
+                                <span v-else class="text-xs uppercase text-text-subtle">{{ change.approval_status }}</span>
                             </td>
                         </tr>
                     </tbody>
@@ -80,8 +80,8 @@ function decisionButtonClass(id, type) {
     return [
         'px-3 py-1 text-xs rounded-md border',
         isActive
-            ? (type === 'approved' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-red-50 border-red-300 text-red-700')
-            : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50',
+            ? (type === 'approved' ? 'bg-success-surface border-success-border text-success' : 'bg-danger-surface border-danger-border text-danger')
+            : 'border-border-subtle text-text-muted hover:bg-surface-sunken',
     ]
 }
 

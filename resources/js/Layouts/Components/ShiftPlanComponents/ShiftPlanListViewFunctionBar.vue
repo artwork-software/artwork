@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-white border-b border-zinc-200 shadow-sm py-2 sticky top-0 z-50">
+    <div class="bg-white border-b border-border-subtle shadow-sm py-2 sticky top-0 z-50">
         <div class="flex justify-between items-center mt-2 mb-2 px-5">
             <div class="inline-flex items-center">
                 <div class="flex">
@@ -34,7 +34,7 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems
-                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5">
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <div @click="changeUserSelectedGoTo('day')"

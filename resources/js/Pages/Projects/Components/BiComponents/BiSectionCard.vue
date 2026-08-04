@@ -1,25 +1,25 @@
 <template>
-    <section class="rounded-xl border border-gray-200 bg-white shadow-sm">
+    <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
         <button
             type="button"
             class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
             @click="open = !open"
         >
             <span class="flex items-center gap-2 min-w-0">
-                <component :is="icon" v-if="icon" class="size-4 text-gray-400 shrink-0" />
-                <span class="text-sm font-semibold text-gray-900 truncate">{{ title }}</span>
+                <component :is="icon" v-if="icon" class="size-4 text-text-subtle shrink-0" />
+                <span class="text-sm font-semibold text-text truncate">{{ title }}</span>
                 <span
                     v-if="completeness"
                     class="rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap"
                     :class="completeness.filled >= completeness.total
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-700'"
+                        ? 'bg-success-surface text-success'
+                        : 'bg-warning-surface text-warning'"
                 >
                     {{ completeness.filled }}/{{ completeness.total }} {{ $t('filled in') }}
                 </span>
             </span>
             <IconChevronDown
-                class="size-4 text-gray-400 transition-transform shrink-0 print:hidden"
+                class="size-4 text-text-subtle transition-transform shrink-0 print:hidden"
                 :class="{ '-rotate-90': !open }"
             />
         </button>

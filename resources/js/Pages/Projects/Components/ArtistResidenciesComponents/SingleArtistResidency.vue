@@ -2,15 +2,15 @@
     <tr :key="artist_residency.id">
         <td v-for="(column, columnIndex) in nameColumns" :key="column.key"
             :class="columnIndex === 0
-                ? 'whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0'
-                : 'whitespace-nowrap px-3 py-4 text-sm text-gray-500'">
+                ? 'whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-text sm:pl-0'
+                : 'whitespace-nowrap px-3 py-4 text-sm text-text-subtle'">
             <div v-if="column.key === 'name' && artist_residency.do_not_save_artist" class="flex items-center gap-1">
                 <template v-if="isEditingName">
                     <input
                         ref="nameInputRef"
                         v-model="editableName"
                         type="text"
-                        class="rounded border-gray-300 text-sm px-2 py-1 focus:border-artwork-buttons-hover focus:ring-artwork-buttons-hover w-40"
+                        class="rounded border-border text-sm px-2 py-1 focus:border-artwork-buttons-hover focus:ring-artwork-buttons-hover w-40"
                         @blur="saveName"
                         @keyup.enter="$event.target.blur()"
                     />
@@ -19,21 +19,21 @@
                     <span>{{ columnValue(column.key) }}</span>
                     <component
                         :is="IconEdit"
-                        class="h-3.5 w-3.5 text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
+                        class="h-3.5 w-3.5 text-text-subtle hover:text-text-muted cursor-pointer shrink-0"
                         @click="startEditingName"
                     />
                 </template>
             </div>
             <span v-else>{{ columnValue(column.key) }}</span>
         </td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.position || artist_residency?.artist?.position || '' }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency?.phone_number || artist_residency?.artist?.phone_number || '' }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.room_type?.name ?? '-' }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ calculateTotalCost(artist_residency) }} €</td>
-        <td class="px-3 py-4 text-sm text-gray-500 max-w-[200px]">
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency?.position || artist_residency?.artist?.position || '' }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency?.phone_number || artist_residency?.artist?.phone_number || '' }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.accommodation?.name ?? $t('Deleted') }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ artist_residency.room_type?.name ?? '-' }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-text-subtle">{{ calculateTotalCost(artist_residency) }} €</td>
+        <td class="px-3 py-4 text-sm text-text-subtle max-w-[200px]">
             <span class="block truncate" v-tooltip.bottom="{ value: artist_residency.description, class: 'aw-tooltip' }">{{ artist_residency.description || '-' }}</span>
         </td>
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">

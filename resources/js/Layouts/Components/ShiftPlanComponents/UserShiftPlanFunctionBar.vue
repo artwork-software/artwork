@@ -28,7 +28,7 @@
                 <div @click="showCalendarAboSettingModal = true"
                      class="flex items-center gap-x-1 text-sm group cursor-pointer">
                     <PropertyIcon name="IconCalendarStar"
-                                  class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                                  class="h-5 w-5 group-hover:text-warning duration-150 transition-all ease-in-out"/>
                     {{ $t('Subscribe to shift calendar') }}
                 </div>
             </div>

@@ -44,13 +44,13 @@
                     {{ $t('modified') }}
                 </span>
                 <div v-if="notification.data.handledStatus" class="mt-2 text-xs font-medium">
-                    <span v-if="notification.data.handledStatus === 'accepted'" class="text-green-700 bg-green-50 px-2 py-1 rounded">
+                    <span v-if="notification.data.handledStatus === 'accepted'" class="text-success bg-success-surface px-2 py-1 rounded">
                         {{ $t('Already accepted by') }} {{ notification.data.handledBy?.name }}
                     </span>
-                    <span v-else-if="notification.data.handledStatus === 'declined'" class="text-red-700 bg-red-50 px-2 py-1 rounded">
+                    <span v-else-if="notification.data.handledStatus === 'declined'" class="text-danger bg-danger-surface px-2 py-1 rounded">
                         {{ $t('Already declined by') }} {{ notification.data.handledBy?.name }}
                     </span>
-                    <span v-else-if="notification.data.handledStatus === 'deleted'" class="text-gray-700 bg-gray-50 px-2 py-1 rounded">
+                    <span v-else-if="notification.data.handledStatus === 'deleted'" class="text-text-muted bg-surface-sunken px-2 py-1 rounded">
                         {{ $t('Event deleted by') }} {{ notification.data.handledBy?.name }}
                     </span>
                 </div>

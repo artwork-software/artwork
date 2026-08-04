@@ -24,9 +24,9 @@
         <div class="flex items-center gap-x-2">
             <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
                <div class="flex items-center gap-x-2">
-                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-artwork-buttons-hover' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
                        <span class="sr-only">Use setting</span>
-                       <span :class="[multiEdit ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                       <span :class="[multiEdit ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-border transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[multiEdit ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                              <IconPencil stroke-width="1.5" class="w-5 h-5" />
                           </span>
@@ -35,9 +35,9 @@
                           </span>
                     </span>
                    </Switch>
-                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :class="[atAGlance ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :class="[atAGlance ? 'bg-artwork-buttons-hover' : 'bg-border-subtle', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out']">
                        <span class="sr-only">Use setting</span>
-                       <span :class="[atAGlance ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                       <span :class="[atAGlance ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-border transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
                              <IconList stroke-width="1.5" class="w-5 h-5" />
                           </span>
@@ -66,7 +66,7 @@
                     <div class="flex items-center">
                         <MenuButton>
                             <span class="items-center flex">
-                                <button type="button" class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
+                                <button type="button" class="text-sm flex items-center my-auto text-primary font-semibold transition">
                                     <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
                                 </button>
                                 <span v-if="$page.props.auth.user.calendar_settings.project_status || $page.props.auth.user.calendar_settings.options || $page.props.auth.user.calendar_settings.project_management || $page.props.auth.user.calendar_settings.repeating_events || $page.props.auth.user.calendar_settings.work_shifts"
@@ -129,7 +129,7 @@
             </div>
             <div class="flex items-center" v-if="!project">
                 <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                    <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                    <IconCalendarStar class="h-5 w-5 group-hover:text-warning duration-150 transition-all ease-in-out"/>
                 </div>
             </div>
             <div @click="showExportModal = true">

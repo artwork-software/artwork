@@ -33,7 +33,7 @@
                         <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector"
                                  id="eventType">
                             <ListboxButton
-                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer sm:text-sm">
                                 <div class="flex items-center my-auto">
                                     <div>
                                         <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }" />
@@ -51,7 +51,7 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    v-for="eventType in eventTypes"
                                                    :key="eventType.name"
@@ -77,7 +77,7 @@
                                 </ListboxOptions>
                             </transition>
                         </Listbox>
-                        <p class="text-xs text-red-800">{{ error?.eventType?.join('. ') }}</p>
+                        <p class="text-xs text-danger">{{ error?.eventType?.join('. ') }}</p>
                     </div>
 
                     <div class="w-1/2" v-if="canEdit">
@@ -86,9 +86,9 @@
                                id="eventTitle"
                                :placeholder="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
                                :disabled="!canEdit"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:border-secondary focus:border-1 w-full border-border"/>
 
-                        <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">
+                        <p v-if="selectedEventType?.individual_name" class="text-xs text-danger">
                             {{ error?.eventName?.join('. ') }}</p>
                     </div>
                     <div v-else class="flex w-1/2 ml-12 items-center">
@@ -99,7 +99,7 @@
                 <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
                     <div>
                         <MenuButton
-                            class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                            class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black "
                         >
 
                             <span class="float-left flex xsLight subpixel-antialiased"><img
@@ -121,7 +121,7 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-white/10 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                 <div class="flex w-full mb-4">
                                     <input v-model="audience"
@@ -229,9 +229,9 @@
                                            :disabled="!canEdit"
                                            id="project-toggle"
                                            class="sr-only peer">
-                                    <div class="w-9 h-5 bg-gray-200 rounded-full
+                                    <div class="w-9 h-5 bg-border-subtle rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
-                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
+                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border
                             after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
                                     </div>
                                 </label>
@@ -251,7 +251,7 @@
                         <input type="text"
                                :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
                                v-model="projectName"
-                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:border-secondary focus:border-1 w-full border-border"/>
                         <LastedProjects
                             :limit="10"
                             @select="chooseProject"
@@ -266,8 +266,8 @@
                             </div>
                         </div>
 
-                        <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
-                        <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
+                        <p class="text-xs text-danger">{{ error?.projectId?.join('. ') }}</p>
+                        <p class="text-xs text-danger">{{ error?.projectName?.join('. ') }}</p>
                     </div>
                 </div>
 
@@ -282,16 +282,16 @@
                                    type="date"
                                    :disabled="!canEdit"
                                    required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                                   class="border-border inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
                             <input v-model="startTime"
                                    id="changeStartTime"
                                    @change="checkChanges()"
                                    type="time"
                                    :disabled="!canEdit"
                                    required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                   class="border-border inputMain xsDark placeholder-secondary  disabled:border-none"/>
                         </div>
-                        <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
+                        <p class="text-xs text-danger">{{ error?.start?.join('. ') }}</p>
                     </div>
                     <div class="sm:w-1/2">
                         <label for="endDate" class="xxsLight">{{ $t('End*')}}</label>
@@ -302,16 +302,16 @@
                                    type="date"
                                    required
                                    :disabled="!canEdit"
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                   class="border-border inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                             <input v-model="endTime"
                                    id="changeEndTime"
                                    @change="checkChanges()"
                                    type="time"
                                    required
                                    :disabled="!canEdit"
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                   class="border-border inputMain xsDark placeholder-secondary  disabled:border-none"/>
                         </div>
-                        <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
+                        <p class="text-xs text-danger">{{ error?.end?.join('. ') }}</p>
                     </div>
 
                 </div>
@@ -352,7 +352,7 @@
                         </ListboxButton>
                         <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                           class="hover:bg-white/10 text-secondary cursor-pointer p-2 flex justify-between "
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
@@ -368,7 +368,7 @@
                             </ListboxOption>
                         </ListboxOptions>
                     </Listbox>
-                    <p class="text-xs text-red-800">{{ error?.roomId?.join('. ') }}</p>
+                    <p class="text-xs text-danger">{{ error?.roomId?.join('. ') }}</p>
                 </div>
                 <!--    Description    -->
                 <div class="py-2">
@@ -377,7 +377,7 @@
                               :disabled="!canEdit"
                               v-model="description"
                               rows="4"
-                              class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                              class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:border-secondary focus:border-1 w-full border-border"/>
                     <div v-else-if="this.description" class="mt-4 xsDark">
                         {{ this.description }}
                     </div>
@@ -402,7 +402,7 @@
                                   :disabled="!canEdit"
                                   v-model="newComment"
                                   rows="4"
-                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:border-secondary focus:border-1 border-border"/>
                 </div>
                 <div>
                     <div class="flex justify-center w-full py-4">

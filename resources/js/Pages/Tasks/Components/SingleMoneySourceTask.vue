@@ -35,7 +35,7 @@ export default {
                 <input @change="updateMoneySourceTaskStatus(task)"
                        v-model="task.done"
                        type="checkbox"
-                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-gray-300"/>
+                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-border"/>
                 <div>
                     <div class="flex items-center gap-x-2">
                         <div class="mDark"

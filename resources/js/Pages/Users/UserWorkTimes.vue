@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between mb-4">
             <div class="">
                 <h2 class="text-lg font-semibold mb-2">{{ $t('Work Times') }}</h2>
-                <p class="text-sm text-gray-600">{{ $t('Overview of work times for the user') }}</p>
+                <p class="text-sm text-text-muted">{{ $t('Overview of work times for the user') }}</p>
             </div>
 
             <div>
@@ -22,14 +22,14 @@
         </div>
 
         <!-- Monthly breakdown when range > 1 month -->
-        <div v-if="isMultiMonth" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">{{ $t('Monthly Breakdown') }}</h3>
+        <div v-if="isMultiMonth" class="mb-6 p-4 bg-surface-sunken rounded-lg border border-border-subtle">
+            <h3 class="text-sm font-semibold text-text-muted mb-3">{{ $t('Monthly Breakdown') }}</h3>
             <div class="space-y-2">
                 <div v-for="(month, index) in monthlyBreakdown" :key="index" class="flex items-center justify-between text-sm">
-                    <span class="font-medium text-gray-600">{{ month.name }}</span>
-                    <span class="text-gray-900">
+                    <span class="font-medium text-text-muted">{{ month.name }}</span>
+                    <span class="text-text">
                         <span class="font-semibold">{{ month.worked }}</span>
-                        <span class="text-gray-500 mx-1">-</span>
+                        <span class="text-text-subtle mx-1">-</span>
                         <span class="font-semibold">{{ month.wanted }}</span>
                     </span>
                 </div>
@@ -41,14 +41,14 @@
 
             <!-- Kalenderwochen -->
             <div v-for="(week, weekKey) in workTimes" :key="weekKey">
-                <h2 class="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-300 border-dashed pb-1 font-lexend">
+                <h2 class="text-lg font-semibold text-text mb-3 border-b border-border border-dashed pb-1 font-lexend">
                     {{ weekKey }}
-                    <span class="text-sm font-normal text-gray-600 ml-3">
+                    <span class="text-sm font-normal text-text-muted ml-3">
                         ({{ $t('Total') }}: {{ weeklySums[weekKey].worked }} - {{ weeklySums[weekKey].wanted }})
                     </span>
                 </h2>
 
-                <div class="divide-y divide-gray-200">
+                <div class="divide-y divide-border-subtle">
                     <div
                         v-for="entry in Object.values(week)"
                         :key="entry.date"
@@ -56,20 +56,20 @@
                     >
                         <!-- Linke Spalte -->
                         <div>
-                            <div class="text-sm font-lexend font-medium text-gray-900">{{ entry.formatted_date }}</div>
+                            <div class="text-sm font-lexend font-medium text-text">{{ entry.formatted_date }}</div>
 
 
                             <div class="font-lexend my-3" v-for="comment in entry.comments" :key="comment.id">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <UserPopoverTooltip :user="comment.user" class="text-xs text-gray-500" width="9" height="9" />
+                                    <UserPopoverTooltip :user="comment.user" class="text-xs text-text-subtle" width="9" height="9" />
                                     <div>
-                                        <div class="text-xs text-gray-900">{{ comment.text }}</div>
-                                        <div class="text-xs text-gray-500">{{ comment.work_time_change }} Std.</div>
-                                        <div class="text-[9px] text-gray-500">{{ comment.date }}</div>
+                                        <div class="text-xs text-text">{{ comment.text }}</div>
+                                        <div class="text-xs text-text-subtle">{{ comment.work_time_change }} Std.</div>
+                                        <div class="text-[9px] text-text-subtle">{{ comment.date }}</div>
                                     </div>
                                 </div>
                             </div>
-                            <div v-if="entry.is_special_day" class="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded inline-block mt-2">
+                            <div v-if="entry.is_special_day" class="text-xs text-warning bg-warning-surface px-2 py-0.5 rounded inline-block mt-2">
                                 {{ $t('Special Day') }}
                             </div>
                             <div v-if="entry.is_compensation_day_off" class="text-xs text-teal-700 bg-teal-100 px-2 py-0.5 rounded inline-block mt-2">
@@ -83,11 +83,11 @@
                         </div>
                         <!-- Rechte Spalte -->
                         <div class="w-full md:w-2/3">
-                            <div class="relative h-4 bg-gray-100 rounded overflow-hidden mb-1">
+                            <div class="relative h-4 bg-surface-sunken rounded overflow-hidden mb-1">
                                 <!-- Worked hours (blue) - up to daily target -->
                                 <div
                                     v-if="entry.worked_hours"
-                                    class="absolute top-0 left-0 h-full bg-blue-500"
+                                    class="absolute top-0 left-0 h-full bg-accent-600"
                                     :style="{ width: `${entry.worked_hours > Math.abs(entry.daily_target_minutes) ?
                                         (Math.abs(entry.daily_target_minutes) / entry.worked_hours) * 100 :
                                         (entry.worked_hours / Math.abs(entry.daily_target_minutes)) * 100}%` }"
@@ -95,7 +95,7 @@
                                 <!-- Planned hours (gray) - up to daily target when no worked hours -->
                                 <div
                                     v-if="entry.planned_minutes > 0 && !entry.worked_hours"
-                                    class="absolute top-0 left-0 h-full bg-gray-300"
+                                    class="absolute top-0 left-0 h-full bg-border"
                                     :style="{
                                         width: `${Math.min((Math.abs(entry.daily_target_minutes) / Math.abs(entry.daily_target_minutes)) * 100, 100)}%`
                                     }"
@@ -122,7 +122,7 @@
                                 <!-- Overtime (dark green) - when worked > required -->
                                 <div
                                     v-if="entry.worked_hours > Math.abs(entry.daily_target_minutes)"
-                                    class="absolute top-0 h-full bg-green-700"
+                                    class="absolute top-0 h-full bg-success"
                                     :style="{
                                         left: `${Math.min((Math.abs(entry.daily_target_minutes) / entry.worked_hours) * 100, 100)}%`,
                                         width: `${((entry.worked_hours - Math.abs(entry.daily_target_minutes)) / entry.worked_hours) * 100}%`
@@ -133,14 +133,14 @@
                                 <div
                                     v-if="(entry.worked_hours && entry.worked_hours < Math.abs(entry.daily_target_minutes)) ||
                                          (isDateInPast(entry.date) && !entry.worked_hours)"
-                                    class="absolute top-0 left-0 h-full bg-red-500"
+                                    class="absolute top-0 left-0 h-full bg-danger"
                                     :style="{
                                         left: `${(entry.worked_hours ? entry.worked_hours : 0) / Math.abs(entry.daily_target_minutes) * 100}%`,
                                         width: `${((Math.abs(entry.daily_target_minutes) - (entry.worked_hours ? entry.worked_hours : 0)) / Math.abs(entry.daily_target_minutes)) * 100}%`
                                     }"
                                 ></div>
                             </div>
-                            <div class="flex flex-wrap gap-3 text-xs text-gray-700 mt-1">
+                            <div class="flex flex-wrap gap-3 text-xs text-text-muted mt-1">
                                 <div>
                                     <strong>{{ $t('Daily target') }}: </strong>{{ entry.daily_target_hours }}h
                                     <span v-if="entry.is_compensation_day_off" class="text-teal-600 text-[10px] ml-1">({{ $t('Compensation day off') }})</span>
@@ -152,7 +152,7 @@
                                 <div v-if="entry.worked_hours"><strong>{{ $t('Worked') }}: </strong>{{ entry.worked_hours_formatted }}</div>
                                 <div v-if="entry.nightly_working_hours"><strong>{{ $t('Night') }}: </strong>{{ entry.nightly_working_hours_formatted }}</div>
                                 <div><strong>{{ $t('Balance') }}: </strong>
-                                    <span :class="[ entry.work_time_balance_change > 0 ? 'text-green-500' : entry.work_time_balance_change < 0 ? 'text-red-500' : 'text-gray-500']">
+                                    <span :class="[ entry.work_time_balance_change > 0 ? 'text-success' : entry.work_time_balance_change < 0 ? 'text-danger' : 'text-text-subtle']">
                                         {{ entry.work_time_balance_change_formatted }}
                                     </span>
                                 </div>

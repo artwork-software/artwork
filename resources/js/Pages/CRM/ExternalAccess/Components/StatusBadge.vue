@@ -15,17 +15,17 @@ const props = defineProps({
 })
 
 const map = {
-    active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700' },
-    expired: { label: 'Expired', classes: 'bg-zinc-100 text-zinc-600' },
-    revoked: { label: 'Revoked', classes: 'bg-red-50 text-red-700' },
-    pending: { label: 'pending', classes: 'bg-amber-50 text-amber-700' },
-    approved: { label: 'approved', classes: 'bg-emerald-50 text-emerald-700' },
-    rejected: { label: 'rejected', classes: 'bg-red-50 text-red-700' },
-    partially_approved: { label: 'partially_approved', classes: 'bg-amber-50 text-amber-700' },
-    superseded: { label: 'superseded', classes: 'bg-zinc-100 text-zinc-500' },
+    active: { label: 'Active', classes: 'bg-success-surface text-success' },
+    expired: { label: 'Expired', classes: 'bg-surface-sunken text-text-muted' },
+    revoked: { label: 'Revoked', classes: 'bg-danger-surface text-danger' },
+    pending: { label: 'pending', classes: 'bg-warning-surface text-warning' },
+    approved: { label: 'approved', classes: 'bg-success-surface text-success' },
+    rejected: { label: 'rejected', classes: 'bg-danger-surface text-danger' },
+    partially_approved: { label: 'partially_approved', classes: 'bg-warning-surface text-warning' },
+    superseded: { label: 'superseded', classes: 'bg-surface-sunken text-text-subtle' },
 }
 
-const entry = computed(() => map[props.status] ?? { label: props.status, classes: 'bg-zinc-100 text-zinc-600' })
+const entry = computed(() => map[props.status] ?? { label: props.status, classes: 'bg-surface-sunken text-text-muted' })
 const classes = computed(() => entry.value.classes)
 const label = computed(() => $t(entry.value.label))
 </script>

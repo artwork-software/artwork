@@ -7,12 +7,12 @@
     >
         <div class="space-y-7 text-sm">
             <!-- Kopfbereich: User-Info -->
-            <section class="flex items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+            <section class="flex items-center justify-between gap-4 border-b border-border-subtle pb-4">
                 <div class="flex items-center gap-3">
                     <div class="relative">
                         <img
                             :src="user.element.profile_photo_url"
-                            class="object-cover h-16 w-16 rounded-full ring-2 ring-zinc-100"
+                            class="object-cover h-16 w-16 rounded-full ring-2 ring-border-subtle"
                             alt=""
                         />
 
@@ -35,7 +35,7 @@
 
                     <div>
                         <div class="flex items-center gap-2">
-                            <p class="text-base font-semibold text-zinc-900">
+                            <p class="text-base font-semibold text-text">
                                 <span v-if="user.element.type === 'service_provider'">
                                     {{ user.element.provider_name }}
                                 </span>
@@ -44,7 +44,7 @@
                                 </span>
                             </p>
                         </div>
-                        <p class="mt-0.5 text-xs text-zinc-500">
+                        <p class="mt-0.5 text-xs text-text-subtle">
                             {{ t('Overview for this day') }}
                         </p>
                     </div>
@@ -53,7 +53,7 @@
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                         :title="t('Show shift history for this person and day')"
                         @click="openHistory"
                     >
@@ -62,11 +62,11 @@
                     </button>
 
                     <div class="hidden sm:flex flex-col items-end gap-1 text-xs">
-                        <span class="inline-flex items-center gap-1 rounded-full bg-zinc-50 px-2 py-1 text-zinc-600 border border-zinc-100">
-                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-1 text-text-muted border border-border-subtle">
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-success"></span>
                             {{ day.dayString }}
                         </span>
-                        <span class="text-[11px] text-zinc-400">
+                        <span class="text-[11px] text-text-subtle">
                             {{ day.fullDay }}
                         </span>
                     </div>
@@ -79,18 +79,18 @@
                     <section class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                     {{ t('Assigned shifts') }}
                                 </h3>
-                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                <p class="text-[11px] text-text-subtle mt-0.5">
                                     {{ t('All shifts assigned to this person on the selected day.') }}
                                 </p>
                             </div>
                         </div>
 
-                        <div v-if="shiftsForDay.length" class="rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2">
+                        <div v-if="shiftsForDay.length" class="rounded-xl border border-border-subtle bg-surface-sunken/70 px-3 py-2">
                             <template v-for="shift in shiftsForDay" :key="shift.id">
-                                <div class="flex items-center justify-between group border-b last:border-b-0 border-dashed border-zinc-200 py-2" :id="'shift-' + shift.id">
+                                <div class="flex items-center justify-between group border-b last:border-b-0 border-dashed border-border-subtle py-2" :id="'shift-' + shift.id">
                                     <SingleShiftInShiftOverviewUser
                                         :user="user"
                                         :shift="shift"
@@ -101,9 +101,9 @@
                         </div>
                         <div
                             v-else
-                            class="flex items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-3 text-xs text-zinc-500"
+                            class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
                         >
-                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
                             <span>{{ t('No shifts assigned for this day.') }}</span>
                         </div>
                     </section>
@@ -112,17 +112,17 @@
                     <section class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                     {{ t('Projects') }}
                                 </h3>
-                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                <p class="text-[11px] text-text-subtle mt-0.5">
                                     {{ t('Binding project assignments and wishes for this day.') }}
                                 </p>
                             </div>
                             <button
                                 v-if="canPlanShifts || isOwnCell"
                                 type="button"
-                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                                 @click="showProjectAssignmentModal = true"
                             >
                                 <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -132,16 +132,16 @@
 
                         <p
                             v-if="projectAssignmentError"
-                            class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+                            class="rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-danger"
                         >
                             {{ projectAssignmentError }}
                         </p>
 
-                        <div v-if="assignmentsForDay.length" class="rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2">
+                        <div v-if="assignmentsForDay.length" class="rounded-xl border border-border-subtle bg-surface-sunken/70 px-3 py-2">
                             <div
                                 v-for="assignment in assignmentsForDay"
                                 :key="assignment.id"
-                                class="flex items-center justify-between gap-2 border-b last:border-b-0 border-dashed border-zinc-200 py-2"
+                                class="flex items-center justify-between gap-2 border-b last:border-b-0 border-dashed border-border-subtle py-2"
                             >
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-2">
@@ -150,19 +150,19 @@
                                             :style="{ backgroundColor: colorForProjectId(assignment.project_id) }"
                                         ></span>
                                         <span
-                                            class="truncate text-xs text-zinc-800"
+                                            class="truncate text-xs text-text"
                                             :class="assignment.type === 'wish' ? 'italic' : ''"
                                         >
                                             {{ assignment.project_name }}
                                         </span>
                                         <span
                                             v-if="assignment.type === 'wish'"
-                                            class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 italic"
+                                            class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] text-text-subtle italic"
                                         >
                                             {{ t('Wish') }}
                                         </span>
                                     </div>
-                                    <div class="text-[11px] text-zinc-400 mt-0.5 pl-4.5">
+                                    <div class="text-[11px] text-text-subtle mt-0.5 pl-4.5">
                                         {{ formatAssignmentDate(assignment.series_start) }} - {{ formatAssignmentDate(assignment.series_end) }}
                                         <template v-if="assignment.is_full_period"> &middot; {{ t('Entire project period') }}</template>
                                     </div>
@@ -171,7 +171,7 @@
                                     <button
                                         v-if="assignment.type === 'wish' && canPlanShifts"
                                         type="button"
-                                        class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] text-emerald-700 hover:border-emerald-400 transition-colors"
+                                        class="inline-flex items-center gap-1 rounded-full border border-success-border bg-white px-2 py-0.5 text-[10px] text-success hover:border-success transition-colors"
                                         :disabled="projectAssignmentActionKey !== null"
                                         :class="projectAssignmentActionKey === `accept:${assignment.id}` ? 'cursor-wait opacity-50' : ''"
                                         :title="t('Accept wish as binding assignment')"
@@ -183,7 +183,7 @@
                                     <button
                                         v-if="canDeleteAssignment(assignment)"
                                         type="button"
-                                        class="inline-flex items-center justify-center rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                        class="inline-flex items-center justify-center rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
                                         :disabled="projectAssignmentActionKey !== null"
                                         :class="projectAssignmentActionKey === `delete-day:${assignment.id}` ? 'cursor-wait opacity-50' : ''"
                                         :title="t('Remove for this day only')"
@@ -194,7 +194,7 @@
                                     <button
                                         v-if="canDeleteAssignment(assignment) && assignment.series_start !== assignment.series_end"
                                         type="button"
-                                        class="inline-flex items-center justify-center rounded-md p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                        class="inline-flex items-center justify-center rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
                                         :disabled="projectAssignmentActionKey !== null"
                                         :class="projectAssignmentActionKey === `delete-group:${assignment.id}` ? 'cursor-wait opacity-50' : ''"
                                         :title="t('Remove entire assignment')"
@@ -207,9 +207,9 @@
                         </div>
                         <div
                             v-else
-                            class="flex items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-3 text-xs text-zinc-500"
+                            class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
                         >
-                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
+                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
                             <span>{{ t('No project assignments for this day.') }}</span>
                         </div>
                     </section>
@@ -218,16 +218,16 @@
                     <section class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                     {{ t('Individual time') }}
                                 </h3>
-                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                <p class="text-[11px] text-text-subtle mt-0.5">
                                     {{ t('Define or adjust custom times for this person on this day.') }}
                                 </p>
                             </div>
                             <button
                                 type="button"
-                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                                class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                                 @click="addIndividualTime"
                             >
                                 <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -237,7 +237,7 @@
 
                         <div v-if="individualTimesByDate.length > 0">
                             <!-- Kopfzeile -->
-                            <div class="hidden md:block text-[11px] text-zinc-500">
+                            <div class="hidden md:block text-[11px] text-text-subtle">
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-2 px-1">
                                     <div>
                                         {{ t('Title') }}
@@ -252,7 +252,7 @@
                             <div
                                 v-for="(individual_time, index) in individualTimesByDate"
                                 :key="individual_time.id ?? index"
-                                class="rounded-lg border border-zinc-100 bg-white px-3 py-3 mt-2 shadow-sm/10 group"
+                                class="rounded-lg border border-border-subtle bg-white px-3 py-3 mt-2 shadow-sm/10 group"
                             >
                                 <!-- Nur Einträge für diesen Tag -->
                                 <div
@@ -303,7 +303,7 @@
                                         </div>
 
                                         <!-- Break Minutes -->
-                                        <div class="col-span-full mt-3 pt-3 border-t border-zinc-100">
+                                        <div class="col-span-full mt-3 pt-3 border-t border-border-subtle">
                                             <BaseInput
                                                 type="number"
                                                 :id="'break_minutes_' + index"
@@ -316,7 +316,7 @@
                                                 class="max-w-xs"
                                                 @input="markBreakAsManuallyEdited(individual_time)"
                                             />
-                                            <p class="text-[11px] text-zinc-500 mt-1.5 leading-snug">
+                                            <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
                                                 {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
                                             </p>
                                         </div>
@@ -332,7 +332,7 @@
                                                 :show-label="false"
                                                 no-margin-top
                                             />
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600 border border-indigo-100">
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-[10px] font-medium text-accent-600 border border-accent-100">
                                                 • {{ t('Series entry') }}
                                             </span>
                                         </div>
@@ -374,13 +374,13 @@
                                                 icon="IconTrash"
                                             />
                                         </div>
-                                        <div class="text-[11px] text-gray-500 col-span-full mt-1">
+                                        <div class="text-[11px] text-text-subtle col-span-full mt-1">
                                             {{ t('This time belongs to a series. If you change it, it will be detached from the series.') }}
                                         </div>
 
                                         <!-- Break Minutes -->
-                                        <div class="col-span-full mt-3 pt-3 border-t border-zinc-100">
-                                            <label class="block text-[11px] font-medium text-zinc-500 mb-1.5">
+                                        <div class="col-span-full mt-3 pt-3 border-t border-border-subtle">
+                                            <label class="block text-[11px] font-medium text-text-subtle mb-1.5">
                                                 {{ t('Break time (minutes)') }}
                                             </label>
                                             <BaseInput
@@ -395,7 +395,7 @@
                                                 class="max-w-xs"
                                                 @input="markBreakAsManuallyEdited(individual_time)"
                                             />
-                                            <p class="text-[11px] text-zinc-500 mt-1.5 leading-snug">
+                                            <p class="text-[11px] text-text-subtle mt-1.5 leading-snug">
                                                 {{ t('This time will be deducted from the working hours when calculating the daily working time.') }}
                                             </p>
                                         </div>
@@ -404,7 +404,7 @@
 
                                 <div
                                     v-if="individual_time.error"
-                                    class="text-[11px] text-red-500 mt-2"
+                                    class="text-[11px] text-danger mt-2"
                                 >
                                     {{ individual_time.error }}
                                 </div>
@@ -432,7 +432,7 @@
                             class="cursor-pointer"
                             @click="addIndividualTime"
                         >
-                            <div class="w-full px-3 py-4 bg-blue-400/8 hover:bg-blue-400/16 border border-dashed border-blue-200/70 rounded-lg mt-1 transition-colors">
+                            <div class="w-full px-3 py-4 bg-accent-50 hover:bg-accent-100 border border-dashed border-accent-200 rounded-lg mt-1 transition-colors">
                                 <AlertComponent
                                     text="Es wurden noch keine Zeiten festgelegt. Klicke hier um Zeiten zu erstellen"
                                     show-icon
@@ -447,16 +447,16 @@
                 <section v-if="(can('can plan shifts') || hasAdminRole()) && user.type === 0" class="space-y-3 mt-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                            <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                 {{ t('Rule violations') }}
                             </h3>
-                            <p class="text-[11px] text-zinc-400 mt-0.5">
+                            <p class="text-[11px] text-text-subtle mt-0.5">
                                 {{ t('Rule violations for this person on this day.') }}
                             </p>
                         </div>
                         <button
                             type="button"
-                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] text-zinc-600 hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
+                            class="hidden sm:inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-2.5 py-1 text-[11px] text-text-muted hover:border-artwork-buttons-hover hover:text-artwork-buttons-hover transition-colors"
                             @click="showAddViolationModal = true"
                         >
                             <PropertyIcon name="IconCirclePlus" class="h-3.5 w-3.5" stroke-width="2" />
@@ -468,38 +468,38 @@
                         <div
                             v-for="violation in violationsForDay"
                             :key="violation.id"
-                            class="flex items-center justify-between rounded-lg border border-zinc-100 bg-white px-3 py-2 cursor-pointer hover:bg-zinc-50/80 transition-colors"
+                            class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-3 py-2 cursor-pointer hover:bg-surface-sunken/80 transition-colors"
                             @click="openViolationEditModal(violation)"
                         >
-                            <div class="flex items-center gap-2 text-xs text-zinc-700">
+                            <div class="flex items-center gap-2 text-xs text-text-muted">
                                 <span
                                     class="inline-block h-2.5 w-2.5 rounded-full"
                                     :style="{ backgroundColor: violation.shift_rule?.warning_color || '#ff0000' }"
                                 ></span>
                                 <span class="font-medium">{{ violation.shift_rule?.name }}</span>
                                 <span
-                                    :class="violation.severity === 'error' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
+                                    :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
                                     class="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded-full"
                                 >
                                     {{ violation.severity === 'error' ? t('Error') : t('Warning') }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span v-if="violation.is_manual" class="text-[10px] text-zinc-400">
+                                <span v-if="violation.is_manual" class="text-[10px] text-text-subtle">
                                     {{ t('Manual violation') }}
                                 </span>
-                                <span v-if="violation.compensation_days" class="text-[10px] text-emerald-600">
+                                <span v-if="violation.compensation_days" class="text-[10px] text-success">
                                     {{ violation.compensation_days }} {{ t('Days') }}
                                 </span>
-                                <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-zinc-400" />
+                                <PropertyIcon name="IconChevronRight" class="h-3.5 w-3.5 text-text-subtle" />
                             </div>
                         </div>
                     </div>
                     <div
                         v-else
-                        class="flex items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-3 text-xs text-zinc-500"
+                        class="flex items-center gap-2 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 px-3 py-3 text-xs text-text-subtle"
                     >
-                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
+                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-border"></span>
                         <span>{{ t('No rule violations for this day.') }}</span>
                     </div>
                 </section>
@@ -566,14 +566,14 @@
                     <!-- Verfügbarkeits-Typ (nur intern & extern) -->
                     <section
                         v-if="(user.type === 0 || user.type === 1) && !compensationDayForDate.length"
-                        class="space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3.5 py-3"
+                        class="space-y-3 rounded-xl border border-border-subtle bg-surface-sunken/80 px-3.5 py-3"
                     >
                         <div class="flex items-center justify-between gap-2">
                             <div>
-                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                     {{ t('Availability status for this day') }}
                                 </h3>
-                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                <p class="text-[11px] text-text-subtle mt-0.5">
                                     {{ canPlanShifts
                                         ? t('Define whether this person is available, off work or not available.')
                                         : t('The availability status is set by shift planning. Enter absences via your availability calendar.') }}
@@ -584,7 +584,7 @@
                         <!-- Ohne Planungsrecht (eigene Zelle): Status nur lesend anzeigen -->
                         <div
                             v-if="!canPlanShifts"
-                            class="mt-2 flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-700"
+                            class="mt-2 flex items-center gap-2 rounded-lg border border-border-subtle bg-white px-3 py-2.5 text-sm text-text-muted"
                         >
                             <span
                                 class="inline-flex h-1.5 w-1.5 rounded-full"
@@ -610,7 +610,7 @@
                                 />
                             </ListboxButton>
                             <ListboxOptions
-                                class="absolute mt-1 w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm"
+                                class="absolute mt-1 w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm"
                             >
                                 <ListboxOption
                                     v-for="type in vacationTypes"
@@ -645,8 +645,8 @@
 
                     <!-- DP-18: "Frei" als ganzer oder halber freier Tag (Vormittag/Nachmittag) -->
                     <section v-if="canPlanShifts && checked && checked.type === 'FREE_WORK'"
-                             class="space-y-2 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
-                        <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                             class="space-y-2 rounded-xl border border-border-subtle bg-white px-3.5 py-3">
+                        <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                             {{ t('Free day type') }}
                         </h3>
                         <div class="flex flex-wrap gap-2">
@@ -654,7 +654,7 @@
                                    class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm cursor-pointer"
                                    :class="freeDayPart === opt.value
                                        ? 'border-artwork-buttons-create text-artwork-buttons-create bg-artwork-buttons-create/5'
-                                       : 'border-zinc-200 text-zinc-600'">
+                                       : 'border-border-subtle text-text-muted'">
                                 <input type="radio" class="hidden" :value="opt.value" v-model="freeDayPart" />
                                 {{ t(opt.label) }}
                             </label>
@@ -662,13 +662,13 @@
                     </section>
 
                     <!-- Kommentar -->
-                    <section class="space-y-3 rounded-xl border border-zinc-100 bg-white px-3.5 py-3">
+                    <section class="space-y-3 rounded-xl border border-border-subtle bg-white px-3.5 py-3">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                     {{ t('Comment') }}
                                 </h3>
-                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                <p class="text-[11px] text-text-subtle mt-0.5">
                                     {{ t('Optional note for this day (visible in shift planning).') }}
                                 </p>
                             </div>
@@ -685,14 +685,14 @@
                     <!-- Registrierte Verfügbarkeiten -->
                     <section
                         v-if="user.availabilities"
-                        class="space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/70 px-3.5 py-3"
+                        class="space-y-3 rounded-xl border border-border-subtle bg-surface-sunken/70 px-3.5 py-3"
                     >
                         <div class="flex items-center justify-between gap-2">
                             <div>
-                                <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+                                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                                     {{ t('Registered availabilities') }}
                                 </h3>
-                                <p class="text-[11px] text-zinc-400 mt-0.5">
+                                <p class="text-[11px] text-text-subtle mt-0.5">
                                     {{ t('Availabilities that this person has registered in the system.') }}
                                 </p>
                             </div>
@@ -705,23 +705,23 @@
                             <div
                                 v-for="availability in user.availabilities[day.fullDay]"
                                 :key="availability.id ?? availability.date_casted + availability.start_time + availability.end_time"
-                                class="rounded-lg border border-zinc-100 bg-white px-3 py-2"
+                                class="rounded-lg border border-border-subtle bg-white px-3 py-2"
                             >
-                                <div class="flex items-center justify-between text-xs text-zinc-700">
+                                <div class="flex items-center justify-between text-xs text-text-muted">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                        <span class="inline-flex h-1.5 w-1.5 rounded-full bg-success"></span>
                                         <span>{{ availability.date_casted }}</span>
                                         <span v-if="!availability.full_day">
                                             · {{ availability.start_time }} – {{ availability.end_time }}
                                         </span>
-                                        <span v-else class="text-[11px] text-emerald-600">
+                                        <span v-else class="text-[11px] text-success">
                                             ({{ t('Full day') }})
                                         </span>
                                     </div>
                                 </div>
                                 <p
                                     v-if="availability.comment"
-                                    class="mt-1 text-[11px] text-zinc-500 italic"
+                                    class="mt-1 text-[11px] text-text-subtle italic"
                                 >
                                     &bdquo;{{ availability.comment }}&rdquo;
                                 </p>
@@ -729,7 +729,7 @@
                         </div>
                         <div
                             v-else
-                            class="text-[11px] text-zinc-500 italic"
+                            class="text-[11px] text-text-subtle italic"
                         >
                             {{ t('No availabilities are registered for this day.') }}
                         </div>
@@ -738,7 +738,7 @@
             </div>
 
             <!-- Footer: Speichern -->
-            <div class="flex justify-between pt-2 border-t border-zinc-100 mt-2">
+            <div class="flex justify-between pt-2 border-t border-border-subtle mt-2">
                 <BaseUIButton
                     :label="t('Cancel')"
                     is-cancel-button
@@ -823,36 +823,36 @@
         >
             <div class="mt-4 space-y-4">
                 <div v-if="cleanupShifts.length">
-                    <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-2">
+                    <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase mb-2">
                         {{ t('Assigned shifts') }}
                     </h3>
                     <ul class="space-y-1.5">
                         <li
                             v-for="shift in cleanupShifts"
                             :key="`shift-${shift.pivot_id}`"
-                            class="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+                            class="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
                         >
-                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-danger"></span>
                             <span class="font-medium">{{ shift.start }} - {{ shift.end }}</span>
-                            <span v-if="shift.event_name" class="text-zinc-500 truncate">· {{ shift.event_name }}</span>
-                            <span v-if="shift.craft_abbreviation" class="text-zinc-400">· {{ shift.craft_abbreviation }}</span>
+                            <span v-if="shift.event_name" class="text-text-subtle truncate">· {{ shift.event_name }}</span>
+                            <span v-if="shift.craft_abbreviation" class="text-text-subtle">· {{ shift.craft_abbreviation }}</span>
                         </li>
                     </ul>
                 </div>
 
                 <div v-if="cleanupIndividualTimes.length">
-                    <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase mb-2">
+                    <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase mb-2">
                         {{ t('Individual times') }}
                     </h3>
                     <ul class="space-y-1.5">
                         <li
                             v-for="it in cleanupIndividualTimes"
                             :key="`it-${it.id}`"
-                            class="flex items-center gap-2 rounded-lg border border-zinc-100 bg-zinc-50/70 px-3 py-2 text-xs text-zinc-700"
+                            class="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
                         >
-                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                            <span class="inline-flex h-1.5 w-1.5 rounded-full bg-accent-500"></span>
                             <span v-if="it.title" class="font-medium truncate">{{ it.title }}</span>
-                            <span v-if="it.start_time || it.end_time" class="text-zinc-500">
+                            <span v-if="it.start_time || it.end_time" class="text-text-subtle">
                                 · {{ it.start_time }} - {{ it.end_time }}
                             </span>
                         </li>
@@ -1207,25 +1207,25 @@ const badgeClassForType = computed(() => {
         return 'bg-purple-50 text-purple-700 border-purple-100';
     }
     if (props.user.element.type === 'freelancer') {
-        return 'bg-amber-50 text-amber-700 border-amber-100';
+        return 'bg-warning-surface text-warning border-warning-border';
     }
-    return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+    return 'bg-success-surface text-success border-success-border';
 });
 
 // Dot-Farbe für aktuellen Availability-Status
 const dotClassForChecked = computed(() => {
-    if (!checked.value) return 'bg-zinc-300';
-    if (checked.value.type === 'AVAILABLE') return 'bg-emerald-500';
-    if (checked.value.type === 'OFF_WORK') return 'bg-amber-500';
-    if (checked.value.type === 'NOT_AVAILABLE') return 'bg-rose-500';
-    return 'bg-zinc-300';
+    if (!checked.value) return 'bg-border';
+    if (checked.value.type === 'AVAILABLE') return 'bg-success';
+    if (checked.value.type === 'OFF_WORK') return 'bg-warning';
+    if (checked.value.type === 'NOT_AVAILABLE') return 'bg-danger';
+    return 'bg-border';
 });
 
 function dotClassForType(type) {
-    if (type.type === 'AVAILABLE') return 'bg-emerald-500';
-    if (type.type === 'OFF_WORK') return 'bg-amber-500';
-    if (type.type === 'NOT_AVAILABLE') return 'bg-rose-500';
-    return 'bg-zinc-300';
+    if (type.type === 'AVAILABLE') return 'bg-success';
+    if (type.type === 'OFF_WORK') return 'bg-warning';
+    if (type.type === 'NOT_AVAILABLE') return 'bg-danger';
+    return 'bg-border';
 }
 
 // Initialer Vacation-Type

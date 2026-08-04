@@ -6,22 +6,22 @@
         @close="$emit('closed', false)"
     >
         <div class="space-y-4">
-            <div class="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">
+            <div class="rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-700">
                 {{ $t('{0} event(s) will be moved into the selected cell.', [eventIds.length]) }}
             </div>
 
             <!-- Ziel-Zelle -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-rose-400"></span>
+                    <span class="ui-dot bg-danger"></span>
                     <h3 class="ui-card-title">{{ $t('Target cell') }}</h3>
                 </header>
 
-                <div class="flex flex-wrap items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-2">
-                    <span class="text-[13px] font-medium text-zinc-900 whitespace-nowrap">
+                <div class="flex flex-wrap items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-2">
+                    <span class="text-[13px] font-medium text-text whitespace-nowrap">
                         {{ formatDayLabel(cell.day) }}
                     </span>
-                    <span class="inline-flex items-center rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-[12.5px] text-zinc-800">
+                    <span class="inline-flex items-center rounded-full border border-border-subtle bg-white px-2.5 py-0.5 text-[12.5px] text-text">
                         {{ roomName }}
                     </span>
                 </div>

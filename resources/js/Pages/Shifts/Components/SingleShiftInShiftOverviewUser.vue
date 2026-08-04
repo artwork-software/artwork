@@ -28,7 +28,7 @@
                             <PopoverPanel static class="z-50 w-96 focus:outline-none  card glassy">
                                 <div class="px-4 py-2">
                                     <div>
-                                        <p class="text-xs text-gray-700 mb-2 font-lexend font-bold">
+                                        <p class="text-xs text-text-muted mb-2 font-lexend font-bold">
                                             Schichtzeiten für
                                             {{ user.element.provider_name || user.element.first_name }}
                                             <span v-if="user.element.last_name"> {{ user.element.last_name }}</span>
@@ -75,10 +75,10 @@
     </div>
     <div class="invisible group-hover:visible cursor-pointer flex items-center gap-x-2">
         <button type="button" @click="showRequestWorkTimeChangeModal = true" v-if="user.element.id === usePage().props.auth.user.id && user.type === 0">
-            <PropertyIcon name="IconClockEdit" class="h-5 w-5 hover:text-blue-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            <PropertyIcon name="IconClockEdit" class="h-5 w-5 hover:text-accent-600 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
         <button type="button" @click="showConfirmDeleteModal = true">
-            <PropertyIcon name="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
+            <PropertyIcon name="IconSquareRoundedXFilled" class="h-5 w-5 hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="1.5"/>
         </button>
     </div>
 

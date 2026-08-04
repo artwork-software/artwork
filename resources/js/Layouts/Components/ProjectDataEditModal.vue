@@ -7,11 +7,11 @@
                 <input :placeholder="name"
                        id="title"
                        v-model="name"
-                       class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                       class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-border"/>
                 <div class="flex mt-2 w-full">
                     <Listbox as="div" class="flex w-full" v-model="selectedState">
                         <ListboxButton class="w-full text-left">
-                            <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-border bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     @click="openColor = !openColor">
                                 <span class="w-full" v-if="!selectedState">
                                     {{ $t('Select project status') }}
@@ -69,7 +69,7 @@
                                     </div>
                                 </div>
                                 <div class="hidden group-hover:block">
-                                    <PropertyIcon name="IconCircleX" class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
+                                    <PropertyIcon name="IconCircleX" class="h-6 w-6 text-text-muted hover:text-danger cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
                                 </div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                     <div class="flex items-center mb-2" v-if="!project.is_group">
                         <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
                                @change="removeSelectedGroup"
-                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-border"/>
                         <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                class="ml-2">
                             {{ $t('Belongs to project group') }}
@@ -108,7 +108,7 @@
                                     {{ $t('No project group has been created yet') }}
                                 </ListboxOption>
                                 <ListboxOption v-for="projectGroup in groupProjects"
-                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                               class="hover:bg-accent-700 text-secondary cursor-pointer p-2 flex justify-between "
                                                :key="projectGroup.id"
                                                :value="projectGroup"
                                                v-slot="{ active, selected }">
@@ -136,13 +136,13 @@
                                id="budgetDeadline"
                                type="date"
                                required
-                               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                               class="border-border inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
                     </div>
                 </div>
                 <div class="mt-4 group">
                     <div class="xsDark mb-1">{{ $t('Key Visual') }}</div>
                     <div
-                        class="flex w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                        class="flex w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
                         @dragover.prevent
                         @drop.stop.prevent="uploadDraggedKeyVisual($event)"
                         @click="selectNewKeyVisual"
@@ -158,17 +158,17 @@
                         <div
                             class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
                             <button @click="downloadKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                                 <PropertyIcon name="IconDownload" class="h-5 w-5" aria-hidden="true"/>
                             </button>
                             <button @click="selectNewKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                    class="mr-3 inline-flex rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                                 <PropertyIcon name="IconEdit"
                                     class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                     aria-hidden="true"/>
                             </button>
                             <button @click="deleteKeyVisual" type="button"
-                                    class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                                    class="inline-flex rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                                 <PropertyIcon name="IconX" class="h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
                                        aria-hidden="true"/>
                             </button>

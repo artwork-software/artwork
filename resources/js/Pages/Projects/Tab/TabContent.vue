@@ -62,7 +62,7 @@
             <div class="w-full">
                 <div class="mb-5 ml-3">
                     <div class="hidden sm:block">
-                        <div class="border-gray-200">
+                        <div class="border-border-subtle">
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                                 <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name"
                                      @click="currentSideBarTab = index"

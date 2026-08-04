@@ -1,6 +1,6 @@
 <template>
     <div
-        class="w-full h-full p-6 bg-white rounded-lg border border-gray-100 hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend"
+        class="w-full h-full p-6 bg-white rounded-lg border border-border-subtle hover:shadow-lg duration-300 ease-in-out cursor-pointer overflow-hidden font-lexend"
         @click="showArticleDetail = true"
     >
         <div v-if="!hideImage" class="flex items-center justify-center">
@@ -15,11 +15,11 @@
                 <IconIdBadge v-if="item?.is_detailed_quantity" class="size-4 xsDark ml-2 shrink-0" />
             </div>
 
-            <p v-if="item?.inventory_number" class="text-xs text-gray-400 font-mono break-words">
+            <p v-if="item?.inventory_number" class="text-xs text-text-subtle font-mono break-words">
                 {{ (usePage().props.inventoryNumberPrefix || '') + item.inventory_number }}
             </p>
 
-            <p class="text-xs text-gray-500 line-clamp-2 break-words">
+            <p class="text-xs text-text-subtle line-clamp-2 break-words">
                 {{ item.description }}
             </p>
 
@@ -31,7 +31,7 @@
                 <span
                     v-for="tag in item.tags"
                     :key="tag.id"
-                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border border-gray-100 max-w-[120px] bg-gray-50"
+                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium border border-border-subtle max-w-[120px] bg-surface-sunken"
                     :style="tagStyle(tag)"
                 >
                     <span
@@ -45,12 +45,12 @@
             </div>
             <!-- Ende Tags -->
 
-            <div class="my-2 text-xs divide-y divide-gray-100 divide-dashed">
+            <div class="my-2 text-xs divide-y divide-border-subtle divide-dashed">
                 <div class="flex items-center justify-between py-2 font-bold font-lexend">
-                    <div class="text-gray-500">
+                    <div class="text-text-subtle">
                         {{ $t('Quantity') }}
                     </div>
-                    <div :class="item.quantity === 0 ? 'text-red-500' : 'text-artwork-buttons-create'">
+                    <div :class="item.quantity === 0 ? 'text-danger' : 'text-artwork-buttons-create'">
                         {{ formatQuantity(item.quantity) }}
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                                 v-else-if="property.varied"
                                 :values="property.distinctValues"
                                 :heading="$t('Values')"
-                                class="text-gray-500"
+                                class="text-text-subtle"
                             >
                                 {{ property.text }}
                             </PropertyDiffTooltip>

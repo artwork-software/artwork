@@ -23,7 +23,7 @@
                         leave-from-class="transform scale-100 opacity-100"
                         leave-to-class="transform scale-95 opacity-0">
                         <MenuItems
-                            class="absolute right-0 w-full origin-top-right rounded-lg divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute right-0 w-full origin-top-right rounded-lg divide-y divide-border-subtle bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="p-4">
                                 <!-- Room Categories Section -->
                                 <BaseFilterDisclosure :title="$t('Room categories')">
@@ -44,7 +44,7 @@
                                     <div v-else class="text-secondary">{{ $t('No room categories created yet') }}</div>
                                 </BaseFilterDisclosure>
 
-                                <hr class="border-gray-500 rounded-full mt-2 mb-2">
+                                <hr class="border-border-strong rounded-full mt-2 mb-2">
 
                                 <!-- Adjoining rooms Section -->
                                 <BaseFilterDisclosure :title="$t('Adjoining rooms')">
@@ -66,7 +66,7 @@
                                     <div v-else class="text-secondary">{{ $t('No adjoining rooms created yet') }}</div>
                                 </BaseFilterDisclosure>
 
-                                <hr class="border-gray-500 rounded-full mt-2 mb-2">
+                                <hr class="border-border-strong rounded-full mt-2 mb-2">
 
                                 <!-- Room attributes Section -->
                                 <BaseFilterDisclosure :title="$t('Room properties')">

@@ -6,14 +6,14 @@
         @close="$emit('closed', false)"
     >
         <div class="space-y-4">
-            <div class="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">
+            <div class="rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-700">
                 {{ $t('{0} event(s) will be duplicated into {1} cells. This creates {2} new event(s).', [eventIds.length, cells.length, eventIds.length * cells.length]) }}
             </div>
 
             <!-- Ziel-Zellen gruppiert nach Tag -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-rose-400"></span>
+                    <span class="ui-dot bg-danger"></span>
                     <h3 class="ui-card-title">{{ $t('Selected cells') }}</h3>
                 </header>
 
@@ -21,15 +21,15 @@
                     <div
                         v-for="[day, roomNames] in cellsByDay"
                         :key="day"
-                        class="flex flex-wrap items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-2"
+                        class="flex flex-wrap items-center gap-1.5 rounded-md border border-border-subtle bg-surface-sunken px-2.5 py-2"
                     >
-                        <span class="text-[13px] font-medium text-zinc-900 whitespace-nowrap">
+                        <span class="text-[13px] font-medium text-text whitespace-nowrap">
                             {{ formatDayLabel(day) }}
                         </span>
                         <span
                             v-for="(roomName, roomIdx) in roomNames"
                             :key="roomIdx"
-                            class="inline-flex items-center rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-[12.5px] text-zinc-800"
+                            class="inline-flex items-center rounded-full border border-border-subtle bg-white px-2.5 py-0.5 text-[12.5px] text-text"
                         >
                             {{ roomName }}
                         </span>

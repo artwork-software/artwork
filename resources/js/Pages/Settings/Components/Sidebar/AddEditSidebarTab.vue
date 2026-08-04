@@ -71,7 +71,7 @@ const saveTab = () => {
     <ArtworkBaseModal :title="tabToEdit ? $t('Rename sidebar tab') : $t('Create sidebar tab')" description="" @close="closeModal">
         <div>
             <BaseInput v-model="tabForm.name" name="name" id="sidebar-tab-name" label="Name" />
-            <div v-if="tabForm.errors.name" class="mt-1 text-sm text-red-600">
+            <div v-if="tabForm.errors.name" class="mt-1 text-sm text-danger">
                 {{ tabForm.errors.name }}
             </div>
         </div>

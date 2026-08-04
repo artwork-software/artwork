@@ -5,13 +5,13 @@
                 type="checkbox"
                 :checked="selected"
                 @change="$emit('toggle-selection', project.id)"
-                class="h-4 w-4 rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
+                class="h-4 w-4 rounded border-border text-artwork-buttons-hover focus:ring-artwork-buttons-hover cursor-pointer"
                 :aria-label="$t('Select project')"
             />
         </div>
         <div class="grid grid-cols-10 gap-x-3 w-full">
             <div class="col-span-1 flex items-center justify-center">
-                <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
+                <div class="flex justify-center items-center relative bg-border-subtle rounded-full h-12 w-12">
                     <img :src="'/storage/keyVisual/' + project.key_visual_path" alt="" class="rounded-full h-12 w-12 object-cover" v-if="project.key_visual_path">
                     <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
                     <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">

@@ -5,32 +5,32 @@
                 v-for="(attribute, index) in visibleAttributes"
                 :key="index"
                 class="inline-flex items-center rounded-full border pr-2"
-                :class="attribute.pivot?.is_main ? 'border-amber-400 ring-1 ring-amber-400' : 'border-gray-100'"
+                :class="attribute.pivot?.is_main ? 'border-warning-border ring-1 ring-warning-border' : 'border-border-subtle'"
             >
                 <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attribute.color }" />
-                <span class="ml-1 text-xs truncate max-w-[6rem]" :class="attribute.pivot?.is_main ? 'text-amber-700 font-semibold' : 'text-secondary'">{{ attribute.name }}</span>
+                <span class="ml-1 text-xs truncate max-w-[6rem]" :class="attribute.pivot?.is_main ? 'text-warning font-semibold' : 'text-secondary'">{{ attribute.name }}</span>
             </div>
             <div v-if="overflowAttributes.length > 0" class="relative" @click.stop>
                 <button
                     type="button"
-                    class="inline-flex items-center justify-center size-6 rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600 hover:bg-zinc-200 transition"
+                    class="inline-flex items-center justify-center size-6 rounded-full bg-surface-sunken text-xs font-semibold text-text-muted hover:bg-border-subtle transition"
                     @click="showOverflow = !showOverflow"
                 >
                     +{{ overflowAttributes.length }}
                 </button>
                 <div
                     v-if="showOverflow"
-                    class="absolute z-50 mt-1 left-0 bg-white border border-zinc-200 rounded-lg shadow-lg p-3 min-w-[14rem] max-w-[20rem]"
+                    class="absolute z-50 mt-1 left-0 bg-white border border-border-subtle rounded-lg shadow-lg p-3 min-w-[14rem] max-w-[20rem]"
                 >
                     <div class="flex flex-wrap gap-1.5">
                         <div
                             v-for="(attr, i) in overflowAttributes"
                             :key="i"
                             class="inline-flex items-center rounded-full border pr-2"
-                            :class="attr.pivot?.is_main ? 'border-amber-400 ring-1 ring-amber-400' : 'border-gray-100'"
+                            :class="attr.pivot?.is_main ? 'border-warning-border ring-1 ring-warning-border' : 'border-border-subtle'"
                         >
                             <div class="inline-block size-5 rounded-full" :style="{ backgroundColor: attr.color }" />
-                            <span class="ml-1 text-xs" :class="attr.pivot?.is_main ? 'text-amber-700 font-semibold' : 'text-secondary'">{{ attr.name }}</span>
+                            <span class="ml-1 text-xs" :class="attr.pivot?.is_main ? 'text-warning font-semibold' : 'text-secondary'">{{ attr.name }}</span>
                         </div>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 <!-- components/ProjectMaterialIssuesSection.vue -->
 <template>
     <section class="space-y-5">
-        <div v-if="loadMaterialsError" class="mb-2 text-xs text-rose-600">
+        <div v-if="loadMaterialsError" class="mb-2 text-xs text-danger">
             {{ loadMaterialsError }}
         </div>
         <div v-else-if="isLoadingMaterials" class="mb-2 text-xs text-secondary">
@@ -10,8 +10,8 @@
         <!-- Top-Bar -->
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-semibold text-zinc-900">{{ $t('Material Issue')}}</h2>
-                <p class="text-sm text-zinc-500">{{ $t('Linked material issues for this project.')}}</p>
+                <h2 class="text-xl font-semibold text-text">{{ $t('Material Issue')}}</h2>
+                <p class="text-sm text-text-subtle">{{ $t('Linked material issues for this project.')}}</p>
             </div>
             <div class="flex items-center gap-2">
                 <ToolTipComponent
@@ -47,7 +47,7 @@
         <!-- Tag-Filter -->
         <div v-if="availableTags.length" class="flex flex-col gap-1 mt-2">
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs text-zinc-500">
+                <span class="text-xs text-text-subtle">
                     {{ $t('Filter by tags') }}:
                 </span>
 
@@ -57,8 +57,7 @@
                     type="button"
                     class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
                     :style="tagChipStyle(tag)"
-                    :class="selectedTagIds.includes(tag.id)
-                        ? 'bg-opacity-20'
+                    :class="selectedTagIds.includes(tag.id) ? 'bg-opacity-20'
                         : 'bg-white/80 hover:bg-white'"
                     @click="toggleTag(tag.id)"
                 >
@@ -74,7 +73,7 @@
                 <button
                     v-if="selectedTagIds.length"
                     type="button"
-                    class="ml-1 text-[11px] text-zinc-500 hover:text-zinc-800 underline underline-offset-2"
+                    class="ml-1 text-[11px] text-text-subtle hover:text-text underline underline-offset-2"
                     @click="clearTags"
                 >
                     {{ $t('Reset tag filter') }}
@@ -83,7 +82,7 @@
 
             <!-- 👇 Aktive Tag-Filter anzeigen -->
             <div v-if="selectedTagIds.length" class="flex flex-wrap items-center gap-2 pl-1">
-                <span class="text-[11px] text-zinc-500">
+                <span class="text-[11px] text-text-subtle">
                     {{ $t('Active tag filters') }}:
                 </span>
 
@@ -110,23 +109,23 @@
         <!-- Empty -->
         <div
             v-if="filteredIssues.length === 0"
-            class="rounded-2xl border border-zinc-200 bg-white/60 backdrop-blur p-12 text-center shadow-sm"
+            class="rounded-2xl border border-border-subtle bg-white/60 backdrop-blur p-12 text-center shadow-sm"
         >
-            <IconPackage class="mx-auto mb-3 size-8 text-zinc-400" />
-            <h3 class="text-base font-medium text-zinc-900">{{ $t('No material expenses')}}</h3>
-            <p class="mt-1 text-sm text-zinc-500">{{ $t('Create a material issue via “New.”')}}</p>
+            <IconPackage class="mx-auto mb-3 size-8 text-text-subtle" />
+            <h3 class="text-base font-medium text-text">{{ $t('No material expenses')}}</h3>
+            <p class="mt-1 text-sm text-text-subtle">{{ $t('Create a material issue via “New.”')}}</p>
         </div>
 
         <!-- List -->
         <article
             v-for="issue in filteredIssues"
             :key="issue.id"
-            class="group rounded-2xl border border-white/50 ring-1 ring-zinc-200/60 bg-white/60 backdrop-blur shadow-sm transition-all hover:shadow-md"
+            class="group rounded-2xl border border-white/50 ring-1 ring-border-subtle bg-white/60 backdrop-blur shadow-sm transition-all hover:shadow-md"
         >
             <!-- Header -->
             <header
-                class="flex cursor-pointer flex-col gap-3 rounded-t-2xl p-5 transition-colors hover:bg-zinc-50/70 md:flex-row md:items-start md:justify-between"
-                :class="{ 'bg-zinc-50/40': !isOpen(issue.id) }"
+                class="flex cursor-pointer flex-col gap-3 rounded-t-2xl p-5 transition-colors hover:bg-surface-sunken md:flex-row md:items-start md:justify-between"
+                :class="{ 'bg-surface-sunken': !isOpen(issue.id) }"
                 :aria-expanded="isOpen(issue.id)"
                 role="button"
                 @click="toggle(issue.id)"
@@ -136,9 +135,8 @@
                         <button
                             type="button"
                             class="grid size-8 shrink-0 place-items-center rounded-full ring-1 transition-colors"
-                            :class="isOpen(issue.id)
-                                ? 'bg-indigo-600 text-white ring-indigo-600'
-                                : 'bg-white text-indigo-600 ring-indigo-200 hover:bg-indigo-50'"
+                            :class="isOpen(issue.id) ? 'bg-accent-600 text-white ring-accent-600'
+                                : 'bg-white text-accent-600 ring-accent-200 hover:bg-accent-50'"
                             :aria-label="isOpen(issue.id) ? $t('Collapse') : $t('Expand')"
                             :title="isOpen(issue.id) ? $t('Collapse') : $t('Expand')"
                             @click.stop="toggle(issue.id)"
@@ -149,7 +147,7 @@
                             />
                         </button>
 
-                        <h3 class="truncate text-lg font-semibold text-zinc-900">
+                        <h3 class="truncate text-lg font-semibold text-text">
                             {{ issue.name || `Materialausgabe #${issue.id}` }}
                         </h3>
 
@@ -157,31 +155,31 @@
                         <ToolTipComponent
                             :icon="IconAlertTriangle"
                             v-if="isPeriodDeviating(issue)"
-                            classes="!text-red-500"
+                            classes="!text-danger"
                             icon-size="!size-4"
                             :tooltip-text="$t('Material issue period differs from project period')"
                         />
                     </div>
 
-                    <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-600">
-                            <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
+                    <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-text-muted">
+                            <span class="inline-flex items-center gap-1.5 rounded-md bg-surface-sunken px-2.5 py-1">
                                   {{ issue.start_date_time }}
                                 </span>
-                        <IconChevronRight class="hidden size-4 text-zinc-400 md:inline" />
-                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
+                        <IconChevronRight class="hidden size-4 text-text-subtle md:inline" />
+                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-surface-sunken px-2.5 py-1">
                               {{ issue.end_date_time }}
                             </span>
-                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
-                              <span class="text-zinc-400">{{ $t('Duration')}}:</span>
+                                        <span class="inline-flex items-center gap-1.5 rounded-md bg-surface-sunken px-2.5 py-1">
+                              <span class="text-text-subtle">{{ $t('Duration')}}:</span>
                               ~ {{ diffDays(issue) }} {{ $t('Days')}}
                             </span>
-                        <span v-if="issue.room" class="inline-flex items-center gap-1.5 rounded-md bg-zinc-50 px-2.5 py-1">
-                              <span class="text-zinc-400">{{ $t('Room')}}:</span>
+                        <span v-if="issue.room" class="inline-flex items-center gap-1.5 rounded-md bg-surface-sunken px-2.5 py-1">
+                              <span class="text-text-subtle">{{ $t('Room')}}:</span>
                               {{ issue.room.name }}
                             </span>
                         <span v-if="issue.special_items?.length > 0"
                             class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1"
-                            :class="issue.special_items_done ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
+                            :class="issue.special_items_done ? 'bg-success-surface text-success' : 'bg-warning-surface text-warning'"
                         >
                           <component :is="issue.special_items_done ? IconCircleCheck : IconAlertTriangle" class="size-4"  />
                           {{ issue.special_items_done ? $t('Special items Completed') : $t('Special items not completed') }}
@@ -190,21 +188,21 @@
 
                     <!-- Inhalts-Zähler: immer sichtbar, signalisiert einklappbaren Inhalt -->
                     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-zinc-700 ring-1 ring-zinc-200">
-                            <strong class="text-zinc-900">{{ issue.articles?.length || 0 }}</strong> {{ $t('Article') }}
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-text-muted ring-1 ring-border-subtle">
+                            <strong class="text-text">{{ issue.articles?.length || 0 }}</strong> {{ $t('Article') }}
                         </span>
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-zinc-700 ring-1 ring-zinc-200">
-                            <strong class="text-zinc-900">{{ issue.special_items?.length || 0 }}</strong> {{ $t('Special items') }}
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-text-muted ring-1 ring-border-subtle">
+                            <strong class="text-text">{{ issue.special_items?.length || 0 }}</strong> {{ $t('Special items') }}
                         </span>
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-zinc-700 ring-1 ring-zinc-200">
-                            <strong class="text-zinc-900">{{ issue.files?.length || 0 }}</strong> {{ $t('Files') }}
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-text-muted ring-1 ring-border-subtle">
+                            <strong class="text-text">{{ issue.files?.length || 0 }}</strong> {{ $t('Files') }}
                         </span>
                     </div>
-                    <div v-if="issue.notes" class="mt-3 rounded-xl border-l-4 border-indigo-300 bg-indigo-50/50 px-4 py-2.5">
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-indigo-600/80">
+                    <div v-if="issue.notes" class="mt-3 rounded-xl border-l-4 border-accent-200 bg-accent-50 px-4 py-2.5">
+                        <div class="text-[11px] font-semibold uppercase tracking-wide text-accent-600">
                             {{ $t('Description') }}
                         </div>
-                        <p class="mt-0.5 text-base leading-relaxed text-zinc-800 whitespace-pre-line">
+                        <p class="mt-0.5 text-base leading-relaxed text-text whitespace-pre-line">
                             {{ issue.notes }}
                         </p>
                     </div>
@@ -227,7 +225,7 @@
                     </button>
                     <button
                         type="button"
-                        class="new-button text-red-500 hover:text-red-700"
+                        class="new-button text-danger hover:text-danger"
                         @click.stop="openDeleteModal(issue)">
                         <IconTrash class="size-4" />
                         {{ $t('Delete')}}
@@ -242,23 +240,23 @@
                 leave-active-class="transition-opacity duration-150"
                 leave-to-class="opacity-0"
             >
-                <div v-show="isOpen(issue.id)" class="divide-y divide-zinc-100">
+                <div v-show="isOpen(issue.id)" class="divide-y divide-border-subtle">
                     <!-- === Artikel (Cards-Grid) === -->
                     <section class="p-5">
                         <!-- Kopfzeile mit Summen -->
                         <div class="mb-3 flex items-center justify-between gap-3">
                             <div class="flex items-center gap-2">
-                                <IconPackage class="size-5 text-zinc-500" />
-                                <h4 class="text-sm font-semibold text-zinc-900">{{ $t('Article')}}</h4>
-                                <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                                <IconPackage class="size-5 text-text-subtle" />
+                                <h4 class="text-sm font-semibold text-text">{{ $t('Article')}}</h4>
+                                <span class="rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted">
                                     {{ issue.articles?.length || 0 }}
                                   </span>
                             </div>
                             <div class="hidden sm:flex items-center gap-2">
-                              <span class="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700">
+                              <span class="rounded-lg border border-border-subtle bg-white px-2.5 py-1 text-xs text-text-muted">
                                 {{ $t('Total demand')}}: <strong>{{ totalNeed(issue) }}</strong>
                               </span>
-                                                        <span class="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-700">
+                                                        <span class="rounded-lg border border-border-subtle bg-white px-2.5 py-1 text-xs text-text-muted">
                                 {{ $t('Total inventory')}}: <strong>{{ totalStock(issue) }}</strong>
                               </span>
                             </div>
@@ -267,7 +265,7 @@
                         <!-- Empty -->
                         <div
                             v-if="(issue.articles?.length || 0) === 0"
-                            class="rounded-xl border border-zinc-100 bg-zinc-50 p-6 text-center text-sm text-zinc-500"
+                            class="rounded-xl border border-border-subtle bg-surface-sunken p-6 text-center text-sm text-text-subtle"
                         >
                             {{ $t('No articles assigned.')}}
                         </div>
@@ -284,7 +282,7 @@
                                 <div class="flex items-start gap-4">
                                     <!-- Article Image -->
                                     <div v-if="a?.images?.length" class="shrink-0" style="max-width: 80px">
-                                        <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openArticleLightbox(0, a.images)">
+                                        <div class="group relative cursor-zoom-in overflow-hidden rounded-lg border border-border-subtle shadow-sm" @click="openArticleLightbox(0, a.images)">
                                             <img :src="'/storage/' + a.images[0].image" :alt="a.images[0].alt || ''" class="block h-auto w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                             <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
                                                 <component :is="IconWindowMaximize" class="h-3 w-3 text-white opacity-0 transition group-hover:opacity-100" />
@@ -297,12 +295,12 @@
                                         <!-- Header -->
                                         <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
-                                        <div class="truncate text-sm font-medium text-zinc-900" :title="a.name">
+                                        <div class="truncate text-sm font-medium text-text" :title="a.name">
                                             {{ a.name }}
                                         </div>
                                         <div
                                             v-if="a.description"
-                                            class="mt-1 text-[11px] text-zinc-500"
+                                            class="mt-1 text-[11px] text-text-subtle"
                                         >
                                             {{ a.description }}
                                         </div>
@@ -316,10 +314,10 @@
 
                                 <!-- Meta -->
                                 <div class="mt-2 flex flex-wrap items-center gap-1.5">
-                                    <span v-if="a.manufacturer?.name" class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200">
+                                    <span v-if="a.manufacturer?.name" class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-text-muted ring-1 ring-border-subtle">
                                       <IconBuildingFactory class="size-3.5" /> {{ a.manufacturer.name }}
                                     </span>
-                                                                <span v-if="a.room?.name" class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-zinc-700 ring-1 ring-zinc-200">
+                                                                <span v-if="a.room?.name" class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] text-text-muted ring-1 ring-border-subtle">
                                       <IconHome class="size-3.5" /> {{ a.room.name }}
                                     </span>
                                 </div>
@@ -347,28 +345,28 @@
 
                                 <!-- KPIs -->
                                 <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
-                                    <div class="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-zinc-600">
+                                    <div class="rounded-lg border border-border-subtle bg-white px-2.5 py-1 text-text-muted">
                                         {{ $t('Demand') }}
-                                        <div class="text-sm font-semibold text-zinc-900">{{ a.pivot?.quantity || 0 }}</div>
+                                        <div class="text-sm font-semibold text-text">{{ a.pivot?.quantity || 0 }}</div>
                                     </div>
-                                    <div class="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-zinc-600">
+                                    <div class="rounded-lg border border-border-subtle bg-white px-2.5 py-1 text-text-muted">
                                         {{ $t('In stock') }}
-                                        <div class="text-sm font-semibold text-zinc-900">{{ a.quantity }}</div>
+                                        <div class="text-sm font-semibold text-text">{{ a.quantity }}</div>
                                     </div>
-                                    <div class="rounded-lg border border-zinc-200 bg-white px-2.5 py-1 text-zinc-600 text-right">
+                                    <div class="rounded-lg border border-border-subtle bg-white px-2.5 py-1 text-text-muted text-right">
                                         {{ $t('Planned') }}
-                                        <div class="text-sm font-semibold text-zinc-900">{{ needProgress(a) }}%</div>
+                                        <div class="text-sm font-semibold text-text">{{ needProgress(a) }}%</div>
                                     </div>
                                 </div>
 
                                 <!-- Progress -->
-                                <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                                <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border-subtle">
                                     <div
-                                        class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-[width]"
+                                        class="h-full rounded-full bg-gradient-to-r from-accent-600 to-success transition-[width]"
                                         :style="{ width: (needProgress(a) || 0) + '%' }"
                                     />
                                 </div>
-                                        <div class="mt-1 flex items-center justify-between text-[11px] text-zinc-500">
+                                        <div class="mt-1 flex items-center justify-between text-[11px] text-text-subtle">
                                             <span>{{ $t('Planned')}}</span>
                                             <span>{{ a.pivot?.quantity || 0 }} / {{ a.quantity }}</span>
                                         </div>
@@ -381,26 +379,26 @@
                     <!-- Sonderteile -->
                     <section class="p-5">
                         <div class="mb-3 flex items-center gap-2">
-                            <IconSticker2 class="size-5 text-zinc-500" />
-                            <h4 class="text-sm font-semibold text-zinc-900">{{ $t('Special items')}}</h4>
-                            <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                            <IconSticker2 class="size-5 text-text-subtle" />
+                            <h4 class="text-sm font-semibold text-text">{{ $t('Special items')}}</h4>
+                            <span class="rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted">
                                 {{ issue.special_items?.length || 0 }}
                               </span>
                         </div>
 
                         <div v-if="(issue.special_items?.length || 0) > 0" class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            <div v-for="sp in issue.special_items" :key="sp.id" class="flex items-start gap-3 rounded-xl border border-zinc-100 bg-zinc-50/60 p-4">
-                                <IconAlertTriangle class="mt-0.5 size-5 text-amber-500" />
+                            <div v-for="sp in issue.special_items" :key="sp.id" class="flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                                <IconAlertTriangle class="mt-0.5 size-5 text-warning" />
                                 <div>
-                                    <div class="text-sm font-medium text-zinc-900">
-                                        {{ sp.name }} <span class="ml-1 text-zinc-500">× {{ sp.quantity }}</span>
+                                    <div class="text-sm font-medium text-text">
+                                        {{ sp.name }} <span class="ml-1 text-text-subtle">× {{ sp.quantity }}</span>
                                     </div>
-                                    <div v-if="sp.description" class="text-sm text-zinc-600">{{ sp.description }}</div>
+                                    <div v-if="sp.description" class="text-sm text-text-muted">{{ sp.description }}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-else class="rounded-xl border border-zinc-100 bg-zinc-50 p-6 text-center text-sm text-zinc-500">
+                        <div v-else class="rounded-xl border border-border-subtle bg-surface-sunken p-6 text-center text-sm text-text-subtle">
                             {{ $t('No special items assigned.')}}
                         </div>
                     </section>
@@ -408,15 +406,15 @@
                     <!-- Dateien -->
                     <section class="p-5">
                         <div class="mb-3 flex items-center gap-2">
-                            <IconFileText class="size-5 text-zinc-500" />
-                            <h4 class="text-sm font-semibold text-zinc-900">{{ $t('Files')}}</h4>
-                            <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+                            <IconFileText class="size-5 text-text-subtle" />
+                            <h4 class="text-sm font-semibold text-text">{{ $t('Files')}}</h4>
+                            <span class="rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted">
                               {{ issue.files?.length || 0 }}
                             </span>
                         </div>
 
                         <div v-if="(issue.files?.length || 0) > 0" class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            <div v-for="f in issue.files" :key="f.id" class="flex items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/60 p-4">
+                            <div v-for="f in issue.files" :key="f.id" class="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-sunken p-4">
                                 <div class="flex min-w-0 flex-1 items-center gap-3">
                                     <!-- Thumbnail -->
                                     <FilePreview
@@ -427,12 +425,12 @@
                                         size="sm"
                                         @open="openPreview(f)"
                                     />
-                                    <component v-else :is="IconFileText" class="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
+                                    <component v-else :is="IconFileText" class="size-5 shrink-0 text-text-subtle" aria-hidden="true" />
 
                                     <!-- Name + Meta -->
                                     <div class="min-w-0 flex-1">
-                                        <div class="truncate text-sm font-medium text-zinc-900">{{ displayName(f) }}</div>
-                                        <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                                        <div class="truncate text-sm font-medium text-text">{{ displayName(f) }}</div>
+                                        <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-text-subtle">
                                             <span v-if="f.created_at" class="inline-flex items-center gap-1">
                                               • <span>{{ $t('Uploaded') }}:</span>
                                               <time :datetime="f.created_at">{{ f.created_at }}</time>
@@ -452,7 +450,7 @@
                             </div>
                         </div>
 
-                        <div v-else class="rounded-xl border border-zinc-100 bg-zinc-50 p-6 text-center text-sm text-zinc-500">
+                        <div v-else class="rounded-xl border border-border-subtle bg-surface-sunken p-6 text-center text-sm text-text-subtle">
                             {{ $t('No files assigned.') }}
                         </div>
                     </section>
@@ -463,7 +461,7 @@
             <button
                 v-if="!isOpen(issue.id)"
                 type="button"
-                class="flex w-full items-center justify-center gap-1.5 rounded-b-2xl border-t border-zinc-100 py-2 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50/60"
+                class="flex w-full items-center justify-center gap-1.5 rounded-b-2xl border-t border-border-subtle py-2 text-xs font-medium text-accent-600 transition-colors hover:bg-accent-50"
                 @click="toggle(issue.id)"
             >
                 <IconChevronDown class="size-4" />
@@ -473,8 +471,8 @@
 
         <!-- Externe Ausgaben -->
         <div v-if="projectExternalIssues.length > 0" class="mt-8">
-            <h3 class="mb-3 flex items-center gap-2 text-base font-semibold text-zinc-900">
-                <span class="inline-block size-2 rounded-full bg-amber-500"></span>
+            <h3 class="mb-3 flex items-center gap-2 text-base font-semibold text-text">
+                <span class="inline-block size-2 rounded-full bg-warning"></span>
                 {{ $t('External issues of material') }}
             </h3>
             <div class="space-y-3">
@@ -493,7 +491,7 @@
              @click.self="closePreview">
             <div class="relative w-[92vw] max-w-5xl rounded-2xl bg-white p-3 shadow-xl">
                 <button type="button"
-                        class="absolute right-3 top-3 rounded-full p-1.5 text-zinc-600 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        class="absolute right-3 top-3 rounded-full p-1.5 text-text-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                         @click="closePreview"
                         aria-label="Close preview">
                     ✕
@@ -510,18 +508,18 @@
                 <div v-else-if="lightboxType === 'pdf'" class="max-h-[80vh] overflow-auto">
                     <div class="mb-3 flex items-center justify-center gap-2">
                         <button type="button"
-                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-zinc-300 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-border disabled:text-text-subtle disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                                 :disabled="!canPrev"
                                 @click="prevPage">
                             ‹ {{ $t('Prev') }}
                         </button>
 
-                        <span class="text-sm text-zinc-600">
+                        <span class="text-sm text-text-muted">
                               {{ currentPage }} / {{ totalPages }}
                             </span>
 
                         <button type="button"
-                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-zinc-300 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                class="rounded-lg px-2 py-1 text-sm font-medium ring-1 ring-inset ring-border disabled:text-text-subtle disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                                 :disabled="!canNext"
                                 @click="nextPage">
                             {{ $t('Next') }} ›
@@ -913,9 +911,9 @@ function cardTone(a: any): 'ok' | 'warn' | 'over' {
 }
 function cardClass(a: any) {
     const t = cardTone(a)
-    if (t === 'over') return 'ring-rose-300 bg-rose-50/40'
-    if (t === 'warn') return 'ring-amber-300 bg-amber-50/40'
-    return 'ring-zinc-200'
+    if (t === 'over') return 'ring-danger-border bg-danger-surface'
+    if (t === 'warn') return 'ring-warning-border bg-warning-surface'
+    return 'ring-border-subtle'
 }
 function statusChipText(a: any) {
     const t = cardTone(a)
@@ -925,9 +923,9 @@ function statusChipText(a: any) {
 }
 function statusChipClass(a: any) {
     const t = cardTone(a)
-    if (t === 'over') return 'bg-rose-50 text-rose-700 ring-rose-200'
-    if (t === 'warn') return 'bg-amber-50 text-amber-700 ring-amber-200'
-    return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+    if (t === 'over') return 'bg-danger-surface text-danger ring-danger-border'
+    if (t === 'warn') return 'bg-warning-surface text-warning ring-warning-border'
+    return 'bg-success-surface text-success ring-success-border'
 }
 type FileItem = {
     id: number

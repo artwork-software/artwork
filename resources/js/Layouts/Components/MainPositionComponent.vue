@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex items-center w-full">
-                <input class="my-2 ml-1 xsDark bg-white rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                <input class="my-2 ml-1 xsDark bg-white rounded-md border border-border px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
                        type="text" v-model="mainPosition.name"
                        @keyup.enter="$event.target.blur()"
                        @keyup.esc="mainPosition.name = editedNameOriginalValue ?? mainPosition.name; mainPosition.clicked = false"
@@ -173,7 +173,7 @@
                 <td class="w-72">{{ $t('SUM') }}</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in valueColumns" :key="column.id" v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="[
-                        mainPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : '',
+                        mainPosition.columnSums?.[column.id]?.sum < 0 ? 'text-danger' : '',
                         column.color !== 'whiteColumn' ? column.color : ''
                     ]">
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums?.[column.id]?.hasComments && mainPosition.columnSums?.[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>

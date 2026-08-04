@@ -12,7 +12,8 @@
 
                 <component
                     :is="IconEdit"
-                    class="inline size-4 ml-2 cursor-pointer text-gray-400 hover:text-gray-600"
+                    class="inline size-4 ml-2 cursor-pointer"
+                    :class="inSidebar ? 'text-white/70 hover:text-white' : 'text-text-subtle hover:text-text-muted'"
                     v-if="canEditComponent"
                     @click="showTextField = !showTextField"
                 />
@@ -29,7 +30,7 @@
                     without-translation
                     name="email"
                     id="email"
-                    :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-zinc-600 !text-white' : ''"
+                    :input-classes="inSidebar ? '!bg-artwork-navigation-background !border-white/20 !text-text-inverse' : ''"
                 />
             </div>
 
@@ -37,7 +38,7 @@
                 <a
                     :href="text"
                     target="_blank"
-                    class="text-blue-600 hover:underline"
+                    class="text-accent-600 hover:underline"
                     v-if="text && text.length > 0"
                 >
                     {{ text }}

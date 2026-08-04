@@ -22,7 +22,7 @@
                 <li
                     v-for="preset in timelinePresets"
                     :key="preset.id"
-                    class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-4"
+                    class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-5 py-4"
                 >
                     <div class="flex items-center gap-x-4 flex-1 min-w-0">
                         <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-semibold text-sm">
@@ -55,7 +55,7 @@
                 </li>
             </ul>
 
-            <div v-if="timelinePresets.length === 0" class="mt-5 text-sm text-gray-500">
+            <div v-if="timelinePresets.length === 0" class="mt-5 text-sm text-text-subtle">
                 <p>{{ $t('No timeline presets found.') }}</p>
                 <p class="mt-1">{{ $t('Save the timeline of an event as a preset to create your first one.') }}</p>
             </div>

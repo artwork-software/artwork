@@ -3,7 +3,7 @@
         <!-- Dropzone, wenn kein Key-Visual vorhanden -->
         <div
             v-if="!hasKeyVisual"
-            class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+            class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-border cursor-pointer border-dashed rounded-md p-2"
             @dragover.prevent
             @drop.stop.prevent="uploadDraggedKeyVisual($event)"
             @click="selectNewKeyVisual"
@@ -42,7 +42,7 @@
                 <button
                     @click="selectNewKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-blue-500"
+                    class="ui-button bg-white hover:text-accent-600"
                 >
                     <IconEdit class="h-5 w-5" aria-hidden="true" />
                 </button>
@@ -50,7 +50,7 @@
                 <button
                     @click="deleteKeyVisual"
                     type="button"
-                    class="ui-button bg-white hover:text-red-500"
+                    class="ui-button bg-white hover:text-danger"
                 >
                     <IconX class="h-5 w-5" aria-hidden="true" />
                 </button>

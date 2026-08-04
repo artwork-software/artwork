@@ -12,7 +12,7 @@
 
             <div class="flex items-start">
                 <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-artwork-buttons-create' :
-                                    'bg-gray-300',
+                                    'bg-border',
             'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                 <span aria-hidden="true"
                       :class="[!groupDisabled(settings) ? 'translate-x-3' : 'translate-x-0',
@@ -28,7 +28,7 @@
                 <div v-for="type in settings">
                     <div class="flex justify-between mt-6 ml-9 items-start">
                         <Switch @click="toggleEmail(type)" :class="[type.enabled_email ? 'bg-artwork-buttons-create' :
-                                                'bg-gray-300',
+                                                'bg-border',
                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                             <span aria-hidden="true"
                                   :class="[type.enabled_email ? 'translate-x-3' : 'translate-x-0',
@@ -42,7 +42,7 @@
 
                         <Listbox as="div" class="flex relative">
                             <ListboxButton
-                                class="border w-36 p-2 border-gray-300 bg-white relative cursor-pointer focus:outline-none sm:text-sm">
+                                class="border w-36 p-2 border-border bg-white relative cursor-pointer sm:text-sm">
                                 <div class="flex items-center my-auto justify-between">
                                         <span class="truncate font-bold">
                                             {{ $t(type.frequency_title) }}
@@ -56,7 +56,7 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute z-10 mt-10 bg-artwork-navigation-background shadow-lg max-h-64 p-1 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    class="absolute z-10 mt-10 bg-artwork-navigation-background shadow-lg max-h-64 p-1 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm">
                                     <div>
                                         <ListboxOption
                                             @click="changeFrequency(type, frequency)"

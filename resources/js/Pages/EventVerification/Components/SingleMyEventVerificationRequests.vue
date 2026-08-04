@@ -3,25 +3,25 @@
         <div class="flex items-stretch gap-x-3 min-w-full w-full h-full px-4 pt-4 pb-2">
             <!-- STATUS ANZEIGE -->
             <div class="p-1 rounded-lg w-1"
-                 :class="{'bg-green-500': myRequest.status_color === 'green',
-                          'bg-yellow-400': myRequest.status_color === 'yellow',
-                          'bg-red-500': myRequest.status_color === 'red',
-                          'bg-gray-300': myRequest.status_color === 'gray'
+                 :class="{'bg-success': myRequest.status_color === 'green',
+                          'bg-warning': myRequest.status_color === 'yellow',
+                          'bg-danger': myRequest.status_color === 'red',
+                          'bg-border': myRequest.status_color === 'gray'
                           }"
             ></div>
             <!-- INFORMATIONEN ANZEIGE -->
             <div class="w-full">
-                <p class="text-sm font-lexend font-semibold text-gray-900"
+                <p class="text-sm font-lexend font-semibold text-text"
                    :style="{color: myRequest.event_type.hex_code}">
                     {{ myRequest.event_type.name }}: {{ myRequest.eventName ?? myRequest?.project?.name }}
                 </p>
-                <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Start') }}:</span>
                     <span class="font-lexend">{{ myRequest?.start_time }}</span>
                     <span class="font-lexend font-bold">{{ $t('End') }}:</span>
                     <span class="font-lexend">{{ myRequest?.end_time }}</span>
                 </p>
-                <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                <p class="mt-1 flex items-center gap-x-1 text-xs text-text-subtle">
                     <span class="font-lexend font-bold">{{ $t('Room') }}:</span>
                     <span class="font-lexend">{{ myRequest?.room?.name }}</span>
                 </p>
@@ -34,7 +34,7 @@
                           'background-color soft-yellow border-color border-b-2  rounded-br-lg border-r-2': key === 'pending',
                           'background-color soft-red border-color border-x-2 border-borderRedSoft border-b-2': key === 'rejected',
                           }"  class="p-2" v-for="(verification, key) in myRequest.verifier_grouped_by_status" :key="key">
-                <p class="text-xs font-lexend font-semibold text-gray-900">
+                <p class="text-xs font-lexend font-semibold text-text">
                     {{ $t(key) }}:
                 </p>
                 <div class="flex -space-x-1 mt-1">

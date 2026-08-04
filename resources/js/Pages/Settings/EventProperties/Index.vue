@@ -25,7 +25,7 @@
                         :key="eventProperty.id"
                         class="flex flex-row justify-between">
                         <div class="flex flex-row items-center gap-4">
-                            <PropertyIcon as="div" class="h-12 w-12 rounded-full border border-gray-300 p-2"
+                            <PropertyIcon as="div" class="h-12 w-12 rounded-full border border-border p-2"
                                        width="16" height="16"
                                        :name="eventProperty.icon"
                                        stroke-width="1.5"/>

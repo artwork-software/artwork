@@ -1,7 +1,7 @@
 <template>
-    <div class="" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-gray-400'">
+    <div class="" :class="$page.props.auth.user.opened_checklists.includes(checklist?.id) ? 'border-artwork-buttons-create' : 'border-border-strong'">
         <div class="p-5">
-            <div class="flex items-center justify-between mb-4 bg-blue-50 rounded-lg px-4 py-3">
+            <div class="flex items-center justify-between mb-4 bg-accent-50 rounded-lg px-4 py-3">
                 <div class="flex items-center gap-x-1">
                         <span v-if="checklist.private">
                             <IconLock stroke-width="1.5" class="h-6 w-6" />
@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-x-2 print:hidden">
-                        <span class="bg-blue-50 border border-blue-200 text-blue-500 text-xs px-2 py-0.5 rounded print:border print:bg-gray-200 print:text-gray-500 print:border-gray-200 print:rounded-lg">
+                        <span class="bg-accent-50 border border-accent-200 text-accent-600 text-xs px-2 py-0.5 rounded print:border print:bg-border-subtle print:text-text-subtle print:border-border-subtle print:rounded-lg">
                             {{ checklist.tasks.length }}
                         </span>
                     <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out print:hidden" @click.stop="openAddTaskModal = true"/>
@@ -36,7 +36,7 @@
                     </div>
                 </div>
             </div>
-            <div class="my-4 border-b border-dashed border-gray-200 pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
+            <div class="my-4 border-b border-dashed border-border-subtle pb-3" v-if="$page.props.auth.user.opened_checklists.includes(checklist?.id)">
                 <div class="">
                     <SingleTaskInListView
                         v-for="element in orderTasksByDeadline"

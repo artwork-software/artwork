@@ -4,11 +4,11 @@
             v-for="day in days"
             :key="day.date"
             class="rounded-xl border p-2 text-center"
-            :class="day.is_rejected ? 'border-red-500 bg-red-50/30' : 'border-gray-200 bg-white'"
+            :class="day.is_rejected ? 'border-danger bg-danger-surface' : 'border-border-subtle bg-white'"
         >
-            <div class="text-xs font-medium text-gray-900">{{ day.label }}</div>
+            <div class="text-xs font-medium text-text">{{ day.label }}</div>
 
-            <div v-if="day.rejection_reason" class="mt-1 text-[10px] font-semibold text-red-600 leading-tight">
+            <div v-if="day.rejection_reason" class="mt-1 text-[10px] font-semibold text-danger leading-tight">
                 {{ day.rejection_reason }}
             </div>
         </div>

@@ -34,33 +34,33 @@
             >
                 <template #item="{ element: group }">
                     <div
-                        class="rounded-2xl border border-gray-100 bg-white/80 shadow-sm hover:shadow-md transition-shadow duration-150"
+                        class="rounded-2xl border border-border-subtle bg-white/80 shadow-sm hover:shadow-md transition-shadow duration-150"
                     >
                         <!-- Gruppen-Header -->
                         <div
-                            class="flex items-start justify-between gap-3 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-t-2xl"
+                            class="flex items-start justify-between gap-3 px-4 py-3 border-b border-border-subtle bg-gradient-to-r from-surface-sunken via-white to-surface-sunken rounded-t-2xl"
                         >
                             <div class="flex items-start gap-2 min-w-0">
                                 <button
                                     type="button"
-                                    class="drag-handle-group mt-0.5 text-gray-300 hover:text-gray-500"
+                                    class="drag-handle-group mt-0.5 text-text-subtle hover:text-text-subtle"
                                     :title="$t('Reorder group')"
                                 >
                                     <component :is="IconGripVertical" class="h-4 w-4" />
                                 </button>
                                 <div class="space-y-0.5 min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm font-semibold text-gray-900 truncate">
+                                        <span class="text-sm font-semibold text-text truncate">
                                             {{ group.name }}
                                         </span>
                                         <span
-                                            class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
+                                            class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-text-muted"
                                         >
-                                            <span class="h-1 w-1 rounded-full bg-emerald-500" />
+                                            <span class="h-1 w-1 rounded-full bg-success" />
                                             {{ $t('Tags') }}: {{ group.tags.length }}
                                         </span>
                                     </div>
-                                    <p class="text-[11px] text-gray-400">
+                                    <p class="text-[11px] text-text-subtle">
                                         {{ $t('Tags in this group will appear together in the filter sidebar.') }}
                                     </p>
                                 </div>
@@ -95,7 +95,7 @@
                             >
                                 <template #item="{ element: tag }">
                                     <div
-                                        class="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/60 px-3 py-2 hover:bg-gray-50 transition-colors"
+                                        class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2 hover:bg-surface-sunken transition-colors"
                                     >
                                         <!-- Farbstreifen -->
                                         <div
@@ -106,13 +106,13 @@
                                         <!-- Main Content -->
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-xs font-medium text-gray-900 truncate">
+                                                <span class="text-xs font-medium text-text truncate">
                                                     {{ tag.name }}
                                                 </span>
 
                                                 <span
                                                     v-if="tag.has_restricted_permissions"
-                                                    class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-100"
+                                                    class="inline-flex items-center gap-1 rounded-full bg-warning-surface px-2 py-0.5 text-[10px] font-medium text-warning border border-warning-border"
                                                 >
                                                     <component :is="IconLock" class="h-3 w-3" />
                                                     {{ $t('Restricted') }}
@@ -120,7 +120,7 @@
                                             </div>
 
                                             <div
-                                                class="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500"
+                                                class="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-text-subtle"
                                             >
                                                 <!-- User-Info -->
                                                 <span class="inline-flex items-center gap-1">
@@ -145,10 +145,10 @@
 
                                                 <!-- Farbe als Hex -->
                                                 <span
-                                                    class="inline-flex items-center gap-1 text-gray-400"
+                                                    class="inline-flex items-center gap-1 text-text-subtle"
                                                 >
                                                     <span
-                                                        class="inline-flex h-2 w-2 rounded-full border border-gray-200"
+                                                        class="inline-flex h-2 w-2 rounded-full border border-border-subtle"
                                                         :style="{ backgroundColor: tag.color || '#4f46e5' }"
                                                     />
                                                     <span class="font-mono text-[10px]">
@@ -162,7 +162,7 @@
                                         <div class="flex items-center gap-1">
                                             <button
                                                 type="button"
-                                                class="drag-handle-tag text-gray-300 hover:text-gray-500"
+                                                class="drag-handle-tag text-text-subtle hover:text-text-subtle"
                                                 :title="$t('Reorder tag')"
                                             >
                                                 <component :is="IconGripVertical" class="h-4 w-4" />
@@ -187,19 +187,19 @@
 
                             <div
                                 v-else
-                                class="flex items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 bg-white px-3 py-3"
+                                class="flex items-center justify-between gap-3 rounded-xl border border-dashed border-border-subtle bg-white px-3 py-3"
                             >
                                 <div class="space-y-1">
-                                    <p class="text-xs font-medium text-gray-700">
+                                    <p class="text-xs font-medium text-text-muted">
                                         {{ $t('No tags in this group yet.') }}
                                     </p>
-                                    <p class="text-[11px] text-gray-400">
+                                    <p class="text-[11px] text-text-subtle">
                                         {{ $t('Add tags and assign them to this group to keep your inventory structured.') }}
                                     </p>
                                 </div>
                                 <button
                                     type="button"
-                                    class="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-100"
+                                    class="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-accent-50 px-2 py-1 text-[11px] font-medium text-accent-700 hover:bg-accent-100"
                                     @click="openCreateTagWithGroup(group)"
                                 >
                                     <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
@@ -214,19 +214,19 @@
             <!-- Ungruppierte Tags (ggf. ebenfalls per Drag&Drop sortierbar) -->
             <div
                 v-if="ungroupedTagsState.length"
-                class="rounded-2xl border border-dashed border-gray-200 bg-white/70 p-4 shadow-sm"
+                class="rounded-2xl border border-dashed border-border-subtle bg-white/70 p-4 shadow-sm"
             >
                 <div class="flex items-start justify-between gap-3 mb-3">
                     <div>
-                        <p class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <p class="text-sm font-semibold text-text flex items-center gap-2">
                             <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-slate-100 text-slate-600 text-xs font-bold"
+                                class="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-surface-sunken text-text-muted text-xs font-bold"
                             >
                                 ∞
                             </span>
                             {{ $t('Ungrouped tags') }}
                         </p>
-                        <p class="mt-0.5 text-xs text-gray-500">
+                        <p class="mt-0.5 text-xs text-text-subtle">
                             {{ $t('Tags without a group will still be available in filters, but are not grouped.') }}
                         </p>
                     </div>
@@ -243,7 +243,7 @@
                 >
                     <template #item="{ element: tag }">
                         <div
-                            class="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/60 px-3 py-2 hover:bg-gray-50 transition-colors"
+                            class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2 hover:bg-surface-sunken transition-colors"
                         >
                             <div
                                 class="h-8 w-1.5 rounded-full"
@@ -252,12 +252,12 @@
 
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-medium text-gray-900 truncate">
+                                    <span class="text-xs font-medium text-text truncate">
                                         {{ tag.name }}
                                     </span>
                                     <span
                                         v-if="tag.has_restricted_permissions"
-                                        class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-100"
+                                        class="inline-flex items-center gap-1 rounded-full bg-warning-surface px-2 py-0.5 text-[10px] font-medium text-warning border border-warning-border"
                                     >
                                         <component :is="IconLock" class="h-3 w-3" />
                                         {{ $t('Restricted') }}
@@ -265,7 +265,7 @@
                                 </div>
 
                                 <div
-                                    class="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500"
+                                    class="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-text-subtle"
                                 >
                                     <span class="inline-flex items-center gap-1">
                                         <component :is="IconUsers" class="h-3.5 w-3.5" />
@@ -284,9 +284,9 @@
                                             {{ (tag.allowed_departments ?? []).length }}
                                         </span>
                                     </span>
-                                    <span class="inline-flex items-center gap-1 text-gray-400">
+                                    <span class="inline-flex items-center gap-1 text-text-subtle">
                                         <span
-                                            class="inline-flex h-2 w-2 rounded-full border border-gray-200"
+                                            class="inline-flex h-2 w-2 rounded-full border border-border-subtle"
                                             :style="{ backgroundColor: tag.color || '#4f46e5' }"
                                         />
                                         <span class="font-mono text-[10px]">
@@ -299,7 +299,7 @@
                             <div class="flex items-center gap-1">
                                 <button
                                     type="button"
-                                    class="drag-handle-tag-ungrouped text-gray-300 hover:text-gray-500"
+                                    class="drag-handle-tag-ungrouped text-text-subtle hover:text-text-subtle"
                                     :title="$t('Reorder tag')"
                                 >
                                     <component :is="IconGripVertical" class="h-4 w-4" />

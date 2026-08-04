@@ -5,7 +5,7 @@
             <ToolbarHeader
                 :icon="IconChecklist"
                 :title="$t('My ToDo-Lists')"
-                icon-bg-class="bg-green-600/10 text-green-700"
+                icon-bg-class="bg-success text-success"
                 :description="$t('Organize, filter and edit your tasks')"
                 :search-enabled="false"
             >
@@ -16,7 +16,7 @@
                 </template>
             </ToolbarHeader>
 
-            <div class="mt-4 mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+            <div class="mt-4 mb-6 p-4 bg-accent-50 border border-accent-200 rounded-lg text-sm text-accent-700">
                 {{ $t('You only see checklists that have at least one task assigned to you, or that are assigned to you') }}
             </div>
             <!-- Reuse ChecklistComponent with OwnTasksManagement mode -->
@@ -38,7 +38,7 @@
                     <component :is="showMoneySourceTasks ? IconChevronDown : IconChevronRight" class="w-5 h-5" />
                     {{ $t('Funding source tasks') }}
                 </h2>
-                <div v-if="showMoneySourceTasks" class="rounded-2xl border border-gray-100 bg-white shadow-sm divide-y">
+                <div v-if="showMoneySourceTasks" class="rounded-2xl border border-border-subtle bg-white shadow-sm divide-y">
                     <div v-for="task in moneySourceTasks" :key="task.id" class="px-5 py-4">
                         <SingleMoneySourceTask :task="task" />
                     </div>

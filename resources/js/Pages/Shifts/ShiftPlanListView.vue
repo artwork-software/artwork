@@ -23,13 +23,13 @@
             </ShiftPlanListViewFunctionBar>
 
             <!-- Multi-edit action bar -->
-            <div v-if="multiEditMode" ref="multiEditBarRef" class="sticky z-40 bg-white border-b border-zinc-200 px-5 py-2 flex items-center gap-x-4" :style="{ top: functionBarHeight + 'px' }">
-                <span class="text-sm text-gray-600">{{ selectedShiftIds.length }} {{ $t('selected') }}</span>
+            <div v-if="multiEditMode" ref="multiEditBarRef" class="sticky z-40 bg-white border-b border-border-subtle px-5 py-2 flex items-center gap-x-4" :style="{ top: functionBarHeight + 'px' }">
+                <span class="text-sm text-text-muted">{{ selectedShiftIds.length }} {{ $t('selected') }}</span>
                 <button
                     type="button"
                     :disabled="selectedShiftIds.length === 0 || duplicateInFlight"
                     @click="duplicateSelectedShifts"
-                    :class="[(selectedShiftIds.length === 0 || duplicateInFlight) ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
+                    :class="[(selectedShiftIds.length === 0 || duplicateInFlight) ? 'bg-border-strong cursor-not-allowed' : 'bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
                 >
                     {{ $t('Duplicate') }}
                 </button>
@@ -37,13 +37,13 @@
                     type="button"
                     :disabled="selectedShiftIds.length === 0"
                     @click="showDeleteConfirm = true"
-                    :class="[selectedShiftIds.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-artwork-error hover:bg-artwork-error/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
+                    :class="[selectedShiftIds.length === 0 ? 'bg-border-strong cursor-not-allowed' : 'bg-artwork-error hover:bg-artwork-error/90 cursor-pointer', 'rounded-md px-4 py-1.5 text-sm font-semibold text-white shadow-sm']"
                 >
                     {{ $t('Delete') }}
                 </button>
             </div>
 
-            <div v-if="calendarWarningText" class="px-5 py-2 bg-yellow-50 text-yellow-800 text-sm">
+            <div v-if="calendarWarningText" class="px-5 py-2 bg-warning-surface text-warning text-sm">
                 {{ calendarWarningText }}
             </div>
 
@@ -95,48 +95,48 @@
                         <div v-for="roomData in dayData.rooms" :key="roomData.room_id" class="mb-1">
                             <!-- ============ Mode B/D: vertical room bar layout (show_appointments active) ============ -->
                             <template v-if="showAppointments">
-                                <div class="flex border border-gray-200 rounded-r-lg overflow-hidden">
+                                <div class="flex border border-border-subtle rounded-r-lg overflow-hidden">
                                     <!-- Vertical room bar -->
-                                    <div class="flex-shrink-0 w-32 bg-gray-50 px-3 py-2 flex items-start font-semibold text-xs uppercase tracking-wide text-gray-600 border-r border-gray-200">
+                                    <div class="flex-shrink-0 w-32 bg-surface-sunken px-3 py-2 flex items-start font-semibold text-xs uppercase tracking-wide text-text-muted border-r border-border-subtle">
                                         {{ roomData.room ? roomData.room.name : $t('No room') }}
                                     </div>
 
                                     <!-- Appointments column -->
-                                    <div class="flex-1 min-w-0 px-2 py-1.5 border-r border-gray-200">
+                                    <div class="flex-1 min-w-0 px-2 py-1.5 border-r border-border-subtle">
                                         <div
                                             v-for="event in roomData.events || []"
                                             :key="`evt-${event.id}`"
-                                            class="border-b border-gray-100 py-1 px-1.5 border-l-4"
+                                            class="border-b border-border-subtle py-1 px-1.5 border-l-4"
                                             :style="{ backgroundColor: hexToRgba(event.event_type?.hex_code || event.event_type?.color, 0.12), borderLeftColor: event.event_type?.hex_code || event.event_type?.color || '#d1d5db' }"
                                         >
                                             <div class="flex items-center gap-2">
                                                 <span class="font-medium text-xs" :style="{ color: event.event_type?.hex_code || event.event_type?.color }">
                                                     {{ event.event_type?.abbreviation }}
                                                 </span>
-                                                <span class="text-xs text-gray-700 truncate flex-1 min-w-0">
+                                                <span class="text-xs text-text-muted truncate flex-1 min-w-0">
                                                     {{ event.eventName || event.name || event.event_type?.name }}
                                                 </span>
-                                                <span class="text-[11px] text-gray-500 tabular-nums shrink-0">
+                                                <span class="text-[11px] text-text-subtle tabular-nums shrink-0">
                                                     <template v-if="event.allDay">{{ $t('All day') }}</template>
                                                     <template v-else>{{ formatEventTime(event.start_time) }} – {{ formatEventTime(event.end_time) }}</template>
                                                 </span>
                                                 <Link
                                                     v-if="event.project"
                                                     :href="route('projects.tab', { project: event.project.id, projectTab: firstProjectShiftTabId })"
-                                                    class="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-medium text-black underline hover:bg-gray-50 transition shrink-0"
+                                                    class="inline-flex items-center rounded-full border border-border bg-white px-2 py-0.5 text-[10px] font-medium text-black underline hover:bg-surface-sunken transition shrink-0"
                                                 >
                                                     {{ event.project.name }}
                                                 </Link>
                                             </div>
                                             <!-- Terminbeschreibung (Anzeigeeinstellung "Notizen einblenden") -->
-                                            <div v-if="listViewSettings.shift_notes && event.description" class="text-xs text-gray-400 mt-0.5 pl-0.5 truncate">
+                                            <div v-if="listViewSettings.shift_notes && event.description" class="text-xs text-text-subtle mt-0.5 pl-0.5 truncate">
                                                 {{ event.description }}
                                             </div>
                                         </div>
                                         <button
                                             v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
                                             type="button"
-                                            class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition"
+                                            class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-text-subtle hover:text-text-muted hover:bg-surface-sunken rounded transition"
                                             @click="openAddEventForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
                                         >
                                             <PropertyIcon name="IconCirclePlus" class="size-3" />
@@ -150,7 +150,7 @@
                                             <!-- Shift group bar -->
                                             <div
                                                 v-if="section.type === 'group_bar'"
-                                                class="bg-zinc-100 border-l-4 border-zinc-300 px-2 py-1 mt-1 first:mt-0 text-xs font-semibold flex items-center justify-between rounded-r"
+                                                class="bg-surface-sunken border-l-4 border-border px-2 py-1 mt-1 first:mt-0 text-xs font-semibold flex items-center justify-between rounded-r"
                                             >
                                                 <span>{{ section.name }}</span>
                                                 <ToolTipComponent
@@ -160,14 +160,14 @@
                                                     icon="IconCirclePlus"
                                                     icon-size="size-3.5"
                                                     @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null, section.shiftGroupId)"
-                                                    classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-5 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out"
+                                                    classes-button="border border-border-subtle inline-flex items-center justify-center cursor-pointer rounded-md size-5 text-sm font-medium bg-white hover:bg-surface-sunken transition duration-200 ease-in-out"
                                                 />
                                             </div>
                                             <!-- Shift row -->
                                             <template v-else-if="section.type === 'shift'">
                                                 <div
                                                     v-if="!hideShiftRow"
-                                                    class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
+                                                    class="flex items-center gap-3 border-b border-border-subtle py-1.5 px-2 border-l-4"
                                                     :style="{ backgroundColor: hexToRgba(section.shift.craft?.color, 0.12), borderLeftColor: section.shift.craft?.color || '#d1d5db' }"
                                                 >
                                                     <div v-if="multiEditMode" class="shrink-0">
@@ -183,27 +183,27 @@
                                                             <div class="flex items-center gap-x-1.5 text-sm">
                                                                 <ToolTipComponent v-if="section.shift.is_committed" icon="IconLock" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Committed')" direction="top" black-icon />
                                                         <ToolTipComponent v-if="section.shift.in_workflow && !section.shift.is_committed" icon="IconGitPullRequest" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Requested')" direction="top" black-icon />
-                                                                <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(section.shift).name }})</span>
+                                                                <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-text-subtle">({{ getShiftGroup(section.shift).name }})</span>
                                                                 <span class="font-medium" :style="{ color: section.shift.craft?.color }">{{ section.shift.craft?.abbreviation }}</span>
                                                                 <span>{{ section.shift.start }} - {{ section.shift.end }}</span>
                                                             </div>
-                                                            <div class="flex items-center text-xs text-gray-500">
+                                                            <div class="flex items-center text-xs text-text-subtle">
                                                                 ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
                                                                 <svg v-if="getUnavailableWorkers(section.shift).length"
-                                                                     class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                                                                     class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
                                                                      fill="currentColor" viewBox="0 0 20 20">
                                                                     <title>{{ getUnavailableTooltip(section.shift) }}</title>
                                                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                                                 </svg>
                                                                 <span v-else class="inline-block w-2 h-2 rounded-full ml-1"
                                                                       :class="{
-                                                                        'bg-red-500': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
-                                                                        'bg-yellow-500': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
-                                                                        'bg-green-500': getUsedWorkerCount(section.shift) >= getMaxWorkerCount(section.shift)
+                                                                        'bg-danger': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
+                                                                        'bg-warning': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
+                                                                        'bg-success': getUsedWorkerCount(section.shift) >= getMaxWorkerCount(section.shift)
                                                                       }">
                                                                 </span>
                                                             </div>
-                                                            <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                                            <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-text-subtle">
                                                                 <div
                                                                     v-for="row in getQualificationRows(section.shift)"
                                                                     :key="row.shift_qualification_id"
@@ -218,14 +218,14 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div v-if="listViewSettings.shift_notes && section.shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
+                                                        <div v-if="listViewSettings.shift_notes && section.shift.description" class="text-xs text-text-subtle mt-0.5 pl-0.5">
                                                             {{ section.shift.description }}
                                                         </div>
                                                     </div>
                                                     <div v-if="getProject(section.shift)" class="shrink-0">
                                                         <Link
                                                             :href="getProjectShiftTabUrl(section.shift)"
-                                                            class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
+                                                            class="inline-flex items-center rounded-full border border-border bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-surface-sunken transition"
                                                         >
                                                             {{ getProject(section.shift).name }}
                                                         </Link>
@@ -253,7 +253,7 @@
                                             <button
                                                 v-else-if="section.type === 'add_button' && (can('can plan shifts') || hasAdminRole()) && !multiEditMode"
                                                 type="button"
-                                                class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition"
+                                                class="mt-1 inline-flex items-center gap-1 px-2 py-1 text-xs text-text-subtle hover:text-text-muted hover:bg-surface-sunken rounded transition"
                                                 @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
                                             >
                                                 <PropertyIcon name="IconCirclePlus" class="size-3" />
@@ -266,13 +266,13 @@
 
                             <!-- ============ Mode C: only group_by_shift_groups active (horizontal layout, group bars) ============ -->
                             <template v-else-if="groupByShiftGroups">
-                                <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-gray-600 uppercase tracking-wide border-gray-200 bg-gray-50 rounded-r-lg">
+                                <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-text-muted uppercase tracking-wide border-border-subtle bg-surface-sunken rounded-r-lg">
                                     <span>{{ roomData.room ? roomData.room.name : $t('No room') }}</span>
                                 </div>
                                 <template v-for="(section, sIdx) in renderShiftSections(roomData, dayData.day)" :key="sIdx">
                                     <div
                                         v-if="section.type === 'group_bar'"
-                                        class="bg-zinc-100 border-l-4 border-zinc-300 px-3 py-1 text-xs font-semibold flex items-center justify-between"
+                                        class="bg-surface-sunken border-l-4 border-border px-3 py-1 text-xs font-semibold flex items-center justify-between"
                                     >
                                         <span>{{ section.name }}</span>
                                         <ToolTipComponent
@@ -282,13 +282,13 @@
                                             icon="IconCirclePlus"
                                             icon-size="size-4"
                                             @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null, section.shiftGroupId)"
-                                            classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out"
+                                            classes-button="border border-border-subtle inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-surface-sunken transition duration-200 ease-in-out"
                                         />
                                     </div>
                                     <template v-else-if="section.type === 'shift'">
                                         <div
                                             v-if="!hideShiftRow"
-                                            class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
+                                            class="flex items-center gap-3 border-b border-border-subtle py-1.5 px-2 border-l-4"
                                             :style="{ backgroundColor: hexToRgba(section.shift.craft?.color, 0.12), borderLeftColor: section.shift.craft?.color || '#d1d5db' }"
                                         >
                                             <div v-if="multiEditMode" class="shrink-0">
@@ -304,27 +304,27 @@
                                                     <div class="flex items-center gap-x-1.5 text-sm">
                                                         <ToolTipComponent v-if="section.shift.is_committed" icon="IconLock" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Committed')" direction="top" black-icon />
                                                         <ToolTipComponent v-if="section.shift.in_workflow && !section.shift.is_committed" icon="IconGitPullRequest" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Requested')" direction="top" black-icon />
-                                                        <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(section.shift).name }})</span>
+                                                        <span v-if="getShiftGroup(section.shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-text-subtle">({{ getShiftGroup(section.shift).name }})</span>
                                                         <span class="font-medium" :style="{ color: section.shift.craft?.color }">{{ section.shift.craft?.abbreviation }}</span>
                                                         <span>{{ section.shift.start }} - {{ section.shift.end }}</span>
                                                     </div>
-                                                    <div class="flex items-center text-xs text-gray-500">
+                                                    <div class="flex items-center text-xs text-text-subtle">
                                                         ({{ getUsedWorkerCount(section.shift) }}/{{ getMaxWorkerCount(section.shift) }})
                                                         <svg v-if="getUnavailableWorkers(section.shift).length"
-                                                             class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                                                             class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
                                                              fill="currentColor" viewBox="0 0 20 20">
                                                             <title>{{ getUnavailableTooltip(section.shift) }}</title>
                                                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                                         </svg>
                                                         <span v-else class="inline-block w-2 h-2 rounded-full ml-1"
                                                               :class="{
-                                                                'bg-red-500': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
-                                                                'bg-yellow-500': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
-                                                                'bg-green-500': getUsedWorkerCount(section.shift) >= getMaxWorkerCount(section.shift)
+                                                                'bg-danger': getUsedWorkerCount(section.shift) === 0 && getMaxWorkerCount(section.shift) !== 0,
+                                                                'bg-warning': getUsedWorkerCount(section.shift) > 0 && getUsedWorkerCount(section.shift) < getMaxWorkerCount(section.shift),
+                                                                'bg-success': getUsedWorkerCount(section.shift) >= getMaxWorkerCount(section.shift)
                                                               }">
                                                         </span>
                                                     </div>
-                                                    <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                                    <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-text-subtle">
                                                         <div
                                                             v-for="row in getQualificationRows(section.shift)"
                                                             :key="row.shift_qualification_id"
@@ -339,14 +339,14 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div v-if="listViewSettings.shift_notes && section.shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
+                                                <div v-if="listViewSettings.shift_notes && section.shift.description" class="text-xs text-text-subtle mt-0.5 pl-0.5">
                                                     {{ section.shift.description }}
                                                 </div>
                                             </div>
                                             <div v-if="getProject(section.shift)" class="shrink-0">
                                                 <Link
                                                     :href="getProjectShiftTabUrl(section.shift)"
-                                                    class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
+                                                    class="inline-flex items-center rounded-full border border-border bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-surface-sunken transition"
                                                 >
                                                     {{ getProject(section.shift).name }}
                                                 </Link>
@@ -375,7 +375,7 @@
 
                             <!-- ============ Mode A: default layout (no toggles) ============ -->
                             <template v-else>
-                                <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-gray-600 uppercase tracking-wide border-gray-200 bg-gray-50 rounded-r-lg">
+                                <div class="flex items-center justify-between px-4 py-2.5 text-xs border-1 shadow-sm font-semibold text-text-muted uppercase tracking-wide border-border-subtle bg-surface-sunken rounded-r-lg">
                                     <span>{{ roomData.room ? roomData.room.name : $t('No room') }}</span>
                                     <ToolTipComponent
                                         v-if="(can('can plan shifts') || hasAdminRole()) && !multiEditMode"
@@ -384,12 +384,12 @@
                                         icon="IconCirclePlus"
                                         icon-size="size-4"
                                         @click="openAddShiftForRoomAndDay(dayData.day, roomData.room?.id ?? null)"
-                                        classes-button="border border-zinc-200 inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-gray-50 transition duration-200 ease-in-out mr-2"
+                                        classes-button="border border-border-subtle inline-flex items-center justify-center cursor-pointer rounded-md size-6 text-sm font-medium bg-white hover:bg-surface-sunken transition duration-200 ease-in-out mr-2"
                                     />
                                 </div>
                                 <template v-for="shift in roomData.shifts" :key="shift.id">
                                     <div v-if="!hideShiftRow"
-                                         class="flex items-center gap-3 border-b border-gray-100 py-1.5 px-2 border-l-4"
+                                         class="flex items-center gap-3 border-b border-border-subtle py-1.5 px-2 border-l-4"
                                          :style="{ backgroundColor: hexToRgba(shift.craft?.color, 0.12), borderLeftColor: shift.craft?.color || '#d1d5db' }">
                                         <div v-if="multiEditMode" class="shrink-0">
                                             <input
@@ -404,27 +404,27 @@
                                                 <div class="flex items-center gap-x-1.5 text-sm">
                                                     <ToolTipComponent v-if="shift.is_committed" icon="IconLock" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Committed')" direction="top" black-icon />
                                                     <ToolTipComponent v-if="shift.in_workflow && !shift.is_committed" icon="IconGitPullRequest" icon-size="h-3 w-3 text-black" :stroke="2" :tooltip-text="$t('Requested')" direction="top" black-icon />
-                                                    <span v-if="getShiftGroup(shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-gray-400">({{ getShiftGroup(shift).name }})</span>
+                                                    <span v-if="getShiftGroup(shift) && listViewSettings.show_shift_group_tag" class="text-[10px] text-text-subtle">({{ getShiftGroup(shift).name }})</span>
                                                     <span class="font-medium" :style="{ color: shift.craft?.color }">{{ shift.craft?.abbreviation }}</span>
                                                     <span>{{ shift.start }} - {{ shift.end }}</span>
                                                 </div>
-                                                <div class="flex items-center text-xs text-gray-500">
+                                                <div class="flex items-center text-xs text-text-subtle">
                                                     ({{ getUsedWorkerCount(shift) }}/{{ getMaxWorkerCount(shift) }})
                                                     <svg v-if="getUnavailableWorkers(shift).length"
-                                                         class="h-3.5 w-3.5 ml-1 shrink-0 text-amber-500"
+                                                         class="h-3.5 w-3.5 ml-1 shrink-0 text-warning"
                                                          fill="currentColor" viewBox="0 0 20 20">
                                                         <title>{{ getUnavailableTooltip(shift) }}</title>
                                                         <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                                     </svg>
                                                     <span v-else class="inline-block w-2 h-2 rounded-full ml-1"
                                                           :class="{
-                                                            'bg-red-500': getUsedWorkerCount(shift) === 0 && getMaxWorkerCount(shift) !== 0,
-                                                            'bg-yellow-500': getUsedWorkerCount(shift) > 0 && getUsedWorkerCount(shift) < getMaxWorkerCount(shift),
-                                                            'bg-green-500': getUsedWorkerCount(shift) >= getMaxWorkerCount(shift)
+                                                            'bg-danger': getUsedWorkerCount(shift) === 0 && getMaxWorkerCount(shift) !== 0,
+                                                            'bg-warning': getUsedWorkerCount(shift) > 0 && getUsedWorkerCount(shift) < getMaxWorkerCount(shift),
+                                                            'bg-success': getUsedWorkerCount(shift) >= getMaxWorkerCount(shift)
                                                           }">
                                                     </span>
                                                 </div>
-                                                <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-gray-400">
+                                                <div class="flex flex-row flex-wrap gap-x-2 text-[11px] text-text-subtle">
                                                     <div
                                                         v-for="row in getQualificationRows(shift)"
                                                         :key="row.shift_qualification_id"
@@ -439,14 +439,14 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div v-if="listViewSettings.shift_notes && shift.description" class="text-xs text-gray-400 mt-0.5 pl-0.5">
+                                            <div v-if="listViewSettings.shift_notes && shift.description" class="text-xs text-text-subtle mt-0.5 pl-0.5">
                                                 {{ shift.description }}
                                             </div>
                                         </div>
                                         <div v-if="getProject(shift)" class="shrink-0">
                                             <Link
                                                 :href="getProjectShiftTabUrl(shift)"
-                                                class="inline-flex items-center rounded-full border border-gray-300 bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-gray-50 transition"
+                                                class="inline-flex items-center rounded-full border border-border bg-white px-3 py-0.5 text-xs font-medium text-black underline hover:bg-surface-sunken transition"
                                             >
                                                 {{ getProject(shift).name }}
                                             </Link>
@@ -477,7 +477,7 @@
                     </div>
                 </template>
 
-                <div v-else class="flex items-center justify-center py-20 text-gray-400 text-sm">
+                <div v-else class="flex items-center justify-center py-20 text-text-subtle text-sm">
                     {{ $t('No shifts found for the selected time range.') }}
                 </div>
             </div>

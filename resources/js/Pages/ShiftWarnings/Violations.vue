@@ -16,39 +16,39 @@
         />
 
         <div class="card white p-5">
-            <div v-if="violations.length === 0" class="text-center py-10 text-gray-400 text-sm">
+            <div v-if="violations.length === 0" class="text-center py-10 text-text-subtle text-sm">
                 {{ $t('No open violations found.') }}
             </div>
             <div v-else class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-border-subtle">
+                    <thead class="bg-surface-sunken">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Employee') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Rule') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Date') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Severity') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Details') }}
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                                 {{ $t('Actions') }}
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-border-subtle">
                         <tr v-for="violation in violations" :key="violation.id">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
                                 {{ violation.user_name }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 <div class="flex items-center gap-2">
                                     <span
                                         class="inline-block h-3 w-3 rounded-full shrink-0"
@@ -57,18 +57,18 @@
                                     {{ violation.rule_name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
                                 {{ formatDate(violation.violation_date) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span
-                                    :class="violation.severity === 'error' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'"
+                                    :class="violation.severity === 'error' ? 'bg-danger-surface text-danger' : 'bg-warning-surface text-warning'"
                                     class="inline-flex px-2 py-0.5 text-[11px] font-semibold rounded-full"
                                 >
                                     {{ violation.severity === 'error' ? $t('Error') : $t('Warning') }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                            <td class="px-6 py-4 text-sm text-text-subtle max-w-xs truncate">
                                 {{ violation.message }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

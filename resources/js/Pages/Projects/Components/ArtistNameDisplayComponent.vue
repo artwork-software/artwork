@@ -6,7 +6,7 @@
                    {{ $t('Project Artist')}}
                 </span>
             </div>
-            <div v-if="loadError" class="mt-2 text-xs text-rose-600">
+            <div v-if="loadError" class="mt-2 text-xs text-danger">
                 {{ loadError }}
             </div>
             <div v-else-if="loading" class="mt-2 text-xs text-secondary">

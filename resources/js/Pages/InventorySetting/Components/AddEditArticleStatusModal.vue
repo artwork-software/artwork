@@ -9,7 +9,7 @@
             <h2 class="text-lg font-semibold mb-4">{{ props.status.name }}</h2>
 
             <div class="mb-4">
-                <label for="status-name" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('Status color') }}</label>
+                <label for="status-name" class="block text-sm font-medium text-text-muted mb-2">{{ $t('Status color') }}</label>
                 <ColorPickerComponent
                     :color="statusForm.color"
                     @update-color="changeColor"

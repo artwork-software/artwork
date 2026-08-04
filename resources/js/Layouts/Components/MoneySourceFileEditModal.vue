@@ -32,7 +32,7 @@
                           id="description"
                           v-model="comment"
                           rows="4"
-                          class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                          class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-border"/>
                 </div>
                 <div class="mb-6">
                     <div v-for="file in files">{{ $t('New document')}}: {{ file?.name }}</div>

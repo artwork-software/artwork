@@ -30,7 +30,7 @@
                             <component :is="IconChevronDown" class="h-5 w-5" aria-hidden="true" />
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 ring-opacity-5 focus:outline-none sm:text-sm">
+                            <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-border ring-opacity-5 focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" v-for="value in selectableValues" :key="value.name" :value="value.name">
                                     <li :class="['relative cursor-default select-none py-2 pl-3 pr-9']">
                                         <span :class="['block truncate']">{{ value.name }}</span>

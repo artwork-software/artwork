@@ -2,21 +2,21 @@
     <AppLayout title="Dashboard">
         <div class="artwork-container ">
             <!-- Welcome Bar mit Profil + Quicklinks -->
-            <header class="rounded-2xl border border-gray-100 bg-white shadow-sm px-5 py-4">
+            <BaseCard elevation="flat" padding="16">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <!-- Greeting -->
                     <div class="flex items-center gap-3 min-w-0">
                         <img
                             :src="user.profile_photo_url"
                             alt="Avatar"
-                            class="size-12 rounded-full object-cover bg-gray-50 ring-4 ring-indigo-50"
+                            class="size-12 rounded-full object-cover bg-surface-sunken ring-4 ring-accent-50"
                         />
 
                         <div class="min-w-0">
-                            <h1 class="text-xl lg:text-2xl font-semibold tracking-tight">
+                            <h1 class="font-lexend text-xl lg:text-2xl font-semibold tracking-tight text-text">
                                 {{ $t('Good day') }}, {{ user.full_name }}
                             </h1>
-                            <p class="text-xs lg:text-sm text-gray-500 mt-0.5">
+                            <p class="text-xs text-text-muted mt-0.5">
                                 {{ formattedToday }} · {{ $t('Everything important at a glance') }}
                             </p>
                         </div>
@@ -27,84 +27,70 @@
 
 
                         <!-- Trenner -->
-                        <div class="hidden lg:block h-10 w-px bg-gray-200"></div>
+                        <div class="hidden lg:block h-10 w-px bg-border"></div>
 
                         <!-- Quicklinks -->
                         <nav class="grid grid-cols-2 sm:flex gap-2">
-                            <a :href="route('events')" class="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 transition">
-                                <PropertyIcon name="IconCalendarMonth" class="size-4" />
-                                {{ $t('Calendar') }}
-                            </a>
-                            <a v-if="canViewShifts" :href="route('shifts.plan')" class="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-xs text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition">
-                                <PropertyIcon name="IconCalendarUser" class="size-4" />
-                                {{ $t('Shift plan') }}
-                            </a>
-                            <a :href="route('tasks.own')" class="inline-flex items-center gap-2 rounded-xl border border-fuchsia-200 bg-fuchsia-50/70 px-3 py-2 text-xs text-fuchsia-700 hover:bg-fuchsia-50 hover:border-fuchsia-300 transition">
-                                <PropertyIcon name="IconListCheck" class="size-4" />
-                                {{ $t('Tasks') }}
-                            </a>
-                            <a :href="route('notifications.index')" class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2 text-xs text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition">
-                                <PropertyIcon name="IconBell" class="size-4" />
-                                {{ $t('Notifications') }}
-                            </a>
+                            <BaseUIButton
+                                variant="secondary"
+                                size="sm"
+                                icon="IconCalendarMonth"
+                                label="Calendar"
+                                @click="router.visit(route('events'))"
+                            />
+                            <BaseUIButton
+                                v-if="canViewShifts"
+                                variant="secondary"
+                                size="sm"
+                                icon="IconCalendarUser"
+                                label="Shift plan"
+                                @click="router.visit(route('shifts.plan'))"
+                            />
+                            <BaseUIButton
+                                variant="secondary"
+                                size="sm"
+                                icon="IconListCheck"
+                                label="Tasks"
+                                @click="router.visit(route('tasks.own'))"
+                            />
+                            <BaseUIButton
+                                variant="secondary"
+                                size="sm"
+                                icon="IconBell"
+                                label="Notifications"
+                                @click="router.visit(route('notifications.index'))"
+                            />
                         </nav>
                     </div>
                 </div>
-            </header>
+            </BaseCard>
 
             <!-- KPI Row -->
             <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Today\'s appointments') }}</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ eventsCountToday }}</p>
-                        </div>
-                        <div class="size-10 rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-300/15 flex items-center justify-center">
-                            <PropertyIcon name="IconCalendarMonth" class="size-5 text-indigo-600" />
-                        </div>
-                    </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('All scheduled appointments today.') }}</p>
-                </div>
-
-                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Today\'s shifts') }}</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ shiftsCountToday }}</p>
-                        </div>
-                        <div class="size-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-300/15 flex items-center justify-center">
-                            <PropertyIcon name="IconCalendarUser" class="size-5 text-emerald-600" />
-                        </div>
-                    </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('Your shifts at a glance.') }}</p>
-                </div>
-
-                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Notifications today') }}</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ notificationsCountToday }}</p>
-                        </div>
-                        <div class="size-10 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-300/15 flex items-center justify-center">
-                            <PropertyIcon name="IconBell" class="size-5 text-amber-600" />
-                        </div>
-                    </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('Current notices & news.') }}</p>
-                </div>
-
-                <div class="rounded-2xl border border-gray-100 backdrop-blur bg-white/70 p-4 shadow-sm">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Open tasks') }}</p>
-                            <p class="mt-1 text-3xl font-semibold">{{ openTasksCount }}</p>
-                        </div>
-                        <div class="size-10 rounded-xl bg-gradient-to-br from-fuchsia-500/15 to-pink-300/15 flex items-center justify-center">
-                            <PropertyIcon name="IconListCheck" class="size-5 text-fuchsia-600" />
-                        </div>
-                    </div>
-                    <p class="mt-2 text-xs text-gray-500">{{ $t('The next due to-dos.') }}</p>
-                </div>
+                <KpiTile
+                    :label="$t('Today\'s appointments')"
+                    :value="eventsCountToday"
+                    icon="IconCalendarMonth"
+                    :trend="$t('All scheduled appointments today.')"
+                />
+                <KpiTile
+                    :label="$t('Today\'s shifts')"
+                    :value="shiftsCountToday"
+                    icon="IconCalendarUser"
+                    :trend="$t('Your shifts at a glance.')"
+                />
+                <KpiTile
+                    :label="$t('Notifications today')"
+                    :value="notificationsCountToday"
+                    icon="IconBell"
+                    :trend="$t('Current notices & news.')"
+                />
+                <KpiTile
+                    :label="$t('Open tasks')"
+                    :value="openTasksCount"
+                    icon="IconListCheck"
+                    :trend="$t('The next due to-dos.')"
+                />
             </section>
 
             <!-- Content Grid -->
@@ -112,24 +98,25 @@
                 <!-- Left: Events (neu) + Shifts -->
                 <section class="col-span-6 xl:col-span-3 space-y-6">
                     <!-- Events neu: Kacheln -->
-                    <div class="rounded-2xl border border-gray-100 bg-white shadow-sm">
-                        <div class="flex items-center justify-between px-5 py-4">
-                            <div>
-                                <h2 class="text-base font-semibold">{{ $t("Today's appointments") }}</h2>
-                                <p class="text-xs text-gray-500">{{ $t('Quick overview of all appointments of the day') }}</p>
-                            </div>
-                            <a :href="route('events')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
+                    <BaseCard elevation="flat">
+                        <div class="flex items-center justify-between border-b border-border-subtle pr-4">
+                            <CardHeadline
+                                class="grow border-none"
+                                title="Today's appointments"
+                                description="Quick overview of all appointments of the day"
+                            />
+                            <a :href="route('events')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
                                 <PropertyIcon name="IconCalendarMonth" class="size-4" /> {{ $t('to calendar') }}
                             </a>
                         </div>
 
-                        <div v-if="eventsSorted.length" class="px-5 pb-5 gap-4 space-y-3">
-                            <div v-for="event in eventsSorted" :key="event.id" class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+                        <div v-if="eventsSorted.length" class="p-4 space-y-3">
+                            <div v-for="event in eventsSorted" :key="event.id" class="overflow-hidden rounded-md border border-border-subtle bg-surface">
                                 <div class="flex items-stretch gap-x-3 min-w-full w-full h-full p-4">
                                     <div class="p-1 rounded-lg w-1" :style="{backgroundColor: event?.event_type.hex_code}"></div>
                                     <div class="flex items-start justify-between w-full">
                                         <div class="">
-                                            <p class="text-sm font-semibold text-gray-900" :style="{color: event?.event_type.hex_code}">
+                                            <p class="text-sm font-semibold text-text" :style="{color: event?.event_type.hex_code}">
                                                 {{ event?.event_type.abbreviation }}:
                                                 <template v-if="event?.eventName">{{ event.eventName }}</template>
                                                 <Link
@@ -140,7 +127,7 @@
                                                     {{ event.project.name }}
                                                 </Link>
                                             </p>
-                                            <p v-if="event?.eventName && event?.project?.name" class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                            <p v-if="event?.eventName && event?.project?.name" class="mt-1 flex items-center gap-x-1 text-xs text-text-muted">
                                                 <span class="font-bold">{{ $t('Project') }}:</span>
                                                 <Link
                                                     :href="route('projects.tab', { project: event.project.id, projectTab: first_project_tab_id })"
@@ -149,7 +136,7 @@
                                                     {{ event.project.name }}
                                                 </Link>
                                             </p>
-                                            <div class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                            <div class="mt-1 flex items-center gap-x-1 text-xs text-text-muted">
                                                 <p v-if="!event.allDay" class="flex items-center gap-x-1">
                                                     <span class="font-bold">{{ $t('Start') }}:</span>
                                                     <span class="">{{ event?.start_time_without_day ?? event?.start_time }}</span>
@@ -160,18 +147,18 @@
                                                     <span class="font-bold">{{ $t('All day') }}</span>
                                                 </p>
                                             </div>
-                                            <p class="mt-1 flex items-center gap-x-1 text-xs text-gray-500">
+                                            <p class="mt-1 flex items-center gap-x-1 text-xs text-text-muted">
                                                 <span class="font-bold">{{ $t('Room') }}:</span>
                                                 <span class="">{{ event?.room?.name }}</span>
                                             </p>
-                                            <p v-if="event?.description" class="mt-1 text-xs text-gray-500 whitespace-pre-line" :title="event.description">
+                                            <p v-if="event?.description" class="mt-1 text-xs text-text-muted whitespace-pre-line" :title="event.description">
                                                 <span class="font-bold">{{ $t('Description') }}:</span>
                                                 {{ event.description }}
                                             </p>
 
                                         </div>
                                         <div class="break-keep">
-                                            <button @click="openCalendarWithEventId(event)" class="inline-flex items-center gap-1 text-xs text-indigo-700 hover:text-indigo-800 break-keep">
+                                            <button @click="openCalendarWithEventId(event)" class="inline-flex items-center gap-1 text-xs text-accent-600 hover:text-accent-700 break-keep">
                                                 {{ $t('Open in calendar') }}
                                                 <PropertyIcon name="IconChevronRight" class="h-3 w-3" />
                                             </button>
@@ -181,23 +168,24 @@
                             </div>
                         </div>
 
-                        <div v-else class="px-5 pb-5">
-                            <BaseAlertComponent message="No events found" type="info" use-translation />
+                        <div v-else class="p-4">
+                            <EmptyState :title="$t('No events found')" icon="IconCalendarMonth" />
                         </div>
-                    </div>
+                    </BaseCard>
 
                     <!-- Schichten -->
-                    <div class="rounded-2xl border border-gray-100 bg-white shadow-sm">
-                        <div class="flex items-center justify-between px-5 py-4">
-                            <div>
-                                <h2 class="text-base font-semibold">{{ $t('Shifts today') }}</h2>
-                                <p class="text-xs text-gray-500">{{ $t('Your shifts today') }}</p>
-                            </div>
-                            <a v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
+                    <BaseCard elevation="flat">
+                        <div class="flex items-center justify-between border-b border-border-subtle pr-4">
+                            <CardHeadline
+                                class="grow border-none"
+                                title="Shifts today"
+                                description="Your shifts today"
+                            />
+                            <a v-if="canViewShifts" :href="route('shifts.plan')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
                                 <PropertyIcon name="IconCalendarUser" class="size-4" /> {{ $t('to the shift plan') }}
                             </a>
                         </div>
-                        <div v-if="workTimesTodaySorted.length" class="px-5 pb-5">
+                        <div v-if="workTimesTodaySorted.length" class="p-4">
                             <div v-for="item in workTimesTodaySorted" :key="item.id" class="mb-3 last:mb-0">
                                 <SingleUserEventShift
                                     v-if="item.type === 'shift'"
@@ -216,17 +204,17 @@
 
                                 <div
                                     v-else
-                                    class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+                                    class="rounded-md border border-border bg-surface overflow-hidden"
                                 >
-                                    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-zinc-100 text-zinc-900">
+                                    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-surface-sunken text-text">
                                         <span class="truncate text-sm font-semibold">
                                             {{ $t('Individual time') }}: {{ item.individualTime?.title ?? '' }}
                                         </span>
                                     </div>
 
                                     <div class="px-3 py-3 space-y-3">
-                                        <div class="flex items-center justify-between gap-3 border-b border-zinc-200 pb-2">
-                                            <span class="text-sm font-medium text-zinc-900">
+                                        <div class="flex items-center justify-between gap-3 border-b border-border-subtle pb-2">
+                                            <span class="text-sm font-medium text-text">
                                                 <template v-if="item.individualTime?.full_day">
                                                     {{ $t('All day') }}
                                                 </template>
@@ -240,24 +228,24 @@
                             </div>
                         </div>
 
-                        <div v-else class="px-5 pb-5">
-                            <BaseAlertComponent message="You don't have any shifts today." type="info" use-translation />
+                        <div v-else class="p-4">
+                            <EmptyState :title="$t('You don\'t have any shifts today.')" icon="IconCalendarUser" />
                         </div>
-                    </div>
+                    </BaseCard>
                 </section>
 
                 <!-- Right: Announcements groß + Tasks -->
                 <section class="col-span-6 xl:col-span-3 space-y-6">
                     <!-- Ankündigungen – groß -->
-                    <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-                        <div class="px-5 py-4">
-                            <h2 class="text-base font-semibold">{{ $t('Notifications today') }}</h2>
-                            <p class="text-xs text-gray-500">{{ $t('Important messages & changes') }}</p>
-                        </div>
+                    <BaseCard elevation="flat" class="overflow-hidden">
+                        <CardHeadline
+                            title="Notifications today"
+                            description="Important messages & changes"
+                        />
 
                         <div v-if="globalNotification?.image_url || globalNotification?.title" class="mt-4">
                             <!-- Hero Card -->
-                            <div class="mx-5 mb-5 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                            <div class="mx-4 mb-4 overflow-hidden rounded-md border border-border-subtle bg-surface">
                                 <div class="relative">
                                     <img
                                         v-if="globalNotification?.image_url"
@@ -272,88 +260,99 @@
                                     </div>
                                 </div>
                                 <div class="p-4">
-                                    <p class="text-sm text-gray-700">
+                                    <p class="text-sm text-text">
                                         {{ globalNotification.description }}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="notifications.length" class="px-5 pb-5 grid grid-cols-1 gap-3" :class="{ 'opacity-50 pointer-events-none': notificationsLoading }">
-                            <div v-for="n in notifications" :key="n.id" class="rounded-xl border border-gray-100 bg-white shadow-sm p-4">
-                                <NotificationBlock
-                                    :history-objects="historyObjects"
-                                    :notification="n"
-                                    :event="event"
-                                    :event-types="eventTypes"
-                                    :rooms="rooms"
-                                    :event-statuses="eventStatuses"
-                                    :first_project_shift_tab_id="first_project_shift_tab_id"
-                                    :first_project_budget_tab_id="first_project_budget_tab_id"
-                                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                    :is-dashboard="true"
+                        <div v-if="notifications.length" class="px-4 pb-4 grid grid-cols-1 gap-3">
+                            <template v-if="notificationsLoading">
+                                <BaseSkeleton
+                                    v-for="index in NOTIFICATIONS_PER_PAGE"
+                                    :key="`notification-skeleton-${index}`"
+                                    variant="block"
+                                    height="h-24"
                                 />
-                            </div>
+                            </template>
+                            <template v-else>
+                                <div v-for="n in notifications" :key="n.id" class="rounded-md border border-border-subtle bg-surface p-4">
+                                    <NotificationBlock
+                                        :history-objects="historyObjects"
+                                        :notification="n"
+                                        :event="event"
+                                        :event-types="eventTypes"
+                                        :rooms="rooms"
+                                        :event-statuses="eventStatuses"
+                                        :first_project_shift_tab_id="first_project_shift_tab_id"
+                                        :first_project_budget_tab_id="first_project_budget_tab_id"
+                                        :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                        :is-dashboard="true"
+                                    />
+                                </div>
+                            </template>
 
-                            <div v-if="notificationPageCount > 1" class="flex items-center justify-between pt-1 text-xs text-gray-500">
-                                <button
-                                    type="button"
+                            <div v-if="notificationPageCount > 1" class="flex items-center justify-between pt-1 text-xs text-text-muted">
+                                <BaseUIButton
+                                    variant="ghost"
+                                    size="sm"
+                                    hide-icon
+                                    label="Back"
                                     :disabled="notificationPage === 1 || notificationsLoading"
                                     @click="fetchNotificationPage(notificationPage - 1)"
-                                    class="rounded px-2 py-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    {{ $t('Back') }}
-                                </button>
+                                />
                                 <span>{{ $t('Page') }} {{ notificationPage }} / {{ notificationPageCount }}</span>
-                                <button
-                                    type="button"
+                                <BaseUIButton
+                                    variant="ghost"
+                                    size="sm"
+                                    hide-icon
+                                    label="Next"
                                     :disabled="notificationPage === notificationPageCount || notificationsLoading"
                                     @click="fetchNotificationPage(notificationPage + 1)"
-                                    class="rounded px-2 py-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    {{ $t('Next') }}
-                                </button>
+                                />
                             </div>
                         </div>
 
-                        <div v-else class="px-5 pb-5">
-                            <BaseAlertComponent message="There are no new announcements for today." type="info" use-translation />
+                        <div v-else class="px-4 pb-4">
+                            <EmptyState :title="$t('There are no new announcements for today.')" icon="IconBell" />
                         </div>
 
-                        <div class="px-5 pb-5">
-                            <a :href="route('notifications.index')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
+                        <div class="px-4 pb-4">
+                            <a :href="route('notifications.index')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1">
                                 <PropertyIcon name="IconBell" class="size-4" /> {{ $t('Go to the notifications') }}
                             </a>
                         </div>
-                    </div>
+                    </BaseCard>
 
                     <!-- Aufgaben -->
-                    <div class="rounded-2xl border border-gray-100 bg-white shadow-sm">
-                        <div class="flex items-center justify-between px-5 py-4">
-                            <div>
-                                <h2 class="text-base font-semibold">{{ $t('Next tasks') }}</h2>
-                                <p class="text-xs text-gray-500">{{ $t('Your open to-dos') }}</p>
-                            </div>
-                            <a :href="route('tasks.own')" class="text-xs text-artwork-buttons-create inline-flex items-center gap-1">
+                    <BaseCard elevation="flat">
+                        <div class="flex items-center justify-between border-b border-border-subtle pr-4">
+                            <CardHeadline
+                                class="grow border-none"
+                                title="Next tasks"
+                                description="Your open to-dos"
+                            />
+                            <a :href="route('tasks.own')" class="text-xs text-accent-600 hover:text-accent-700 inline-flex items-center gap-1 whitespace-nowrap">
                                 <PropertyIcon name="IconListCheck" class="size-4" /> {{ $t('To the task overview') }}
                             </a>
                         </div>
 
-                        <div v-if="tasks?.length" class="px-5 pb-5 space-y-3">
-                            <div v-for="task in tasks" :key="task.id" class="rounded-xl border border-gray-100 bg-white shadow-sm p-4">
+                        <div v-if="tasks?.length" class="p-4 space-y-3">
+                            <div v-for="task in tasks" :key="task.id" class="rounded-md border border-border-subtle bg-surface p-4">
                                 <div class="flex items-start justify-between gap-3">
                                     <label class="flex items-start gap-2 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             v-model="task.done"
                                             @change="updateTaskStatus(task)"
-                                            class="mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            class="mt-0.5 rounded border-border text-accent-600 focus:ring-accent-600"
                                         />
                                         <div class="min-w-0">
-                                            <p class="text-sm font-medium leading-tight truncate" :class="task.done ? 'line-through text-gray-400' : ''">
+                                            <p class="text-sm font-medium leading-tight truncate" :class="task.done ? 'line-through text-text-subtle' : 'text-text'">
                                                 {{ task.name }}
                                             </p>
-                                            <p v-if="task.description" class="text-xs text-gray-500 line-clamp-2 mt-0.5">
+                                            <p v-if="task.description" class="text-xs text-text-muted line-clamp-2 mt-0.5">
                                                 {{ task.description }}
                                             </p>
                                         </div>
@@ -361,7 +360,7 @@
                                     <div
                                         v-if="!task.done && task.deadline"
                                         class="text-sm font-medium text-right whitespace-nowrap"
-                                        :class="task.isDeadlineInFuture ? 'text-gray-600' : 'text-red-600'"
+                                        :class="task.isDeadlineInFuture ? 'text-text-muted' : 'text-danger'"
                                     >
                                         {{ $t('until') }} {{ task.deadline }}
                                     </div>
@@ -370,7 +369,7 @@
                                 <Link
                                     v-if="task.projectId"
                                     :href="route('projects.tab', { project: task.projectId, projectTab: first_project_tasks_tab_id })"
-                                    class="mt-2 inline-flex items-center gap-1 text-xs text-indigo-700 hover:text-indigo-800"
+                                    class="mt-2 inline-flex items-center gap-1 text-xs text-accent-600 hover:text-accent-700"
                                 >
                                     {{ task.projectName }}
                                     <PropertyIcon name="IconChevronRight" class="h-3 w-3" />
@@ -379,10 +378,10 @@
                             </div>
                         </div>
 
-                        <div v-else class="px-5 pb-5">
-                            <BaseAlertComponent message="You have no open tasks." type="info" use-translation />
+                        <div v-else class="p-4">
+                            <EmptyState :title="$t('You have no open tasks.')" icon="IconListCheck" />
                         </div>
-                    </div>
+                    </BaseCard>
                 </section>
 
 
@@ -401,6 +400,14 @@ import { is, can } from 'laravel-permission-to-vuejs'
 
 // Icons
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+
+// Design-Basis Katalogkomponenten
+import KpiTile from '@/Artwork/Cards/KpiTile.vue'
+import BaseCard from '@/Artwork/Cards/BaseCard.vue'
+import CardHeadline from '@/Artwork/Cards/CardHeadline.vue'
+import EmptyState from '@/Artwork/Feedback/EmptyState.vue'
+import BaseSkeleton from '@/Artwork/Feedback/BaseSkeleton.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 defineOptions({ mixins: [Permissions] })
 
@@ -465,7 +472,6 @@ const fetchNotificationPage = async (targetPage: number) => {
     }
 }
 
-const BaseAlertComponent = defineAsyncComponent(() => import('@/Components/Alerts/BaseAlertComponent.vue'));
 const NotificationBlock = defineAsyncComponent(() => import('@/Layouts/Components/NotificationComponents/NotificationBlock.vue'));
 const SingleUserEventShift = defineAsyncComponent(() => import('@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue'));
 

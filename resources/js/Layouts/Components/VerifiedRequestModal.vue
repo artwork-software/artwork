@@ -17,7 +17,7 @@
                              class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                     text-base ring-1 ring-black ring-opacity-5
                                     overflow-auto focus:outline-none sm:text-sm">
-                            <div class="border-gray-200">
+                            <div class="border-border-subtle">
                                 <div v-for="(user, index) in filteredSearchResults" :key="index"
                                      class="flex items-center cursor-pointer">
                                     <div class="flex-1 text-sm py-4">

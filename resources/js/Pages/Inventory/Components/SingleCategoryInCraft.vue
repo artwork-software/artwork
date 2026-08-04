@@ -1,7 +1,7 @@
 <template>
     <tr class="cursor-pointer xsLight pb-1" @click="category.closed = !category.closed">
        <td>
-           <div class="py-1.5 bg-gray-50/20 w-full" >
+           <div class="py-1.5 bg-surface-sunken w-full" >
                <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
                    <component :is="IconCategory" class="h-4 w-4" />
                    {{ category.name }}

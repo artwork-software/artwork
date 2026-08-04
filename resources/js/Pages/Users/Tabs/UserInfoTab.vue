@@ -1,7 +1,7 @@
 <<template>
     <div class="">
         <!-- HERO / HEADER -->
-        <header class="relative overflow-hidden rounded-3xl border border-zinc-200 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-sm">
+        <header class="relative overflow-hidden rounded-3xl border border-border-subtle bg-gradient-to-r from-accent-600 to-accent-600 shadow-sm">
             <div class="absolute inset-0 opacity-10">
                 <div class="h-full w-full bg-[radial-gradient(ellipse_at_top_right,white,transparent_55%)]"></div>
             </div>
@@ -22,7 +22,7 @@
                             class="h-24 w-24 rounded-full object-cover ring-4 ring-white/80 shadow-md"
                         />
                         <span
-                            class="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/60 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-zinc-700 backdrop-blur group-hover:bg-white"
+                            class="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-white/60 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-text-muted backdrop-blur group-hover:bg-white"
                         >
                           {{ $t('Change') }}
                         </span>
@@ -48,8 +48,8 @@
 
         <!-- NAME CARD (nur eigener Account oder Admin) -->
         <section v-if="isSignedInUser() || hasAdminRole()" class="mt-8">
-            <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
-                <h2 class="mb-5 text-base font-semibold text-zinc-900">
+            <div class="rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
+                <h2 class="mb-5 text-base font-semibold text-text">
                     {{ $t('Basic information') }}
                 </h2>
 
@@ -70,7 +70,7 @@
                     />
                 </div>
 
-                <p v-if="hasNameError" class="mt-2 text-sm text-red-600">
+                <p v-if="hasNameError" class="mt-2 text-sm text-danger">
                     {{ nameError }}
                 </p>
             </div>
@@ -79,9 +79,9 @@
         <!-- ACCOUNT & KONTAKT -->
         <section class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
             <!-- Account -->
-            <div class="lg:col-span-2 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+            <div class="lg:col-span-2 rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
                 <div class="mb-5 flex items-center justify-between">
-                    <h3 class="text-base font-semibold text-zinc-900">
+                    <h3 class="text-base font-semibold text-text">
                         {{ $t('Account & Contact') }}
                     </h3>
                 </div>
@@ -89,7 +89,7 @@
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <BaseInput
                         :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.pronouns"
                         :label="$t('Pronouns')"
@@ -99,7 +99,7 @@
 
                     <BaseInput
                         :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.business"
                         :label="$t('Company')"
@@ -109,7 +109,7 @@
 
                     <BaseInput
                         :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.position"
                         :label="$t('Position')"
@@ -122,7 +122,7 @@
                             type="text"
                             v-model="user_to_edit.email"
                             :disabled="!hasAdminRole()"
-                            :class="hasAdminRole() ? '' : 'bg-zinc-100'"
+                            :class="hasAdminRole() ? '' : 'bg-surface-sunken'"
                             @focusout="editUser"
                             :label="$t('Email')"
                             id="email"
@@ -132,7 +132,7 @@
 
                     <BaseInput
                         :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
                         type="text"
                         v-model="userForm.phone_number"
                         :label="$t('Phone number')"
@@ -144,7 +144,7 @@
                 <div class="mt-6">
                     <BaseTextarea
                         :disabled="!(isSignedInUser() || can('can manage workers'))"
-                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-zinc-100'"
+                        :class="isSignedInUser() || can('can manage workers') ? '' : 'bg-surface-sunken'"
                         :label="$t('What should other artwork users know?')"
                         v-model="userForm.description"
                         rows="5"
@@ -157,23 +157,23 @@
             <!-- Einstellungen -->
             <aside class="space-y-8">
                 <!-- Sprache -->
-                <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-7">
-                    <h3 class="mb-4 text-base font-semibold text-zinc-900">
+                <div class="rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-7">
+                    <h3 class="mb-4 text-base font-semibold text-text">
                         {{ $t('Preferences') }}
                     </h3>
 
                     <div v-if="isSignedInUser() || hasAdminRole()" class="mb-5">
                         <Listbox as="div" v-model="selectedLanguage" @update:modelValue="editUser">
-                            <ListboxLabel class="block text-sm font-medium text-zinc-800">
+                            <ListboxLabel class="block text-sm font-medium text-text">
                                 {{ $t('Application language') }}
                             </ListboxLabel>
                             <div class="relative mt-2">
                                 <ListboxButton
-                                    class="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 pr-9 text-left text-sm text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                    class="w-full rounded-xl border border-border bg-white px-3 py-2 pr-9 text-left text-sm text-text hover:bg-surface-sunken focus:outline-none focus:ring-2 focus:ring-accent-600"
                                 >
                                     <span class="block truncate">{{ selectedLanguage?.name }}</span>
                                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronDownIcon class="h-5 w-5 text-zinc-400" aria-hidden="true" />
+                    <ChevronDownIcon class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                   </span>
                                 </ListboxButton>
 
@@ -193,8 +193,7 @@
                                             v-slot="{ active, selected }"
                                         >
                                             <li
-                                                :class="[
-                          active ? 'bg-blue-600 text-white' : 'text-zinc-900',
+                                                :class="[ active ? 'bg-accent-600 text-white' : 'text-text',
                           'relative cursor-default select-none py-2 pl-3 pr-9'
                         ]"
                                             >
@@ -203,7 +202,7 @@
                         </span>
                                                 <span
                                                     v-if="selected"
-                                                    :class="[active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
+                                                    :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']"
                                                 >
                           <CheckIcon class="h-5 w-5" aria-hidden="true" />
                         </span>
@@ -225,14 +224,13 @@
                                 name="high_contrast"
                                 type="checkbox"
                                 :disabled="!canEditPreferences"
-                                :class="[
-                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
-                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
+                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
-                <span class="block text-sm font-medium text-zinc-900">{{ $t('High contrast') }}</span>
-                <span class="block text-sm text-zinc-600">
+                <span class="block text-sm font-medium text-text">{{ $t('High contrast') }}</span>
+                <span class="block text-sm text-text-muted">
                   {{ $t('Enable high contrast mode in the application for the event type colors.') }}
                 </span>
               </span>
@@ -246,14 +244,13 @@
                                 name="email_private"
                                 type="checkbox"
                                 :disabled="!canEditPreferences"
-                                :class="[
-                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
-                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
+                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
-                <span class="block text-sm font-medium text-zinc-900">{{ $t('Email private') }}</span>
-                <span class="block text-sm text-zinc-600">
+                <span class="block text-sm font-medium text-text">{{ $t('Email private') }}</span>
+                <span class="block text-sm text-text-muted">
                   {{ $t('Hide your email address from other users.') }}
                 </span>
               </span>
@@ -267,14 +264,13 @@
                                 name="phone_private"
                                 type="checkbox"
                                 :disabled="!canEditPreferences"
-                                :class="[
-                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
-                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
+                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
-                            <span class="block text-sm font-medium text-zinc-900">{{ $t('Phone private') }}</span>
-                            <span class="block text-sm text-zinc-600">
+                            <span class="block text-sm font-medium text-text">{{ $t('Phone private') }}</span>
+                            <span class="block text-sm text-text-muted">
                               {{ $t('Hide your phone number from other users.') }}
                             </span>
                           </span>
@@ -288,14 +284,13 @@
                                 name="use_chat"
                                 type="checkbox"
                                 :disabled="!canEditPreferences"
-                                :class="[
-                                    'mt-1 h-4 w-4 rounded border-zinc-300 focus:ring-blue-600',
-                                    canEditPreferences ? 'text-blue-600' : 'text-zinc-300 cursor-not-allowed bg-zinc-100'
+                                :class="[ 'mt-1 h-4 w-4 rounded border-border focus:ring-accent-600',
+                                    canEditPreferences ? 'text-accent-600' : 'text-text-subtle cursor-not-allowed bg-surface-sunken'
                                 ]"
                             />
                             <span>
-                            <span class="block text-sm font-medium text-zinc-900">{{ $t('Use Artwork Chat') }}</span>
-                            <span class="block text-sm text-zinc-600">
+                            <span class="block text-sm font-medium text-text">{{ $t('Use Artwork Chat') }}</span>
+                            <span class="block text-sm text-text-muted">
                               {{ $t('Use the chat function in the application.') }}
                             </span>
                           </span>
@@ -304,12 +299,12 @@
                 </div>
 
                 <!-- Passwort / Admin -->
-                <div class="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-7">
-                    <h3 class="mb-3 text-base font-semibold text-zinc-900">
+                <div class="rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-7">
+                    <h3 class="mb-3 text-base font-semibold text-text">
                         {{ $t('Security') }}
                     </h3>
                     <div class="flex items-center justify-between gap-x-8">
-                        <div class="text-sm text-zinc-600">
+                        <div class="text-sm text-text-muted">
                             {{ $t('Reset your password or send a reset email.') }}
                         </div>
                         <button
@@ -320,7 +315,7 @@
                             {{ $t('Reset Password') }}
                         </button>
                     </div>
-                    <div v-if="password_reset_status" class="mt-3 text-sm font-medium text-green-600">
+                    <div v-if="password_reset_status" class="mt-3 text-sm font-medium text-success">
                         {{ password_reset_status }}
                     </div>
                 </div>
@@ -328,11 +323,11 @@
         </section>
 
         <!-- TEAMS -->
-        <section class="mt-8 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+        <section class="mt-8 rounded-3xl border border-border-subtle bg-white p-6 shadow-sm sm:p-8">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h3 class="text-base font-semibold text-zinc-900">{{ $t('Teams') }}</h3>
-                    <p class="mt-1 text-sm text-zinc-600" v-if="userForm.departments.length === 0">
+                    <h3 class="text-base font-semibold text-text">{{ $t('Teams') }}</h3>
+                    <p class="mt-1 text-sm text-text-muted" v-if="userForm.departments.length === 0">
                         {{ $t('Not in any team') }}
                     </p>
                 </div>
@@ -341,13 +336,13 @@
 
             <div class="mt-5 flex flex-wrap items-center gap-3">
                 <template v-for="(team, index) in userForm.departments" :key="team.id || index">
-                    <div class="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5">
+                    <div class="flex items-center gap-2 rounded-full border border-border-subtle bg-surface-sunken px-3 py-1.5">
                         <img
                             class="h-8 w-8 rounded-full ring-2 ring-white"
                             :src="`/Svgs/TeamIconSvgs/${team.svg_name}.svg`"
                             :alt="team.name"
                         />
-                        <span class="text-sm text-zinc-800">{{ team.name }}</span>
+                        <span class="text-sm text-text">{{ team.name }}</span>
                     </div>
                 </template>
 
@@ -366,7 +361,7 @@
                 <button
                     v-if="can('teammanagement') && userForm.departments.length || hasAdminRole()"
                     @click="deleteFromAllDepartments"
-                    class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                    class="inline-flex items-center gap-2 rounded-xl border border-danger-border bg-danger-surface px-3 py-2.5 text-sm font-medium text-danger transition hover:bg-danger-surface"
                 >
                     <TrashIcon class="h-4 w-4" />
                     {{ $t('Remove user from all teams') }}
@@ -381,19 +376,19 @@
             modal-image="/Svgs/Overlays/illu_team_user.svg"
         >
             <div class="mx-3">
-                <div class="text-2xl font-bold text-zinc-900 my-2">
+                <div class="text-2xl font-bold text-text my-2">
                     {{ $t('Team membership') }}
                 </div>
-                <div class="mt-2 text-sm text-zinc-600">
+                <div class="mt-2 text-sm text-text-muted">
                     {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.') }}
                 </div>
 
                 <div class="mt-6 mb-8 space-y-2">
-          <span v-if="deptLocal.length === 0" class="text-zinc-600 flex my-6">
+          <span v-if="deptLocal.length === 0" class="text-text-muted flex my-6">
             {{ $t('No teams have been created in the tool yet.') }}
           </span>
 
-                    <div v-for="team in deptLocal" :key="team.id" class="rounded-xl border border-zinc-200 px-3 py-2">
+                    <div v-for="team in deptLocal" :key="team.id" class="rounded-xl border border-border-subtle px-3 py-2">
                         <label :for="`dept-${team.id}`" class="flex items-center justify-between cursor-pointer">
                             <div class="flex items-center gap-3">
                                 <input
@@ -401,10 +396,10 @@
                                     type="checkbox"
                                     v-model="team.checked"
                                     @change="teamChecked(team)"
-                                    class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                    class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                                 />
                                 <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
-                                <span :class="team.checked ? 'text-zinc-900 font-medium' : 'text-zinc-600'">
+                                <span :class="team.checked ? 'text-text font-medium' : 'text-text-muted'">
                   {{ team.name }}
                 </span>
                             </div>
@@ -425,10 +420,10 @@
             :show-image="false"
         >
             <div class="mx-4">
-                <div class="text-2xl font-bold text-zinc-900 my-2">
+                <div class="text-2xl font-bold text-text my-2">
                     {{ $t('Change profile picture') }}
                 </div>
-                <p class="text-sm text-zinc-600">
+                <p class="text-sm text-text-muted">
                     {{ $t('Select your profile picture here. It should not exceed the size of 3072 KB.') }}
                 </p>
 
@@ -437,7 +432,7 @@
 
                 <!-- Preview + Buttons -->
                 <div class="mt-4 flex items-start gap-4">
-                    <div v-show="photoPreview" class="rounded-full ring-2 ring-zinc-200">
+                    <div v-show="photoPreview" class="rounded-full ring-2 ring-border-subtle">
             <span
                 class="block h-20 w-20 rounded-full bg-cover bg-no-repeat bg-center"
                 :style="`background-image: url('${photoPreview}');`"

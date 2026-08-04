@@ -5,7 +5,7 @@
             <ToolbarHeader
                 :icon="IconLamp2"
                 title="Accommodations"
-                icon-bg-class="bg-emerald-600/10 text-emerald-700"
+                icon-bg-class="bg-success text-success"
                 :description="accommodations?.length ? `${accommodations?.length} ${$t('Accommodations')}` : ''"
                 :search-enabled="false"
             >
@@ -37,8 +37,8 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.name }}</div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="font-medium text-text">{{ row.name }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </Link>
                 </template>
@@ -46,8 +46,8 @@
                 <!-- Title + Department -->
                 <template #cell-address="{ row }">
                     <div>
-                        <div class="text-xs font-medium text-gray-900">{{ row.street }}</div>
-                        <div class="text-xs font-medium text-gray-900" v-if="row.zip_code && row.location">{{ row.zip_code }}, {{ row.location }}</div>
+                        <div class="text-xs font-medium text-text">{{ row.street }}</div>
+                        <div class="text-xs font-medium text-text" v-if="row.zip_code && row.location">{{ row.zip_code }}, {{ row.location }}</div>
                     </div>
                 </template>
 

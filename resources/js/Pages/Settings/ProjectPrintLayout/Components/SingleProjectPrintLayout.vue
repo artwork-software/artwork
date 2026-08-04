@@ -1,6 +1,6 @@
 <template>
-    <div class="border border-gray-200 rounded-lg select-none">
-        <div class="bg-gray-200 py-5 px-4 flex items-center justify-between" :class="!layoutClosed ? 'rounded-t-lg' : 'rounded-lg'" >
+    <div class="border border-border-subtle rounded-lg select-none">
+        <div class="bg-border-subtle py-5 px-4 flex items-center justify-between" :class="!layoutClosed ? 'rounded-t-lg' : 'rounded-lg'" >
             <div  @click="layoutClosed = !layoutClosed" class="cursor-pointer flex items-center justify-between w-fit gap-x-10">
                 <div>
                     <h3 class="headline3">{{ layout.name }}</h3>
@@ -15,7 +15,7 @@
                 </BaseMenu>
             </div>
         </div>
-        <div v-if="!layoutClosed" class="rounded-b-lg border-gray-100">
+        <div v-if="!layoutClosed" class="rounded-b-lg border-border-subtle">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-2">
                     <h4 class="xsDark mb-2">{{ $t('Header') }}</h4>

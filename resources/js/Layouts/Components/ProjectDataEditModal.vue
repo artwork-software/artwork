@@ -108,7 +108,7 @@
                                     {{ $t('No project group has been created yet') }}
                                 </ListboxOption>
                                 <ListboxOption v-for="projectGroup in groupProjects"
-                                               class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between "
+                                               class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
                                                :key="projectGroup.id"
                                                :value="projectGroup"
                                                v-slot="{ active, selected }">

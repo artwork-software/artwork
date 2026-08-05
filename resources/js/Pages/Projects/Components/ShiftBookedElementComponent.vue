@@ -1,6 +1,6 @@
 <template>
     <SelectUserForShiftMenu :can-edit-component="canEditComponent" :crafts-with-entities="sortedCraftsWithEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
-        <div class="flex items-center p-1 hover:bg-surface-sunken rounded cursor-pointer w-full h-full"  @dragover="onDragOver" @drop="onDrop">
+        <div class="flex items-center p-1 hover:bg-surface-sunken/40 rounded cursor-pointer w-full h-full"  @dragover="onDragOver" @drop="onDrop">
             <div class="flex gap-1 items-center justify-between w-full h-full">
                 <div class="h-full">
                     <div class="flex items-center gap-1" v-if="type === 0 || type === 1">
@@ -37,7 +37,7 @@
 
     </SelectUserForShiftMenu>
 
-    <div class="absolute w-full h-full bg-border top-0 left-0 rounded-lg z-50" v-show="isUpdateContainer">
+    <div class="absolute w-full h-full bg-border/10 top-0 left-0 rounded-lg z-50" v-show="isUpdateContainer">
         <div class="flex items-center justify-center h-full w-full text-xs">
             <div class="bg-black text-white px-4 py-1 rounded-lg">
                 {{ $t('Updating...')}}

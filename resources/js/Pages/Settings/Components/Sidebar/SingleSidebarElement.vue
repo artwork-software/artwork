@@ -144,10 +144,10 @@ function removeDisclosureComponent(id) {
 <template>
     <!-- Gesamt-Card (Sidebar-Tab) -->
     <div
-        class="mb-3 rounded-2xl border border-border-subtle bg-white/70 backdrop-blur p-4 shadow-sm transition"
+        class="mb-3 rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur p-4 shadow-sm transition"
         draggable="true"
         @dragstart="onDragStart"
-        :class="dragging ? 'ring-2 ring-success-border' : ''"
+        :class="dragging ? 'ring-2 ring-success-border/30' : ''"
     >
         <!-- Header -->
         <div
@@ -156,7 +156,7 @@ function removeDisclosureComponent(id) {
         >
             <button
                 type="button"
-                class="group/button inline-flex items-start gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-0"
+                class="group/button inline-flex items-start gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-accent-600/30 focus:ring-offset-0"
                 @click="tabClosed = !tabClosed"
                 :aria-expanded="!tabClosed"
                 :aria-controls="`sidebar-panel-${sidebarTab.id}`">
@@ -218,8 +218,8 @@ function removeDisclosureComponent(id) {
                         @mouseout="showMenu = null"
                     >
                         <div
-                            class="rounded-xl border border-border-subtle bg-white/60 transition"
-                            :class="dragging ? 'ring-2 ring-success-border' : ''"
+                            class="rounded-xl border border-border-subtle/80 bg-white/60 transition"
+                            :class="dragging ? 'ring-2 ring-success-border/30' : ''"
                         >
                             <!-- Hauptkomponente -->
                             <div class="flex items-center justify-between gap-3 px-4 py-4">
@@ -228,7 +228,7 @@ function removeDisclosureComponent(id) {
                                     <button
                                         v-if="element.component.type === 'DisclosureComponent'"
                                         @click="disclosureOpen[element.id] = !disclosureOpen[element.id]"
-                                        class="grid place-items-center size-9 rounded-lg border border-border-subtle bg-white/70 shrink-0 hover:bg-surface-sunken transition"
+                                        class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0 hover:bg-surface-sunken transition"
                                         :aria-expanded="disclosureOpen[element.id]"
                                     >
                                         <IconChevronDown
@@ -237,7 +237,7 @@ function removeDisclosureComponent(id) {
                                         />
                                     </button>
                                     <!-- Normales Icon -->
-                                    <div v-else class="grid place-items-center size-9 rounded-lg border border-border-subtle bg-white/70 shrink-0">
+                                    <div v-else class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0">
                                         <ComponentIcons :type="element.component.type" />
                                     </div>
 

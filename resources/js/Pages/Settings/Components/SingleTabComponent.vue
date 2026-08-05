@@ -91,8 +91,8 @@ function updateDefaultTab() {
 <template>
     <!-- Container -->
     <div
-        class="rounded-2xl border border-border-subtle bg-white/70 backdrop-blur px-4 py-5 shadow-sm transition"
-        :class="dragging ? 'ring-2 ring-success-border' : ''"
+        class="rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur px-4 py-5 shadow-sm transition"
+        :class="dragging ? 'ring-2 ring-success-border/40' : ''"
     >
         <!-- Header -->
         <div class="relative">
@@ -109,7 +109,7 @@ function updateDefaultTab() {
                 >
                     <!-- Chevron -->
                     <span
-                        class="grid place-items-center size-8 rounded-2xl border bg-white/70 border-border-subtle transition"
+                        class="grid place-items-center size-8 rounded-2xl border bg-white/70 border-border-subtle/80 transition"
                         aria-hidden="true"
                     >
                         <IconChevronDown
@@ -130,7 +130,7 @@ function updateDefaultTab() {
                             <!-- Default badge -->
                             <span
                                 v-if="tab.default"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-success-border bg-success-surface text-success shrink-0"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-success-border/70 bg-success-surface/70 text-success shrink-0"
                             >
                                 Default
                             </span>
@@ -156,7 +156,7 @@ function updateDefaultTab() {
 
                             <span
                                 v-else
-                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-warning-border bg-warning-surface text-warning"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-warning-border bg-warning-surface/70 text-warning"
                             >
                                 <IconLock class="h-3.5 w-3.5" />
                                 {{ $t("Restricted") }}
@@ -181,7 +181,7 @@ function updateDefaultTab() {
                             <!-- Warning if restricted but empty -->
                             <span
                                 v-if="isRestricted && !hasAccessList"
-                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-danger-border bg-danger-surface text-danger"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-danger-border bg-danger-surface/70 text-danger"
                             >
                                 <IconEye class="h-3.5 w-3.5" />
                                 {{ $t("No access configured") }}
@@ -213,7 +213,7 @@ function updateDefaultTab() {
                             <!-- Overflow -->
                             <span
                                 v-if="accessUserCount + accessDeptCount > 12"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-surface-sunken border-border-subtle text-text-muted"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-surface-sunken/80 border-border-subtle text-text-muted"
                             >
                                 +{{ (accessUserCount + accessDeptCount) - 12 }}
                             </span>
@@ -277,7 +277,7 @@ function updateDefaultTab() {
                         @tab-opened="openTab"
                     />
 
-                    <div class="transition" :class="dragging ? 'ring-2 ring-success-border' : ''">
+                    <div class="transition" :class="dragging ? 'ring-2 ring-success-border/30' : ''">
                         <draggable
                             ghost-class="opacity-50"
                             key="draggableKey"

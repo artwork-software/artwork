@@ -5,7 +5,7 @@
         @close="$emit('close')"
     >
         <div class="space-y-4 text-sm">
-            <div class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
+            <div class="rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2.5">
                 <div class="grid grid-cols-2 gap-2 text-xs text-text-muted">
                     <div>
                         <span class="font-medium text-text-subtle">{{ $t('Value') }}:</span>

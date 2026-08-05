@@ -10,7 +10,7 @@
             <div v-for="entry in entries"
                  :key="entry.unique_key"
                  class="rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[11px] transition relative"
-                 :class="entry.is_removed_ghost ? 'border border-dashed border-danger-border bg-danger-surface'
+                 :class="entry.is_removed_ghost ? 'border border-dashed border-danger-border bg-danger-surface/40'
                      : (entry.is_individual_time ? 'bg-accent-50 border border-accent-200' : [entryCardClass(entry), 'cursor-pointer'])"
                  @click="(!entry.is_individual_time && !entry.is_removed_ghost) && $emit('open-history', entry.shift_id)">
 
@@ -23,7 +23,7 @@
                     <span class="inline-flex w-fit items-center gap-1 rounded-full bg-danger-surface px-1.5 py-0.5 text-[9px] font-semibold text-danger">
                         {{ entry.reason === 'shift_deleted' ? $t('Subsequently deleted') : $t('Removed from shift') }}
                     </span>
-                    <div v-if="entry.qualification" class="text-[10px] text-danger line-through truncate">{{ entry.qualification }}</div>
+                    <div v-if="entry.qualification" class="text-[10px] text-danger/80 line-through truncate">{{ entry.qualification }}</div>
                 </template>
 
                 <!-- Shift Entry -->
@@ -96,10 +96,10 @@ const props = defineProps({
 });
 const isSelectedDay = computed(() => !!props.selectedDays[props.dayDate]);
 const entryCardClass = (entry) => {
-    let base = entry.has_changes_after_commit ? 'border border-danger-border bg-danger-surface shadow-none hover:border-danger-border' : 'bg-white shadow-sm hover:ring-1 hover:ring-accent-200';
+    let base = entry.has_changes_after_commit ? 'border border-danger-border bg-danger-surface/70 shadow-none hover:border-danger-border' : 'bg-white shadow-sm hover:ring-1 hover:ring-accent-200';
 
     if (entry.is_rejected || entry.workflow_rejection_reason) {
-        base = 'border border-danger bg-danger-surface shadow-none hover:border-danger';
+        base = 'border border-danger bg-danger-surface/30 shadow-none hover:border-danger';
     }
 
     if (props.rejectActive && props.shiftSelections[entry.unique_key]) {

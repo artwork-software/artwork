@@ -78,7 +78,7 @@
                     <div
                         v-for="(article, index) in articleNamesForFilter"
                         :key="index"
-                        class="inline-flex items-center rounded-full border border-info-border bg-info-surface px-2.5 py-0.5 text-sm text-info ring-1 ring-inset ring-info-border"
+                        class="inline-flex items-center rounded-full border border-info-border bg-info-surface/70 px-2.5 py-0.5 text-sm text-info ring-1 ring-inset ring-info-border"
                     >
                         <span class="truncate max-w-[220px]">{{ article.name }}</span>
                         <button
@@ -107,15 +107,15 @@
                             <label class="block text-xs font-medium text-text-muted mb-1">{{ $t('Quick range') }}</label>
                             <div class="flex gap-1.5 overflow-x-auto no-scrollbar snap-x -mx-1.5 px-1.5">
                                 <button type="button"
-                                        class="snap-start shrink-0 rounded-md border border-accent-200 bg-accent-50 px-2.5 py-1 text-xs text-accent-700 hover:bg-accent-50 hover:border-accent-200"
+                                        class="snap-start shrink-0 rounded-md border border-accent-200 bg-accent-50/70 px-2.5 py-1 text-xs text-accent-700 hover:bg-accent-50 hover:border-accent-200"
                                         @click="setRangeToday">{{ $t('Today') }}
                                 </button>
                                 <button type="button"
-                                        class="snap-start shrink-0 rounded-md border border-info-border bg-info-surface px-2.5 py-1 text-xs text-info hover:bg-info-surface hover:border-info-border"
+                                        class="snap-start shrink-0 rounded-md border border-info-border bg-info-surface/70 px-2.5 py-1 text-xs text-info hover:bg-info-surface hover:border-info-border"
                                         @click="setRangeThisWeek">{{ $t('This week') }}
                                 </button>
                                 <button type="button"
-                                        class="snap-start shrink-0 rounded-md border border-success-border bg-success-surface px-2.5 py-1 text-xs text-success hover:bg-success-surface hover:border-success-border"
+                                        class="snap-start shrink-0 rounded-md border border-success-border bg-success-surface/70 px-2.5 py-1 text-xs text-success hover:bg-success-surface hover:border-success-border"
                                         @click="setRangeThisMonth">{{ $t('This month') }}
                                 </button>
                                 <button type="button"
@@ -211,7 +211,7 @@
                             <button
                                 type="button"
                                 @click="applyFilters"
-                                class="inline-flex items-center justify-center rounded-md border border-accent-200 bg-accent-50 px-3 py-2 text-sm text-accent-700 hover:bg-accent-50 hover:border-accent-200 focus:outline-none focus:ring-2 focus:ring-accent-600"
+                                class="inline-flex items-center justify-center rounded-md border border-accent-200 bg-accent-50/70 px-3 py-2 text-sm text-accent-700 hover:bg-accent-50 hover:border-accent-200 focus:outline-none focus:ring-2 focus:ring-accent-600"
                                 :title="$t('Apply filters')"
                             >
                                 <component :is="IconSearch" class="size-4 mr-1" stroke-width="1.5"/>
@@ -258,15 +258,15 @@
                                         }}</label>
                                     <div class="flex flex-wrap gap-1.5">
                                         <button type="button"
-                                                class="rounded-md border border-accent-200 bg-accent-50 px-2.5 py-1 text-xs text-accent-700 hover:bg-accent-50 hover:border-accent-200"
+                                                class="rounded-md border border-accent-200 bg-accent-50/70 px-2.5 py-1 text-xs text-accent-700 hover:bg-accent-50 hover:border-accent-200"
                                                 @click="setRangeToday">{{ $t('Today') }}
                                         </button>
                                         <button type="button"
-                                                class="rounded-md border border-info-border bg-info-surface px-2.5 py-1 text-xs text-info hover:bg-info-surface hover:border-info-border"
+                                                class="rounded-md border border-info-border bg-info-surface/70 px-2.5 py-1 text-xs text-info hover:bg-info-surface hover:border-info-border"
                                                 @click="setRangeThisWeek">{{ $t('This week') }}
                                         </button>
                                         <button type="button"
-                                                class="rounded-md border border-success-border bg-success-surface px-2.5 py-1 text-xs text-success hover:bg-success-surface hover:border-success-border"
+                                                class="rounded-md border border-success-border bg-success-surface/70 px-2.5 py-1 text-xs text-success hover:bg-success-surface hover:border-success-border"
                                                 @click="setRangeThisMonth">{{ $t('This month') }}
                                         </button>
                                         <button type="button"
@@ -382,7 +382,7 @@
                                         <span
                                             v-for="u in visibleResponsibleChipUsers"
                                             :key="u.id"
-                                            class="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-surface px-2 py-0.5 text-success ring-1 ring-inset ring-success-border shrink-0"
+                                            class="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-surface/70 px-2 py-0.5 text-success ring-1 ring-inset ring-success-border shrink-0"
                                         >
                                           {{ displayUserName(u) }}
                                           <button type="button" class="text-success hover:text-success"
@@ -432,8 +432,8 @@
                                             <li
                                                 v-for="(u, idx) in filteredUsers"
                                                 :key="u.id"
-                                                class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent-50"
-                                                :class="{'bg-accent-50': idx === respHighlightedIndex}"
+                                                class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent-50/40"
+                                                :class="{'bg-accent-50/60': idx === respHighlightedIndex}"
                                                 @mouseenter="respHighlightedIndex = idx"
                                                 @click="toggleResponsible(u.id)"
                                             >
@@ -482,7 +482,7 @@
                 <div v-if="hasAnyFilter" class="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
                     <span v-if="filtersCollapsed" class="text-sm font-medium text-text shrink-0">{{ $t('Filter') }}:</span>
                     <span v-if="filters.date_from || filters.date_to"
-                          class="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 text-xs text-accent-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-accent-200 bg-accent-50/70 px-2.5 py-0.5 text-xs text-accent-700 shrink-0">
                       {{ $t('Range') }}:
                       <span class="mx-1 font-medium">{{
                               formatDate(filters.date_from) || '…'
@@ -491,26 +491,26 @@
                               @click="clearRange">&times;</button>
                     </span>
                     <span v-if="filters.room_id"
-                          class="inline-flex items-center rounded-full border border-info-border bg-info-surface px-2.5 py-0.5 text-xs text-info shrink-0">
+                          class="inline-flex items-center rounded-full border border-info-border bg-info-surface/70 px-2.5 py-0.5 text-xs text-info shrink-0">
                       {{ $t('Room') }}: <span class="mx-1 font-medium">{{ roomName }}</span>
                       <button class="ml-1 text-info hover:text-info"
                               @click="filters.room_id = ''">&times;</button>
                     </span>
                     <span v-if="filters.project_id"
-                          class="inline-flex items-center rounded-full border border-success-border bg-success-surface px-2.5 py-0.5 text-xs text-success shrink-0">
+                          class="inline-flex items-center rounded-full border border-success-border bg-success-surface/70 px-2.5 py-0.5 text-xs text-success shrink-0">
                       {{ $t('Project') }}: <span class="mx-1 font-medium">{{ projectName }}</span>
                       <button class="ml-1 text-success hover:text-success"
                               @click="filters.project_id = ''">&times;</button>
                     </span>
                     <span v-if="filters.responsible_user_ids.length"
-                          class="inline-flex items-center rounded-full border border-accent-200 bg-accent-50 px-2.5 py-0.5 text-xs text-accent-700 shrink-0">
+                          class="inline-flex items-center rounded-full border border-accent-200 bg-accent-50/70 px-2.5 py-0.5 text-xs text-accent-700 shrink-0">
                       {{ $t('Responsible') }}: <span class="mx-1 font-medium">{{
                                 selectedResponsibleUsers.length
                             }}</span>
                       <button class="ml-1 text-accent-600 hover:text-accent-700" @click="clearResponsible">&times;</button>
                     </span>
                     <span v-if="filters.q"
-                          class="inline-flex items-center rounded-full border border-special-violet-border bg-special-violet-surface px-2.5 py-0.5 text-xs text-special-violet shrink-0">
+                          class="inline-flex items-center rounded-full border border-special-violet-border bg-special-violet-surface/70 px-2.5 py-0.5 text-xs text-special-violet shrink-0">
                       {{ $t('Search') }}: <span class="mx-1 font-medium">"{{ filters.q }}"</span>
                       <button class="ml-1 text-special-violet hover:text-special-violet"
                               @click="filters.q = ''">&times;</button>

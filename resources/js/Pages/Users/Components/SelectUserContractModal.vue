@@ -13,7 +13,7 @@
                 is-small
                 id="searchInput"/>
 
-            <div v-if="selectedContractId" class="rounded-md bg-accent-50 border border-accent-200 px-3 py-2 text-xs text-accent-700">
+            <div v-if="selectedContractId" class="rounded-md bg-accent-50/60 border border-accent-200 px-3 py-2 text-xs text-accent-700">
                 {{ $t('Selecting a different contract replaces the current values for this user.') }}
             </div>
 
@@ -27,7 +27,7 @@
                     @click="$emit('selectContract', contract)"
                     class="group cursor-pointer rounded-lg border p-4 transition duration-150 ease-in-out"
                     :class="contract.id === selectedContractId
-                        ? 'border-accent-200 bg-accent-50'
+                        ? 'border-accent-200 bg-accent-50/50'
                         : 'border-border-subtle hover:border-accent-200 hover:bg-surface-sunken'">
 
                     <div class="flex items-start justify-between gap-4">

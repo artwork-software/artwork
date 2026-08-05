@@ -188,7 +188,7 @@
                 </form>
 
                 <!-- How the import works -->
-                <aside class="rounded-2xl border border-accent-200 bg-accent-50 p-5 h-fit">
+                <aside class="rounded-2xl border border-accent-200 bg-accent-50/50 p-5 h-fit">
                     <div class="flex items-center gap-2 mb-3">
                         <component :is="IconInfoCircle" class="h-5 w-5 text-accent-600" />
                         <h3 class="text-sm font-semibold text-text">{{ $t('How the import works') }}</h3>

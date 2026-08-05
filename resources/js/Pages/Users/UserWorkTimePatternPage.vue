@@ -29,17 +29,17 @@
 
         <!-- Pattern selected: read-only overview -->
         <div v-if="isPatternSelected" class="mt-5 space-y-4">
-            <div class="rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
+            <div class="rounded-lg border border-accent-200 bg-accent-50/60 px-4 py-3">
                 <div class="flex items-start gap-3">
                     <component :is="IconClockCheck" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
                     <div class="min-w-0">
                         <p class="text-sm font-semibold text-accent-700 font-lexend">
                             {{ $t('Active work time pattern: {0}', [selectedWorkTimePattern?.name ?? '-']) }}
                         </p>
-                        <p v-if="selectedWorkTimePattern?.description" class="text-xs text-accent-700 mt-0.5">
+                        <p v-if="selectedWorkTimePattern?.description" class="text-xs text-accent-700/80 mt-0.5">
                             {{ selectedWorkTimePattern.description }}
                         </p>
-                        <p class="text-xs text-accent-700 mt-1">
+                        <p class="text-xs text-accent-700/80 mt-1">
                             {{ $t('Working times are defined by the pattern and cannot be edited. Remove the pattern to enter custom times.') }}
                         </p>
                     </div>
@@ -63,7 +63,7 @@
 
                 <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                     <div v-for="day in weekDays" :key="day.key"
-                         class="rounded-md border border-border-subtle bg-surface-sunken px-3 py-2.5 text-center">
+                         class="rounded-md border border-border-subtle bg-surface-sunken/60 px-3 py-2.5 text-center">
                         <p class="text-xs text-text-subtle">{{ $t(day.label) }}</p>
                         <p class="mt-0.5 text-sm font-semibold text-text">
                             {{ formatHours(currentWorkTime?.[`${day.key}_hours`]) }}
@@ -95,7 +95,7 @@
                         </p>
                     </div>
 
-                    <div class="mt-3 rounded-md border border-accent-200 bg-accent-50 px-3 py-2 flex items-start gap-2">
+                    <div class="mt-3 rounded-md border border-accent-200 bg-accent-50/60 px-3 py-2 flex items-start gap-2">
                         <component :is="IconInfoCircle" class="size-4 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
                         <p class="text-xs text-accent-700">
                             {{ $t('Enter the number of working hours per day (e.g. 08:00 = 8 hours) – not a start time.') }}

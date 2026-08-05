@@ -11,7 +11,7 @@
 
         <div class="space-y-6">
             <!-- Top Info -->
-            <div class="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-sunken px-4 py-3 text-xs text-text-muted">
+            <div class="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-sunken/80 px-4 py-3 text-xs text-text-muted">
                 <div class="flex items-center gap-2 font-medium text-text">
                     <PropertyIcon name="IconRepeat" class="h-4 w-4" />
                     <span>{{ $t('Series configuration') }}</span>
@@ -230,7 +230,7 @@
                         </div>
 
                         <!-- Search results -->
-                        <div class="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg bg-surface-sunken p-2">
+                        <div class="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg bg-surface-sunken/60 p-2">
                             <div
                                 v-if="isSearching"
                                 class="flex items-center gap-2 rounded-md bg-white/80 px-3 py-2 text-xs text-text-subtle"
@@ -249,7 +249,7 @@
                                     v-for="result in searchResults"
                                     :key="`${result.type}-${result.id}`"
                                     type="button"
-                                    class="group flex w-full items-center justify-between gap-3 rounded-md bg-white/80 px-3 py-2 text-left text-xs text-text-muted shadow-sm transition hover:-translate-y-[1px] hover:bg-accent-50 hover:shadow-md"
+                                    class="group flex w-full items-center justify-between gap-3 rounded-md bg-white/80 px-3 py-2 text-left text-xs text-text-muted shadow-sm transition hover:-translate-y-[1px] hover:bg-accent-50/80 hover:shadow-md"
                                     @click="addSubject(result)"
                                 >
                                     <div class="flex items-center gap-2">
@@ -302,7 +302,7 @@
 
                         <div
                             v-if="subjects.length === 0"
-                            class="mt-2 rounded-lg border border-dashed border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-subtle"
+                            class="mt-2 rounded-lg border border-dashed border-border-subtle bg-surface-sunken/80 px-3 py-2 text-xs text-text-subtle"
                         >
                             {{ $t('No people selected yet. Use the search above to find users, freelancers or service providers.') }}
                         </div>
@@ -328,7 +328,7 @@
                                     </span>
                                     <button
                                         type="button"
-                                        class="ml-0.5 rounded-full p-0.5 text-text-subtle hover:bg-border-subtle hover:text-text-muted"
+                                        class="ml-0.5 rounded-full p-0.5 text-text-subtle hover:bg-border-subtle/80 hover:text-text-muted"
                                         @click="removeSubject(subject)"
                                     >
                                         <PropertyIcon name="IconX" class="h-3 w-3" />

@@ -248,7 +248,7 @@
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold uppercase shadow-sm "
                                 @click="approveRequest" :disabled="approveRequestForm.processing">
                             {{$t('Commitments')}}
                         </button>

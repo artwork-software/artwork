@@ -124,8 +124,8 @@ function addToSidebarTab(sidebarTab) {
         @close="emit('close')"
     >
         <!-- Welche Komponente wird hinzugefügt -->
-        <div class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2.5 mb-4">
-            <div class="grid place-items-center size-9 rounded-lg border border-border-subtle bg-white shrink-0">
+        <div class="flex items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-sunken/70 px-3 py-2.5 mb-4">
+            <div class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white shrink-0">
                 <ComponentIcons :type="component.type" />
             </div>
             <div class="min-w-0">
@@ -148,12 +148,12 @@ function addToSidebarTab(sidebarTab) {
             <div
                 v-for="tab in tabs"
                 :key="tab.id"
-                class="rounded-xl border border-border-subtle bg-white/70"
+                class="rounded-xl border border-border-subtle/80 bg-white/70"
             >
                 <!-- Tab selbst -->
                 <button
                     type="button"
-                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-success-surface rounded-t-xl transition text-left"
+                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 hover:bg-success-surface/60 rounded-t-xl transition text-left"
                     :class="foldersOfTab(tab).length === 0 && (tab.sidebar_tabs ?? []).length === 0 ? 'rounded-b-xl' : ''"
                     @click="addToTab(tab)"
                 >
@@ -173,7 +173,7 @@ function addToSidebarTab(sidebarTab) {
                     <button
                         type="button"
                         class="w-full flex items-center justify-between gap-2 pl-8 pr-3 py-2 text-left transition"
-                        :class="folderDisabledReason ? 'text-text-subtle cursor-not-allowed' : 'hover:bg-success-surface'"
+                        :class="folderDisabledReason ? 'text-text-subtle cursor-not-allowed' : 'hover:bg-success-surface/60'"
                         :title="folderDisabledReason ? $t(folderDisabledReason) : undefined"
                         :disabled="!!folderDisabledReason"
                         @click="addToFolder(tab, folderElement)"
@@ -198,7 +198,7 @@ function addToSidebarTab(sidebarTab) {
                     <button
                         type="button"
                         class="w-full flex items-center justify-between gap-2 pl-8 pr-3 py-2 text-left transition"
-                        :class="sidebarDisabledReason ? 'text-text-subtle cursor-not-allowed' : 'hover:bg-success-surface'"
+                        :class="sidebarDisabledReason ? 'text-text-subtle cursor-not-allowed' : 'hover:bg-success-surface/60'"
                         :title="sidebarDisabledReason ? $t(sidebarDisabledReason) : undefined"
                         :disabled="!!sidebarDisabledReason"
                         @click="addToSidebarTab(sidebarTab)"

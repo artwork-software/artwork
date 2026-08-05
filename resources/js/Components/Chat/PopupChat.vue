@@ -42,9 +42,9 @@
 
         <!-- Chat Panel -->
         <div v-if="isChatOpen" class="w-[24rem] md:w-[26rem]">
-            <div class="rounded-2xl overflow-hidden border border-border-subtle bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_10px_30px_-10px_rgba(2,6,23,.2)]">
+            <div class="rounded-2xl overflow-hidden border border-border-subtle/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_10px_30px_-10px_rgba(2,6,23,.2)]">
                 <!-- Header -->
-                <div class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-border-subtle">
+                <div class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-border-subtle/80">
                     <div class="px-4 py-3">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
@@ -201,7 +201,7 @@
                 </div>
 
                 <!-- Body -->
-                <div class="bg-surface-sunken min-h-96">
+                <div class="bg-surface-sunken/60 min-h-96">
                     <!-- Loader -->
                     <div v-if="isLoading" class="grid place-items-center max-h-96 min-h-96 w-full">
                         <PropertyIcon name="IconLoaderQuarter" class="motion-safe:animate-spin text-text-subtle" />
@@ -221,7 +221,7 @@
                                     <div
                                         v-for="chat in filteredChats"
                                         :key="chat.id"
-                                        class="group rounded-lg border border-transparent hover:border-accent-200 bg-white hover:bg-accent-50 transition-colors cursor-pointer"
+                                        class="group rounded-lg border border-transparent hover:border-accent-200 bg-white hover:bg-accent-50/60 transition-colors cursor-pointer"
                                         @click="openChatPage(chat.id)"
                                     >
                                         <div class="px-3 py-2 flex items-center justify-between">

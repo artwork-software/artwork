@@ -51,7 +51,7 @@
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-border">
+                                            <div class=" font-semibold px-3 py-2 border-2 w-full border-border">
                                                 {{ $page.props.businessName }}
                                             </div>
                                         </div>
@@ -120,7 +120,7 @@
                                 <button v-else type="submit"
                                     class="items-center py-1 mt-5 rounded-full px-28 border bg-success"
                                 >
-                                    <IconCheck class="h-10 w-9 inline-block text-secondaryHover"/>
+                                    <IconCheck class="h-10 w-9 inline-block "/>
                                 </button>
                             </div>
                         </div>
@@ -268,7 +268,7 @@
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold uppercase shadow-sm "
                             @click="deleteUser">
                             {{$t('Delete account')}}
                         </button>

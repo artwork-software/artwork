@@ -327,7 +327,7 @@
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-accent-600 text-text-subtle cursor-pointer p-2 flex justify-between "
+                                           class="hover:bg-accent-600 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">

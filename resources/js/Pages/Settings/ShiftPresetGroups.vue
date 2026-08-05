@@ -22,13 +22,13 @@
             footnote="Deleting a group only removes the grouping — the templates themselves are kept."
         />
 
-        <div class="rounded-2xl border border-border-subtle bg-white/85 backdrop-blur px-5 py-5 shadow-sm">
+        <div class="rounded-2xl border border-border-subtle/70 bg-white/85 backdrop-blur px-5 py-5 shadow-sm">
             <div>
                 <TransitionGroup v-if="groups?.length" name="list" tag="ul" class="space-y-2">
                     <li
                         v-for="g in groups"
                         :key="g.id"
-                        class="group flex items-center justify-between gap-4 rounded-2xl border border-border-subtle bg-white/70 px-4 py-3 hover:bg-surface-sunken hover:shadow-sm transition active:scale-[0.995]"
+                        class="group flex items-center justify-between gap-4 rounded-2xl border border-border-subtle/70 bg-white/70 px-4 py-3 hover:bg-surface-sunken hover:shadow-sm transition active:scale-[0.995]"
                     >
                         <div class="min-w-0">
                             <div class="truncate text-sm font-extrabold text-text">
@@ -54,7 +54,7 @@
                                   <span
                                       v-for="c in groupSummary(g).crafts"
                                       :key="c"
-                                      class="inline-flex items-center rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle"
+                                      class="inline-flex items-center rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle/70"
                                   >
                                     {{ c }}
                                   </span>
@@ -65,7 +65,7 @@
                                 <span
                                     v-for="p in g.presets.slice(0,2)"
                                     :key="p.id"
-                                    class="inline-flex items-center gap-2 rounded-full bg-white text-text px-2.5 py-1 text-[11px] font-semibold ring-1 ring-border-subtle shadow-sm"
+                                    class="inline-flex items-center gap-2 rounded-full bg-white text-text px-2.5 py-1 text-[11px] font-semibold ring-1 ring-border-subtle/70 shadow-sm"
                                 >
                                   <span class="text-text-subtle tabular-nums">{{
                                           fmtTime(p.start_time)
@@ -83,7 +83,7 @@
                         <div class="flex shrink-0 items-center gap-2">
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-xl px-2.5 py-2 ring-1 ring-border-subtle bg-white/60 hover:bg-white transition active:scale-[0.99]"
+                                class="inline-flex items-center justify-center rounded-xl px-2.5 py-2 ring-1 ring-border-subtle/80 bg-white/60 hover:bg-white transition active:scale-[0.99]"
                                 @click="openEditModal(g)"
                                 :aria-label="$t('Edit')"
                             >
@@ -92,7 +92,7 @@
 
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center rounded-xl px-2.5 py-2 ring-1 ring-border-subtle bg-white/60 hover:bg-danger-surface transition active:scale-[0.99]"
+                                class="inline-flex items-center justify-center rounded-xl px-2.5 py-2 ring-1 ring-border-subtle/80 bg-white/60 hover:bg-danger-surface transition active:scale-[0.99]"
                                 @click="confirmDelete(g)"
                                 :aria-label="$t('Delete')"
                             >

@@ -308,7 +308,7 @@
                         <div
                             v-for="craft in user.assignedCrafts"
                             :key="craft.id"
-                            class="group rounded-2xl border border-border-subtle bg-white shadow-sm hover:shadow-md transition-shadow"
+                            class="group rounded-2xl border border-border-subtle/80 bg-white shadow-sm hover:shadow-md transition-shadow"
                         >
                             <!-- Card Header -->
                             <div class="px-4 pt-3">
@@ -343,7 +343,7 @@
                                         v-for="q in craft.qualifications"
                                         :key="q.id"
                                         as="div"
-                                        class="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2 hover:bg-surface-sunken hover:border-border transition-colors"
+                                        class="flex items-center justify-between rounded-xl border border-border-subtle/80 bg-surface-sunken/60 px-3 py-2 hover:bg-surface-sunken hover:border-border transition-colors"
                                     >
                                         <div class="min-w-0 flex items-center gap-2 text-sm text-text">
                                             <PropertyIcon :name="q.icon" class="h-4 w-4 text-text-subtle" />

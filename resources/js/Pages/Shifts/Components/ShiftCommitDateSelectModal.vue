@@ -6,7 +6,7 @@
     >
         <!-- Hinweis-Box -->
         <div class="mb-4" v-if="isShiftCommitWorkflowEnabled">
-            <div class="bg-warning-surface border border-warning-border text-warning p-4 rounded-xl flex gap-3 items-start">
+            <div class="bg-warning-surface/80 border border-warning-border text-warning p-4 rounded-xl flex gap-3 items-start">
                 <div class="mt-0.5 h-6 w-6 min-w-6 min-h-6 rounded-full bg-warning-surface flex items-center justify-center text-xs font-semibold">
                     !
                 </div>
@@ -94,7 +94,7 @@
         <div class="mt-5">
             <!-- Fester Container, damit nichts springt -->
             <div
-                class="rounded-2xl border border-border-subtle bg-surface-sunken px-4 py-3 shadow-sm flex gap-3 items-start min-h-[3.25rem]"
+                class="rounded-2xl border border-border-subtle bg-surface-sunken/80 px-4 py-3 shadow-sm flex gap-3 items-start min-h-[3.25rem]"
             >
                 <!-- kleines Icon / Badge -->
                 <div class="mt-0.5 h-7 w-7 rounded-full bg-surface-sunken flex items-center justify-center text-[10px] font-semibold text-text-subtle">

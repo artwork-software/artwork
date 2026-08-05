@@ -1,5 +1,5 @@
 <template>
-    <div id="bar" class="p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[project ? isPageScrolled ? 'fixed w-[calc(100%-4rem)] ' : 'sticky w-full' : 'fixed  w-[calc(100%-4rem)] ']">
+    <div id="bar" class="p-2 top-0 left-16 z-40  flex justify-between items-center" :class="[project ? isPageScrolled ? 'fixed w-[calc(100%-4rem)] ' : 'sticky w-full' : 'fixed  w-[calc(100%-4rem)] ']">
         <div class="inline-flex items-center gap-x-3">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
@@ -88,35 +88,35 @@
                                     <input v-model="userCalendarSettings.project_status"
                                            type="checkbox"
                                            class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <div :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                    <div :class="userCalendarSettings.project_status ? ' subpixel-antialiased' : 'text-text-subtle'"
                                        class=" ml-4 my-auto text-text-subtle">{{ $t('Project Status')}}</div>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.options"
                                            type="checkbox"
                                            class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                    <p :class="userCalendarSettings.options ? ' subpixel-antialiased' : 'text-text-subtle'"
                                        class=" ml-4 my-auto text-text-subtle">{{ $t('Option prioritization')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="!project">
                                     <input v-model="userCalendarSettings.project_management"
                                            type="checkbox"
                                            class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                    <p :class="userCalendarSettings.project_management ? ' subpixel-antialiased' : 'text-text-subtle'"
                                        class=" ml-4 my-auto text-text-subtle">{{$t('Project managers')}}</p>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.repeating_events"
                                            type="checkbox"
                                            class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                    <p :class="userCalendarSettings.repeating_events ? ' subpixel-antialiased' : 'text-text-subtle'"
                                        class=" ml-4 my-auto text-text-subtle">{{ $t('Repeat event')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
                                     <input v-model="userCalendarSettings.work_shifts"
                                            type="checkbox"
                                            class="size-6 cursor-pointer rounded border-2 border-border-strong text-success"/>
-                                    <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                                    <p :class="userCalendarSettings.work_shifts ? ' subpixel-antialiased' : 'text-text-subtle'"
                                        class=" ml-4 my-auto text-text-subtle">{{$t('Show shifts')}}</p>
                                 </div>
                             </div>

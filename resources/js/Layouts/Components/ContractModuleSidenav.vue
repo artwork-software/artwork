@@ -4,7 +4,7 @@
             <div class="text-text-subtle text-md font-semibold">
                 {{ $t('Contract modules')}}
             </div>
-            <PropertyIcon name="IconUpload" stroke-width="1.5" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="$can('view edit upload contracts') || hasAdminRole()"/>
+            <PropertyIcon name="IconUpload" stroke-width="1.5" class="ml-auto w-6 h-6 p-1 rounded-full text-white " @click="openUploadModal" v-if="$can('view edit upload contracts') || hasAdminRole()"/>
         </div>
         <div class="w-full flex items-center mb-2 cursor-pointer text-text-subtle hover:text-white"
              v-for="contractModule in contractModules.data"

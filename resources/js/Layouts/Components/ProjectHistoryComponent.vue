@@ -5,7 +5,7 @@
 
             <!-- Tabs (Pill/Segmented) -->
             <div class="mb-4 pt-3">
-                <nav class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken p-1 shadow-sm ring-1 ring-white/40"
+                <nav class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken/70 p-1 shadow-sm ring-1 ring-white/40"
                      aria-label="Tabs" role="tablist">
                     <button
                         v-for="tab in historyTabs"
@@ -46,7 +46,7 @@
 
                 <!-- Timeline: Project -->
                 <div v-else-if="currentTab === 'project'" class="mt-2 max-h-96 overflow-y-auto pr-1.5" role="region" :aria-label="$t('Project')">
-                    <div v-if="projectItems.length === 0" class="rounded-xl border border-border-subtle bg-surface-sunken p-4 text-sm text-text-muted">
+                    <div v-if="projectItems.length === 0" class="rounded-xl border border-border-subtle bg-surface-sunken/70 p-4 text-sm text-text-muted">
                         {{ $t('No entries found') }}
                     </div>
 
@@ -83,7 +83,7 @@
 
                 <!-- Timeline: Budget -->
                 <div v-else-if="currentTab === 'budget'" class="mt-2 max-h-96 overflow-y-auto" role="region" :aria-label="$t('Budget')">
-                    <div v-if="budgetItems.length === 0" class="rounded-xl border border-border-subtle bg-surface-sunken p-4 text-sm text-text-muted">
+                    <div v-if="budgetItems.length === 0" class="rounded-xl border border-border-subtle bg-surface-sunken/70 p-4 text-sm text-text-muted">
                         {{ $t('No entries found') }}
                     </div>
 
@@ -99,9 +99,9 @@
                                     aria-hidden="true"
                                 ></span>
 
-                                <div class="rounded-xl border border-warning-border bg-warning-surface p-3">
+                                <div class="rounded-xl border border-warning-border/70 bg-warning-surface/70 p-3">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="inline-flex h-6 items-center rounded-full border border-warning-border bg-warning-surface px-2 text-[11px] font-medium text-warning tabular-nums">
+                                        <span class="inline-flex h-6 items-center rounded-full border border-warning-border/70 bg-warning-surface/70 px-2 text-[11px] font-medium text-warning tabular-nums">
                                           {{ historyItem.created_at }}
                                         </span>
                                         <UserPopoverTooltip :user="historyItem.changer" :id="`budget-${index}`" height="6" width="6" />

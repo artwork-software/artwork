@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center pl-1 py-1 hover:bg-surface-sunken rounded cursor-pointer w-full h-6" @dragover="onDragOver" @drop="onDrop">
+    <div class="flex items-center pl-1 py-1 hover:bg-surface-sunken/40 rounded cursor-pointer w-full h-6" @dragover="onDragOver" @drop="onDrop">
         <SelectUserForShiftMenu :can-edit-component="canEditComponent" :crafts-with-entities="craftsWithAllEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-2">

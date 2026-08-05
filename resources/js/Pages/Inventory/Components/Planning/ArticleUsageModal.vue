@@ -9,7 +9,7 @@
             <!-- Artikel Kopfkarte -->
             <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
                 <div
-                    class="border-b border-border-subtle bg-gradient-to-r from-info-surface via-info-surface to-transparent px-5 py-3 rounded-t-2xl">
+                    class="border-b border-border-subtle bg-gradient-to-r from-info-surface via-info-surface/60 to-transparent px-5 py-3 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-text flex items-center gap-2">
                         {{ props.detailsForModal.article.name }}
                     </h3>
@@ -138,7 +138,7 @@
             <!-- Stichtag / Datum -->
             <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
                 <div
-                    class="border-b border-border-subtle bg-gradient-to-r from-accent-50 via-accent-50 to-transparent px-5 py-3 rounded-t-2xl">
+                    class="border-b border-border-subtle bg-gradient-to-r from-accent-50 via-accent-50/60 to-transparent px-5 py-3 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-text flex items-center gap-2">
                         <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                         <template v-if="props.detailsForModal.date">

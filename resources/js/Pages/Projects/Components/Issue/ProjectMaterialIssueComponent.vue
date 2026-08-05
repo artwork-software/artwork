@@ -120,12 +120,12 @@
         <article
             v-for="issue in filteredIssues"
             :key="issue.id"
-            class="group rounded-2xl border border-white/50 ring-1 ring-border-subtle bg-white/60 backdrop-blur shadow-sm transition-all hover:shadow-md"
+            class="group rounded-2xl border border-white/50 ring-1 ring-border-subtle/60 bg-white/60 backdrop-blur shadow-sm transition-all hover:shadow-md"
         >
             <!-- Header -->
             <header
-                class="flex cursor-pointer flex-col gap-3 rounded-t-2xl p-5 transition-colors hover:bg-surface-sunken md:flex-row md:items-start md:justify-between"
-                :class="{ 'bg-surface-sunken': !isOpen(issue.id) }"
+                class="flex cursor-pointer flex-col gap-3 rounded-t-2xl p-5 transition-colors hover:bg-surface-sunken/70 md:flex-row md:items-start md:justify-between"
+                :class="{ 'bg-surface-sunken/40': !isOpen(issue.id) }"
                 :aria-expanded="isOpen(issue.id)"
                 role="button"
                 @click="toggle(issue.id)"
@@ -198,8 +198,8 @@
                             <strong class="text-text">{{ issue.files?.length || 0 }}</strong> {{ $t('Files') }}
                         </span>
                     </div>
-                    <div v-if="issue.notes" class="mt-3 rounded-xl border-l-4 border-accent-200 bg-accent-50 px-4 py-2.5">
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-accent-600">
+                    <div v-if="issue.notes" class="mt-3 rounded-xl border-l-4 border-accent-200 bg-accent-50/50 px-4 py-2.5">
+                        <div class="text-[11px] font-semibold uppercase tracking-wide text-accent-600/80">
                             {{ $t('Description') }}
                         </div>
                         <p class="mt-0.5 text-base leading-relaxed text-text whitespace-pre-line">
@@ -388,7 +388,7 @@
                         </div>
 
                         <div v-if="(issue.special_items?.length || 0) > 0" class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            <div v-for="sp in issue.special_items" :key="sp.id" class="flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                            <div v-for="sp in issue.special_items" :key="sp.id" class="flex items-start gap-3 rounded-xl border border-border-subtle bg-surface-sunken/60 p-4">
                                 <IconAlertTriangle class="mt-0.5 size-5 text-warning" />
                                 <div>
                                     <div class="text-sm font-medium text-text">
@@ -415,7 +415,7 @@
                         </div>
 
                         <div v-if="(issue.files?.length || 0) > 0" class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                            <div v-for="f in issue.files" :key="f.id" class="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                            <div v-for="f in issue.files" :key="f.id" class="flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-sunken/60 p-4">
                                 <div class="flex min-w-0 flex-1 items-center gap-3">
                                     <!-- Thumbnail -->
                                     <FilePreview
@@ -462,7 +462,7 @@
             <button
                 v-if="!isOpen(issue.id)"
                 type="button"
-                class="flex w-full items-center justify-center gap-1.5 rounded-b-2xl border-t border-border-subtle py-2 text-xs font-medium text-accent-600 transition-colors hover:bg-accent-50"
+                class="flex w-full items-center justify-center gap-1.5 rounded-b-2xl border-t border-border-subtle py-2 text-xs font-medium text-accent-600 transition-colors hover:bg-accent-50/60"
                 @click="toggle(issue.id)"
             >
                 <IconChevronDown class="size-4" />
@@ -913,8 +913,8 @@ function cardTone(a: any): 'ok' | 'warn' | 'over' {
 }
 function cardClass(a: any) {
     const t = cardTone(a)
-    if (t === 'over') return 'ring-danger-border bg-danger-surface'
-    if (t === 'warn') return 'ring-warning-border bg-warning-surface'
+    if (t === 'over') return 'ring-danger-border bg-danger-surface/40'
+    if (t === 'warn') return 'ring-warning-border bg-warning-surface/40'
     return 'ring-border-subtle'
 }
 function statusChipText(a: any) {

@@ -419,11 +419,11 @@
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
                              v-if="this.$can('edit budget templates') || !table.is_template"
-                             class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+                             class="group w-[97%]  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
                             <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                                 {{ $t('Main position') }}
                                 <PropertyIcon name="IconCirclePlus"
-                                    class="h-6 w-6 ml-12 text-secondaryHover bg-accent-600 rounded-full" />
+                                    class="h-6 w-6 ml-12  bg-accent-600 rounded-full" />
                             </div>
                         </div>
                         <draggable
@@ -463,7 +463,7 @@
                         </draggable>
                         <table class="w-[97%] mb-6">
                             <tbody class="">
-                            <tr class="bg-secondaryHover text-sm/5 font-semibold text-text flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM') }}</td>
@@ -504,7 +504,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="bg-secondaryHover text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
@@ -529,7 +529,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="ml-5 w-full bg-secondaryHover" v-else>
+                    <div class="ml-5 w-full " v-else>
                         <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
@@ -543,7 +543,7 @@
                 <!-- Divider -->
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
                 <div class="w-full flex">
-                    <div class="ml-5 w-full bg-secondaryHover" v-if="earningsOpened">
+                    <div class="ml-5 w-full " v-if="earningsOpened">
                         <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6" @click="earningsOpened = !earningsOpened">
@@ -589,7 +589,7 @@
                         </draggable>
                         <table class="w-[97%] mb-6">
                             <tbody class="">
-                            <tr class="bg-secondaryHover text-sm/5 font-semibold text-text flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM') }}</td>
@@ -631,7 +631,7 @@
                                 </td>
 
                             </tr>
-                            <tr class="bg-secondaryHover text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
+                            <tr class=" text-sm/5 font-bold text-text-subtle flex h-10 w-full text-right">
                                 <td class="w-48"></td>
                                 <td class="w-48"></td>
                                 <td class="w-72 my-2">{{ $t('SUM excluded items') }}</td>
@@ -657,7 +657,7 @@
                         </table>
                     </div>
                     <!-- View if not opened Event -->
-                    <div class="ml-5 w-full bg-secondaryHover" v-else>
+                    <div class="ml-5 w-full " v-else>
                         <div class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6"
@@ -674,7 +674,7 @@
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12"/>
                 <table class="w-[97%] mt-4 mb-2 ml-5">
                     <tbody>
-                    <tr class="bg-secondaryHover items-center text-sm/5 font-semibold text-text flex h-10 w-full text-right">
+                    <tr class=" items-center text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                         <td class="w-48"></td>
                         <td class="w-48"></td>
                         <td class="w-72 my-2">{{ $t('Revenue') }} - {{ $t('Expenses') }}</td>

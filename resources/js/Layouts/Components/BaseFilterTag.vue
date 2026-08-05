@@ -1,5 +1,5 @@
 <template>
-    <div class="flex rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1 min-w-fit">
+    <div class="flex rounded-full items-center font-medium  border  border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1 min-w-fit">
         <div v-if="filter.name">
             {{ filter.name }}
         </div>

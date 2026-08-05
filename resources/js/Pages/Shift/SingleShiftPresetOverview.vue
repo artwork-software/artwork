@@ -245,7 +245,7 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                     <div
                         v-for="(preset, i) in filteredAndSorted"
                         :key="preset.id"
-                        class="grid grid-cols-[8px_22%_12%_12%_18%_auto_160px] items-center hover:bg-surface-sunken"
+                        class="grid grid-cols-[8px_22%_12%_12%_18%_auto_160px] items-center hover:bg-surface-sunken/60"
                     >
                         <!-- Akzentleiste -->
                         <div :class="accentByIndex(i).bar"></div>

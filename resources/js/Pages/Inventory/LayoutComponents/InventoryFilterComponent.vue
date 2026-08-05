@@ -225,7 +225,7 @@
                     <div
                         v-for="group in displayTagGroups"
                         :key="`tg-${group.key}`"
-                        :class="group.name ? 'rounded-lg border border-border-subtle bg-surface-sunken p-3' : ''"
+                        :class="group.name ? 'rounded-lg border border-border-subtle bg-surface-sunken/40 p-3' : ''"
                     >
                         <div v-if="group.name" class="flex items-center justify-between">
                             <div class="flex items-center gap-2">

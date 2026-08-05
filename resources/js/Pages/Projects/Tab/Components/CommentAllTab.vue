@@ -1,7 +1,7 @@
 <template>
     <section class="">
         <!-- Wrapper Card -->
-        <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+        <div class="rounded-2xl border border-border-subtle/70 bg-white shadow-sm">
             <!-- Header -->
             <header class="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4">
                 <BasePageTitle
@@ -26,7 +26,7 @@
             <div class="px-6 py-5">
                 <div
                     v-if="canEditComponent || (is('artwork admin') || can('write projects') || effectiveProjectWriteIds?.includes($page.props.auth.user.id) || effectiveProjectManagerIds?.includes($page.props.auth.user.id) || isMemberOfADepartment)"
-                    class="relative rounded-xl border border-border-subtle bg-surface-sunken p-4"
+                    class="relative rounded-xl border border-border-subtle/80 bg-surface-sunken/50 p-4"
                 >
                     <BaseTextarea
                         :label="$t('What should the other project members know about the project?')"
@@ -72,7 +72,7 @@
                             <!-- Timeline node -->
                             <span class="absolute left-4 top-6 inline-flex size-2.5 -translate-x-1/2 transform items-center justify-center rounded-full bg-accent-600 ring-8 ring-white sm:left-5"></span>
 
-                            <div class="rounded-xl border border-border-subtle bg-white p-4 shadow-xs transition group-hover:shadow-sm">
+                            <div class="rounded-xl border border-border-subtle/70 bg-white p-4 shadow-xs transition group-hover:shadow-sm">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="flex min-w-0 items-start gap-3">
                                         <UserPopoverTooltip :user="comment.user" height="9" width="9" :id="comment.id" />
@@ -116,7 +116,7 @@
                 </div>
 
                 <!-- Empty state -->
-                <div v-else class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken p-10 text-center">
+                <div v-else class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken/60 p-10 text-center">
                     <div class="mx-auto max-w-md">
                         <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-white text-text-subtle shadow-inner">
                             <!-- simple dot icon -->

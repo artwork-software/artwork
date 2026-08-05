@@ -25,17 +25,17 @@
 
             <!-- Summary cards -->
             <div class="grid grid-cols-3 gap-4 mt-4">
-                <div class="rounded-xl border border-accent-200 bg-accent-50 px-5 py-4">
+                <div class="rounded-xl border border-accent-200 bg-accent-50/50 px-5 py-4">
                     <div class="text-xs font-medium text-accent-600 uppercase tracking-wide">{{ $t('Total open') }}</div>
                     <div class="mt-1 text-2xl font-bold text-accent-700">{{ stats.open }}</div>
                     <div class="text-xs text-accent-600 mt-0.5">{{ stats.open_value }} {{ $t('Days') }}</div>
                 </div>
-                <div class="rounded-xl border border-success-border bg-success-surface px-5 py-4">
+                <div class="rounded-xl border border-success-border bg-success-surface/50 px-5 py-4">
                     <div class="text-xs font-medium text-success uppercase tracking-wide">{{ $t('Total granted') }}</div>
                     <div class="mt-1 text-2xl font-bold text-success">{{ stats.granted }}</div>
                     <div class="text-xs text-success mt-0.5">{{ stats.granted_value }} {{ $t('Days') }}</div>
                 </div>
-                <div class="rounded-xl border border-danger-border bg-danger-surface px-5 py-4">
+                <div class="rounded-xl border border-danger-border bg-danger-surface/50 px-5 py-4">
                     <div class="text-xs font-medium text-danger uppercase tracking-wide">{{ $t('Total overdue') }}</div>
                     <div class="mt-1 text-2xl font-bold text-danger">{{ stats.overdue }}</div>
                     <div class="text-xs text-danger mt-0.5">{{ stats.overdue_value }} {{ $t('Days') }}</div>

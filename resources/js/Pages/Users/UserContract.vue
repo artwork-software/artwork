@@ -27,14 +27,14 @@
         <VisualFeedback :show-save-success="showVisualFeedback" />
 
         <!-- Active contract banner -->
-        <div v-if="isContractSelected" class="mt-5 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
+        <div v-if="isContractSelected" class="mt-5 rounded-lg border border-accent-200 bg-accent-50/60 px-4 py-3">
             <div class="flex items-start gap-3">
                 <component :is="IconFileCheck" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
                 <div class="min-w-0">
                     <p class="text-sm font-semibold text-accent-700 font-lexend">
                         {{ $t('Active contract: {0}', [selectedContract?.name ?? '-']) }}
                     </p>
-                    <p v-if="selectedContract?.description" class="text-xs text-accent-700 mt-0.5">
+                    <p v-if="selectedContract?.description" class="text-xs text-accent-700/80 mt-0.5">
                         {{ selectedContract.description }}
                     </p>
                 </div>

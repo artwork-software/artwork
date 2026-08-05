@@ -3,7 +3,7 @@
         class="group grid grid-cols-12 gap-4 px-2 py-3 text-sm border-b border-border-subtle hover:bg-gradient-to-r hover:from-surface-sunken hover:to-white relative"
         :class="{ 'bg-warning-surface': usePage().props.urlParameters?.issue === String(externMaterialIssue.id) }"
     >
-        <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500 transition-all duration-200 group-hover:bg-accent-500"></span>
+        <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500/0 transition-all duration-200 group-hover:bg-accent-500/70"></span>
 
         <!-- Name -->
         <div class="col-span-3">

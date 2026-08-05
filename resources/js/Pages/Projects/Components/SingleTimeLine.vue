@@ -12,7 +12,7 @@
 
                 <span
                     v-if="summary"
-                    class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[11px] text-text-muted"
+                    class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken/80 px-2 py-0.5 text-[11px] text-text-muted"
                     :title="$t('Summary')"
                 >
           {{ summary }}

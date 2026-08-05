@@ -106,7 +106,7 @@ const usageTooltip = computed(() =>
         >
             <!-- Karte -->
             <div
-                class="flex items-center gap-3 rounded-2xl border bg-white/70 backdrop-blur px-3 py-3 shadow-sm transition focus-within:ring-2 focus-within:ring-accent-600 active:scale-[0.99]"
+                class="flex items-center gap-3 rounded-2xl border bg-white/70 backdrop-blur px-3 py-3 shadow-sm transition focus-within:ring-2 focus-within:ring-accent-600/50 active:scale-[0.99]"
                 :class="[ isDragging
             ? 'ring-2 ring-success-border border-success-border bg-success-surface shadow rounded-lg'
             : 'border-border-subtle'
@@ -117,7 +117,7 @@ const usageTooltip = computed(() =>
                 <!-- Icon -->
                 <div
                     class="shrink-0 grid place-items-center size-10 rounded-xl border bg-white/60"
-                    :class="isDragging ? 'border-success-border' : 'border-border-subtle'"
+                    :class="isDragging ? 'border-success-border/70' : 'border-border-subtle/80'"
                     aria-hidden="true"
                 >
                     <ComponentIcons :type="component.type" />
@@ -143,14 +143,14 @@ const usageTooltip = computed(() =>
                         <!-- Verwendung -->
                         <span
                             v-if="usages.length > 0"
-                            class="inline-flex items-center rounded-full border border-success-border bg-success-surface px-2 py-0.5 text-[10px] leading-4 text-success whitespace-pre-line"
+                            class="inline-flex items-center rounded-full border border-success-border bg-success-surface/70 px-2 py-0.5 text-[10px] leading-4 text-success whitespace-pre-line"
                             :title="usageTooltip"
                         >
                             {{ t('Used') }}: {{ usages.length }}
                         </span>
                         <span
                             v-else
-                            class="inline-flex items-center rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[10px] leading-4 text-text-subtle"
+                            class="inline-flex items-center rounded-full border border-border-subtle bg-surface-sunken/70 px-2 py-0.5 text-[10px] leading-4 text-text-subtle"
                         >
                             {{ t('Not used') }}
                         </span>
@@ -158,7 +158,7 @@ const usageTooltip = computed(() =>
                         <!-- Scope-Konfiguration nötig -->
                         <span
                             v-if="needsScope"
-                            class="inline-flex items-center rounded-full border border-warning-border bg-warning-surface px-2 py-0.5 text-[10px] leading-4 text-warning"
+                            class="inline-flex items-center rounded-full border border-warning-border bg-warning-surface/70 px-2 py-0.5 text-[10px] leading-4 text-warning"
                             :title="t('When adding, you choose which tabs are included')"
                         >
                             {{ t('Requires configuration') }}
@@ -205,7 +205,7 @@ const usageTooltip = computed(() =>
 
                     <div
                         class="h-8 w-5 rounded-md border"
-                        :class="isDragging ? 'border-success-border bg-success-surface rounded-lg' : 'border-border-subtle bg-white/60'"
+                        :class="isDragging ? 'border-success-border/70 bg-success-surface/50 rounded-lg' : 'border-border-subtle bg-white/60'"
                         aria-hidden="true"
                     >
                         <div class="h-full w-full grid place-items-center text-[10px] text-text-subtle">⋮⋮</div>

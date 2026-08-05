@@ -30,7 +30,7 @@
                         </div>
                     </div>
 
-                    <span class="shrink-0 inline-flex items-center rounded-full border border-border-subtle bg-surface-sunken px-2.5 py-1 text-[11px] font-semibold text-text-muted">
+                    <span class="shrink-0 inline-flex items-center rounded-full border border-border-subtle/70 bg-surface-sunken px-2.5 py-1 text-[11px] font-semibold text-text-muted">
                         PDF
                     </span>
                 </div>
@@ -73,7 +73,7 @@
                         </div>
 
                         <!-- Details -->
-                        <div class="mt-3 rounded-xl border border-border-subtle bg-surface-sunken px-3 py-3">
+                        <div class="mt-3 rounded-xl border border-border-subtle/70 bg-surface-sunken px-3 py-3">
                             <div class="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
                                 {{ $t('When enabled') }}
                             </div>

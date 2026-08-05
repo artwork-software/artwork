@@ -22,7 +22,7 @@
                 </h3>
 
                 <!-- Manual create form -->
-                <div v-if="showCreateForm" class="mb-4 rounded-lg border border-accent-200 bg-accent-50 p-4 space-y-3">
+                <div v-if="showCreateForm" class="mb-4 rounded-lg border border-accent-200 bg-accent-50/50 p-4 space-y-3">
                     <h4 class="text-xs font-semibold text-text-muted">{{ $t('Add compensation day') }}</h4>
                     <div class="grid grid-cols-3 gap-3">
                         <div>
@@ -89,8 +89,8 @@
                             <tr
                                 v-for="dayOff in openCompensations"
                                 :key="dayOff.id"
-                                class="hover:bg-surface-sunken"
-                                :class="isOverdue(dayOff) ? 'bg-danger-surface' : ''"
+                                class="hover:bg-surface-sunken/50"
+                                :class="isOverdue(dayOff) ? 'bg-danger-surface/50' : ''"
                             >
                                 <td class="px-3 py-2.5 font-medium text-text">
                                     <span
@@ -178,7 +178,7 @@
                             <tr
                                 v-for="dayOff in grantedCompensations"
                                 :key="dayOff.id"
-                                class="hover:bg-surface-sunken"
+                                class="hover:bg-surface-sunken/50"
                             >
                                 <td class="px-3 py-2.5 font-medium text-text">
                                     <span
@@ -263,7 +263,7 @@
                             <tr
                                 v-for="violation in unprocessedViolations"
                                 :key="violation.id"
-                                class="hover:bg-surface-sunken"
+                                class="hover:bg-surface-sunken/50"
                             >
                                 <td class="px-3 py-2.5 text-text-muted">{{ formatDate(violation.violation_date) }}</td>
                                 <td class="px-3 py-2.5">

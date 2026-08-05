@@ -139,7 +139,7 @@
                             <li
                                 v-for="entry in group.items"
                                 :key="entry.id"
-                                class="flex gap-4 rounded-xl border border-border-subtle bg-white p-4 hover:bg-surface-sunken transition"
+                                class="flex gap-4 rounded-xl border border-border-subtle bg-white p-4 hover:bg-surface-sunken/40 transition"
                             >
                                 <div class="flex-1 space-y-2">
                                     <!-- Message -->
@@ -176,7 +176,7 @@
                                     </div>
 
                                     <!-- Field changes -->
-                                    <div v-if="entry.changes.length" class="mt-2 rounded-lg border border-border-subtle bg-surface-sunken p-3">
+                                    <div v-if="entry.changes.length" class="mt-2 rounded-lg border border-border-subtle bg-surface-sunken/70 p-3">
                                         <table class="w-full border-collapse text-[11px]">
                                             <thead>
                                             <tr class="text-text-subtle text-[10px]">

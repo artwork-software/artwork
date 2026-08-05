@@ -30,7 +30,7 @@
         </div>
 
         <!-- Vergleich Snapshot ↔ aktuell -->
-        <div v-if="snapshots.length > 0" class="mb-5 rounded-lg border border-border-subtle p-3 bg-surface-sunken">
+        <div v-if="snapshots.length > 0" class="mb-5 rounded-lg border border-border-subtle p-3 bg-surface-sunken/60">
             <div class="flex items-end gap-3 max-w-md">
                 <ArtworkBaseListbox
                     class="flex-1"

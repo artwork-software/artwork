@@ -29,7 +29,7 @@
                     <div v-if="saving">
                         <div class="flex">
                             <input id="saveFilter" autocomplete="off" v-model="filterName" type="text"
-                                   class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-text-subtle focus:border-1 text-sm"
+                                   class="shadow-sm   focus:outline-none focus:ring-0 border-text-subtle focus:border-1 text-sm"
                                    :placeholder="$t('Name of the filter')"/>
                             <button
                                 class="rounded-full bg-accent-600 cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
@@ -67,7 +67,7 @@
                             <div v-if="filterArray.rooms.length > 0" v-for="room in filterArray.rooms"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="room.checked" @change="addRoomsToFilter(room)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="cursor-pointer h-4 w-4 text-success border-1   focus:border-none"/>
                                 <p :class="[room.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ room.label }}</p>
@@ -104,7 +104,7 @@
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-for="eventType in filterArray.eventTypes" class="flex w-full mb-2">
                                 <input type="checkbox" v-model="eventType.checked" @change="addEventTypesToFilter(eventType)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="cursor-pointer h-4 w-4 text-success border-1   focus:border-none"/>
                                 <p :class="[eventType.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ eventType.name }}</p>

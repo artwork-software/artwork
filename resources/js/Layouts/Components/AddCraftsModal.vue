@@ -58,7 +58,7 @@
                     <p class="mt-2 text-xs text-text-subtle">{{$t('We will alert you when a shift remains under-staffed after this many days.')}}</p>
                 </div>
 
-                <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken/70 p-4">
                     <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-border text-text focus:ring-surface-inverse focus:ring-2">
                     <label for="universally_applicable" class="text-sm text-text">{{$t('Universally applicable')}}</label>
                 </div>

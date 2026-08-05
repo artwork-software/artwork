@@ -11,7 +11,7 @@
                     />
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="validateType($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-accent-600 border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        border-accent-600 border-dotted border-2 h-32  p-2 cursor-pointer">
                         <p class="text-accent-600 font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
@@ -406,7 +406,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-backgroundGray -mx-10 pt-6 pb-12">
+                <div class=" -mx-10 pt-6 pb-12">
                     <div class="px-12 w-full">
                         <div class="text-xs/[15px] font-semibold text-text flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">

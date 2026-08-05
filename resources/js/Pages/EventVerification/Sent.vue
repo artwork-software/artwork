@@ -46,11 +46,11 @@
                                     </p>
                                     <div class="mt-2 flex items-center justify-between">
                                         <span v-if="isDeclined(req)"
-                                              class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-inset ring-danger">
+                                              class="inline-flex items-center rounded-md bg-danger-surface px-2 py-1 text-xs font-medium text-danger ring-1 ring-inset ring-danger/10">
                                             {{ $t('declined') }}
                                         </span>
                                         <span v-else
-                                              class="inline-flex items-center rounded-md bg-warning-surface px-2 py-1 text-xs font-medium text-warning ring-1 ring-inset ring-warning">
+                                              class="inline-flex items-center rounded-md bg-warning-surface px-2 py-1 text-xs font-medium text-warning ring-1 ring-inset ring-warning/20">
                                             {{ $t('pending') }}
                                         </span>
                                         <button

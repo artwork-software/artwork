@@ -6,7 +6,7 @@
                :id="getIdentifier(item)"
                v-model="item.checked"
                @change="$emit('change-filter-items', { list: list, item: item, filterName: filterName})"
-               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+               class="cursor-pointer h-4 w-4 text-success border-1   focus:border-none"/>
         <label :for="getIdentifier(item)"
                :class="[item.checked ? 'text-white' : 'text-text-subtle', 'ml-1.5 text-xs subpixel-antialiased align-text-middle cursor-pointer']">
             {{ item.name }}</label>

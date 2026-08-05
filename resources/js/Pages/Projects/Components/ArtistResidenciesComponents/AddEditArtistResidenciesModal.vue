@@ -505,7 +505,7 @@
         </form>
 
         <!-- EMPTY STATE -->
-        <div v-else class="mx-10 my-10 -mt-2 rounded-xl border border-danger-border bg-danger px-4 py-5">
+        <div v-else class="mx-10 my-10 -mt-2 rounded-xl border border-danger-border bg-danger/10 px-4 py-5">
             <h4 class="mb-1 text-sm font-bold text-danger">
                 {{ $t('Attention') }}
             </h4>

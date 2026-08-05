@@ -24,7 +24,7 @@
                                 class="z-40 overflow-y-auto origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5">
                                 <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                     <Link href="#" @click="teamForm.svg_name = item.iconName; editTeam()"
-                                          :class="[active ? 'bg-text-inverse/10 text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                          :class="[active ? 'bg-text-inverse/10 ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TeamIconCollection class="h-16 w-16" :iconName="item.iconName"/>
                                     </Link>
                                 </MenuItem>
@@ -106,7 +106,7 @@
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold uppercase shadow-sm "
                                 @click="deleteTeam">
                             {{ $t('Delete')}}
                         </button>
@@ -128,7 +128,7 @@
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold uppercase shadow-sm "
                                 @click="deleteAllTeamMembers">
                             {{ $t('Delete all team members')}}
                         </button>

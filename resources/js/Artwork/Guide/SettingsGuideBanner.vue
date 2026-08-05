@@ -1,6 +1,6 @@
 <template>
     <!-- sidebar: fixed card for side columns, never collapsible -->
-    <div v-if="variant === 'sidebar'" class="rounded-2xl border border-accent-100 bg-accent-50 p-5">
+    <div v-if="variant === 'sidebar'" class="rounded-2xl border border-accent-100 bg-accent-50/50 p-5">
         <div class="flex items-center gap-2 mb-3">
             <PropertyIcon :name="icon" class="h-5 w-5 text-accent-600 shrink-0" />
             <span class="text-sm font-semibold text-text">{{ $t(title) }}</span>
@@ -13,7 +13,7 @@
     </div>
 
     <!-- static: non-collapsible box, for modals and short in-place notes -->
-    <div v-else-if="variant === 'static'" class="rounded-xl border border-accent-100 bg-accent-50 px-4 py-3">
+    <div v-else-if="variant === 'static'" class="rounded-xl border border-accent-100 bg-accent-50/50 px-4 py-3">
         <div class="flex gap-x-3">
             <PropertyIcon :name="icon" class="h-5 w-5 text-accent-600 shrink-0 mt-0.5" />
             <div class="min-w-0">
@@ -28,7 +28,7 @@
     </div>
 
     <!-- banner (tab level) / inline (card level): collapsible, state remembered per browser -->
-    <div v-else class="rounded-2xl border border-accent-100 bg-accent-50" :class="variant === 'inline' ? 'rounded-xl' : ''">
+    <div v-else class="rounded-2xl border border-accent-100 bg-accent-50/50" :class="variant === 'inline' ? 'rounded-xl' : ''">
         <button
             type="button"
             class="w-full flex items-center gap-3 text-left"

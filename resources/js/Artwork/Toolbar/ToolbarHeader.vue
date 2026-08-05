@@ -1,6 +1,6 @@
 <template>
     <div class="-mx-2 sm:mx-0">
-        <div class="rounded-lg border border-border-subtle bg-surface px-3 py-3 sm:px-5 sm:py-4 shadow-raised">
+        <div class="rounded-lg border border-border-subtle/70 bg-surface px-3 py-3 sm:px-5 sm:py-4 shadow-raised">
             <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                 <!-- Brand/Icon + Titel -->
                 <div class="flex items-center gap-3 mr-auto min-w-0">

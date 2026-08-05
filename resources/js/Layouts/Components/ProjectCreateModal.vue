@@ -475,7 +475,7 @@
                                                         <input type="checkbox"
                                                                v-model="createProjectForm.assignedCategoryIds"
                                                                :value="category.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                               class="cursor-pointer h-4 w-4 text-success border-1   focus:border-none"/>
                                                         <p :class="[createProjectForm.assignedCategoryIds.includes(category.id)
                                                             ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -507,7 +507,7 @@
                                                         <input type="checkbox"
                                                                v-model="createProjectForm.assignedGenreIds"
                                                                :value="genre.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                               class="cursor-pointer h-4 w-4 text-success border-1   focus:border-none"/>
                                                         <p :class="[createProjectForm.assignedGenreIds.includes(genre.id)
                                                         ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -539,7 +539,7 @@
                                                         <input type="checkbox"
                                                                v-model="createProjectForm.assignedSectorIds"
                                                                :value="sector.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                               class="cursor-pointer h-4 w-4 text-success border-1   focus:border-none"/>
                                                         <p :class="[createProjectForm.assignedSectorIds.includes(sector.id)
                                                         ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">

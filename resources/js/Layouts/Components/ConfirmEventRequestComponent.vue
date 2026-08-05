@@ -9,7 +9,7 @@
                 </div>
                 <div class="flex justify-between mt-6">
                     <FormButton v-if="!showCheckButton" @click="closeModal(true)" :text="mode === 'warning' ? $t('Confirm') : $t('Reject')" />
-                    <FormButton v-else @click="closeModal(true)"><IconCheck class="h-6 w-6 text-secondaryHover"/></FormButton>
+                    <FormButton v-else @click="closeModal(true)"><IconCheck class="h-6 w-6 "/></FormButton>
                     <div v-if="!showCheckButton" class="my-auto text-sm/5 font-bold text-text-subtle cursor-pointer"
                         @click="closeModal(false)">
                         {{ $t('No, not really')}}

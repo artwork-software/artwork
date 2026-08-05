@@ -3,7 +3,7 @@
          sehr viele Zellen sichtbar — kein Drag&Drop, keine Qualifikationszeilen, keine
          Worker-Liste. Klick öffnet wie gewohnt das Schicht-Modal. -->
     <div
-        class="flex items-center justify-between gap-x-1 px-1 py-0.5 text-[10px] text-shiftText cursor-pointer select-none"
+        class="flex items-center justify-between gap-x-1 px-1 py-0.5 text-[10px]  cursor-pointer select-none"
         :data-shift-id="shift?.id"
         :title="`${craftAbbreviation} ${shift.start} - ${shift.end} (${usedWorkerCount}/${maxWorkerCount})`"
         @click="emit('clickOnEdit', shift)"

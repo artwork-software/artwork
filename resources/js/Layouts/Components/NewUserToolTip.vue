@@ -9,7 +9,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="type === 1" :id="'tooltip' + id" role="tooltip" class="-right-80 hidden absolute -mt-40 z-100 w-fit transition duration-150 ease-in-out shadow-lg p-4 rounded text-text-subtle bg-surface-inverse">
+        <div v-if="type === 1" :id="'tooltip' + id" role="tooltip" class="-right-80 hidden absolute -mt-40 z-100 w-fit transition duration-150 ease-in-out shadow-lg p-4 rounded text-white/80 bg-surface-inverse">
             <div class="grid grid-cols-4 gap-x-2 items-center w-96">
                 <div class="col-span-1 shrink-0 flex">
                     <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full" :src="user?.profile_photo_url" alt=""/>
@@ -35,7 +35,7 @@
                 </div>
             </div>
         </div>
-        <div v-else :id="'tooltip' + id" role="tooltip" class="-right-12 hidden absolute -mt-40 z-100 w-fit transition duration-150 ease-in-out shadow-lg p-4 rounded text-text-subtle bg-surface-inverse">
+        <div v-else :id="'tooltip' + id" role="tooltip" class="-right-12 hidden absolute -mt-40 z-100 w-fit transition duration-150 ease-in-out shadow-lg p-4 rounded text-white/80 bg-surface-inverse">
             <div class="grid grid-cols-4 gap-x-2 items-center w-96">
                 <div class="col-span-1 shrink-0 flex">
                     <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full" :src="user?.profile_photo_url" alt=""/>

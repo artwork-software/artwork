@@ -30,12 +30,12 @@
         </header>
 
         <!-- Konflikt-Leiste: Zeigt Überbuchungen im Zeitraum an -->
-        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-danger-border bg-danger-surface p-4 ring-1 ring-inset ring-danger-border">
+        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-danger-border bg-danger-surface/70 p-4 ring-1 ring-inset ring-danger-border">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-start gap-3">
                     <div class="grid size-8 place-items-center rounded-full bg-danger text-white text-xs font-bold">!</div>
                     <div>
-                        <h3 class="text-sm font-semibold text-danger">{{ $t('Conflicts regarding availability') }}</h3>
+                        <h3 class="text-sm font-semibold text-danger/90">{{ $t('Conflicts regarding availability') }}</h3>
                         <p class="text-xs text-danger">
                             {{ $t('There are') }} <strong>{{ conflicts.length }}</strong> {{ $t('Items with a quantity higher than available in the selected period.') }}
                         </p>
@@ -189,7 +189,7 @@
 
                     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                         <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
-                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-success-border bg-success-surface ring-1 ring-success-border' : 'border-border-subtle bg-surface-sunken hover:bg-surface-sunken hover:border-accent-200'">
+                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-success-border bg-success-surface/50 ring-1 ring-success-border' : 'border-border-subtle bg-surface-sunken/60 hover:bg-surface-sunken hover:border-accent-200'">
                                 <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                     <div class="flex items-start gap-3">
                                         <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-border-subtle object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -255,7 +255,7 @@
                                     <IconX class="h-4 w-4" />
                                 </button>
                             </div>
-                            <div v-if="externMaterialIssueForm.articles.length > 0" class="divide-y divide-border-subtle">
+                            <div v-if="externMaterialIssueForm.articles.length > 0" class="divide-y divide-border-subtle/80">
                                 <div v-for="(article, index) in externMaterialIssueForm.articles" :key="index" :data-article-row="index" class="flex flex-col gap-3 py-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
                                     <div class="flex w-full items-start gap-4">
                                         <!-- Single preview with zoom overlay -->
@@ -366,7 +366,7 @@
                 </div>
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch">
                     <div>
-                        <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-success-border p-10 text-center hover:border-success-border focus:outline-hidden focus:ring-2 focus:ring-success focus:ring-offset-2">
+                        <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-success-border/70 p-10 text-center hover:border-success-border focus:outline-hidden focus:ring-2 focus:ring-success focus:ring-offset-2">
                             <component :is="IconFile" class="mx-auto size-12 text-success" stroke-width="1" />
                             <span class="mt-2 block text-sm font-semibold text-success">{{ $t('Select file') }}</span>
                             <input @change="upload" class="hidden" ref="externMaterialIssueFiles" id="file" type="file" multiple />

@@ -987,7 +987,7 @@
                 />
                 <label
                     for="cb-options"
-                    :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-text-subtle'"
+                    :class="userCalendarSettings.options ? ' subpixel-antialiased' : 'text-text-subtle'"
                     class="ml-4 my-auto text-text-subtle cursor-pointer"
                 >
                     {{ $t('Option prioritization') }}

@@ -22,7 +22,7 @@
                         />
                         <div @click="selectNewFiles" @dragover.prevent
                              @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
-                        border-accent-600 border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        border-accent-600 border-dotted border-2 h-32  p-2 cursor-pointer">
                             <p class="text-accent-600 font-bold text-center">
                                 {{ $t('Drag document here to upload or click in the field') }}
                             </p>

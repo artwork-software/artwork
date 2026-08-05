@@ -25,7 +25,7 @@
                     <Menu as="div" class="my-auto relative">
                         <div class="flex">
                             <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
+                                class="flex  p-0.5 rounded-full">
                                 <IconDotsVertical
                                     class=" flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create my-auto"
                                     aria-hidden="true"/>
@@ -49,7 +49,7 @@
                                                       budgetManagementAccount: trashedAccount.id
                                                   }
                                               )"
-                                              :class="[active ? 'bg-primaryHover text-white' :
+                                              :class="[active ? ' text-white' :
                                                 'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
                                             <IconRefresh
@@ -66,7 +66,7 @@
                                                       budgetManagementAccount: trashedAccount.id
                                                   }
                                               )"
-                                              :class="[active ? 'bg-primaryHover text-white' :
+                                              :class="[active ? ' text-white' :
                                                 'text-text-subtle',
                                                 'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
                                             <IconTrash

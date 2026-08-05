@@ -9,7 +9,7 @@
             ]"
         />
         <div class="my-10 grid gap-5 xl:grid-cols-2">
-            <div v-if="hasAdminRole()" class="rounded-2xl border border-accent-200 bg-accent-50 p-5">
+            <div v-if="hasAdminRole()" class="rounded-2xl border border-accent-200 bg-accent-50/60 p-5">
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Permission model')"
@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-special-violet-border bg-special-violet-surface p-5">
+            <div class="rounded-2xl border border-special-violet-border bg-special-violet-surface/60 p-5">
                 <div class="flex items-start justify-between gap-5">
                     <BasePageTitle
                         :title="$t('Uncommitted shifts in own roster')"

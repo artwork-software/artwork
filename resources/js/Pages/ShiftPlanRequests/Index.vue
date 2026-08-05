@@ -76,7 +76,7 @@
                                         v-if="item.type === 'today-line'"
                                         class="flex items-center gap-2 px-4 py-1"
                                     >
-                                        <div class="flex-1 border-t border-danger-border"></div>
+                                        <div class="flex-1 border-t border-danger-border/60"></div>
                                         <span class="text-[10px] font-medium text-danger uppercase tracking-wide">{{ $t('Today') }}</span>
                                         <div class="flex-1 border-t border-danger-border"></div>
                                     </div>
@@ -85,7 +85,7 @@
                                     <button
                                         v-else
                                         type="button"
-                                        class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-accent-50 transition"
+                                        class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-accent-50/60 transition"
                                         @click="goToRequest(item.data.id)"
                                     >
                                         <div class="flex items-center gap-3">
@@ -143,7 +143,7 @@
                                     v-for="req in (pastRequests[craft.id]?.approved || [])"
                                     :key="req.id"
                                     type="button"
-                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-accent-50 transition rounded"
+                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-accent-50/60 transition rounded"
                                     @click="goToRequest(req.id)"
                                 >
                                     <div class="flex flex-col">
@@ -187,7 +187,7 @@
                                     v-for="req in (pastRequests[craft.id]?.rejected || [])"
                                     :key="req.id"
                                     type="button"
-                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-accent-50 transition rounded"
+                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-accent-50/60 transition rounded"
                                     @click="goToRequest(req.id)"
                                 >
                                     <div class="flex flex-col">

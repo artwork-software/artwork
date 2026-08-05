@@ -46,7 +46,7 @@
         <ShiftNoteComponent :shift="presetShift" is-preset />
         <div v-for="shiftsQualification in this.presetShift.shifts_qualifications">
             <div v-for="(count) in shiftsQualification.value">
-                <div class="flex items-center justify-between p-1 hover:bg-surface-sunken rounded">
+                <div class="flex items-center justify-between p-1 hover:bg-surface-sunken/40 rounded">
                     <div class="flex items-center gap-x-2">
                         <div class="h-4 w-4 rounded-full block bg-text-subtle"></div>
                         <div class="text-xs">{{ $t('Unoccupied')}}</div>

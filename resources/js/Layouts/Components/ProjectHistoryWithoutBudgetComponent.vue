@@ -9,7 +9,7 @@
                 <!-- Leerer Zustand -->
                 <div
                     v-if="projectItems.length === 0"
-                    class="rounded-xl border border-border-subtle bg-surface-sunken p-4 text-sm text-text-muted"
+                    class="rounded-xl border border-border-subtle bg-surface-sunken/70 p-4 text-sm text-text-muted"
                 >
                     {{ $t('No entries found') }}
                 </div>

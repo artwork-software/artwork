@@ -1,8 +1,8 @@
 <template>
     <div
-        class="shiftCell h-full overflow-hidden rounded-lg bg-surface-sunken text-xs text-white hover:opacity-100 relative"
+        class="shiftCell h-full overflow-hidden rounded-lg bg-surface-sunken/10 text-xs text-white hover:opacity-100 relative"
         :class="[ hasUnavailableAssignment
-          ? 'ring-2 ring-inset ring-warning bg-warning'
+          ? 'ring-2 ring-inset ring-warning-border bg-warning-border/20'
           : hasMultiShiftGroups && 'ring-2 ring-inset ring-danger-border',
     ]"
     >
@@ -63,7 +63,7 @@
             />
             <div
                 v-if="overflowAssignmentsToday.length"
-                class="h-[5px] mt-[2px] rounded-full mx-0.5 bg-text-subtle"
+                class="h-[5px] mt-[2px] rounded-full mx-0.5 bg-text-subtle/70"
                 :title="overflowAssignmentsToday.map(a => assignmentLabel(a, t('Wish'))).join('\n')"
             />
         </div>

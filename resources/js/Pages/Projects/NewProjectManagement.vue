@@ -188,7 +188,7 @@
                         >
                             <div class="grid items-center" :style="`grid-template-columns: ${gridTemplateColumns}`">
                                 <div v-for="i in skeletonCols" :key="i" class="px-3 py-3">
-                                    <div class="h-4 w-[70%] rounded bg-border-subtle animate-pulse"></div>
+                                    <div class="h-4 w-[70%] rounded bg-border-subtle/70 animate-pulse"></div>
                                 </div>
                             </div>
                         </div>

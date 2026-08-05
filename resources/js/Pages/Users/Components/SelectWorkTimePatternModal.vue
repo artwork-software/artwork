@@ -13,7 +13,7 @@
                 is-small
                 id="searchInput"/>
 
-            <div class="rounded-lg border border-border-subtle bg-surface-sunken p-3">
+            <div class="rounded-lg border border-border-subtle bg-surface-sunken/60 p-3">
                 <p class="text-xs font-medium text-text-muted mb-2">
                     {{ $t('Validity period') }}
                 </p>
@@ -50,7 +50,7 @@
                     @click="emitWorkTimePattern(workTime)"
                     class="group cursor-pointer rounded-lg border p-4 transition duration-150 ease-in-out"
                     :class="workTime.id === selectedPatternId
-                        ? 'border-accent-200 bg-accent-50'
+                        ? 'border-accent-200 bg-accent-50/50'
                         : 'border-border-subtle hover:border-accent-200 hover:bg-surface-sunken'">
 
                     <div class="flex items-start justify-between gap-4">
@@ -77,7 +77,7 @@
 
                     <div class="mt-3 grid grid-cols-4 sm:grid-cols-8 gap-1.5">
                         <div v-for="day in weekDays" :key="day.key"
-                             class="rounded-md border border-border-subtle bg-surface-sunken group-hover:bg-white px-1.5 py-1.5 text-center">
+                             class="rounded-md border border-border-subtle bg-surface-sunken/60 group-hover:bg-white px-1.5 py-1.5 text-center">
                             <p class="text-[10px] text-text-subtle">{{ $t(day.short) }}</p>
                             <p class="text-xs font-semibold text-text">{{ workTime[day.key] ?? '-' }}</p>
                         </div>

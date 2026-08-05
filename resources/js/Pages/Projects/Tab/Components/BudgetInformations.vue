@@ -2,7 +2,7 @@
     <div class="w-full">
         <div class="w-full flex items-center">
             <div class="text-text-subtle text-md">{{$t('Cost unit:')}} {{ project?.cost_center?.name }}</div>
-            <IconEdit :class="[!this.inSidebar ? 'text-black' : 'text-white', 'ml-auto w-6 h-6 p-1 rounded-full bg-darkInputBg']" @click="openCopyrightModal"/>
+            <IconEdit :class="[!this.inSidebar ? 'text-black' : 'text-white', 'ml-auto w-6 h-6 p-1 rounded-full ']" @click="openCopyrightModal"/>
             <ProjectCopyrightModal
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
@@ -11,13 +11,13 @@
         </div>
         <div class="text-text-subtle text-md">{{$t('GEMA')}}: {{ project.gema ? $t('Yes') : $t('No') }}</div>
         <div class="text-text-subtle text-sm mt-2" v-if="project.cost_center_description">{{ project.cost_center_description }}</div>
-        <hr class="my-10 border-darkGray">
+        <hr class="my-10 ">
         <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.effectiveBudgetInformation?.project_manager_ids?.includes(this.$page.props.auth.user.id)">
             <div class="text-text-subtle text-md">{{$t('Documents')}}</div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
             <IconUpload v-if="this.hasAdminRole() || this.$can('can manage global project budgets')"
-                        class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                        class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                         @click="openFileUploadModal"/>
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
@@ -56,12 +56,12 @@
         </div>
         <div
             v-if="$can('view edit upload contracts') || this.hasBudgetAccess()">
-            <hr class="my-10 border-darkGray">
+            <hr class="my-10 ">
             <div class="w-full flex items-center mb-4">
                 <div class="text-text-subtle text-md">{{ $t('Contracts')}}</div>
                 <IconChevronDown class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
                                  @click="showContracts = !showContracts"/>
-                <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                             @click="openContractUploadModal"/>
                 <ContractUploadModal
                     :show="showContractUploadModal"
@@ -100,7 +100,7 @@
                 </div>
             </div>
             <div v-if="this.$can('view edit add money_sources') || this.hasAdminRole() || this.hasBudgetAccess()">
-                <hr class="my-10 border-darkGray">
+                <hr class="my-10 ">
                 <section class="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                     <button
                         type="button"
@@ -144,7 +144,7 @@
                                         <div class="flex flex-wrap items-center gap-2">
                                             <Link
                                                 v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
-                                                class="truncate text-sm font-semibold text-linkOnDarkColor underline-offset-2 hover:underline"
+                                                class="truncate text-sm font-semibold  underline-offset-2 hover:underline"
                                                 :href="route('money_sources.show', {moneySource: moneySource.id})"
                                             >
                                                 {{ moneySource.name }}

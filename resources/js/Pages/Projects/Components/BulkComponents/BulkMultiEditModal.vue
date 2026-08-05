@@ -59,7 +59,7 @@
                         <ListboxOptions
                             class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption
-                                class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between"
+                                class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                 v-for="status in eventStatuses"
                                 :key="status.name"
                                 :value="status"
@@ -103,7 +103,7 @@
                         <ListboxOptions
                             class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption
-                                class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between"
+                                class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                 v-for="eventType in eventTypes"
                                 :key="eventType.name"
                                 :value="eventType"
@@ -141,7 +141,7 @@
                         <ListboxOptions
                             class="w-full rounded-lg bg-surface-inverse max-h-56 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between"
+                                           class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">

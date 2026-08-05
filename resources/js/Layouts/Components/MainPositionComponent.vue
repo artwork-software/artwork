@@ -120,8 +120,8 @@
                 </div>
             </div>
         </div>
-        <div @click="addSubPosition(mainPosition.id)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-            <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+        <div @click="addSubPosition(mainPosition.id)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+            <div class="group-hover:block hidden uppercase  text-sm -mt-8">
                 {{ $t('Sub position') }}
                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full" />
             </div>
@@ -196,8 +196,8 @@
             </tr>
             </thead>
             </table>
-            <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
-                <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+            <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+                <div class="group-hover:block hidden uppercase  text-sm -mt-8">
                     {{ $t('Main position') }}
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full" />
                 </div>

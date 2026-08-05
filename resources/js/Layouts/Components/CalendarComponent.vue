@@ -1,5 +1,5 @@
 <template>
-    <div class=" items-center relative bg-secondaryHover" id="myCalendar">
+    <div class=" items-center relative " id="myCalendar">
         <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
             <div v-if="filteredEvents?.length > 0"
                  class="ml-5 flex text-sm/5 text-danger items-center cursor-pointer mb-5 "
@@ -173,7 +173,7 @@
                                                         <MenuItem v-for="user in event.projectLeaders"
                                                                   v-slot="{ active }">
                                                             <Link href="#"
-                                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                  :class="[active ? ' ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
                                                                      class="rounded-full"
                                                                      :src="user.profile_photo_url"

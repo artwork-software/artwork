@@ -57,7 +57,7 @@
                     <template #item="{ element: group }">
                     <div
                         class="rounded-lg border transition-colors"
-                        :class="isGroupAssigned(group) ? 'border-accent-200 bg-white' : 'border-border-subtle bg-surface-sunken'"
+                        :class="isGroupAssigned(group) ? 'border-accent-200 bg-white' : 'border-border-subtle bg-surface-sunken/70'"
                     >
                         <!-- Group header -->
                         <div

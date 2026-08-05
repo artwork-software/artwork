@@ -60,7 +60,7 @@
                     <div ref="scrollContainer" class="max-h-[28rem] overflow-y-auto px-5 pb-5">
                         <!-- Skeletons -->
                         <div v-if="initialLoading" class="space-y-2">
-                            <div v-for="i in 6" :key="i" class="animate-pulse rounded-xl border border-border-subtle bg-surface-sunken p-3">
+                            <div v-for="i in 6" :key="i" class="animate-pulse rounded-xl border border-border-subtle bg-surface-sunken/60 p-3">
                                 <div class="flex items-start gap-3">
                                     <div class="h-12 w-12 rounded-lg bg-border-subtle" />
                                     <div class="min-w-0 flex-1 space-y-2">
@@ -75,7 +75,7 @@
                             <div
                                 v-for="article in articles"
                                 :key="article.id"
-                                class="mb-2 rounded-xl border border-border-subtle bg-surface-sunken p-3 shadow-sm"
+                                class="mb-2 rounded-xl border border-border-subtle bg-surface-sunken/60 p-3 shadow-sm"
                             >
                                 <button
                                     type="button"
@@ -194,7 +194,7 @@
                         <div class="mt-4">
                             <!-- Listendarstellung im Kartenstil -->
                             <div v-if="materialSetForm.items.length" class="p-5">
-                                <div class="divide-y divide-border-subtle">
+                                <div class="divide-y divide-border-subtle/80">
                                     <div
                                         v-for="(item, index) in materialSetForm.items"
                                         :key="item.id"

@@ -4,7 +4,7 @@
             <div class="text-text-subtle text-md">
                 {{$t('Access to room')}}
             </div>
-            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                            @click="openRoomAccessModal"/>
         </div>
         <div class="text-text-subtle text-sm mt-4 uppercase">{{$t('Room admin')}}</div>
@@ -26,27 +26,27 @@
             {{ $t('So far, no user is authorized to make inquiries')}}
         </div>
 
-        <hr class="my-10 border-darkGray">
+        <hr class="my-10 ">
 
         <div class="flex">
             <div class="text-text-subtle text-md">
                 {{$t('Room properties')}}
             </div>
-            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                            @click="openEditRoomAttributesModal"/>
         </div>
         <div v-if="adjoiningRooms?.length > 0 || categories?.length > 0 || attributes?.length > 0">
             <div class="mt-4 flex flex-wrap">
                 <div v-for="category in categories"
-                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-surface-inverse w-fit rounded-full">
+                     class="mr-2 mb-2 flex text-sm px-3 py-1 border  bg-surface-inverse w-fit rounded-full">
                     {{ category.name}}
                 </div>
                 <div v-for="attribute in attributes"
-                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-surface-inverse w-fit rounded-full">
+                     class="mr-2 mb-2 flex text-sm px-3 py-1 border  bg-surface-inverse w-fit rounded-full">
                     {{ attribute.name}}
                 </div>
                 <div v-for="room in adjoiningRooms"
-                     class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-surface-inverse w-fit rounded-full">
+                     class="mr-2 mb-2 flex text-sm px-3 py-1 border  bg-surface-inverse w-fit rounded-full">
                     {{ room.name}}
                 </div>
             </div>
@@ -55,7 +55,7 @@
             {{$t('No properties selected yet')}}
         </div>
 
-        <hr class="my-10 border-darkGray">
+        <hr class="my-10 ">
 
         <div class="flex items-center">
             <div class="text-text-subtle text-md">
@@ -63,7 +63,7 @@
             </div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showRoomFiles ? 'rotate-180' : '']"
                              @click="showRoomFiles = !showRoomFiles"/>
-            <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                         @click="openFileUploadModal"/>
             <RoomFileUploadModal
                 :show="showFileUploadModal"

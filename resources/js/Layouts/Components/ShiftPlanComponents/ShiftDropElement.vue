@@ -9,7 +9,7 @@
 
               multiEditMode ? 'text-[10px]' : 'text-[11px]'
             ]"
-            class="flex items-center text-sm/5 font-bold text-text-subtle text-shiftText subpixel-antialiased"
+            class="flex items-center text-sm/5 font-bold text-text-subtle  subpixel-antialiased"
             @dragover="onDragOver"
             @drop="onDrop"
             @click="handleClickEvent"

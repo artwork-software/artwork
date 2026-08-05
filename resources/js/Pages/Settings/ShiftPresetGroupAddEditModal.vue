@@ -12,7 +12,7 @@
                     <input
                         v-model="groupForm.name"
                         type="text"
-                        class="h-11 w-full rounded-2xl border border-border-subtle bg-white/90 px-4 text-sm text-text
+                        class="h-11 w-full rounded-2xl border border-border-subtle/70 bg-white/90 px-4 text-sm text-text
                  shadow-sm transition
                  focus:border-border focus:bg-white focus:shadow"
                         :placeholder="$t('e.g. Early shift / Service / Kitchen')"
@@ -34,12 +34,12 @@
 
                     <div class="flex items-center gap-2">
                         <button type="button"
-                                class="h-9 rounded-xl px-3 text-xs font-semibold text-text-muted ring-1 ring-border-subtle hover:bg-surface-sunken active:scale-[0.99] transition"
+                                class="h-9 rounded-xl px-3 text-xs font-semibold text-text-muted ring-1 ring-border-subtle/80 hover:bg-surface-sunken active:scale-[0.99] transition"
                                 @click="selectAll">
                             {{ $t('All') }}
                         </button>
                         <button type="button"
-                                class="h-9 rounded-xl px-3 text-xs font-semibold text-text-muted ring-1 ring-border-subtle hover:bg-surface-sunken active:scale-[0.99] transition"
+                                class="h-9 rounded-xl px-3 text-xs font-semibold text-text-muted ring-1 ring-border-subtle/80 hover:bg-surface-sunken active:scale-[0.99] transition"
                                 @click="clearAll">
                             {{ $t('None') }}
                         </button>
@@ -50,7 +50,7 @@
                     <input
                         v-model="search"
                         type="text"
-                        class="h-11 w-full rounded-2xl border border-border-subtle bg-white/90 pl-10 pr-4 text-sm text-text
+                        class="h-11 w-full rounded-2xl border border-border-subtle/70 bg-white/90 pl-10 pr-4 text-sm text-text
                  shadow-sm transition focus:border-border focus:bg-white"
                         :placeholder="$t('Search presets… (group)')"
                         autocomplete="off"
@@ -64,7 +64,7 @@
                     </div>
                 </div>
 
-                <div class="max-h-[340px] overflow-auto rounded-2xl border border-border-subtle bg-white/80 shadow-sm">
+                <div class="max-h-[340px] overflow-auto rounded-2xl border border-border-subtle/70 bg-white/80 shadow-sm">
                     <div v-if="filteredPresets.length === 0" class="p-4 text-sm text-text-subtle">
                         {{ $t('No presets found. (group)') }}
                     </div>
@@ -72,8 +72,8 @@
                     <label
                         v-for="p in filteredPresets"
                         :key="p.id"
-                        class="group flex items-start gap-3 px-4 py-3 border-b border-border-subtle last:border-b-0
-           hover:bg-surface-sunken transition cursor-pointer"
+                        class="group flex items-start gap-3 px-4 py-3 border-b border-border-subtle/50 last:border-b-0
+           hover:bg-surface-sunken/80 transition cursor-pointer"
                     >
                         <input
                             class="mt-1 h-4 w-4 rounded border-border text-accent-600"
@@ -124,7 +124,7 @@
                                         <span
                                             v-for="q in presetMeta(p).quals.slice(0, 4)"
                                             :key="q.id"
-                                            class="inline-flex items-center gap-1 rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle"
+                                            class="inline-flex items-center gap-1 rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle/70"
                                         >
                                           {{ q.name }}
                                           <span v-if="q.pivot?.quantity" class="text-text-subtle">×{{

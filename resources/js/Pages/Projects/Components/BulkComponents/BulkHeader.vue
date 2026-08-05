@@ -4,7 +4,7 @@
          darunterliegenden Event-Zeilen durch die (transparente) Headerzeile durch.
          backdrop-blur wird nicht in allen Browsern unterstützt → deshalb voll deckend. -->
     <div
-        class="sticky top-0 z-20 print:static w-max bg-white border-b border-border-subtle"
+        class="sticky top-0 z-20 print:static w-max bg-white border-b border-border-subtle/70"
     >
         <div
             class="px-6 sm:px-4 mt-2 mb-3"

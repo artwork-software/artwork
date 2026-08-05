@@ -165,7 +165,7 @@
                         </div>
                         <div  class="col-span-4 pr-8">
                             <div v-if="globalNotification.image_url || globalNotification.title">
-                                <div class="bg-backgroundGray rounded-xl">
+                                <div class=" rounded-xl">
                                     <img v-if="globalNotification.image_url" alt="Benachrichtigungs-Bild" class="max-h-96 rounded-t-xl"
                                          :src="globalNotification.image_url"/>
                                     <div class="px-4 py-4">

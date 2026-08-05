@@ -115,7 +115,7 @@
                     </div>
 
                     <label
-                        class="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-white px-3 py-1.5 text-xs font-medium text-text-muted shadow-xs cursor-pointer hover:border-success-border hover:bg-success-surface transition-colors"
+                        class="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-white px-3 py-1.5 text-xs font-medium text-text-muted shadow-xs cursor-pointer hover:border-success-border hover:bg-success-surface/70 transition-colors"
                     >
                         <input
                             type="checkbox"

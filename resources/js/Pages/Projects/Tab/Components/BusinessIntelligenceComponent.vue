@@ -40,7 +40,7 @@
 
             <!-- ================= PLAN-ANSICHT ================= -->
             <template v-if="scope === 'plan'">
-                <div class="mb-4 rounded-xl border border-dashed border-accent-200 bg-accent-50 px-4 py-2.5 flex items-center gap-2">
+                <div class="mb-4 rounded-xl border border-dashed border-accent-200 bg-accent-50/50 px-4 py-2.5 flex items-center gap-2">
                     <span class="rounded-full bg-accent-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                         {{ $t('Plan') }}
                     </span>
@@ -157,7 +157,7 @@
                     <span class="text-sm font-medium text-warning">
                         {{ $t('Data quality') }}: {{ dataQuality.filled }}/{{ dataQuality.total }} {{ $t('filled in') }}
                     </span>
-                    <div class="h-1.5 w-32 rounded-full bg-warning-surface overflow-hidden shrink-0">
+                    <div class="h-1.5 w-32 rounded-full bg-warning-surface/70 overflow-hidden shrink-0">
                         <div
                             class="h-full rounded-full bg-warning"
                             :style="{ width: (dataQuality.filled / dataQuality.total * 100) + '%' }"

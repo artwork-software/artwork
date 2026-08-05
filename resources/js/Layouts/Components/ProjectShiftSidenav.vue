@@ -5,9 +5,9 @@
             :project="this.project"
             :event-types="this.eventTypes"
         />
-        <hr v-if="RelevantDatesForShiftPlanningComponent" class="my-10 border-darkGray">
+        <hr v-if="RelevantDatesForShiftPlanningComponent" class="my-10 ">
         <ShiftContactPersonsComponent :project="this.project"/>
-        <hr class="my-10 border-darkGray">
+        <hr class="my-10 ">
         <GeneralShiftInformationComponent :project="this.project"/>
     </div>
 </template>

@@ -218,7 +218,7 @@ function closeModal() {
                         v-for="q in props.shiftQualifications"
                         :key="q.id"
                         class="flex items-center justify-between rounded-xl border p-3 transition-shadow"
-                        :class="isQualificationSelected(q.id) ? 'border-accent-600 shadow-sm' : 'border-border-subtle hover:shadow-sm'"
+                        :class="isQualificationSelected(q.id) ? 'border-accent-600/50 shadow-sm' : 'border-border-subtle hover:shadow-sm'"
                     >
                         <!-- Toggle + Label -->
                         <button

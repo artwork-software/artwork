@@ -2,7 +2,7 @@
     <div
         :style="containerStyle"
         :class="[isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays', hour ? '!bg-surface-sunken' : '']"
-        class="text-calendarText text-right bg-surface-sunken"
+        class=" text-right bg-surface-sunken"
     >
         <!-- Sticky so the date stays visible when scrolling through very tall day rows (expand_days) -->
         <div :style="stickyTop !== null ? { position: 'sticky', top: stickyTop + 'px' } : {}" :class="isCompact ? 'mt-0.5 mr-2' : 'mt-2 mr-2'" v-if="day">

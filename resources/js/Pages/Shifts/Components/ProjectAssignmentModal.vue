@@ -9,7 +9,7 @@
     >
         <div class="space-y-5 text-sm">
             <!-- Projekt-Auswahl -->
-            <section class="space-y-2 rounded-xl border border-border-subtle bg-surface-sunken px-3.5 py-3">
+            <section class="space-y-2 rounded-xl border border-border-subtle bg-surface-sunken/80 px-3.5 py-3">
                 <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                     {{ $t('Project') }}
                 </h3>

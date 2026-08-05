@@ -266,7 +266,7 @@
                 </section>
 
                 <!-- detaillierte Artikel -->
-                <div class="bg-backgroundGray -mx-4">
+                <div class=" -mx-4">
                     <section
                         aria-labelledby="details-heading"
                         class="mt-8 mb-2 border-t-2 border-border-subtle pt-4 mx-6"

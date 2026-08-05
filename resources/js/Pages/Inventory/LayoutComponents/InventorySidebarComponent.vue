@@ -30,7 +30,7 @@
                                                 <span v-if="category?.subcategories?.length > 0">
                                                     <component :is="IconChevronDown" class="size-5" stroke-width="1" aria-hidden="true"  :class="[category.id === currentCategory?.id ? 'rotate-180' : '']" />
                                                 </span>
-                                                <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600 ring-inset">{{ category.articles?.length || 0 }}</span>
+                                                <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600/10 ring-inset">{{ category.articles?.length || 0 }}</span>
                                             </div>
                                         </Link>
                                         <div v-if="category.id === currentCategory?.id" :class="currentCategory?.subcategories?.length > 0 ? 'mt-4' : ''">
@@ -49,7 +49,7 @@
                                                                 {{ subCategory.name }}
                                                             </span>
                                                         </div>
-                                                        <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600 ring-inset">{{ subCategory.articles?.length }}</span>
+                                                        <span class="inline-flex items-center rounded-md bg-accent-50 px-2 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-600/10 ring-inset">{{ subCategory.articles?.length }}</span>
                                                     </div>
                                                 </Link>
                                             </div>

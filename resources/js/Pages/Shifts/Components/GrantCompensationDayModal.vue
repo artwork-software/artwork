@@ -26,7 +26,7 @@
                             class="rounded-lg border px-3 py-2.5 cursor-pointer transition-colors"
                             :class="[
                                 selectedDayOff?.id === dayOff.id
-                                    ? 'border-accent-700 bg-accent-50'
+                                    ? 'border-accent-700 bg-accent-50/50'
                                     : 'border-border-subtle hover:border-border bg-white',
                                 isOverdue(dayOff) ? 'ring-1 ring-danger-border' : '',
                             ]"
@@ -94,7 +94,7 @@
                                 :key="option.value"
                                 class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs cursor-pointer"
                                 :class="halfDayPeriod === option.value
-                                    ? 'border-accent-700 bg-accent-50 text-text'
+                                    ? 'border-accent-700 bg-accent-50/50 text-text'
                                     : 'border-border-subtle text-text-muted hover:border-border'"
                             >
                                 <input

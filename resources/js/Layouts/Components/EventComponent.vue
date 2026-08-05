@@ -566,7 +566,7 @@
             <div
                 v-for="(affected, index) in assignmentImpactList"
                 :key="index"
-                class="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2 text-xs text-text-muted"
+                class="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2 text-xs text-text-muted"
             >
                 <span class="mt-1 inline-flex h-1.5 w-1.5 shrink-0 rounded-full" :class="affected.type === 'wish' ? 'bg-success' : 'bg-danger'"></span>
                 <span>

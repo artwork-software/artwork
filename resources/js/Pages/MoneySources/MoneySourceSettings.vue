@@ -35,8 +35,8 @@
 
                 <div class="mr-10 mt-5 flex flex-wrap">
                     <span v-for="(category,index) in moneySourceCategories"
-                          class="rounded-full items-center font-medium text-tagText
-                        border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                          class="rounded-full items-center font-medium 
+                        border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                         {{ category.name }}
                         <button type="button" @click="this.showCategoryDeleteModal(category)">
                             <PropertyIcon name="IconX"  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>

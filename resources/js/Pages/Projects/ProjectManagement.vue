@@ -148,49 +148,49 @@
                     <!-- Tags are not wanted right now
                     <div id="selectedFilter" class="mt-3">
                         <span v-if="getUserSortBySetting()"
-                            class="rounded-full items-center font-medium text-tagTextGreen border bg-tagBgGreen border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                            class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ getSortEnumTranslation(this.getUserSortBySetting()) }}
                             <button type="button" @click="this.resetSort();">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showOnlyMyProjects')"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                              class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                             {{ $t('My projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showOnlyMyProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showProjectGroups')"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                              class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                             {{ $t('Project groups') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showProjectGroups');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showProjects')"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                              class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showExpiredProjects')"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                              class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Show expired projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showExpiredProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showFutureProjects')"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                              class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Show future projects') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('showFutureProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('hideProjectsWithoutEvents')"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                              class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Hide projects without events') }}
                             <button type="button" @click="this.disableUserProjectFilterSetting('hideProjectsWithoutEvents');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
@@ -199,7 +199,7 @@
 
                         <template v-for="state in computedStateTags">
                             <span v-if="state.clicked"
-                                  class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                  class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ state.name }}
                                 <button type="button"
                                         @click="state.clicked = false; this.applyFiltersAndSort();">

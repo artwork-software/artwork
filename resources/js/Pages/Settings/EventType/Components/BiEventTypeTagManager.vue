@@ -14,7 +14,7 @@
         </div>
 
         <!-- Explanation of what BI tags are used for -->
-        <div class="mb-6 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3">
+        <div class="mb-6 rounded-lg border border-accent-200 bg-accent-50/60 px-4 py-3">
             <div class="flex gap-3">
                 <component :is="IconInfoCircle" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
                 <div class="text-sm text-accent-700 space-y-1">

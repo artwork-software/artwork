@@ -18,8 +18,8 @@
                 <tr
                     v-for="item in items"
                     :key="item.id"
-                    class="hover:bg-surface-sunken"
-                    :class="overdueHighlight && isOverdue(item) ? 'bg-danger-surface' : ''"
+                    class="hover:bg-surface-sunken/50"
+                    :class="overdueHighlight && isOverdue(item) ? 'bg-danger-surface/50' : ''"
                 >
                     <td v-if="showUser" class="px-3 py-2.5 text-text font-medium">
                         {{ item.user?.first_name }} {{ item.user?.last_name }}

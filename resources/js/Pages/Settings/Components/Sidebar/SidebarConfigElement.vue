@@ -41,7 +41,7 @@ function handleSaved() {
 </script>
 
 <template>
-    <div class="rounded-2xl border border-border bg-surface-sunken backdrop-blur p-4 shadow-sm">
+    <div class="rounded-2xl border border-border/80 bg-surface-sunken/70 backdrop-blur p-4 shadow-sm">
         <!-- Header -->
         <div class="flex items-start justify-between pb-3 border-b border-dashed border-border-subtle">
             <div class="min-w-0">
@@ -63,7 +63,7 @@ function handleSaved() {
 
             <button
                 type="button"
-                class="grid place-items-center size-9 rounded-xl border border-border-subtle bg-white/70 hover:bg-white transition shrink-0"
+                class="grid place-items-center size-9 rounded-xl border border-border-subtle/80 bg-white/70 hover:bg-white transition shrink-0"
                 @click="showAddEditSidebarTabModal = true"
                 :aria-label="t('Add sidebar tab')"
             >
@@ -74,7 +74,7 @@ function handleSaved() {
         <!-- Liste -->
         <div
             class="mt-3 transition"
-            :class="dragging ? 'ring-2 ring-success-border' : ''"
+            :class="dragging ? 'ring-2 ring-success-border/30' : ''"
         >
             <draggable
                 ghost-class="opacity-50"

@@ -31,7 +31,7 @@
             </div>
 
             <!-- Violation details -->
-            <div class="grid grid-cols-2 gap-4 rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+            <div class="grid grid-cols-2 gap-4 rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-3">
                 <div>
                     <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Date') }}</label>
                     <p class="text-sm text-text">{{ formatDate(violation.violation_date) }}</p>
@@ -48,7 +48,7 @@
             </div>
 
             <!-- Manual info -->
-            <div v-if="violation.is_manual" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+            <div v-if="violation.is_manual" class="rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-3">
                 <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Manual violation') }}</label>
                 <p v-if="violation.created_by_user" class="text-xs text-text-muted">
                     {{ $t('Created by') }}: {{ violation.created_by_user?.first_name }} {{ violation.created_by_user?.last_name }}
@@ -59,7 +59,7 @@
             </div>
 
             <!-- Violation data details -->
-            <div v-if="violationDetails.length" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+            <div v-if="violationDetails.length" class="rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-3">
                 <label class="block text-[11px] font-medium text-text-subtle mb-1">{{ $t('Details') }}</label>
                 <div v-for="detail in violationDetails" :key="detail.key" class="text-xs text-text-muted">
                     <span class="font-medium">{{ detail.label }}:</span> {{ detail.value }}
@@ -171,7 +171,7 @@
             </template>
 
             <!-- Ignored info -->
-            <div v-if="violation.status === 'ignored'" class="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-3">
+            <div v-if="violation.status === 'ignored'" class="rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-3">
                 <label class="block text-[11px] font-medium text-text-subtle mb-0.5">{{ $t('Ignore reason') }}</label>
                 <p class="text-xs text-text-muted">{{ violation.ignore_reason || '-' }}</p>
                 <p v-if="violation.resolved_by_user" class="text-xs text-text-subtle mt-1">
@@ -180,7 +180,7 @@
             </div>
 
             <!-- Inline ignore reason input -->
-            <div v-if="showIgnoreInput" class="space-y-3 rounded-xl border border-danger-border bg-danger-surface px-4 py-3">
+            <div v-if="showIgnoreInput" class="space-y-3 rounded-xl border border-danger-border bg-danger-surface/50 px-4 py-3">
                 <h4 class="text-xs font-semibold text-danger">{{ $t('Ignore rule violation') }}</h4>
                 <BaseTextarea
                     id="ignore_reason"

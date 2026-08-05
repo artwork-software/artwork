@@ -27,7 +27,7 @@
                     v-for="day in days"
                     :key="day.date"
                     class="rounded-lg border"
-                    :class="selectedDays[day.date] ? 'border-danger-border bg-danger-surface' : 'border-border-subtle bg-surface-sunken'"
+                    :class="selectedDays[day.date] ? 'border-danger-border bg-danger-surface/70' : 'border-border-subtle bg-surface-sunken'"
                 >
                     <div class="flex items-start gap-3 p-3">
                         <div class="flex-1 space-y-2">

@@ -56,7 +56,7 @@
                                                        :key="type.name"
                                                        :value="type"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group rounded-lg hover:bg-accent-600 cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle hover:text-white', 'group rounded-lg hover:bg-accent-600 cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex items-center">
                                                     <div>
                                                         <div class="block size-4 rounded-full"
@@ -108,7 +108,7 @@
                                                        :key="status.name"
                                                        :value="status"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-text-subtle', 'group rounded-lg hover:bg-accent-600 cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? ' text-white' : 'text-text-subtle hover:text-white', 'group rounded-lg hover:bg-accent-600 cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex items-center">
                                                     <div>
                                                         <div class="block size-4 rounded-full"
@@ -280,7 +280,7 @@
                         </ListboxButton>
                         <ListboxOptions class="w-full rounded-lg bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between"
+                                           class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">

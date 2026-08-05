@@ -23,7 +23,7 @@
         <div
             v-if="!isInModal"
             ref="bulkFunctionBarEl"
-            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-raised border-b border-border-subtle w-fit mx-auto"
+            class="sticky glassy rounded-2xl top-(--project-header-height) z-30 print:hidden bg-white/95 backdrop-blur-xl shadow-raised border-b border-border-subtle/80 w-fit mx-auto"
         >
             <div class="flex items-center justify-start gap-x-4 py-2 px-3 print:hidden">
                 <MultiEditSwitch
@@ -134,7 +134,7 @@
                 <!-- Legend row-->
                 <div
                     v-if="!isInModal"
-                    class="px-3 py-3 border-b border-border-subtle bg-white"
+                    class="px-3 py-3 border-b border-border-subtle/70 bg-white"
                 >
                     <div
                         class="flex items-center gap-5 sm:gap-6 text-[11px] sm:text-xs text-text-muted"
@@ -155,7 +155,7 @@
                         <div class="flex items-center gap-2" role="listitem">
                             <span
                                 aria-hidden="true"
-                                class="h-4 w-10 rounded-full border-2 border-dashed border-special-pink bg-special-pink-surface"
+                                class="h-4 w-10 rounded-full border-2 border-dashed border-special-pink/70 bg-special-pink-surface/40"
                             ></span>
                             <span class="uppercase tracking-wide font-medium">
                                 {{ $t('Most recently created events') }}

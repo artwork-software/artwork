@@ -112,9 +112,9 @@ const props = defineProps({
 })
 
 const statuses = {
-    approved: 'text-success bg-success ring-success',
-    pending: 'text-text-muted bg-text-subtle border-border-subtle',
-    rejected: 'text-danger bg-danger ring-danger',
+    approved: 'text-success bg-success-surface ring-success-border',
+    pending: 'text-text-muted bg-surface-sunken border-border-subtle',
+    rejected: 'text-danger bg-danger-surface ring-danger-border',
 }
 
 const showRejectEventVerificationRequestModal = ref(false)

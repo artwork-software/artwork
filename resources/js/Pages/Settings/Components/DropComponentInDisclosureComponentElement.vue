@@ -6,10 +6,10 @@
         :class="[ 'flex items-center h-4 min-h-4 rounded transition',
             isDragging ? 'border-2 border-dashed' : '',
             isDragging && invalidDropReason
-                ? 'border-danger-border bg-danger-surface opacity-70 cursor-not-allowed'
+                ? 'border-danger-border bg-danger-surface/40 opacity-70 cursor-not-allowed'
                 : (isDragging && dropOver
-                    ? 'border-success-border bg-success-surface ring-2 ring-success-border cursor-pointer'
-                    : (isDragging ? 'border-border bg-surface-sunken cursor-pointer' : 'cursor-pointer'))
+                    ? 'border-success-border bg-success-surface/60 ring-2 ring-success-border/30 cursor-pointer'
+                    : (isDragging ? 'border-border bg-surface-sunken/40 cursor-pointer' : 'cursor-pointer'))
         ]"
         :aria-hidden="!isDragging"
         :aria-dropeffect="isDragging && !invalidDropReason ? 'copy' : undefined"

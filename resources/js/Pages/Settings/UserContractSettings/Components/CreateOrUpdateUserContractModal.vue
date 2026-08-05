@@ -81,7 +81,7 @@
                     <p v-if="userContractForm.errors.compensation_period" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
-                <div class="rounded-xl border border-accent-200 bg-accent-50 p-4">
+                <div class="rounded-xl border border-accent-200 bg-accent-50/60 p-4">
                     <label class="flex cursor-pointer items-start gap-3" for="use_three_month_average_for_target_reduction">
                         <input
                             id="use_three_month_average_for_target_reduction"

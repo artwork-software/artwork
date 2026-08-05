@@ -157,7 +157,7 @@ export default {
     >
         <div class="space-y-6">
             <!-- Name -->
-            <div class="rounded-2xl border border-border-subtle bg-white/70 backdrop-blur p-4 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur p-4 shadow-sm">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                         <div class="text-sm font-medium text-text">{{ $t('Tab name') }}</div>
@@ -176,7 +176,7 @@ export default {
             </div>
 
             <!-- Visibility -->
-            <div class="rounded-2xl border border-border-subtle bg-white/70 backdrop-blur p-4 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur p-4 shadow-sm">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                         <div class="text-sm font-medium text-text">{{ $t('Visibility') }}</div>
@@ -332,7 +332,7 @@ export default {
 
                         <div
                             v-if="!selectedVisibleUsers.length && !selectedVisibleDepartments.length"
-                            class="mt-3 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
+                            class="mt-3 rounded-lg border border-warning-border bg-warning-surface/70 px-3 py-2 text-xs text-warning"
                         >
                             {{ $t('Warning: If nobody is selected, nobody will be able to see this tab.') }}
                         </div>
@@ -347,7 +347,7 @@ export default {
                 </div>
 
                 <!-- Visible for all helper -->
-                <div v-else class="mt-4 rounded-xl border border-success-border bg-success-surface px-3 py-2 text-xs text-success">
+                <div v-else class="mt-4 rounded-xl border border-success-border bg-success-surface/50 px-3 py-2 text-xs text-success">
                     {{ $t('Everyone with access to the project can see this tab.') }}
                 </div>
             </div>

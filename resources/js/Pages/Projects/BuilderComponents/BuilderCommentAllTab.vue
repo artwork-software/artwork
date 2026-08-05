@@ -18,8 +18,8 @@
                     <button @click="addCommentToProject" :disabled="commentForm.text === ''">
                         <IconCircleCheckFilled class="h-8 w-8" :class="[commentForm.text === '' ?
                                 '!text-text-subtle' :
-                                '!text-text hover:!text-primaryHover focus:outline-none',
-                            'mr-1 mb-1 rounded-full ml-1 text-sm border border-transparent uppercase shadow-sm text-secondaryHover']"></IconCircleCheckFilled>
+                                '!text-text hover:! focus:outline-none',
+                            'mr-1 mb-1 rounded-full ml-1 text-sm border border-transparent uppercase shadow-sm ']"></IconCircleCheckFilled>
                     </button>
                 </div>
                 <div class="text-xs text-end mt-1 text-text-muted">{{ commentForm.text?.length ?? 0 }} / 5000</div>

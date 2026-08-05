@@ -4,7 +4,7 @@
             <div class="flex-1 bg-black/30" @click="$emit('close')"></div>
             <div class="relative w-full max-w-md bg-white shadow-xl h-full overflow-y-auto">
                 <div
-                    class="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-sunken backdrop-blur-sm">
+                    class="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-sunken/80 backdrop-blur-sm">
                     <div class="space-y-0.5">
                         <h2 class="text-sm font-semibold text-text flex items-center gap-2">
                             {{ $t('Shift history') }}
@@ -23,11 +23,11 @@
                     </button>
                 </div>
                 <div class="px-4 py-4 space-y-6 text-sm">
-                    <div class="flex items-start gap-2 rounded-xl border border-accent-200 bg-accent-50 px-3 py-2 text-[11px] text-accent-700">
+                    <div class="flex items-start gap-2 rounded-xl border border-accent-200 bg-accent-50/70 px-3 py-2 text-[11px] text-accent-700">
                         <IconInfoCircle class="h-4 w-4 shrink-0 mt-px"/>
                         <p>{{ $t('This panel shows all changes to the entire shift across every assigned person – not only the person you selected.') }}</p>
                     </div>
-                    <section class="rounded-xl border border-border-subtle bg-surface-sunken px-3 py-3 text-[11px]">
+                    <section class="rounded-xl border border-border-subtle bg-surface-sunken/80 px-3 py-3 text-[11px]">
                         <div class="flex items-center justify-between mb-2">
                             <p class="font-semibold text-text">{{ $t('Current shift overview') }}</p>
                             <div
@@ -76,7 +76,7 @@
                         <ol class="space-y-3 border-l border-border-subtle pl-3">
                             <li v-for="(change, count) in shift.committed_shift_changes" :key="'csc-' + change.id"
                                 class="relative rounded-lg px-3 py-2 border shadow-sm"
-                                :class="change.acknowledged_at ? 'bg-success-surface border-success-border' : 'bg-danger-surface border-danger-border'">
+                                :class="change.acknowledged_at ? 'bg-success-surface/70 border-success-border' : 'bg-danger-surface/70 border-danger-border'">
                                 <span class="absolute -left-[17.5px] top-2 h-2 w-2 rounded-full"
                                       :class="change.acknowledged_at ? 'bg-success' : 'bg-danger'"></span>
                                 <div class="flex items-center justify-between gap-2">
@@ -136,7 +136,7 @@
                         </div>
                         <ol class="relative space-y-3 border-l border-accent-200 pl-3">
                             <li v-for="(change, idx) in shift.shift_plan_request_changes" :key="'spc-' + change.id"
-                                class="relative rounded-lg bg-accent-50 px-3 py-2 border border-accent-200">
+                                class="relative rounded-lg bg-accent-50/70 px-3 py-2 border border-accent-200">
                                 <span class="absolute -left-[17px] top-3 h-2 w-2 rounded-full bg-accent-500"></span>
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col gap-0.5">
@@ -154,14 +154,14 @@
                                             <IconUser class="h-3 w-3 text-accent-500"/>
                                             {{ affectedPersonName(change) }}
                                         </span>
-                                        <div class="flex flex-wrap items-center gap-2 text-[10px] text-accent-700">
+                                        <div class="flex flex-wrap items-center gap-2 text-[10px] text-accent-700/80">
                                             <span class="inline-flex items-center gap-1">
                                                 <IconUser class="h-3 w-3"/>
                                                 <span>{{
                                                         change.changed_by ? (change.changed_by.full_name || (change.changed_by.first_name + ' ' + change.changed_by.last_name)) : $t('Unknown user')
                                                     }}</span>
                                             </span>
-                                            <span class="text-accent-700">{{
+                                            <span class="text-accent-700/70">{{
                                                     formatDateTime(change.changed_at || change.created_at)
                                                 }}</span>
                                         </div>
@@ -174,9 +174,9 @@
                                         {{ $t('Reject change') }}
                                     </button>
                                 </div>
-                                <div class="mt-2 rounded-lg bg-white/90 border border-accent-200 px-2 py-1.5">
+                                <div class="mt-2 rounded-lg bg-white/90 border border-accent-200/70 px-2 py-1.5">
                                     <div
-                                        class="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] text-[10px] font-semibold text-text-subtle border-b border-accent-200 pb-1 mb-1">
+                                        class="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] text-[10px] font-semibold text-text-subtle border-b border-accent-200/70 pb-1 mb-1">
                                         <span class="pr-1">{{ $t('Field') }}</span>
                                         <span class="text-right pr-1">{{ $t('Before') }}</span>
                                         <span class="text-right">{{ $t('After') }}</span>
@@ -196,7 +196,7 @@
                                             }}</span></div>
                                     </div>
                                     <div v-if="extractInitialState(change.field_changes)"
-                                         class="mt-2 rounded-md bg-accent-50 px-2 py-1.5 border border-dashed border-accent-200">
+                                         class="mt-2 rounded-md bg-accent-50/60 px-2 py-1.5 border border-dashed border-accent-200">
                                         <p class="text-[10px] font-semibold text-accent-700 mb-1 flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-accent-500"></span>
                                             {{ $t('Initial state') }}
@@ -204,7 +204,7 @@
                                         <div
                                             v-for="(val, key) in pickInitialFields(extractInitialState(change.field_changes))"
                                             :key="key" class="flex items-start justify-between gap-2 text-[10px]">
-                                            <span class="shrink-0 text-accent-700">{{ fieldLabel(key) }}</span>
+                                            <span class="shrink-0 text-accent-700/90">{{ fieldLabel(key) }}</span>
                                             <span class="flex-1 text-right text-accent-700">{{
                                                     formatFieldValue(key, val)
                                                 }}</span>

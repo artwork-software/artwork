@@ -400,7 +400,7 @@
 
             <div v-if="!(subPosition.sub_position_rows?.length > 0) && (this.hasBudgetAccess || this.$can('edit budget templates'))"
                  @click="addRowToSubPosition(subPosition)"
-                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+                 class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
                 <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                     {{ $t('Row') }}
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
@@ -409,7 +409,7 @@
             </div>
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
-            <tr class="bg-silverGray text-sm/5 font-semibold text-text flex h-10 w-full text-right">
+            <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
                 <td class="w-72 my-2">{{ $t('SUM') }}</td>
@@ -453,7 +453,7 @@
         </table>
         <div @click="addSubPosition(mainPosition.id, subPosition)"
              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
-             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+             class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
             <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                 {{ $t('Sub position') }}
                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5"

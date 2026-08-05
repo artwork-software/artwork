@@ -558,7 +558,7 @@
                     <!-- Info: Availability locked by compensation day -->
                     <section
                         v-if="compensationDayForDate.length && (user.type === 0 || user.type === 1)"
-                        class="rounded-xl border border-special-teal-border bg-special-teal-surface px-3.5 py-3 text-xs text-special-teal"
+                        class="rounded-xl border border-special-teal-border bg-special-teal-surface/60 px-3.5 py-3 text-xs text-special-teal"
                     >
                         {{ t('Availability cannot be changed — compensation day off granted.') }}
                     </section>

@@ -16,7 +16,7 @@
                         v-model="search"
                         type="search"
                         :placeholder="$t('Search lists & tasks...')"
-                        class="w-full rounded-xl border border-border-subtle px-3 py-2 text-sm placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-accent-600 focus:border-accent-600 transition"
+                        class="w-full rounded-xl border border-border-subtle px-3 py-2 text-sm placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-accent-600/40 focus:border-accent-600/40 transition"
                     />
                     <span v-if="search" class="absolute inset-y-0 right-0 flex items-center pr-2">
                       <button @click="search=''" class="rounded-lg p-1 text-text-subtle hover:text-text-muted">
@@ -492,13 +492,13 @@ function resetFilters() {
 
 function chipClass(active) {
     return active
-        ? 'border-accent-200 bg-accent-50 text-accent-700'
+        ? 'border-accent-200 bg-accent-50/70 text-accent-700'
         : 'border-border-subtle text-text-muted hover:bg-surface-sunken';
 }
 
 function groupedChipClass(active) {
     return active
-        ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-200'
+        ? 'bg-accent-50/80 text-accent-700 ring-1 ring-inset ring-accent-200'
         : 'text-text-muted hover:bg-surface-sunken';
 }
 

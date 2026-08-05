@@ -13,7 +13,7 @@
                 <p class="mt-1 text-xl font-semibold text-text">{{ local.open_formatted }}</p>
             </div>
             <div class="rounded-lg border px-4 py-3"
-                 :class="local.payable_minutes > 0 ? 'border-danger-border bg-danger-surface' : 'border-border-subtle'">
+                 :class="local.payable_minutes > 0 ? 'border-danger-border bg-danger-surface/40' : 'border-border-subtle'">
                 <p class="text-[11px] uppercase tracking-wide"
                    :class="local.payable_minutes > 0 ? 'text-danger' : 'text-text-subtle'">
                     {{ $t('Overtime to be paid out') }}

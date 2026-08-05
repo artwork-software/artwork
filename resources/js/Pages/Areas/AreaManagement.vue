@@ -91,7 +91,7 @@
         <span class="truncate max-w-[14rem]">{{ category.name }}</span>
         <button
             type="button"
-            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken transition"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
             @click="this.showRoomCategoryDeleteModal(category)"
             :title="$t('Remove')"
             aria-label="Remove category"
@@ -110,8 +110,8 @@
         {{ $t('Room properties') }}
       </span>
                                     <span
-                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-accent-200
-               bg-gradient-to-br from-accent-100 to-white
+                                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-accent-200/60
+               bg-gradient-to-br from-accent-100/80 to-white
                text-accent-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] ring-1 ring-inset ring-white/50"
                                         :title="$t('Total')"
                                     >
@@ -152,11 +152,11 @@
                bg-gradient-to-br from-white to-text-inverse/5
                text-text ring-1 ring-inset ring-white/40 shadow-sm"
       >
-        <span class="inline-block h-2 w-2 rounded-full bg-accent-500"></span>
+        <span class="inline-block h-2 w-2 rounded-full bg-accent-500/80"></span>
         <span class="truncate max-w-[14rem]">{{ attribute.name }}</span>
         <button
             type="button"
-            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken transition"
+            class="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-text-subtle hover:text-danger hover:bg-surface-sunken/70 transition"
             @click="this.showRoomAttributeDeleteModal(attribute)"
             :title="$t('Remove')"
             aria-label="Remove attribute"
@@ -209,7 +209,7 @@
                     <div class="flex w-full flex-wrap mt-8">
                         <!-- Modernisierte Liste: Bereiche & Räume -->
                         <div v-if="hasActiveRoomFilters && filteredAreas.every(area => area.rooms.length === 0)"
-                             class="w-full my-4 rounded-xl border border-dashed border-border-subtle bg-surface-sunken p-4 text-sm text-text-subtle">
+                             class="w-full my-4 rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle">
                             {{ $t('No rooms found') }}
                         </div>
                         <div
@@ -272,8 +272,8 @@
                                         <span
                                             v-if="area.rooms?.some(r => r.temporary)"
                                             :title="$t('Temporary rooms')"
-                                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border
-                                               bg-gradient-to-br from-warning-surface to-warning-surface
+                                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border/60
+                                               bg-gradient-to-br from-warning-surface/90 to-warning-surface
                                                text-warning
                                                shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]
                                                ring-1 ring-inset ring-white/50
@@ -284,7 +284,7 @@
                                         <!-- Pulsierender Status-Dot -->
                                         <span class="relative flex h-2 w-2">
                                           <span
-                                              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning"></span>
+                                              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning/40"></span>
                                           <span class="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
                                         </span>
                                         <span class="tabular-nums">
@@ -331,7 +331,7 @@
                                     <div class="mt-6">
                                         <div
                                             v-if="(area.rooms?.filter(r => !r.temporary).length || 0) === 0"
-                                            class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken p-4 text-sm text-text-subtle"
+                                            class="rounded-xl border border-dashed border-border-subtle bg-surface-sunken/40 p-4 text-sm text-text-subtle"
                                         >
                                             {{ $t('No rooms yet') }}.
                                         </div>
@@ -443,7 +443,7 @@
                                                 >
                                                         <div class="relative group mt-3">
                                                             <div
-                                                                class="relative rounded-2xl border border-warning-border bg-warning-surface p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-warning-border hover:shadow-md focus-within:ring-2 focus-within:ring-warning-border"
+                                                                class="relative rounded-2xl border border-warning-border/80 bg-warning-surface/70 p-4 pl-5 shadow-sm ring-1 ring-transparent transition hover:border-warning-border hover:shadow-md focus-within:ring-2 focus-within:ring-warning-border/50"
                                                                 @mouseover="showMenu = element.id"
                                                                 @mouseout="showMenu = null"
                                                             >
@@ -461,12 +461,12 @@
                                                                             </Link>
                                                                             <!-- Temporary-Status -->
                                                                             <span
-                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border bg-warning-surface text-warning ring-1 ring-inset ring-white/50"
+                                                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border/60/60 bg-warning-surface/80 text-warning ring-1 ring-inset ring-white/50"
                                                                                 :title="$t('Temporary rooms')"
                                                                             >
                                                                             <span class="relative flex h-2 w-2">
                                                                               <span
-                                                                                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning"></span>
+                                                                                  class="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning/40"></span>
                                                                               <span
                                                                                   class="relative inline-flex h-2 w-2 rounded-full bg-warning"></span>
                                                                             </span>
@@ -480,7 +480,7 @@
                                                                             <!-- Zeitraum -->
                                                                             <span
                                                                                 class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none font-medium border border-warning-border
-                       bg-gradient-to-br from-warning-surface to-warning-surface
+                       bg-gradient-to-br from-warning-surface/90 to-warning-surface
                        text-warning shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] ring-1 ring-inset ring-white/40"
                                                                                 :title="$t('Date range')"
                                                                             >
@@ -498,7 +498,7 @@
 
                                                                         <!-- Meta: erstellt am / von -->
                                                                         <div
-                                                                            class="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-warning">
+                                                                            class="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-tight text-warning/90">
                                                                           <span class="inline-flex items-center gap-1">
                                                                             <component :is="IconClock"
                                                                                        class="h-3.5 w-3.5"
@@ -645,7 +645,7 @@
                         id="description"
                     />
                 </div>
-                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
                     <RoomPropertyCheckboxGroup
                         :label="$t('Room categories')"
                         :items="room_categories"
@@ -768,7 +768,7 @@
                         :rows="4"
                     />
                 </div>
-                <div class="rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                <div class="rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
                     <div class="text-sm text-text mb-1">{{ $t('Color') }}</div>
                     <div class="flex items-center mb-3">
                         <input v-model="editRoomInheritColor" id="inheritRoomColor" type="checkbox" class="input-checklist"/>
@@ -782,7 +782,7 @@
                         <ColorPickerComponent @updateColor="(color) => editRoomForm.color = color" :color="editRoomForm.color ?? editRoomAreaColor"/>
                     </div>
                 </div>
-                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                <div class="space-y-6 rounded-xl border border-border-subtle bg-surface-sunken/50 p-4">
                     <RoomPropertyCheckboxGroup
                         :label="$t('Room categories')"
                         :items="room_categories"

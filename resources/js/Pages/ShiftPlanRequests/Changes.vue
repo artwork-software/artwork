@@ -221,8 +221,8 @@
                             <tr
                                 v-for="change in pageChanges"
                                 :key="change.id"
-                                :class="[ !change.acknowledged ? 'bg-warning-surface' : 'bg-white',
-                                    'transition hover:bg-accent-50'
+                                :class="[ !change.acknowledged ? 'bg-warning-surface/60' : 'bg-white',
+                                    'transition hover:bg-accent-50/40'
                                 ]"
                             >
                                 <!-- Betroffene Entität (Person oder Schicht) -->
@@ -340,7 +340,7 @@
                         :key="change.id"
                         :class="[ 'rounded-2xl border px-4 py-3 shadow-sm',
                             !change.acknowledged
-                                ? 'border-warning-border bg-warning-surface'
+                                ? 'border-warning-border bg-warning-surface/60'
                                 : 'border-border-subtle bg-white'
                         ]"
                     >

@@ -39,7 +39,7 @@
             <!-- Ausfüllhilfe: Werte auf ausgewählte Termine anwenden -->
             <div
                 v-if="canEdit && (selectedIds.size > 0 || hasBulkInput)"
-                class="mb-3 flex flex-wrap items-end gap-3 rounded-md border border-accent-200 bg-accent-50 p-3 print:hidden"
+                class="mb-3 flex flex-wrap items-end gap-3 rounded-md border border-accent-200 bg-accent-50/60 p-3 print:hidden"
             >
                 <span class="pb-2 text-xs font-medium text-accent-700 whitespace-nowrap">
                     {{ selectedIds.size }} {{ $t('events selected') }}
@@ -64,7 +64,7 @@
                 <button type="button" class="pb-2 text-xs text-text-subtle hover:text-text-muted" @click="clearSelection">
                     {{ $t('Clear selection') }}
                 </button>
-                <p class="w-full text-[11px] text-accent-700 -mt-1">
+                <p class="w-full text-[11px] text-accent-700/70 -mt-1">
                     {{ $t('Empty fields are skipped. Tip: use the copy icon in a row to take over its values.') }}
                 </p>
             </div>

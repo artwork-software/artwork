@@ -1049,7 +1049,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </button>
                 </div>
                 <!-- REPLACE: Sektion Schichtvorlagen -->
-                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-0 shadow-sm overflow-hidden">
+                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
                     <div class="flex items-center justify-between gap-3 p-4">
                         <h3 class="text-sm font-semibold text-text">{{ $t('shift templates') }}</h3>
@@ -1169,7 +1169,7 @@ const lockOrUnlockShift = (commit = false) => {
                 </section>
 
                 <!-- Sektion: Zeitvorgaben -->
-                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-0 shadow-sm overflow-hidden">
+                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
                     <div class="flex items-center justify-between gap-3 p-4">
                         <h3 class="text-sm font-semibold text-text">{{ $t('Time presets') }}</h3>
@@ -1265,7 +1265,7 @@ const lockOrUnlockShift = (commit = false) => {
                 </section>
 
                 <!-- Sektion: Zeitvorgaben -->
-                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-0 shadow-sm overflow-hidden">
+                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-0 shadow-sm overflow-hidden">
                     <!-- Header -->
                     <div class="flex items-center justify-between gap-3 p-4">
                         <h3 class="text-sm font-semibold text-text">{{ $t('Global qualifications') }}</h3>
@@ -1330,7 +1330,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </transition>
                 </section>
                 <!-- Sektion: Basisdaten -->
-                <section class="rounded-2xl ring-1 ring-border-subtle bg-white/70 p-4 sm:p-5 shadow-sm">
+                <section class="rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-3 mb-3">
                         <div>
                             <h3 class="text-sm font-semibold text-text">{{ $t('basic data') }}</h3>
@@ -1629,7 +1629,7 @@ const lockOrUnlockShift = (commit = false) => {
                     </div>
                 </section>
 
-                <div v-if="shift?.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-border-subtle bg-white/70 p-4 sm:p-5 shadow-sm">
+                <div v-if="shift?.is_committed" class="flex items-start justify-between gap-3 rounded-2xl ring-1 ring-border-subtle/70 bg-white/70 p-4 sm:p-5 shadow-sm">
                     <AlertComponent
                         type="error"
                         show-icon

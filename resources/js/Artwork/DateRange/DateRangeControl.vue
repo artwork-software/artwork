@@ -1,6 +1,6 @@
 <template>
     <div v-if="!project" ref="rootEl" class="inline-flex items-center" @keydown="onRootKeydown">
-        <div class="inline-flex items-stretch bg-surface border border-border-subtle rounded-xl shadow-raised overflow-hidden">
+        <div class="inline-flex items-stretch bg-surface border border-border-subtle/80 rounded-xl shadow-raised overflow-hidden">
             <button v-if="showNavigation"
                     type="button"
                     class="w-7 flex items-center justify-center text-text-muted hover:bg-surface-sunken transition duration-200 border-r border-border-subtle"
@@ -53,7 +53,7 @@
         </div>
         <button v-if="showToday"
                 type="button"
-                class="ml-1.5 px-2.5 py-2 rounded-xl border border-border-subtle bg-surface shadow-raised text-sm font-medium transition duration-200"
+                class="ml-1.5 px-2.5 py-2 rounded-xl border border-border-subtle/80 bg-surface shadow-raised text-sm font-medium transition duration-200"
                 :class="todayInRange ? 'text-text-subtle cursor-default' : 'text-accent-600 hover:bg-accent-600/5'"
                 :disabled="todayInRange"
                 @click="jumpToToday">

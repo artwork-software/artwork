@@ -13,7 +13,7 @@
                               </span>
                                             <span
                                                 v-if="moneySource.hasSentExpirationReminderNotification"
-                                                class="inline-flex items-center rounded-md border border-danger-border bg-danger-surface px-2 py-0.5 text-[11px] text-danger"
+                                                class="inline-flex items-center rounded-md border border-danger-border bg-danger-surface/70 px-2 py-0.5 text-[11px] text-danger"
                                             >
                                 {{ $t('Ablaufwarnung gesendet') }}
                               </span>
@@ -64,7 +64,7 @@
                           </span>
                                         <span
                                             v-if="moneySource.funding_start_date && moneySource.funding_end_date"
-                                            :class="['ui-button-small', moneySource.hasSentExpirationReminderNotification ? 'border-danger-border text-danger bg-danger-surface' : '']"
+                                            :class="['ui-button-small', moneySource.hasSentExpirationReminderNotification ? 'border-danger-border text-danger bg-danger-surface/70' : '']"
                                         >
                             {{ $t('Förderzeitraum') }}:
                             <strong class="ml-1">{{ formatDate(moneySource.funding_start_date) }} – {{ formatDate(moneySource.funding_end_date) }}</strong>
@@ -103,7 +103,7 @@
                         </div>
                         <span
                             v-if="moneySource.hasSentThresholdReminderNotification"
-                            class="inline-flex items-center rounded-md border border-danger-border bg-danger-surface px-2 py-0.5 text-[11px] text-danger"
+                            class="inline-flex items-center rounded-md border border-danger-border bg-danger-surface/70 px-2 py-0.5 text-[11px] text-danger"
                         >
               {{ $t('Schwelle erreicht') }}
             </span>
@@ -231,7 +231,7 @@
                                             <div class="flex items-center gap-2">
                         <span
                             class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px]"
-                            :class="position.type === 'COST' ? 'border-danger-border text-danger bg-danger-surface' : 'border-success-border text-success bg-success-surface'"
+                            :class="position.type === 'COST' ? 'border-danger-border text-danger bg-danger-surface/70' : 'border-success-border text-success bg-success-surface/70'"
                         >
                           {{ position.type === 'COST' ? $t('Ausgabe') : $t('Einnahme') }}
                         </span>

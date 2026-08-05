@@ -9,7 +9,7 @@
                 <div class="flex font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text ">
                     {{ name }}
                     <div v-if="!showSection && displayUnreadCount > 0"
-                         class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue text-xs/[18px] text-text-subtle rounded-lg">
+                         class="ml-4 flex font-semibold items-center p-1  border   text-xs/[18px] text-text-subtle rounded-lg">
                         {{ displayUnreadCount }}
                     </div>
                 </div>

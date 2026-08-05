@@ -33,7 +33,7 @@
         </template>
     </Galleria>
 
-    <td v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle opacity-0 hover:opacity-100 duration-200 cursor-pointer z-10 pointer-events-none hover:pointer-events-auto">
+    <td v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle/30 opacity-0 hover:opacity-100 duration-200 cursor-pointer z-10 pointer-events-none hover:pointer-events-auto">
         <div class="flex items-center justify-center h-full w-full">
             <div class="relative pointer-events-auto">
                 <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-2 ring-white text-accent-600 text-xs flex items-center justify-center">

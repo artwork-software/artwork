@@ -80,7 +80,7 @@
                     <p class="text-[11px] text-text-subtle" v-if="issue.articles?.length">{{ $t('Loaned inventory and quantities.') }}</p>
                 </div>
                 <div class="p-5">
-                    <div v-if="issue.articles?.length" class="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-sunken overflow-hidden">
+                    <div v-if="issue.articles?.length" class="divide-y divide-border-subtle/80 rounded-xl border border-border-subtle bg-surface-sunken/40 overflow-hidden">
                         <div v-for="a in issue.articles" :key="a.id" class="flex items-center justify-between gap-3 p-3">
                             <div class="min-w-0 flex items-center gap-2">
                                 <span class="font-medium text-text truncate">{{ a.name }}</span>
@@ -105,7 +105,7 @@
                     </h3>
                 </div>
                 <div class="p-5">
-                    <div class="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-sunken overflow-hidden">
+                    <div class="divide-y divide-border-subtle/80 rounded-xl border border-border-subtle bg-surface-sunken/40 overflow-hidden">
                         <div v-for="s in issue.special_items" :key="s.id" class="flex items-center justify-between gap-3 p-3">
                             <span class="font-medium text-text truncate">{{ s.name }}</span>
                             <div class="shrink-0 inline-flex items-center gap-1 rounded-md border border-special-violet-border bg-special-violet-surface px-2 py-0.5 text-[11px] font-medium text-special-violet">
@@ -118,7 +118,7 @@
             </section>
 
             <!-- Rückgabe-Mängel -->
-            <section v-if="issue.return_remarks" class="rounded-2xl border border-warning-border bg-warning-surface">
+            <section v-if="issue.return_remarks" class="rounded-2xl border border-warning-border bg-warning-surface/60">
                 <div class="border-b border-warning-border px-5 py-3 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-warning flex items-center gap-2">
                         <span class="inline-block size-2 rounded-full bg-warning"></span>

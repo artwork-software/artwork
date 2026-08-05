@@ -15,7 +15,7 @@
             />
             <div
                 v-if="event.isSelectedForMultiEdit && effectiveMultiEdit"
-                class="absolute inset-0 bg-success pointer-events-none"
+                class="absolute inset-0 bg-success/10 pointer-events-none"
                 aria-hidden="true"
             />
 
@@ -241,13 +241,13 @@
                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true" />
                                 </ListboxButton>
                                 <ListboxOptions
-                                    class="w-44 rounded-xl border border-border-subtle bg-white backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
+                                    class="w-44 rounded-xl border border-border-subtle/60 bg-white backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
                                     <ListboxOption
                                         v-for="copyType in copyTypes"
                                         :key="copyType.name"
                                         :value="copyType"
                                         v-slot="{ selected }"
-                                        class="hover:bg-accent-700 text-text-subtle cursor-pointer px-3 py-2 flex justify-between">
+                                        class="hover:bg-accent-700/90 text-text-subtle cursor-pointer px-3 py-2 flex justify-between">
                                         <div :class="[selected ? 'text-accent-600' : 'text-text', 'flex']">
                                             {{ copyType.name }}
                                         </div>
@@ -309,7 +309,7 @@
         <!-- Inline description row -->
         <div
             v-if="showDescriptionInBulk"
-            class="border-t border-b border-dashed border-border border-l-2 border-l-zinc-300 ml-6 bg-surface-sunken rounded-b-lg px-3 py-1.5"
+            class="border-t border-b border-dashed border-border border-l-2 border-l-zinc-300 ml-6 bg-surface-sunken/50 rounded-b-lg px-3 py-1.5"
         >
             <div v-if="!editingDescription" @click="startEditDescription"
                  class="min-h-[24px] flex items-center"

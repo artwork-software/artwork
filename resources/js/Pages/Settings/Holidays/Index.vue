@@ -12,7 +12,7 @@
             />
 
             <!-- Länderwahl -->
-            <fieldset class="my-4 bg-white rounded-2xl border border-border-subtle shadow-sm p-5">
+            <fieldset class="my-4 bg-white rounded-2xl border border-border-subtle/70 shadow-sm p-5">
                 <label class="block text-sm/6 font-semibold text-text dark:text-white mb-2">
                     {{ $t('Choose a country') }}
                 </label>
@@ -49,7 +49,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     <!-- API Import Card -->
-                    <div class="bg-white rounded-2xl border border-border-subtle shadow-sm">
+                    <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                         <div class="p-6 sm:p-8">
                             <BasePageTitle
                                 :title="$t('Public holidays & school vacations via interface')"
@@ -128,7 +128,7 @@
                                             class="break-keep"
                                         >
                                             <div
-                                                class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer border border-tagBg hover:bg-danger hover:border-danger hover:text-danger transition-colors"
+                                                class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer border  hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors"
                                                 @click="removeSubDivisionFormForm(selectedSubdivision.id)"
                                             >
                                                 {{ selectedSubdivision.name }}
@@ -189,7 +189,7 @@
                     </div>
 
                     <!-- Manuell erstellen Card -->
-                    <div class="bg-white rounded-2xl border border-border-subtle shadow-sm">
+                    <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                         <div class="p-6 sm:p-8">
                             <div class="mb-2">
                                 <BasePageTitle
@@ -288,7 +288,7 @@
                                             class="break-keep"
                                         >
                                             <div
-                                                class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer border border-tagBg hover:bg-danger hover:border-danger hover:text-danger transition-colors"
+                                                class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer border  hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors"
                                                 @click="removeSubDivisionFormCustomHoliday(selectedSubdivision.id)"
                                             >
                                                 {{ selectedSubdivision.name }}
@@ -389,7 +389,7 @@
 
             <!-- Tabelle / Liste -->
             <section class="mt-10">
-                <div class="bg-white rounded-2xl border border-border-subtle shadow-sm">
+                <div class="bg-white rounded-2xl border border-border-subtle/70 shadow-sm">
                     <div class="p-4 sm:p-6 lg:p-8">
                         <SettingsGuideBanner
                             class="mb-4"

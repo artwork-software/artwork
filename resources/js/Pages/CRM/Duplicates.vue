@@ -28,7 +28,7 @@
             </Transition>
 
             <!-- Explanation -->
-            <div class="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
+            <div class="mt-6 rounded-2xl border border-accent-200 bg-accent-50/50 p-5">
                 <div class="flex gap-3">
                     <component :is="IconInfoCircle" class="h-5 w-5 text-accent-600 shrink-0" />
                     <div class="text-sm text-text-muted space-y-1">

@@ -45,7 +45,7 @@
                 <div class="w-full">
                     <div class="flex items-center flex-wrap gap-2 mt-4 w-full">
                         <div v-for="selectedSubdivision in customHolidayForm.selectedSubdivisions" :key="selectedSubdivision.id" class="break-keep">
-                            <div class="px-2 py-1 bg-tagBg rounded-full min-w-fit text-tagText text-xs cursor-pointer hover:bg-danger hover:border-danger hover:text-danger transition-colors duration-300 ease-in-out border border-tagBg"
+                            <div class="px-2 py-1  rounded-full min-w-fit  text-xs cursor-pointer hover:bg-danger/20 hover:border-danger/40 hover:text-danger transition-colors duration-300 ease-in-out border "
                                  @click="removeSubDivisionFormCustomHoliday(selectedSubdivision.id)">
                                 {{ selectedSubdivision.name }}
                             </div>

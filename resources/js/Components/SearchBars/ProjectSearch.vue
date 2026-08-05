@@ -66,7 +66,7 @@
                         :aria-selected="idx === activeIndex"
                         @mouseenter="activeIndex = idx"
                         @mousedown.prevent="selectProject(proj)"
-                    class="cursor-pointer select-none px-3 py-2 text-[13px] text-text flex items-center gap-2 hover:bg-accent-50 data-[active=true]:bg-accent-50"
+                    class="cursor-pointer select-none px-3 py-2 text-[13px] text-text flex items-center gap-2 hover:bg-accent-50/60 data-[active=true]:bg-accent-50/60"
                     :data-active="idx === activeIndex"
                     >
                     <span class="inline-block size-1.5 rounded-full" :class="proj.is_group ? 'bg-success' : 'bg-accent-500'"></span>

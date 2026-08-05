@@ -3,7 +3,7 @@
         class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoomFactor > 0.4"
              class="absolute z-50 w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
-             :class="event.clicked ? 'block bg-success-surface' : 'hidden bg-accent-600/50'">
+             :class="event.clicked ? 'block bg-success-surface/50' : 'hidden bg-accent-600/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
                    class="rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
@@ -188,7 +188,7 @@
                                     class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
                                         <Link href="#"
-                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                              :class="[active ? ' ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <img :class="'h-5 w-5'"
                                                  class="rounded-full"
                                                  :src="user.profile_photo_url"
@@ -210,7 +210,7 @@
         <div v-for="subEvent in event.subEvents" class="mb-1">
             <div class="w-full relative group rounded-lg border-l-[6px] border-[#A7A6B115]">
                 <div
-                    class="bg-accent-500 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
+                    class="bg-accent-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
                         <button @click="editSubEvent(subEvent)" type="button"
                                 class="rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">

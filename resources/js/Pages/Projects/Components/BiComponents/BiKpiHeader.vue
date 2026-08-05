@@ -29,7 +29,7 @@
             <div
                 v-for="kpi in quotaTiles"
                 :key="kpi.key"
-                class="rounded-xl border border-border-subtle bg-surface-sunken p-3"
+                class="rounded-xl border border-border-subtle bg-surface-sunken/60 p-3"
                 v-tooltip.top="kpi.tooltip ? { value: kpi.tooltip, appendTo: 'body', class: 'aw-tooltip' } : undefined"
             >
                 <span class="text-xs text-text-subtle truncate block">{{ $t(kpi.label) }}</span>

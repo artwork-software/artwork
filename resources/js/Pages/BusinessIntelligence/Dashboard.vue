@@ -167,7 +167,7 @@
                         <div
                             v-for="kpi in quotaTiles"
                             :key="kpi.key"
-                            class="rounded-2xl border border-border-subtle bg-surface-sunken p-4"
+                            class="rounded-2xl border border-border-subtle bg-surface-sunken/70 p-4"
                         >
                             <p class="text-xs text-text-subtle">{{ $t(kpi.label) }}</p>
                             <p class="text-lg font-semibold mt-1" :class="kpi.value === null ? 'text-text-subtle' : 'text-text'">

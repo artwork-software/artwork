@@ -74,8 +74,8 @@ function requestDeleteComponentInDisclosure(componentId) {
     <div class="group w-full">
         <!-- Card -->
         <div
-            class="w-full rounded-xl border border-border-subtle bg-white/70 backdrop-blur px-4 py-4 my-2 shadow-sm transition"
-            :class="dragging ? 'ring-2 ring-success-border rounded-lg' : ''"
+            class="w-full rounded-xl border border-border-subtle/80 bg-white/70 backdrop-blur px-4 py-4 my-2 shadow-sm transition"
+            :class="dragging ? 'ring-2 ring-success-border/30 rounded-lg' : ''"
             :key="element.id"
         >
             <div class="flex items-start justify-between gap-3">
@@ -83,7 +83,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                 <div class="flex items-start gap-3 min-w-0">
                     <!-- Icon-Box -->
                     <div
-                        class="grid place-items-center size-10 rounded-xl border bg-white/60 border-border-subtle shrink-0"
+                        class="grid place-items-center size-10 rounded-xl border bg-white/60 border-border-subtle/80 shrink-0"
                         aria-hidden="true"
                     >
                         <ComponentIcons :type="element.component.type" />
@@ -101,7 +101,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                                 <!-- Ordner: Titel im Projekt + Anzahl der Komponenten -->
                                 <span
                                     v-if="isFolder && folderLabel"
-                                    class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken px-2 py-0.5 text-[11px] leading-4 text-text-muted shrink-0 max-w-48"
+                                    class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken/80 px-2 py-0.5 text-[11px] leading-4 text-text-muted shrink-0 max-w-48"
                                     :title="$t('This title is displayed in the project')"
                                 >
                                     <IconFolder class="size-3.5 shrink-0 text-text-subtle" />
@@ -202,7 +202,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                                     <div class="ml-2 pl-3 border-l-2 border-border-subtle">
                                         <DropComponentInDisclosureComponentElement :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mb-2" />
                                         <div v-for="(component, index) in element.disclosure_components" :key="component.id" class="mb-2">
-                                            <div class="rounded-lg border border-border-subtle bg-surface-sunken px-2.5 py-2 group/component">
+                                            <div class="rounded-lg border border-border-subtle/80 bg-surface-sunken/60 px-2.5 py-2 group/component">
                                                 <div class="flex items-center gap-2">
                                                     <div class="flex items-center gap-1.5 text-sm text-text min-w-0 flex-1">
                                                         <ComponentIcons :type="component.component.type" class="shrink-0" />

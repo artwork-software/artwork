@@ -1,7 +1,7 @@
 <template>
     <div>
         <div :id="team.name" role="tooltip"
-             class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-text-subtle bg-surface-inverse shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+             class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-white/80 bg-surface-inverse shadow-sm opacity-0 transition-opacity duration-300 tooltip">
             <div class="flex flex-wrap">
                 <div class="flex w-full mb-4">
                     <TeamIconCollection class="ml-2  h-14 w-14" :iconName="team.svg_name"/>

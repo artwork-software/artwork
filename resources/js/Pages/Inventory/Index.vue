@@ -118,7 +118,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-8 gap-4 items-stretch" v-if="gridLayout">
                             <div v-for="item in props.articles.data">
                                 <div class="relative">
-                                    <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
+                                    <div v-if="enableAddArticleToBasket" class="absolute inset-0 bg-text-subtle/30 rounded-lg opacity-0 hover:opacity-100 duration-200 cursor-pointer">
                                         <div class="flex items-center justify-center h-full w-full">
                                             <div class="relative">
                                                 <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-2 ring-white text-accent-600 text-xs flex items-center justify-center">
@@ -200,7 +200,7 @@
                                         <tbody class="divide-y divide-border-subtle bg-white">
                                             <template v-for="subcategory in category.subcategories" :key="subcategory.id">
                                                 <!-- Subcategory group row (spans the full width of the shared table) -->
-                                                <tr class="bg-surface-sunken">
+                                                <tr class="bg-surface-sunken/80">
                                                     <td :colspan="category.unionProperties.length + (hideArticleImages ? 3 : 4)" class="p-0">
                                                         <div class="sticky left-0 w-fit px-4 py-2 border-l-4 border-accent-600 flex items-center gap-x-2">
                                                             <h3 class="text-sm font-semibold text-text">{{ subcategory.name }}</h3>

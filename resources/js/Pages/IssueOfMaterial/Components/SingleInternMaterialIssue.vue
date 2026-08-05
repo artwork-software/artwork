@@ -5,7 +5,7 @@
         :class="{ 'bg-warning-surface': usePage().props.urlParameters?.issue === String(issueOfMaterial.id) }"
     >
         <!-- Linke Akzent-Leiste bei Hover -->
-        <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500 transition-all duration-200 group-hover:bg-accent-500"></span>
+        <span class="pointer-events-none absolute left-0 top-0 h-full w-0.5 bg-accent-500/0 transition-all duration-200 group-hover:bg-accent-500/70"></span>
 
         <!-- Name + Notes -->
         <div class="col-span-3">

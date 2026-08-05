@@ -60,7 +60,7 @@
                                                     {{ $t('Search') }}
                                                 </label>
                                                 <div class="relative mt-2 rounded-md shadow-sm">
-                                                    <input v-model="userSearch" ref="searchFieldUserSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-white/10 py-1.5 pr-10 text-white ring-0 bg-darkGrayBg placeholder:text-white/70 sm:text-sm sm:leading-6" />
+                                                    <input v-model="userSearch" ref="searchFieldUserSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-white/10 py-1.5 pr-10 text-white ring-0  placeholder:text-white/70 sm:text-sm sm:leading-6" />
                                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                                         <IconSearch class="h-5 w-5 text-white/70" aria-hidden="true" v-if="userSearch.length === 0" />
                                                         <IconX class="h-5 w-5 text-white/70 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>

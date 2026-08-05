@@ -47,7 +47,7 @@
             <span
                 class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2.5 py-1 text-[11px] font-medium text-text-muted ring-1 ring-inset ring-border-subtle"
             >
-              <span class="inline-block size-2 rounded-full bg-accent-600 ring-2 ring-accent-200" />
+              <span class="inline-block size-2 rounded-full bg-accent-600 ring-2 ring-accent-200/60" />
               {{ $t('Found') }}: {{ filteredSets.length }}
             </span>
 

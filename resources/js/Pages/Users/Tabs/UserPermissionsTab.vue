@@ -35,7 +35,7 @@
                     <div
                         v-for="(role, index) in available_roles"
                         :key="index"
-                        class="flex items-start justify-between rounded-2xl border border-border-subtle bg-surface-sunken px-4 py-3"
+                        class="flex items-start justify-between rounded-2xl border border-border-subtle bg-surface-sunken/50 px-4 py-3"
                     >
                         <label class="flex cursor-pointer items-start gap-3">
                             <input

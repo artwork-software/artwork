@@ -120,7 +120,7 @@
                                     </ListboxButton>
                                     <ListboxOptions class="w-full rounded-lg bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute z-30">
                                         <ListboxOption v-if="this.moneySourceGroups.length > 0" v-for="moneySourceGroup in this.moneySourceGroups"
-                                                       class="hover:bg-accent-700 text-text-subtle cursor-pointer p-2 flex justify-between "
+                                                       class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
                                                        :key="moneySourceGroup.id"
                                                        :value="moneySourceGroup"
                                                        v-slot="{ active, selected }">
@@ -317,7 +317,7 @@
                                 <div v-if="subMoneySources.length > 0" class="mt-2 mb-4 flex items-center">
                                     <div v-for="(subMoneySource,index) in subMoneySources" class="flex mr-5 rounded-full items-center font-bold text-text">
                                         <div
-                                            class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                            class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                             {{ subMoneySource.name }}
                                             <button type="button"
                                                     @click="this.deleteSubMoneySourceFromGroup(index)">

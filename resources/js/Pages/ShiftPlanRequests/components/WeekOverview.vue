@@ -4,7 +4,7 @@
             v-for="day in days"
             :key="day.date"
             class="rounded-xl border p-2 text-center"
-            :class="day.is_rejected ? 'border-danger bg-danger-surface' : 'border-border-subtle bg-white'"
+            :class="day.is_rejected ? 'border-danger bg-danger-surface/30' : 'border-border-subtle bg-white'"
         >
             <div class="text-xs font-medium text-text">{{ day.label }}</div>
 

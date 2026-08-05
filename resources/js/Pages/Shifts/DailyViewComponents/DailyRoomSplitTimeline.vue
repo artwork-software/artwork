@@ -63,7 +63,7 @@
             :icon="IconCopyPlus"
             icon-size="size-4"
             @click="$emit('addShiftByPresetOrGroup')"
-            classes-button="pointer-events-auto -1 border border-border-subtle z-20 inline-flex items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-surface-sunken focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
+            classes-button="pointer-events-auto -1 border border-border-subtle z-20 inline-flex items-center justify-center cursor-pointer gap-1 rounded-md size-7 text-sm font-medium ring-0 bg-white/90 hover:bg-surface-sunken/90 focus:outline-none focus:ring-0 transition duration-200 ease-in-out"
           />
         </div>
       </div>

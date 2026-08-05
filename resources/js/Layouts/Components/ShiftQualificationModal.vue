@@ -22,7 +22,7 @@
                                     <div @click="this.shiftQualificationForm.icon = shiftQualificationIcon.iconName"
                                          :class="[
                                              active ?
-                                             'bg-primaryHover text-secondaryHover' :
+                                             ' ' :
                                              'text-text-subtle',
                                              'group px-3 py-2 text-sm subpixel-antialiased flex items-center justify-center'
                                          ]">

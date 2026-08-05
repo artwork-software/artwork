@@ -353,7 +353,7 @@
                                                 <MenuItem v-for="user in event?.project?.leaders" :key="'menu-'+user.id" v-slot="{ active }">
                                                     <Link
                                                         href="#"
-                                                        :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']"
+                                                        :class="[active ? ' ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']"
                                                     >
                                                         <img class="h-5 w-5 rounded-full" :src="user.profile_photo_url" alt="" />
                                                         <span class="ml-4">{{ user.first_name }} {{ user.last_name }}</span>

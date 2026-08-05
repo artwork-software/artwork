@@ -26,12 +26,12 @@
             </div>
         </header>
         <!-- Konflikt-Leiste: Zeigt Überbuchungen im Zeitraum an -->
-        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-danger-border bg-danger-surface p-4 ring-1 ring-inset ring-danger-border">
+        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-danger-border bg-danger-surface/70 p-4 ring-1 ring-inset ring-danger-border">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-start gap-3">
                     <div class="grid size-8 place-items-center rounded-full bg-danger text-white text-xs font-bold">!</div>
                     <div>
-                        <h3 class="text-sm font-semibold text-danger">{{ $t('Conflicts regarding availability') }}</h3>
+                        <h3 class="text-sm font-semibold text-danger/90">{{ $t('Conflicts regarding availability') }}</h3>
                         <p class="text-xs text-danger">
                             {{ $t('There are') }} <strong>{{ conflicts.length }}</strong> {{ $t('Items with a quantity higher than available in the selected period.') }}
                         </p>
@@ -118,7 +118,7 @@
                                 :key="room.id"
                                 type="button"
                                 class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition"
-                                :class="selectedRoom?.id === room.id ? 'border-accent-200 bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-200'
+                                :class="selectedRoom?.id === room.id ? 'border-accent-200 bg-accent-50/50 text-accent-700 ring-1 ring-inset ring-accent-200'
                                     : 'border-border-subtle bg-white text-text-muted hover:border-accent-200 hover:bg-accent-50'"
                                 @click="assignRoomFromProject(room, { force: true })"
                             >
@@ -131,7 +131,7 @@
 
                     <!-- Zeitraum -->
                     <div class="md:col-span-3">
-                        <div class="rounded-xl border border-border-subtle bg-surface-sunken p-4">
+                        <div class="rounded-xl border border-border-subtle/80 bg-surface-sunken p-4">
                             <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                                 <BaseInput id="start_date" v-model="internMaterialIssue.start_date" :label="$t('Start date') + ' *'" type="date" />
                                 <BaseInput id="start_time" v-model="internMaterialIssue.start_time" :label="$t('Start time')" type="time" />
@@ -199,7 +199,7 @@
 
                     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                         <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
-                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-success-border bg-success-surface ring-1 ring-success-border' : 'border-border-subtle bg-surface-sunken hover:bg-surface-sunken hover:border-accent-200'">
+                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-success-border bg-success-surface/50 ring-1 ring-success-border' : 'border-border-subtle bg-surface-sunken/60 hover:bg-surface-sunken hover:border-accent-200'">
                                 <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                     <div class="flex items-start gap-3">
                                         <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-border-subtle object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
@@ -280,7 +280,7 @@
                                 <!-- Loop through categories -->
                                 <div v-for="(subcategories, categoryName) in groupedSelectedArticles" :key="categoryName" class="space-y-4">
                                     <!-- Category heading -->
-                                    <div class="border-b border-border-subtle pb-2">
+                                    <div class="border-b border-border-subtle/60 pb-2">
                                         <h4 class="text-sm font-semibold text-text flex items-center gap-2">
                                             <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                                             {{ categoryName }}
@@ -298,7 +298,7 @@
                                         </div>
 
                                         <!-- Articles in this subcategory -->
-                                        <div class="ml-8 divide-y divide-border-subtle">
+                                        <div class="ml-8 divide-y divide-border-subtle/80">
                                             <div v-for="article in articles" :key="article.originalIndex" :data-article-row="article.originalIndex" class="flex flex-col gap-3 py-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
                                                 <div class="flex w-full items-start gap-4">
                                                     <!-- Single preview with zoom overlay -->
@@ -413,7 +413,7 @@
                         <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch">
                             <!-- Dropzone -->
                             <div>
-                                <button @click="$refs.internMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-success-border p-10 text-center hover:border-success-border focus:outline-hidden focus:ring-2 focus:ring-success focus:ring-offset-2">
+                                <button @click="$refs.internMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-success-border/70 p-10 text-center hover:border-success-border focus:outline-hidden focus:ring-2 focus:ring-success focus:ring-offset-2">
                                     <component :is="IconFile" class="mx-auto size-12 text-success" stroke-width="1" />
                                     <span class="mt-2 block text-sm font-semibold text-success">{{ $t('Datei auswählen') }}</span>
                                     <input ref="internMaterialIssueFiles" id="file" type="file" class="hidden" multiple @change="upload" />

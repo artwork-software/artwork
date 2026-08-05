@@ -75,7 +75,7 @@
                                 v-for="request in craft.shift_plan_requests"
                                 :key="request.id"
                                 type="button"
-                                class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-accent-50 transition"
+                                class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-accent-50/60 transition"
                                 @click="goToRequest(request.id)"
                             >
                                 <div class="flex items-center gap-3">

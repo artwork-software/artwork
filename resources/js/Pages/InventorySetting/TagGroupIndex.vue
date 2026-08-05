@@ -95,7 +95,7 @@
                             >
                                 <template #item="{ element: tag }">
                                     <div
-                                        class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2 hover:bg-surface-sunken transition-colors"
+                                        class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken/60 px-3 py-2 hover:bg-surface-sunken transition-colors"
                                     >
                                         <!-- Farbstreifen -->
                                         <div
@@ -243,7 +243,7 @@
                 >
                     <template #item="{ element: tag }">
                         <div
-                            class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2 hover:bg-surface-sunken transition-colors"
+                            class="flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken/60 px-3 py-2 hover:bg-surface-sunken transition-colors"
                         >
                             <div
                                 class="h-8 w-1.5 rounded-full"

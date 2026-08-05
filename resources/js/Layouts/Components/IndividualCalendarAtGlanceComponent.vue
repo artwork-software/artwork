@@ -14,7 +14,7 @@
             <template v-if="eventsAtAGlanceRef && eventsAtAGlanceRef.length > 0">
                 <div v-for="roomData in eventsAtAGlanceRef" :key="roomData.roomId">
                     <div :class="isSearchingForProject ? '' : 'sticky' + (isCalendarViewRoute ? ' top-[4.5rem] mt-7' : '')"
-                         class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg z-40">
+                         class="w-52 py-3 border-r-4   z-40">
                         <div class="flex text-[13px]/[18px] font-semibold items-center ml-4">
                             {{ roomData.roomName }}
                         </div>

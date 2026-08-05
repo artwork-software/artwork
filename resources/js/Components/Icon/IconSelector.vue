@@ -65,7 +65,7 @@
                         <!-- Skeleton Grid -->
                         <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             <div v-for="n in 12" :key="n" class="rounded-xl border border-border-subtle p-4">
-                                <div class="h-8 w-8 rounded bg-border-subtle animate-pulse mx-auto"></div>
+                                <div class="h-8 w-8 rounded bg-border-subtle/80 animate-pulse mx-auto"></div>
                                 <div class="mt-3 h-3 w-20 rounded bg-border-subtle animate-pulse mx-auto"></div>
                             </div>
                         </div>

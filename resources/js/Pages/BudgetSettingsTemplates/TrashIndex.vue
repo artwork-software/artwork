@@ -23,11 +23,9 @@
         <div class="ml-4 my-4">
             <BudgetComponent v-if="!table.closed"
                              :table="table"
-                             :project="project"
                              :selectedCell="budget.selectedCell"
                              :selectedRow="budget.selectedRow"
                              :templates="budget.templates"
-                             :money-sources="moneySources"
                              :is-budget-template-management="true"
                              :isInTrash="true"
             />

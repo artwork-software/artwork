@@ -5,11 +5,17 @@
             {{ $page.props.flash.success }}
         </div>
 
-        <div class="max-w-2xl">
-            <p class="text-sm text-secondary mb-6">
-                {{ $t('Maintain the mail account here. Empty fields fall back to the server configuration (.env).') }}
-            </p>
+        <SettingsGuideBanner
+            class="mt-6 mb-6"
+            storage-key="settings-guide.tool.mail"
+            title="How does this area work?"
+            :paragraphs="[
+                'These settings control the mail account for all outgoing emails. Empty fields fall back to the server configuration (.env) — the effective fallback values are shown below the fields.',
+                'Changes take effect immediately after saving.',
+            ]"
+        />
 
+        <div class="max-w-2xl">
             <!-- SMTP settings -->
             <form @submit.prevent="save" class="grid grid-cols-1 gap-4">
                 <h3 class="text-sm font-semibold text-gray-900">{{ $t('SMTP server') }}</h3>
@@ -70,6 +76,13 @@
                 </div>
 
                 <h3 class="text-sm font-semibold text-gray-900 mt-4">{{ $t('Sender (From)') }}</h3>
+                <SettingsGuideBanner
+                    variant="static"
+                    title="Interaction with Communication & Legal"
+                    :paragraphs="[
+                        'Most notifications use the support email address from Communication & Legal as their sender. The fields here only override that if you set them deliberately.',
+                    ]"
+                />
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                         <BaseInput id="mail_from_address" v-model="form.from_address" :label="$t('From address')" :error="form.errors.from_address"/>
@@ -129,12 +142,14 @@ import {defineComponent} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     name: 'MailSettingsIndex',
     components: {
         ToolSettingsHeader,
         BaseInput,
+        SettingsGuideBanner,
     },
     props: {
         mailSettings: {

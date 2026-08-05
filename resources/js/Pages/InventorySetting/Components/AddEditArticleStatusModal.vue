@@ -1,7 +1,7 @@
 <template>
     <ArtworkBaseModal @close="$emit('close')"
-        title="Edit Article Status"
-        description="Edit the details of the article status."
+        :title="$t('Edit Article Status')"
+        :description="$t('Edit the details of the article status.')"
     >
 
         <form @submit.prevent="submit">
@@ -9,7 +9,7 @@
             <h2 class="text-lg font-semibold mb-4">{{ props.status.name }}</h2>
 
             <div class="mb-4">
-                <label for="status-name" class="block text-sm font-medium text-gray-700 mb-2">Status Farbe</label>
+                <label for="status-name" class="block text-sm font-medium text-gray-700 mb-2">{{ $t('Status color') }}</label>
                 <ColorPickerComponent
                     :color="statusForm.color"
                     @update-color="changeColor"

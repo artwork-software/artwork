@@ -1,5 +1,12 @@
 <template>
     <BudgetSettingsHeader :title="$t('General')" :description="$t('Define settings for your budget.')">
+        <SettingsGuideBanner
+            variant="banner"
+            storage-key="settings-guide.budget.general"
+            title="How the column names work"
+            :paragraphs="guideParagraphs"
+            class="mb-6"
+        />
         <div class="xsLight mb-5">
             {{ $t('Specify here what the first three columns of new budget tables should be called') }}
         </div>
@@ -42,9 +49,11 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     components: {
+        SettingsGuideBanner,
         ErrorComponent,
         SuccessModal,
         CheckIcon,
@@ -55,6 +64,14 @@ export default defineComponent({
     props: [
         'budgetColumnSettings'
     ],
+    data() {
+        return {
+            guideParagraphs: [
+                'The column names apply only to newly created budget tables — existing project budgets keep their names.',
+                'If account management is activated, columns 1 and 2 become select fields for accounts and cost units — the names entered here then only serve as headings.',
+            ],
+        };
+    },
     methods: {
         saveBudgetColumnSetting(budgetColumnSetting) {
             router.patch(

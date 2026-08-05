@@ -4,6 +4,15 @@
             <template #actions>
 
             </template>
+            <SettingsGuideBanner
+                class="mb-6"
+                storage-key="settings-guide.event.standard-values"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Everything on this tab is only a default: the values pre-fill the form when an event is created and can be changed there at any time.',
+                    'Existing events are not affected. Changes here are saved automatically.',
+                ]"
+            />
             <div>
                 <BasePageTitle
                     title="Standard values"
@@ -60,6 +69,7 @@ import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSet
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 

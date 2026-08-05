@@ -12,6 +12,12 @@
         </style>
 
         <!-- Scripts -->
+        {{-- Oeffentliche Laufzeit-Config (config/frontend.php). Muss vor @vite stehen,
+             damit die Werte bereitstehen, bevor die Module ausgefuehrt werden. --}}
+        <script type="text/javascript">
+            window.__APP_CONFIG__ = @json(config('frontend'));
+        </script>
+
         @routes
         @vite(['resources/js/app.js'])
         @inertiaHead

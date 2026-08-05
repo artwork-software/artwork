@@ -2647,6 +2647,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // Export
         Route::post('/export', [CrmExportController::class, 'export'])->name('crm.export');
 
+        // Duplikate finden & zusammenführen
+        Route::get('/duplicates', [\Artwork\Modules\Crm\Http\Controllers\CrmDuplicateController::class, 'index'])
+            ->middleware('can:crm manager')->name('crm.duplicates');
+        Route::post('/duplicates/merge', [\Artwork\Modules\Crm\Http\Controllers\CrmDuplicateController::class, 'merge'])
+            ->middleware('can:crm manager')->name('crm.duplicates.merge');
+
         Route::get('/contacts-search', [CrmContactController::class, 'search'])->name('crm.contacts.search');
         // Papierkorb — muss vor den /contacts/{crmContact}-Routen stehen!
         Route::get('/contacts/trashed', [CrmContactController::class, 'getTrashed'])

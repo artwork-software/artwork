@@ -1,5 +1,5 @@
 <template>
-    <ShiftSettingsHeader :title="$t('User Contracts')">
+    <ShiftSettingsHeader :title="$t('User Contracts')" :description="$t('Manage contract templates with employment-law parameters.')">
         <template #actions>
             <button class="ui-button-add" @click="showCreateOrUpdateUserContractModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
@@ -7,6 +7,15 @@
             </button>
         </template>
 
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.user-contracts"
+            title="How user contracts work"
+            :paragraphs="[
+                'Contracts bundle the employment-law parameters of a person: free days, target-hour rules, season entitlements and overtime deadlines. You assign a contract to people in their user profile.',
+                'Contracts take effect in the hour accounts, on the user info pages and in the shift rule check.'
+            ]"
+            footnote="Important: people without an assigned contract are not covered by the rule check at all."
+        />
 
             <div class="card white p-5 mt-5">
                 <ul role="list" class="divide-y divide-gray-100" v-if="contracts.length > 0">
@@ -15,7 +24,7 @@
                     </li>
                 </ul>
                 <div v-else>
-                    <BaseAlertComponent message="No user contracts found. Please create a new one." type="error" use-translation />
+                    <BaseAlertComponent message="No user contracts found. Please create a new one." type="info" use-translation />
                 </div>
             </div>
 
@@ -42,6 +51,7 @@ import CreateOrUpdateUserContractModal
     from "@/Pages/Settings/UserContractSettings/Components/CreateOrUpdateUserContractModal.vue";
 import SingleUserContractTemplate
     from "@/Pages/Settings/UserContractSettings/Components/SingleUserContractTemplate.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {IconCirclePlus} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -52,44 +62,6 @@ const props = defineProps({
 })
 
 const showCreateOrUpdateUserContractModal = ref(false)
-
-const tabs = ref([
-    {
-        name: 'Shift Settings',
-        href: route('shift.settings'),
-        current: route().current('shift.settings'),
-        show: true,
-        icon: 'IconCalendarUser'
-    },
-    {
-        name: 'Day Services',
-        href: route('day-service.index'),
-        current: route().current('day-service.index'),
-        show: true,
-        icon: 'IconHours24'
-    },
-    {
-        name: 'Work Time Pattern',
-        href: route('shift.work-time-pattern'),
-        current: route().current('shift.work-time-pattern'),
-        show: true,
-        icon: 'IconClockCog'
-    },
-    {
-        name: 'User Contracts',
-        href: route('user-contract-settings.index'),
-        current: route().current('user-contract-settings.index'),
-        show: true,
-        icon: 'IconContract'
-    },
-    {
-        name: 'Shift warnings - rules',
-        href: route('shift-rules.index'),
-        current: route().current('shift-rules.index'),
-        show: true,
-        icon: 'IconGavel'
-    }
-])
 </script>
 
 <style scoped>

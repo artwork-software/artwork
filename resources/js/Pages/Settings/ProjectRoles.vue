@@ -6,6 +6,16 @@
                 {{ $t('Add Project Role') }}
             </button>
         </template>
+            <SettingsGuideBanner
+                class="mb-6"
+                storage-key="settings-guide.project.roles"
+                title="What are project roles?"
+                :paragraphs="[
+                    'Project roles are plain labels such as project management, technology or dramaturgy — they are independent of system permissions and do not grant any rights.',
+                    'You assign them per person in the project team. They are visible in the user profile and in the project role matrix export.',
+                    'If the option “CRM contacts in project team” is enabled, roles can also be assigned to CRM contacts in the team.',
+                ]"
+            />
             <div v-for="role in projectRoles">
                 <div class="rounded-lg bg-gray-50 px-4 py-5 mb-3">
                     <div class="flex items-center justify-between">
@@ -16,7 +26,7 @@
                         </div>
                         <div class="flex gap-x-3">
                             <PropertyIcon name="IconEdit" class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="openRoleEditForm(role)"/>
-                            <PropertyIcon name="IconTrash "class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="deleteRole(role)"/>
+                            <PropertyIcon name="IconTrash "class="w-5 h-5 text-artwork-buttons-context cursor-pointer" @click="openDeleteRoleModal(role)"/>
                         </div>
                     </div>
                 </div>
@@ -24,7 +34,7 @@
 
         <BaseModal  modal-image="/Svgs/Overlays/illu_project_edit.svg" v-if="showAddProjectRoleModal" @closed="closeAddProjectRoleModal">
             <ModalHeader
-                :title="$t('Add Project Role')"
+                :title="projectRoleForm.id ? $t('Edit project role') : $t('Add Project Role')"
                 :description="$t('Add a new project role.')"
             />
             <BaseInput label="Name" id="title" v-model="projectRoleForm.name" />
@@ -32,6 +42,14 @@
                 <FormButton :text="$t('Save')" :disabled="projectRoleForm.name.length < 1" @click="addProjectRole"/>
             </div>
         </BaseModal>
+
+        <ConfirmDeleteModal
+            v-if="showDeleteRoleModal"
+            :title="$t('Delete project role')"
+            :description="$t('Do you really want to delete this project role?')"
+            @closed="closeDeleteRoleModal"
+            @delete="deleteRole"
+        />
     </ProjectSettingsHeader>
 </template>
 
@@ -49,10 +67,14 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import {IconCirclePlus} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default {
     name: "ProjectRoles",
     components: {
+        ConfirmDeleteModal,
+        SettingsGuideBanner,
         PropertyIcon,
         ProjectSettingsHeader,
         GlassyIconButton,
@@ -72,6 +94,8 @@ export default {
                 name: '',
             }),
             showAddProjectRoleModal: false,
+            showDeleteRoleModal: false,
+            roleToDelete: null,
         }
     },
     methods: {
@@ -108,11 +132,24 @@ export default {
             this.projectRoleForm.name = role.name;
             this.showAddProjectRoleModal = true;
         },
-        deleteRole(role) {
-            this.projectRoleForm.delete(route('project-roles.destroy', {project_role: role.id}), {
+        openDeleteRoleModal(role) {
+            this.roleToDelete = role;
+            this.showDeleteRoleModal = true;
+        },
+        closeDeleteRoleModal() {
+            this.showDeleteRoleModal = false;
+            this.roleToDelete = null;
+        },
+        deleteRole() {
+            if (!this.roleToDelete) {
+                return;
+            }
+
+            this.projectRoleForm.delete(route('project-roles.destroy', {project_role: this.roleToDelete.id}), {
                 preserveScroll: true,
                 onSuccess: () => {
                     this.projectRoleForm.reset();
+                    this.closeDeleteRoleModal();
                 }
             });
         }

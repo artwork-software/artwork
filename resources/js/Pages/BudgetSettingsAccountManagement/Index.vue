@@ -1,5 +1,12 @@
 <template>
     <BudgetSettingsHeader :title="$t('Account management')" :description="$t('Define settings for your budget.')">
+        <SettingsGuideBanner
+            variant="banner"
+            storage-key="settings-guide.budget.account-management"
+            title="How account management works"
+            :steps="guideSteps"
+            class="mb-6"
+        />
         <SwitchGroup as="div" class="mb-5">
             <Switch v-model="budgetAccountManagementGlobal"
                     :class="[
@@ -24,6 +31,12 @@
                 </span>
             </SwitchLabel>
         </SwitchGroup>
+        <SettingsGuideBanner
+            variant="static"
+            :paragraphs="switchInfoParagraphs"
+            footnote="Budget templates are not affected."
+            class="mb-5"
+        />
         <hr class="mb-5"/>
         <div class="mb-5 space-y-1">
             <div class="headline3 mb-5">{{ $t('Selectable accounts') }}</div>
@@ -59,6 +72,9 @@
                 />
             </div>
             <div class="errorText" v-if="this.accountFormHelpText">{{ this.accountFormHelpText }}</div>
+            <p class="text-xs text-gray-500 pt-1">
+                {{ $t('The expense or revenue setting determines where the account is sorted in.') }}
+            </p>
         </div>
         <div class="mb-5 space-y-1">
             <div class="headline3 mb-5">{{ $t('Selectable cost units') }}</div>
@@ -85,6 +101,11 @@
             <div class="errorText" v-if="this.costUnitFormHelpText">{{ this.costUnitFormHelpText }}</div>
         </div>
         <hr class="mb-5"/>
+        <SettingsGuideBanner
+            variant="static"
+            :paragraphs="['Deleted accounts and cost units are moved to the trash and can be restored there.']"
+            class="mb-5"
+        />
         <div class="space-y-5">
             <div class="flex flex-col">
                 <div class="flex flex-row space-x-5 items-center">
@@ -292,10 +313,12 @@ import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     mixins: [IconLib],
     components: {
+        SettingsGuideBanner,
         PropertyIcon,
         BaseInput,
         TextInputComponent,
@@ -315,6 +338,23 @@ export default defineComponent({
     ],
     data() {
         return {
+            guideSteps: [
+                {
+                    title: 'Activate account linking',
+                    text: 'Enable the switch — columns 1 and 2 of the project budgets become select fields for accounts and cost units.',
+                },
+                {
+                    title: 'Create accounts and cost units',
+                    text: 'Add the selectable accounts and cost units below and keep them up to date.',
+                },
+                {
+                    title: 'Select them in the project budget',
+                    text: 'In each project budget, pick an account in column 1 and a cost unit in column 2 per row.',
+                },
+            ],
+            switchInfoParagraphs: [
+                'This switch takes effect immediately and for all project budgets: columns 1 and 2 become select fields for accounts and cost units, and the number/name toggle appears in the budget toolbar.',
+            ],
             budgetAccountManagementGlobal: this.$page.props.budgetAccountManagementGlobal,
             accountForm: useForm({
                 account_number: '',

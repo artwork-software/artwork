@@ -15,6 +15,17 @@
             </button>
         </template>
 
+            <SettingsGuideBanner
+                class="mb-4"
+                storage-key="settings-guide.material-sets.index"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Material sets are reusable compilations of articles.',
+                    'When you create an internal, external or project-related material issue, you apply a set with one click - all articles and quantities are filled in automatically.',
+                ]"
+                footnote="The filter in the set modal is the same as in the inventory overview: it is fed by the properties marked as filterable and by the tags."
+            />
+
             <!-- Toolbar -->
             <div class="rounded-2xl border border-zinc-200 bg-white/80 p-4 shadow-sm backdrop-blur">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -167,6 +178,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import MaterialSetSettingsHeader from '@/Pages/MaterialSet/Components/MaterialSetSettingsHeader.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import SingleMaterialSet from '@/Pages/MaterialSet/Components/SingleMaterialSet.vue'
 import CreateOrUpdateMaterialSetModal from '@/Pages/MaterialSet/Components/CreateOrUpdateMaterialSetModal.vue'
 import BaseAlertComponent from '@/Components/Alerts/BaseAlertComponent.vue'

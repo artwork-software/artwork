@@ -1,13 +1,23 @@
 <template>
     <div>
         <!-- Uniform external label keeps all field types aligned in a shared grid -->
-        <label
-            v-if="uniformLabel && showExternalLabel"
-            :for="`prop_${property.id}`"
-            class="block text-sm font-medium text-gray-700 mb-1"
-        >
-            {{ $t(property.name) }}<span v-if="required" class="text-red-500 ml-0.5">*</span>
-        </label>
+        <div v-if="uniformLabel && showExternalLabel" class="flex items-center mb-1">
+            <label
+                :for="`prop_${property.id}`"
+                class="block text-sm font-medium text-gray-700"
+            >
+                {{ $t(property.name) }}<span v-if="required" class="text-red-500 ml-0.5">*</span>
+            </label>
+            <!-- tooltip_text ist Nutzerdaten-Text aus den CRM-Settings — bewusst ohne $t -->
+            <ToolTipComponent
+                v-if="property.tooltip_text"
+                class="ml-1.5"
+                direction="right"
+                :tooltip-text="property.tooltip_text"
+                icon="IconInfoCircle"
+                icon-size="h-4 w-4"
+            />
+        </div>
 
         <template v-if="property.type === 'text' || property.type === 'link'">
             <BaseInput
@@ -157,6 +167,7 @@ import { router } from '@inertiajs/vue3'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import { IconFile, IconTrash, IconUpload, IconX } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 

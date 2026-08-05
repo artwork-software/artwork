@@ -19,6 +19,14 @@
                 <span class="text-sm text-gray-700">{{ $t('Confidential') }}</span>
             </label>
 
+            <!-- Effect of confidentiality -->
+            <SettingsGuideBanner
+                v-if="form.is_confidential"
+                variant="static"
+                title="Confidential group"
+                :paragraphs="confidentialInfoParagraphs"
+            />
+
             <!-- Permissions section when confidential -->
             <div v-if="form.is_confidential" class="rounded-xl border border-gray-200 bg-white p-4">
                 <div class="mb-3 text-sm font-bold text-gray-900">
@@ -114,6 +122,7 @@ import { ref, reactive, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import axios from 'axios'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import IconSelector from '@/Components/Icon/IconSelector.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
@@ -124,6 +133,12 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+
+const confidentialInfoParagraphs = [
+    'Confidential groups are only visible to CRM managers and to the people and teams you authorize below.',
+    'Can view shows the group, Can edit also unlocks its fields for editing.',
+    'External accesses never see confidential groups.',
+]
 
 const USER_TYPE = 'Artwork\\Modules\\User\\Models\\User'
 const DEPARTMENT_TYPE = 'Artwork\\Modules\\Department\\Models\\Department'

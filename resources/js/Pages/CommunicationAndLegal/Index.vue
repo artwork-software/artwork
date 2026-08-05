@@ -4,6 +4,15 @@
              class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
             {{ this.$page.props.flash.success }}
         </div>
+        <SettingsGuideBanner
+            class="mt-6"
+            storage-key="settings-guide.tool.communication-and-legal"
+            title="How does this area work?"
+            :paragraphs="[
+                'The details on this page appear in system emails, on the login page and in generated PDFs.',
+                'Every field saves automatically as soon as you leave it.',
+            ]"
+        />
         <div class="grid grid-cols-1 gap-4 mt-10 max-w-lg">
             <div class="">
                 <div class="sm:col-span-3">
@@ -52,6 +61,9 @@
                           class="text-red-500 text-xs mt-1">
                         {{ $t('Invalid Email Address') }}
                     </span>
+                    <p class="text-xs text-secondary mt-1">
+                        {{ $t('This address is the sender of almost all system notifications.') }}
+                    </p>
                 </div>
             </div>
             <div>
@@ -65,6 +77,14 @@
                 </div>
             </div>
 
+            <SettingsGuideBanner
+                variant="inline"
+                storage-key="settings-guide.tool.communication-and-legal.playing-time-window"
+                title="What is the playing time window for?"
+                :paragraphs="[
+                    'This period is the default date range of the BI dashboards, the BI exports and the shift KPI evaluation.',
+                ]"
+            />
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div class="">
                     <BaseInput
@@ -89,6 +109,14 @@
 
             <div class="mt-8 border-t border-gray-200 pt-6">
                 <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $t('Letterhead') }}</h3>
+                <SettingsGuideBanner
+                    variant="inline"
+                    storage-key="settings-guide.tool.communication-and-legal.letterhead"
+                    title="Where is the letterhead used?"
+                    :paragraphs="[
+                        'The letterhead appears only in PDF exports, for example the per diem statements of artist residencies.',
+                    ]"
+                />
             </div>
             <div class="">
                 <div class="sm:col-span-3">
@@ -126,9 +154,11 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     components: {
+        SettingsGuideBanner,
         BaseInput,
         TextareaComponent,
         TextInputComponent,

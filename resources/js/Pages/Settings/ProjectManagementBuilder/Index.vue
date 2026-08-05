@@ -1,12 +1,16 @@
 <template>
     <ProjectSettingsHeader :title="$t('Project overview builder')" :description="$t('Define global settings for projects.')">
 
-            <div>
-                <BasePageTitle
-                    :title="$t('Project overview builder')"
-                    :description="$t('Set up the project overview for your artwork. To do this, drag and drop the components from the lower area into the project overview. You can also adjust the order of the components using drag & drop.')"
-                />
-            </div>
+            <SettingsGuideBanner
+                storage-key="settings-guide.project.overview-builder"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Drag and drop components to compose the columns of the project overview and adjust their order.',
+                    'Changes apply globally — every user sees the project list with exactly these columns.',
+                    'The palette only shows components that can be used as list columns: no separators or titles, and each component only once.',
+                    'The builder chain: create building blocks in the component settings, build the project detail page in the tab settings, arrange the blocks for the PDF in the print layout, and turn them into columns of the project list in the overview builder. All four use the same component pool with different filters — that is why you do not see every component everywhere.',
+                ]"
+            />
 
             <div class="card white p-5 mt-5">
                 <div class="overflow-x-auto">
@@ -72,6 +76,7 @@ import {IconCircleX, IconSearch} from "@tabler/icons-vue";
 import { useI18n } from 'vue-i18n';
 import SingleComponentInGrid from "@/Pages/Settings/ProjectManagementBuilder/Components/SingleComponentInGrid.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 const props = defineProps({
     componentsInGrid: {
         type: Object,

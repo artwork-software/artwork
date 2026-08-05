@@ -5,6 +5,16 @@
                  class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
                 {{ this.$page.props.flash.success }}
             </div>
+            <SettingsGuideBanner
+                class="mt-6"
+                storage-key="settings-guide.tool.branding"
+                title="How does this area work?"
+                :paragraphs="[
+                    'The big logo appears on the login page and in all email communication, the small logo in the app header, and the illustration on the login page.',
+                    'Every upload is saved automatically as soon as you select a file.',
+                ]"
+                footnote="Which file types are allowed and how large the files may be is defined in the File settings tab."
+            />
             <jet-input-error :message="uploadDocumentFeedback"/>
             <label class="block mt-6 mb-4 xsDark">
                 {{ $t('Big Logo (Upload by click or drag & drop)') }}
@@ -127,9 +137,11 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     components: {
+        SettingsGuideBanner,
         FormButton,
         JetInputError,
         SvgCollection,

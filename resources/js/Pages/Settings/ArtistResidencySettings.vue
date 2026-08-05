@@ -3,6 +3,16 @@
         :title="$t('Artist residencies')"
         :description="$t('Define global default values for artist residencies.')"
     >
+        <SettingsGuideBanner
+            class="mb-6"
+            storage-key="settings-guide.project.artist-residencies"
+            title="How does this area work?"
+            :paragraphs="[
+                'These are default values: they are pre-filled when you create a new artist residency and can be overwritten there.',
+                'Changing a default does not affect existing residencies.',
+                'This tab is only saved when you click the save button.',
+            ]"
+        />
         <div class="card white p-5">
             <BasePageTitle
                 :title="$t('Artist residencies')"
@@ -122,6 +132,7 @@ import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { IconChevronUp, IconChevronDown } from '@tabler/icons-vue'
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 

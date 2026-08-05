@@ -95,28 +95,28 @@ export default {
                             </div>
                             <div class="relative z-40 px-4">
                                 <div class="mt-8 headline1">
-                                   Wähle Tabs aus
+                                   {{ $t('Select tabs') }}
                                 </div>
                                 <p class="xsLight my-6">
-                                    Welche Tabs sollen in dieser Komponente einbezogen werden ?
+                                    {{ $t('Which tabs should be included in this component?') }}
                                 </p>
 
                                 <div class="mb-3">
                                     <SwitchGroup as="div" class="flex items-center gap-x-4">
                                         <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-gray-900">Nur aktuellen Tab einbeziehen</span>
+                                            <span class="font-medium text-gray-900">{{ $t('Only include current tab') }}</span>
                                         </SwitchLabel>
                                         <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
                                             <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                         </Switch>
                                         <SwitchLabel as="span" class="text-sm">
-                                            <span class="font-medium text-gray-900">Tabs auswählen</span>
+                                            <span class="font-medium text-gray-900">{{ $t('Select tabs') }}</span>
                                         </SwitchLabel>
                                     </SwitchGroup>
                                 </div>
                                 <div v-if="enabled">
                                     <Listbox as="div" v-model="selected" multiple>
-                                        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">Ausgewählte Tabs</ListboxLabel>
+                                        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Selected tabs') }}</ListboxLabel>
                                         <div class="relative mt-2">
                                             <ListboxButton class="relative w-full cursor-default bg-white h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-hover sm:text-sm sm:leading-6">
                                                 <span class="block truncate"> {{ selected.map((tab) => tab.name).join(', ') }}</span>

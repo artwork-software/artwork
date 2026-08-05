@@ -1,6 +1,16 @@
 <template>
   <div>
     <h2 class="headline2 mb-4">{{ $t('API Keys Management') }}</h2>
+    <SettingsGuideBanner
+      class="mb-6"
+      variant="static"
+      title="How do API keys work?"
+      :paragraphs="[
+        'An API key is an access token that allows an external application to read data from your artwork.',
+        'The token is shown only once after creation — store it securely. Setting an expiry date is recommended.',
+        'Revoking a key is permanent and immediately blocks its access. The log lists every request made with a key.',
+      ]"
+    />
     <div class="grid grid-cols-12 gap-4 mb-6">
       <div class="col-span-3 flex justify-end">
         <button
@@ -326,9 +336,11 @@ import {
   XIcon
 } from '@heroicons/vue/solid'
 import dayjs from 'dayjs'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 
 export default defineComponent({
   components: {
+    SettingsGuideBanner,
     ConfirmationComponent,
     BaseModal,
     PlusIcon,

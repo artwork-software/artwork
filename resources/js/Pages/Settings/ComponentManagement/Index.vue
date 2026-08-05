@@ -11,6 +11,17 @@
             </button>
         </template>
 
+        <SettingsGuideBanner
+            storage-key="settings-guide.project.components"
+            title="How does this area work?"
+            :paragraphs="[
+                'Only the building blocks are created here — they become visible once you place them in the tab settings, the print layout or the project overview builder.',
+                'The builder chain: create building blocks in the component settings, build the project detail page in the tab settings, arrange the blocks for the PDF in the print layout, and turn them into columns of the project list in the overview builder. All four use the same component pool with different filters — that is why you do not see every component everywhere.',
+                '“0×” means the component exists but is not visible anywhere yet.',
+                'Deleting a component also removes all values already entered in projects.',
+            ]"
+        />
+
         <div class="mt-4">
             <!-- Toolbar -->
             <div class="mb-3 flex items-center justify-end">
@@ -56,6 +67,16 @@
                         {{ $t('Special components') }}
                     </h2>
 
+                    <SettingsGuideBanner
+                        class="mb-3"
+                        variant="inline"
+                        storage-key="settings-guide.project.components.special"
+                        title="What are special components?"
+                        :paragraphs="[
+                            'Special components ship with the system and cannot be deleted. They bring their own logic — for example the calendar, budget or shift components.',
+                        ]"
+                    />
+
                     <div class="flex flex-wrap gap-3 mb-3">
                         <DropComponentsToolTip
                             v-for="component in filteredSpecialComponents"
@@ -98,6 +119,7 @@ import SingleComponent from '@/Pages/Settings/ComponentManagement/Components/Sin
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue'
 import DropComponentsToolTip from '@/Components/ToolTips/DropComponentsToolTip.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import { IconCirclePlus } from '@tabler/icons-vue'
 
 defineOptions({ name: 'ComponentSettingsIndex' })

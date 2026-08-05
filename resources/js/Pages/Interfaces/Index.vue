@@ -1,5 +1,14 @@
 <template>
     <ToolSettingsHeader :title="$t('Interfaces')">
+        <SettingsGuideBanner
+            class="mt-6 mb-6"
+            storage-key="settings-guide.tool.interfaces"
+            title="How does this area work?"
+            :paragraphs="[
+                'The artwork interface manages API keys with which external systems can read data from your artwork (incoming access).',
+                'The Sage interface connects your Sage accounting and imports booking data into the project budgets (outgoing connection).',
+            ]"
+        />
         <div>
                 <div class="space-y-6">
                     <div @click="toggleSection(openSections.ARTWORK)"
@@ -40,6 +49,7 @@ import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue"
 import {ChevronDownIcon} from '@heroicons/vue/solid'
 import SageApiSettings from "@/Pages/Interfaces/Sage/SageApiSettings.vue";
 import ArtworkApiSettings from "@/Pages/Interfaces/Artwork/ArtworkApiSettings.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 defineProps({
     title: String,

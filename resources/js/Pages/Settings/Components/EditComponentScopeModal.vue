@@ -63,25 +63,25 @@ function save() {
 <template>
   <ArtworkBaseModal
     modal-size="sm:max-w-2xl"
-    title="Tabs-Auswahl bearbeiten"
-    description="Lege fest, von welchen Tabs die Dokumente angezeigt werden."
+    :title="$t('Edit tab selection')"
+    :description="$t('Define from which tabs the documents are displayed.')"
     @close="close"
   >
     <div class="space-y-5">
       <div class="flex items-center gap-x-3">
-        <span class="text-sm text-gray-900">Nur aktuellen Tab einbeziehen</span>
+        <span class="text-sm text-gray-900">{{ $t('Only include current tab') }}</span>
         <button
           type="button"
           class="ml-auto rounded-md px-2 py-1 text-xs ring-1 ring-inset"
           :class="enabled ? 'ring-emerald-300 text-emerald-700 bg-emerald-50' : 'ring-zinc-300 text-zinc-700 bg-white'"
           @click="enabled = !enabled"
         >
-          {{ enabled ? 'Tabs auswählen' : 'Aktueller Tab' }}
+          {{ enabled ? $t('Select tabs') : $t('Current tab') }}
         </button>
       </div>
 
       <div v-if="enabled" class="border rounded-lg p-3">
-        <div class="text-xs text-zinc-600 mb-2">Tabs auswählen</div>
+        <div class="text-xs text-zinc-600 mb-2">{{ $t('Select tabs') }}</div>
         <div class="max-h-56 overflow-auto space-y-2">
           <label v-for="tab in allTabs" :key="tab.id" class="flex items-center gap-2 text-sm">
             <input type="checkbox" class="rounded border-zinc-300" :value="tab.id" v-model="selectedIds" />

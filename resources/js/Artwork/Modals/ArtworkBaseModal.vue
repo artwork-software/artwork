@@ -14,11 +14,11 @@
                                          leave-from="opacity-100 translate-y-0 sm:scale-100"
                                          @after-enter="initDraggable"
                                          leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                            <DialogPanel class="draggableModal w-full text-left bg-surface border border-border rounded-lg shadow-overlay" :class="modalSize" ref="containerRef">
-                                <div class="flex items-start justify-between gap-x-6 px-4 py-3 border-b border-border-subtle">
+                            <DialogPanel class="draggableModal w-full text-left bg-surface rounded-lg shadow-overlay" :class="modalSize" ref="containerRef">
+                                <div class="flex items-start justify-between gap-x-6 rounded-t-lg bg-surface-inverse px-5 py-3">
                                     <div class="min-w-0">
-                                        <h2 class="font-lexend font-semibold text-lg text-text">{{ $t(props.title) }}</h2>
-                                        <p v-if="props.description" class="mt-0.5 text-[13px] text-text-muted">
+                                        <h2 class="font-lexend font-bold text-[16px] text-text-inverse">{{ $t(props.title) }}</h2>
+                                        <p v-if="props.description" class="mt-0.5 text-[13px] text-text-inverse-muted tabular-nums">
                                             {{ $t(props.description) }}
                                         </p>
                                     </div>
@@ -26,7 +26,7 @@
                                         <Menu as="div" class="relative">
                                             <MenuButton
                                                 type="button"
-                                                class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-sunken hover:text-text"
+                                                class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
                                                 :aria-label="$t('More options')"
                                                 v-tooltip.bottom="{ value: $t('More options'), class: 'aw-tooltip' }"
                                             >
@@ -56,7 +56,7 @@
                                         <div ref="dragHandleRef">
                                             <button
                                                 type="button"
-                                                class="inline-flex size-7 cursor-grab items-center justify-center rounded-md text-text-muted transition-colors duration-150 motion-reduce:transition-none hover:bg-surface-sunken hover:text-text"
+                                                class="inline-flex size-7 cursor-grab items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
                                                 :aria-label="$t('Hold here to move')"
                                                 v-tooltip.bottom="{ value: $t('Hold here to move'), class: 'aw-tooltip' }"
                                             >
@@ -65,7 +65,7 @@
                                         </div>
                                         <button
                                             type="button"
-                                            class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-150 motion-reduce:transition-none hover:bg-danger-surface hover:text-danger"
+                                            class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
                                             :aria-label="$t('Close Window')"
                                             v-tooltip.bottom="{ value: $t('Close Window'), class: 'aw-tooltip' }"
                                             @click="$emit('close')"
@@ -74,10 +74,10 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="p-4">
+                                <div class="p-5">
                                     <slot/>
                                 </div>
-                                <div v-if="$slots.footer" class="sticky bottom-0 flex items-center justify-end gap-x-2 rounded-b-lg border-t border-border-subtle bg-surface-sunken px-4 py-3">
+                                <div v-if="$slots.footer" class="sticky bottom-0 flex items-center justify-end gap-x-2 rounded-b-lg border-t border-border-subtle bg-surface-sunken px-5 py-3">
                                     <slot name="footer"/>
                                 </div>
                             </DialogPanel>

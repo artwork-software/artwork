@@ -2,7 +2,7 @@
     <div class="min-h-screen bg-surface-canvas p-8">
         <div class="mx-auto max-w-6xl space-y-12 pb-24">
             <header>
-                <h1 class="font-lexend text-2xl font-semibold text-text">Design-Katalog — Design-Basis v1</h1>
+                <h1 class="font-lexend text-2xl font-semibold text-text">Design-Katalog — Design-Basis v2 »Bühnenlicht«</h1>
                 <p class="mt-1 text-xs text-text-muted">
                     Nur lokal erreichbar (/_design). Vergleichsbasis für alle Katalog-Komponenten in allen Varianten und Zuständen.
                 </p>
@@ -25,7 +25,7 @@
 
                 <div>
                     <h3 class="mb-2 font-lexend text-[15px] font-semibold text-text">Rahmen</h3>
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                         <div v-for="swatch in borderSwatches" :key="swatch.token" class="rounded-md border border-border-subtle bg-surface p-2">
                             <div class="h-12 rounded-sm border-2 bg-surface" :class="swatch.class" />
                             <div class="mt-1.5 text-[11px] font-semibold text-text tabular-nums">{{ swatch.token }}</div>
@@ -41,6 +41,7 @@
                         <p class="text-sm text-text-muted">text-text-muted — Sekundärer Text (#5F6169)</p>
                         <p class="text-sm text-text-subtle">text-text-subtle — Tertiärer Text (#74767E)</p>
                         <p class="rounded-sm bg-surface-inverse px-2 py-1 text-sm text-text-inverse">text-text-inverse auf bg-surface-inverse (#F4F4F2 auf #222831)</p>
+                        <p class="rounded-sm bg-surface-inverse px-2 py-1 text-sm text-text-inverse-muted">text-text-inverse-muted auf bg-surface-inverse (#A9B1BC, nie unter 11,5px)</p>
                     </div>
                 </div>
 
@@ -74,9 +75,10 @@
                     <div class="flex flex-wrap items-start gap-3">
                         <div class="rounded-sm border border-border bg-surface px-4 py-3 text-xs text-text-muted">rounded-sm (4px)</div>
                         <div class="rounded-md border border-border bg-surface px-4 py-3 text-xs text-text-muted">rounded-md (6px)</div>
-                        <div class="rounded-lg border border-border bg-surface px-4 py-3 text-xs text-text-muted">rounded-lg (10px)</div>
+                        <div class="rounded-lg border border-border bg-surface px-4 py-3 text-xs text-text-muted">rounded-lg (12px)</div>
                         <div class="rounded-full border border-border bg-surface px-4 py-3 text-xs text-text-muted">rounded-full (pill)</div>
                         <div class="rounded-md bg-surface px-4 py-3 text-xs text-text-muted shadow-raised">shadow-raised</div>
+                        <div class="rounded-lg bg-surface px-4 py-3 text-xs text-text-muted shadow-card">shadow-card</div>
                         <div class="rounded-md bg-surface px-4 py-3 text-xs text-text-muted shadow-overlay">shadow-overlay</div>
                     </div>
                     <div class="mt-3 space-y-1 rounded-md border border-border-subtle bg-surface p-4">
@@ -102,6 +104,17 @@
                             <BaseUIButton :variant="variant" :size="size" label="Mit Icon" icon="IconCalendar" />
                             <BaseUIButton :variant="variant" :size="size" icon="IconSettings" aria-label="Nur Icon" />
                         </div>
+                    </div>
+                </div>
+
+                <!-- v2: on-band — Buttons auf dunklem Band (bg-surface-inverse) -->
+                <div class="rounded-lg bg-surface-inverse p-4">
+                    <div class="mb-3 text-[11px] font-semibold text-text-inverse-muted tabular-nums">on-band (auf bg-surface-inverse)</div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <BaseUIButton v-for="variant in buttonVariants" :key="`band-${variant}`" :variant="variant" size="md" :label="variant" hide-icon on-band :use-translation="false" />
+                        <BaseUIButton variant="primary" size="md" label="Disabled" hide-icon on-band disabled />
+                        <BaseUIButton variant="secondary" size="md" label="Disabled" hide-icon on-band disabled />
+                        <BaseUIButton variant="primary" size="md" label="Mit Icon" icon="IconCalendar" on-band />
                     </div>
                 </div>
             </section>
@@ -170,6 +183,21 @@
                         <BaseChip variant="success" :count="99">Erfolg</BaseChip>
                         <BaseChip variant="warning" count="7+">Warnung</BaseChip>
                         <BaseChip variant="danger" :count="0">Gefahr</BaseChip>
+                    </div>
+                    <p class="mt-4 mb-2 text-[11px] font-semibold text-text-muted tabular-nums">appearance="filled" (v2: Status, weiß auf satter Farbe)</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <BaseChip variant="neutral" appearance="filled">Neutral</BaseChip>
+                        <BaseChip variant="accent" appearance="filled">Akzent</BaseChip>
+                        <BaseChip variant="success" appearance="filled">Erfolg</BaseChip>
+                        <BaseChip variant="warning" appearance="filled">Warnung</BaseChip>
+                        <BaseChip variant="danger" appearance="filled">Gefahr</BaseChip>
+                    </div>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <BaseChip variant="neutral" appearance="filled" :count="12">Neutral</BaseChip>
+                        <BaseChip variant="accent" appearance="filled" :count="3">Akzent</BaseChip>
+                        <BaseChip variant="success" appearance="filled" :count="99">Erfolg</BaseChip>
+                        <BaseChip variant="warning" appearance="filled" count="7+">Warnung</BaseChip>
+                        <BaseChip variant="danger" appearance="filled" :count="0">Gefahr</BaseChip>
                     </div>
                 </div>
                 <div class="rounded-md border border-border-subtle bg-surface p-4">
@@ -243,12 +271,12 @@
             <section class="space-y-4">
                 <h2 class="font-lexend text-lg font-semibold text-text">KpiTile</h2>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <KpiTile label="Projekte" :value="128" icon="IconFolder" trend="+12 seit letztem Monat" />
+                    <KpiTile label="Projekte (inverse)" :value="128" icon="IconFolder" trend="+12 seit letztem Monat" :inverse="true" />
                     <KpiTile label="Auslastung" value="87 %" icon="IconChartBar" />
                     <KpiTile label="Offene Anfragen" :value="14" icon="IconInbox" trend="−3 diese Woche" href="/_design" />
                     <KpiTile label="Ohne Icon &amp; Trend" :value="42" />
                 </div>
-                <p class="text-[11px] text-text-subtle">Die dritte Kachel ist ein Inertia-Link (href auf diese Seite).</p>
+                <p class="text-[11px] text-text-subtle">Erste Kachel: v2-Akzent-Kachel (:inverse="true", max. eine pro Reihe). Die dritte Kachel ist ein Inertia-Link (href auf diese Seite).</p>
             </section>
 
             <!-- ============ TABLE ============ -->
@@ -344,10 +372,13 @@ const surfaceSwatches = [
     { token: 'bg-surface', class: 'bg-surface', hex: '#FFFFFF' },
     { token: 'bg-surface-canvas', class: 'bg-surface-canvas', hex: '#F6F6F4' },
     { token: 'bg-surface-sunken', class: 'bg-surface-sunken', hex: '#F1F1EE' },
+    { token: 'bg-surface-header', class: 'bg-surface-header', hex: '#FBFBFC' },
+    { token: 'bg-surface-hover', class: 'bg-surface-hover', hex: '#EFF4F9' },
     { token: 'bg-surface-inverse', class: 'bg-surface-inverse', hex: '#222831' },
 ]
 
 const borderSwatches = [
+    { token: 'border-border-hairline', class: 'border-border-hairline', hex: '#EEEFF1' },
     { token: 'border-border-subtle', class: 'border-border-subtle', hex: '#E7E7E3' },
     { token: 'border-border', class: 'border-border', hex: '#D6D6D0' },
     { token: 'border-border-strong', class: 'border-border-strong', hex: '#A9A9A1' },

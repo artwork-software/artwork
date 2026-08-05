@@ -11,8 +11,8 @@
                             :key="col.key"
                             scope="col"
                             :class="[
-                  'sticky top-0 z-10 bg-surface-sunken border-b border-border',
-                  'py-2 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-text-muted',
+                  'sticky top-0 z-10 bg-surface-header border-b border-border',
+                  'py-2 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600',
                   col.headerClass,
                   isNumericColumn(col) ? 'text-right' : col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                   col.key === normalizedColumns[0]?.key ? 'pl-4 pr-3' : 'px-3'
@@ -22,7 +22,7 @@
                             <button
                                 v-if="col.sortable"
                                 type="button"
-                                class="group inline-flex items-center gap-1 uppercase tracking-[0.08em] hover:text-text"
+                                class="group inline-flex items-center gap-1 uppercase tracking-[0.08em] hover:text-accent-700"
                                 @click="onToggleSort(col.key)"
                             >
                                 <span class="truncate">{{ $t(col.label) }}</span>
@@ -33,20 +33,20 @@
                             <span v-else class="truncate">{{ $t(col.label) }}</span>
                         </th>
 
-                        <th v-if="$slots['header-extra']" scope="col" class="sticky top-0 z-10 bg-surface-sunken border-b border-border py-2 pr-4 pl-3 sm:pr-0">
+                        <th v-if="$slots['header-extra']" scope="col" class="sticky top-0 z-10 bg-surface-header border-b border-border py-2 pr-4 pl-3 sm:pr-0">
                             <slot name="header-extra" />
                         </th>
                     </tr>
                     </thead>
 
                     <!-- TBODY -->
-                    <tbody v-if="displayRows.length" class="divide-y divide-border-subtle bg-surface">
-                    <tr v-for="row in displayRows" :key="row[rowKey]" class="group hover:bg-[#FBFBF9]">
+                    <tbody v-if="displayRows.length" class="divide-y divide-border-hairline bg-surface">
+                    <tr v-for="row in displayRows" :key="row[rowKey]" class="group hover:bg-surface-hover" :class="rowHeightClass">
                         <td
                             v-for="(col, idx) in normalizedColumns"
                             :key="col.key"
                             :class="[
-                          'py-2 text-[13px] whitespace-nowrap',
+                          cellPaddingYClass, 'text-[13px] whitespace-nowrap',
                           col.cellClass,
                           isNumericColumn(col) ? 'text-right tabular-nums' : col.align === 'right' ? 'text-right tabular-nums' : col.align === 'center' ? 'text-center' : 'text-left',
                           idx === 0 ? 'pl-4 pr-3' : 'px-3'
@@ -67,7 +67,7 @@
                         </td>
 
                         <!-- Actions: bei Hover/Fokus sichtbar, Platz bleibt reserviert (invisible statt display:none/opacity) -->
-                        <td v-if="$slots['row-actions']" class="py-2 pr-4 pl-3 text-right text-[13px] font-medium whitespace-nowrap sm:pr-0">
+                        <td v-if="$slots['row-actions']" class="pr-4 pl-3 text-right text-[13px] font-medium whitespace-nowrap sm:pr-0" :class="cellPaddingYClass">
                             <div class="invisible group-hover:visible group-focus-within:visible">
                                 <slot name="row-actions" :row="row" />
                             </div>
@@ -136,6 +136,16 @@
     </div>
 </template>
 
+<script lang="ts">
+/**
+ * v2 »Bühnenlicht«: Klassen für eine ausgewählte Zeile (BaseTable hat selbst
+ * keine Auswahl-Logik — Konsumenten mit eigenem selected-Konzept wenden diese
+ * Klassen auf ihre aktive <tr> an, z. B. via cellClass/eigene Row-Slots):
+ *   aktive Zeile = bg-accent-50 + Inset-Ring in accent-600.
+ */
+export const ROW_SELECTED_CLASSES = 'bg-accent-50 shadow-[inset_0_0_0_2px_#276293]'
+</script>
+
 <script setup lang="ts">
 import { computed, reactive, watch, toRefs } from 'vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
@@ -176,6 +186,8 @@ const props = withDefaults(defineProps<{
     // Empty-State: optionaler Reset-Button (emittiert 'reset')
     showResetButton?: boolean
     resetLabel?: string
+    // v2: Zeilenhöhe — 'default' 40px, 'project' 44px, 'compact' 34px
+    density?: 'default' | 'project' | 'compact'
 }>(), {
     rowKey: 'id',
     sortKey: null,
@@ -189,8 +201,19 @@ const props = withDefaults(defineProps<{
     nextLabel: 'Next page',
     ofLabel: 'of',
     showResetButton: false,
-    resetLabel: 'Reset filters'
+    resetLabel: 'Reset filters',
+    density: 'default'
 })
+
+// v2-Dichte: tr-Höhe wirkt in Tabellen als Mindesthöhe (Inhalt zentriert via
+// default vertical-align:middle); compact reduziert zusätzlich das Zellpadding,
+// damit 34px erreichbar sind.
+const rowHeightClass = computed(() =>
+    props.density === 'project' ? 'h-11' : props.density === 'compact' ? 'h-[34px]' : 'h-10'
+)
+const cellPaddingYClass = computed(() =>
+    props.density === 'compact' ? 'py-1' : 'py-2'
+)
 
 const emit = defineEmits<{
     (e: 'update:sortKey', value: string | null): void

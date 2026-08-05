@@ -1,7 +1,8 @@
 <template>
     <div class="w-full my-4">
         <div class="overflow-x-auto">
-            <nav class="flex gap-2">
+            <!-- v2 »Bühnenlicht«: Segmented Control statt Unterstrich-Tabs -->
+            <nav class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]">
                 <template v-for="tab in tabs" :key="tab.name">
                     <component
                         v-if="tab.permission"
@@ -11,9 +12,11 @@
                         :aria-current="tab.current ? 'page' : undefined"
                         :class="[
                             tab.current
-                                ? 'bg-surface border-border border-b-accent-600 text-text'
-                                : 'border-transparent border-b-transparent text-text-muted hover:bg-surface-sunken hover:text-text',
-                            'inline-flex h-[30px] items-center gap-2 whitespace-nowrap rounded-t-md border border-b-2 px-3 text-[13px] font-medium cursor-pointer transition-colors duration-150 motion-reduce:transition-none'
+                                ? 'bg-surface shadow-raised text-text'
+                                : 'text-text hover:bg-white/60',
+                            'inline-flex h-[26px] items-center gap-2 whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-semibold cursor-pointer',
+                            'transition-[background-color] duration-150 ease-out motion-reduce:transition-none',
+                            'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-600'
                         ]"
                         @click="onTabActivate(tab)"
                     >
@@ -22,8 +25,8 @@
                         <span
                             v-if="tab.count"
                             :class="[
-                                tab.current ? 'bg-accent-50 text-accent-700' : 'bg-surface-sunken text-text-muted',
-                                'ml-2 hidden rounded-full px-2 py-0.5 text-xs font-medium md:inline-block'
+                                tab.current ? 'bg-accent-50 text-accent-700' : 'bg-white/70 text-text-muted',
+                                'hidden rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums md:inline-block'
                             ]"
                         >{{ tab.count }}</span>
                     </component>

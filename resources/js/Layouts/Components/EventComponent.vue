@@ -36,14 +36,11 @@
                 </div>
             </div>
             <!-- EDIT MODE -->
-            <div v-if="canEdit" class="space-y-4">
+            <div v-if="canEdit">
 
                 <!-- Basics -->
-                <section class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-accent-500"></span>
-                        <h3 class="ui-card-title">{{ $t('Basics') }}</h3>
-                    </header>
+                <section class="pb-4">
+                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Basics') }}</h3>
 
                     <div class="ui-grid-2">
                         <ArtworkBaseListbox
@@ -88,11 +85,8 @@
                 </section>
 
                 <!-- Date & Time -->
-                <section class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-info"></span>
-                        <h3 class="ui-card-title">{{ $t('Date & Time') }}</h3>
-                    </header>
+                <section class="border-t border-border-hairline py-4">
+                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Date & Time') }}</h3>
 
                     <label class="inline-flex items-center gap-2">
                         <input
@@ -131,37 +125,34 @@
                         </div>
                     </div>
 
-                    <!-- Quick duration buttons -->
-                    <div class="mt-4">
+                    <!-- Quick duration pills -->
+                    <div class="mt-3 flex flex-wrap items-center gap-2" v-if="startDate && endDate && startTime">
+                        <div class="text-[12px] text-text-muted">{{ $t('Duration Shortcuts:')}}</div>
+                        <button
+                            v-for="m in quickDurations"
+                            :key="m"
+                            type="button"
+                            class="inline-flex items-center rounded-full h-[26px] px-3 text-xs border border-border bg-surface hover:bg-surface-hover disabled:text-text-subtle disabled:cursor-not-allowed"
+                            :disabled="!startDate || allDayEvent || !startTime"
+                            @click="applyQuickDuration(m)"
+                            :aria-label="$t('Set end to {0} minutes after start', [m])"
+                            :title="$t('Set end to {0} minutes after start', [m])"
+                        >
+                            {{ m }} {{ $t('min') }}
+                        </button>
 
-                        <div class="flex flex-wrap items-center gap-2 mt-6" v-if="startDate && endDate && startTime">
-                            <div class="ui-card-title">{{ $t('Duration Shortcuts:')}}</div>
-                            <button
-                                v-for="m in quickDurations"
-                                :key="m"
-                                type="button"
-                                class="px-2.5 py-1.5 text-xs rounded-md border border-border-subtle bg-white hover:bg-surface-sunken disabled:text-text-subtle disabled:cursor-not-allowed"
-                                :disabled="!startDate || allDayEvent || !startTime"
-                                @click="applyQuickDuration(m)"
-                                :aria-label="$t('Set end to {0} minutes after start', [m])"
-                                :title="$t('Set end to {0} minutes after start', [m])"
-                            >
-                                {{ m }} {{ $t('min') }}
-                            </button>
-
-                            <!-- optional: Button mit Standarddauer aus PageProps -->
-                            <button
-                                v-if="defaultDurationMin > 0 && ![...quickDurations].includes(defaultDurationMin)"
-                                type="button"
-                                class="px-2.5 py-1.5 text-xs rounded-md border border-accent-200 bg-accent-50 hover:bg-accent-100 text-accent-700 disabled:text-text-subtle disabled:cursor-not-allowed"
-                                :disabled="!startDate || allDayEvent || !startTime"
-                                @click="applyQuickDuration(defaultDurationMin)"
-                                :aria-label="$t('Set end to {0} minutes after start', [defaultDurationMin])"
-                                :title="$t('Set end to {0} minutes after start', [defaultDurationMin])"
-                            >
-                                Standard: {{ defaultDurationMin }} {{ $t('min') }}
-                            </button>
-                        </div>
+                        <!-- optional: Pill mit Standarddauer aus PageProps -->
+                        <button
+                            v-if="defaultDurationMin > 0 && ![...quickDurations].includes(defaultDurationMin)"
+                            type="button"
+                            class="inline-flex items-center rounded-full h-[26px] px-3 text-xs border border-accent-200 bg-accent-50 text-accent-700 hover:bg-accent-100 disabled:text-text-subtle disabled:cursor-not-allowed"
+                            :disabled="!startDate || allDayEvent || !startTime"
+                            @click="applyQuickDuration(defaultDurationMin)"
+                            :aria-label="$t('Set end to {0} minutes after start', [defaultDurationMin])"
+                            :title="$t('Set end to {0} minutes after start', [defaultDurationMin])"
+                        >
+                            Standard: {{ defaultDurationMin }} {{ $t('min') }}
+                        </button>
                     </div>
 
                     <div class="ui-grid-2">
@@ -172,11 +163,8 @@
                 </section>
 
                 <!-- Repeat -->
-                <section class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-warning"></span>
-                        <h3 class="ui-card-title">{{ $t('Repeat') }}</h3>
-                    </header>
+                <section class="border-t border-border-hairline py-4">
+                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Repeat') }}</h3>
 
                     <div class="flex flex-wrap items-center gap-2">
                         <label class="inline-flex items-center gap-2">
@@ -207,22 +195,16 @@
                 </section>
 
                 <!-- Room -->
-                <section class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-danger"></span>
-                        <h3 class="ui-card-title">{{ $t('Room') }}</h3>
-                    </header>
+                <section class="border-t border-border-hairline py-4">
+                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Room') }}</h3>
 
                     <div v-if="declinedRoomId" class="flex items-center gap-2 text-[12px] text-danger mb-1">
                         <span>{{ $t('Previously declined from') }}:</span>
                         <span class="font-medium line-through">{{ declinedRoomName }}</span>
                     </div>
 
-                    <div class="mb-1 flex items-center justify-between">
+                    <div class="mb-1">
                         <span class="ui-hint">{{ $t('Pick a room for this event.') }}</span>
-                        <div v-if="selectedRoom && roomCollisionArray?.[selectedRoom.id] > 0" class="text-[12px] text-warning">
-                            {{ $t('{0} potential conflicts detected', [roomCollisionArray[selectedRoom.id]]) }}
-                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto]">
@@ -237,16 +219,20 @@
                         </div>
                     </div>
 
+                    <div
+                        v-if="selectedRoom && roomCollisionArray?.[selectedRoom.id] > 0"
+                        class="mt-2 flex items-center gap-2 rounded-[8px] border border-warning-border bg-warning-surface px-3 py-2 text-[13px] text-warning"
+                    >
+                        <IconAlertTriangle class="size-4 shrink-0" />
+                        <span>{{ $t('{0} potential conflicts detected', [roomCollisionArray[selectedRoom.id]]) }}</span>
+                    </div>
+
                     <p class="ui-error mt-1" v-if="errorMsg('roomId')" v-html="errorMsg('roomId')" />
                 </section>
 
                 <!-- Project -->
-                <!-- Project -->
-                <section class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-success"></span>
-                        <h3 class="ui-card-title">{{ $t('Project') }}</h3>
-                    </header>
+                <section class="border-t border-border-hairline py-4">
+                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Project') }}</h3>
 
                     <!-- Fehlerhinweis immer oben beim Abschnittstitel anzeigen -->
                     <div class="mt-1">
@@ -284,11 +270,11 @@
                         </template>
 
                         <!-- Segment: Bestehend / Neu -->
-                        <div class="ui-segment" role="tablist" aria-label="Project source">
+                        <div class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]" role="tablist" aria-label="Project source">
                             <button
                                 type="button"
-                                class="ui-segment-btn"
-                                :class="!creatingProject ? 'is-active' : ''"
+                                class="inline-flex items-center justify-center h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
+                                :class="!creatingProject ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
                                 role="tab"
                                 :aria-selected="!creatingProject"
                                 @click="switchToExisting()"
@@ -297,8 +283,8 @@
                             </button>
                             <button
                                 type="button"
-                                class="ui-segment-btn"
-                                :class="creatingProject ? 'is-active' : ''"
+                                class="inline-flex items-center justify-center h-[26px] px-3 rounded-[6px] text-[12.5px] font-semibold transition"
+                                :class="creatingProject ? 'bg-surface shadow-raised text-text' : 'text-text hover:bg-white/60'"
                                 role="tab"
                                 :aria-selected="creatingProject"
                                 @click="switchToNew()"
@@ -345,10 +331,9 @@
 
 
                 <!-- Notes / Booking -->
-                <section class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-special-violet"></span>
-                        <h3 class="ui-card-title">{{ $t('Description') }}</h3>
+                <section class="border-t border-border-hairline py-4">
+                    <header class="mb-3 flex items-center gap-2">
+                        <h3 class="font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Description') }}</h3>
                         <ToolTipComponent
                             :tooltip-text="$t('Other users can see this description in the project\'s event list and in the calendar.')"
                             direction="right"
@@ -412,65 +397,73 @@
                 </section>
 
                 <!-- Properties -->
-                <section v-if="(event_properties?.length || 0) > 0" class="ui-card">
-                    <header class="ui-card-header">
-                        <span class="ui-dot bg-special-teal"></span>
-                        <h3 class="ui-card-title">{{ $t('Properties') }}</h3>
-                    </header>
+                <section v-if="(event_properties?.length || 0) > 0" class="border-t border-border-hairline py-4">
+                    <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Properties') }}</h3>
 
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div class="flex flex-wrap gap-2">
                         <label
                             v-for="ep in event_properties"
                             :key="ep.id"
-                            class="flex items-center gap-2 rounded-md border border-border-subtle bg-surface-sunken px-3 py-2 transition hover:bg-white"
+                            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full h-[26px] px-3 text-xs border transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent-600"
+                            :class="ep.checked ? 'bg-accent-50 text-accent-700 border-accent-200' : 'bg-surface border-border text-text-muted hover:bg-surface-hover'"
                         >
-                            <input type="checkbox" v-model="ep.checked" class="ui-checkbox" />
+                            <input type="checkbox" v-model="ep.checked" class="sr-only" />
+                            <IconCheck v-if="ep.checked" class="size-3.5" />
                             <PropertyIcon :name="ep.icon" class="size-3.5" />
-                            <span class="text-[13px]" :class="ep.checked ? 'font-medium text-text' : 'text-text-muted'">{{ ep.name }}</span>
+                            <span>{{ ep.name }}</span>
                         </label>
-                    </div>
-
-                    <div v-if="checkedEventProperties.length" class="mt-2 flex flex-wrap items-center gap-1.5">
-                    <span
-                        v-for="(ep, i) in checkedEventProperties"
-                        :key="ep.id ?? i"
-                        class="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-sunken px-2.5 py-1 text-[12.5px] text-text"
-                    >
-                       <PropertyIcon :name="ep.icon" class="size-3.5" />
-                      <span>{{ ep.name }}</span>
-                    </span>
                     </div>
                 </section>
 
                 <!-- Sticky Action Bar -->
                 <div class="ui-footer">
-                    <div class="flex items-center justify-end gap-2">
-                        <BaseUIButton type="button" hide-icon @click="closeModal">
-                            {{ $t('Cancel') }}
-                        </BaseUIButton>
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <BaseUIButton
+                                v-if="event?.id && event?.canDelete"
+                                type="button"
+                                variant="danger"
+                                hide-icon
+                                @click="deleteComponentVisible = true"
+                            >
+                                <IconTrash class="size-4" />
+                                {{ $t('Put in the trash') }}
+                            </BaseUIButton>
+                        </div>
 
-                        <FormButton
-                            v-if="canCreateDirect"
-                            :disabled="isPrimaryDisabled"
-                            @click="updateOrCreateEvent()"
-                            :text="primaryButtonText"
-                        />
-                        <FormButton
-                            v-else
-                            :disabled="requestDisabled"
-                            @click="updateOrCreateEvent(true)"
-                            :text="$t('Request occupancy')"
-                        />
+                        <div class="flex items-center gap-2">
+                            <BaseUIButton type="button" hide-icon @click="closeModal">
+                                {{ $t('Cancel') }}
+                            </BaseUIButton>
+
+                            <BaseUIButton
+                                v-if="canCreateDirect"
+                                type="button"
+                                variant="primary"
+                                hide-icon
+                                :disabled="isPrimaryDisabled"
+                                @click="updateOrCreateEvent()"
+                            >
+                                {{ primaryButtonText }}
+                            </BaseUIButton>
+                            <BaseUIButton
+                                v-else
+                                type="button"
+                                variant="primary"
+                                hide-icon
+                                :disabled="requestDisabled"
+                                @click="updateOrCreateEvent(true)"
+                            >
+                                {{ $t('Request occupancy') }}
+                            </BaseUIButton>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- READONLY MODE -->
-            <div v-else class="ui-card">
-                <header class="ui-card-header">
-                    <span class="ui-dot bg-accent-500"></span>
-                    <h3 class="ui-card-title">{{ $t('Event overview') }}</h3>
-                </header>
+            <div v-else class="py-4">
+                <h3 class="mb-3 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600">{{ $t('Event overview') }}</h3>
 
                 <div class="flex items-center gap-3">
                     <div class="size-9 rounded-full ring-1 ring-border-subtle" :style="{ backgroundColor: selectedEventType?.hex_code }" />
@@ -633,7 +626,7 @@ import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vu
 import ProjectSearch from '@/Components/SearchBars/ProjectSearch.vue'
 import RoomSearch from '@/Components/SearchBars/RoomSearch.vue'
 
-import { IconChevronUp, IconCircleX } from '@tabler/icons-vue'
+import { IconAlertTriangle, IconCheck, IconChevronUp, IconCircleX, IconTrash } from '@tabler/icons-vue'
 import { useEvent } from '@/Composeables/Event.js'
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import {useI18n} from "vue-i18n";

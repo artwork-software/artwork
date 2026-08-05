@@ -72,6 +72,7 @@
                     :value="eventsCountToday"
                     icon="IconCalendarMonth"
                     :trend="$t('All scheduled appointments today.')"
+                    inverse
                 />
                 <KpiTile
                     :label="$t('Today\'s shifts')"

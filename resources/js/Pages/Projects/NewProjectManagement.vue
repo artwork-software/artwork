@@ -1,11 +1,11 @@
 <template>
     <AppLayout title="Projektübersicht">
         <div class="container mx-auto pt-6 relative">
-            <!-- Headbar (neu) -->
+            <!-- Headbar (neu): dunkles Band (CI »Bühnenlicht«) -->
             <ToolbarHeader
+                band
                 :icon="IconGeometry"
                 :title="$t('Projects')"
-                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="projects.total + ' ' + $t('projects in total')"
                 v-model="project_search"
                 :search-enabled="true"
@@ -14,8 +14,9 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <!-- Filter -->
-                    <BaseFilter :only-icon="true" :left="false" white-background dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
+                    <!-- Filter (Trigger auf Band-Optik: ui-button-Chrome per Descendant-Override neutralisiert) -->
+                    <div class="[&_.ui-button]:!size-[30px] [&_.ui-button]:!min-h-0 [&_.ui-button]:!p-0 [&_.ui-button]:!border-transparent [&_.ui-button]:!bg-white/8 [&_.ui-button:hover]:!bg-white/16">
+                    <BaseFilter :only-icon="true" :left="false" white-background white-icon dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="text-sm font-medium text-text-muted ">{{ $t('Filters') }}</div>
@@ -103,9 +104,10 @@
                             </div>
                         </div>
                     </BaseFilter>
+                    </div>
 
-                    <!-- Sort --><div class="flex items-center mr-6">
-                    <BaseMenu show-sort-icon dots-size="size-6" menu-width="w-72" classes-button="ui-button">
+                    <!-- Sort --><div class="flex items-center">
+                    <BaseMenu show-sort-icon white-icon dots-size="size-6" menu-width="w-72" :classes-button="bandIconButtonClasses">
                         <div class="flex items-center justify-between">
                             <div class="text-sm font-medium text-text-muted ">{{ $t('Sort by') }}</div>
                             <button type="button" class="text-xs text-text-subtle hover:text-text-muted transition" @click="resetSort()">
@@ -127,7 +129,7 @@
                 </div>
                     <!-- Export -->
                     <button type="button" @click="openExportModal">
-                        <ToolTipComponent :icon="IconFileExport" icon-size="size-6" :tooltip-text="$t('Export project list')" direction="bottom" classes-button="ui-button" />
+                        <ToolTipComponent :icon="IconFileExport" icon-size="size-6" white-icon :tooltip-text="$t('Export project list')" direction="bottom" :classes-button="bandIconButtonClasses" />
                     </button>
 
                     <!-- Bulk selection mode toggle -->
@@ -135,13 +137,14 @@
                         <ToolTipComponent
                             :icon="IconChecklist"
                             icon-size="size-6"
+                            white-icon
                             :tooltip-text="selectionMode ? $t('Exit selection mode') : $t('Select multiple projects')"
                             direction="bottom"
-                            :classes-button="selectionMode ? 'ui-button text-accent-600' : 'ui-button'"
+                            :classes-button="selectionMode ? bandIconButtonActiveClasses : bandIconButtonClasses"
                         />
                     </button>
 
-                    <BaseUIButton label="New project" use-translation is-add-button @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
+                    <BaseUIButton label="New project" use-translation is-add-button on-band @click="openCreateProjectModal"  v-if="can('create and edit own project') || role('artwork admin')" />
                 </template>
             </ToolbarHeader>
 
@@ -163,9 +166,9 @@
             <div class="overflow-x-auto">
                 <div class="min-w-fit">
                     <div class="">
-                        <div class="border-b border-border-subtle backdrop-blur px-3 py-2">
+                        <div class="border-b border-border bg-surface-header px-3 py-1">
                             <div
-                                class="grid items-center text-sm font-semibold text-text tracking-wide"
+                                class="grid items-center font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600"
                                 :style="`grid-template-columns: ${gridTemplateColumns}`"
                             >
                                 <div
@@ -195,7 +198,7 @@
                     </div>
 
                     <!-- Pinned -->
-                    <div v-else-if="pinnedProjects?.length" class="divide-y divide-border-subtle">
+                    <div v-else-if="pinnedProjects?.length" class="divide-y divide-border-hairline">
                         <SingleProjectInManagement
                             v-for="project in pinnedProjects"
                             :key="project.id"
@@ -217,7 +220,7 @@
                     </div>
 
                     <!-- List -->
-                    <div v-if="!isLoading" class="divide-y divide-border-subtle">
+                    <div v-if="!isLoading" class="divide-y divide-border-hairline">
                         <SingleProjectInManagement
                             v-for="project in projectComponents"
                             :key="project.id"
@@ -309,34 +312,31 @@
             :configuration="getExportModalConfiguration()"
         />
 
-        <!-- Selection-mode action bar (move selected projects to trash) -->
+        <!-- Selection-mode action bar (move selected projects to trash) — Band-Stil am unteren Rand -->
         <div v-if="selectionMode"
-             class="fixed inset-x-0 bottom-0 z-30 border-t border-border-subtle bg-white/95 backdrop-blur py-3 pr-6 pl-20 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] print:hidden">
-            <div class="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-text-muted">
+             class="fixed inset-x-0 bottom-4 z-30 pr-6 pl-20 print:hidden pointer-events-none">
+            <div class="pointer-events-auto mx-auto flex max-w-screen-2xl items-center justify-between gap-4 rounded-lg bg-surface-inverse text-text-inverse shadow-overlay px-6 py-3">
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-text-inverse">
                     <input
                         type="checkbox"
                         :checked="allOnPageSelected"
                         @change="toggleSelectAllOnPage"
-                        class="h-4 w-4 rounded border-border text-accent-700 focus:ring-accent-700 cursor-pointer"
+                        class="h-4 w-4 rounded border-white/40 bg-white/10 text-accent-500 focus:ring-accent-500 focus:ring-offset-surface-inverse cursor-pointer"
                     />
                     {{ $t('Select all on this page') }}
-                    <span class="ml-2 text-text-subtle">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
+                    <span class="ml-2 text-text-inverse-muted">· {{ $t('{0} selected', [selectedProjectIds.length]) }}</span>
                 </label>
-                <div class="flex items-center gap-x-4">
-                    <button type="button" class="text-sm text-text-muted hover:text-text" @click="toggleSelectionMode">
-                        {{ $t('Cancel') }}
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-x-1.5 rounded-full px-5 py-2 text-sm font-bold text-white"
-                        :class="selectedProjectIds.length === 0 ? 'bg-border cursor-not-allowed' : 'bg-accent-600 hover:bg-accent-700'"
+                <div class="flex items-center gap-x-3">
+                    <BaseUIButton variant="ghost" on-band hide-icon label="Cancel" use-translation @click="toggleSelectionMode" />
+                    <BaseUIButton
+                        variant="primary"
+                        on-band
+                        :icon="IconTrash"
+                        label="Put in the trash"
+                        use-translation
                         :disabled="selectedProjectIds.length === 0"
                         @click="openBulkDeleteModal"
-                    >
-                        <component :is="IconTrash" class="h-4 w-4" />
-                        {{ $t('Put in the trash') }}
-                    </button>
+                    />
                 </div>
             </div>
         </div>
@@ -433,6 +433,14 @@ const props = defineProps({
     lastProject: { type: Object, required: true },
     entitiesPerPage: { type: Number, required: true },
 });
+
+// Icon-Buttons auf dem dunklen Toolbar-Band (CI »Bühnenlicht«)
+const bandIconButtonClasses =
+    'size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 text-text-inverse ' +
+    'transition-[background-color] duration-150 ease-out cursor-pointer';
+const bandIconButtonActiveClasses =
+    'size-[30px] inline-flex items-center justify-center rounded-md bg-accent-500 hover:bg-accent-600 text-text-inverse ' +
+    'transition-[background-color] duration-150 ease-out cursor-pointer';
 
 const project_search = ref(route().params.query);
 const showProjectHistoryTab = ref(true);

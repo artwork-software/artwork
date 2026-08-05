@@ -67,6 +67,8 @@ const props = withDefaults(defineProps<{
     processing?: boolean;
     /** Icon komplett ausblenden */
     hideIcon?: boolean;
+    /** Button sitzt im dunklen Band (CI »Bühnenlicht«): Primär accent-500, Rest transluzent weiß */
+    onBand?: boolean;
 }>(), {
     disabled: false,
     icon: undefined,
@@ -82,6 +84,7 @@ const props = withDefaults(defineProps<{
     type: 'button',
     processing: false,
     hideIcon: false,
+    onBand: false,
 });
 
 const emit = defineEmits<{
@@ -127,15 +130,17 @@ const iconSizeClass = computed(() =>
     sizeResolved.value === 'sm' ? 'size-4' : 'size-[18px]'
 );
 
-/** Varianten-Matrix aus design-basis.md §3 — Zustände nie über Deckkraft */
+/** Varianten-Matrix aus design-basis.md v2 §3 — Zustände nie über Deckkraft.
+    Primary trägt das Band-Ink (CI »Bühnenlicht«): surface-inverse + Top-Highlight. */
 const VARIANTS: Record<string, string> = {
     primary:
-        'bg-accent-600 border border-accent-600 text-white ' +
-        'hover:bg-accent-700 hover:border-accent-700 ' +
-        'disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle',
+        'bg-surface-inverse border border-surface-inverse text-white ' +
+        'shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] ' +
+        'hover:bg-accent-900 hover:border-accent-900 ' +
+        'disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle disabled:shadow-none',
     secondary:
         'bg-surface border border-border text-text ' +
-        'hover:bg-surface-sunken ' +
+        'hover:bg-surface-hover ' +
         'disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle',
     ghost:
         'bg-transparent border border-transparent text-accent-600 ' +
@@ -145,6 +150,26 @@ const VARIANTS: Record<string, string> = {
         'bg-surface border border-danger-border text-danger ' +
         'hover:bg-danger-surface ' +
         'disabled:bg-surface-canvas disabled:border-border-subtle disabled:text-text-subtle',
+};
+
+/** Im dunklen Band (onBand): Primär = accent-500, alles andere transluzent weiß */
+const BAND_VARIANTS: Record<string, string> = {
+    primary:
+        'bg-accent-500 border border-accent-500 text-white ' +
+        'hover:bg-accent-600 hover:border-accent-600 ' +
+        'disabled:bg-white/10 disabled:border-transparent disabled:text-white/40',
+    secondary:
+        'bg-white/8 border border-transparent text-text-inverse ' +
+        'hover:bg-white/16 ' +
+        'disabled:bg-white/5 disabled:text-white/40',
+    ghost:
+        'bg-transparent border border-transparent text-text-inverse ' +
+        'hover:bg-white/16 ' +
+        'disabled:text-white/40 disabled:hover:bg-transparent',
+    danger:
+        'bg-white/8 border border-transparent text-danger-border ' +
+        'hover:bg-white/16 ' +
+        'disabled:bg-white/5 disabled:text-white/40',
 };
 
 const SIZES: Record<string, string> = {
@@ -157,7 +182,7 @@ const buttonClasses = computed(() => [
     'inline-flex items-center justify-center select-none whitespace-nowrap font-medium',
     'rounded-md cursor-pointer disabled:cursor-not-allowed',
     'transition-[background-color,border-color] duration-150 ease-out',
-    VARIANTS[variantResolved.value],
+    (props.onBand ? BAND_VARIANTS : VARIANTS)[variantResolved.value],
     SIZES[sizeResolved.value],
 ]);
 </script>

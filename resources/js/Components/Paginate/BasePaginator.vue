@@ -34,11 +34,11 @@
                         <div v-for="(link, key) in entities.links" :key="key">
                             <div v-if="link.url === null"
                                  v-html="link.label"
-                                 class="mr-1 mb-1 inline-flex items-center justify-center min-w-7 h-7 px-1.5 text-[13px] leading-4 tabular-nums text-text-subtle"/>
+                                 class="mr-1 mb-1 inline-flex items-center justify-center min-w-[26px] h-[26px] px-1.5 text-[13px] leading-4 tabular-nums text-text-subtle"/>
                             <a v-else
                                v-html="link.label"
-                               class="cursor-pointer mr-1 mb-1 inline-flex items-center justify-center min-w-7 h-7 px-1.5 text-[13px] leading-4 tabular-nums rounded-md"
-                               :class="link.active ? 'bg-accent-600 text-white' : 'text-text hover:bg-surface-sunken'"
+                               class="cursor-pointer mr-1 mb-1 inline-flex items-center justify-center min-w-[26px] h-[26px] px-1.5 text-[13px] leading-4 tabular-nums rounded-md"
+                               :class="link.active ? 'bg-surface-inverse text-white' : 'text-text hover:bg-surface-hover'"
                                @click="updatePage(link, entities.current_page, entities.per_page)"/>
                         </div>
                     </div>

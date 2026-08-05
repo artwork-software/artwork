@@ -1,25 +1,29 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Design-Basis v1 — semantische Token-Ebene (design-basis.md §1)
+   Design-Basis v2 »Bühnenlicht« — semantische Token-Ebene (design-basis.md §0/§1)
    ============================================================ */
 @theme {
     /* ---------- Flächen ---------- */
-    --color-surface-canvas:  #F6F6F4;   /* Seitenhintergrund (Erbe #F5F5F3) */
+    --color-surface-canvas:  #F2F3F5;   /* Seitenhintergrund (v2, kühl) */
     --color-surface:         #FFFFFF;   /* Karten, Tabellen, Modal */
-    --color-surface-sunken:  #F1F1EE;   /* Tabellenkopf, Zebra, Footer */
-    --color-surface-inverse: #222831;   /* Navigation, Kalenderkopf (Bestand) */
+    --color-surface-sunken:  #F4F5F6;   /* Modal-Footer, Zebra */
+    --color-surface-header:  #FBFBFC;   /* Tabellenkopf */
+    --color-surface-hover:   #EFF4F9;   /* Zeilen-Hover, akzentgetönt */
+    --color-surface-inverse: #222831;   /* Band: Navigation, Toolbar, Kalender-/Modalkopf */
 
     /* ---------- Rahmen ---------- */
-    --color-border-subtle:   #E7E7E3;   /* Karten, Trennlinien */
-    --color-border:          #D6D6D0;   /* Eingaben, Buttons */
-    --color-border-strong:   #A9A9A1;   /* Datenraster, 3:1-Pflicht */
+    --color-border-hairline: #EEEFF1;   /* Zeilentrenner */
+    --color-border-subtle:   #E3E5E9;   /* Karten, Segmented-Track */
+    --color-border:          #C9CDD3;   /* Eingaben, Buttons */
+    --color-border-strong:   #8B929C;   /* Datenraster, 3:1-Pflicht */
 
     /* ---------- Text (Kontrast auf --color-surface) ---------- */
     --color-text:            #1C1F24;   /* 15,1:1 */
     --color-text-muted:      #5F6169;   /*  6,3:1 */
     --color-text-subtle:     #74767E;   /*  4,6:1 — Minimum für Text */
-    --color-text-inverse:    #F4F4F2;
+    --color-text-inverse:    #F4F4F2;   /* auf dem Band */
+    --color-text-inverse-muted: #A9B1BC; /* Kontextzeilen auf dem Band, nie unter 11,5px */
 
     /* ---------- Akzent (abgeleitet aus Bestands-#3073ae) ---------- */
     --color-accent-50:       #EEF4FA;
@@ -39,17 +43,23 @@
     /* ---------- Radien ---------- */
     --radius-sm:   4px;   /* Kalenderkacheln, Zellen */
     --radius-md:   6px;   /* alle Steuerelemente */
-    --radius-lg:  10px;   /* Karten, Modale */
+    --radius-lg:  12px;   /* Karten, Modale, Listen-Container */
     --radius-pill: 999px; /* Chips, Zähler */
 
     /* ---------- Elevation ---------- */
     --shadow-raised:  0 1px 2px rgba(28,31,36,.06), 0 1px 1px rgba(28,31,36,.04);
     --shadow-overlay: 0 8px 24px -8px rgba(28,31,36,.18), 0 2px 6px rgba(28,31,36,.06);
+    --shadow-card:    0 1px 2px rgba(28,31,36,.06), 0 6px 16px -8px rgba(28,31,36,.10);
 
     /* ---------- Steuerhöhen ---------- */
     --control-h-sm: 28px;
     --control-h-md: 32px;
     --control-h-lg: 40px;
+
+    /* ---------- Zeilenhöhen ---------- */
+    --row-h:         40px;  /* Standard-Datenzeile */
+    --row-h-project: 44px;  /* Projektlisten (Badges + Avatare) */
+    --row-h-compact: 34px;  /* wählbares Kompakt-Profil */
 
     /* ---------- Typografie ---------- */
     --font-heading: Lexend, system-ui, sans-serif;
@@ -384,8 +394,9 @@
     /* Buttons */
 
     /* Sticky Footer innerhalb des Modals */
+    /* Sticky-Modal-Footer (v2): surface-sunken, Hairline-Oberkante, kein Blur */
     .ui-footer {
-        @apply sticky bottom-0 left-0 w-full bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-zinc-200 pt-2 pb-2 mt-2;
+        @apply sticky bottom-0 left-0 w-full bg-surface-sunken border-t border-border-subtle pt-2 pb-2 mt-2;
     }
 
     .ui-lb-btn { /* placeholder, falls extern benötigt */ }

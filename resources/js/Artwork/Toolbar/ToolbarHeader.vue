@@ -1,6 +1,11 @@
 <template>
     <div class="-mx-2 sm:mx-0">
-        <div class="rounded-lg border border-border-subtle/70 bg-surface px-3 py-3 sm:px-5 sm:py-4 shadow-raised">
+        <div
+            class="rounded-lg border px-3 py-3 sm:px-5 sm:py-4"
+            :class="band
+                ? 'border-transparent bg-surface-inverse shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+                : 'border-border-subtle/70 bg-surface shadow-raised'"
+        >
             <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                 <!-- Brand/Icon + Titel -->
                 <div class="flex items-center gap-3 mr-auto min-w-0">
@@ -11,10 +16,17 @@
                         <component v-if="icon" :is="icon" class="size-6" />
                     </div>
                     <div class="min-w-0">
-                        <h1 class="font-lexend font-bold text-2xl text-text truncate">
+                        <h1
+                            class="font-lexend font-bold text-2xl truncate"
+                            :class="band ? 'text-text-inverse' : 'text-text'"
+                        >
                             {{ $t(title) }}
                         </h1>
-                        <div v-if="$slots.subtitle || description" class="text-xs text-text-muted">
+                        <div
+                            v-if="$slots.subtitle || description"
+                            class="text-xs"
+                            :class="band ? 'text-text-inverse-muted' : 'text-text-muted'"
+                        >
                             <slot name="subtitle">
                                 {{ $t(description) }}
                             </slot>
@@ -35,26 +47,41 @@
                         @keydown.enter.prevent="openSearchbar"
                         @keydown.space.prevent="openSearchbar"
                     >
-                        <ToolTipComponent :icon="IconSearch" icon-size="size-6" :tooltip-text="searchTooltip" direction="bottom" classes-button="ui-button"/>
+                        <ToolTipComponent
+                            :icon="IconSearch"
+                            :icon-size="band ? 'size-5' : 'size-6'"
+                            :icon-color="band ? 'text-text-inverse' : ''"
+                            :tooltip-text="searchTooltip"
+                            direction="bottom"
+                            :classes-button="band ? bandIconButtonClasses : 'ui-button'"
+                        />
                     </div>
 
-                    <div v-else class="w-72 sm:w-96 flex items-center justify-end gap-2">
+                    <div
+                        v-else
+                        class="w-72 sm:w-96 flex items-center justify-end gap-2"
+                        :class="band ? '[&_label]:text-text-inverse-muted!' : ''"
+                    >
                         <BaseInput
                             type="text"
                             ref="searchBarInput"
                             :id="searchInputId"
                             :label="searchLabel"
                             :placeholder="searchPlaceholder"
+                            :input-classes="band ? 'bg-white/10! border-white/16! text-text-inverse! placeholder:text-text-inverse-muted!' : ''"
                             :model-value="modelValue"
                             @update:model-value="$emit('update:modelValue', $event)"
                         />
                         <button
                             type="button"
-                            class="shrink-0 rounded-lg border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken transition"
+                            class="shrink-0 transition"
+                            :class="band
+                                ? 'size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16'
+                                : 'rounded-lg border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken'"
                             @click="closeSearchbar"
                             aria-label="Close search"
                         >
-                            <IconX class="size-5 text-text-subtle" />
+                            <IconX class="size-5" :class="band ? 'text-text-inverse' : 'text-text-subtle'" />
                         </button>
                     </div>
                 </div>
@@ -89,6 +116,9 @@ const props = defineProps<{
     searchPlaceholder?: string
     searchTooltip?: string
     searchInputId?: string
+    /** Band-Variante (Design-Basis v2 »Bühnenlicht«): dunkles Toolbar-Band auf bg-surface-inverse.
+     *  Default false = bisherige helle Optik (Settings bleiben bandfrei). */
+    band?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -101,7 +131,16 @@ const showSearchbar = ref(false)
 const searchBarInput = ref<{ focus?: () => void; select?: () => void } | null>(null)
 
 const icon = props.icon ?? null
-const iconBgClass = props.iconBgClass ?? 'bg-accent-50 text-accent-700'
+const band = props.band ?? false
+// Explizit gesetzte iconBgClass gewinnt in beiden Modi; nur der Default unterscheidet sich.
+const iconBgClass = props.iconBgClass
+    ?? (band ? 'bg-[rgba(48,115,174,0.35)] text-accent-200' : 'bg-accent-50 text-accent-700')
+// Icon-/Aktionsbuttons auf dem Band: 30px-Kachel, weiß-transluzent (Spec §3).
+// Aufrufer nutzen dieselben Klassen für eigene Icon-Buttons im actions-Slot;
+// Trenner zwischen Gruppen: <span class="w-px h-5 bg-white/16" />.
+const bandIconButtonClasses =
+    'select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md ' +
+    'bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out'
 const searchInputId = props.searchInputId ?? 'toolbar-search'
 const searchLabel = props.searchLabel ?? 'Search'
 const searchPlaceholder = props.searchPlaceholder ?? ''

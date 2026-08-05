@@ -1,15 +1,16 @@
 <template>
     <AppLayout :title="$t('Inventory')">
         <div class="w-full px-10 min-h-screen">
-            <!-- Sticky Funktionsleiste über die gesamte Breite -->
-            <div class="sticky top-0 z-40 -mx-10 px-10 bg-white border-b border-border-subtle pt-3 pb-2 shadow-sm">
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
-                    <div class="w-72">
+            <!-- Sticky Funktionsleiste über die gesamte Breite — dunkles Toolbar-Band (CI »Bühnenlicht«) -->
+            <div class="sticky top-0 z-40 -mx-10 px-10 bg-white pt-3 pb-2">
+                <div class="rounded-lg bg-surface-inverse shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-3">
+                    <div class="w-72 [&_label]:text-text-inverse-muted!">
                         <BaseInput
                             id="productSearch"
                             v-model="searchArticleInput"
                             :label="$t('Search Articles')"
                             is-small
+                            input-classes="bg-white/10! border-white/16! text-text-inverse! placeholder:text-text-inverse-muted!"
                         />
                     </div>
 
@@ -23,7 +24,7 @@
                             :items="propertySearchOptions"
                             by="id"
                             option-label="name"
-                            :button-class="COMPACT_LISTBOX_BUTTON_CLASS"
+                            :button-class="BAND_LISTBOX_BUTTON_CLASS"
                         />
                     </div>
 
@@ -36,7 +37,8 @@
                                 :tooltip-text="$t('Opens your product basket. Enable the toggle next to it to add articles by clicking them in the overview; when you are done, open the basket here, make final adjustments and create a material issue from it.')"
                                 icon="IconBasket"
                                 icon-size="h-5 w-5"
-                                classesButton="ui-button"
+                                white-icon
+                                :classes-button="bandIconButtonClasses"
                                 @click="showProductBasketModal = true"
                             />
                             <span class="absolute -top-2 -right-2 size-5 rounded-full bg-accent-50 ring-1 ring-accent-200 text-accent-600 text-xs flex items-center justify-center pointer-events-none">
@@ -49,9 +51,10 @@
                             :tooltip-text="$t('Enable this toggle to add articles to your product basket by clicking them in the overview. Then use the basket button next to it to review the basket and create a material issue.')"
                             size="md"
                             icon="IconBasket"
+                            on-band
                         />
 
-                        <InventoryLayoutSwitchComponent :grid-layout="gridLayout" @update:gridLayout="updateGridLayout" />
+                        <InventoryLayoutSwitchComponent :grid-layout="gridLayout" on-band @update:gridLayout="updateGridLayout" />
 
                         <div class="relative">
                             <ToolTipComponent
@@ -59,7 +62,8 @@
                                 :tooltip-text="$t('Display settings')"
                                 icon="IconSettings"
                                 icon-size="h-5 w-5"
-                                classesButton="ui-button"
+                                white-icon
+                                :classes-button="bandIconButtonClasses"
                                 @click="showDisplaySettingsModal = true"
                             />
                             <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="hideArticleImages">
@@ -67,7 +71,7 @@
                             </span>
                         </div>
 
-                        <InventoryFilterComponent :filterable-properties="filterableProperties ?? []" />
+                        <InventoryFilterComponent :filterable-properties="filterableProperties ?? []" on-band />
 
                         <ToolTipComponent
                             v-if="can('inventory.create_edit') || hasAdminRole()"
@@ -75,7 +79,8 @@
                             :tooltip-text="$t('Add Article')"
                             icon="IconCirclePlus"
                             icon-size="h-5 w-5"
-                            classesButton="ui-button"
+                            white-icon
+                            :classes-button="bandIconButtonPrimaryClasses"
                             @click="showAddEditArticleModal = true"
                         />
                     </div>
@@ -316,7 +321,7 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import InventoryFilterComponent from "@/Pages/Inventory/LayoutComponents/InventoryFilterComponent.vue";
 import InventoryActiveFilterChips from "@/Pages/Inventory/LayoutComponents/InventoryActiveFilterChips.vue";
-import {COMPACT_LISTBOX_BUTTON_CLASS, INVENTORY_FILTER_RELOAD_PROPS, useInventoryFilters} from "@/Pages/Inventory/Composables/useInventoryFilters.js";
+import {INVENTORY_FILTER_RELOAD_PROPS, useInventoryFilters} from "@/Pages/Inventory/Composables/useInventoryFilters.js";
 import InventoryLayoutSwitchComponent from "@/Pages/Inventory/LayoutComponents/InventoryLayoutSwitchComponent.vue";
 import InventorySingleArticleInTable from "@/Pages/Inventory/TableComponents/InventorySingleArticleInTable.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
@@ -432,6 +437,21 @@ provide('tagGroups', props.tagGroups)
 provide('tags', props.tags)
 
 
+
+// Bausteine des dunklen Toolbar-Bands (CI »Bühnenlicht«, Spec §3):
+// 30px-Icon-Kacheln weiß-transluzent, Primäraktion als Accent-Kachel,
+// Eingabefelder/Listbox-Trigger weiß-transluzent mit hellem Text.
+const bandIconButtonClasses =
+    'select-none size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 ' +
+    'text-text-inverse transition-[background-color] duration-150 ease-out cursor-pointer';
+const bandIconButtonPrimaryClasses =
+    'select-none size-[30px] inline-flex items-center justify-center rounded-md bg-accent-500 hover:bg-accent-600 ' +
+    'text-text-inverse transition-[background-color] duration-150 ease-out cursor-pointer';
+// Listbox-Trigger im Band (Panel bleibt hell); Chevron-Icon hat intern text-text-muted -> per Child-Selektor aufhellen.
+const BAND_LISTBOX_BUTTON_CLASS =
+    'w-full flex items-center justify-between text-left rounded-md border px-3 py-2.5 text-sm font-normal ' +
+    'bg-white/10 border-white/16 text-text-inverse ' +
+    'focus:outline-none focus:ring-1 focus:ring-accent-500 [&_svg]:text-text-inverse!';
 
 const gridLayout = ref(props.inventoryGridLayout)
 const hideArticleImages = ref(props.inventoryHideImages)

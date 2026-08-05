@@ -6,10 +6,10 @@
             <ToolbarHeader title="External material issues"
                            description="Track and filter external issues, returns and recipients."
                            :icon="IconMenu4"
-                           icon-bg-class="bg-accent-50 text-accent-700"
+                           band
             >
                 <template #actions>
-                    <BaseUIButton variant="primary" hide-icon @click="openIssueOfMaterialModal">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="openIssueOfMaterialModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New issue of material') }}
                     </BaseUIButton>

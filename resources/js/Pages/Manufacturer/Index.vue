@@ -8,7 +8,7 @@
             <ToolbarHeader
                 :icon="IconBuildingFactory2"
                 title="Manufacturers"
-                icon-bg-class="bg-warning-surface text-warning"
+                band
                 v-model="searchManufacturerInput"
                 :description="manufacturers?.data?.length ? `${manufacturers?.data?.length} ${$t('Manufacturer')}` : ''"
                 :search-enabled="true"
@@ -17,7 +17,7 @@
             >
                 <template #actions>
 
-                    <BaseUIButton variant="primary" hide-icon @click="showAddEditManufacturerModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="showAddEditManufacturerModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create Manufacturer') }}
                     </BaseUIButton>

@@ -13,7 +13,8 @@
             :tooltip-text="$t('Filter')"
             icon="IconFilter"
             icon-size="h-5 w-5"
-            classes-button="ui-button"
+            :white-icon="onBand"
+            :classes-button="onBand ? BAND_ICON_BUTTON_CLASSES : 'ui-button'"
             @click="openModal"
         />
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="activeFilterCount > 0">
@@ -316,7 +317,18 @@ const props = defineProps({
         required: false,
         default: () => [],
     },
+    /** Trigger sitzt im dunklen Toolbar-Band (CI »Bühnenlicht«):
+     *  Icon-Kachel weiß-transluzent + weißes Icon. Das Modal bleibt hell. */
+    onBand: {
+        type: Boolean,
+        default: false,
+    },
 })
+
+// Icon-Kachel auf dem dunklen Toolbar-Band (Spec §3)
+const BAND_ICON_BUTTON_CLASSES =
+    'select-none size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 ' +
+    'text-text-inverse transition-[background-color] duration-150 ease-out cursor-pointer'
 
 const {
     appliedFilters,

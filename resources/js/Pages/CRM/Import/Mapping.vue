@@ -2,13 +2,13 @@
     <AppLayout :title="$t('Map columns')">
         <div class="mt-5 mx-auto container pb-20">
             <ToolbarHeader
+                band
                 :icon="IconTableColumn"
                 :title="$t('Map columns')"
-                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="$t('{count} rows to import', { count: totalRows })"
             >
                 <template #actions>
-                    <BaseUIButton hide-icon @click="cancel">
+                    <BaseUIButton hide-icon on-band @click="cancel">
                         {{ $t('Cancel') }}
                     </BaseUIButton>
                 </template>

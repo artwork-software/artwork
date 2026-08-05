@@ -5,13 +5,13 @@
             <ToolbarHeader
                 :icon="IconLamp2"
                 title="Accommodations"
-                icon-bg-class="bg-success-surface text-success"
+                band
                 :description="accommodations?.length ? `${accommodations?.length} ${$t('Accommodations')}` : ''"
                 :search-enabled="false"
             >
                 <template #actions>
 
-                    <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="showCreateOrUpdateModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create new Accommodation') }}
                     </BaseUIButton>

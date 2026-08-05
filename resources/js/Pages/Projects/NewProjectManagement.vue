@@ -14,9 +14,7 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <!-- Filter (Trigger auf Band-Optik: ui-button-Chrome per Descendant-Override neutralisiert) -->
-                    <div class="[&_.ui-button]:!size-[30px] [&_.ui-button]:!min-h-0 [&_.ui-button]:!p-0 [&_.ui-button]:!border-transparent [&_.ui-button]:!bg-white/8 [&_.ui-button:hover]:!bg-white/16">
-                    <BaseFilter :only-icon="true" :left="false" white-background white-icon dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
+                    <BaseFilter :only-icon="true" :left="false" white-background band dots-size="size-6" :use-full-button="true" :has-active-filters="hasActiveFilters">
                         <div class="w-full px-2 py-4">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="text-sm font-medium text-text-muted ">{{ $t('Filters') }}</div>
@@ -104,7 +102,6 @@
                             </div>
                         </div>
                     </BaseFilter>
-                    </div>
 
                     <!-- Sort --><div class="flex items-center">
                     <BaseMenu show-sort-icon white-icon dots-size="size-6" menu-width="w-72" :classes-button="bandIconButtonClasses">

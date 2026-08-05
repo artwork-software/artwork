@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconChartHistogram"
                 :title="$t('BI Dashboard')"
-                icon-bg-class="bg-accent-50 text-accent-700"
+                band
                 :description="$t('Business intelligence overview')"
                 :search-enabled="false"
             >
@@ -15,52 +15,53 @@
                                 v-for="preset in rangePresets"
                                 :key="preset.key"
                                 type="button"
-                                class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                                :class="activePreset === preset.key ? 'border-accent-600 bg-accent-600 text-white'
-                                    : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
+                                class="rounded-full border px-3 py-1 text-xs font-medium transition cursor-pointer"
+                                :class="activePreset === preset.key ? 'border-accent-500 bg-accent-500 text-white'
+                                    : 'border-transparent bg-white/8 text-text-inverse hover:bg-white/16'"
                                 @click="applyPreset(preset)"
                             >
                                 {{ $t(preset.label) }}
                             </button>
                         </div>
-                        <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40" />
-                        <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40" />
-                        <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon />
+                        <BaseInput type="date" id="bi_dash_from" v-model="dateFrom" :label="$t('From')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                        <BaseInput type="date" id="bi_dash_to" v-model="dateTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                        <BaseUIButton :label="$t('Apply')" @click="reload()" :disabled="loading" hide-icon on-band />
                         <BaseUIButton
                             v-if="exportOptions"
                             :label="$t('Excel-Export')"
                             @click="openHeaderExport"
                             hide-icon
+                            on-band
                         />
                         <BaseUIButton
                             v-if="exportOptions"
                             :label="$t('Budget export')"
                             @click="showBudgetExportModal = true"
                             hide-icon
-                            white
+                            on-band
                         />
                         <!-- Vergleichszeitraum -->
                         <div class="w-full flex flex-wrap items-end gap-2 pt-1">
-                            <span class="pb-2 text-xs text-text-subtle">{{ $t('Comparison') }}:</span>
+                            <span class="pb-2 text-xs text-text-inverse-muted">{{ $t('Comparison') }}:</span>
                             <div class="flex items-center gap-1.5 pb-1.5">
                                 <button
                                     v-for="preset in comparePresets"
                                     :key="preset.key"
                                     type="button"
-                                    class="rounded-full border px-3 py-1 text-xs font-medium transition"
-                                    :class="comparePreset === preset.key ? 'border-border-strong bg-text-subtle text-white'
-                                        : 'border-border-subtle bg-white text-text-muted hover:bg-surface-sunken'"
+                                    class="rounded-full border px-3 py-1 text-xs font-medium transition cursor-pointer"
+                                    :class="comparePreset === preset.key ? 'border-white/40 bg-white/25 text-text-inverse'
+                                        : 'border-transparent bg-white/8 text-text-inverse hover:bg-white/16'"
                                     @click="applyComparePreset(preset.key)"
                                 >
                                     {{ $t(preset.label) }}
                                 </button>
                             </div>
                             <template v-if="comparePreset === 'free'">
-                                <BaseInput type="date" id="bi_dash_cmp_from" v-model="compareFrom" :label="$t('From')" class="w-40" />
-                                <BaseInput type="date" id="bi_dash_cmp_to" v-model="compareTo" :label="$t('To')" class="w-40" />
-                                <BaseUIButton :label="$t('Apply')" @click="reload(true)" :disabled="loading" hide-icon />
+                                <BaseInput type="date" id="bi_dash_cmp_from" v-model="compareFrom" :label="$t('From')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                                <BaseInput type="date" id="bi_dash_cmp_to" v-model="compareTo" :label="$t('To')" class="w-40 [&_label]:text-text-inverse-muted!" input-classes="bg-white/10! border-white/16! text-text-inverse! [color-scheme:dark]" />
+                                <BaseUIButton :label="$t('Apply')" @click="reload(true)" :disabled="loading" hide-icon on-band />
                             </template>
-                            <span v-if="comparisonLabel" class="pb-2 text-xs text-text-subtle">{{ comparisonLabel }}</span>
+                            <span v-if="comparisonLabel" class="pb-2 text-xs text-text-inverse-muted">{{ comparisonLabel }}</span>
                         </div>
                     </div>
                 </template>

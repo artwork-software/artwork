@@ -6,9 +6,9 @@
 
         <template #tabBar>
             <ToolbarHeader
+                band
                 :icon="IconAddressBook"
                 title="Freelancers & Service Providers"
-                icon-bg-class="bg-accent-600/10 text-accent-700"
                 v-model="user_query"
                 :description="userObjectsToShow?.length ? `${userObjectsToShow.length} ${$t('Freelancers & Service Providers')}` : ''"
                 :search-enabled="true"
@@ -18,10 +18,10 @@
                 <template #actions>
                     <Listbox v-model="selectedFilter" as="div" class="relative">
                         <ListboxButton
-                            class="ui-button"
+                            class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium cursor-pointer transition-[background-color] duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-accent-500"
                         >
                             <span>{{ $t(selectedFilter.name) }}</span>
-                            <IconChevronDown class="size-5 text-text-subtle" />
+                            <IconChevronDown class="size-5 text-text-inverse-muted" />
                         </ListboxButton>
 
                         <transition
@@ -55,7 +55,7 @@
                             </ListboxOptions>
                         </transition>
                     </Listbox>
-                    <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
+                    <BaseMenu show-sort-icon dots-size="size-5" white-icon menu-width="w-72" classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out">
                         <div class="flex items-center justify-between px-4 py-2">
                             <button
                                 class="text-xs text-text-subtle hover:text-text"
@@ -86,7 +86,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <BaseUIButton variant="primary" hide-icon v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add new Address') }}
                     </BaseUIButton>

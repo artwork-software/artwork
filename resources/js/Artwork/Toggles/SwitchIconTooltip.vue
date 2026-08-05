@@ -7,8 +7,8 @@
             v-tooltip.bottom="tooltipBinding"
             :class="[
         disabled
-            ? (model ? 'bg-accent-200' : 'bg-border-subtle')
-            : (model ? 'bg-accent-600 hover:bg-accent-700' : 'bg-border'),
+            ? (model ? 'bg-accent-200' : (onBand ? 'bg-white/10' : 'bg-border-subtle'))
+            : (model ? 'bg-accent-600 hover:bg-accent-700' : (onBand ? 'bg-white/20 hover:bg-white/30' : 'bg-border')),
         sizeClasses.track,
         'relative inline-flex cursor-pointer rounded-full transition-colors duration-300 ease-out shadow-inner',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
@@ -38,7 +38,7 @@
         <!-- Right Label -->
         <span v-if="label"
             class="model-title cursor-pointer ml-3 text-sm "
-            :class="model ? 'text-text' : 'text-text-subtle'"
+            :class="model ? (onBand ? 'text-text-inverse' : 'text-text') : (onBand ? 'text-text-inverse-muted' : 'text-text-subtle')"
             role="button"
             tabindex="0"
             @click="set(true)"
@@ -68,7 +68,11 @@ const props = defineProps({
     icon: { type: [Object, Function, String], default: () => IconList },
     size: { type: String, default: 'sm' }, // 'sm' | 'md'
     disabled: { type: Boolean, default: false },
-    label: { type: String, default: '' }
+    label: { type: String, default: '' },
+    /** Switch sitzt im dunklen Toolbar-Band (CI »Bühnenlicht«):
+     *  Aus-Zustand des Tracks weiß-transluzent statt bg-border, damit auf Dunkel sichtbar.
+     *  Aktiv-Zustand (accent) bleibt unverändert. Default false = bisherige Optik. */
+    onBand: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])

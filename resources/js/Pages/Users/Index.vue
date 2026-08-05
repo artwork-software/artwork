@@ -4,9 +4,9 @@
         <template #tabBar>
 
             <ToolbarHeader
+                band
                 :icon="IconUsers"
                 title="Users"
-                icon-bg-class="bg-warning-surface text-warning"
                 v-model="user_query"
                 :description="users?.length ? `${users.length} ${$t('Users')}` : ''"
                 :search-enabled="true"
@@ -17,13 +17,14 @@
                     <BaseUIButton
                         type="button"
                         hide-icon
-                        :class="authProviderFilter === 'sso' ? '!bg-accent-600 !text-white' : ''"
+                        on-band
+                        :class="authProviderFilter === 'sso' ? '!bg-accent-500 !text-white' : ''"
                         @click="setAuthProviderFilter('sso')"
                     >
                         {{ $t('SSO only') }}
                     </BaseUIButton>
 
-                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-text" menu-width="w-72" classes="ui-button" menu-button-text="Sort">
+                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-text-inverse" white-icon menu-width="w-72" classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out" menu-button-text="Sort">
                         <div class="flex items-center justify-between py-1">
                             <span
                                 class="px-4 py-2 text-xs text-text-subtle hover:text-text cursor-pointer"
@@ -46,7 +47,7 @@
                         </MenuItem>
                     </BaseMenu>
 
-                    <BaseUIButton v-if="hasAdminRole()" variant="primary" hide-icon @click="addingUser = true">
+                    <BaseUIButton v-if="hasAdminRole()" variant="primary" on-band hide-icon @click="addingUser = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite new users') }}
                     </BaseUIButton>

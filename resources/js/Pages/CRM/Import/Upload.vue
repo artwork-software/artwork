@@ -2,13 +2,13 @@
     <AppLayout :title="$t('Import contacts')">
         <div class="mt-5 mx-auto container pb-20">
             <ToolbarHeader
+                band
                 :icon="IconUpload"
                 :title="$t('Import contacts')"
-                icon-bg-class="bg-accent-50 text-accent-700"
                 :search-enabled="false"
             >
                 <template #actions>
-                    <Link :href="route('crm.index')" class="ui-button">
+                    <Link :href="route('crm.index')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                         {{ $t('Back to CRM') }}
                     </Link>
                 </template>

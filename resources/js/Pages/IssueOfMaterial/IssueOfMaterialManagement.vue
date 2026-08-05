@@ -6,7 +6,7 @@
             <ToolbarHeader title="Material issue book"
                            description="Track and filter all internal material issues across projects and rooms."
                            :icon="IconMenu4"
-                           icon-bg-class="bg-warning-surface text-warning"
+                           band
             >
                 <template #actions>
                     <ToolTipComponent
@@ -15,10 +15,11 @@
                         :tooltip-text="$t('Material issue log')"
                         icon="IconHistory"
                         icon-size="h-5 w-5"
-                        classes-button="ui-button"
+                        white-icon
+                        classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                         @click="showLogModal = true"
                     />
-                    <BaseUIButton variant="primary" hide-icon @click="openIssueOfMaterialModal">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="openIssueOfMaterialModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5"/>
                         {{ $t('New issue of material') }}
                     </BaseUIButton>

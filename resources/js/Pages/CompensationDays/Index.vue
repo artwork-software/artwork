@@ -2,9 +2,9 @@
     <app-layout :title="$t('Compensation days overview')">
         <div class="artwork-container">
             <ToolbarHeader
+                band
                 :icon="IconCalendarOff"
                 :title="$t('Compensation days overview')"
-                icon-bg-class="bg-special-teal-surface text-special-teal"
                 :description="$t('Overview of all compensation days across all users.')"
                 :search-enabled="false"
             />

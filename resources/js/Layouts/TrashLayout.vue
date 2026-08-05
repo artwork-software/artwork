@@ -12,7 +12,7 @@
                 :icon="IconTrash"
                 :title="$t('Recycle bin')"
                 :description="$t('You can restore objects from your recycle bin or delete them permanently. Items are automatically deleted permanently after 30 days.')"
-                icon-bg-class="bg-accent-50 text-accent-700"
+                band
                 :search-enabled="false"
             >
                 <template #actions>

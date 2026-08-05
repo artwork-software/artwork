@@ -1,16 +1,17 @@
 <template>
-    <div class="flex items-center w-full">
+    <!-- Dunkles Toolbar-Band (CI »Bühnenlicht«): trägt die Funktionsleiste des Screens -->
+    <div class="flex items-center w-full rounded-lg bg-surface-inverse shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] px-3 py-2">
         <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
 
         <div class="flex items-center mx-4 gap-x-1 select-none">
-            <BaseUIButton variant="ghost" size="sm" :icon="IconChevronLeftPipe" :aria-label="$t('Previous')" @click="previousTimeRange"/>
-            <BaseUIButton variant="ghost" size="sm" :icon="IconChevronLeft" :aria-label="$t('Previous')" @click="scrollToPreviousDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronLeftPipe" :aria-label="$t('Previous')" @click="previousTimeRange"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronLeft" :aria-label="$t('Previous')" @click="scrollToPreviousDay"/>
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
-                    <MenuButton class="">
-                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-text-muted" v-if="$page.props.auth.user.goto_mode === 'month'"/>
-                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-text-muted" v-if="$page.props.auth.user.goto_mode === 'week'"/>
-                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-text-muted" v-if="$page.props.auth.user.goto_mode === 'day'"/>
+                    <MenuButton :class="bandIconButtonClasses">
+                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                     </MenuButton>
                 </div>
 
@@ -53,19 +54,19 @@
                     </MenuItems>
                 </transition>
             </Menu>
-            <BaseUIButton variant="ghost" size="sm" :icon="IconChevronRight" :aria-label="$t('Next')" @click="scrollToNextDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronRight" :aria-label="$t('Next')" @click="scrollToNextDay"/>
 
-            <BaseUIButton variant="ghost" size="sm" :icon="IconChevronRightPipe" :aria-label="$t('Next')" @click="nextTimeRange"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronRightPipe" :aria-label="$t('Next')" @click="nextTimeRange"/>
         </div>
 
         <div class="flex items-center mx-4 gap-x-1 select-none invisible">
-            <BaseUIButton variant="ghost" size="sm" :icon="IconChevronLeft" :aria-label="$t('Previous')" @click="scrollToPreviousDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronLeft" :aria-label="$t('Previous')" @click="scrollToPreviousDay"/>
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
-                    <MenuButton class="has">
-                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-text-muted" v-if="$page.props.auth.user.goto_mode === 'month'"/>
-                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-text-muted" v-if="$page.props.auth.user.goto_mode === 'week'"/>
-                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-text-muted" v-if="$page.props.auth.user.goto_mode === 'day'"/>
+                    <MenuButton :class="bandIconButtonClasses">
+                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                     </MenuButton>
                 </div>
                 <transition enter-active-class="transition-enter-active"
@@ -98,7 +99,7 @@
                     </MenuItems>
                 </transition>
             </Menu>
-            <BaseUIButton variant="ghost" size="sm" :icon="IconChevronRight" :aria-label="$t('Next')" @click="scrollToNextDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronRight" :aria-label="$t('Next')" @click="scrollToNextDay"/>
 
         </div>
 
@@ -128,6 +129,11 @@ const props = defineProps({
         required: true
     }
 })
+
+// Icon-Kachel auf dem dunklen Toolbar-Band (CI »Bühnenlicht«, Spec §3)
+const bandIconButtonClasses =
+    'select-none size-[30px] inline-flex items-center justify-center rounded-md ' +
+    'bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out';
 
 const emits = defineEmits([
     'scrollToPrevious',

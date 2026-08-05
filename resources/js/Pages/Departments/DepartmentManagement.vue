@@ -4,17 +4,17 @@
             <template #tabBar>
                 <!-- Toolbar -->
                 <ToolbarHeader
+                    band
                     :icon="IconUsersGroup"
                     :title="$t('Departments')"
                     :description="`${totalDepartments} ${$t('Departments')}`"
-                    icon-bg-class="bg-accent-50 text-accent-700"
                     v-model="department_query"
                     :search-enabled="true"
                     :search-label="$t('Search for teams')"
                     :search-tooltip="$t('Search')"
                 >
                     <template #actions>
-                        <BaseUIButton variant="primary" hide-icon @click="openAddTeamModal">
+                        <BaseUIButton variant="primary" on-band hide-icon @click="openAddTeamModal">
                             <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                             {{ $t('Create Team') }}
                         </BaseUIButton>

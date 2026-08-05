@@ -2,37 +2,41 @@
     <app-layout :title="$t('Contracts')">
         <div class="artwork-container">
             <ToolbarHeader
+                band
                 :icon="IconFileText"
                 :title="$t('Contracts')"
-                icon-bg-class="bg-success-surface text-success"
                 :description="filteredContracts.length ? `${filteredContracts.length} ${$t('Contracts')}` : ''"
             >
                 <template #actions>
-                    <ToolTipComponent
-                        direction="bottom"
-                        :tooltip-text="$t('Filter')"
-                        :icon="IconFilter"
-                        icon-size="h-5 w-5"
-                        @click="openContractFilterModal"
-                        classesButton="ui-button"
-                    >
-                        <template #badge v-if="activeFilterCount > 0">
-                            <span class="absolute top-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-accent-100 text-accent-700 rounded-full">
-                                {{ activeFilterCount }}
-                            </span>
-                        </template>
-                    </ToolTipComponent>
+                    <div class="relative inline-flex">
+                        <ToolTipComponent
+                            direction="bottom"
+                            :tooltip-text="$t('Filter')"
+                            :icon="IconFilter"
+                            icon-size="h-5 w-5"
+                            white-icon
+                            @click="openContractFilterModal"
+                            classesButton="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
+                        />
+                        <span
+                            v-if="activeFilterCount > 0"
+                            class="absolute -top-1 -right-1 flex items-center justify-center size-4 rounded-full bg-accent-600 text-white text-[10px] font-bold pointer-events-none"
+                        >
+                            {{ activeFilterCount }}
+                        </span>
+                    </div>
 
                     <ToolTipComponent
                         direction="bottom"
                         :tooltip-text="$t('Export')"
                         :icon="IconFileSpreadsheet"
                         icon-size="h-5 w-5"
+                        white-icon
                         @click="openContractExportModal"
-                        classesButton="ui-button"
+                        classesButton="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                     />
 
-                    <BaseUIButton variant="primary" hide-icon @click="openContractUploadModal">
+                    <BaseUIButton variant="primary" on-band hide-icon @click="openContractUploadModal">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('New contract') }}
                     </BaseUIButton>

@@ -2,13 +2,13 @@
     <app-layout :title="$t('Document Requests')">
         <div class="artwork-container">
             <ToolbarHeader
+                band
                 :icon="IconFileDescription"
                 :title="$t('Document Requests')"
-                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="totalRequests ? `${totalRequests} ${$t('Requests')}` : ''"
             >
                 <template #actions>
-                    <BaseUIButton v-if="can('can create document requests') || hasAdminRole()" variant="primary" hide-icon @click="showCreateModal = true">
+                    <BaseUIButton v-if="can('can create document requests') || hasAdminRole()" variant="primary" on-band hide-icon @click="showCreateModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create document request') }}
                     </BaseUIButton>

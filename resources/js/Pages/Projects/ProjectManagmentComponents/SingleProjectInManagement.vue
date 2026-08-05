@@ -197,7 +197,10 @@ const isPinnedByCurrentUser = computed(() =>
 
 // Zähler nur anzeigen, wenn die Gruppen-Projekte im Payload vorhanden sind (BaseChip blendet count bei undefined aus)
 const groupProjectCount = computed(() => {
-    const count = props.project?.groupProjects?.length ?? props.fullProject?.groupProjects?.length;
+    const count = props.project?.projects_of_group_count
+        ?? props.fullProject?.projects_of_group_count
+        ?? props.project?.groupProjects?.length
+        ?? props.fullProject?.groupProjects?.length;
     return typeof count === 'number' && count > 0 ? count : undefined;
 });
 

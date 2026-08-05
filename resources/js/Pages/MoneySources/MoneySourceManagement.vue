@@ -4,9 +4,9 @@
 
 
             <ToolbarHeader
+                band
                 :icon="IconCurrencyEuro"
                 :title="$t('Sources of funding')"
-                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="filteredMoneySources.length + ' ' + $t('Sources of funding')"
                 v-model="moneySource_query"
                 :search-enabled="true"
@@ -19,10 +19,10 @@
                         <Listbox as="div" v-model="moneySourceFilter">
                             <div class="relative">
                                 <ListboxButton
-                                    class="flex items-center gap-2 rounded-xl border border-border-subtle bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent-600"
+                                    class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium cursor-pointer transition-[background-color] duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-accent-500"
                                 >
-                                    <span class="text-text">{{ moneySourceFilter.name }}</span>
-                                    <IconChevronDown class="h-4 w-4 text-text-subtle" />
+                                    <span>{{ moneySourceFilter.name }}</span>
+                                    <IconChevronDown class="h-4 w-4 text-text-inverse-muted" />
                                 </ListboxButton>
 
                                 <transition
@@ -61,6 +61,7 @@
                         <BaseUIButton
                             label=""
                             use-translation
+                            on-band
                             :icon="IconFilter"
                             @click="showMoneySourceFilters = !showMoneySourceFilters"
                         />
@@ -68,10 +69,10 @@
 
                     <Menu as="div" class="relative">
                         <MenuButton
-                            class="ui-button"
+                            class="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                             :aria-label="$t('Sort')"
                         >
-                            <IconArrowsSort class="h-5 w-5 text-text-muted" stroke-width="1.5" />
+                            <IconArrowsSort class="h-5 w-5 text-text-inverse" stroke-width="1.5" />
                         </MenuButton>
                         <transition
                             enter-active-class="transition duration-100 ease-out"
@@ -149,6 +150,7 @@
                         label="New"
                         use-translation
                         is-add-button
+                        on-band
                         @click="showMoneySourceModal = true"
                     />
 

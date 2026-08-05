@@ -19,15 +19,17 @@
 
             <!-- Button: Nur Icon mit Tooltip -->
             <MenuButton v-else class="relative">
-                <span v-if="hasActiveFilters" class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-accent-600 ring-2 ring-white z-10"></span>
+                <span v-if="hasActiveFilters" class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full z-10" :class="band ? 'bg-accent-200 ring-2 ring-surface-inverse' : 'bg-accent-600 ring-2 ring-white'"></span>
                 <ToolTipComponent
                     direction="bottom"
                     :tooltip-text="$t('Filter')"
                     icon="IconFilter"
-                    :whiteIcon="whiteIcon"
-                    :grayIcon="grayIcon"
-                    icon-size="size-6"
-                    :classes-button="useFullButton ? 'ui-button' : 'ui-button-small hover:!bg-white text-text-muted'"
+                    :whiteIcon="band || whiteIcon"
+                    :grayIcon="!band && grayIcon"
+                    :icon-size="band ? 'size-5' : 'size-6'"
+                    :classes-button="band
+                        ? 'select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out'
+                        : (useFullButton ? 'ui-button' : 'ui-button-small hover:!bg-white text-text-muted')"
                 />
             </MenuButton>
         </div>
@@ -72,6 +74,8 @@ const props = defineProps({
     onlyIcon: { type: Boolean, default: false },
     left: { type: Boolean, default: false },
     whiteIcon: { type: Boolean, default: false },
+    /** v2 »Bühnenlicht«: Trigger als 30px-Kachel im dunklen Band */
+    band: { type: Boolean, default: false },
     grayIcon: { type: Boolean, default: false },
     classes: { type: [String, Array, Object], default: 'relative flex items-center text-left' },
     whiteBackground: { type: Boolean, default: false },

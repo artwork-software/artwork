@@ -3,15 +3,15 @@
         <div class="artwork-container">
 
             <ToolbarHeader
+                band
                 :icon="IconChecklist"
                 :title="$t('My ToDo-Lists')"
-                icon-bg-class="bg-success-surface text-success"
                 :description="$t('Organize, filter and edit your tasks')"
                 :search-enabled="false"
             >
                 <template #actions>
                     <nav class="grid grid-cols-2 sm:flex gap-2">
-                        <BaseUIButton label="New checklist" use-translation is-add-button @click="showChecklistEditModal = true" />
+                        <BaseUIButton label="New checklist" use-translation is-add-button on-band @click="showChecklistEditModal = true" />
                     </nav>
                 </template>
             </ToolbarHeader>

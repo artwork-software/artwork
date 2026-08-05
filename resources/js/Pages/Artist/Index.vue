@@ -5,21 +5,21 @@
             <ToolbarHeader
                 :icon="IconPalette"
                 title="Artists"
-                icon-bg-class="bg-surface-sunken text-text-muted"
+                band
                 :description="artists?.length ? `${artists?.length} ${$t('Artists')}` : ''"
                 :search-enabled="false"
             >
                 <template #actions>
-                    <div class="ui-button">
-                        <ToolTipComponent
-                            :icon="IconFileExport"
-                            :tooltip-text="$t('Export artists')"
-                            direction="bottom"
-                            @click="exportArtist"
-                            icon-size="size-5"
-                        />
-                    </div>
-                    <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateArtistModal = true">
+                    <ToolTipComponent
+                        :icon="IconFileExport"
+                        :tooltip-text="$t('Export artists')"
+                        direction="bottom"
+                        @click="exportArtist"
+                        icon-size="size-5"
+                        white-icon
+                        classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
+                    />
+                    <BaseUIButton variant="primary" on-band hide-icon @click="showCreateOrUpdateArtistModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add artist') }}
                     </BaseUIButton>

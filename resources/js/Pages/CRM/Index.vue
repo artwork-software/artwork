@@ -2,9 +2,9 @@
     <AppLayout :title="$t('CRM')">
         <div class="mt-5 mx-auto container pb-20">
             <ToolbarHeader
+                band
                 :icon="IconAddressBook"
                 :title="$t('CRM')"
-                icon-bg-class="bg-accent-50 text-accent-700"
                 v-model="searchInput"
                 :description="contacts?.total ? `${contacts.total} ${$t('Contacts')}` : ''"
                 :search-enabled="true"
@@ -28,7 +28,7 @@
                         {{ $t('Invite external') }}
                     </button>
                     -->
-                    <Link v-if="canImport" :href="route('crm.duplicates')" class="ui-button flex items-center gap-1.5">
+                    <Link v-if="canImport" :href="route('crm.duplicates')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                         <component :is="IconUsers" stroke-width="1" class="size-5" />
                         {{ $t('Find duplicates') }}
                     </Link>
@@ -38,8 +38,9 @@
                             :tooltip-text="$t('Filter')"
                             icon="IconFilter"
                             icon-size="h-5 w-5"
+                            white-icon
                             @click="showFilterModal = true"
-                            classes-button="ui-button"
+                            classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                         />
                         <span
                             v-if="activeFilterCount > 0"
@@ -48,17 +49,17 @@
                             {{ activeFilterCount }}
                         </span>
                     </div>
-                    <span v-if="isMirroredType" class="text-xs text-text-subtle">
+                    <span v-if="isMirroredType" class="text-xs text-text-inverse-muted">
                         <template v-if="activeType?.slug === 'user'">{{ $t('Creation only possible in user management') }}</template>
                         <template v-else-if="activeType?.slug === 'freelancer'">{{ $t('Creation only possible in freelancer management') }}</template>
                         <template v-else-if="activeType?.slug === 'service_provider'">{{ $t('Creation only possible in service provider management') }}</template>
                     </span>
                     <template v-else>
-                        <Link v-if="canImport" :href="route('crm.import')" class="ui-button flex items-center gap-1.5">
+                        <Link v-if="canImport" :href="route('crm.import')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                             <component :is="IconUpload" stroke-width="1" class="size-5" />
                             {{ $t('Import') }}
                         </Link>
-                        <BaseUIButton variant="primary" hide-icon @click="showCreateModal = true">
+                        <BaseUIButton variant="primary" on-band hide-icon @click="showCreateModal = true">
                             <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                             {{ $t('New contact') }}
                         </BaseUIButton>

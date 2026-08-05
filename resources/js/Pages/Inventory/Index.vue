@@ -3,13 +3,25 @@
         <div class="w-full px-10 min-h-screen">
             <!-- Sticky Funktionsleiste über die gesamte Breite — dunkles Toolbar-Band (CI »Bühnenlicht«) -->
             <div class="sticky top-0 z-40 -mx-10 px-10 bg-white pt-3 pb-2">
-                <div class="rounded-lg bg-surface-inverse shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-3">
-                    <div class="w-72 [&_label]:text-text-inverse-muted!">
+                <div class="rounded-lg bg-surface-inverse shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] px-4 py-2.5 flex flex-wrap items-end gap-x-4 gap-y-3">
+                    <div class="w-72">
+                        <!-- Label + Funktions-Tooltip in einer Zeile, Feld darunter — Unterkante fluchtet mit dem Dropdown (items-end) -->
+                        <div class="mb-1 flex items-center gap-x-1">
+                            <label for="productSearch" class="font-lexend font-medium text-xs text-text-inverse-muted">
+                                {{ $t('Search Articles') }}
+                            </label>
+                            <ToolTipComponent
+                                direction="bottom"
+                                :tooltip-text="$t('Enter a search term here. It searches within the properties selected in the dropdown next to it.')"
+                                icon="IconInfoCircle"
+                                icon-size="size-3.5"
+                                white-icon
+                                classes-button="inline-flex items-center justify-center text-text-inverse-muted hover:text-text-inverse cursor-help"
+                            />
+                        </div>
                         <BaseInput
                             id="productSearch"
                             v-model="searchArticleInput"
-                            :label="$t('Search Articles')"
-                            is-small
                             input-classes="bg-white/10! border-white/16! text-text-inverse! placeholder:text-text-inverse-muted!"
                         />
                     </div>
@@ -30,7 +42,7 @@
 
                     <div class="grow"></div>
 
-                    <div class="flex items-center gap-x-4">
+                    <div class="flex items-center gap-x-4 h-8">
                         <div class="relative">
                             <ToolTipComponent
                                 direction="bottom"
@@ -449,7 +461,7 @@ const bandIconButtonPrimaryClasses =
     'text-text-inverse transition-[background-color] duration-150 ease-out cursor-pointer';
 // Listbox-Trigger im Band (Panel bleibt hell); Chevron-Icon hat intern text-text-muted -> per Child-Selektor aufhellen.
 const BAND_LISTBOX_BUTTON_CLASS =
-    'w-full flex items-center justify-between text-left rounded-md border px-3 py-2.5 text-sm font-normal ' +
+    'w-full h-8 flex items-center justify-between text-left rounded-md border px-3 text-sm font-normal ' +
     'bg-white/10 border-white/16 text-text-inverse ' +
     'focus:outline-none focus:ring-1 focus:ring-accent-500 [&_svg]:text-text-inverse!';
 

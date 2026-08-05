@@ -59,7 +59,7 @@
 
                     <div
                         v-else
-                        class="w-72 sm:w-96 flex items-center justify-end gap-2"
+                        class="w-72 sm:w-96 flex items-end justify-end gap-2"
                         :class="band ? '[&_label]:text-text-inverse-muted!' : ''"
                     >
                         <BaseInput
@@ -76,8 +76,8 @@
                             type="button"
                             class="shrink-0 transition"
                             :class="band
-                                ? 'size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16'
-                                : 'rounded-lg border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken'"
+                                ? 'size-[30px] mb-[1px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16'
+                                : 'mb-[1px] rounded-lg border border-transparent px-1.5 py-1.5 hover:bg-surface-sunken'"
                             @click="closeSearchbar"
                             aria-label="Close search"
                         >

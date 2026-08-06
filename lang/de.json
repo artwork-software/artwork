@@ -6449,5 +6449,12 @@
     "Rows per page": "Zeilen pro Seite",
     "Erfolgreich gespeichert!": "Erfolgreich gespeichert!",
     "Pinned": "Gepinnt",
-    "Enter a search term here. It searches within the properties selected in the dropdown next to it.": "Gib hier einen Suchbegriff ein. Gesucht wird in den Eigenschaften, die im Dropdown daneben ausgewählt sind."
+    "Enter a search term here. It searches within the properties selected in the dropdown next to it.": "Gib hier einen Suchbegriff ein. Gesucht wird in den Eigenschaften, die im Dropdown daneben ausgewählt sind.",
+    "Name (Z–A)": "Name (Z–A)",
+    "Grouped by type": "Nach Typ gruppiert",
+    "Most shifts first": "Meiste Schichten zuerst",
+    "Fewest shifts first": "Wenigste Schichten zuerst",
+    "Most hours first": "Meiste Stunden zuerst",
+    "Only people with shifts": "Nur Personen mit Einträgen",
+    "No people match the current filters.": "Keine Personen entsprechen den aktuellen Filtern."
 }

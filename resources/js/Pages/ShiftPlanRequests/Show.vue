@@ -29,10 +29,21 @@
                 :request-show-url="requestShowUrl"
                 @navigate="rememberReviewPosition"
             />
+            <!-- Filter & Sortierung für die Personen-Zeilen -->
+            <ShiftPlanRequestRowControls
+                :types="rowPrefs.types"
+                :counts="typeCounts"
+                :only-with-entries="rowPrefs.onlyWithEntries"
+                :sort-by="rowPrefs.sortBy"
+                @toggle-type="toggleRowType"
+                @update:only-with-entries="rowPrefs.onlyWithEntries = $event"
+                @update:sort-by="rowPrefs.sortBy = $event"
+            />
+
             <!-- Rows: User / Freelancer / ServiceProvider / Unassigned -->
             <div class="space-y-4">
                 <ShiftPlanRequestRow
-                    v-for="row in rows"
+                    v-for="row in visibleRows"
                     :key="row.key"
                     :row="row"
                     :days="daysComputed"
@@ -46,6 +57,16 @@
 
                 <div v-if="!rows.length" class="text-center text-sm text-text-subtle">
                     {{ $t('No shifts found for this request.') }}
+                </div>
+                <div v-else-if="!visibleRows.length" class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border-subtle bg-white px-4 py-8 text-center text-sm text-text-subtle">
+                    <span>{{ $t('No people match the current filters.') }}</span>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-full border border-border-subtle bg-white px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface-sunken"
+                        @click="resetRowPrefs"
+                    >
+                        {{ $t('Reset filters') }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -92,10 +113,11 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {Link, router} from '@inertiajs/vue3';
-import {computed, reactive, ref} from 'vue';
+import {computed, reactive, ref, watch} from 'vue';
 import {IconArrowLeft} from '@tabler/icons-vue';
 import ShiftPlanRequestHeader from './components/ShiftPlanRequestHeader.vue';
 import ShiftPlanRequestRow from './components/ShiftPlanRequestRow.vue';
+import ShiftPlanRequestRowControls from './components/ShiftPlanRequestRowControls.vue';
 import ShiftPlanRequestWeekNavigator from './components/ShiftPlanRequestWeekNavigator.vue';
 import ShiftHistoryDrawer from './components/ShiftHistoryDrawer.vue';
 import RejectShiftPlanRequestModal from './components/RejectShiftPlanRequestModal.vue';
@@ -301,6 +323,23 @@ const typeLabelForType = (type) => {
     }
 };
 
+// User mit "Als Freelancer*in im Tool anzeigen" (is_freelancer) zählen für Filter,
+// Gruppierung und Typ-Label als externe Mitarbeiter*innen.
+const freelancerUserIds = computed(() => {
+    const ids = new Set();
+    for (const u of (props.craftWorkers?.users || [])) {
+        if (u.is_freelancer) ids.add(u.id);
+    }
+    for (const shift of props.shifts) {
+        for (const u of (shift.users || [])) {
+            if (u.is_freelancer) ids.add(u.id);
+        }
+    }
+    return ids;
+});
+const effectiveRowType = (row) =>
+    (row.type === 'user' && freelancerUserIds.value.has(row.id)) ? 'freelancer' : row.type;
+
 const rows = computed(() => {
     const map = new Map();
     const ensureRow = (key, base) => {
@@ -351,7 +390,7 @@ const rows = computed(() => {
             type: 'user', id: user.id,
             name: user.full_name,
             avatar: user.profile_photo_url,
-            typeLabel: 'User'
+            typeLabel: user.is_freelancer ? 'Freelancer' : 'User'
         });
     }
     for (const fl of (props.craftWorkers?.freelancers || [])) {
@@ -385,7 +424,7 @@ const rows = computed(() => {
                     id: user.id,
                     name: user.full_name || `${user.first_name} ${user.last_name}`,
                     avatar: user.profile_photo_url,
-                    typeLabel: 'User'
+                    typeLabel: user.is_freelancer ? 'Freelancer' : 'User'
                 });
                 const hasChangesAfterCommit = hasOpenPostCommitChange(shift, user.id);
                 const hasChangesInRequest = hasOpenWorkflowChange(shift, user.id);
@@ -495,7 +534,9 @@ const rows = computed(() => {
             id: marker.id,
             name: marker.name || t('Unknown user'),
             avatar: null,
-            typeLabel: typeLabelForType(marker.type)
+            typeLabel: marker.type === 'user' && freelancerUserIds.value.has(marker.id)
+                ? 'Freelancer'
+                : typeLabelForType(marker.type)
         });
         if (!row.days[marker.date]) row.days[marker.date] = [];
 
@@ -515,6 +556,77 @@ const rows = computed(() => {
     }
 
     return Array.from(map.values());
+});
+
+// Filter & Sortierung der Personen-Zeilen (Einstellungen überleben das Blättern zwischen Anfragen)
+const ROW_PREFS_STORAGE_KEY = 'artwork.shiftPlanRequest.rowPrefs';
+const defaultRowPrefs = () => ({
+    types: {user: true, freelancer: true, service_provider: true},
+    onlyWithEntries: false,
+    sortBy: 'type',
+});
+const loadRowPrefs = () => {
+    try {
+        const stored = JSON.parse(localStorage.getItem(ROW_PREFS_STORAGE_KEY) ?? 'null');
+        if (!stored) return defaultRowPrefs();
+        return {
+            ...defaultRowPrefs(),
+            ...stored,
+            types: {...defaultRowPrefs().types, ...(stored.types ?? {})},
+        };
+    } catch {
+        return defaultRowPrefs();
+    }
+};
+const rowPrefs = reactive(loadRowPrefs());
+watch(rowPrefs, () => {
+    try {
+        localStorage.setItem(ROW_PREFS_STORAGE_KEY, JSON.stringify(rowPrefs));
+    } catch { /* Speichern ist optional */ }
+}, {deep: true});
+
+const toggleRowType = (type) => {
+    rowPrefs.types[type] = !rowPrefs.types[type];
+};
+const resetRowPrefs = () => {
+    Object.assign(rowPrefs, defaultRowPrefs());
+};
+
+const typeCounts = computed(() => {
+    const counts = {user: 0, freelancer: 0, service_provider: 0};
+    for (const row of rows.value) {
+        const type = effectiveRowType(row);
+        if (counts[type] !== undefined) counts[type] += 1;
+    }
+    return counts;
+});
+
+const rowHasEntries = (row) => Object.values(row.days).some(entries => entries?.length);
+
+const visibleRows = computed(() => {
+    const typeOrder = {user: 0, freelancer: 1, service_provider: 2, unassigned: 3};
+    const byName = (a, b) => (a.name || '').localeCompare(b.name || '', undefined, {sensitivity: 'base'});
+    const comparators = {
+        type: (a, b) => (typeOrder[effectiveRowType(a)] - typeOrder[effectiveRowType(b)]) || byName(a, b),
+        name_asc: byName,
+        name_desc: (a, b) => byName(b, a),
+        shifts_desc: (a, b) => (b.totals.total_shifts - a.totals.total_shifts) || byName(a, b),
+        shifts_asc: (a, b) => (a.totals.total_shifts - b.totals.total_shifts) || byName(a, b),
+        hours_desc: (a, b) => (b.totals.total_hours - a.totals.total_hours) || byName(a, b),
+    };
+    const compare = comparators[rowPrefs.sortBy] ?? comparators.type;
+
+    const filtered = rows.value.filter(row => {
+        // "Nicht zugewiesene Schichten" immer zeigen — sie brauchen bei der Prüfung Aufmerksamkeit
+        if (row.type === 'unassigned') return true;
+        if (!rowPrefs.types[effectiveRowType(row)]) return false;
+        if (rowPrefs.onlyWithEntries && !rowHasEntries(row)) return false;
+        return true;
+    });
+
+    const persons = filtered.filter(row => row.type !== 'unassigned').sort(compare);
+    const unassigned = filtered.filter(row => row.type === 'unassigned');
+    return [...persons, ...unassigned];
 });
 
 // Drawer-State

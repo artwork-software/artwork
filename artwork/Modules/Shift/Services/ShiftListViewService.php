@@ -237,6 +237,11 @@ readonly class ShiftListViewService
         Carbon $endDate,
         ?UserFilter $userFilter
     ): \Illuminate\Database\Eloquent\Collection {
+        // start_time/end_time sind Datetime-Spalten, der Filter liefert reine Datumswerte
+        // (Mitternacht) — ohne endOfDay fehlen alle Termine des letzten Zeitraumtags.
+        $rangeStart = $startDate->copy()->startOfDay();
+        $rangeEnd = $endDate->copy()->endOfDay();
+
         // Note: only the relations actually rendered in the appointments column are eager-loaded.
         // event_type → abbreviation+color, project → name, room → position for sort.
         $query = Event::query()
@@ -245,12 +250,12 @@ readonly class ShiftListViewService
                 'event_type:id,name,abbreviation,hex_code',
                 'project:id,name',
             ])
-            ->where(function (Builder $q) use ($startDate, $endDate): void {
-                $q->whereBetween('start_time', [$startDate, $endDate])
-                    ->orWhereBetween('end_time', [$startDate, $endDate])
-                    ->orWhere(function (Builder $nested) use ($startDate, $endDate): void {
-                        $nested->where('start_time', '<=', $startDate)
-                            ->where('end_time', '>=', $endDate);
+            ->where(function (Builder $q) use ($rangeStart, $rangeEnd): void {
+                $q->whereBetween('start_time', [$rangeStart, $rangeEnd])
+                    ->orWhereBetween('end_time', [$rangeStart, $rangeEnd])
+                    ->orWhere(function (Builder $nested) use ($rangeStart, $rangeEnd): void {
+                        $nested->where('start_time', '<=', $rangeStart)
+                            ->where('end_time', '>=', $rangeEnd);
                     });
             });
 

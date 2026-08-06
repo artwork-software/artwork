@@ -191,6 +191,9 @@ const props = defineProps({
     workerName: { type: String, default: '' },
     mode: { type: String, default: 'binding' }, // 'binding' | 'wish'
     initialDays: { type: Array, default: () => [] }, // ['Y-m-d']
+    // Vorauswahl (z. B. aus dem Schichten-Tab): { id, name, period_start?, period_end? } —
+    // abwählbar, überstimmt die localStorage-Vorauswahl
+    fixedProject: { type: Object, default: null },
 });
 
 const emit = defineEmits(['close']);
@@ -198,7 +201,7 @@ const emit = defineEmits(['close']);
 const searchQuery = ref('');
 const projectOptions = ref([]);
 const loadingProjects = ref(false);
-const selectedProject = ref(null);
+const selectedProject = ref(props.fixedProject ? { ...props.fixedProject } : null);
 const periodMode = ref(props.initialDays.length ? 'days' : 'full_period');
 const selectedDays = ref([...props.initialDays]);
 const dayToAdd = ref('');

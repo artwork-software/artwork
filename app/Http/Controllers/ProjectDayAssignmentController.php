@@ -43,6 +43,27 @@ class ProjectDayAssignmentController extends Controller
         ]);
     }
 
+    /**
+     * Personenvorschläge für die projektzentrierte Zuordnung im Schichten-Tab
+     * (nur Planer*innen — verbindliche Zuordnungen sind ohnehin planer-exklusiv).
+     */
+    public function workerOptions(Project $project, Request $request): JsonResponse
+    {
+        // Admins passieren via Gate::before
+        abort_unless((bool) auth()->user()?->can(PermissionEnum::SHIFT_PLANNER->value), 403);
+
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        return new JsonResponse([
+            'workers' => $this->projectDayAssignmentService->getWorkerOptionsForProject(
+                $project,
+                $validated['search'] ?? null
+            ),
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([

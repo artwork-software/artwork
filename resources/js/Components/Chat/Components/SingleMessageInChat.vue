@@ -24,7 +24,7 @@
                             icon-size="size-4"
                             white-icon
                             :icon="tooltipText ? 'IconChecks' : 'IconCheck'"
-                            :classes="tooltipText ? '!text-white-500' : '!text-text-subtle'"
+                            :classes="tooltipText ? '!text-white' : '!text-text-subtle'"
                         />
                     </div>
                 </div>

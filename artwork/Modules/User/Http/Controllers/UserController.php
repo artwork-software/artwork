@@ -13,6 +13,7 @@ use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Models\SubEvent;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\ExternalUserManagement\Models\ExternalUserSource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Invitation\Models\Invitation;
@@ -298,7 +299,8 @@ class UserController extends Controller
             ),
             'userUserManagementSetting' => $userUserManagementSettingService
                 ->getFromUser($userService->getAuthUser())
-                ->getAttribute('settings')
+                ->getAttribute('settings'),
+            'hasActiveSsoSource' => ExternalUserSource::query()->where('active', true)->exists()
         ]);
     }
 

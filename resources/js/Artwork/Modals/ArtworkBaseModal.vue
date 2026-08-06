@@ -23,36 +23,15 @@
                                         </p>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-x-1">
-                                        <Menu as="div" class="relative">
-                                            <MenuButton
-                                                type="button"
-                                                class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
-                                                :aria-label="$t('More options')"
-                                                v-tooltip.bottom="{ value: $t('More options'), class: 'aw-tooltip' }"
-                                            >
-                                                <PropertyIcon name="IconDotsVertical" class="size-4" stroke-width="1.5" aria-hidden="true"/>
-                                            </MenuButton>
-                                            <transition enter-active-class="transition ease-out duration-100 motion-reduce:transition-none"
-                                                        enter-from-class="opacity-0 scale-95"
-                                                        enter-to-class="opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75 motion-reduce:transition-none"
-                                                        leave-from-class="opacity-100 scale-100"
-                                                        leave-to-class="opacity-0 scale-95">
-                                                <MenuItems class="absolute right-0 z-10 mt-1 w-56 origin-top-right rounded-lg border border-border-subtle bg-surface p-1 shadow-overlay">
-                                                    <MenuItem v-slot="{ active }">
-                                                        <button
-                                                            type="button"
-                                                            class="flex min-h-8 w-full cursor-pointer items-center gap-x-2 rounded-md px-2.5 text-left text-[13px] text-text"
-                                                            :class="active ? 'bg-surface-sunken' : ''"
-                                                            @click="toggleBackdrop"
-                                                        >
-                                                            <PropertyIcon name="IconTexture" class="size-4 shrink-0 text-text-muted" stroke-width="1.5" aria-hidden="true"/>
-                                                            {{ showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop') }}
-                                                        </button>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
+                                        <button
+                                            type="button"
+                                            class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white/8 text-text-inverse transition-colors duration-150 motion-reduce:transition-none hover:bg-white/16"
+                                            :aria-label="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"
+                                            v-tooltip.bottom="{ value: showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop'), class: 'aw-tooltip' }"
+                                            @click="toggleBackdrop"
+                                        >
+                                            <PropertyIcon name="IconTexture" class="size-4" stroke-width="1.5" aria-hidden="true"/>
+                                        </button>
                                         <div ref="dragHandleRef">
                                             <button
                                                 type="button"
@@ -94,7 +73,7 @@
 import axios from "axios";
 import {nextTick, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
-import {Dialog, DialogPanel, Menu, MenuButton, MenuItem, MenuItems, TransitionChild, TransitionRoot} from "@headlessui/vue";
+import {Dialog, DialogPanel, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 //define options for the modal

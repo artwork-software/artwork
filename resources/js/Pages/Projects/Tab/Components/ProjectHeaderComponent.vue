@@ -71,7 +71,7 @@
 
 
 
-                            <div class="mt-2 flex items-center text-[13px] text-text-muted" v-if="headerObject.project_history.length > 0">
+                            <div class="flex items-center text-[13px] text-text-muted" v-if="headerObject.project_history.length > 0">
                                 <span>{{ $t('last modified') }}:</span>
                                 <UserPopoverTooltip
                                     :user="headerObject.project_history[0]?.changer"

@@ -102,17 +102,37 @@
 
             <!-- Zugewiesene Personen (Projektzuordnungen; nur Projektansicht, per Anzeigeeinstellung) -->
             <section
-                v-if="showProjectAssignments && hasAnyProjectAssignments"
+                v-if="showProjectAssignments"
                 class="mx-1 mt-3 rounded-xl border border-border-subtle bg-white px-4 py-3"
             >
-                <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase mb-3">
-                    {{ $t('Assigned persons') }}
-                </h3>
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <h3 class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
+                        {{ $t('Assigned persons') }}
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <BaseUIButton
+                            :label="$t('Enter wish')"
+                            is-small
+                            @click="showSelfWishModal = true"
+                        />
+                        <BaseUIButton
+                            v-if="canPlanProjectAssignments"
+                            :label="$t('Assign person')"
+                            :icon="IconUserPlus"
+                            is-small
+                            is-add-button
+                            @click="openAssignPersonModal([])"
+                        />
+                    </div>
+                </div>
                 <p
                     v-if="projectAssignmentError"
                     class="mb-3 rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-danger"
                 >
                     {{ projectAssignmentError }}
+                </p>
+                <p v-if="!hasAnyProjectAssignments" class="mb-3 text-xs text-text-subtle">
+                    {{ $t('Nobody is assigned to this project yet. Assign persons bindingly for single days or the entire project period — or enter yourself as a wish.') }}
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -136,12 +156,21 @@
                                     :alt="group.worker.name"
                                     class="h-7 w-7 rounded-full object-cover"
                                 />
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <div class="text-xs text-text truncate">{{ group.worker.name }}</div>
                                     <div class="text-[10px] text-text-subtle">
                                         {{ formatAssignmentDate(group.series_start) }} - {{ formatAssignmentDate(group.series_end) }}
                                     </div>
                                 </div>
+                                <button
+                                    v-if="canPlanProjectAssignments"
+                                    type="button"
+                                    class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                                    :title="$t('Remove assignment')"
+                                    @click="requestAssignmentRemoval(group, 'full_period')"
+                                >
+                                    <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
+                                </button>
                             </div>
                             <div v-if="!assignmentOverviewGroups.fullPeriod.length" class="text-[11px] text-text-subtle italic">
                                 {{ $t('None') }}
@@ -170,12 +199,21 @@
                                     :alt="group.worker.name"
                                     class="h-7 w-7 rounded-full object-cover"
                                 />
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <div class="text-xs text-text truncate">{{ group.worker.name }}</div>
                                     <div class="text-[10px] text-text-subtle truncate" :title="group.dates.map(formatAssignmentDate).join(', ')">
                                         {{ group.dates.map(formatAssignmentDate).join(', ') }}
                                     </div>
                                 </div>
+                                <button
+                                    v-if="canPlanProjectAssignments"
+                                    type="button"
+                                    class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                                    :title="$t('Remove assignment')"
+                                    @click="requestAssignmentRemoval(group, 'single_days')"
+                                >
+                                    <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
+                                </button>
                             </div>
                             <div v-if="!assignmentOverviewGroups.singleDays.length" class="text-[11px] text-text-subtle italic">
                                 {{ $t('None') }}
@@ -227,6 +265,15 @@
                                     @click="acceptProjectWish(group)"
                                 >
                                     {{ $t('Accept') }}
+                                </button>
+                                <button
+                                    v-if="canRemoveWish(group)"
+                                    type="button"
+                                    class="shrink-0 rounded-md p-1 text-text-subtle hover:text-danger hover:bg-danger-surface transition-colors"
+                                    :title="$t('Remove wish')"
+                                    @click="requestAssignmentRemoval(group, 'wish')"
+                                >
+                                    <PropertyIcon name="IconX" class="h-3.5 w-3.5" stroke-width="2" />
                                 </button>
                             </div>
                             <div v-if="!assignmentOverviewGroups.wishes.length" class="text-[11px] text-text-subtle italic">
@@ -389,12 +436,24 @@
                                     >+{{ dayAssignmentAvatars(day, 'binding').length - 5 }}</span>
                                 </div>
 
+                                <!-- Person direkt für diesen Tag verbindlich zuordnen (nur Projektansicht) -->
+                                <ToolTipComponent
+                                    v-if="props.isInProjectView && showProjectAssignments && canPlanProjectAssignments"
+                                    direction="left"
+                                    :tooltip-text="$t('Assign person for this day')"
+                                    :icon="IconUserPlus"
+                                    icon-size="h-4 w-4"
+                                    white-icon
+                                    classes-button="!rounded-lg !bg-white/10 hover:!bg-white/20 !p-1.5 ml-2 cursor-pointer"
+                                    @click="openAssignPersonModal([day.withoutFormat])"
+                                />
+
                                 <BaseUIButton
                                     v-if="isDayWithoutRooms(day.fullDay) && (can('can plan shifts') || is('artwork admin'))"
                                     :label="$t('Add Shift')"
                                     :icon="IconCalendarUser"
                                     is-small
-                                    class="!bg-white/10 !text-white hover:!bg-white/20"
+                                    class="!bg-white/10 !text-white hover:!bg-white/20 ml-2"
                                     @click="openAddShiftForRoomAndDay(day.withoutFormat, null)"
                                 />
                             </div>
@@ -516,6 +575,35 @@
                 is-in-shift-plan
                 @close="dayRemarkModalDay = null"
             />
+
+            <!-- Projektzentriert Personen zuordnen (Schichten-Tab) -->
+            <ProjectAssignPersonModal
+                v-if="assignPersonModalDays !== null && props.project?.id"
+                :project="props.project"
+                :period-start="assignmentPeriod.start"
+                :period-end="assignmentPeriod.end"
+                :initial-days="assignPersonModalDays"
+                @close="onAssignPersonModalClose"
+            />
+
+            <!-- Eigener Projektwunsch mit vorausgewähltem Projekt -->
+            <ProjectAssignmentModal
+                v-if="showSelfWishModal && props.project?.id && authUserId"
+                :worker-type="0"
+                :worker-id="authUserId"
+                mode="wish"
+                :fixed-project="selfWishFixedProject"
+                @close="onSelfWishModalClose"
+            />
+
+            <ConfirmationComponent
+                v-if="assignmentRemovalCandidate"
+                :titel="assignmentRemovalCandidate.kind === 'wish' ? $t('Remove wish') : $t('Remove assignment')"
+                :description="assignmentRemovalCandidate.kind === 'wish'
+                    ? $t('Should the wish of {0} really be removed?', [assignmentRemovalCandidate.group.worker.name])
+                    : $t('Should the binding assignment of {0} really be removed? The person will be notified.', [assignmentRemovalCandidate.group.worker.name])"
+                @closed="onAssignmentRemovalConfirmed"
+            />
         </component>
     </div>
 </template>
@@ -539,6 +627,7 @@ import {
     IconX, IconFileExport,
     IconCalendarPlus,
     IconCalendarUser,
+    IconUserPlus,
 } from "@tabler/icons-vue";
 import { useShiftCalendarListener } from "@/Composeables/Listener/useShiftCalendarListener.js";
 import { provideShiftPlanLookups } from "@/Composeables/useShiftPlanLookups.js";
@@ -559,6 +648,9 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import AddShiftsByPresetsAndGroupsModal from "@/Pages/Shifts/Components/AddShiftsByPresetsAndGroupsModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import { formatAssignmentDate } from "@/Composeables/UseProjectDayAssignments.js";
+import ProjectAssignPersonModal from "@/Pages/Shifts/Components/ProjectAssignPersonModal.vue";
+import ProjectAssignmentModal from "@/Pages/Shifts/Components/ProjectAssignmentModal.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 type AnyRoom = any
 type AnyEvent = any
@@ -669,6 +761,77 @@ const acceptProjectWish = async (group: any) => {
         projectAssignmentError.value = error?.response?.data?.message ?? String(error)
     } finally {
         projectAssignmentActionId.value = null
+    }
+}
+
+const canPlanProjectAssignments = computed(() => can('can plan shifts') || is('artwork admin'))
+const authUserId = computed(() => (page.props.auth as any)?.user?.id ?? null)
+
+// Anzeige-Zeitraum fürs Zuordnungs-Modal (Projektzeitraum aus dem Tab-Datumsbereich)
+const assignmentPeriod = computed(() => ({
+    start: props.dateValue?.[0] ?? null,
+    end: props.dateValue?.[1] ?? null,
+}))
+
+// null = Modal zu; [] = ganzer Zeitraum vorausgewählt; ['Y-m-d'] = Tageszuordnung
+const assignPersonModalDays = ref<string[] | null>(null)
+const showSelfWishModal = ref(false)
+
+const selfWishFixedProject = computed(() => ({
+    id: props.project?.id,
+    name: props.project?.name,
+    period_start: assignmentPeriod.value.start,
+    period_end: assignmentPeriod.value.end,
+}))
+
+const openAssignPersonModal = (days: string[] = []) => {
+    assignPersonModalDays.value = days
+}
+
+const onAssignPersonModalClose = (payload?: { saved?: boolean }) => {
+    assignPersonModalDays.value = null
+    if (payload?.saved) loadProjectDayAssignments()
+}
+
+const onSelfWishModalClose = (payload?: { saved?: boolean }) => {
+    showSelfWishModal.value = false
+    if (payload?.saved) loadProjectDayAssignments()
+}
+
+// Entfernen mit Bestätigung (verbindliche Zuordnung benachrichtigt die Person)
+const assignmentRemovalCandidate = ref<any | null>(null) // { group, kind: 'full_period' | 'single_days' | 'wish' }
+
+const requestAssignmentRemoval = (group: any, kind: string) => {
+    assignmentRemovalCandidate.value = { group, kind }
+}
+
+const canRemoveWish = (group: any) =>
+    canPlanProjectAssignments.value || (group.worker.type === 0 && group.worker.id === authUserId.value)
+
+const onAssignmentRemovalConfirmed = async (confirmed: boolean) => {
+    const candidate = assignmentRemovalCandidate.value
+    assignmentRemovalCandidate.value = null
+    if (!confirmed || !candidate) return
+    projectAssignmentError.value = ''
+    try {
+        if (candidate.kind === 'full_period') {
+            await axios.delete(route('project-day-assignments.full-period.destroy'), {
+                params: {
+                    worker_type: candidate.group.worker.type,
+                    worker_id: candidate.group.worker.id,
+                    project_id: props.project.id,
+                    group_id: candidate.group.group_id,
+                },
+            })
+        } else {
+            await axios.delete(
+                route('project-day-assignments.destroy', { projectDayAssignment: candidate.group.id }),
+                { params: { whole_group: true } }
+            )
+        }
+        await loadProjectDayAssignments()
+    } catch (error: any) {
+        projectAssignmentError.value = error?.response?.data?.message ?? String(error)
     }
 }
 

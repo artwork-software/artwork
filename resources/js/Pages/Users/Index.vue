@@ -15,6 +15,7 @@
             >
                 <template #actions>
                     <BaseUIButton
+                        v-if="hasActiveSsoSource"
                         type="button"
                         hide-icon
                         on-band
@@ -256,6 +257,7 @@ const props = defineProps({
     invitedUsers: Array,
     userSortEnumNames: Array,
     userUserManagementSetting: Object,
+    hasActiveSsoSource: Boolean,
 })
 
 const { getSortEnumTranslation } = useSortEnumTranslation()

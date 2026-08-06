@@ -603,6 +603,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/{project}/day-assignments', [ProjectDayAssignmentController::class, 'forProject'])
         ->name('projects.day-assignments')
         ->can('can view shift plan');
+    Route::get('/projects/{project}/day-assignments/worker-options', [ProjectDayAssignmentController::class, 'workerOptions'])
+        ->name('projects.day-assignments.worker-options');
     Route::get('/shifts/{shift}/project-assignees', [ProjectDayAssignmentController::class, 'forShift'])
         ->name('shifts.project-assignees')
         ->can('can view shift plan');

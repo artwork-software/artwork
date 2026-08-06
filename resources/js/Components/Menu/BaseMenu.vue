@@ -133,7 +133,7 @@ const props = withDefaults(defineProps<{
     /** ARIA-Label, wenn kein sichtbarer Text vorhanden ist */
     menuButtonAria?: string
 }>(), {
-    dotsColor: 'text-text-inverse',
+    dotsColor: 'text-text-muted',
     dotsSize: 'size-5',
     noRelative: false,
     showSortIcon: false,

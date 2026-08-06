@@ -1,9 +1,9 @@
 <template>
     <div
-        class="flex border-b border-zinc-200 relative article-row-cv"
+        class="flex border-b border-border-subtle relative article-row-cv"
     >
         <div
-            class="sticky left-0 z-20 bg-white px-4 py-2 text-xs text-zinc-900 font-medium border-r border-zinc-200 w-[220px] min-w-[220px]"
+            class="sticky left-0 z-20 bg-white px-4 py-2 text-xs text-text font-medium border-r border-border-subtle w-[220px] min-w-[220px]"
         >
             {{ article.name }}
         </div>
@@ -12,21 +12,20 @@
             :key="date.date"
             @click="onCellClick(date.date)"
             :style="cellBarStyle"
-            class="text-xs px-2 pt-2 text-center border-r border-zinc-200 min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition relative"
-            :class="[
-                cellValue(date.date) < 0
-                    ? 'bg-red-100'
-                    : (date.isWeekend ? 'bg-zinc-50' : 'bg-white'),
+            class="text-xs px-2 pt-2 text-center border-r border-border-subtle min-w-24 max-w-24 w-24 flex items-center justify-center cursor-pointer transition relative"
+            :class="[ cellValue(date.date) < 0
+                    ? 'bg-danger-surface'
+                    : (date.isWeekend ? 'bg-surface-sunken' : 'bg-white'),
                 isToday(date.date)
-                    ? 'ring-1 ring-indigo-300 ring-inset'
-                    : (cellValue(date.date) < 0 ? 'hover:bg-red-200' : 'hover:bg-zinc-50'),
+                    ? 'ring-1 ring-accent-200 ring-inset'
+                    : (cellValue(date.date) < 0 ? 'hover:bg-danger-surface' : 'hover:bg-surface-sunken'),
                 isWeekStart(date.date) ? 'border-l-2 border-l-zinc-800' : ''
             ]"
         >
             <div class="inline-flex items-center gap-1">
                 <span
                     class="tabular-nums"
-                    :class="{ 'text-red-800 font-semibold': cellValue(date.date) < 0 }"
+                    :class="{ 'text-danger font-semibold': cellValue(date.date) < 0 }"
                 >
                     {{ cellValue(date.date) }}
                 </span>
@@ -48,10 +47,9 @@
                 v-for="bar in visibleBars"
                 :key="bar.key"
                 type="button"
-                class="absolute pointer-events-auto rounded-sm transition-opacity focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                class="absolute pointer-events-auto rounded-sm transition-opacity focus:outline-none focus:ring-2 focus:ring-accent-600"
                 :style="barStyle(bar)"
-                :class="[
-                    isHighlighted(bar.issue) ? '' : 'opacity-30',
+                :class="[ isHighlighted(bar.issue) ? '' : 'opacity-30',
                     'hover:brightness-110'
                 ]"
                 @click.stop="onBarClick(bar)"

@@ -6,11 +6,11 @@
                 <MenuButton
                     class="menu-button"
                 >
-                        <span class="float-left flex xsLight subpixel-antialiased">
+                        <span class="float-left flex text-sm/5 font-bold text-text-subtle subpixel-antialiased">
                             {{ $t('Select appointment properties') }}
                         </span>
-                    <ChevronDownIcon
-                        class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                    <IconChevronDown
+                        class="ml-2 -mr-1 h-5 w-5 text-text float-right"
                         aria-hidden="true"
                     />
                 </MenuButton>
@@ -24,8 +24,8 @@
                 leave-to-class="transform scale-95 opacity-0"
             >
                 <MenuItems
-                    class="absolute overflow-y-auto h-48 mt-2 rounded-lg w-full origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                    <div class="mx-auto w-full bg-primary border-none mt-2">
+                    class="absolute overflow-y-auto h-48 mt-2 rounded-lg w-full origin-top-left divide-y divide-border-subtle bg-surface-inverse ring-1 ring-black p-2 text-white opacity-100 z-50">
+                    <div class="mx-auto w-full bg-surface-inverse border-none mt-2">
                         <div class="flex w-full mb-4" v-for="eventType in accessibleEventTypes">
                             <input v-model="shiftRelevantEventTypeIds"
                                    :id="eventType.id"
@@ -33,7 +33,7 @@
                                    type="checkbox"
                                    class="input-checklist-dark"/>
                             <div
-                                :class="[shiftRelevantEventTypeIds.includes(eventType.id) ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                :class="[shiftRelevantEventTypeIds.includes(eventType.id) ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                 {{ eventType.name }}
                             </div>
                         </div>
@@ -57,9 +57,9 @@
 </template>
 
 <script>
+import {IconChevronDown, IconDownload, IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon, DownloadIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -85,11 +85,11 @@ export default {
         BaseModal,
         FormButton,
         TagComponent,
-        ChevronDownIcon, Input,
+        IconChevronDown, Input,
         JetDialogModal,
         JetInputError,
-        XIcon,
-        DownloadIcon,
+        IconX,
+        IconDownload,
         Menu,
         MenuButton,
         MenuItems,

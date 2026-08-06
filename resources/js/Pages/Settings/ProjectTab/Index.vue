@@ -6,8 +6,8 @@ import SingleTabComponent from "@/Pages/Settings/Components/SingleTabComponent.v
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 import { computed, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -176,10 +176,10 @@ function updateComponentOrder(components) {
 <template>
     <ProjectSettingsHeader :title="t('Tab Settings')" :description="t('Define global settings for projects.')">
         <template #actions>
-            <button class="ui-button-add" @click="showAddEditModal = true">
+            <BaseUIButton variant="primary" hide-icon @click="showAddEditModal = true">
                 <PropertyIcon name="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ t('Create tab') }}
-            </button>
+            </BaseUIButton>
         </template>
         <SettingsGuideBanner
             class="mb-6"
@@ -194,7 +194,7 @@ function updateComponentOrder(components) {
             <!-- Tab components -->
             <div class="w-full col-span-1">
 
-                <div class="card white p-5">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
                     <draggable
                         ghost-class="opacity-50"
                         key="draggableKey"
@@ -216,10 +216,10 @@ function updateComponentOrder(components) {
             </div>
 
             <!-- Components List -->
-            <div class="col-span-1 card glassy p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
-                <div class="card white p-5 space-y-3">
+            <div class="col-span-1 rounded-lg bg-surface border border-border-subtle shadow-raised p-5 sticky top-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 space-y-3">
                     <!-- Suche bleibt beim Scrollen der Palette sichtbar -->
-                    <div class="sticky top-0 z-10 -mx-5 px-5 -mt-5 pt-5 pb-3 bg-white border-b border-zinc-100">
+                    <div class="sticky top-0 z-10 -mx-5 px-5 -mt-5 pt-5 pb-3 bg-white border-b border-border-subtle">
                         <div class="flex items-center justify-end w-full">
                             <div class="w-44 md:w-56 lg:w-72">
                                 <BaseInput
@@ -253,10 +253,10 @@ function updateComponentOrder(components) {
                             >
                                 <h2 class="text-md font-bold mb-2">
                                     {{ t(componentsArray.name) }}
-                                    <span class="text-zinc-400 font-normal">({{ componentsArray.components.length }})</span>
+                                    <span class="text-text-subtle font-normal">({{ componentsArray.components.length }})</span>
                                 </h2>
                                 <IconChevronDown
-                                    class="size-4 text-zinc-500 mb-2 transition-transform"
+                                    class="size-4 text-text-subtle mb-2 transition-transform"
                                     :class="{ '-rotate-90': isGroupClosed(componentsArray.name) }"
                                 />
                             </button>
@@ -280,10 +280,10 @@ function updateComponentOrder(components) {
                         >
                             <h2 class="text-md font-bold mb-2">
                                 {{ t('Special components') }}
-                                <span class="text-zinc-400 font-normal">({{ filteredSpecialComponents.length }})</span>
+                                <span class="text-text-subtle font-normal">({{ filteredSpecialComponents.length }})</span>
                             </h2>
                             <IconChevronDown
-                                class="size-4 text-zinc-500 mb-2 transition-transform"
+                                class="size-4 text-text-subtle mb-2 transition-transform"
                                 :class="{ '-rotate-90': isGroupClosed('__special') }"
                             />
                         </button>

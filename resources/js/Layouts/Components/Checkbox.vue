@@ -3,9 +3,9 @@
         <div class="flex items-center justify-start">
             <input :key="item.name" v-model="item.checked" type="checkbox"
                    class="input-checklist"/>
-                            <p :class="[item.checked ? 'xsDark' : 'xsLight']"
+                            <p :class="[item.checked ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
                class="ml-4 my-auto text-sm" v-if="!item.translation_key">{{ item.name }}</p>
-            <p :class="[item.checked ? 'xsDark' : 'xsLight']"
+            <p :class="[item.checked ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
                class="ml-4 my-auto text-sm" v-else>{{$t(item.translation_key)}}</p>
         </div>
         <div v-if="item.showIcon !== false">
@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import {InformationCircleIcon} from "@heroicons/vue/outline";
+import {IconInfoCircle} from "@tabler/icons-vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -24,7 +24,7 @@ export default {
     name: "Checkbox",
     components: {
         TextToolTip,
-        InformationCircleIcon,
+        IconInfoCircle,
         SvgCollection
     },
     mixins: [Permissions],

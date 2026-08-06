@@ -6,9 +6,9 @@
 
         <template #tabBar>
             <ToolbarHeader
+                band
                 :icon="IconAddressBook"
                 title="Freelancers & Service Providers"
-                icon-bg-class="bg-purple-600/10 text-purple-700"
                 v-model="user_query"
                 :description="userObjectsToShow?.length ? `${userObjectsToShow.length} ${$t('Freelancers & Service Providers')}` : ''"
                 :search-enabled="true"
@@ -18,10 +18,10 @@
                 <template #actions>
                     <Listbox v-model="selectedFilter" as="div" class="relative">
                         <ListboxButton
-                            class="ui-button"
+                            class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium cursor-pointer transition-[background-color] duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-accent-500"
                         >
                             <span>{{ $t(selectedFilter.name) }}</span>
-                            <ChevronDownIcon class="size-5 text-zinc-500" />
+                            <IconChevronDown class="size-5 text-text-inverse-muted" />
                         </ListboxButton>
 
                         <transition
@@ -33,7 +33,7 @@
                             leave-to-class="opacity-0 translate-y-1"
                         >
                             <ListboxOptions
-                                class="absolute z-40 mt-2 w-64 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg focus:outline-none"
+                                class="absolute z-40 mt-2 w-64 rounded-xl border border-border-subtle bg-white p-1 shadow-lg"
                             >
                                 <ListboxOption
                                     v-for="filter in displayFilters"
@@ -43,8 +43,8 @@
                                 >
                                     <li
                                         :class="[
-                                          active ? 'bg-zinc-100' : '',
-                                          'flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-zinc-800'
+                                          active ? 'bg-surface-sunken' : '',
+                                          'flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-text'
                                         ]"
                                     >
                                         <span :class="[selected ? 'font-semibold' : 'font-normal']">
@@ -55,10 +55,10 @@
                             </ListboxOptions>
                         </transition>
                     </Listbox>
-                    <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
+                    <BaseMenu show-sort-icon dots-size="size-5" white-icon menu-width="w-72" classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out">
                         <div class="flex items-center justify-between px-4 py-2">
                             <button
-                                class="text-xs text-zinc-500 hover:text-zinc-900"
+                                class="text-xs text-text-subtle hover:text-text"
                                 @click="resetSort()"
                                 type="button"
                             >
@@ -73,23 +73,23 @@
                             <div
                                 @click="sortBy = memberSortEnum; applyFiltersAndSort()"
                                 :class="[
-                                  active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600',
+                                  active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                                   'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-lg'
                                 ]"
                             >
                                 {{ getSortEnumTranslation(memberSortEnum) }}
                                 <IconCheck
                                     v-if="getUserSortBySetting() === memberSortEnum"
-                                    class="size-5 text-blue-600"
+                                    class="size-5 text-accent-600"
                                 />
                             </div>
                         </MenuItem>
                     </BaseMenu>
 
-                    <button class="ui-button-add" v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
+                    <BaseUIButton variant="primary" on-band hide-icon v-if="can('can manage workers') || is('artwork admin')" @click="openSelectAddUsersModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add new Address') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -111,8 +111,8 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.name }}</div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="font-medium text-text">{{ row.name }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </Link>
                 </template>
@@ -145,13 +145,13 @@
                 modal-image="/Svgs/Overlays/illu_warning.svg"
             >
                 <div class="mx-4">
-                    <div class="my-2 text-2xl font-bold text-zinc-900">
+                    <div class="my-2 text-2xl font-bold text-text">
                         <span v-if="userToDelete?.type === 'user'">{{ $t('Delete user') }}</span>
                         <span v-else-if="userToDelete?.type === 'freelancer'">{{ $t('Delete freelancer') }}</span>
                         <span v-else-if="userToDelete?.type === 'service_provider'">{{ $t('Delete service provider') }}</span>
                     </div>
 
-                    <div class="text-sm text-red-600">
+                    <div class="text-sm text-danger">
           <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
             {{
                   $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
@@ -171,7 +171,7 @@
 
                     <div class="mt-6 flex items-center justify-between">
                         <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
-                        <button @click="closeDeleteUserModal" class="text-sm text-zinc-500 hover:text-zinc-800">
+                        <button @click="closeDeleteUserModal" class="text-sm text-text-subtle hover:text-text">
                             {{ $t('No, not really') }}
                         </button>
                     </div>
@@ -196,10 +196,10 @@
 
                     <Listbox v-model="selectedFilter" as="div" class="relative">
                         <ListboxButton
-                            class="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                            class="inline-flex items-center gap-2 rounded-xl border border-border-subtle bg-white px-3 py-2 text-sm font-medium text-text hover:bg-surface-sunken"
                         >
                             <span>{{ $t(selectedFilter.name) }}</span>
-                            <ChevronDownIcon class="size-5 text-zinc-500" />
+                            <IconChevronDown class="size-5 text-text-subtle" />
                         </ListboxButton>
 
                         <transition
@@ -211,7 +211,7 @@
                             leave-to-class="opacity-0 translate-y-1"
                         >
                             <ListboxOptions
-                                class="absolute z-40 mt-2 w-64 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg focus:outline-none"
+                                class="absolute z-40 mt-2 w-64 rounded-xl border border-border-subtle bg-white p-1 shadow-lg"
                             >
                                 <ListboxOption
                                     v-for="filter in displayFilters"
@@ -221,8 +221,8 @@
                                 >
                                     <li
                                         :class="[
-                                          active ? 'bg-zinc-100' : '',
-                                          'flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-zinc-800'
+                                          active ? 'bg-surface-sunken' : '',
+                                          'flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-text'
                                         ]"
                                                         >
                                         <span :class="[selected ? 'font-semibold' : 'font-normal']">
@@ -238,18 +238,18 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button
+                    <BaseUIButton
                         v-if="can('can manage workers') || is('artwork admin')"
                         @click="openSelectAddUsersModal = true"
                         type="button"
-                        class="ui-button"
+                        hide-icon
                     >
                         <PlusIcon class="size-5" />
-                    </button>
+                    </BaseUIButton>
                     <BaseMenu show-sort-icon dots-size="size-5" menu-width="w-72" classes="ui-button">
                         <div class="flex items-center justify-between px-4 py-2">
                             <button
-                                class="text-xs text-zinc-500 hover:text-zinc-900"
+                                class="text-xs text-text-subtle hover:text-text"
                                 @click="resetSort()"
                                 type="button"
                             >
@@ -264,26 +264,26 @@
                             <div
                                 @click="sortBy = memberSortEnum; applyFiltersAndSort()"
                                 :class="[
-                  active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600',
+                  active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                   'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm'
                 ]"
                             >
                                 {{ getSortEnumTranslation(memberSortEnum) }}
                                 <IconCheck
                                     v-if="getUserSortBySetting() === memberSortEnum"
-                                    class="size-5 text-blue-600"
+                                    class="size-5 text-accent-600"
                                 />
                             </div>
                         </MenuItem>
                     </BaseMenu>
 
-                    <button
+                    <BaseUIButton
                         v-if="!showSearchbar"
                         @click="openSearchbar"
-                        class="ui-button"
+                        hide-icon
                     >
-                        <SearchIcon class="size-5 text-zinc-700" />
-                    </button>
+                        <SearchIcon class="size-5 text-text-muted" />
+                    </BaseUIButton>
                     <div v-else class="flex items-center">
                         <input
                             id="userSearch"
@@ -292,18 +292,18 @@
                             type="text"
                             autocomplete="off"
                             :placeholder="$t('Search users')"
-                            class="h-10 w-64 rounded-xl border border-zinc-300 bg-white px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                            class="h-10 w-64 rounded-xl border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle"
                         />
                         <XIcon
-                            class="ml-2 size-5 cursor-pointer text-zinc-500 hover:text-zinc-800"
+                            class="ml-2 size-5 cursor-pointer text-text-subtle hover:text-text"
                             @click="closeSearchbar()"
                         />
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
-                <ul role="list" class="divide-y divide-zinc-100">
+            <div class="rounded-3xl border border-border-subtle bg-white p-5 shadow-sm">
+                <ul role="list" class="divide-y divide-border-subtle">
                     <li
                         v-if="user_search_results.length < 1"
                         v-for="user in userObjectsToShow"
@@ -313,7 +313,7 @@
                         <div class="flex items-center justify-between gap-4">
                             <div class="flex min-w-0 flex-1 items-center gap-3">
                                 <img
-                                    class="size-12 rounded-full object-cover ring-2 ring-zinc-200"
+                                    class="size-12 rounded-full object-cover ring-2 ring-border-subtle"
                                     :src="user.profile_photo_url ?? user.profile_image"
                                     :alt="user.display_name ?? user.provider_name"
                                 />
@@ -321,12 +321,12 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <Link
                                             :href="checkLink(user)"
-                                            class="truncate text-sm font-medium text-zinc-900 hover:text-blue-700"
+                                            class="truncate text-sm font-medium text-text hover:text-accent-700"
                                         >
                                             {{ user.display_name ?? user.provider_name }}
                                             <span v-if="user.position || user.business">,</span>
                                         </Link>
-                                        <p class="truncate text-sm text-zinc-500">
+                                        <p class="truncate text-sm text-text-subtle">
                                             <span v-if="user.business">{{ user.business }}<span v-if="user.position">,</span> </span>
                                             <span v-if="user.position">{{ user.position }}</span>
                                         </p>
@@ -350,9 +350,9 @@
                                 <div v-if="(user.departments || []).length >= 3" class="relative">
                                     <Menu as="div" class="relative">
                                         <MenuButton
-                                            class="flex size-10 items-center justify-center rounded-full bg-zinc-900 text-white ring-2 ring-white hover:bg-zinc-800"
+                                            class="flex size-10 items-center justify-center rounded-full bg-surface-inverse text-white ring-2 ring-white hover:bg-surface-inverse/90"
                                         >
-                                            <ChevronDownIcon class="size-5" />
+                                            <IconChevronDown class="size-5" />
                                         </MenuButton>
                                         <transition
                                             enter-active-class="transition duration-100 ease-out"
@@ -363,7 +363,7 @@
                                             leave-to-class="opacity-0 translate-y-1"
                                         >
                                             <MenuItems
-                                                class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-zinc-200 bg-white py-1 shadow-lg focus:outline-none"
+                                                class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-border-subtle bg-white py-1 shadow-lg"
                                             >
                                                 <MenuItem
                                                     v-for="department in user.departments"
@@ -372,8 +372,8 @@
                                                 >
                                                     <div
                                                         :class="[
-                              active ? 'bg-zinc-100' : '',
-                              'flex items-center px-3 py-2 text-sm text-zinc-700'
+                              active ? 'bg-surface-sunken' : '',
+                              'flex items-center px-3 py-2 text-sm text-text-muted'
                             ]"
                                                     >
                                                         <TeamIconCollection class="size-8 rounded-full" :iconName="department.svg_name" />
@@ -391,11 +391,11 @@
                                     <a
                                         :href="checkLink(user)"
                                         :class="[
-                      active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-700',
+                      active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                       'group flex items-center px-4 py-2 text-sm'
                     ]"
                                     >
-                                        <PencilAltIcon class="mr-3 size-5 text-zinc-500 group-hover:text-blue-700" />
+                                        <PencilAltIcon class="mr-3 size-5 text-text-subtle group-hover:text-accent-700" />
                                         {{ $t('Edit Profile') }}
                                     </a>
                                 </MenuItem>
@@ -405,11 +405,11 @@
                                         type="button"
                                         @click="openDeleteUserModal(user)"
                                         :class="[
-                      active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-700',
+                      active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                       'group flex w-full items-center px-4 py-2 text-sm'
                     ]"
                                     >
-                                        <TrashIcon class="mr-3 size-5 text-zinc-500 group-hover:text-red-600" />
+                                        <TrashIcon class="mr-3 size-5 text-text-subtle group-hover:text-danger" />
                                         <span v-if="user.type === 'user'">{{ $t('Delete user') }}</span>
                                         <span v-else-if="user.type === 'freelancer'">{{ $t('Delete freelancer') }}</span>
                                         <span v-else-if="user.type === 'service_provider'">{{ $t('Delete service provider') }}</span>
@@ -428,7 +428,7 @@
                         <div class="flex items-center justify-between gap-4">
                             <div class="flex min-w-0 flex-1 items-center gap-3">
                                 <img
-                                    class="size-12 rounded-full object-cover ring-2 ring-zinc-200"
+                                    class="size-12 rounded-full object-cover ring-2 ring-border-subtle"
                                     :src="user.profile_photo_url"
                                     :alt="user.name"
                                 />
@@ -437,11 +437,11 @@
                                         <Link
                                             v-if="is('artwork admin')"
                                             :href="getEditHref(user)"
-                                            class="truncate text-sm font-medium text-zinc-900 hover:text-blue-700"
+                                            class="truncate text-sm font-medium text-text hover:text-accent-700"
                                         >
                                             {{ user.name }}
                                         </Link>
-                                        <p class="truncate text-sm text-zinc-500">
+                                        <p class="truncate text-sm text-text-subtle">
                                             {{ user.business }}, {{ user.position }}
                                         </p>
                                     </div>
@@ -458,9 +458,9 @@
                                 <div v-if="(user.departments || []).length >= 3" class="relative">
                                     <Menu as="div" class="relative">
                                         <MenuButton
-                                            class="flex size-10 items-center justify-center rounded-full bg-zinc-900 text-white ring-2 ring-white hover:bg-zinc-800"
+                                            class="flex size-10 items-center justify-center rounded-full bg-surface-inverse text-white ring-2 ring-white hover:bg-surface-inverse/90"
                                         >
-                                            <ChevronDownIcon class="size-5" />
+                                            <IconChevronDown class="size-5" />
                                         </MenuButton>
                                         <transition
                                             enter-active-class="transition duration-100 ease-out"
@@ -471,7 +471,7 @@
                                             leave-to-class="opacity-0 translate-y-1"
                                         >
                                             <MenuItems
-                                                class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-zinc-200 bg-white py-1 shadow-lg focus:outline-none"
+                                                class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-border-subtle bg-white py-1 shadow-lg"
                                             >
                                                 <MenuItem
                                                     v-for="department in user.departments"
@@ -480,8 +480,8 @@
                                                 >
                                                     <div
                                                         :class="[
-                              active ? 'bg-zinc-100' : '',
-                              'flex items-center px-3 py-2 text-sm text-zinc-700'
+                              active ? 'bg-surface-sunken' : '',
+                              'flex items-center px-3 py-2 text-sm text-text-muted'
                             ]"
                                                     >
                                                         <TeamIconCollection class="size-8 rounded-full" :iconName="department.svg_name" />
@@ -499,11 +499,11 @@
                                     <a
                                         :href="getEditHref(user)"
                                         :class="[
-                      active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-700',
+                      active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                       'group flex items-center px-4 py-2 text-sm'
                     ]"
                                     >
-                                        <PencilAltIcon class="mr-3 size-5 text-zinc-500 group-hover:text-blue-700" />
+                                        <PencilAltIcon class="mr-3 size-5 text-text-subtle group-hover:text-accent-700" />
                                         {{ $t('Edit Profile') }}
                                     </a>
                                 </MenuItem>
@@ -512,11 +512,11 @@
                                         type="button"
                                         @click="openDeleteUserModal(user)"
                                         :class="[
-                      active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-700',
+                      active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                       'group flex w-full items-center px-4 py-2 text-sm'
                     ]"
                                     >
-                                        <TrashIcon class="mr-3 size-5 text-zinc-500 group-hover:text-red-600" />
+                                        <TrashIcon class="mr-3 size-5 text-text-subtle group-hover:text-danger" />
                                         {{ $t('Delete user') }}
                                     </button>
                                 </MenuItem>
@@ -556,10 +556,7 @@ import { Link, router } from '@inertiajs/vue3'
 import {
     Listbox, ListboxButton, ListboxOption, ListboxOptions,MenuItem
 } from '@headlessui/vue'
-import {
-    ChevronDownIcon,
-} from '@heroicons/vue/outline'
-import {IconCheck, IconCirclePlus, IconEdit, IconTrash, IconAddressBook} from '@tabler/icons-vue'
+import {IconAddressBook, IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconTrash} from "@tabler/icons-vue"
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'

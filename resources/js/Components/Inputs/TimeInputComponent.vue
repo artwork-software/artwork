@@ -1,28 +1,25 @@
 <template>
-
-    <PlaceholderInputLabelContainer :no-margin-top="noMarginTop">
+    <div class="flex flex-col relative w-full" :class="noMarginTop || showLabel ? '' : 'mt-5'">
+        <label v-if="showLabel"
+               :for="this.id"
+               class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
+            {{ this.label }}<span v-if="required" class="text-danger"> *</span>
+        </label>
         <input :id="this.id"
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                :type="modelValue ? 'time' : 'text'"
                onfocus="(this.type='time', this.value === '' ? this.value='00:00' : '')"
                :required="required"
-               class="input peer"
-               :class="[isSmall ? '' : 'h-12', classes]"
-               placeholder="placeholder"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark" v-if="showLabel" :classes="classes"/>
-    </PlaceholderInputLabelContainer>
+               class="input"
+               :class="[isSmall ? 'h-7 text-xs' : 'h-8', classes]"/>
+    </div>
 </template>
 
 <script>
 import {defineComponent} from "vue";
-import InputLabelContainer from "@/Components/Inputs/Container/InputLabelContainer.vue";
-import Label from "@/Components/Inputs/Labels/Label.vue";
-import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
-import PlaceholderInputLabelContainer from "@/Components/Inputs/Container/PlaceholderInputLabelContainer.vue";
 
 export default defineComponent({
-    components: {PlaceholderInputLabelContainer, PlaceholderLabel, Label, InputLabelContainer},
     props: {
         id: {
             type: String,

@@ -8,7 +8,7 @@
                 @delete-all="showConfirmDeleteAll = true"
             />
 
-            <ul role="list" class="divide-y divide-gray-100 min-w-7xl w-full" v-if="trashedArticles.total > 0">
+            <ul role="list" class="divide-y divide-border-subtle min-w-7xl w-full" v-if="trashedArticles.total > 0">
                 <li v-for="article in trashedArticles.data" :key="article.id" class="flex items-center justify-between gap-x-6 py-5 ">
                     <SingleArticleInTrash :article="article" />
                 </li>

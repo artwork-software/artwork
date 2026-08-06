@@ -1,6 +1,6 @@
 <template>
     <div :style="{ 'paddingTop' : calculateHeight + 'px',  'paddingBottom' : calculateHeight + 'px' }" class="w-full flex items-center justify-center ">
-        <div class="w-full flex items-center justify-center h-0.5 bg-gray-300" v-if="component.data?.showLine"></div>
+        <div class="w-full flex items-center justify-center h-0.5 bg-border" v-if="component.data?.showLine"></div>
     </div>
 </template>
 

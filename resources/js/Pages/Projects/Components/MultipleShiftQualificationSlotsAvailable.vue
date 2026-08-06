@@ -9,7 +9,7 @@
                         @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id, false, !!availableShiftQualificationSlot.isOverbooked)"
                         :icon="availableShiftQualificationSlot.icon"
                         is-add-button
-                        :class="{ '!border-amber-500 !border-dashed': availableShiftQualificationSlot.isOverbooked }"
+                        :class="{ '!border-warning !border-dashed': availableShiftQualificationSlot.isOverbooked }"
                     />
                 </div>
             </div>
@@ -17,10 +17,10 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import {defineComponent} from 'vue';
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
@@ -36,7 +36,7 @@ export default defineComponent({
         AddButtonSmall,
         FormButton,
         BaseModal,
-        XIcon,
+        IconX,
         JetDialogModal,
         ShiftQualificationIconCollection
     },

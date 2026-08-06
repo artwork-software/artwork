@@ -15,36 +15,10 @@
 </template>
 
 <script>
-import {
-    UserIcon,
-    AcademicCapIcon,
-    BellIcon,
-    ChatIcon,
-    AdjustmentsIcon,
-    BookOpenIcon,
-    BriefcaseIcon,
-    CameraIcon,
-    ClipboardIcon,
-    EyeIcon,
-    FilmIcon
-} from "@heroicons/vue/outline";
 import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ShiftQualificationIconCollection",
-    components: {
-        UserIcon,
-        AcademicCapIcon,
-        BellIcon,
-        ChatIcon,
-        AdjustmentsIcon,
-        BookOpenIcon,
-        BriefcaseIcon,
-        CameraIcon,
-        ClipboardIcon,
-        EyeIcon,
-        FilmIcon
-    },
     props: [
         'iconName', 'classes'
     ],

@@ -3,7 +3,7 @@
         <div class="space-y-6">
             <!-- Status Badge -->
             <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-500">{{ $t('Status') }}</span>
+                <span class="text-sm font-medium text-text-subtle">{{ $t('Status') }}</span>
                 <span :class="getStatusClass(documentRequest?.status)" class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium">
                     {{ getStatusLabel(documentRequest?.status) }}
                 </span>
@@ -12,26 +12,26 @@
             <!-- Requester & Requested -->
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <span class="text-sm font-medium text-gray-500">{{ $t('Requested by') }}</span>
+                    <span class="text-sm font-medium text-text-subtle">{{ $t('Requested by') }}</span>
                     <div v-if="documentRequest?.requester" class="mt-2 flex items-center">
                         <img :src="documentRequest.requester.profile_photo_url" alt="" class="size-10 rounded-full object-cover" />
                         <div class="ml-3">
-                            <div class="text-sm font-medium text-gray-900">
+                            <div class="text-sm font-medium text-text">
                                 {{ documentRequest.requester.first_name }} {{ documentRequest.requester.last_name }}
                             </div>
-                            <div class="text-xs text-gray-500">{{ documentRequest.requester.email }}</div>
+                            <div class="text-xs text-text-subtle">{{ documentRequest.requester.email }}</div>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <span class="text-sm font-medium text-gray-500">{{ $t('Assigned to') }}</span>
+                    <span class="text-sm font-medium text-text-subtle">{{ $t('Assigned to') }}</span>
                     <div v-if="documentRequest?.requested" class="mt-2 flex items-center">
                         <img :src="documentRequest.requested.profile_photo_url" alt="" class="size-10 rounded-full object-cover" />
                         <div class="ml-3">
-                            <div class="text-sm font-medium text-gray-900">
+                            <div class="text-sm font-medium text-text">
                                 {{ documentRequest.requested.first_name }} {{ documentRequest.requested.last_name }}
                             </div>
-                            <div class="text-xs text-gray-500">{{ documentRequest.requested.email }}</div>
+                            <div class="text-xs text-text-subtle">{{ documentRequest.requested.email }}</div>
                         </div>
                     </div>
                 </div>
@@ -39,14 +39,14 @@
 
             <!-- Project -->
             <div v-if="documentRequest?.project">
-                <span class="text-sm font-medium text-gray-500">{{ $t('Project') }}</span>
-                <p class="mt-1 text-sm text-gray-900">{{ documentRequest.project.name }}</p>
+                <span class="text-sm font-medium text-text-subtle">{{ $t('Project') }}</span>
+                <p class="mt-1 text-sm text-text">{{ documentRequest.project.name }}</p>
             </div>
 
             <!-- Uploaded Contract -->
             <div v-if="documentRequest?.contract">
-                <span class="text-sm font-medium text-gray-500">{{ $t('Uploaded document') }}</span>
-                <a :href="route('contracts.download', documentRequest.contract.id)" class="mt-1 flex items-center text-sm text-blue-600 hover:text-blue-800">
+                <span class="text-sm font-medium text-text-subtle">{{ $t('Uploaded document') }}</span>
+                <a :href="route('contracts.download', documentRequest.contract.id)" class="mt-1 flex items-center text-sm text-accent-600 hover:text-accent-700">
                     <PropertyIcon name="IconFile" stroke-width="1.5" class="h-5 w-5 mr-2" />
                     {{ documentRequest.contract.name }}
                 </a>
@@ -54,7 +54,7 @@
 
             <!-- CRM Contact Profile -->
             <div v-if="documentRequest?.crm_contact_id">
-                <span class="text-sm font-medium text-gray-500 mb-2 block">{{ $t('Linked CRM contact') }}</span>
+                <span class="text-sm font-medium text-text-subtle mb-2 block">{{ $t('Linked CRM contact') }}</span>
                 <CrmContactProfileCard
                     :document-request-id="documentRequest.id"
                     :crm-contact="documentRequest.crm_contact"
@@ -62,111 +62,111 @@
                 />
             </div>
 
-            <hr class="border-gray-200">
+            <hr class="border-border-subtle">
 
             <!-- Metadata Section -->
-            <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Document metadata') }}</div>
+            <div class="text-sm font-medium text-text-muted mb-2">{{ $t('Document metadata') }}</div>
 
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div v-if="documentRequest?.contract_partner">
-                    <span class="font-medium text-gray-500">{{ $t('Contract partner') }}</span>
-                    <p class="text-gray-900">{{ documentRequest.contract_partner }}</p>
+                    <span class="font-medium text-text-subtle">{{ $t('Contract partner') }}</span>
+                    <p class="text-text">{{ documentRequest.contract_partner }}</p>
                 </div>
 
                 <div v-if="documentRequest?.contract_value">
-                    <span class="font-medium text-gray-500">{{ $t('Contract value') }}</span>
-                    <p class="text-gray-900">{{ formatCurrency(documentRequest.contract_value) }}</p>
+                    <span class="font-medium text-text-subtle">{{ $t('Contract value') }}</span>
+                    <p class="text-text">{{ formatCurrency(documentRequest.contract_value) }}</p>
                 </div>
 
                 <div v-if="documentRequest?.contract_type">
-                    <span class="font-medium text-gray-500">{{ $t('Contract type') }}</span>
-                    <p class="text-gray-900">{{ documentRequest.contract_type.name }}</p>
+                    <span class="font-medium text-text-subtle">{{ $t('Contract type') }}</span>
+                    <p class="text-text">{{ documentRequest.contract_type.name }}</p>
                 </div>
 
                 <div v-if="documentRequest?.company_type">
-                    <span class="font-medium text-gray-500">{{ $t('Legal form') }}</span>
-                    <p class="text-gray-900">{{ documentRequest.company_type.name }}</p>
+                    <span class="font-medium text-text-subtle">{{ $t('Legal form') }}</span>
+                    <p class="text-text">{{ documentRequest.company_type.name }}</p>
                 </div>
 
                 <div v-if="documentRequest?.deadline_date">
-                    <span class="font-medium text-gray-500">{{ $t('Deadline date') }}</span>
-                    <p class="text-gray-900">{{ formatDate(documentRequest.deadline_date) }}</p>
+                    <span class="font-medium text-text-subtle">{{ $t('Deadline date') }}</span>
+                    <p class="text-text">{{ formatDate(documentRequest.deadline_date) }}</p>
                 </div>
             </div>
 
             <!-- KSK Info -->
-            <div v-if="documentRequest?.ksk_liable" class="bg-gray-50 rounded-lg p-4">
+            <div v-if="documentRequest?.ksk_liable" class="bg-surface-sunken rounded-lg p-4">
                 <div class="flex items-center mb-2">
-                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5 text-green-500 mr-2" />
-                    <span class="font-medium text-gray-900">{{ $t('KSK-liable') }}</span>
+                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5 text-success mr-2" />
+                    <span class="font-medium text-text">{{ $t('KSK-liable') }}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-4 text-sm ml-7">
                     <div v-if="documentRequest?.ksk_amount">
-                        <span class="text-gray-500">{{ $t('Amount') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ formatCurrency(documentRequest.ksk_amount) }}</span>
+                        <span class="text-text-subtle">{{ $t('Amount') }}:</span>
+                        <span class="ml-1 text-text">{{ formatCurrency(documentRequest.ksk_amount) }}</span>
                     </div>
                     <div v-if="documentRequest?.ksk_reason">
-                        <span class="text-gray-500">{{ $t('Reason') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ documentRequest.ksk_reason }}</span>
+                        <span class="text-text-subtle">{{ $t('Reason') }}:</span>
+                        <span class="ml-1 text-text">{{ documentRequest.ksk_reason }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Foreign Tax Info -->
-            <div v-if="documentRequest?.foreign_tax" class="bg-gray-50 rounded-lg p-4">
+            <div v-if="documentRequest?.foreign_tax" class="bg-surface-sunken rounded-lg p-4">
                 <div class="flex items-center mb-2">
-                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5 text-green-500 mr-2" />
-                    <span class="font-medium text-gray-900">{{ $t('Foreign tax') }}</span>
+                    <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-5 w-5 text-success mr-2" />
+                    <span class="font-medium text-text">{{ $t('Foreign tax') }}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-4 text-sm ml-7">
                     <div v-if="documentRequest?.foreign_tax_amount">
-                        <span class="text-gray-500">{{ $t('Amount') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ formatCurrency(documentRequest.foreign_tax_amount) }}</span>
+                        <span class="text-text-subtle">{{ $t('Amount') }}:</span>
+                        <span class="ml-1 text-text">{{ formatCurrency(documentRequest.foreign_tax_amount) }}</span>
                     </div>
                     <div v-if="documentRequest?.foreign_tax_city">
-                        <span class="text-gray-500">{{ $t('City') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ documentRequest.foreign_tax_city }}</span>
+                        <span class="text-text-subtle">{{ $t('City') }}:</span>
+                        <span class="ml-1 text-text">{{ documentRequest.foreign_tax_city }}</span>
                     </div>
                     <div v-if="documentRequest?.foreign_tax_country">
-                        <span class="text-gray-500">{{ $t('Country') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ documentRequest.foreign_tax_country }}</span>
+                        <span class="text-text-subtle">{{ $t('Country') }}:</span>
+                        <span class="ml-1 text-text">{{ documentRequest.foreign_tax_country }}</span>
                     </div>
                     <div v-if="documentRequest?.foreign_tax_reason">
-                        <span class="text-gray-500">{{ $t('Reason') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ documentRequest.foreign_tax_reason }}</span>
+                        <span class="text-text-subtle">{{ $t('Reason') }}:</span>
+                        <span class="ml-1 text-text">{{ documentRequest.foreign_tax_reason }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Reverse Charge -->
             <div v-if="documentRequest?.reverse_charge_amount" class="text-sm">
-                <span class="font-medium text-gray-500">{{ $t('Reverse Charge Amount') }}</span>
-                <p class="text-gray-900">{{ formatCurrency(documentRequest.reverse_charge_amount) }}</p>
+                <span class="font-medium text-text-subtle">{{ $t('Reverse Charge Amount') }}</span>
+                <p class="text-text">{{ formatCurrency(documentRequest.reverse_charge_amount) }}</p>
             </div>
 
             <!-- Comment -->
             <div v-if="documentRequest?.comment">
-                <span class="text-sm font-medium text-gray-500">{{ $t('Comment') }}</span>
-                <p class="mt-1 text-sm text-gray-900">{{ documentRequest.comment }}</p>
+                <span class="text-sm font-medium text-text-subtle">{{ $t('Comment') }}</span>
+                <p class="mt-1 text-sm text-text">{{ documentRequest.comment }}</p>
             </div>
 
             <!-- Contract State -->
-            <div v-if="documentRequest?.contract_state || documentRequest?.contract_state_comment" class="bg-gray-50 rounded-lg p-4">
-                <div class="text-sm font-medium text-gray-700 mb-2">{{ $t('Contract status') }}</div>
+            <div v-if="documentRequest?.contract_state || documentRequest?.contract_state_comment" class="bg-surface-sunken rounded-lg p-4">
+                <div class="text-sm font-medium text-text-muted mb-2">{{ $t('Contract status') }}</div>
                 <div class="grid grid-cols-1 gap-2 text-sm">
                     <div v-if="documentRequest?.contract_state">
-                        <span class="text-gray-500">{{ $t('Status') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ documentRequest.contract_state }}</span>
+                        <span class="text-text-subtle">{{ $t('Status') }}:</span>
+                        <span class="ml-1 text-text">{{ documentRequest.contract_state }}</span>
                     </div>
                     <div v-if="documentRequest?.contract_state_comment">
-                        <span class="text-gray-500">{{ $t('Comment') }}:</span>
-                        <span class="ml-1 text-gray-900">{{ documentRequest.contract_state_comment }}</span>
+                        <span class="text-text-subtle">{{ $t('Comment') }}:</span>
+                        <span class="ml-1 text-text">{{ documentRequest.contract_state_comment }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Timestamps -->
-            <div class="text-xs text-gray-400 pt-4 border-t border-gray-200">
+            <div class="text-xs text-text-subtle pt-4 border-t border-border-subtle">
                 <p>{{ $t('Created at') }}: {{ documentRequest?.created_at }}</p>
                 <p>{{ $t('Updated at') }}: {{ documentRequest?.updated_at }}</p>
             </div>
@@ -198,13 +198,13 @@ export default {
         getStatusClass(status) {
             switch (status) {
                 case 'open':
-                    return 'bg-yellow-100 text-yellow-800'
+                    return 'bg-warning-surface text-warning'
                 case 'in_progress':
-                    return 'bg-blue-100 text-blue-800'
+                    return 'bg-accent-100 text-accent-700'
                 case 'completed':
-                    return 'bg-green-100 text-green-800'
+                    return 'bg-success-surface text-success'
                 default:
-                    return 'bg-gray-100 text-gray-800'
+                    return 'bg-surface-sunken text-text'
             }
         },
         getStatusLabel(status) {

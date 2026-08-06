@@ -1,76 +1,35 @@
 <template>
     <div class="w-full my-4">
         <div class="overflow-x-auto">
-            <nav class="flex gap-2">
+            <!-- v2 »Bühnenlicht«: Segmented Control statt Unterstrich-Tabs -->
+            <nav class="inline-flex gap-[2px] rounded-[8px] bg-border-subtle p-[3px]">
                 <template v-for="tab in tabs" :key="tab.name">
-                    <!-- Link navigation mode -->
-                    <Link
-                        v-if="navigationMode === 'links' && tab.permission"
-                        :href="tab.href"
+                    <component
+                        v-if="tab.permission"
+                        :is="tabTag"
+                        :href="navigationMode === 'links' ? tab.href : undefined"
+                        :type="navigationMode === 'buttons' ? 'button' : undefined"
                         :aria-current="tab.current ? 'page' : undefined"
                         :class="[
-              tab.current
-                ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
-              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
-            ]"
-                    >
-                        <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
-                        {{ useTranslation ? $t(tab.name) : tab.name }}
-                        <span
-                            v-if="tab.count"
-                            :class="[
-                            tab.current ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-700',
-                            'ml-2 hidden rounded-full px-2.5 py-0.5 text-xs font-medium md:inline-block'
-                          ]"
-                        >{{ tab.count }}</span>
-                    </Link>
-
-                    <!-- Button navigation mode -->
-                    <button
-                        v-else-if="navigationMode === 'buttons' && tab.permission"
-                        @click="$emit('tab-click', tab)"
-                        :aria-current="tab.current ? 'page' : undefined"
-                        :class="[
-                          tab.current
-                            ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                            : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
-                          'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
+                            tab.current
+                                ? 'bg-surface shadow-raised text-text'
+                                : 'text-text hover:bg-white/60',
+                            'inline-flex h-[26px] items-center gap-2 whitespace-nowrap rounded-[6px] px-3 text-[12.5px] font-semibold cursor-pointer',
+                            'transition-[background-color] duration-150 ease-out motion-reduce:transition-none',
+                            'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-600'
                         ]"
+                        @click="onTabActivate(tab)"
                     >
-                        <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
+                        <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" stroke-width="1.5" />
                         {{ useTranslation ? $t(tab.name) : tab.name }}
                         <span
                             v-if="tab.count"
                             :class="[
-                            tab.current ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-700',
-                            'ml-2 hidden rounded-full px-2.5 py-0.5 text-xs font-medium md:inline-block'
-                          ]"
+                                tab.current ? 'bg-accent-50 text-accent-700' : 'bg-white/70 text-text-muted',
+                                'hidden rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums md:inline-block'
+                            ]"
                         >{{ tab.count }}</span>
-                    </button>
-
-                    <!-- Event navigation mode -->
-                    <div
-                        v-else-if="navigationMode === 'events' && tab.permission"
-                        @click="$emit('tab-select', tab)"
-                        :aria-current="tab.current ? 'page' : undefined"
-                        :class="[
-                          tab.current
-                            ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                            : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
-                          'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium cursor-pointer'
-                        ]"
-                    >
-                        <PropertyIcon v-if="tab.icon" :name="tab.icon" class="size-4" />
-                        {{ useTranslation ? $t(tab.name) : tab.name }}
-                        <span
-                            v-if="tab.count"
-                            :class="[
-                            tab.current ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-700',
-                            'ml-2 hidden rounded-full px-2.5 py-0.5 text-xs font-medium md:inline-block'
-                          ]"
-                        >{{ tab.count }}</span>
-                    </div>
+                    </component>
                 </template>
             </nav>
         </div>
@@ -78,10 +37,11 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
 
-defineProps({
+const props = defineProps({
     tabs: {
         type: Array,
         required: true,
@@ -97,5 +57,20 @@ defineProps({
     },
 })
 
-defineEmits(['tab-click', 'tab-select'])
+const emit = defineEmits(['tab-click', 'tab-select'])
+
+const tabTag = computed(() => {
+    if (props.navigationMode === 'links') return Link
+    if (props.navigationMode === 'buttons') return 'button'
+    return 'div'
+})
+
+function onTabActivate(tab) {
+    if (props.navigationMode === 'buttons') {
+        emit('tab-click', tab)
+    } else if (props.navigationMode === 'events') {
+        emit('tab-select', tab)
+    }
+    // links: Inertia <Link> handles navigation itself
+}
 </script>

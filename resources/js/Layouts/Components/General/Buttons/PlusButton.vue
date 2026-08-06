@@ -18,7 +18,7 @@ export default {
 </script>
 
 <template>
-    <button type="button" class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full p-1 flex items-center justify-center transition-all duration-150 ease-in-out">
+    <button type="button" class="bg-accent-600 hover:bg-accent-700 rounded-full p-1 flex items-center justify-center transition-all duration-150 ease-in-out">
         <ToolTipComponent
             direction="left"
             :tooltip-text="buttonText"

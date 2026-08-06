@@ -3,15 +3,15 @@
         <div class="mx-4">
             <!-- Tabs Navigation -->
             <div class="mb-6">
-                <nav class="flex space-x-1 bg-gray-100 rounded-lg p-1" aria-label="Tabs">
+                <nav class="flex space-x-1 bg-surface-sunken rounded-lg p-1" aria-label="Tabs">
                     <button
                         v-for="tab in availableTabs"
                         :key="tab.id"
                         @click="activeTab = tab.id"
                         :class="[
                             activeTab === tab.id
-                                ? 'bg-white text-artwork-buttons-create shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900',
+                                ? 'bg-white text-accent-600 shadow-sm'
+                                : 'text-text-muted hover:text-text',
                             'flex-1 py-2.5 px-3 text-sm font-medium rounded-md transition-all duration-200'
                         ]"
                     >
@@ -28,21 +28,21 @@
                 <!-- Comment Tab -->
                 <div v-show="activeTab === 'comment'" class="space-y-4">
                     <!-- New Comment Input -->
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <div class="bg-surface-sunken rounded-lg p-4 border border-border-subtle">
+                        <label class="block text-sm font-semibold text-text-muted mb-2">
                             {{ $t('Add new comment') }}
                         </label>
                         <textarea
                             v-model="newComment"
                             rows="4"
                             :placeholder="$t('What do I need to know about this item?')"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm resize-none"
+                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent text-sm resize-none"
                         />
                         <div class="mt-3 flex justify-end">
                             <button
                                 @click="saveComment"
                                 :disabled="!newComment || newComment.trim() === ''"
-                                class="px-4 py-2 bg-artwork-buttons-create text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
+                                class="px-4 py-2 bg-accent-600 text-white rounded-md hover:bg-accent-700 disabled:bg-border disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
                             >
                                 <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                 {{ $t('Save comment') }}
@@ -52,7 +52,7 @@
 
                     <!-- Existing Comments -->
                     <div class="space-y-3">
-                        <h3 class="text-sm font-semibold text-gray-700">{{ $t('Previous comments') }}</h3>
+                        <h3 class="text-sm font-semibold text-text-muted">{{ $t('Previous comments') }}</h3>
                         <div v-if="selectedSumDetail?.comments?.length > 0" class="space-y-3">
                             <TransitionGroup name="list">
                                 <div
@@ -60,7 +60,7 @@
                                     :key="comment.id"
                                     @mouseenter="hoveredCommentId = comment.id"
                                     @mouseleave="hoveredCommentId = null"
-                                    class="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all duration-200"
+                                    class="bg-white rounded-lg p-4 border border-border-subtle hover:border-border transition-all duration-200"
                                 >
                                     <div class="flex items-start justify-between mb-2">
                                         <div class="flex items-center space-x-2">
@@ -70,47 +70,47 @@
                                                 :height="8"
                                                 :width="8"
                                             />
-                                            <div class="text-xs text-gray-500">
+                                            <div class="text-xs text-text-subtle">
                                                 {{ formatDate(comment.created_at) }}
                                             </div>
                                         </div>
                                         <button
                                             v-if="hoveredCommentId === comment.id && comment.user_id === $page.props.auth.user.id"
                                             @click="deleteComment(comment)"
-                                            class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                            class="p-1 text-danger hover:bg-danger-surface rounded transition-colors"
                                             :title="$t('Delete')"
                                         >
                                             <IconTrash class="w-4 h-4" stroke-width="1.5" />
                                         </button>
                                     </div>
-                                    <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ comment.comment }}</p>
+                                    <p class="text-sm text-text whitespace-pre-wrap">{{ comment.comment }}</p>
                                 </div>
                             </TransitionGroup>
                         </div>
                         <div v-else class="text-center py-8">
-                            <IconMessage class="w-12 h-12 mx-auto text-gray-300 mb-3" stroke-width="1" />
-                            <p class="text-gray-500 text-sm">{{ $t('No comments yet') }}</p>
+                            <IconMessage class="w-12 h-12 mx-auto text-text-subtle mb-3" stroke-width="1" />
+                            <p class="text-text-subtle text-sm">{{ $t('No comments yet') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Linking Tab -->
                 <div v-show="activeTab === 'linking'" class="space-y-4">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <p class="text-sm text-blue-800">
+                    <div class="bg-accent-50 border border-accent-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-accent-700">
                             {{ $t('Keep track of your funding sources. You can either add or subtract the value from the source.') }}
                         </p>
                     </div>
 
                     <!-- Link Toggle -->
-                    <div class="flex items-center bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex items-center bg-surface-sunken rounded-lg p-4 border border-border-subtle">
                         <input
                             v-model="isLinked"
                             type="checkbox"
-                            class="h-5 w-5 text-artwork-buttons-create border-gray-300 rounded focus:ring-artwork-buttons-create"
+                            class="h-5 w-5 text-accent-600 border-border rounded focus:ring-accent-600"
                         />
                         <label
-                            :class="[isLinked ? 'text-gray-900 font-medium' : 'text-gray-600']"
+                            :class="[isLinked ? 'text-text font-medium' : 'text-text-muted']"
                             class="ml-3 text-sm cursor-pointer"
                             @click="isLinked = !isLinked"
                         >
@@ -130,17 +130,17 @@
                         <div v-if="isLinked" class="space-y-4">
                             <!-- Type Selection -->
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-sm font-semibold text-text-muted mb-2">
                                     {{ $t('Type') }}
                                 </label>
                                 <Listbox v-model="linkedType">
                                     <div class="relative">
                                         <ListboxButton
-                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create"
+                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-border focus:outline-none focus:ring-2 focus:ring-accent-600"
                                         >
                                             <span class="block truncate text-sm">{{ linkedType.name }}</span>
                                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                <IconChevronDown class="h-5 w-5 text-gray-400" stroke-width="1.5" />
+                                                <IconChevronDown class="h-5 w-5 text-text-subtle" stroke-width="1.5" />
                                             </span>
                                         </ListboxButton>
                                         <transition
@@ -160,7 +160,7 @@
                                                 >
                                                     <div
                                                         :class="[
-                                                            active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900',
+                                                            active ? 'bg-accent-600 text-white' : 'text-text',
                                                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                                                         ]"
                                                     >
@@ -183,7 +183,7 @@
 
                             <!-- Money Source Search -->
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-sm font-semibold text-text-muted mb-2">
                                     {{ $t('Funding source') }}
                                 </label>
                                 <div class="relative">
@@ -191,7 +191,7 @@
                                         v-model="moneySourceQuery"
                                         type="text"
                                         :placeholder="$t('Search funding source...')"
-                                        class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm"
+                                        class="w-full px-3 py-2.5 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent text-sm"
                                     />
 
                                     <!-- Search Results -->
@@ -208,7 +208,7 @@
                                                 v-for="(source, index) in moneySourceSearchResults"
                                                 :key="index"
                                                 @click="selectMoneySource(source)"
-                                                class="cursor-pointer px-4 py-3 hover:bg-artwork-buttons-create hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
+                                                class="cursor-pointer px-4 py-3 hover:bg-accent-600 hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
                                             >
                                                 <p class="font-medium text-sm">{{ source.name }}</p>
                                             </div>
@@ -218,13 +218,13 @@
                             </div>
 
                             <!-- Selected Source Display -->
-                            <div v-if="selectedMoneySource" class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div v-if="selectedMoneySource" class="bg-success-surface border border-success-border rounded-lg p-4">
                                 <div class="flex items-center text-sm">
-                                    <IconLink class="w-5 h-5 text-green-600 mr-2" stroke-width="1.5" />
-                                    <span class="text-gray-700">{{ $t('Linked with') }}:</span>
-                                    <span class="font-semibold text-gray-900 mx-2">{{ selectedMoneySource.name }}</span>
-                                    <span class="text-gray-700">{{ $t('as') }}</span>
-                                    <span class="font-semibold text-gray-900 ml-2">
+                                    <IconLink class="w-5 h-5 text-success mr-2" stroke-width="1.5" />
+                                    <span class="text-text-muted">{{ $t('Linked with') }}:</span>
+                                    <span class="font-semibold text-text mx-2">{{ selectedMoneySource.name }}</span>
+                                    <span class="text-text-muted">{{ $t('as') }}</span>
+                                    <span class="font-semibold text-text ml-2">
                                         {{ linkedType.type === 'EARNING' ? $t('Revenue') : $t('Expenses') }}
                                     </span>
                                 </div>
@@ -235,7 +235,7 @@
                                 <button
                                     @click="saveMoneySourceLink"
                                     :disabled="!selectedMoneySource"
-                                    class="px-4 py-2 bg-artwork-buttons-create text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
+                                    class="px-4 py-2 bg-accent-600 text-white rounded-md hover:bg-accent-700 disabled:bg-border disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center"
                                 >
                                     <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                     {{ $t('Save') }}
@@ -245,13 +245,13 @@
                     </transition>
 
                     <!-- Remove Link Option (when already linked) -->
-                    <div v-if="!isLinked && selectedSumDetail?.sum_money_source" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p class="text-sm text-yellow-800 mb-3">
+                    <div v-if="!isLinked && selectedSumDetail?.sum_money_source" class="bg-warning-surface border border-warning-border rounded-lg p-4">
+                        <p class="text-sm text-warning mb-3">
                             {{ $t('This sum was linked to a funding source. The link will be removed when you save.') }}
                         </p>
                         <button
                             @click="removeMoneySourceLink"
-                            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                            class="px-4 py-2 bg-danger text-white rounded-md hover:bg-danger transition-colors text-sm font-medium"
                         >
                             {{ $t('Remove link') }}
                         </button>
@@ -260,7 +260,7 @@
             </div>
 
             <!-- Footer Actions -->
-            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-3">
+            <div class="mt-6 pt-4 border-t border-border-subtle flex justify-end space-x-3">
                 <BaseUIButton is-cancel-button @click="handleClose">
                     {{ $t('Close') }}
                 </BaseUIButton>

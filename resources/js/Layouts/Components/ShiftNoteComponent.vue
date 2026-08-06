@@ -1,12 +1,12 @@
 <template>
     <div v-if="shouldRender" class="my-2 px-1">
-        <div v-if="showLabel" class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+        <div v-if="showLabel" class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-text-subtle">
             {{ labelText }}
         </div>
 
         <div v-if="!showTextField">
             <div v-if="!currentText" :class="canEdit ? 'cursor-pointer' : ''" @click="openTextField">
-                <PropertyIcon name="IconNote" class="w-4 h-4 text-artwork-buttons-context" :class="canEdit ? 'cursor-pointer' : ''" />
+                <PropertyIcon name="IconNote" class="w-4 h-4 text-text-muted" :class="canEdit ? 'cursor-pointer' : ''" />
             </div>
             <p v-else class="text-xs" :class="canEdit ? 'cursor-pointer' : ''" @click="openTextField">
                 {{ cutText }}
@@ -22,7 +22,7 @@
                 maxlength="250"
                 @focusout="updateDescription"
             />
-            <div class="text-xs text-end text-artwork-buttons-context">
+            <div class="text-xs text-end text-text-muted">
                 {{ form.short_description.length }} / 250
             </div>
         </div>

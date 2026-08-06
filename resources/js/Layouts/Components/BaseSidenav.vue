@@ -1,10 +1,10 @@
 <template>
     <TransitionRoot as="template" :show="show">
         <TransitionChild as="template" enter="transform transition ease-in-out duration-500 sm:duration-700" enter-from="translate-x-full" enter-to="translate-x-0" leave="transform transition ease-in-out duration-500 sm:duration-700" leave-from="translate-x-0" leave-to="translate-x-full">
-            <div class="fixed right-0 top-0 z-100 h-screen bg-artwork-navigation-background w-[26rem]">
+            <div class="fixed right-0 top-0 z-100 h-screen bg-surface-inverse w-[26rem]">
                 <div class="h-full max-h-screen overflow-y-scroll overflow-x-clip">
                     <div>
-                        <div class="mt-5 px-3 text-artwork-navigation-color">
+                        <div class="mt-5 px-3 text-text-inverse">
                             <slot></slot>
                         </div>
                     </div>
@@ -14,9 +14,9 @@
     </TransitionRoot>
 
     <div class="fixed top-44 right-0 cursor-pointer z-100 transition-all duration-700" :class="{'right-[25.7rem]': show}" @click="updateShow">
-        <div class="bg-artwork-navigation-background px-2 py-1.5 flex items-center rounded-l-lg">
-            <PropertyIcon name="IconChevronsLeft" class="w-5 h-5 xsLight" v-if="!show"/>
-            <PropertyIcon name="IconChevronsRight" class="w-5 h-5 xsLight" v-else/>
+        <div class="bg-surface-inverse px-2 py-1.5 flex items-center rounded-l-lg">
+            <PropertyIcon name="IconChevronsLeft" class="w-5 h-5 text-sm/5 font-bold text-text-subtle" v-if="!show"/>
+            <PropertyIcon name="IconChevronsRight" class="w-5 h-5 text-sm/5 font-bold text-text-subtle" v-else/>
         </div>
     </div>
 

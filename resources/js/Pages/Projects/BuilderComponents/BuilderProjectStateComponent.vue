@@ -9,10 +9,9 @@
 </template>
 
 <script setup>
-import ColorHelper from '../../../Mixins/ColorHelper.vue';
+import { useColorHelper } from '@/Composeables/UseColorHelper.js';
 
-// Extract methods from ColorHelper mixin
-const { backgroundColorWithOpacity, TextColorWithDarken } = ColorHelper.methods;
+const { backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken } = useColorHelper();
 
 const props = defineProps({
     project: {

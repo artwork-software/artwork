@@ -41,9 +41,9 @@
 </template>
 
 <script>
+import {IconAlertTriangle} from "@tabler/icons-vue";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
-import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -55,7 +55,7 @@ export default {
     components: {
         BaseCalendar,
         EventsWithoutRoomComponent,
-        ExclamationIcon,
+        IconAlertTriangle,
         EventComponent
     },
     data() {

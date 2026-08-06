@@ -41,41 +41,40 @@ function handleSaved() {
 </script>
 
 <template>
-    <div class="rounded-2xl border border-zinc-300/80 bg-zinc-50/70 backdrop-blur p-4 shadow-sm">
+    <div class="rounded-2xl border border-border/80 bg-surface-sunken/70 backdrop-blur p-4 shadow-sm">
         <!-- Header -->
-        <div class="flex items-start justify-between pb-3 border-b border-dashed border-zinc-200">
+        <div class="flex items-start justify-between pb-3 border-b border-dashed border-border-subtle">
             <div class="min-w-0">
                 <div class="flex items-center gap-2">
-                    <IconLayoutSidebarRight class="size-4 text-zinc-600 shrink-0" />
-                    <h3 class="text-sm font-semibold text-zinc-800 tracking-wide">
+                    <IconLayoutSidebarRight class="size-4 text-text-muted shrink-0" />
+                    <h3 class="text-sm font-semibold text-text tracking-wide">
                         {{ t('Sidebar of this tab') }}
                     </h3>
                     <span
-                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4
-                     border-zinc-200 bg-white/70 text-zinc-600"
+                        class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-border-subtle bg-white/70 text-text-muted"
                     >
               {{ sidebarCount }} {{ t('Tab') }}
             </span>
                 </div>
-                <p class="mt-1 text-[11px] text-zinc-500">
+                <p class="mt-1 text-[11px] text-text-subtle">
                     {{ t('Optional: shown in the project as a narrow right column next to the main area') }}
                 </p>
             </div>
 
             <button
                 type="button"
-                class="grid place-items-center size-9 rounded-xl border border-zinc-200/80 bg-white/70 hover:bg-white transition shrink-0"
+                class="grid place-items-center size-9 rounded-xl border border-border-subtle/80 bg-white/70 hover:bg-white transition shrink-0"
                 @click="showAddEditSidebarTabModal = true"
                 :aria-label="t('Add sidebar tab')"
             >
-                <IconCirclePlus class="h-5 w-5 text-zinc-700" />
+                <IconCirclePlus class="h-5 w-5 text-text-muted" />
             </button>
         </div>
 
         <!-- Liste -->
         <div
             class="mt-3 transition"
-            :class="dragging ? 'ring-2 ring-emerald-400/30' : ''"
+            :class="dragging ? 'ring-2 ring-success-border/30' : ''"
         >
             <draggable
                 ghost-class="opacity-50"
@@ -96,7 +95,7 @@ function handleSaved() {
             <!-- Empty State -->
             <div
                 v-if="!tab.sidebar_tabs || tab.sidebar_tabs.length === 0"
-                class="text-[12px] text-zinc-500 px-3 py-6 text-center border-2 border-dashed border-zinc-200 rounded-lg"
+                class="text-[12px] text-text-subtle px-3 py-6 text-center border-2 border-dashed border-border-subtle rounded-lg"
             >
                 {{ t('No sidebar tabs yet. Click the plus to add one.') }}
             </div>

@@ -1,12 +1,12 @@
 <script>
+import {IconCirclePlus} from "@tabler/icons-vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import { PlusCircleIcon } from '@heroicons/vue/outline'
 import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default {
     name: "AddButtonBase",
-    components: {PropertyIcon, BaseButton, PlusCircleIcon},
+    components: {PropertyIcon, BaseButton, IconCirclePlus},
     mixins: [IconLib],
     props: {
         text: String,

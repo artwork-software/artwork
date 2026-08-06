@@ -3,11 +3,11 @@
             <div class="mx-4">
                 <!--   Heading   -->
                 <div class="my-1">
-                    <div class="flex-grow headline1 mb-6">
+                    <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mb-6">
                         {{ moneySource.is_group ? $t('Funding source group') : $t('Source of funding') }}
                     </div>
                     <div class="flex items-center w-full mt-4">
-                        <div class="mt-2 xsDark text-xs flex items-center"
+                        <div class="mt-2 text-sm/5 font-semibold text-text text-xs flex items-center"
                              v-if="moneySource.users">
                             <div class="flex items-center mb-4">
                                 <div class="mr-2">
@@ -19,7 +19,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex mt-2 mb-4 ml-12 xsDark items-center">
+                        <div class="flex mt-2 mb-4 ml-12 text-sm/5 font-semibold text-text items-center">
                             {{ $t('Created by')}}
                             <div class="ml-1">
                             <NewUserToolTip :height="7" :width="7" v-if="moneySource.creator"
@@ -85,7 +85,7 @@
                                        :label="$t('Funding period End')"
                                 />
                             </div>
-                            <div class="mb-2 col-span-full -mx-10 px-10 py-4 bg-lightBackgroundGray">
+                            <div class="mb-2 col-span-full -mx-10 px-10 py-4 bg-surface-canvas">
                                 <div class="relative w-full">
                                     <UserSearch
                                            v-model="user_query"
@@ -95,18 +95,18 @@
                                 </div>
                                 <div v-if="usersToAdd !== null" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in usersToAdd"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                              class="flex mr-5 rounded-full items-center font-bold text-text">
                                         <div class="flex items-center">
                                             <img class="flex h-11 w-11 rounded-full object-cover"
                                                  :src="user.profile_photo_url"
                                                  alt=""/>
-                                            <span class="flex ml-4 sDark">
+                                            <span class="flex ml-4 text-base/5 font-semibold text-text">
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
                                                 <IconX stroke-width="1.5"
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full bg-accent-600 text-white border-0 "/>
                                             </button>
                                         </div>
                                         </span>
@@ -116,7 +116,7 @@
                                 <div class="flex items-cente mb-3">
                                     <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
                                            class="input-checklist"/>
-                                    <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                    <label for="hasGroup" :class="this.hasGroup ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle subpixel-antialiased'"
                                            class="ml-2">
                                         {{ $t('Belongs to funding Sources Group')}}
                                     </label>
@@ -125,20 +125,20 @@
                                 <div v-if="this.hasGroup" class="mb-2">
                                     <Listbox as="div" v-model="this.selectedMoneySourceGroup" id="room">
                                         <ListboxButton class="menu-button">
-                                            <div class="flex-grow flex text-left xsDark">
+                                            <div class="flex-grow flex text-left text-sm/5 font-semibold text-text">
                                                 {{
                                                     this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
                                                 }}
                                             </div>
-                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                                         </ListboxButton>
-                                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOptions class="w-5/6 bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
                                             <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
-                                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                           class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
                                                            :key="moneySourceGroup.id"
                                                            :value="moneySourceGroup"
                                                            v-slot="{ active, selected }">
-                                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                                <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'flex']">
                                                     {{ moneySourceGroup.name }}
                                                 </div>
                                                 <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
@@ -171,7 +171,7 @@
                                    :label="$t('Title*')"
                             />
                         </div>
-                        <div class="col-span-full -mx-10 bg-lightBackgroundGray px-10 py-4 mt-5">
+                        <div class="col-span-full -mx-10 bg-surface-canvas px-10 py-4 mt-5">
                             <div class="relative w-full">
                                 <UserSearch
                                        v-model="user_query"
@@ -181,18 +181,18 @@
                             </div>
                             <div v-if="usersToAdd !== null" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in usersToAdd"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                              class="flex mr-5 rounded-full items-center font-bold text-text">
                                         <div class="flex items-center">
                                             <img class="flex h-11 w-11 rounded-full object-cover"
                                                  :src="user.profile_photo_url"
                                                  alt=""/>
-                                            <span class="flex ml-4 sDark">
+                                            <span class="flex ml-4 text-base/5 font-semibold text-text">
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
                                                 <IconX stroke-width="1.5"
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full bg-accent-600 text-white border-0 "/>
                                             </button>
                                         </div>
                                         </span>
@@ -211,10 +211,10 @@
                                             leave-from-class="opacity-100"
                                             leave-to-class="opacity-0">
                                     <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
-                                         class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                         class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm rounded-lg">
-                                        <div class="border-gray-200">
+                                        <div class="border-border-subtle">
                                             <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
                                                  class="flex items-center cursor-pointer">
                                                 <div class="flex-1 text-sm py-4">
@@ -230,13 +230,13 @@
                             </div>
                             <div v-if="subMoneySources" class="mt-2 flex items-center">
                                         <span v-for="(subMoneySource,index) in subMoneySources"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                              class="flex mr-5 rounded-full items-center font-bold text-text">
                                             <span
-                                                class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                                class="rounded-full items-center font-medium  border  border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                                 {{ subMoneySource.name }}
                                                 <button type="button"
                                                         @click="this.deleteSubMoneySourceFromGroup(index)">
-                                                    <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                                    <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-danger "/>
                                                 </button>
                                             </span>
                                         </span>
@@ -259,9 +259,9 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconChevronUp, IconCircleX, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
     Listbox,
     ListboxButton,
@@ -272,7 +272,6 @@ import {
     MenuItem,
     MenuItems
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -308,23 +307,23 @@ export default {
         NewUserToolTip,
         Input,
         JetDialogModal,
-        XIcon,
-        XCircleIcon,
+        IconX,
+        IconCircleX,
         Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconChevronDown,
+        IconChevronUp,
         SvgCollection,
-        CheckIcon,
+        IconCheck,
         Menu,
         MenuButton,
         MenuItem,
         MenuItems,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
+        IconEdit,
+        IconTrash,
+        IconDotsVertical,
         ConfirmationComponent,
         TagComponent,
         InputComponent,

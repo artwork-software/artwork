@@ -7,15 +7,15 @@
                 <div
                     v-for="request in requests"
                     :key="request.id"
-                    class="card white p-6 relative"
+                    class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-6 relative"
                 >
                     <button
                         v-if="request.status === 'pending'"
                         @click="deleteRequest(request.id)"
-                        class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        class="absolute top-4 right-4 p-2 hover:bg-surface-sunken rounded-lg transition-colors"
                         :title="$t('Delete request')"
                     >
-                        <IconTrash class="h-5 w-5 text-red-600" />
+                        <IconTrash class="h-5 w-5 text-danger" />
                     </button>
                     <SingleWorkTimeChangeRequest :request="request" :need-approval="false" />
                 </div>
@@ -31,7 +31,6 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import WorkTimeTabComponent from "@/Pages/WorkTime/Components/WorkTimeTabComponent.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import SingleWorkTimeChangeRequest from "@/Pages/WorkTime/Components/SingleWorkTimeChangeRequest.vue";
 import { IconTrash } from "@tabler/icons-vue";
 import { router } from "@inertiajs/vue3";

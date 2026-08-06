@@ -3,7 +3,7 @@
         <link v-if="page.props.small_logo" rel="icon" type="image/png" :href="page.props.small_logo" />
         <title>{{ title }} - {{ page.props.page_title }}</title>
     </Head>
-    <div class="artwork relative min-h-screen bg-zinc-50">
+    <div class="artwork relative min-h-screen bg-surface-sunken">
         <ExternalSubMenu />
 
         <main class="lg:pl-72 pb-20">

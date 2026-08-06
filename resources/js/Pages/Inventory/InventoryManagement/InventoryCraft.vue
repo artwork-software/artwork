@@ -15,7 +15,7 @@
                         :icon="IconLink"
                         icon-size="h-5 w-5"
                         stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        classes="text-black cursor-pointer hover:text-accent-600 duration-150 ease-in-out transition-colors"
                         @click="openShiftSettingsInNewTab()"/>
                     <ToolTipComponent
                         :tooltip-text="$t('Add new category')"
@@ -23,7 +23,7 @@
                         :icon="IconCirclePlus"
                         icon-size="h-5 w-5"
                         stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        classes="text-black cursor-pointer hover:text-accent-600 duration-150 ease-in-out transition-colors"
                         @click="openAddCategoryOrGroupModal('category', craft.value.id)" />
                 </div>
             </div>

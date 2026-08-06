@@ -3,14 +3,14 @@
         <div class="flex items-center gap-x-5">
             <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('Contact persons') }}</span>
             <div v-if="this.canEditComponent" class="mt-2">
-                <PencilAltIcon class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
+                <IconEdit class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-text-muted'"
                                @click="openContactModal"/>
             </div>
         </div>
-        <div v-if="loadError" class="text-xs text-rose-600 mt-2">
+        <div v-if="loadError" class="text-xs text-danger mt-2">
             {{ loadError }}
         </div>
-        <div v-else-if="loading" class="text-xs text-secondary mt-2">
+        <div v-else-if="loading" class="text-xs text-text-subtle mt-2">
             {{ $t('Loading data...') }}
         </div>
         <div v-if="shiftProject?.project_managers?.length > 0" class="my-2" v-for="projectManager in shiftProject?.project_managers">
@@ -22,9 +22,9 @@
                 </div>
                 <div>
                     <div>
-                        <div class="xsLight">
+                        <div class="text-sm/5 font-bold text-text-subtle">
                             {{ projectManager?.first_name }} {{ projectManager?.last_name }}
-                            <span class="xxsLight">
+                            <span class="text-xs/[18px] text-text-subtle">
                                     , {{ $t('Project management')}}
                                 </span>
                         </div>
@@ -35,7 +35,7 @@
                             <div v-if="projectManager?.phone_number">
                                 |
                             </div>
-                            <div class="xxsLight">
+                            <div class="text-xs/[18px] text-text-subtle">
                                 {{ projectManager?.email }}
                             </div>
                         </div>
@@ -51,7 +51,7 @@
                 </div>
                 <div>
                     <div>
-                        <div class="xsLight">
+                        <div class="text-sm/5 font-bold text-text-subtle">
                             {{ contact?.first_name }} {{ contact?.last_name }}
                         </div>
                         <div>
@@ -61,7 +61,7 @@
                             <div v-if="contact?.phone_number">
                                 |
                             </div>
-                            <div class="xxsLight">
+                            <div class="text-xs/[18px] text-text-subtle">
                                 {{ contact?.email }}
                             </div>
                         </div>
@@ -82,7 +82,6 @@
 <script>
 import {defineComponent} from "vue";
 import axios from "axios";
-import {PencilAltIcon} from "@heroicons/vue/outline";
 import ShiftContactModal from "@/Layouts/Components/ShiftContactModal.vue";
 import {IconEdit} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
@@ -92,7 +91,7 @@ export default defineComponent({
         BasePageTitle,
         IconEdit,
         ShiftContactModal,
-        PencilAltIcon
+        IconEdit
     },
     props: {
         project: {

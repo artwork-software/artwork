@@ -2,10 +2,10 @@
     <div class="space-y-4">
         <!-- Boolean Filters Section -->
         <div class="py-2">
-            <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+            <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                 {{ $t('Contract options') }}
             </div>
-            <div class="card white px-4 mt-2">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-3">
                     <!-- KSK-pflichtig -->
                     <div class="flex items-center gap-x-2">
@@ -15,14 +15,14 @@
                                     v-model="localFilters.kskLiable"
                                     id="filter-ksk-liable"
                                     type="checkbox"
-                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                                 />
                                 <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                         </div>
-                        <label for="filter-ksk-liable" class="text-sm text-gray-900">
+                        <label for="filter-ksk-liable" class="text-sm text-text">
                             {{ $t('KSK-liable') }}
                         </label>
                     </div>
@@ -34,14 +34,14 @@
                                     v-model="localFilters.foreignTax"
                                     id="filter-foreign-tax"
                                     type="checkbox"
-                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                                 />
                                 <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                         </div>
-                        <label for="filter-foreign-tax" class="text-sm text-gray-900">
+                        <label for="filter-foreign-tax" class="text-sm text-text">
                             {{ $t('Foreign tax') }}
                         </label>
                     </div>
@@ -51,10 +51,10 @@
 
         <!-- Date Range Filter Section -->
         <div class="py-2">
-            <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+            <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                 {{ $t('Deadline period') }}
             </div>
-            <div class="card white px-4 mt-2">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-3">
                     <div>
                         <BaseInput
@@ -78,16 +78,16 @@
 
         <!-- Legal Forms Filter Section -->
         <div class="py-2">
-            <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm flex items-center justify-between cursor-pointer" @click="toggleSection('legalForms')">
+            <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm flex items-center justify-between cursor-pointer" @click="toggleSection('legalForms')">
                 <span>{{ $t('Legal form') }}</span>
                 <div class="flex items-center gap-5">
-                    <span v-if="selectedLegalFormsCount > 0" class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10">
+                    <span v-if="selectedLegalFormsCount > 0" class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border">
                         {{ selectedLegalFormsCount }} {{ $t('selected') }}
                     </span>
-                    <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="openSections.legalForms ? 'rotate-180' : ''" />
+                    <component :is="IconChevronDown" class="w-4 h-4 text-white/70" :class="openSections.legalForms ? 'rotate-180' : ''" />
                 </div>
             </div>
-            <div v-if="openSections.legalForms" class="card white px-4 mt-2">
+            <div v-if="openSections.legalForms" class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
                     <div v-for="legalForm in localFilters.legalForms" :key="legalForm.id" class="flex items-center gap-x-2">
                         <div class="flex h-6 shrink-0 items-center">
@@ -96,14 +96,14 @@
                                     v-model="legalForm.checked"
                                     :id="'filter-legal-form-' + legalForm.id"
                                     type="checkbox"
-                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                                 />
                                 <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                         </div>
-                        <label :for="'filter-legal-form-' + legalForm.id" class="text-sm text-gray-900">
+                        <label :for="'filter-legal-form-' + legalForm.id" class="text-sm text-text">
                             {{ legalForm.name }}
                         </label>
                     </div>
@@ -113,16 +113,16 @@
 
         <!-- Contract Types Filter Section -->
         <div class="py-2">
-            <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm flex items-center justify-between cursor-pointer" @click="toggleSection('contractTypes')">
+            <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm flex items-center justify-between cursor-pointer" @click="toggleSection('contractTypes')">
                 <span>{{ $t('Contract type') }}</span>
                 <div class="flex items-center gap-5">
-                    <span v-if="selectedContractTypesCount > 0" class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10">
+                    <span v-if="selectedContractTypesCount > 0" class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border">
                         {{ selectedContractTypesCount }} {{ $t('selected') }}
                     </span>
-                    <component :is="IconChevronDown" class="w-4 h-4 text-gray-400" :class="openSections.contractTypes ? 'rotate-180' : ''" />
+                    <component :is="IconChevronDown" class="w-4 h-4 text-white/70" :class="openSections.contractTypes ? 'rotate-180' : ''" />
                 </div>
             </div>
-            <div v-if="openSections.contractTypes" class="card white px-4 mt-2">
+            <div v-if="openSections.contractTypes" class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
                     <div v-for="contractType in localFilters.contractTypes" :key="contractType.id" class="flex items-center gap-x-2">
                         <div class="flex h-6 shrink-0 items-center">
@@ -131,14 +131,14 @@
                                     v-model="contractType.checked"
                                     :id="'filter-contract-type-' + contractType.id"
                                     type="checkbox"
-                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                                    class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                                 />
                                 <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white" viewBox="0 0 14 14" fill="none">
                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
                         </div>
-                        <label :for="'filter-contract-type-' + contractType.id" class="text-sm text-gray-900">
+                        <label :for="'filter-contract-type-' + contractType.id" class="text-sm text-text">
                             {{ contractType.name }}
                         </label>
                     </div>

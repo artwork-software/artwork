@@ -39,11 +39,11 @@ defineExpose({ focus: () => input.value.focus() });
 
 <template>
     <div :class="noLabel ? 'mb-1' : ''">
-        <label v-if="noLabel" :for="label" class="block text-xs font-medium leading-6 text-gray-900">
-            {{ label }} <span v-if="required" class="text-red-600">*</span>
+        <label v-if="noLabel" :for="label" class="block text-xs font-medium leading-6 text-text">
+            {{ label }} <span v-if="required" class="text-danger">*</span>
         </label>
         <div :class="noLabel ? 'mt-1' : ''">
-            <input :type="type" :value="modelValue" :required="required" @input="$emit('update:modelValue', $event.target.value)" :name="label" :id="label" class="w-full h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" :placeholder="placeholder" />
+            <input :type="type" :value="modelValue" :required="required" @input="$emit('update:modelValue', $event.target.value)" :name="label" :id="label" class="w-full h-10 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 border-border" :placeholder="placeholder" />
         </div>
     </div>
 </template>

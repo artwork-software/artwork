@@ -1,66 +1,71 @@
 <template>
-    <div class="relative w-full">
-        <input
-            ref="inputEl"
-            :id="id"
-            :type="effectiveType"
-            v-model="model"
-            :placeholder="effectivePlaceholder"
-            :disabled="disabled"
-            :required="required"
-            :step="effectiveType === 'number' ? step : undefined"
-            :inputmode="isTimeProxy ? 'tel' : undefined"
-            :pattern="isTimeProxy ? timePattern : undefined"
-            :autocomplete="isTimeProxy ? 'off' : undefined"
-            :aria-invalid="String(Boolean(error))"
-            :aria-required="String(required)"
-            :aria-describedby="error ? errorId : undefined"
-            :class="[
-                inputClasses,
-                inputBaseClass,
-                label ? density.inputPadding : density.inputPaddingNoLabel,
-                disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white',
-                hasRightAffordance ? density.rightPadding : '',
-                effectiveType === 'number'
-                  ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
-                  : ''
-            ]"
-            @input="isTimeProxy ? onTimeProxyInput($event) : undefined"
-            @blur="($event) => { maybeAutofillTime($event); emit('focusout', $event) }"
-            @change="maybeAutofillTime"
-            @keydown.enter="handleEnter"
-        />
+    <div class="w-full">
+        <!-- Label über dem Feld -->
+        <label v-if="label" :for="id" class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
+            <span class="block truncate">
+                {{ withoutTranslation ? label : $t(label) }}
+                <span v-if="required" class="text-danger">*</span>
+            </span>
+        </label>
 
-        <!-- Clear Button -->
-        <div v-if="isClearable" :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]">
-            <button
-                type="button"
-                @click="handleClear"
-                tabindex="-1"
-                class="text-gray-500 hover:text-artwork-messages-error transition duration-200 ease-in-out"
-                :aria-label="$t ? $t('Clear input') : 'Clear input'"
-            >
-                <PropertyIcon name="IconX" :class="density.iconSize" />
-            </button>
-        </div>
+        <div class="relative">
+            <input
+                ref="inputEl"
+                :id="id"
+                :type="effectiveType"
+                v-model="model"
+                :placeholder="effectivePlaceholder"
+                :disabled="disabled"
+                :required="required"
+                :step="effectiveType === 'number' ? step : undefined"
+                :inputmode="isTimeProxy ? 'tel' : undefined"
+                :pattern="isTimeProxy ? timePattern : undefined"
+                :autocomplete="isTimeProxy ? 'off' : undefined"
+                :aria-invalid="String(Boolean(error))"
+                :aria-required="String(required)"
+                :aria-describedby="error ? errorId : undefined"
+                :class="[
+                    inputClasses,
+                    inputBaseClass,
+                    density.field,
+                    error ? 'border-danger-border' : 'border-border',
+                    disabled
+                        ? 'bg-surface-sunken text-text-subtle border-border-subtle cursor-not-allowed'
+                        : 'bg-surface text-text',
+                    hasRightAffordance ? density.rightPadding : '',
+                    effectiveType === 'number'
+                      ? 'appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+                      : ''
+                ]"
+                @input="isTimeProxy ? onTimeProxyInput($event) : undefined"
+                @blur="($event) => { maybeAutofillTime($event); emit('focusout', $event) }"
+                @change="maybeAutofillTime"
+                @keydown.enter="handleEnter"
+            />
 
-        <!-- Loading Spinner -->
-        <div v-if="isLoadingIcon" :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]">
-            <div class="animate-spin">
-                <PropertyIcon name="IconLoader2" :class="['text-gray-500', density.iconSize]" />
+            <!-- Clear Button -->
+            <div v-if="isClearable" :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]">
+                <button
+                    type="button"
+                    @click="handleClear"
+                    tabindex="-1"
+                    class="text-text-subtle hover:text-danger transition duration-200 ease-in-out"
+                    :aria-label="$t ? $t('Clear input') : 'Clear input'"
+                >
+                    <PropertyIcon name="IconX" :class="density.iconSize" />
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div v-if="isLoadingIcon" :class="['absolute top-0 bottom-0 flex items-center', density.affordanceRight]">
+                <div class="animate-spin">
+                    <PropertyIcon name="IconLoader2" :class="['text-text-muted', density.iconSize]" />
+                </div>
             </div>
         </div>
 
-        <!-- Floating Label -->
-        <label v-if="label" :for="id" :class="[labelBaseClass, density.labelPositionFloated, density.labelTransitions]">
-              <span class="block truncate">
-                {{ withoutTranslation ? label : $t(label) }}
-                <span v-if="required" class="text-red-500">*</span>
-              </span>
-        </label>
-
         <!-- Error -->
-        <p v-if="error" :id="errorId" class="mt-1 text-xs text-artwork-messages-error">
+        <p v-if="error" :id="errorId" class="mt-1 text-[11.5px] text-danger">
             {{ error }}
         </p>
     </div>
@@ -84,6 +89,8 @@ const props = defineProps({
     disabled: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     isSmall: { type: Boolean, default: false },
+    /** NEU: große Variante (40px Feldhöhe) */
+    isLarge: { type: Boolean, default: false },
     withoutTranslation: { type: Boolean, default: false },
 
     step: { type: Number, default: 1 },
@@ -91,7 +98,7 @@ const props = defineProps({
     inputClasses: { type: [String, Array, Object], default: '' },
     error: { type: String, default: '' },
 
-    /** NEW: aktiviert den Text-Proxy für time-Autofill */
+    /** aktiviert den Text-Proxy für time-Autofill */
     enableTimeAutofill: { type: Boolean, default: true }
 })
 
@@ -112,44 +119,38 @@ function select() {
 
 defineExpose({ focus, select })
 
-/** Dichte */
+/** Dichte: sm = 28px, md = 32px (Default), lg = 40px */
 const density = computed(() => {
     if (props.isSmall) {
         return {
-            inputPadding: 'px-3 pt-4 pb-1 text-xs leading-5 min-h-9 peer',
-            inputPaddingNoLabel: 'px-3 py-2 text-xs leading-5 min-h-9 peer',
-            labelPositionFloated: 'left-3 top-1',
-            labelTransitions:
-                'origin-left text-[10px] peer-focus:translate-y-0 peer-focus:scale-90 peer-focus:text-artwork-buttons-create ' +
-                'peer-placeholder-shown:translate-y-[10px] peer-placeholder-shown:scale-100 peer-placeholder-shown:text-[11px] peer-placeholder-shown:text-gray-500',
+            field: 'h-7 px-2.5 text-xs',
             affordanceRight: 'right-1 pr-1',
-            rightPadding: 'pr-8',
+            rightPadding: 'pr-7',
             iconSize: 'size-3.5'
         }
     }
+    if (props.isLarge) {
+        return {
+            field: 'h-10 px-3.5 text-sm',
+            affordanceRight: 'right-2 pr-2',
+            rightPadding: 'pr-10',
+            iconSize: 'size-4'
+        }
+    }
     return {
-        inputPadding: 'px-4 pt-6 pb-2 text-sm leading-6 min-h-11 peer',
-        inputPaddingNoLabel: 'px-4 py-3 text-sm leading-6 min-h-11 peer',
-        labelPositionFloated: 'left-4 top-1.5',
-        labelTransitions:
-            'origin-left text-[11px] peer-focus:translate-y-0 peer-focus:scale-90 peer-focus:text-artwork-buttons-create ' +
-            'peer-placeholder-shown:translate-y-[14px] peer-placeholder-shown:scale-100 peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-500',
-        affordanceRight: 'right-2 pr-2',
-        rightPadding: 'pr-10',
+        field: 'h-8 px-3 text-sm',
+        affordanceRight: 'right-1.5 pr-1.5',
+        rightPadding: 'pr-8',
         iconSize: 'size-4'
     }
 })
 
 /** Klassen */
 const inputBaseClass = [
-    'block w-full rounded-md border border-gray-200 shadow-sm',
-    'focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
-    'transition-[box-shadow,border-color] duration-150 ease-in-out'
-].join(' ')
-
-const labelBaseClass = [
-    'absolute pointer-events-none',
-    'text-gray-500 transition-all duration-200'
+    'block w-full rounded-md border',
+    'placeholder:text-text-subtle',
+    'focus:border-accent-600',
+    'transition-[border-color,background-color] duration-150 ease-in-out'
 ].join(' ')
 
 /** Text-Proxy für time-Felder */
@@ -157,8 +158,8 @@ const isTime = computed(() => props.type === 'time')
 const isTimeProxy = computed(() => isTime.value && props.enableTimeAutofill)
 const effectiveType = computed(() => (isTimeProxy.value ? 'text' : props.type))
 
-/** Placeholder: Leerzeichen nur wenn Label vorhanden, sonst echter Placeholder */
-const effectivePlaceholder = computed(() => (props.label ? ' ' : (props.placeholder || '')))
+/** Echter Placeholder (kein Floating-Label mehr) */
+const effectivePlaceholder = computed(() => props.placeholder || '')
 
 /** Clear/Loading nur für textartige Eingaben ODER Time-Proxy */
 const isTextLike = computed(() =>

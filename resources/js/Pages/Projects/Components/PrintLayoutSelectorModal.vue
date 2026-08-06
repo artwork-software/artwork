@@ -5,20 +5,20 @@
 
         <div v-if="activePrintLayouts.length > 0">
             <Listbox as="div" v-model="selectedLayout">
-                <ListboxLabel class="block text-sm/6 font-medium text-gray-900">{{ $t('Select print layout')}}</ListboxLabel>
+                <ListboxLabel class="block text-sm/6 font-medium text-text">{{ $t('Select print layout')}}</ListboxLabel>
                 <div class="relative mt-2">
                     <ListboxButton class="menu-button">
-                        <span class="col-start-1 row-start-1 truncate pr-6 !xsDark">{{ selectedLayout?.name }}</span>
-                        <component :is="IconChevronDown" class="h-5 w-5 text-gray-500 col-start-1 row-start-1 -mt-1 -mr-1" aria-hidden="true" />
+                        <span class="col-start-1 row-start-1 truncate pr-6 !text-sm/5 font-semibold text-text">{{ selectedLayout?.name }}</span>
+                        <component :is="IconChevronDown" class="h-5 w-5 text-text-subtle col-start-1 row-start-1 -mt-1 -mr-1" aria-hidden="true" />
                     </ListboxButton>
 
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                         <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
                             <ListboxOption as="template" v-for="layout in activePrintLayouts" :key="layout.id" :value="layout" v-slot="{ active, selected }">
-                                <li :class="[active ? 'bg-artwork-buttons-create text-white outline-none' : 'text-gray-900', 'relative select-none py-2 pl-3 pr-9 cursor-pointer']">
+                                <li :class="[active ? 'bg-accent-600 text-white outline-none' : 'text-text', 'relative select-none py-2 pl-3 pr-9 cursor-pointer']">
                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ layout.name }}</span>
 
-                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-accent-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                         <component :is="IconCheck" class="h-5 w-5" aria-hidden="true" />
                                     </span>
                                 </li>
@@ -37,13 +37,13 @@
             </div>
         </div>
         <div v-else>
-            <div class="bg-red-50 p-4 rounded-lg">
+            <div class="bg-danger-surface p-4 rounded-lg">
                 <div class="flex">
                     <div class="shrink-0">
-                        <component :is="IconExclamationCircle" class="size-5 text-red-400" aria-hidden="true" />
+                        <component :is="IconExclamationCircle" class="size-5 text-danger" aria-hidden="true" />
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-red-700">
+                        <p class="text-sm text-danger">
                             {{ $t('No print layouts available') }}
                         </p>
                     </div>

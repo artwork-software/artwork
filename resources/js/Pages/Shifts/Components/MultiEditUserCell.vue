@@ -44,7 +44,7 @@
                             icon-size="w-4 h-4"
                             tooltip-text="Freelancer*in"
                             direction="top"
-                            classes="text-gray-300"
+                            classes="text-text-subtle"
                         />
                     </div>
                     <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)" class="">
@@ -60,14 +60,17 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
     name: "MultiEditUserCell",
     components: {PropertyIcon, ToolTipComponent},
-    mixins: [ColorHelper],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity} = useColorHelper();
+        return {backgroundColorWithOpacity};
+    },
     props: [
         'item',
         'type',
@@ -108,11 +111,11 @@ export default defineComponent({
             const minutes = parseInt(minutePartRaw.split('m')[0].trim(), 10);
 
             if (hours > 0 || (hours === 0 && minutes > 0)) {
-                return 'text-green-200';
+                return 'text-success';
             }
 
             if (hours < 0 || (hours === 0 && minutes < 0)) {
-                return 'text-red-200';
+                return 'text-danger';
             }
 
             return 'text-white';

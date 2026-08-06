@@ -12,8 +12,8 @@
                             type="file"
                             multiple
                         />
-                        <div @click="selectNewFiles" @dragover.prevent @drop.stop.prevent="uploadDraggedDocuments($event)" class="w-full flex rounded-lg justify-center items-center border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                            <p class="text-artwork-buttons-create font-bold text-center">
+                        <div @click="selectNewFiles" @dragover.prevent @drop.stop.prevent="uploadDraggedDocuments($event)" class="w-full flex rounded-lg justify-center items-center border-accent-600 border-dotted border-2 h-32  p-2 cursor-pointer">
+                            <p class="text-accent-600 font-bold text-center">
                                 {{$t('Drag document here to upload or click in the field')}}
                             </p>
                         </div>
@@ -39,15 +39,15 @@
                             />
                         </div>
                         <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
-                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-primary">
+                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-text">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
-                                    <span class="flex ml-4 sDark">
+                                    <span class="flex ml-4 text-base/5 font-semibold text-text">
                                         {{ user.first_name }} {{ user.last_name }}
                                     </span>
                                     <button type="button" @click="deleteUserFromFileUserArray(index)">
                                         <span class="sr-only">{{ $t('Remove user from contract')}}</span>
-                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                        <IconX class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full text-text border-0 "/>
                                     </button>
                                     </div>
                                 </div>
@@ -68,9 +68,9 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -102,7 +102,7 @@ export default {
         FormButton,
         JetDialogModal,
         JetInputError,
-        XIcon
+        IconX
     },
     data() {
         return {

@@ -1,6 +1,6 @@
 <template>
     <div :style="{ height: height + 'px' }" class="flex items-center">
-        <hr v-if="showLine" class="w-full border-zinc-200" />
+        <hr v-if="showLine" class="w-full border-border-subtle" />
     </div>
 </template>
 

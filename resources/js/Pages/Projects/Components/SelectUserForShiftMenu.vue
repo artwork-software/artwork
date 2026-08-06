@@ -13,7 +13,7 @@
                             leave-active-class="transition ease-in duration-75"
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems v-show="canEditComponent" class="rounded-lg absolute bg-artwork-navigation-background shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none w-64 h-fit overflow-y-scroll">
+                    <MenuItems v-show="canEditComponent" class="rounded-lg absolute bg-surface-inverse shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none w-64 h-fit overflow-y-scroll">
                         <div class="text-white">
                             <div class="px-3 py-5">
                                 <div class="flex items-center justify-between">
@@ -34,7 +34,7 @@
                                             <input v-model="showIntern"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <div :class="[showIntern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                            <div :class="[showIntern ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                                 {{ $t('Internal employees') }}
                                             </div>
                                         </div>
@@ -42,7 +42,7 @@
                                             <input v-model="showExtern"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <div :class="[showExtern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                            <div :class="[showExtern ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                                 {{ $t('External employees') }}
                                             </div>
                                         </div>
@@ -50,7 +50,7 @@
                                             <input v-model="showProvider"
                                                    type="checkbox"
                                                    class="input-checklist-dark"/>
-                                            <div :class="[showProvider ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                            <div :class="[showProvider ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle', 'my-auto ml-2']">
                                                 {{ $t('Service provider') }}
                                             </div>
                                         </div>
@@ -60,10 +60,10 @@
                                                     {{ $t('Search') }}
                                                 </label>
                                                 <div class="relative mt-2 rounded-md shadow-sm">
-                                                    <input v-model="userSearch" ref="searchFieldUserSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-gray-600 py-1.5 pr-10 text-white ring-0 bg-darkGrayBg placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 sm:text-sm sm:leading-6" />
+                                                    <input v-model="userSearch" ref="searchFieldUserSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-white/10 py-1.5 pr-10 text-white ring-0  placeholder:text-white/70 sm:text-sm sm:leading-6" />
                                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                                        <IconSearch class="h-5 w-5 text-gray-400" aria-hidden="true" v-if="userSearch.length === 0" />
-                                                        <IconX class="h-5 w-5 text-gray-400 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>
+                                                        <IconSearch class="h-5 w-5 text-white/70" aria-hidden="true" v-if="userSearch.length === 0" />
+                                                        <IconX class="h-5 w-5 text-white/70 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -97,7 +97,7 @@
                                                     icon-size="w-4 h-4"
                                                     tooltip-text="Freelancer*in"
                                                     direction="left"
-                                                    classes="text-gray-300"
+                                                    classes="text-white/70"
                                                 />
                                             </div>
                                         </div>

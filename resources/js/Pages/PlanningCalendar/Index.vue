@@ -3,8 +3,8 @@
 
         <transition name="fade" appear>
             <div class="pointer-events-none fixed z-50 inset-x-0 top-5 sm:flex sm:justify-center sm:px-6 sm:pb-5 lg:px-8" v-show="showCalendarWarning.length > 0">
-                <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
-                    <component :is="IconAlertSquareRounded" class="size-5 text-yellow-400" aria-hidden="true" />
+                <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-surface-inverse px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5">
+                    <component :is="IconAlertSquareRounded" class="size-5 text-warning-border" aria-hidden="true" />
                     <p class="text-sm/6 text-white">
                         {{ showCalendarWarning }}
                     </p>

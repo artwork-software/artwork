@@ -2,13 +2,13 @@
     <AppLayout :title="$t('Find duplicates')">
         <div class="mt-5 mx-auto container pb-20">
             <ToolbarHeader
+                band
                 :icon="IconUsers"
                 :title="$t('Find duplicates')"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
                 :search-enabled="false"
             >
                 <template #actions>
-                    <Link :href="route('crm.index')" class="ui-button">
+                    <Link :href="route('crm.index')" class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium">
                         {{ $t('Back to CRM') }}
                     </Link>
                 </template>
@@ -22,34 +22,34 @@
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-1"
             >
-                <div v-if="flashSuccess" class="mt-4 rounded-md bg-green-50 p-3">
-                    <p class="text-sm font-medium text-green-800">{{ flashSuccess }}</p>
+                <div v-if="flashSuccess" class="mt-4 rounded-md bg-success-surface p-3">
+                    <p class="text-sm font-medium text-success">{{ flashSuccess }}</p>
                 </div>
             </Transition>
 
             <!-- Explanation -->
-            <div class="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5">
+            <div class="mt-6 rounded-2xl border border-accent-200 bg-accent-50/50 p-5">
                 <div class="flex gap-3">
-                    <component :is="IconInfoCircle" class="h-5 w-5 text-indigo-600 shrink-0" />
-                    <div class="text-sm text-gray-700 space-y-1">
+                    <component :is="IconInfoCircle" class="h-5 w-5 text-accent-600 shrink-0" />
+                    <div class="text-sm text-text-muted space-y-1">
                         <p>{{ $t('Contacts of the same type with an identical name or identical email address are listed here as potential duplicates.') }}</p>
                         <p>{{ $t('When merging, the main contact keeps its values; empty fields are filled from the duplicates. Project links, residencies and accesses are transferred. The duplicates are moved to the recycle bin.') }}</p>
-                        <p class="text-xs text-gray-500">{{ $t('Contacts mirrored from user, freelancer or service provider profiles are not included — clean those up in the respective management area.') }}</p>
+                        <p class="text-xs text-text-subtle">{{ $t('Contacts mirrored from user, freelancer or service provider profiles are not included — clean those up in the respective management area.') }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Empty state -->
-            <div v-if="!duplicateGroups.length" class="mt-8 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-                <component :is="IconCircleCheck" class="mx-auto h-10 w-10 text-green-400" />
-                <p class="mt-3 text-sm font-medium text-gray-900">{{ $t('No duplicates found') }}</p>
-                <p class="mt-1 text-sm text-gray-500">{{ $t('There are no contacts of the same type with identical names or email addresses.') }}</p>
+            <div v-if="!duplicateGroups.length" class="mt-8 rounded-lg border border-dashed border-border bg-surface-sunken p-12 text-center">
+                <component :is="IconCircleCheck" class="mx-auto h-10 w-10 text-success" />
+                <p class="mt-3 text-sm font-medium text-text">{{ $t('No duplicates found') }}</p>
+                <p class="mt-1 text-sm text-text-subtle">{{ $t('There are no contacts of the same type with identical names or email addresses.') }}</p>
             </div>
 
             <!-- Clusters -->
             <div v-else class="mt-8 space-y-6">
-                <div v-for="(cluster, index) in duplicateGroups" :key="clusterKey(cluster)" class="bg-white border border-gray-200 rounded-lg">
-                    <div class="px-5 py-3 bg-gray-50 rounded-t-lg flex items-center gap-3 flex-wrap">
+                <div v-for="(cluster, index) in duplicateGroups" :key="clusterKey(cluster)" class="bg-white border border-border-subtle rounded-lg">
+                    <div class="px-5 py-3 bg-surface-sunken rounded-t-lg flex items-center gap-3 flex-wrap">
                         <span
                             v-if="cluster.contact_type"
                             class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -60,65 +60,66 @@
                             <PropertyIcon v-if="cluster.contact_type.icon" :name="cluster.contact_type.icon" class="h-3.5 w-3.5" />
                             {{ $t(cluster.contact_type.name) }}
                         </span>
-                        <span class="text-sm text-gray-600">
+                        <span class="text-sm text-text-muted">
                             {{ cluster.match === 'email' ? $t('Same email address') : $t('Same name') }}:
-                            <span class="font-medium text-gray-900">{{ cluster.value }}</span>
+                            <span class="font-medium text-text">{{ cluster.value }}</span>
                         </span>
-                        <span class="ml-auto text-xs text-gray-400">{{ cluster.contacts.length }} {{ $t('Contacts') }}</span>
+                        <span class="ml-auto text-xs text-text-subtle">{{ cluster.contacts.length }} {{ $t('Contacts') }}</span>
                     </div>
 
-                    <div class="divide-y divide-gray-100">
+                    <div class="divide-y divide-border-subtle">
                         <div v-for="contact in cluster.contacts" :key="contact.id" class="px-5 py-3 flex items-center gap-4">
-                            <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer shrink-0 w-36">
+                            <label class="flex items-center gap-2 text-xs text-text-subtle cursor-pointer shrink-0 w-36">
                                 <input
                                     type="radio"
                                     :name="`primary-${index}`"
                                     :checked="selection[index]?.primaryId === contact.id"
-                                    class="text-indigo-600 border-gray-300"
+                                    class="text-accent-600 border-border"
                                     @change="setPrimary(index, contact.id)"
                                 />
                                 {{ $t('Keep as main contact') }}
                             </label>
                             <img :src="contact.profile_photo_url" alt="" class="size-9 rounded-full object-cover shrink-0" />
                             <div class="min-w-0">
-                                <div class="text-sm font-medium text-gray-900 truncate flex items-center gap-2">
-                                    <Link :href="route('crm.contacts.show', contact.id)" class="hover:text-indigo-600" target="_blank">
+                                <div class="text-sm font-medium text-text truncate flex items-center gap-2">
+                                    <Link :href="route('crm.contacts.show', contact.id)" class="hover:text-accent-600" target="_blank">
                                         {{ contact.display_name }}
                                     </Link>
-                                    <span v-if="contact.has_entity" class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                                    <span v-if="contact.has_entity" class="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-[10px] font-medium text-accent-700">
                                         {{ $t('Linked to profile') }}
                                     </span>
                                 </div>
-                                <div class="text-xs text-gray-500 truncate">
+                                <div class="text-xs text-text-subtle truncate">
                                     <span v-if="contact.email">{{ contact.email }} · </span>{{ $t('Created at') }} {{ contact.created_at }}
                                 </div>
                             </div>
                             <label
                                 v-if="selection[index]?.primaryId !== contact.id"
                                 class="ml-auto flex items-center gap-2 text-xs cursor-pointer shrink-0"
-                                :class="contact.has_entity ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600'"
+                                :class="contact.has_entity ? 'text-text-subtle cursor-not-allowed' : 'text-text-muted'"
                             >
                                 <input
                                     type="checkbox"
-                                    class="rounded border-gray-300 text-indigo-600"
+                                    class="rounded border-border text-accent-600"
                                     :disabled="contact.has_entity"
                                     :checked="selection[index]?.mergeIds.has(contact.id)"
                                     @change="toggleMerge(index, contact.id)"
                                 />
                                 {{ contact.has_entity ? $t('Cannot be merged (linked)') : $t('Merge into main contact') }}
                             </label>
-                            <span v-else class="ml-auto text-xs font-medium text-indigo-600 shrink-0">{{ $t('Main contact') }}</span>
+                            <span v-else class="ml-auto text-xs font-medium text-accent-600 shrink-0">{{ $t('Main contact') }}</span>
                         </div>
                     </div>
 
-                    <div class="px-5 py-3 border-t border-gray-100 flex justify-end">
-                        <button
-                            class="ui-button-add"
+                    <div class="px-5 py-3 border-t border-border-subtle flex justify-end">
+                        <BaseUIButton
+                            variant="primary"
+                            hide-icon
                             :disabled="!(selection[index]?.mergeIds.size > 0) || merging"
                             @click="confirmCluster = index"
                         >
                             {{ $t('Merge {count} contacts', { count: (selection[index]?.mergeIds.size ?? 0) + 1 }) }}
-                        </button>
+                        </BaseUIButton>
                     </div>
                 </div>
             </div>
@@ -141,6 +142,7 @@ import { router, Link, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import ToolbarHeader from '@/Artwork/Toolbar/ToolbarHeader.vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import ConfirmDeleteModal from '@/Layouts/Components/ConfirmDeleteModal.vue'
 import { IconUsers, IconInfoCircle, IconCircleCheck } from '@tabler/icons-vue'
 import { useTranslation } from '@/Composeables/Translation.js'

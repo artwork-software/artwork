@@ -20,7 +20,7 @@ export const INVENTORY_FILTER_RELOAD_PROPS = [
 export const COMPACT_LISTBOX_BUTTON_CLASS =
     'bg-white w-full flex items-center justify-between text-left rounded-md border border-gray-200 ' +
     'shadow-sm px-3 py-2.5 text-sm font-normal text-gray-900 ' +
-    'focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create'
+    'focus:outline-none focus:ring-1 focus:ring-accent-600'
 
 export const FILTER_OPERATORS = [
     { name: 'Enthält', type: 'like', allowedTypes: ['string', 'room', 'manufacturer'] },

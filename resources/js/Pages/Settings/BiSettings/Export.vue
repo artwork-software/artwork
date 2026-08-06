@@ -13,7 +13,7 @@
             ]"
         />
         <div class="mt-4 space-y-6">
-            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs space-y-5">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs space-y-5">
                 <ArtworkBaseListbox
                     :model-value="selectedProjects"
                     @update:model-value="value => selectedProjects = value"
@@ -40,7 +40,7 @@
                         :label="$t('To')"
                         class="w-48"
                     />
-                    <p class="text-xs text-gray-500 pb-2">
+                    <p class="text-xs text-text-subtle pb-2">
                         {{ $t('Defaults to the configured playing time window.') }}
                     </p>
                 </div>
@@ -66,14 +66,14 @@
                             :label="$t('Filter events by BI tags')"
                             :placeholder="$t('All events')"
                         />
-                        <p class="mt-1.5 text-xs text-gray-500">
+                        <p class="mt-1.5 text-xs text-text-subtle">
                             {{ $t('Without a selection, all events in the period are exported.') }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div v-if="includesProjects" class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
+            <div v-if="includesProjects" class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs">
                 <BiExportColumnPicker
                     v-model="selectedColumns"
                     :columns="availableColumns"
@@ -84,8 +84,8 @@
             </div>
 
             <div class="flex items-center justify-end gap-4">
-                <span v-if="isExporting" class="text-sm text-gray-500">{{ $t('The export is being generated…') }}</span>
-                <span v-else-if="exportError" class="text-sm text-rose-600">{{ $t('The export could not be generated.') }}</span>
+                <span v-if="isExporting" class="text-sm text-text-subtle">{{ $t('The export is being generated…') }}</span>
+                <span v-else-if="exportError" class="text-sm text-danger">{{ $t('The export could not be generated.') }}</span>
                 <BaseUIButton
                     @click="doExport"
                     :label="$t('Download Excel')"

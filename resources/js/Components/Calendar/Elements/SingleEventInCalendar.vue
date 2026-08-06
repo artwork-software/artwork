@@ -62,9 +62,9 @@ const MinimalEventInCalendar = defineComponent({
         return { contentZoom: computed(() => (zoomFactor.value > 1 ? zoomFactor.value : 1)) }
     },
     template: `
-    <div class="rounded-lg border border-gray-200 bg-white px-2 py-1 overflow-hidden"
+    <div class="rounded-sm border border-border bg-surface px-2 py-1 overflow-hidden"
          :style="{ minWidth: width, maxWidth: width, width: width, zoom: contentZoom }">
-      <div class="text-xs font-medium truncate">{{ event.title ?? event.eventName ?? 'Event' }}</div>
+      <div class="text-[11px] font-semibold text-text truncate">{{ event.title ?? event.eventName ?? 'Event' }}</div>
     </div>`
 })
 

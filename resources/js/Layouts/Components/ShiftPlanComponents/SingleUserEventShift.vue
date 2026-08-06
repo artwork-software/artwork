@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md">
+    <div class="rounded-xl border border-border-subtle bg-white shadow-sm overflow-hidden transition hover:shadow-md">
         <!-- Farb-Akzent / Headerzeile -->
         <div
             class="flex items-start justify-between gap-2 px-3 py-2"
@@ -69,30 +69,30 @@
         <!-- Body -->
         <div class="px-3 py-3 space-y-3">
             <!-- Zeit & Raum -->
-            <div class="flex flex-col border-b border-zinc-200 pb-2">
+            <div class="flex flex-col border-b border-border-subtle pb-2">
                 <div class="flex items-center justify-between gap-3">
-                    <span class="text-sm font-medium text-zinc-900">
+                    <span class="text-sm font-medium text-text">
                       {{ getDisplayTime() }}
-                      <span class="text-zinc-500">·</span>
-                      <span class="text-zinc-700">{{ shift?.room?.name ?? shift?.event?.room?.name }}</span>
+                      <span class="text-text-subtle">·</span>
+                      <span class="text-text-muted">{{ shift?.room?.name ?? shift?.event?.room?.name }}</span>
                     </span>
                 </div>
-                <div v-if="hasIndivTime" class="text-[10px] text-zinc-500 mt-0.5">
+                <div v-if="hasIndivTime" class="text-[10px] text-text-subtle mt-0.5">
                     {{ $t('individual user time, original shift time: {start} - {end}', { start: shift.start, end: shift.end }) }}
                 </div>
             </div>
 
             <!-- Kolleg*innen -->
-            <div class="border-b border-zinc-200 pb-2">
+            <div class="border-b border-border-subtle pb-2">
                 <template v-if="hasColleaguesOnShift(shift)">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-1">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-text-subtle mb-1">
                         {{ $t('Colleagues') }}
                     </div>
                     <ul class="flex flex-wrap gap-1.5">
                         <template v-for="worker in (shift.workers || [])" :key="worker.type + '-' + worker.id">
                             <li
                                 v-if="worker.type !== type || worker.id !== userToEditId"
-                                class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs text-zinc-800"
+                                class="inline-flex items-center gap-1 rounded-full bg-surface-sunken px-2 py-1 text-xs text-text"
                             >
                                 <UserPopoverTooltip
                                     :user="worker"
@@ -109,17 +109,17 @@
                     </ul>
                 </template>
 
-                <span v-else class="text-sm font-medium text-zinc-600">
+                <span v-else class="text-sm font-medium text-text-muted">
           {{ $t('No colleagues') }}
         </span>
             </div>
 
             <!-- Schichtbeschreibung (nur anzeigen, nicht bearbeiten) -->
-            <div v-if="shift.description" class="border-b border-zinc-200 pb-2">
-                <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-1">
+            <div v-if="shift.description" class="border-b border-border-subtle pb-2">
+                <div class="text-xs font-semibold uppercase tracking-wide text-text-subtle mb-1">
                     {{ $t('Description') }}
                 </div>
-                <p class="text-sm text-zinc-800 whitespace-pre-wrap">
+                <p class="text-sm text-text whitespace-pre-wrap">
                     {{ shift.description }}
                 </p>
             </div>

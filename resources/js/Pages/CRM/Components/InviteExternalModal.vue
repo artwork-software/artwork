@@ -14,7 +14,7 @@
                     :label="$t('Email')"
                     required
                 />
-                <p v-if="form.errors.email" class="text-xs text-red-600 mt-1">{{ form.errors.email }}</p>
+                <p v-if="form.errors.email" class="text-xs text-danger mt-1">{{ form.errors.email }}</p>
             </div>
 
             <!-- Contact type -->
@@ -25,7 +25,7 @@
                         <ListboxButton class="menu-button bg-white">
                             <div class="block truncate">{{ selectedTypeLabel }}</div>
                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true" />
                             </span>
                         </ListboxButton>
                         <ListboxOptions
@@ -38,14 +38,14 @@
                                 :value="type.id"
                                 v-slot="{ active, selected: isSelected }"
                             >
-                                <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                <li :class="[active ? 'bg-accent-600 text-white' : 'text-text', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                     <span :class="[isSelected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ type.name }}</span>
                                 </li>
                             </ListboxOption>
                         </ListboxOptions>
                     </div>
                 </Listbox>
-                <p v-if="requirements && !requirements.invitable" class="text-xs text-red-600 mt-1">
+                <p v-if="requirements && !requirements.invitable" class="text-xs text-danger mt-1">
                     {{ $t('This contact type cannot be invited for external access.') }}
                 </p>
             </div>
@@ -62,8 +62,8 @@
 
             <!-- Confidential required fields (external never sees these) -->
             <template v-if="confidentialRequiredProperties.length">
-                <div class="rounded-lg bg-gray-50 border border-gray-200 p-3 space-y-3">
-                    <p class="text-xs text-gray-600">
+                <div class="rounded-lg bg-surface-sunken border border-border-subtle p-3 space-y-3">
+                    <p class="text-xs text-text-muted">
                         {{ $t('These fields will not be visible to the external person and must be filled in by you in advance.') }}
                     </p>
                     <div v-for="property in confidentialRequiredProperties" :key="`conf-${property.id}`">
@@ -84,7 +84,7 @@
                     <div
                         v-for="tab in availableTabs"
                         :key="tab.id"
-                        class="rounded-md border border-gray-200 p-3"
+                        class="rounded-md border border-border-subtle p-3"
                     >
                         <label class="flex items-center gap-2">
                             <input type="checkbox" :value="tab.id" v-model="selectedTabIds" class="rounded" />
@@ -93,18 +93,18 @@
 
                         <div v-if="selectedTabIds.includes(tab.id)" class="mt-3 grid grid-cols-2 gap-3">
                             <div class="col-span-2">
-                                <label class="text-xs text-gray-600">{{ $t('Access') }}</label>
+                                <label class="text-xs text-text-muted">{{ $t('Access') }}</label>
                                 <select v-model="tabConfig[tab.id].access_type" class="menu-button bg-white mt-1">
                                     <option value="read">{{ $t('Read only') }}</option>
                                     <option value="write">{{ $t('Read and write') }}</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="text-xs text-gray-600">{{ $t('From') }}</label>
+                                <label class="text-xs text-text-muted">{{ $t('From') }}</label>
                                 <input type="date" v-model="tabConfig[tab.id].valid_from" class="menu-button bg-white mt-1" />
                             </div>
                             <div>
-                                <label class="text-xs text-gray-600">{{ $t('Until') }}</label>
+                                <label class="text-xs text-text-muted">{{ $t('Until') }}</label>
                                 <input type="date" v-model="tabConfig[tab.id].valid_to" class="menu-button bg-white mt-1" />
                             </div>
                         </div>
@@ -114,7 +114,7 @@
                 <!-- Visibility warning: the external sees ALL components of a shared tab -->
                 <div
                     v-if="selectedTabIds.length"
-                    class="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800"
+                    class="rounded-lg bg-warning-surface border border-warning-border p-4 text-sm text-warning"
                 >
                     <p class="font-semibold">{{ $t('Important') }}</p>
                     <p class="mt-1">
@@ -123,22 +123,23 @@
                 </div>
             </template>
 
-            <p v-if="form.errors.source_reference_project_id" class="text-xs text-red-600">
+            <p v-if="form.errors.source_reference_project_id" class="text-xs text-danger">
                 {{ form.errors.source_reference_project_id }}
             </p>
-            <p v-if="serverError" class="text-xs text-red-600">{{ serverError }}</p>
+            <p v-if="serverError" class="text-xs text-danger">{{ serverError }}</p>
         </div>
 
         <div class="flex justify-end gap-2 mt-6">
-            <button type="button" class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-            <button
+            <BaseUIButton type="button" variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
+            <BaseUIButton
                 type="button"
-                class="ui-button-add"
+                variant="primary"
+                hide-icon
                 :disabled="form.processing || (requirements && !requirements.invitable)"
                 @click="submit"
             >
                 {{ $t('Send invitation') }}
-            </button>
+            </BaseUIButton>
         </div>
     </ArtworkBaseModal>
 </template>
@@ -155,6 +156,7 @@ import {
     ListboxOptions,
 } from '@headlessui/vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import { IconChevronDown } from '@tabler/icons-vue'

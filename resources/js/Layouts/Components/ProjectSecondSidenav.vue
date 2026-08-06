@@ -1,9 +1,9 @@
 <template>
     <div class="w-full mt-24">
-        <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
+        <div class="w-full pb-10 mb-5 border-b-2 border-border-strong">
             <ProjectTeamComponent :project="this.project" :project-id="this.project?.id"/>
         </div>
-        <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
+        <div class="w-full pb-10 mb-5 border-b-2 border-border-strong">
             <ProjectAttributesComponent :project="this.project"
                                         :project-categories="this.projectCategories"
                                         :project-genres="this.projectGenres"
@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import {PencilAltIcon} from "@heroicons/vue/outline";
+import {IconEdit} from "@tabler/icons-vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
 import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
@@ -54,7 +54,7 @@ export default {
         TeamIconCollection,
         UserTooltip,
         SidebarTagComponent,
-        PencilAltIcon,
+        IconEdit,
         TagComponent,
         ProjectAttributeEditModal,
         ProjectTeamComponent,

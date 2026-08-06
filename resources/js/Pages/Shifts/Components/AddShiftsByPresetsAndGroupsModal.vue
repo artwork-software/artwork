@@ -9,37 +9,37 @@
             <!-- Context pills -->
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-semibold text-zinc-500">{{ $t('Room') }}</span>
-                    <span class="inline-flex items-center rounded-full bg-zinc-900 text-white px-3 py-1 text-xs font-semibold shadow-sm">
+                    <span class="text-xs font-semibold text-text-subtle">{{ $t('Room') }}</span>
+                    <span class="inline-flex items-center rounded-full bg-surface-inverse text-text-inverse px-3 py-1 text-xs font-semibold shadow-sm">
                         {{ roomLabel }}
                     </span>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-semibold text-zinc-500">{{ $t('Day') }}</span>
-                    <span class="inline-flex items-center rounded-full bg-white/80 text-zinc-900 px-3 py-1 text-xs font-semibold ring-1 ring-zinc-200/70 shadow-sm">
+                    <span class="text-xs font-semibold text-text-subtle">{{ $t('Day') }}</span>
+                    <span class="inline-flex items-center rounded-full bg-white/80 text-text px-3 py-1 text-xs font-semibold ring-1 ring-border-subtle/70 shadow-sm">
                         {{ day.fullDay }}
                     </span>
                 </div>
             </div>
 
             <!-- Optional project -->
-            <div class="rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm">
-                <div class="px-4 py-3 border-b border-zinc-200/60 flex items-center justify-between gap-3">
-                    <div class="text-xs font-semibold text-zinc-600">{{ $t('Project') }}</div>
+            <div class="rounded-2xl border border-border-subtle/70 bg-white/80 shadow-sm">
+                <div class="px-4 py-3 border-b border-border-subtle/60 flex items-center justify-between gap-3">
+                    <div class="text-xs font-semibold text-text-muted">{{ $t('Project') }}</div>
                 </div>
                 <div class="p-4">
                     <!-- wie in EventComponent: ProjectSearch + Chip -->
                     <div v-if="selectedProject" class="flex items-center justify-between gap-3">
                         <div class="min-w-0">
-                            <span class="inline-flex items-center rounded-full bg-zinc-900 text-white px-3 py-1 text-xs font-semibold shadow-sm truncate">
+                            <span class="inline-flex items-center rounded-full bg-surface-inverse text-text-inverse px-3 py-1 text-xs font-semibold shadow-sm truncate">
                                 {{ selectedProject.name }}
                             </span>
                         </div>
 
                         <button
                             type="button"
-                            class="text-xs cursor-pointer font-semibold text-zinc-500 hover:text-zinc-700 transition"
+                            class="text-xs cursor-pointer font-semibold text-text-subtle hover:text-text-muted transition"
                             @click="clearProject"
                             :aria-label="$t('Remove project')"
                         >
@@ -63,29 +63,29 @@
 
             <!-- Tabs + actions -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
-                <div class="inline-flex rounded-2xl bg-zinc-100/70 p-1 ring-1 ring-zinc-200/60">
+                <div class="inline-flex rounded-2xl bg-surface-sunken/70 p-1 ring-1 ring-border-subtle/60">
                     <button
                         type="button"
                         class="h-10 rounded-2xl px-4 text-sm font-extrabold transition active:scale-[0.99]"
                         :class="tab === 'groups'
-                            ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200/60'
-                            : 'text-zinc-600 hover:text-zinc-800'"
+                            ? 'bg-white text-text shadow-sm ring-1 ring-border-subtle/60'
+                            : 'text-text-muted hover:text-text'"
                         @click="setTab('groups')"
                     >
                         {{ $t('Groups') }}
-                        <span class="ml-2 text-xs font-semibold text-zinc-500">({{ groups.length }})</span>
+                        <span class="ml-2 text-xs font-semibold text-text-subtle">({{ groups.length }})</span>
                     </button>
 
                     <button
                         type="button"
                         class="h-10 rounded-2xl px-4 text-sm font-extrabold transition active:scale-[0.99]"
                         :class="tab === 'presets'
-                            ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200/60'
-                            : 'text-zinc-600 hover:text-zinc-800'"
+                            ? 'bg-white text-text shadow-sm ring-1 ring-border-subtle/60'
+                            : 'text-text-muted hover:text-text'"
                         @click="setTab('presets')"
                     >
                         {{ $t('Single presets') }}
-                        <span class="ml-2 text-xs font-semibold text-zinc-500">({{ presets.length }})</span>
+                        <span class="ml-2 text-xs font-semibold text-text-subtle">({{ presets.length }})</span>
                     </button>
                 </div>
             </div>
@@ -95,13 +95,13 @@
                 <input
                     v-model="search"
                     type="text"
-                    class="h-11 w-full rounded-2xl border border-zinc-200/70 bg-white/90 pl-10 pr-4 text-sm text-zinc-900
+                    class="h-11 w-full rounded-2xl border border-border-subtle/70 bg-white/90 pl-10 pr-4 text-sm text-text
                            shadow-sm outline-none transition
-                           focus:border-zinc-300 focus:bg-white focus:shadow"
+                           focus:border-border focus:bg-white focus:shadow"
                     :placeholder="tab === 'groups' ? $t('Search groups…') : $t('Search presets…')"
                     autocomplete="off"
                 />
-                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 21l-4.3-4.3" />
                         <circle cx="11" cy="11" r="7" />
@@ -112,9 +112,9 @@
             <!-- Content -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <!-- Left: list -->
-                <div class="rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm overflow-hidden">
-                    <div class="px-4 py-3 border-b border-zinc-200/60">
-                        <div class="text-xs font-semibold text-zinc-600">
+                <div class="rounded-2xl border border-border-subtle/70 bg-white/80 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-border-subtle/60">
+                        <div class="text-xs font-semibold text-text-muted">
                             {{ tab === 'groups' ? $t('Select groups') : $t('Select presets') }}
                         </div>
                     </div>
@@ -126,41 +126,41 @@
                                 v-for="g in filteredGroups"
                                 :key="`g-${g.id}`"
                                 type="button"
-                                class="w-full text-left px-4 py-3 border-b border-zinc-200/50 last:border-b-0
-                                       hover:bg-zinc-50/80 transition active:scale-[0.995]"
+                                class="w-full text-left px-4 py-3 border-b border-border-subtle/50 last:border-b-0
+                                       hover:bg-surface-sunken/80 transition active:scale-[0.995]"
                                 @click="toggleGroup(g.id)"
                             >
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="min-w-0">
-                                        <div class="truncate text-sm font-extrabold text-zinc-900">
+                                        <div class="truncate text-sm font-extrabold text-text">
                                             {{ g.name }}
                                         </div>
 
-                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-text-subtle">
       <span class="inline-flex items-center gap-1">
-        <span class="font-semibold text-zinc-700">{{ groupSummary(g).totalPresets }}</span>
+        <span class="font-semibold text-text-muted">{{ groupSummary(g).totalPresets }}</span>
         {{ $t('presets') }}
       </span>
 
-                                            <span class="text-zinc-300">•</span>
+                                            <span class="text-text-subtle">•</span>
 
                                             <span class="inline-flex items-center gap-1">
         {{ $t('Time range') }}:
-        <span class="font-semibold text-zinc-700">{{ groupSummary(g).timeRange }}</span>
+        <span class="font-semibold text-text-muted">{{ groupSummary(g).timeRange }}</span>
       </span>
 
-                                            <span v-if="groupSummary(g).crafts.length" class="text-zinc-300">•</span>
+                                            <span v-if="groupSummary(g).crafts.length" class="text-text-subtle">•</span>
 
                                             <div v-if="groupSummary(g).crafts.length" class="flex flex-wrap gap-1.5">
         <span
             v-for="c in groupSummary(g).crafts"
             :key="c"
-            class="inline-flex items-center rounded-full bg-zinc-100 text-zinc-800 px-2 py-0.5 text-[11px] font-semibold ring-1 ring-zinc-200/70"
+            class="inline-flex items-center rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle/70"
         >
           {{ c }}
         </span>
                                                 <span v-if="(g.presets?.length ?? 0) > 0 && groupSummary(g).crafts.length >= 4"
-                                                      class="text-[11px] font-semibold text-zinc-400">
+                                                      class="text-[11px] font-semibold text-text-subtle">
           …
         </span>
                                             </div>
@@ -171,14 +171,14 @@
       <span
           v-for="p in g.presets.slice(0,2)"
           :key="p.id"
-          class="inline-flex items-center gap-2 rounded-full bg-white text-zinc-900 px-2.5 py-1 text-[11px] font-semibold
-               ring-1 ring-zinc-200/70 shadow-sm"
+          class="inline-flex items-center gap-2 rounded-full bg-white text-text px-2.5 py-1 text-[11px] font-semibold
+               ring-1 ring-border-subtle/70 shadow-sm"
       >
-        <span class="text-zinc-500 tabular-nums">{{ fmtTime(p.start_time) }}–{{ fmtTime(p.end_time) }}</span>
-        <span class="text-zinc-300">•</span>
+        <span class="text-text-subtle tabular-nums">{{ fmtTime(p.start_time) }}–{{ fmtTime(p.end_time) }}</span>
+        <span class="text-text-subtle">•</span>
         <span class="truncate max-w-[160px]">{{ p.name ?? `${$t('Preset')} #${p.id}` }}</span>
       </span>
-                                            <span v-if="g.presets.length > 2" class="text-[11px] font-semibold text-zinc-500">
+                                            <span v-if="g.presets.length > 2" class="text-[11px] font-semibold text-text-subtle">
         +{{ g.presets.length - 2 }}
       </span>
                                         </div>
@@ -188,8 +188,8 @@
     <span
         class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition"
         :class="selectedGroupIds.has(g.id)
-        ? 'bg-zinc-900 text-white ring-zinc-900'
-        : 'bg-white text-zinc-700 ring-zinc-200/70'"
+        ? 'bg-surface-inverse text-text-inverse ring-surface-inverse'
+        : 'bg-white text-text-muted ring-border-subtle/70'"
     >
       {{ selectedGroupIds.has(g.id) ? $t('Selected') : $t('Select') }}
     </span>
@@ -198,7 +198,7 @@
                             </button>
                         </TransitionGroup>
 
-                        <div v-if="tab === 'groups' && !filteredGroups.length" class="px-4 py-6 text-sm text-zinc-500">
+                        <div v-if="tab === 'groups' && !filteredGroups.length" class="px-4 py-6 text-sm text-text-subtle">
                             {{ $t('No groups found.') }}
                         </div>
 
@@ -208,40 +208,40 @@
                                 v-for="p in filteredPresets"
                                 :key="`p-${p.id}`"
                                 type="button"
-                                class="w-full text-left px-4 py-3 border-b border-zinc-200/50 last:border-b-0
-                                       hover:bg-zinc-50/80 transition active:scale-[0.995]"
+                                class="w-full text-left px-4 py-3 border-b border-border-subtle/50 last:border-b-0
+                                       hover:bg-surface-sunken/80 transition active:scale-[0.995]"
                                 @click="togglePreset(p.id)"
                             >
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="min-w-0">
-                                        <div class="truncate text-sm font-extrabold text-zinc-900">
+                                        <div class="truncate text-sm font-extrabold text-text">
                                             {{ p.name ?? p.title ?? `${$t('Preset')} #${p.id}` }}
                                         </div>
 
-                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-    <span class="tabular-nums font-semibold text-zinc-700">
+                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-text-subtle">
+    <span class="tabular-nums font-semibold text-text-muted">
       {{ presetMeta(p).start }}–{{ presetMeta(p).end }}
     </span>
 
-                                            <span class="text-zinc-300">•</span>
+                                            <span class="text-text-subtle">•</span>
 
                                             <span class="inline-flex items-center gap-1">
       {{ $t('Duration') }}:
-      <span class="font-semibold text-zinc-700">{{ presetMeta(p).duration }}</span>
+      <span class="font-semibold text-text-muted">{{ presetMeta(p).duration }}</span>
     </span>
 
-                                            <span class="text-zinc-300">•</span>
+                                            <span class="text-text-subtle">•</span>
 
                                             <span class="inline-flex items-center gap-1">
       {{ $t('Break') }}:
-      <span class="font-semibold text-zinc-700">{{ presetMeta(p).breakLabel }}</span>
+      <span class="font-semibold text-text-muted">{{ presetMeta(p).breakLabel }}</span>
     </span>
 
-                                            <span class="text-zinc-300">•</span>
+                                            <span class="text-text-subtle">•</span>
 
                                             <span class="inline-flex items-center gap-1">
       {{ $t('Craft') }}:
-      <span class="font-semibold text-zinc-700">{{ presetMeta(p).craftLabel }}</span>
+      <span class="font-semibold text-text-muted">{{ presetMeta(p).craftLabel }}</span>
     </span>
                                         </div>
 
@@ -249,18 +249,18 @@
     <span
         v-for="q in presetMeta(p).quals.slice(0, 4)"
         :key="q.id"
-        class="inline-flex items-center gap-1 rounded-full bg-zinc-100 text-zinc-800 px-2 py-0.5 text-[11px] font-semibold ring-1 ring-zinc-200/70"
+        class="inline-flex items-center gap-1 rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle/70"
     >
       {{ q.name }}
-      <span v-if="q.pivot?.quantity" class="text-zinc-500">×{{ q.pivot.quantity }}</span>
+      <span v-if="q.pivot?.quantity" class="text-text-subtle">×{{ q.pivot.quantity }}</span>
     </span>
 
-                                            <span v-if="presetMeta(p).quals.length > 4" class="text-[11px] font-semibold text-zinc-500">
+                                            <span v-if="presetMeta(p).quals.length > 4" class="text-[11px] font-semibold text-text-subtle">
       +{{ presetMeta(p).quals.length - 4 }}
     </span>
                                         </div>
 
-                                        <div v-if="p.description" class="mt-1 truncate text-xs text-zinc-500">
+                                        <div v-if="p.description" class="mt-1 truncate text-xs text-text-subtle">
                                             {{ p.description }}
                                         </div>
                                     </div>
@@ -269,17 +269,17 @@
                             </button>
                         </TransitionGroup>
 
-                        <div v-if="tab === 'presets' && !filteredPresets.length" class="px-4 py-6 text-sm text-zinc-500">
+                        <div v-if="tab === 'presets' && !filteredPresets.length" class="px-4 py-6 text-sm text-text-subtle">
                             {{ $t('No presets found.') }}
                         </div>
                     </div>
                 </div>
 
                 <!-- Right: selection -->
-                <div class="rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm overflow-hidden">
-                    <div class="px-4 py-3 border-b border-zinc-200/60 flex items-center justify-between">
-                        <div class="text-xs font-semibold text-zinc-600">{{ $t('Selection') }}</div>
-                        <div class="text-xs text-zinc-500">
+                <div class="rounded-2xl border border-border-subtle/70 bg-white/80 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 border-b border-border-subtle/60 flex items-center justify-between">
+                        <div class="text-xs font-semibold text-text-muted">{{ $t('Selection') }}</div>
+                        <div class="text-xs text-text-subtle">
                             {{ selectedCount }} {{ $t('selected') }}
                         </div>
                     </div>
@@ -287,13 +287,13 @@
                     <div class="p-4 space-y-4">
                         <!-- selected groups -->
                         <div>
-                            <div class="text-xs font-semibold text-zinc-700 mb-2">{{ $t('Groups') }}</div>
+                            <div class="text-xs font-semibold text-text-muted mb-2">{{ $t('Groups') }}</div>
 
                             <TransitionGroup name="pill" tag="div" class="flex flex-wrap gap-2">
                                 <span
                                     v-for="g in selectedGroups"
                                     :key="`sg-${g.id}`"
-                                    class="inline-flex items-center gap-2 rounded-full bg-zinc-900 text-white px-3 py-1 text-xs font-semibold shadow-sm"
+                                    class="inline-flex items-center gap-2 rounded-full bg-surface-inverse text-text-inverse px-3 py-1 text-xs font-semibold shadow-sm"
                                 >
                                     {{ g.name }}
                                     <button
@@ -307,21 +307,21 @@
                                 </span>
                             </TransitionGroup>
 
-                            <div v-if="!selectedGroups.length" class="text-sm text-zinc-500">
+                            <div v-if="!selectedGroups.length" class="text-sm text-text-subtle">
                                 {{ $t('No groups selected.') }}
                             </div>
                         </div>
 
                         <!-- selected presets -->
                         <div>
-                            <div class="text-xs font-semibold text-zinc-700 mb-2">{{ $t('Single presets') }}</div>
+                            <div class="text-xs font-semibold text-text-muted mb-2">{{ $t('Single presets') }}</div>
 
                             <TransitionGroup name="pill" tag="div" class="flex flex-wrap gap-2">
                                 <span
                                     v-for="p in selectedPresets"
                                     :key="`sp-${p.id}`"
-                                    class="inline-flex items-center gap-2 rounded-full bg-white text-zinc-900 px-3 py-1 text-xs font-semibold
-                                           ring-1 ring-zinc-200/70 shadow-sm"
+                                    class="inline-flex items-center gap-2 rounded-full bg-white text-text px-3 py-1 text-xs font-semibold
+                                           ring-1 ring-border-subtle/70 shadow-sm"
                                 >
                                     {{ p.name ?? p.title ?? `${$t('Preset')} #${p.id}` }}
                                     <button
@@ -335,12 +335,12 @@
                                 </span>
                             </TransitionGroup>
 
-                            <div v-if="!selectedPresets.length" class="text-sm text-zinc-500">
+                            <div v-if="!selectedPresets.length" class="text-sm text-text-subtle">
                                 {{ $t('No presets selected.') }}
                             </div>
                         </div>
 
-                        <div class="pt-1 text-[11px] text-zinc-500">
+                        <div class="pt-1 text-[11px] text-text-subtle">
                             {{ $t('Tip: You can combine multiple groups and presets — duplicates are removed automatically.') }}
                         </div>
                     </div>

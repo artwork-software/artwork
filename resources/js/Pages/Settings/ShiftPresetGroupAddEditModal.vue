@@ -6,15 +6,15 @@
     >
         <form class="space-y-5" @submit.prevent="submit">
             <div class="space-y-1.5">
-                <label class="text-xs font-semibold text-zinc-700">{{ $t('Group name') }}</label>
+                <label class="text-xs font-semibold text-text-muted">{{ $t('Group name') }}</label>
 
                 <div class="relative">
                     <input
                         v-model="groupForm.name"
                         type="text"
-                        class="h-11 w-full rounded-2xl border border-zinc-200/70 bg-white/90 px-4 text-sm text-zinc-900
-                 shadow-sm outline-none ring-0 transition
-                 focus:border-zinc-300 focus:bg-white focus:shadow"
+                        class="h-11 w-full rounded-2xl border border-border-subtle/70 bg-white/90 px-4 text-sm text-text
+                 shadow-sm transition
+                 focus:border-border focus:bg-white focus:shadow"
                         :placeholder="$t('e.g. Early shift / Service / Kitchen')"
                         autocomplete="off"
                     />
@@ -24,22 +24,22 @@
             <div class="space-y-2">
                 <div class="flex items-end justify-between gap-3">
                     <div>
-                        <div class="text-xs font-semibold text-zinc-700">{{ $t('Select presets for this group') }}</div>
-                        <div class="text-[11px] text-zinc-500">
+                        <div class="text-xs font-semibold text-text-muted">{{ $t('Select presets for this group') }}</div>
+                        <div class="text-[11px] text-text-subtle">
                             {{ $t('Selected:') }}
-                            <span class="font-semibold text-zinc-800">{{ groupForm.preset_ids.length }}</span>
+                            <span class="font-semibold text-text">{{ groupForm.preset_ids.length }}</span>
                             / {{ presets.length }}
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <button type="button"
-                                class="h-9 rounded-xl px-3 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-200/80 hover:bg-zinc-50 active:scale-[0.99] transition"
+                                class="h-9 rounded-xl px-3 text-xs font-semibold text-text-muted ring-1 ring-border-subtle/80 hover:bg-surface-sunken active:scale-[0.99] transition"
                                 @click="selectAll">
                             {{ $t('All') }}
                         </button>
                         <button type="button"
-                                class="h-9 rounded-xl px-3 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-200/80 hover:bg-zinc-50 active:scale-[0.99] transition"
+                                class="h-9 rounded-xl px-3 text-xs font-semibold text-text-muted ring-1 ring-border-subtle/80 hover:bg-surface-sunken active:scale-[0.99] transition"
                                 @click="clearAll">
                             {{ $t('None') }}
                         </button>
@@ -50,12 +50,12 @@
                     <input
                         v-model="search"
                         type="text"
-                        class="h-11 w-full rounded-2xl border border-zinc-200/70 bg-white/90 pl-10 pr-4 text-sm text-zinc-900
-                 shadow-sm outline-none transition focus:border-zinc-300 focus:bg-white"
+                        class="h-11 w-full rounded-2xl border border-border-subtle/70 bg-white/90 pl-10 pr-4 text-sm text-text
+                 shadow-sm transition focus:border-border focus:bg-white"
                         :placeholder="$t('Search presets… (group)')"
                         autocomplete="off"
                     />
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2">
                             <path d="M21 21l-4.3-4.3"/>
@@ -64,19 +64,19 @@
                     </div>
                 </div>
 
-                <div class="max-h-[340px] overflow-auto rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm">
-                    <div v-if="filteredPresets.length === 0" class="p-4 text-sm text-zinc-500">
+                <div class="max-h-[340px] overflow-auto rounded-2xl border border-border-subtle/70 bg-white/80 shadow-sm">
+                    <div v-if="filteredPresets.length === 0" class="p-4 text-sm text-text-subtle">
                         {{ $t('No presets found. (group)') }}
                     </div>
 
                     <label
                         v-for="p in filteredPresets"
                         :key="p.id"
-                        class="group flex items-start gap-3 px-4 py-3 border-b border-zinc-200/50 last:border-b-0
-           hover:bg-zinc-50/80 transition cursor-pointer"
+                        class="group flex items-start gap-3 px-4 py-3 border-b border-border-subtle/50 last:border-b-0
+           hover:bg-surface-sunken/80 transition cursor-pointer"
                     >
                         <input
-                            class="mt-1 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-0"
+                            class="mt-1 h-4 w-4 rounded border-border text-accent-600"
                             type="checkbox"
                             :value="p.id"
                             v-model="groupForm.preset_ids"
@@ -85,36 +85,36 @@
                         <div class="min-w-0 flex-1">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <div class="truncate text-sm font-semibold text-zinc-900">
+                                    <div class="truncate text-sm font-semibold text-text">
                                         {{ p.name ?? p.title ?? `${$t('Preset')} #${p.id}` }}
                                     </div>
 
-                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                        <span class="tabular-nums font-semibold text-zinc-700">
+                                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-text-subtle">
+                                        <span class="tabular-nums font-semibold text-text-muted">
                                           {{ presetMeta(p).start }}–{{ presetMeta(p).end }}
                                         </span>
 
-                                        <span class="text-zinc-300">•</span>
+                                        <span class="text-text-subtle">•</span>
 
                                         <span class="inline-flex items-center gap-1">
                                           {{ $t('Duration') }}:
-                                          <span class="font-semibold text-zinc-700">{{ presetMeta(p).duration }}</span>
+                                          <span class="font-semibold text-text-muted">{{ presetMeta(p).duration }}</span>
                                         </span>
 
-                                        <span class="text-zinc-300">•</span>
+                                        <span class="text-text-subtle">•</span>
 
                                         <span class="inline-flex items-center gap-1">
                                           {{ $t('Break') }}:
-                                          <span class="font-semibold text-zinc-700">{{
+                                          <span class="font-semibold text-text-muted">{{
                                                   presetMeta(p).breakLabel
                                               }}</span>
                                         </span>
 
-                                        <span class="text-zinc-300">•</span>
+                                        <span class="text-text-subtle">•</span>
 
                                         <span class="inline-flex items-center gap-1">
                                           {{ $t('Craft') }}:
-                                          <span class="font-semibold text-zinc-700">{{
+                                          <span class="font-semibold text-text-muted">{{
                                                   presetMeta(p).craftLabel
                                               }}</span>
                                         </span>
@@ -124,26 +124,26 @@
                                         <span
                                             v-for="q in presetMeta(p).quals.slice(0, 4)"
                                             :key="q.id"
-                                            class="inline-flex items-center gap-1 rounded-full bg-zinc-100 text-zinc-800 px-2 py-0.5 text-[11px] font-semibold ring-1 ring-zinc-200/70"
+                                            class="inline-flex items-center gap-1 rounded-full bg-surface-sunken text-text px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border-subtle/70"
                                         >
                                           {{ q.name }}
-                                          <span v-if="q.pivot?.quantity" class="text-zinc-500">×{{
+                                          <span v-if="q.pivot?.quantity" class="text-text-subtle">×{{
                                                   q.pivot.quantity
                                               }}</span>
                                         </span>
 
                                         <span v-if="presetMeta(p).quals.length > 4"
-                                              class="text-[11px] font-semibold text-zinc-500">
+                                              class="text-[11px] font-semibold text-text-subtle">
                                           +{{ presetMeta(p).quals.length - 4 }}
                                         </span>
                                     </div>
 
-                                    <div v-if="p.description" class="mt-1 truncate text-xs text-zinc-500">
+                                    <div v-if="p.description" class="mt-1 truncate text-xs text-text-subtle">
                                         {{ p.description }}
                                     </div>
                                 </div>
 
-                                <div class="shrink-0 text-[11px] text-zinc-400 tabular-nums">
+                                <div class="shrink-0 text-[11px] text-text-subtle tabular-nums">
                                     #{{ p.id }}
                                 </div>
                             </div>
@@ -152,7 +152,7 @@
                 </div>
 
 
-                <p v-if="groupForm.errors.preset_ids" class="text-xs text-red-600">
+                <p v-if="groupForm.errors.preset_ids" class="text-xs text-danger">
                     {{ groupForm.errors.preset_ids }}
                 </p>
 
@@ -160,7 +160,7 @@
                     <span
                         v-for="p in selectedPresets"
                         :key="p.id"
-                        class="inline-flex items-center gap-2 rounded-full bg-zinc-900 text-white
+                        class="inline-flex items-center gap-2 rounded-full bg-surface-inverse text-text-inverse
                                px-3 py-1 text-xs font-semibold shadow-sm"
                     >
                         <span class="max-w-[220px] truncate">

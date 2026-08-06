@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 
 // Artwork / UI
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import SelectComponent from '@/Components/Inputs/SelectComponent.vue'
@@ -170,7 +169,7 @@ function closeModal() {
     <ArtworkBaseModal :open="open" @close="closeModal" :title="props.edit ? $t('Edit shift preset') : $t('Create shift preset')" :description="$t('Define names, times, trades, and required qualifications.')">
         <form @submit.prevent="handleSubmit" class="space-y-6">
             <!-- Basisdaten -->
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <BaseInput v-model="form.name" :label="$t('Name')" id="name" required class="w-full" />
 
@@ -204,12 +203,12 @@ function closeModal() {
             </div>
 
             <!-- Qualifikationen -->
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                 <div class="mb-3 flex items-center justify-between">
-                    <label class="text-sm font-medium text-gray-700">
+                    <label class="text-sm font-medium text-text-muted">
                         {{ $t('Qualifications') }}
                     </label>
-                    <div class="text-xs text-gray-500">
+                    <div class="text-xs text-text-subtle">
                         {{ $t('Click to select, adjust quantity on the right') }}
                     </div>
                 </div>
@@ -219,7 +218,7 @@ function closeModal() {
                         v-for="q in props.shiftQualifications"
                         :key="q.id"
                         class="flex items-center justify-between rounded-xl border p-3 transition-shadow"
-                        :class="isQualificationSelected(q.id) ? 'border-blue-500/50 shadow-sm' : 'border-gray-200 hover:shadow-sm'"
+                        :class="isQualificationSelected(q.id) ? 'border-accent-600/50 shadow-sm' : 'border-border-subtle hover:shadow-sm'"
                     >
                         <!-- Toggle + Label -->
                         <button
@@ -229,19 +228,19 @@ function closeModal() {
                         >
               <span
                   class="inline-flex h-6 w-10 items-center rounded-full transition-colors"
-                  :class="isQualificationSelected(q.id) ? 'bg-blue-600' : 'bg-gray-200'"
+                  :class="isQualificationSelected(q.id) ? 'bg-accent-600' : 'bg-border-subtle'"
               >
                 <span
                     class="h-5 w-5 translate-x-0 rounded-full bg-white shadow transition-transform"
                     :class="isQualificationSelected(q.id) ? 'translate-x-4' : 'translate-x-1'"
                 />
               </span>
-                            <span class="text-sm font-medium text-gray-900">
+                            <span class="text-sm font-medium text-text">
                 {{ q.name }}
               </span>
                             <span
                                 v-if="q.available === false"
-                                class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
+                                class="rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-text-muted"
                             >
                 {{ $t('nicht verfügbar') }}
               </span>
@@ -251,7 +250,7 @@ function closeModal() {
                         <div v-if="isQualificationSelected(q.id)" class="flex items-center gap-2">
                             <button
                                 type="button"
-                                class="rounded-lg border border-gray-200 px-2 py-1 text-sm font-semibold hover:bg-gray-50"
+                                class="rounded-lg border border-border-subtle px-2 py-1 text-sm font-semibold hover:bg-surface-sunken"
                                 @click="decQuantity(q.id)"
                                 aria-label="decrease"
                             >−</button>
@@ -261,13 +260,13 @@ function closeModal() {
                                 @input="setQualificationQuantity(q.id, Number(($event.target as HTMLInputElement).value))"
                                 type="number"
                                 min="0"
-                                class="w-20 rounded-lg border border-gray-200 px-2 py-1 text-center text-sm"
+                                class="w-20 rounded-lg border border-border-subtle px-2 py-1 text-center text-sm"
                                 :placeholder="$t('Count')"
                             />
 
                             <button
                                 type="button"
-                                class="rounded-lg border border-gray-200 px-2 py-1 text-sm font-semibold hover:bg-gray-50"
+                                class="rounded-lg border border-border-subtle px-2 py-1 text-sm font-semibold hover:bg-surface-sunken"
                                 @click="incQuantity(q.id)"
                                 aria-label="increase"
                             >+</button>
@@ -290,7 +289,7 @@ function closeModal() {
         </form>
 
         <!-- Debug optional:
-        <pre class="mt-4 text-xs text-gray-500">
+        <pre class="mt-4 text-xs text-text-subtle">
           {{ form }}
         </pre>
         -->

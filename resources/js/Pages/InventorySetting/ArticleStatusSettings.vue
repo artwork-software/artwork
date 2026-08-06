@@ -48,21 +48,21 @@ const persistOrder = () => {
                 'The statuses appear in the status overview of the inventory overview and on the detailed articles.',
             ]"
         />
-        <div class="mb-10 card white p-5">
+        <div class="mb-10 rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
 
 
             <div class="mt-8 flow-root">
                 <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                        <table class="min-w-full divide-y divide-gray-300 dark:divide-white/15">
+                        <table class="min-w-full divide-y divide-border">
                             <thead>
-                            <tr class="divide-x divide-gray-200 dark:divide-white/10">
+                            <tr class="divide-x divide-border-subtle">
                                 <th scope="col" class="w-8 py-3.5 pl-4 sm:pl-0"></th>
-                                <th scope="col" class="py-3.5 pr-4 pl-6 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
-                                <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                <th scope="col" class="py-3.5 pr-4 pl-6 text-left text-sm font-semibold text-text">Name</th>
+                                <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">
                                     {{ $t('Color') }}
                                 </th>
-                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 dark:text-white">
+                                <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0">
                                     {{ $t('Actions') }}
                                 </th>
                             </tr>
@@ -73,12 +73,12 @@ const persistOrder = () => {
                                 item-key="id"
                                 handle=".drag-handle"
                                 ghost-class="opacity-50"
-                                class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900"
+                                class="divide-y divide-border-subtle bg-white"
                                 @end="persistOrder"
                             >
                                 <template #item="{ element: status }">
-                                    <tr :key="status.id" class="divide-x divide-gray-200 dark:divide-white/10">
-                                        <td class="py-4 pl-4 sm:pl-0 text-gray-400 align-middle">
+                                    <tr :key="status.id" class="divide-x divide-border-subtle">
+                                        <td class="py-4 pl-4 sm:pl-0 text-text-subtle align-middle">
                                             <component :is="IconGripVertical" class="size-4 cursor-grab drag-handle" />
                                         </td>
                                         <SingleArticleStatus :status="status" />

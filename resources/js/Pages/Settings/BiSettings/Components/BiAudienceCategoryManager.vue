@@ -1,29 +1,29 @@
 <template>
-    <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
+    <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs">
         <div class="flex items-start justify-between gap-3 mb-1">
             <div>
-                <h3 class="text-sm font-semibold text-gray-900">{{ $t('Audience categories') }}</h3>
-                <p class="mt-1 text-xs text-gray-500 max-w-2xl">
+                <h3 class="text-sm font-semibold text-text">{{ $t('Audience categories') }}</h3>
+                <p class="mt-1 text-xs text-text-subtle max-w-2xl">
                     {{ $t('Categories break visitors down into e.g. full price, reduced and free tickets. The calculation role determines how a category counts in the free-ticket and reduced-ticket rates — regardless of its name.') }}
                 </p>
             </div>
-            <button class="ui-button-add inline-flex items-center gap-2 shrink-0" @click="startCreate">
+            <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2 shrink-0" @click="startCreate">
                 <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Add category') }}
-            </button>
+            </BaseUIButton>
         </div>
 
         <div
             v-if="pageError"
-            class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+            class="mt-3 rounded-md border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning"
         >
             {{ pageError }}
         </div>
 
-        <div v-if="loading" class="py-6 text-center text-sm text-gray-400">{{ $t('Loading') }}…</div>
+        <div v-if="loading" class="py-6 text-center text-sm text-text-subtle">{{ $t('Loading') }}…</div>
 
         <template v-else>
-            <div v-if="categories.length === 0" class="py-6 text-center text-sm text-gray-500">
+            <div v-if="categories.length === 0" class="py-6 text-center text-sm text-text-subtle">
                 {{ $t('No categories yet.') }}
             </div>
 
@@ -38,14 +38,14 @@
             >
                 <template #item="{ element }">
                     <div
-                        class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 transition"
+                        class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white p-3 hover:border-border transition"
                         :class="{ 'opacity-60': !element.is_active }"
                     >
-                        <IconGripVertical class="drag-handle size-5 text-gray-400 cursor-grab flex-shrink-0" />
+                        <IconGripVertical class="drag-handle size-5 text-text-subtle cursor-grab flex-shrink-0" />
 
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">{{ element.name }}</p>
-                            <p class="text-xs text-gray-500">
+                            <p class="text-sm font-medium text-text truncate">{{ element.name }}</p>
+                            <p class="text-xs text-text-subtle">
                                 {{ pricingTypeLabel(element.pricing_type) }}
                                 <span v-if="!element.is_active"> · {{ $t('deactivated') }}</span>
                             </p>
@@ -54,16 +54,16 @@
                         <div class="flex items-center gap-2 flex-shrink-0">
                             <button
                                 type="button"
-                                class="ui-button bg-white hover:bg-gray-50 transition text-xs px-2"
+                                class="ui-button bg-white hover:bg-surface-sunken transition text-xs px-2"
                                 @click="toggleActive(element)"
                             >
                                 {{ element.is_active ? $t('Deactivate') : $t('Activate') }}
                             </button>
-                            <button type="button" class="ui-button bg-white hover:bg-gray-50 transition" @click="startEdit(element)">
-                                <IconEdit class="size-4 text-blue-600" />
-                            </button>
-                            <button type="button" class="ui-button bg-red-50 hover:bg-red-100 transition" @click="askDelete(element)">
-                                <IconTrash class="size-4 text-red-600" />
+                            <BaseUIButton type="button" hide-icon class="bg-white hover:bg-surface-sunken transition" @click="startEdit(element)">
+                                <IconEdit class="size-4 text-accent-600" />
+                            </BaseUIButton>
+                            <button type="button" class="ui-button bg-danger-surface hover:bg-danger-surface transition" @click="askDelete(element)">
+                                <IconTrash class="size-4 text-danger" />
                             </button>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                     option-label="name"
                     :label="$t('Calculation role')"
                 />
-                <p v-if="formError" class="text-sm text-red-600">{{ formError }}</p>
+                <p v-if="formError" class="text-sm text-danger">{{ formError }}</p>
                 <div class="flex justify-end gap-2">
                     <BaseUIButton :label="$t('Save')" :disabled="saving || !form.name?.trim()" hide-icon @click="submitEdit" />
                 </div>

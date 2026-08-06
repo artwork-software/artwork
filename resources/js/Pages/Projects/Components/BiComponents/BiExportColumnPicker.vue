@@ -18,7 +18,7 @@
                 class="w-56"
             />
             <button
-                class="text-sm text-blue-600 hover:underline pb-2 disabled:opacity-40"
+                class="text-sm text-accent-600 hover:underline pb-2 disabled:text-text-subtle disabled:cursor-not-allowed"
                 :disabled="!newPresetName || modelValue.length === 0"
                 @click="savePreset"
             >
@@ -26,7 +26,7 @@
             </button>
             <button
                 v-if="selectedPreset"
-                class="text-sm text-rose-600 hover:underline pb-2"
+                class="text-sm text-danger hover:underline pb-2"
                 @click="deletePreset"
             >
                 {{ $t('Delete preset') }}
@@ -35,15 +35,15 @@
 
         <div>
             <div class="flex items-center justify-between mb-2">
-                <h4 class="text-sm font-medium text-gray-700">
+                <h4 class="text-sm font-medium text-text-muted">
                     {{ $t('Columns') }}
-                    <span class="text-xs font-normal text-gray-400">({{ modelValue.length }}/{{ columns.length }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ modelValue.length }}/{{ columns.length }})</span>
                 </h4>
                 <div class="flex gap-3 text-xs">
-                    <button class="text-blue-600 hover:underline" @click="selectAll">
+                    <button class="text-accent-600 hover:underline" @click="selectAll">
                         {{ $t('Select all') }}
                     </button>
-                    <button class="text-gray-500 hover:underline" @click="$emit('update:modelValue', [])">
+                    <button class="text-text-subtle hover:underline" @click="$emit('update:modelValue', [])">
                         {{ $t('Clear') }}
                     </button>
                 </div>

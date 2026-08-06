@@ -1,23 +1,23 @@
 <template>
     <div class="w-full">
         <div class="w-full flex items-center">
-            <div class="text-secondary text-md">{{$t('Cost unit:')}} {{ project?.cost_center?.name }}</div>
-            <PencilAltIcon :class="[!this.inSidebar ? 'text-black' : 'text-white', 'ml-auto w-6 h-6 p-1 rounded-full bg-darkInputBg']" @click="openCopyrightModal"/>
+            <div class="text-text-subtle text-md">{{$t('Cost unit:')}} {{ project?.cost_center?.name }}</div>
+            <IconEdit :class="[!this.inSidebar ? 'text-black' : 'text-white', 'ml-auto w-6 h-6 p-1 rounded-full ']" @click="openCopyrightModal"/>
             <ProjectCopyrightModal
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
                 :project="project"
             />
         </div>
-        <div class="text-secondary text-md">{{$t('GEMA')}}: {{ project.gema ? $t('Yes') : $t('No') }}</div>
-        <div class="text-secondary text-sm mt-2" v-if="project.cost_center_description">{{ project.cost_center_description }}</div>
-        <hr class="my-10 border-darkGray">
+        <div class="text-text-subtle text-md">{{$t('GEMA')}}: {{ project.gema ? $t('Yes') : $t('No') }}</div>
+        <div class="text-text-subtle text-sm mt-2" v-if="project.cost_center_description">{{ project.cost_center_description }}</div>
+        <hr class="my-10 ">
         <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.effectiveBudgetInformation?.project_manager_ids?.includes(this.$page.props.auth.user.id)">
-            <div class="text-secondary text-md">{{$t('Documents')}}</div>
-            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
+            <div class="text-text-subtle text-md">{{$t('Documents')}}</div>
+            <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
-            <UploadIcon v-if="this.hasAdminRole() || this.$can('can manage global project budgets')"
-                        class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconUpload v-if="this.hasAdminRole() || this.$can('can manage global project budgets')"
+                        class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                         @click="openFileUploadModal"/>
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
@@ -29,11 +29,11 @@
                 <div v-for="projectFile in effectiveBudgetInformation.project_files">
                     <div
                         v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || this.hasAdminRole()"
-                        class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                        class="flex items-center w-full mb-2 cursor-pointer text-text-subtle hover:text-white"
                     >
-                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
+                        <IconDownload class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
                         <div @click="openFileEditModal(projectFile)">{{ projectFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(projectFile)"/>
+                        <IconCircleX class="w-4 h-4 ml-auto bg-danger rounded-full text-white" @click="openFileDeleteModal(projectFile)"/>
                     </div>
                 </div>
 
@@ -51,17 +51,17 @@
                 />
             </div>
             <div v-else>
-                <div class="text-secondary text-sm mt-2">{{$t('No documents available')}}</div>
+                <div class="text-text-subtle text-sm mt-2">{{$t('No documents available')}}</div>
             </div>
         </div>
         <div
             v-if="$can('view edit upload contracts') || this.hasBudgetAccess()">
-            <hr class="my-10 border-darkGray">
+            <hr class="my-10 ">
             <div class="w-full flex items-center mb-4">
-                <div class="text-secondary text-md">{{ $t('Contracts')}}</div>
-                <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
+                <div class="text-text-subtle text-md">{{ $t('Contracts')}}</div>
+                <IconChevronDown class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
                                  @click="showContracts = !showContracts"/>
-                <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white "
                             @click="openContractUploadModal"/>
                 <ContractUploadModal
                     :show="showContractUploadModal"
@@ -77,8 +77,8 @@
                     <div v-for="contract in this.effectiveBudgetInformation.contracts">
                         <div
                             v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.auth.user.id).length > 0 || hasAdminRole()"
-                            class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
-                            <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
+                            class="flex items-center w-full mb-2 cursor-pointer text-text-subtle hover:text-white">
+                            <IconDownload class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
                             <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
                             <ContractDeleteModal v-if="showContractDeleteModal"
                                                  :show="showContractDeleteModal === contract?.id"
@@ -91,32 +91,32 @@
                                                :contract-types="this.effectiveBudgetInformation?.contract_types ?? project.contract_types"
                                                :company-types="this.effectiveBudgetInformation?.company_types ?? project.company_types"
                                                :currencies="this.effectiveBudgetInformation?.currencies ?? project.currencies"/>
-                            <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
+                            <IconCircleX class="w-4 h-4 ml-auto bg-danger rounded-full text-white" @click="openContractDeleteModal(contract)"/>
                         </div>
                     </div>
                 </div>
                 <div v-else>
-                    <div class="text-secondary text-sm mt-2">{{$t('No contracts available')}}</div>
+                    <div class="text-text-subtle text-sm mt-2">{{$t('No contracts available')}}</div>
                 </div>
             </div>
             <div v-if="this.$can('view edit add money_sources') || this.hasAdminRole() || this.hasBudgetAccess()">
-                <hr class="my-10 border-darkGray">
+                <hr class="my-10 ">
                 <section class="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                     <button
                         type="button"
-                        class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+                        class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                         :aria-expanded="showMoneySources"
                         aria-controls="linked-money-sources"
                         @click="showMoneySources = !showMoneySources"
                     >
                         <span class="min-w-0 flex-1">
-                            <span class="block text-sm font-semibold text-secondary">{{ $t('Linked sources of funding') }}</span>
-                            <span class="mt-0.5 block text-xs text-secondary/70">
+                            <span class="block text-sm font-semibold text-text-subtle">{{ $t('Linked sources of funding') }}</span>
+                            <span class="mt-0.5 block text-xs text-text-subtle/70">
                                 {{ filteredMoneySources.length }} {{ filteredMoneySources.length === 1 ? $t('source') : $t('sources') }}
                             </span>
                         </span>
-                        <ChevronDownIcon
-                            class="h-5 w-5 shrink-0 text-secondary transition-transform"
+                        <IconChevronDown
+                            class="h-5 w-5 shrink-0 text-text-subtle transition-transform"
                             :class="showMoneySources ? 'rotate-180' : ''"
                             aria-hidden="true"
                         />
@@ -128,7 +128,7 @@
                             <input
                                 v-model.trim="moneySourceSearch"
                                 type="search"
-                                class="w-full rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm text-secondary placeholder:text-secondary/50 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                class="w-full rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm text-text-subtle placeholder:text-text-subtle/50 focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                                 :placeholder="$t('Search funding sources')"
                             >
                         </label>
@@ -144,20 +144,20 @@
                                         <div class="flex flex-wrap items-center gap-2">
                                             <Link
                                                 v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
-                                                class="truncate text-sm font-semibold text-linkOnDarkColor underline-offset-2 hover:underline"
+                                                class="truncate text-sm font-semibold  underline-offset-2 hover:underline"
                                                 :href="route('money_sources.show', {moneySource: moneySource.id})"
                                             >
                                                 {{ moneySource.name }}
                                             </Link>
-                                            <span v-else class="truncate text-sm font-semibold text-secondary">{{ moneySource.name }}</span>
-                                            <span class="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-secondary/80">
+                                            <span v-else class="truncate text-sm font-semibold text-text-subtle">{{ moneySource.name }}</span>
+                                            <span class="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-subtle/80">
                                                 {{ moneySource.is_group ? $t('Group') : $t('Funding source') }}
                                             </span>
                                         </div>
-                                        <p v-if="moneySource.source_name" class="mt-1 truncate text-xs text-secondary/70">
+                                        <p v-if="moneySource.source_name" class="mt-1 truncate text-xs text-text-subtle/70">
                                             {{ moneySource.source_name }}
                                         </p>
-                                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-secondary/70">
+                                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-subtle/70">
                                             <span v-if="moneySource.amount !== null && moneySource.amount !== undefined">
                                                 {{ $t('Amount') }}: {{ formatMoneySourceAmount(moneySource.amount) }}
                                             </span>
@@ -169,7 +169,7 @@
                                 </div>
                             </article>
                         </div>
-                        <div v-else class="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-secondary/70">
+                        <div v-else class="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-text-subtle/70">
                             {{ moneySourceSearch ? $t('No matching funding sources found') : $t('No sources of funding available') }}
                         </div>
                     </div>
@@ -181,7 +181,7 @@
 </template>
 
 <script>
-import {ChevronDownIcon, DownloadIcon, PencilAltIcon, UploadIcon, XCircleIcon} from '@heroicons/vue/outline';
+import {IconChevronDown, IconCircleX, IconDownload, IconEdit, IconUpload} from "@tabler/icons-vue";
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal.vue";
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal.vue";
 import ProjectFileUploadModal from "@/Layouts/Components/ProjectFileUploadModal.vue";
@@ -207,12 +207,12 @@ export default {
         ContractDeleteModal,
         ProjectFileUploadModal,
         ContractModuleDeleteModal,
-        DownloadIcon,
-        UploadIcon,
-        XCircleIcon,
+        IconDownload,
+        IconUpload,
+        IconCircleX,
         ContractModuleUploadModal,
-        PencilAltIcon,
-        ChevronDownIcon,
+        IconEdit,
+        IconChevronDown,
         ProjectCopyrightModal,
         Link
     },

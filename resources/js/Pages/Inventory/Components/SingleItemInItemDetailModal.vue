@@ -8,27 +8,27 @@
                 <div>
                     {{ event.eventInfo.name ?? event.eventInfo.project_name }}
                 </div>
-                <div class="text-gray-500 text-xs">
+                <div class="text-text-subtle text-xs">
                     {{ $t('Project') }}: {{ event.eventInfo.project_name ?? $t('No Project') }}
                 </div>
             </div>
-            <span class="stock-badge bg-gray-100">
+            <span class="stock-badge bg-surface-sunken">
                 {{ event.quantity }}
-                <span v-if="event.overbooked > 0" class="text-red-500">
+                <span v-if="event.overbooked > 0" class="text-danger">
                     / {{ event.overbooked }}
                 </span>
             </span>
         </div>
-        <div class="flex justify-between bg-gray-100 pl-2 rounded-r-lg">
+        <div class="flex justify-between bg-surface-sunken pl-2 rounded-r-lg">
             <div class="flex items-center gap-x-2">
                 <img :src="event.user.profile_photo_url" class="h-8 w-8 object-cover rounded-full">
-                <div class="xsLight">
+                <div class="text-sm/5 font-bold text-text-subtle">
                     {{ event.user.name }}
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-x-2 bg-gray-100 rounded-r-lg px-3">
-                <IconEditCircle class="h-5 w-5 text-blue-500 hidden group-hover:block cursor-pointer" @click="showAssignedItemToEventModal = true" />
-                <IconCircleX @click="removeEvent" class="h-5 w-5 text-red-500 hidden group-hover:block cursor-pointer" />
+            <div class="flex items-center justify-end gap-x-2 bg-surface-sunken rounded-r-lg px-3">
+                <IconEditCircle class="h-5 w-5 text-accent-600 hidden group-hover:block cursor-pointer" @click="showAssignedItemToEventModal = true" />
+                <IconCircleX @click="removeEvent" class="h-5 w-5 text-danger hidden group-hover:block cursor-pointer" />
             </div>
         </div>
 

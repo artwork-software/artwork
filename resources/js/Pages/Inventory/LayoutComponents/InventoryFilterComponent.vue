@@ -13,11 +13,12 @@
             :tooltip-text="$t('Filter')"
             icon="IconFilter"
             icon-size="h-5 w-5"
-            classes-button="ui-button"
+            :white-icon="onBand"
+            :classes-button="onBand ? BAND_ICON_BUTTON_CLASSES : 'ui-button'"
             @click="openModal"
         />
         <span class="absolute flex size-2.5 top-0 right-0 pointer-events-none" v-if="activeFilterCount > 0">
-            <span class="relative inline-flex size-2.5 rounded-full bg-blue-500"></span>
+            <span class="relative inline-flex size-2.5 rounded-full bg-accent-600"></span>
         </span>
     </div>
 
@@ -48,30 +49,30 @@
                         <div
                             v-if="!saveFilterOption"
                             @click="startSaveFilter"
-                            class="underline text-artwork-buttons-create text-sm underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out"
+                            class="underline text-accent-600 text-sm underline-offset-2 cursor-pointer hover:text-accent-700 duration-200 ease-in-out"
                         >
                             {{ $t('Save') }}
                         </div>
                         <div
                             v-else
                             @click="saveFilterOption = false"
-                            class="underline text-red-500 text-sm underline-offset-2 cursor-pointer hover:text-red-600 duration-200 ease-in-out"
+                            class="underline text-danger text-sm underline-offset-2 cursor-pointer hover:text-danger duration-200 ease-in-out"
                         >
                             {{ $t('Cancel') }}
                         </div>
                     </div>
                 </div>
 
-                <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+                <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
                     <div v-if="!saveFilterOption" class="flex flex-wrap items-center gap-2 mt-3">
                         <div
                             v-for="preset in filterPresets"
                             :key="preset.id"
-                            class="group flex items-center shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border"
-                            :class="activePresetId === preset.id ? 'border-blue-500' : 'border-blue-200'"
+                            class="group flex items-center shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border"
+                            :class="activePresetId === preset.id ? 'border-accent-600' : 'border-accent-200'"
                         >
                             <button type="button" class="mx-1.5" @click="applyPreset(preset)">
-                                <p class="text-blue-500 text-xs group-hover:text-blue-600">{{ preset.name }}</p>
+                                <p class="text-accent-600 text-xs group-hover:text-accent-600">{{ preset.name }}</p>
                             </button>
                             <button
                                 type="button"
@@ -82,15 +83,15 @@
                                 <component
                                     :is="IconStar"
                                     class="size-4"
-                                    :class="preset.is_default ? 'text-amber-400 fill-amber-400' : 'text-blue-300 hover:text-amber-400'"
+                                    :class="preset.is_default ? 'text-warning fill-warning' : 'text-accent-500 hover:text-warning'"
                                 />
                             </button>
                             <button type="button" class="ml-1 flex items-center" @click="deletePreset(preset)">
-                                <component :is="IconX" class="size-4 text-blue-500 hover:text-red-500" />
+                                <component :is="IconX" class="size-4 text-accent-600 hover:text-danger" />
                             </button>
                         </div>
 
-                        <span v-if="!filterPresets.length" class="text-xs text-gray-500">
+                        <span v-if="!filterPresets.length" class="text-xs text-text-subtle">
                             {{ $t('No saved filters yet.') }}
                         </span>
                     </div>
@@ -111,14 +112,14 @@
                         />
                     </div>
 
-                    <div v-if="presetError" class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <div v-if="presetError" class="mt-2 rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-sm text-danger">
                         {{ presetError }}
                     </div>
                 </div>
             </div>
 
             <!-- Eigenschaften -->
-            <div v-if="newFilterObject.length" class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+            <div v-if="newFilterObject.length" class="mb-4 pb-4 border-b-2 border-dashed border-border">
                 <BasePageTitle
                     :title="$t('Properties')"
                     :description="$t('Filter changes take effect immediately')"
@@ -127,14 +128,14 @@
                 <div class="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3">
                     <div v-for="filterProperty in newFilterObject" :key="filterProperty.id" class="min-w-0">
                         <div class="flex items-center justify-between h-5 mb-1">
-                            <label class="font-lexend text-xs text-gray-700 truncate">
+                            <label class="font-lexend text-xs text-text-muted truncate">
                                 {{ filterProperty.name }}
                             </label>
 
                             <button
                                 v-if="hasValue(filterProperty)"
                                 type="button"
-                                class="text-gray-400 hover:text-gray-600 shrink-0"
+                                class="text-text-subtle hover:text-text-muted shrink-0"
                                 :title="$t('Clear')"
                                 @click="clearSingleFilter(filterProperty)"
                             >
@@ -161,7 +162,7 @@
                             <input
                                 v-model="filterProperty.value"
                                 :type="inputTypeFor(filterProperty.type)"
-                                class="h-[42px] w-full min-w-0 rounded-md border border-gray-200 bg-white shadow-sm px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create"
+                                class="h-[42px] w-full min-w-0 rounded-md border border-border-subtle bg-white shadow-sm px-3 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600"
                                 :placeholder="filterProperty.name"
                                 @input="debouncedSubmit()"
                                 @keydown.enter.prevent="applyNow()"
@@ -182,7 +183,7 @@
                         <!-- Checkbox: gleiche Höhe wie die übrigen Felder -->
                         <div
                             v-if="filterProperty.type === 'checkbox'"
-                            class="h-[42px] flex items-center rounded-md border border-gray-200 bg-white shadow-sm px-3"
+                            class="h-[42px] flex items-center rounded-md border border-border-subtle bg-white shadow-sm px-3"
                         >
                             <BaseCheckbox
                                 :model-value="!!filterProperty.value"
@@ -212,7 +213,7 @@
                         <button
                             v-if="selectedTagIds.length"
                             type="button"
-                            class="h-9 inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 text-[11px] text-gray-700 hover:bg-gray-50"
+                            class="h-9 inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-white px-2 text-[11px] text-text-muted hover:bg-surface-sunken"
                             @click="clearTagsOnly"
                         >
                             <component :is="IconX" class="size-4" />
@@ -225,17 +226,17 @@
                     <div
                         v-for="group in displayTagGroups"
                         :key="`tg-${group.key}`"
-                        :class="group.name ? 'rounded-lg border border-gray-100 bg-gray-50/40 p-3' : ''"
+                        :class="group.name ? 'rounded-lg border border-border-subtle bg-surface-sunken/40 p-3' : ''"
                     >
                         <div v-if="group.name" class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <span class="font-lexend text-[11px] text-gray-700">{{ group.name }}</span>
-                                <span class="text-[11px] text-gray-400">({{ group.tags.length }})</span>
+                                <span class="font-lexend text-[11px] text-text-muted">{{ group.name }}</span>
+                                <span class="text-[11px] text-text-subtle">({{ group.tags.length }})</span>
                             </div>
 
                             <button
                                 type="button"
-                                class="text-gray-400 hover:text-gray-600"
+                                class="text-text-subtle hover:text-text-muted"
                                 :title="$t('Collapse / expand')"
                                 @click="toggleGroupCollapsed(group.key)"
                             >
@@ -257,9 +258,8 @@
                                 :key="tag.id"
                                 type="button"
                                 class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
-                                :class="selectedTagIds.includes(tag.id)
-                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'"
+                                :class="selectedTagIds.includes(tag.id) ? 'bg-accent-50 border-accent-200 text-accent-700'
+                                    : 'bg-white border-border-subtle text-text-muted hover:bg-surface-sunken'"
                                 @click="toggleTag(tag.id)"
                             >
                                 <span
@@ -277,7 +277,7 @@
             <div class="mt-4 flex items-center justify-start" v-if="checkIfAnyFilterIsSet">
                 <button
                     type="button"
-                    class="text-xs text-gray-500 underline underline-offset-2 hover:text-artwork-messages-error transition-colors"
+                    class="text-xs text-text-subtle underline underline-offset-2 hover:text-danger transition-colors"
                     @click="resetPanelFilters"
                 >
                     {{ $t('Reset all filters') }}
@@ -317,7 +317,18 @@ const props = defineProps({
         required: false,
         default: () => [],
     },
+    /** Trigger sitzt im dunklen Toolbar-Band (CI »Bühnenlicht«):
+     *  Icon-Kachel weiß-transluzent + weißes Icon. Das Modal bleibt hell. */
+    onBand: {
+        type: Boolean,
+        default: false,
+    },
 })
+
+// Icon-Kachel auf dem dunklen Toolbar-Band (Spec §3)
+const BAND_ICON_BUTTON_CLASSES =
+    'select-none size-[30px] inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 ' +
+    'text-text-inverse transition-[background-color] duration-150 ease-out cursor-pointer'
 
 const {
     appliedFilters,

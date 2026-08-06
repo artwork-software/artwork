@@ -14,14 +14,14 @@
                 <aside
                     v-if="visible"
                     ref="panelRef"
-                    class="relative z-10 h-full w-[400px] max-w-[90vw] bg-white shadow-2xl border-l border-zinc-200 flex flex-col pointer-events-auto"
+                    class="relative z-10 h-full w-[400px] max-w-[90vw] bg-white shadow-2xl border-l border-border-subtle flex flex-col pointer-events-auto"
                 >
-                    <header class="flex items-start gap-2 border-b border-zinc-100 px-4 py-3 sticky top-0 bg-white z-10">
+                    <header class="flex items-start gap-2 border-b border-border-subtle px-4 py-3 sticky top-0 bg-white z-10">
                         <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-semibold text-zinc-900 truncate">
+                            <h3 class="text-sm font-semibold text-text truncate">
                                 {{ props.detailsForModal?.article?.name || $t('Article Usage Overview') }}
                             </h3>
-                            <p class="text-[11px] text-zinc-500 mt-0.5">
+                            <p class="text-[11px] text-text-subtle mt-0.5">
                                 <template v-if="props.detailsForModal?.date">
                                     {{ formatDate(props.detailsForModal.date) }}
                                 </template>
@@ -32,7 +32,7 @@
                         </div>
                         <button
                             type="button"
-                            class="shrink-0 rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                            class="shrink-0 rounded-md p-1 text-text-subtle hover:bg-surface-sunken hover:text-text-muted"
                             @click="$emit('close')"
                             :aria-label="$t('Close')"
                         >
@@ -42,37 +42,37 @@
 
                     <!-- Lightweight loading skeleton while the JSON endpoint is in flight -->
                     <div v-if="loading && !props.detailsForModal?.article" class="px-4 py-3 space-y-3 animate-pulse">
-                        <div class="h-20 rounded-xl bg-zinc-100"></div>
-                        <div class="h-32 rounded-xl bg-zinc-100"></div>
-                        <div class="h-24 rounded-xl bg-zinc-100"></div>
+                        <div class="h-20 rounded-xl bg-surface-sunken"></div>
+                        <div class="h-32 rounded-xl bg-surface-sunken"></div>
+                        <div class="h-24 rounded-xl bg-surface-sunken"></div>
                     </div>
 
                     <div
                         v-else
-                        class="flex-1 overflow-y-auto px-4 py-3 space-y-4 text-sm text-zinc-800"
-                        :class="{ 'opacity-50 pointer-events-none': isRefreshing || loading }"
+                        class="flex-1 overflow-y-auto px-4 py-3 space-y-4 text-sm text-text"
+                        :class="{ 'text-text-subtle pointer-events-none': isRefreshing || loading }"
                     >
                         <!-- Article quantity summary -->
-                        <section v-if="props.detailsForModal?.article" class="rounded-xl border border-zinc-200 bg-white">
-                            <div class="border-b border-zinc-100 bg-gradient-to-r from-sky-50 to-transparent px-3 py-2 rounded-t-xl">
+                        <section v-if="props.detailsForModal?.article" class="rounded-xl border border-border-subtle bg-white">
+                            <div class="border-b border-border-subtle bg-gradient-to-r from-info-surface to-transparent px-3 py-2 rounded-t-xl">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="text-[11px] font-medium uppercase tracking-wide text-sky-700">{{ $t('Stock') }}</span>
+                                    <span class="text-[11px] font-medium uppercase tracking-wide text-info">{{ $t('Stock') }}</span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-3 divide-x divide-zinc-100 text-center text-[11px]">
+                            <div class="grid grid-cols-3 divide-x divide-border-subtle text-center text-[11px]">
                                 <div class="px-2 py-2">
-                                    <div class="text-zinc-500">{{ $t('Total quantity') }}</div>
-                                    <div class="text-lg font-semibold tabular-nums text-zinc-900">{{ props.detailsForModal.article.quantity ?? 0 }}</div>
+                                    <div class="text-text-subtle">{{ $t('Total quantity') }}</div>
+                                    <div class="text-lg font-semibold tabular-nums text-text">{{ props.detailsForModal.article.quantity ?? 0 }}</div>
                                 </div>
                                 <div class="px-2 py-2">
-                                    <div class="text-zinc-500">{{ $t('of which available') }}</div>
-                                    <div class="text-lg font-semibold tabular-nums text-green-700">{{ getEinsatzbereitQuantity() }}</div>
+                                    <div class="text-text-subtle">{{ $t('of which available') }}</div>
+                                    <div class="text-lg font-semibold tabular-nums text-success">{{ getEinsatzbereitQuantity() }}</div>
                                 </div>
                                 <div class="px-2 py-2">
-                                    <div class="text-zinc-500">{{ $t('available after usage') }}</div>
+                                    <div class="text-text-subtle">{{ $t('available after usage') }}</div>
                                     <div
                                         class="text-lg font-semibold tabular-nums"
-                                        :class="{ 'text-red-700': getAvailableQuantity() < 0, 'text-emerald-700': getAvailableQuantity() >= 0 }"
+                                        :class="{ 'text-danger': getAvailableQuantity() < 0, 'text-success': getAvailableQuantity() >= 0 }"
                                     >{{ getAvailableQuantity() }}</div>
                                 </div>
                             </div>
@@ -80,12 +80,12 @@
                             <!-- Breakdown of the total stock by article status -->
                             <div
                                 v-if="statusBreakdown.length"
-                                class="border-t border-zinc-100 px-3 py-2.5"
+                                class="border-t border-border-subtle px-3 py-2.5"
                             >
-                                <div class="text-[10px] font-medium uppercase tracking-wide text-zinc-400 mb-1">
+                                <div class="text-[10px] font-medium uppercase tracking-wide text-text-subtle mb-1">
                                     {{ $t('Status composition') }}
                                 </div>
-                                <div class="divide-y divide-zinc-100">
+                                <div class="divide-y divide-border-subtle">
                                     <div
                                         v-for="status in statusBreakdown"
                                         :key="status.id"
@@ -93,25 +93,25 @@
                                     >
                                         <span class="flex min-w-0 items-center gap-1.5">
                                             <span class="inline-block size-2 shrink-0 rounded-full" :style="{ backgroundColor: status.color }"></span>
-                                            <span class="truncate text-[11px] text-zinc-900">{{ status.name }}</span>
+                                            <span class="truncate text-[11px] text-text">{{ status.name }}</span>
                                         </span>
-                                        <span class="shrink-0 text-[11px] font-semibold tabular-nums text-zinc-900">{{ status.value }}</span>
+                                        <span class="shrink-0 text-[11px] font-semibold tabular-nums text-text">{{ status.value }}</span>
                                     </div>
                                 </div>
                             </div>
                         </section>
 
                         <!-- Tabs: internal / external -->
-                        <section v-if="props.detailsForModal?.article" class="rounded-xl border border-zinc-200 bg-white p-3">
+                        <section v-if="props.detailsForModal?.article" class="rounded-xl border border-border-subtle bg-white p-3">
                             <TabGroup :default-index="defaultTabIndex">
-                                <TabList class="flex rounded-lg bg-zinc-100 p-1">
+                                <TabList class="flex rounded-lg bg-surface-sunken p-1">
                                     <Tab as="template" v-slot="{ selected }">
                                         <button
                                             class="w-full rounded-md py-1.5 text-xs font-medium leading-5 focus:outline-none transition"
-                                            :class="selected ? 'bg-white text-indigo-700 shadow' : 'text-zinc-600 hover:bg-white/70'"
+                                            :class="selected ? 'bg-white text-accent-700 shadow' : 'text-text-muted hover:bg-white/70'"
                                         >
                                             {{ $t('internal') }}
-                                            <span class="ml-1 text-[10px] bg-zinc-200 text-zinc-700 rounded-full px-1.5 py-0.5 tabular-nums">
+                                            <span class="ml-1 text-[10px] bg-border-subtle text-text-muted rounded-full px-1.5 py-0.5 tabular-nums">
                                                 {{ getTotalQuantity(props.detailsForModal.internal || []) }}
                                             </span>
                                         </button>
@@ -119,10 +119,10 @@
                                     <Tab as="template" v-slot="{ selected }">
                                         <button
                                             class="w-full rounded-md py-1.5 text-xs font-medium leading-5 focus:outline-none transition"
-                                            :class="selected ? 'bg-white text-indigo-700 shadow' : 'text-zinc-600 hover:bg-white/70'"
+                                            :class="selected ? 'bg-white text-accent-700 shadow' : 'text-text-muted hover:bg-white/70'"
                                         >
                                             {{ $t('external') }}
-                                            <span class="ml-1 text-[10px] bg-zinc-200 text-zinc-700 rounded-full px-1.5 py-0.5 tabular-nums">
+                                            <span class="ml-1 text-[10px] bg-border-subtle text-text-muted rounded-full px-1.5 py-0.5 tabular-nums">
                                                 {{ getTotalQuantity(props.detailsForModal.external || []) }}
                                             </span>
                                         </button>
@@ -158,9 +158,9 @@
                         <!-- Negative availability warning -->
                         <div
                             v-if="props.detailsForModal?.article && getAvailableQuantity() < 0"
-                            class="rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-800 flex items-center gap-2"
+                            class="rounded-lg border border-danger-border bg-danger-surface p-2 text-xs text-danger flex items-center gap-2"
                         >
-                            <span class="inline-flex size-4 items-center justify-center rounded-full bg-red-600 text-white text-[9px] font-bold">!</span>
+                            <span class="inline-flex size-4 items-center justify-center rounded-full bg-danger text-white text-[9px] font-bold">!</span>
                             <span>{{ $t('Selected usage exceeds available stock for this date.') }}</span>
                         </div>
                     </div>

@@ -4,7 +4,7 @@
         <template v-if="!noTooltip">
             <div v-tooltip.top="tooltipBinding"  v-if="direction === 'top'" :class="classesButton">
                 <button
-                    class="focus:outline-none"
+                    class="cursor-pointer"
                     type="button"
                     :class="classes"
                     :disabled="disabled"
@@ -21,7 +21,7 @@
 
             <div v-tooltip.bottom="tooltipBinding"  v-else-if="direction === 'bottom'" :class="classesButton">
                 <button
-                    class="focus:outline-none"
+                    class="cursor-pointer"
                     type="button"
                     :class="classes"
                     :disabled="disabled"
@@ -37,7 +37,7 @@
             </div>
             <div v-tooltip.left="tooltipBinding" v-else-if="direction === 'left'" :class="classesButton">
                 <button
-                    class="focus:outline-none"
+                    class="cursor-pointer"
                     type="button"
                     :class="classes"
                     :disabled="disabled"
@@ -53,7 +53,7 @@
             </div>
             <div v-tooltip.right="tooltipBinding" v-else :class="classesButton">
                 <button
-                    class="focus:outline-none"
+                    class="cursor-pointer"
                     type="button"
                     :class="classes"
                     :disabled="disabled"
@@ -72,7 +72,7 @@
         <!-- Tooltip komplett aus -->
         <button
             v-else
-            class="focus:outline-none"
+            class="cursor-pointer"
             type="button"
             :class="[classes, classesButton]"
             :disabled="disabled"
@@ -129,10 +129,10 @@ const finalIconColorClass = computed(() => {
     if (props.iconColor) return props.iconColor;
 
     if (props.whiteIcon) return 'text-white';
-    if (props.grayIcon) return 'text-gray-400';
-    if (props.blackIcon) return 'text-[#27233C]';
+    if (props.grayIcon) return 'text-text-subtle';
+    if (props.blackIcon) return 'text-text';
 
-    return 'text-artwork-buttons-context';
+    return 'text-text-muted';
 });
 
 /**

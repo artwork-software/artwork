@@ -1,5 +1,5 @@
 <template>
-    <div class="py-4 px-5 bg-white border-b border-zinc-200 shadow-sm">
+    <div class="py-4 px-5 bg-surface border border-border-subtle rounded-lg shadow-raised">
         <div class="flex flex-wrap items-center justify-between gap-y-2">
             <div class="flex items-center gap-2">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
@@ -44,16 +44,16 @@
                         is-small
                     />
                     <div v-if="projectSearchResults.length > 0"
-                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-64 rounded-lg z-50">
+                         class="absolute translate-y-1 bg-surface-inverse truncate sm:text-sm min-w-64 rounded-lg shadow-overlay z-50">
                         <div v-for="(project, index) in projectSearchResults"
                              :key="index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
-                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer flex flex-col">
+                             class="p-4 text-sm font-bold text-text-inverse border-l-4 hover:border-l-success border-l-transparent cursor-pointer flex flex-col">
                             <div>{{ project.name }}</div>
-                            <div v-if="project.first_event_date && project.last_event_date" class="text-secondary text-xs font-normal">
+                            <div v-if="project.first_event_date && project.last_event_date" class="text-white/70 text-xs font-normal">
                                 {{ $t('Project period') }}: {{ project.first_event_date.split(' ')[0] }} - {{ project.last_event_date.split(' ')[0] }}
                             </div>
-                            <div v-if="project.artists" class="text-secondary text-xs font-normal">
+                            <div v-if="project.artists" class="text-white/70 text-xs font-normal">
                                 {{ $t('Artist') }}: {{ project.artists }}
                             </div>
                         </div>
@@ -88,7 +88,7 @@
             </div>
 
             <div v-if="isPlanning">
-                <div class="font-lexend text-xs font-bold text-red-500 select-none pointer-events-none">
+                <div class="font-lexend text-xs font-bold text-danger select-none pointer-events-none">
                     {{ $t('Attention! You are in the planning calendar')}}
                 </div>
             </div>
@@ -116,7 +116,7 @@
                          das Drei-Punkte-Menü auf der Kachel entfällt -->
                     <div
                         v-if="isCompactZoom && !atAGlance"
-                        class="ui-button !bg-blue-50 !border-blue-200/80 !text-blue-700 text-xs !cursor-help"
+                        class="ui-button !bg-info-surface !border-info-border !text-info text-xs !cursor-help"
                     >
                         <ToolTipWithTextComponent
                             direction="bottom"
@@ -142,9 +142,9 @@
                             leave-from-class="opacity-100 scale-100"
                             leave-to-class="opacity-0 scale-95"
                         >
-                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right focus:outline-none">
+                            <MenuItems class="absolute right-0 z-50 mt-2 origin-top-right">
                                 <!-- Panel-Optik identisch zu BaseMenu -->
-                                <div class="w-52 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5">
+                                <div class="w-52 rounded-lg border border-border-subtle bg-surface p-1.5 shadow-overlay">
                                     <BaseMenuItem
                                         white-menu-background
                                         without-translation
@@ -152,7 +152,7 @@
                                         :title="$t('Month view') + ' (40%)'"
                                         @click="selectMonthView"
                                     />
-                                    <div class="my-1 border-t border-gray-100"></div>
+                                    <div class="my-1 border-t border-border-subtle"></div>
                                     <BaseMenuItem
                                         v-for="step in zoomSteps"
                                         :key="step"
@@ -237,7 +237,8 @@
                         direction="bottom"
                         :tooltip-text="$t('Add Event')"
                         :icon="IconCirclePlus"
-                        icon-size="h-5 w-5 text-blue-500"
+                        icon-size="h-5 w-5"
+                        white-icon
                         @click="$emit('wantsToAddNewEvent');"
                         classesButton="ui-button-add"
                     />
@@ -258,7 +259,8 @@
                         direction="bottom"
                         :tooltip-text="$t('Add Event')"
                         :icon="IconCirclePlus"
-                        icon-size="h-5 w-5 text-blue-500"
+                        icon-size="h-5 w-5"
+                        white-icon
                         @click="$emit('wantsToAddNewEvent');"
                         classesButton="ui-button-add"
                     />

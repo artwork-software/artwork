@@ -21,8 +21,8 @@
             </div>
 
             <div class="mt-6">
-                <h3 class="text-sm font-semibold text-secondary">{{ $t('Default event duration') }}</h3>
-                <p class="text-xs text-secondary mt-1">{{ $t('The default event duration specified here will be preselected when you create an event in artwork.') }}</p>
+                <h3 class="text-sm font-semibold text-text-subtle">{{ $t('Default event duration') }}</h3>
+                <p class="text-xs text-text-subtle mt-1">{{ $t('The default event duration specified here will be preselected when you create an event in artwork.') }}</p>
                 <BaseInput
                     id="event_time_length_minutes"
                     :label="$t('Default event duration (minutes)')"
@@ -34,8 +34,8 @@
             </div>
 
             <div class="mt-6">
-                <h3 class="text-sm font-semibold text-secondary">{{ $t('Default start time') }}</h3>
-                <p class="text-xs text-secondary mt-1">{{ $t('The default start time determines which time should be prefilled when you create a new event in artwork.') }}</p>
+                <h3 class="text-sm font-semibold text-text-subtle">{{ $t('Default start time') }}</h3>
+                <p class="text-xs text-text-subtle mt-1">{{ $t('The default start time determines which time should be prefilled when you create a new event in artwork.') }}</p>
                 <BaseInput
                     id="event_start_time"
                     :label="$t('Default start time')"
@@ -47,8 +47,8 @@
             </div>
 
             <div class="mt-6">
-                <h3 class="text-sm font-semibold text-secondary">{{ $t('Full day as default') }}</h3>
-                <p class="text-xs text-secondary mt-1">{{ $t('If activated, the Full day checkbox is preselected when creating a new event.') }}</p>
+                <h3 class="text-sm font-semibold text-text-subtle">{{ $t('Full day as default') }}</h3>
+                <p class="text-xs text-text-subtle mt-1">{{ $t('If activated, the Full day checkbox is preselected when creating a new event.') }}</p>
                 <label class="inline-flex items-center gap-2 mt-2 cursor-pointer">
                     <input
                         type="checkbox"
@@ -56,7 +56,7 @@
                         class="ui-checkbox"
                         @change="update"
                     />
-                    <span class="text-sm text-secondary">{{ $t('Full day') }}</span>
+                    <span class="text-sm text-text-subtle">{{ $t('Full day') }}</span>
                 </label>
             </div>
         </EventSettingHeader>

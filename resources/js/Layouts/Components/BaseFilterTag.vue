@@ -1,5 +1,5 @@
 <template>
-    <div class="flex rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1 min-w-fit">
+    <div class="flex rounded-full items-center font-medium  border  border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1 min-w-fit">
         <div v-if="filter.name">
             {{ filter.name }}
         </div>
@@ -9,15 +9,13 @@
             <button
                 @click="$emit('removeFilter', filter)"
                 type="button">
-                <PropertyIcon name="IconX" stroke-width="1.5" v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
+                <PropertyIcon name="IconX" stroke-width="1.5" v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-danger "/>
             </button>
     </div>
 </template>
 
 <script>
-import {
-    XIcon
-} from '@heroicons/vue/outline';
+import {IconX} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
@@ -34,7 +32,7 @@ export default {
     emits: ['removeFilter'],
     components: {
         PropertyIcon,
-        XIcon
+        IconX
     },
 }
 </script>

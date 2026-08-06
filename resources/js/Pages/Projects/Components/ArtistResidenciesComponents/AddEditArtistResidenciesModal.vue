@@ -12,16 +12,16 @@
                     <!-- FORM -->
                     <div class="md:col-span-2 space-y-6 ">
                         <!-- Artist -->
-                        <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
+                        <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <header class="flex items-center justify-between px-4 pt-4">
-                                <h3 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-buttons-hover">
+                                <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-accent-700">
                                     {{ $t('Artist') }}
                                 </h3>
                                 <div class="flex items-center gap-x-3">
-                                    <div class="text-xs text-blue-500 cursor-pointer hover:underline" @click="selectArtist = !selectArtist">
+                                    <div class="text-xs text-accent-600 cursor-pointer hover:underline" @click="selectArtist = !selectArtist">
                                         {{ selectArtist ? $t('Close artist selection') : $t('Assign existing artist') }}
                                     </div>
-                                    <span class="inline-flex items-center rounded-full border border-artwork-navigation-color/30 bg-artwork-navigation-color/10 px-2 py-0.5 text-[11px] font-medium text-artwork-buttons-hover">
+                                    <span class="inline-flex items-center rounded-full border border-text-inverse/30 bg-text-inverse/10 px-2 py-0.5 text-[11px] font-medium text-accent-700">
                                       {{ project?.name }}
                                     </span>
                                 </div>
@@ -29,14 +29,14 @@
                             <div class="p-4">
                                 <!-- Wenn ein Künstler ausgewählt ist (z. B. aus vorherigem Residency), zeige nur diesen -->
                                 <div v-if="selectedArtist && !selectArtist">
-                                    <div class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                                    <div class="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-sunken p-4">
                                         <!-- Avatar + Name -->
                                         <div class="flex items-center gap-4">
-                                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-semibold text-sm">
+                                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent-700 text-white font-semibold text-sm">
                                                 {{ selectedArtist.name?.slice(0, 2).toUpperCase() }}
                                             </div>
                                             <div class="flex flex-col">
-                                                <span class="text-sm font-medium text-zinc-900">{{ selectedArtist.name }}</span>
+                                                <span class="text-sm font-medium text-text">{{ selectedArtist.name }}</span>
                                             </div>
                                         </div>
 
@@ -44,7 +44,7 @@
                                         <button
                                             type="button"
                                             @click="selectedArtist = null; selectArtist = true"
-                                            class="text-xs font-medium text-red-600 hover:underline"
+                                            class="text-xs font-medium text-danger hover:underline"
                                         >
                                             {{ $t('Remove artist') }}
                                         </button>
@@ -82,16 +82,16 @@
                                             type="checkbox"
                                             id="do_not_save_artist"
                                             v-model="artistResidency.do_not_save_artist"
-                                            class="rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                            class="rounded border-border text-accent-700 focus:ring-accent-700"
                                         />
-                                        <label for="do_not_save_artist" class="text-sm text-zinc-700">
+                                        <label for="do_not_save_artist" class="text-sm text-text-muted">
                                             {{ $t('Do not save artist in database') }}
                                         </label>
                                     </div>
                                     <!-- Info-Text: beim Bearbeiten, wenn do_not_save_artist aktiv -->
-                                    <div v-if="artistResidency.id && artistResidency.do_not_save_artist" class="md:col-span-2 flex items-center gap-2 mt-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
-                                        <component :is="IconInfoCircle" class="h-4 w-4 text-blue-500 shrink-0" />
-                                        <span class="text-sm text-blue-700">
+                                    <div v-if="artistResidency.id && artistResidency.do_not_save_artist" class="md:col-span-2 flex items-center gap-2 mt-2 rounded-lg bg-accent-50 border border-accent-200 px-3 py-2">
+                                        <component :is="IconInfoCircle" class="h-4 w-4 text-accent-600 shrink-0" />
+                                        <span class="text-sm text-accent-700">
                                             {{ $t('Artist was not automatically saved in the database') }}
                                         </span>
                                     </div>
@@ -108,38 +108,37 @@
                                     />
 
                                     <!-- Künstler-Auswahl als Card-Grid -->
-                                    <div class="mt-4 max-h-[360px] overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                                    <div class="mt-4 max-h-[360px] overflow-y-auto rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div
                                                 v-for="artist in filteredArtists"
                                                 :key="artist.id"
                                                 @click="selectedArtist = artist; selectArtist = false"
-                                                class="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-zinc-300 p-4 transition-all duration-150 ease-in-out"
-                                                :class="{
-                                                    'border-artwork-buttons-hover bg-artwork-buttons-hover/10 ring-2 ring-artwork-buttons-hover/50':
+                                                class="group relative flex cursor-pointer items-center gap-4 rounded-xl border border-border p-4 transition-all duration-150 ease-in-out"
+                                                :class="{ 'border-accent-700 bg-accent-700/10 ring-2 ring-accent-700/50':
                                                         selectedArtist?.id === artist.id,
-                                                    'hover:border-artwork-buttons-hover/40 hover:bg-artwork-buttons-hover/5':
+                                                    'hover:border-accent-700/40 hover:bg-accent-700/5':
                                                         selectedArtist?.id !== artist.id
                                                 }"
                                             >
                                                 <!-- Avatar -->
-                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-artwork-buttons-hover text-white font-bold text-sm">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-700 text-white font-bold text-sm">
                                                     {{ artist.name.slice(0, 2).toUpperCase() }}
                                                 </div>
 
                                                 <!-- Name -->
                                                 <div class="flex flex-col overflow-hidden">
-                                                    <span class="truncate font-medium text-sm text-zinc-900">{{ artist.name }}</span>
+                                                    <span class="truncate font-medium text-sm text-text">{{ artist.name }}</span>
                                                 </div>
 
                                                 <!-- Check -->
-                                                <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-artwork-buttons-hover">
+                                                <div v-if="selectedArtist?.id === artist.id" class="absolute right-3 top-3 text-accent-700">
                                                     <component :is="IconCheck" class="h-5 w-5" />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div v-if="filteredArtists.length === 0" class="text-center text-sm text-zinc-500 py-4">
+                                        <div v-if="filteredArtists.length === 0" class="text-center text-sm text-text-subtle py-4">
                                             {{ $t('No matching artist found.') }}
                                         </div>
                                     </div>
@@ -150,9 +149,9 @@
                             </div>
                         </section>
                         <!-- Accommodation & Room -->
-                        <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
+                        <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <header class="px-4 pt-4">
-                                <h3 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-navigation-color">
+                                <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-text-inverse">
                                     {{ $t('Accommodation & room') }}
                                 </h3>
                             </header>
@@ -164,7 +163,7 @@
                                         by="id"
                                         label="Accommodation"
                                     />
-                                    <div v-if="showValidationErrors && validationErrors.accommodation" class="mt-1 text-sm text-red-600">
+                                    <div v-if="showValidationErrors && validationErrors.accommodation" class="mt-1 text-sm text-danger">
                                         {{ $t(validationErrors.accommodation) }}
                                     </div>
                                 </div>
@@ -178,7 +177,7 @@
                                         use-translations
                                         label="Room Type"
                                     />
-                                    <div v-if="showValidationErrors && validationErrors.roomType" class="mt-1 text-sm text-red-600">
+                                    <div v-if="showValidationErrors && validationErrors.roomType" class="mt-1 text-sm text-danger">
                                         {{ $t(validationErrors.roomType) }}
                                     </div>
                                 </div>
@@ -186,10 +185,10 @@
                         </section>
 
                         <!-- Travel & costs -->
-                        <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
+                        <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <div class="flex items-center justify-between px-4 pt-4">
                                 <header class="">
-                                    <h3 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-buttons-hover">
+                                    <h3 class="text-sm font-semibold text-text pl-3 border-l-4 border-accent-700">
                                         {{ $t('Travel & costs') }}
                                     </h3>
                                 </header>
@@ -295,9 +294,9 @@
                             <!-- KPIs (mobile only) -->
                             <div class="p-4 md:hidden">
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                                    <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <div class="flex items-center">
-                                            <h4 class="xsLight">{{ $t('No. of overnight stays') }}</h4>
+                                            <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('No. of overnight stays') }}</h4>
                                             <ToolTipComponent
                                                 :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
@@ -305,19 +304,19 @@
                                                 direction="bottom"
                                             />
                                         </div>
-                                        <div class="mt-2 xsDark tabular-nums">{{ calculateTotalNights() }}</div>
+                                        <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">{{ calculateTotalNights() }}</div>
                                     </div>
 
-                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                                        <h4 class="xsLight">{{ $t('Costs for overnight stays') }}</h4>
-                                        <div class="mt-2 xsDark tabular-nums">
+                                    <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
+                                        <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('Costs for overnight stays') }}</h4>
+                                        <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">
                                             <span class="underline decoration-double underline-offset-2">{{ calculateTotalCost }} €</span>
                                         </div>
                                     </div>
 
-                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                                    <div class="rounded-xl border border-border-subtle bg-surface-sunken p-3">
                                         <div class="flex items-center">
-                                            <h4 class="xsLight">{{ $t('Daily allowance entitlement') }}</h4>
+                                            <h4 class="text-sm/5 font-bold text-text-subtle">{{ $t('Daily allowance entitlement') }}</h4>
                                             <ToolTipComponent
                                                 :icon="IconInfoCircle"
                                                 icon-size="h-4 w-4 ml-2"
@@ -325,7 +324,7 @@
                                                 direction="bottom"
                                             />
                                         </div>
-                                        <div class="mt-2 xsDark tabular-nums">
+                                        <div class="mt-2 text-sm/5 font-semibold text-text tabular-nums">
                                             {{ calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance) }}
                                         </div>
                                     </div>
@@ -334,7 +333,7 @@
                         </section>
 
                         <!-- Description -->
-                        <section class="rounded-xl border border-zinc-200 bg-white shadow-sm">
+                        <section class="rounded-xl border border-border-subtle bg-white shadow-sm">
                             <div class="p-4">
                                 <BaseTextarea v-model="artistResidency.description" :label="$t('Description')" id="description" />
                             </div>
@@ -343,46 +342,46 @@
 
                     <!-- SUMMARY -->
                     <aside class="md:col-span-1">
-                        <div class="md:sticky md:top-4 rounded-xl border border-zinc-200 bg-white shadow-sm p-4">
-                            <h4 class="text-sm font-semibold text-zinc-900 pl-3 border-l-4 border-artwork-navigation-color">
+                        <div class="md:sticky md:top-4 rounded-xl border border-border-subtle bg-white shadow-sm p-4">
+                            <h4 class="text-sm font-semibold text-text pl-3 border-l-4 border-text-inverse">
                                 {{ $t('Summary') }}
                             </h4>
 
                             <!-- Übernachtungen -->
                             <div class="mt-3">
-                                <h5 class="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">{{ $t('Overnight stays') }}</h5>
+                                <h5 class="text-xs font-semibold text-text-subtle uppercase tracking-wide mb-2">{{ $t('Overnight stays') }}</h5>
                                 <dl class="space-y-2">
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-sm text-zinc-600">{{ $t('No. of overnight stays') }}</dt>
+                                        <dt class="text-sm text-text-muted">{{ $t('No. of overnight stays') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(calculateTotalNights())"
                                                 :decimals="0"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-sm text-zinc-600">{{ $t('Cost per night') }}</dt>
+                                        <dt class="text-sm text-text-muted">{{ $t('Cost per night') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(artistResidency.cost_per_night)"
                                                 :decimals="2"
                                                 suffix=" €"
                                                 locale="de-DE"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
-                                    <div class="flex items-center justify-between border-t border-zinc-100 pt-2">
-                                        <dt class="text-sm font-semibold text-zinc-900">{{ $t('Total costs for overnight stays') }}</dt>
+                                    <div class="flex items-center justify-between border-t border-border-subtle pt-2">
+                                        <dt class="text-sm font-semibold text-text">{{ $t('Total costs for overnight stays') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(calculateTotalCost)"
                                                 :decimals="2"
                                                 suffix=" €"
                                                 locale="de-DE"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
@@ -391,63 +390,63 @@
 
                             <!-- Tagegeld -->
                             <div class="mt-4">
-                                <h5 class="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">{{ $t('Daily allowance') }}</h5>
+                                <h5 class="text-xs font-semibold text-text-subtle uppercase tracking-wide mb-2">{{ $t('Daily allowance') }}</h5>
                                 <dl class="space-y-2">
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-sm text-zinc-600">{{ $t('Daily allowance entitlement') }}</dt>
+                                        <dt class="text-sm text-text-muted">{{ $t('Daily allowance entitlement') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance))"
                                                 :decimals="0"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-sm text-zinc-600">{{ $t('Daily allowance per day') }}</dt>
+                                        <dt class="text-sm text-text-muted">{{ $t('Daily allowance per day') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(artistResidency.daily_allowance)"
                                                 :decimals="2"
                                                 suffix=" €"
                                                 locale="de-DE"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-sm text-zinc-600">{{ $t('Daily allowance costs before deduction') }}</dt>
+                                        <dt class="text-sm text-text-muted">{{ $t('Daily allowance costs before deduction') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(calculateTotalDailyAllowance)"
                                                 :decimals="2"
                                                 suffix=" €"
                                                 locale="de-DE"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-sm text-zinc-600">{{ $t('Breakfast deduction') }}</dt>
+                                        <dt class="text-sm text-text-muted">{{ $t('Breakfast deduction') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(calculateBreakfastDeduction)"
                                                 :decimals="2"
                                                 suffix=" €"
                                                 locale="de-DE"
-                                                class="tabular-nums text-sm font-semibold text-red-600"
+                                                class="tabular-nums text-sm font-semibold text-danger"
                                             />
                                         </dd>
                                     </div>
-                                    <div class="flex items-center justify-between border-t border-zinc-100 pt-2">
-                                        <dt class="text-sm font-semibold text-zinc-900">{{ $t('Payout per diem') }}</dt>
+                                    <div class="flex items-center justify-between border-t border-border-subtle pt-2">
+                                        <dt class="text-sm font-semibold text-text">{{ $t('Payout per diem') }}</dt>
                                         <dd>
                                             <CountUp
                                                 :value="Number(calculatePayoutPerDiem)"
                                                 :decimals="2"
                                                 suffix=" €"
                                                 locale="de-DE"
-                                                class="tabular-nums text-sm font-semibold text-zinc-900"
+                                                class="tabular-nums text-sm font-semibold text-text"
                                             />
                                         </dd>
                                     </div>
@@ -455,20 +454,20 @@
                             </div>
 
                             <!-- Gesamtkosten -->
-                            <div class="flex items-center justify-between border-t-2 border-zinc-300 mt-4 pt-3">
-                                <dt class="text-sm font-bold text-zinc-900">{{ $t('Total cost') }}</dt>
+                            <div class="flex items-center justify-between border-t-2 border-border mt-4 pt-3">
+                                <dt class="text-sm font-bold text-text">{{ $t('Total cost') }}</dt>
                                 <dd>
                                     <CountUp
                                         :value="Number(calculateTotalCost) + Number(calculatePayoutPerDiem)"
                                         :decimals="2"
                                         suffix=" €"
                                         locale="de-DE"
-                                        class="tabular-nums text-sm font-bold text-zinc-900"
+                                        class="tabular-nums text-sm font-bold text-text"
                                     />
                                 </dd>
                             </div>
 
-                            <p class="mt-3 text-[11px] text-zinc-500">
+                            <p class="mt-3 text-[11px] text-text-subtle">
                                 {{ $t('Values update automatically when dates or rates change.') }}
                             </p>
 
@@ -478,9 +477,9 @@
                                     type="checkbox"
                                     id="sync_crm_changes"
                                     v-model="syncCrmChanges"
-                                    class="rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                    class="rounded border-border text-accent-700 focus:ring-accent-700"
                                 />
-                                <label for="sync_crm_changes" class="text-sm text-zinc-700">
+                                <label for="sync_crm_changes" class="text-sm text-text-muted">
                                     {{ $t('Apply changes to artist in CRM') }}
                                 </label>
                             </div>
@@ -506,8 +505,8 @@
         </form>
 
         <!-- EMPTY STATE -->
-        <div v-else class="mx-10 my-10 -mt-2 rounded-xl border border-red-200 bg-red-500/10 px-4 py-5">
-            <h4 class="mb-1 text-sm font-bold text-red-500">
+        <div v-else class="mx-10 my-10 -mt-2 rounded-xl border border-danger-border bg-danger/10 px-4 py-5">
+            <h4 class="mb-1 text-sm font-bold text-danger">
                 {{ $t('Attention') }}
             </h4>
             <AlertComponent

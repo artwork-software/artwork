@@ -2,7 +2,7 @@
     <Link
         :style="colorStyle"
         class="flex font-semibold items-center px-3 min-w-0"
-        :class="isLight ? 'text-white' : 'xsDark'"
+        :class="isLight ? 'text-white' : 'text-sm/5 font-semibold text-text'"
         :href="route('rooms.show', { room: room?.id ?? room.roomId })"
         @mouseenter="onMouseEnter"
         @mouseleave="showTooltip = false"

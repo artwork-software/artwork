@@ -5,11 +5,9 @@ export default {
 </script>
 
 <template>
-    <table class="w-full bg-white">
-        <div>
-            <slot name="head"></slot>
-            <slot name="body"></slot>
-        </div>
+    <table class="relative w-full bg-surface">
+        <slot name="head"></slot>
+        <slot name="body"></slot>
     </table>
 </template>
 

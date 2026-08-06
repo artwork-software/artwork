@@ -3,11 +3,11 @@
         <div class="mt-6 ">
             <!-- Loading State -->
             <div v-if="isLoadingCalendar" class="pl-16 py-8 text-center">
-                <div class="text-gray-600">{{ $t('Loading calendar data...') }}</div>
+                <div class="text-text-muted">{{ $t('Loading calendar data...') }}</div>
             </div>
 
             <!-- Error State -->
-            <div v-else-if="loadCalendarError" class="pl-16 py-8 text-center text-red-600">
+            <div v-else-if="loadCalendarError" class="pl-16 py-8 text-center text-danger">
                 {{ loadCalendarError }}
             </div>
 
@@ -59,7 +59,7 @@
             </div>
 
             <!-- Fallback if data is missing -->
-            <div v-else class="pl-16 py-8 text-center text-gray-600">
+            <div v-else class="pl-16 py-8 text-center text-text-muted">
                 {{ $t('Calendar data is not available.') }}
             </div>
         </div>

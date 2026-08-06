@@ -4,19 +4,19 @@
         Kept separate from BuilderBiKeyFiguresDisplay.vue (used in the project
         management view) so that print-only styling changes never leak elsewhere.
     -->
-    <div class="min-w-0 text-xs text-gray-700 leading-tight">
+    <div class="min-w-0 text-xs text-text-muted leading-tight">
         <div v-if="hasData" class="space-y-0.5">
             <div v-if="figures.visitors !== null && figures.visitors !== undefined">
-                <span class="text-gray-400">{{ $t('Visitors') }}:</span> {{ formatInt(figures.visitors) }}
+                <span class="text-text-subtle">{{ $t('Visitors') }}:</span> {{ formatInt(figures.visitors) }}
             </div>
             <div v-if="figures.revenue !== null && figures.revenue !== undefined">
-                <span class="text-gray-400">{{ $t('Revenue') }}:</span> {{ formatCurrency(figures.revenue) }}
+                <span class="text-text-subtle">{{ $t('Revenue') }}:</span> {{ formatCurrency(figures.revenue) }}
             </div>
             <div v-if="figures.occupancy !== null && figures.occupancy !== undefined">
-                <span class="text-gray-400">{{ $t('Occupancy rate') }}:</span> {{ figures.occupancy.toFixed(1) }} %
+                <span class="text-text-subtle">{{ $t('Occupancy rate') }}:</span> {{ figures.occupancy.toFixed(1) }} %
             </div>
         </div>
-        <span v-else class="text-gray-300">—</span>
+        <span v-else class="text-text-subtle">—</span>
     </div>
 </template>
 

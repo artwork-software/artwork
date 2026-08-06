@@ -1,11 +1,11 @@
 <template>
     <div class="space-y-1">
-        <div class="text-[11px] font-semibold uppercase tracking-wide text-secondary">
+        <div class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle">
             {{ $t('Artists') }}
         </div>
-        <div class="font-lexend font-black tracking-wide text-sm text-primary">
+        <div class="font-lexend font-black tracking-wide text-sm text-text">
             <span v-if="artistText">{{ artistText }}</span>
-            <span v-else class="text-secondary text-xs font-normal">{{ $t('No entries') }}</span>
+            <span v-else class="text-text-subtle text-xs font-normal">{{ $t('No entries') }}</span>
         </div>
     </div>
 </template>

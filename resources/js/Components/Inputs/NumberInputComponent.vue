@@ -1,28 +1,27 @@
 <template>
-    <PlaceholderInputLabelContainer>
+    <div class="flex flex-col relative w-full">
+        <label :for="this.id"
+               class="mb-1 block font-lexend text-xs font-medium text-[#3F424A]">
+            {{ this.label }}<span v-if="required" class="text-danger"> *</span>
+        </label>
         <input :id="this.id"
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="number"
-               class="input peer"
-               :class="[isSmall ? '' : 'h-12', classes]"
-               placeholder="placeholder"
+               class="input"
+               :class="[isSmall ? 'h-7 text-xs' : 'h-8', classes]"
                :min="min"
-                :max="max"
-                :maxlength="maxlength"
+               :max="max"
+               :maxlength="maxlength"
                :step="step"
-        :required="required"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :classes="classes"/>
-    </PlaceholderInputLabelContainer>
+               :required="required"/>
+    </div>
 </template>
 
 <script>
 import {defineComponent} from "vue";
-import PlaceholderInputLabelContainer from "@/Components/Inputs/Container/PlaceholderInputLabelContainer.vue";
-import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
 
 export default defineComponent({
-    components: {PlaceholderLabel, PlaceholderInputLabelContainer},
     props: {
         id: {
             type: String,

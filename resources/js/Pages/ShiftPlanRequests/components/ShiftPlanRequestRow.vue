@@ -1,21 +1,21 @@
 <template>
     <div
         :data-shift-plan-row-key="row.key"
-        class="flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-[border-color,box-shadow] duration-300"
+        class="flex flex-col rounded-2xl border border-border-subtle bg-white shadow-sm transition-[border-color,box-shadow] duration-300"
         :class="[
-            rejectActive ? 'border-rose-300' : '',
-            isComparisonFocus ? 'border-indigo-300 ring-2 ring-indigo-200 ring-offset-2' : '',
+            rejectActive ? 'border-danger-border' : '',
+            isComparisonFocus ? 'border-accent-200 ring-2 ring-accent-200 ring-offset-2' : '',
         ]"
     >
-        <div class="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <div class="flex items-center gap-3 border-b border-border-subtle px-4 py-3">
             <div class="flex items-center gap-3 flex-1">
-                <div v-if="row.type !== 'unassigned'" class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-[11px] font-semibold text-gray-700 overflow-hidden">
+                <div v-if="row.type !== 'unassigned'" class="h-8 w-8 rounded-full bg-surface-sunken flex items-center justify-center text-[11px] font-semibold text-text-muted overflow-hidden">
                     <img v-if="row.avatar" :src="row.avatar" alt="" class="h-8 w-8 rounded-full object-cover" />
                     <span v-else class="uppercase">{{ row.name.slice(0, 2) }}</span>
                 </div>
                 <div>
-                    <div class="text-sm font-medium text-gray-900">{{ row.name }}</div>
-                    <div class="text-[11px] text-gray-500 flex items-center gap-1">
+                    <div class="text-sm font-medium text-text">{{ row.name }}</div>
+                    <div class="text-[11px] text-text-subtle flex items-center gap-1">
                         <span v-if="row.typeLabel">{{ $t(row.typeLabel) }}</span>
                         <span v-if="row.totals.total_shifts > 0" class="inline-flex items-center gap-1">
                             ·
@@ -25,7 +25,7 @@
                     </div>
                 </div>
             </div>
-            <div class="text-[11px] text-gray-400"></div>
+            <div class="text-[11px] text-text-subtle"></div>
         </div>
         <div class="px-3 py-3">
             <div class="grid gap-2" :style="gridStyle">

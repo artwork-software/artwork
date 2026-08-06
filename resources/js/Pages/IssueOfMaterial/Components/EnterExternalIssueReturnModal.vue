@@ -16,7 +16,6 @@ import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({

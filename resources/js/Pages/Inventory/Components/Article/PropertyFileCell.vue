@@ -2,15 +2,15 @@
     <div class="flex items-center gap-x-2">
         <!-- Existing file: download link + remove -->
         <template v-if="hasFile">
-            <component :is="IconFile" class="size-5 shrink-0 text-gray-400" aria-hidden="true"/>
+            <component :is="IconFile" class="size-5 shrink-0 text-text-subtle" aria-hidden="true"/>
             <button type="button"
-                    class="truncate font-medium text-indigo-600 hover:text-indigo-800 hover:underline text-left"
+                    class="truncate font-medium text-accent-600 hover:text-accent-700 hover:underline text-left"
                     :title="fileName"
                     @click="download">
                 {{ fileName }}
             </button>
             <button type="button"
-                    class="text-gray-400 hover:text-red-600 hover:animate-pulse duration-200 ease-in-out shrink-0"
+                    class="text-text-subtle hover:text-danger hover:animate-pulse duration-200 ease-in-out shrink-0"
                     :disabled="busy"
                     @click="remove">
                 <component :is="IconTrash" class="h-5 w-5" aria-hidden="true"/>
@@ -19,7 +19,7 @@
 
         <!-- No file yet: select to upload immediately -->
         <template v-else>
-            <label class="flex items-center gap-x-2 cursor-pointer text-gray-500 hover:text-gray-700">
+            <label class="flex items-center gap-x-2 cursor-pointer text-text-subtle hover:text-text-muted">
                 <component :is="busy ? IconLoader2 : IconUpload"
                            :class="['size-5 shrink-0', busy ? 'animate-spin' : '']" aria-hidden="true"/>
                 <span class="truncate font-medium">
@@ -29,7 +29,7 @@
             </label>
         </template>
     </div>
-    <p v-if="error" class="text-xs text-red-500 mt-1">{{ error }}</p>
+    <p v-if="error" class="text-xs text-danger mt-1">{{ error }}</p>
 </template>
 
 <script setup>

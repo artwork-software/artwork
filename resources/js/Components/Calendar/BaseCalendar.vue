@@ -37,7 +37,7 @@
             </FunctionBarCalendar>
             <div
                 v-if="hasFailedMonths"
-                class="w-full h-8 px-4 py-2 bg-error cursor-pointer"
+                class="w-full h-8 px-4 py-2 bg-danger cursor-pointer"
                 @click="retryFailedMonths"
             >
                 <div class="flex items-center justify-center w-full h-full gap-x-1">
@@ -53,7 +53,7 @@
             <!-- Monatsansicht -->
             <div v-if="!isDaily && !atAGlance">
                 <div class="w-max -ml-3">
-                    <div :class="project ? 'bg-lightBackgroundGray/50' : 'bg-white'">
+                    <div :class="project ? 'bg-surface-canvas/50' : 'bg-white'">
                         <!-- Kopfzeile soll exakt dieselbe Raumreihenfolge/-filterung nutzen wie das Grid -->
                         <CalendarHeader :rooms="newCalendarData" :filtered-events-length="eventsWithoutRoomLen" :sticky-top="topbarHeight" :show-day-remarks-column="dayRemarksColumnVisible" :is-fullscreen="isFullscreen" />
                         <div
@@ -71,7 +71,7 @@
                                  obersten Block bei Start mitten im Monat die Orientierung -->
                             <div
                                 v-if="(day.isFirstDayOfMonth || dayIndex === 0) && !day.isExtraRow"
-                                class="month-separator flex items-center h-7 w-full bg-artwork-navigation-background"
+                                class="month-separator flex items-center h-7 w-full bg-surface-inverse"
                             >
                                 <span
                                     class="month-separator-label text-xs font-semibold text-white whitespace-nowrap px-3"
@@ -122,12 +122,12 @@
                                                 v-if="multiEdit"
                                                 class="absolute inset-0 z-30 pointer-events-none"
                                                 :class="isCellSelected(day, room)
-                                                    ? 'border-2 border-dashed border-blue-500 bg-blue-500/10'
-                                                    : 'group-hover/container:border group-hover/container:border-dashed group-hover/container:border-blue-400/70'"
+                                                    ? 'border-2 border-dashed border-accent-600 bg-accent-600/10'
+                                                    : 'group-hover/container:border group-hover/container:border-dashed group-hover/container:border-accent-500/70'"
                                             >
                                                 <div
                                                     v-if="isCellSelected(day, room)"
-                                                    class="absolute top-0.5 right-0.5 rounded-full bg-blue-500 text-white p-0.5"
+                                                    class="absolute top-0.5 right-0.5 rounded-full bg-accent-600 text-white p-0.5"
                                                 >
                                                     <component :is="IconCirclePlus" class="size-3.5" stroke-width="2" />
                                                 </div>
@@ -252,7 +252,7 @@
                 />
             </div>
             <div class="w-max" v-else>
-                <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-30 top-[64px] rounded-lg mb-3">
+                <div class="flex items-center sticky gap-0.5 h-16 bg-surface-inverse z-30 top-[64px] rounded-lg mb-3">
                     <div v-for="room in newCalendarData" :key="room.roomId ?? room.id">
                         <div :style="{ minWidth: columnWidth + 'px', maxWidth: columnWidth + 'px', width: columnWidth + 'px' }" class="flex items-center h-full truncate">
                             <SingleRoomInHeader :room="room" is-light />
@@ -300,10 +300,10 @@
         </div>
 
         <!-- Multi-Edit Bottom Bar -->
-        <div class="fixed bottom-0 w-full bg-artwork-navigation-background/30 z-[45] pointer-events-none py-3" v-if="multiEdit">
+        <div class="fixed bottom-0 w-full bg-surface-inverse/30 z-[45] pointer-events-none py-3" v-if="multiEdit">
             <!-- Auswahl-Zähler bzw. Bedien-Hinweis -->
             <div class="flex items-center justify-center pb-2">
-                <span class="rounded-full bg-artwork-navigation-background/90 text-white text-xs px-3 py-1 select-none">
+                <span class="rounded-full bg-surface-inverse/90 text-white text-xs px-3 py-1 select-none">
                     <template v-if="checkedCount > 0 || selectedCellCount > 0">
                         {{ $t('{0} event(s) · {1} cell(s) selected', [checkedCount, selectedCellCount]) }}
                     </template>
@@ -335,7 +335,7 @@
                     :text="$t('Move {0} event(s) into this cell', [checkedCount])"
                 />
                 <FormButton
-                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="cancelMultiEditDuplicateSelection"
                     :text="$t('Cancel selection')"
                 />
@@ -374,7 +374,7 @@
                     />
                     <FormButton
                         v-if="can('can edit planning calendar') || isAdmin"
-                        class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                        class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                         @click="showRejectEventVerificationRequestModal = true"
                         :disabled="checkedCount === 0"
                         :text="checkedCount + ' ' + $t('Reject events')"
@@ -382,27 +382,27 @@
                 </template>
                 <FormButton
                     v-if="hasSelectedRoomRequests"
-                    class="bg-green-600 hover:bg-green-500 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-success hover:bg-success/80 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="bulkAcceptRoomRequests"
                     :disabled="checkedCount === 0"
                     :text="checkedCount + ' ' + $t('Accept requests')"
                 />
                 <FormButton
                     v-if="hasSelectedRoomRequests"
-                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="bulkDeclineRoomRequests"
                     :disabled="checkedCount === 0"
                     :text="checkedCount + ' ' + $t('Decline requests')"
                 />
                 <FormButton
                     v-if="!isPlanning || can('can edit planning calendar') || isAdmin"
-                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="openDeleteSelectedEventsModal = true"
                     :disabled="checkedCount === 0"
                     :text="checkedCount + ' ' + $t('Delete events')"
                 />
                 <FormButton
-                    class="bg-artwork-error hover:bg-artwork-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    class="bg-danger hover:bg-danger/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="cancelMultiEditDuplicateSelection"
                     :disabled="checkedCount === 0"
                     :text="$t('Cancel selection')"

@@ -8,7 +8,7 @@
             <div class="flex items-center gap-x-3">
                 <div
                     class="rounded-full"
-                    :class="{ 'ring-2 ring-red-500 ring-offset-2': dayServiceForm.errors.icon }"
+                    :class="{ 'ring-2 ring-danger ring-offset-2': dayServiceForm.errors.icon }"
                 >
                     <IconSelector
                         @update:modelValue="addIconToForm"
@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <p v-if="dayServiceForm.errors.icon" class="mt-2 text-xs text-artwork-messages-error">
+            <p v-if="dayServiceForm.errors.icon" class="mt-2 text-xs text-danger">
                 {{ dayServiceForm.errors.icon }}
             </p>
 

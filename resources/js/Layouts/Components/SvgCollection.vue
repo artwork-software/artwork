@@ -237,8 +237,8 @@
 
 
     <span v-if="svgName === 'xMarkIcon'" class="flex items-center justify-center">
-        <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-            <XIcon class="w-2 h-2 text-white" />
+        <span class="rounded-full bg-danger p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+            <IconX class="w-2 h-2 text-white" />
         </span>
     </span>
 
@@ -246,14 +246,14 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 
 
-import {XIcon} from "@heroicons/vue/solid";
 
 export default {
     name: "SvgCollection",
     components: {
-        XIcon
+        IconX
     },
     props:['svgName'],
 }

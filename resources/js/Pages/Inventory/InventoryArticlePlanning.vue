@@ -19,7 +19,7 @@
                             type="text"
                             v-model="searchFilter"
                             :placeholder="$t('Search articles, categories...')"
-                            class="px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-w-[200px]"
+                            class="px-3 py-1.5 text-sm border border-border-subtle rounded-md focus:ring-2 focus:ring-accent-600 focus:border-accent-600 min-w-[200px]"
                         />
                     </div>
 
@@ -27,7 +27,7 @@
                     <div class="shrink-0">
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-text-muted hover:bg-surface-sunken transition-colors"
                             :title="allExpanded ? $t('Collapse all') : $t('Expand all')"
                             @click="toggleAllCategories"
                         >
@@ -45,8 +45,8 @@
                     <div class="relative shrink-0" data-legend-wrapper ref="legendBtnRef">
                         <button
                             type="button"
-                            class="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white/80 p-1.5 text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 transition-colors"
-                            :class="showLegend ? 'bg-zinc-100 text-zinc-700' : ''"
+                            class="inline-flex items-center justify-center rounded-md border border-border-subtle bg-white/80 p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-text-muted transition-colors"
+                            :class="showLegend ? 'bg-surface-sunken text-text-muted' : ''"
                             :title="$t('Legend')"
                             :aria-label="$t('Legend')"
                             @click="toggleLegend"
@@ -59,21 +59,21 @@
                         <div
                             v-if="showLegend"
                             data-legend-wrapper
-                            class="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-lg p-3 min-w-[200px]"
+                            class="fixed z-[9999] rounded-lg border border-border-subtle bg-white shadow-lg p-3 min-w-[200px]"
                             :style="{ right: legendPos.right + 'px', top: legendPos.top + 'px' }"
                         >
-                            <div class="flex flex-col gap-2 text-[11px] text-zinc-600">
+                            <div class="flex flex-col gap-2 text-[11px] text-text-muted">
                                 <span class="inline-flex items-center gap-1.5">
-                                    <span class="inline-block size-2 rounded-full bg-red-600"></span>{{ $t('Overbooked (< 0)') }}
+                                    <span class="inline-block size-2 rounded-full bg-danger"></span>{{ $t('Overbooked (< 0)') }}
                                 </span>
                                 <span class="inline-flex items-center gap-1.5">
-                                    <span class="inline-block size-2 rounded-full bg-indigo-600"></span>{{ $t('Today') }}
+                                    <span class="inline-block size-2 rounded-full bg-accent-600"></span>{{ $t('Today') }}
                                 </span>
                                 <span class="inline-flex items-center gap-1.5">
-                                    <span class="inline-block size-2 rounded bg-zinc-300"></span>{{ $t('Weekend') }}
+                                    <span class="inline-block size-2 rounded bg-border"></span>{{ $t('Weekend') }}
                                 </span>
                                 <span class="inline-flex items-center gap-1.5">
-                                    <span class="inline-block h-1 w-3 rounded-sm bg-emerald-500"></span>{{ $t('Internal issue') }}
+                                    <span class="inline-block h-1 w-3 rounded-sm bg-success"></span>{{ $t('Internal issue') }}
                                 </span>
                                 <span class="inline-flex items-center gap-1.5">
                                     <span class="inline-block h-1 w-3 rounded-sm bar-stripe-legend-dropdown"></span>{{ $t('External issue') }}
@@ -86,8 +86,8 @@
                     <div class="relative shrink-0" data-settings-wrapper ref="settingsBtnRef">
                         <button
                             type="button"
-                            class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
-                            :class="showSettings ? 'bg-zinc-100 text-zinc-700' : ''"
+                            class="inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-text-muted hover:bg-surface-sunken transition-colors"
+                            :class="showSettings ? 'bg-surface-sunken text-text-muted' : ''"
                             @click="toggleSettings"
                         >
                             <IconAdjustmentsHorizontal class="size-4" />
@@ -99,31 +99,31 @@
                         <div
                             v-if="showSettings"
                             data-settings-wrapper
-                            class="fixed z-[9999] rounded-lg border border-zinc-200 bg-white shadow-lg p-3 min-w-[220px]"
+                            class="fixed z-[9999] rounded-lg border border-border-subtle bg-white shadow-lg p-3 min-w-[220px]"
                             :style="{ right: settingsPos.right + 'px', top: settingsPos.top + 'px' }"
                         >
-                            <div class="text-[10px] font-semibold uppercase tracking-wide text-zinc-400 mb-2">
+                            <div class="text-[10px] font-semibold uppercase tracking-wide text-text-subtle mb-2">
                                 {{ $t('Display Settings') }}
                             </div>
-                            <label class="flex items-center gap-2 text-[12px] font-medium text-zinc-700 cursor-pointer select-none">
+                            <label class="flex items-center gap-2 text-[12px] font-medium text-text-muted cursor-pointer select-none">
                                 <input
                                     type="checkbox"
                                     v-model="onlyPlanned"
-                                    class="size-3.5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                                    class="size-3.5 rounded border-border text-accent-600 focus:ring-accent-600"
                                 />
                                 {{ $t('Only planned articles') }}
                             </label>
 
                             <!-- Ansichtsübergreifend (users-Spalte) — gleiche Einstellung wie in den Kalender-Anzeigeoptionen -->
-                            <label class="mt-2 flex items-start gap-2 text-[12px] font-medium text-zinc-700 cursor-pointer select-none max-w-[260px]">
+                            <label class="mt-2 flex items-start gap-2 text-[12px] font-medium text-text-muted cursor-pointer select-none max-w-[260px]">
                                 <input
                                     type="checkbox"
                                     v-model="shareCalendarDate"
-                                    class="mt-0.5 size-3.5 shrink-0 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                                    class="mt-0.5 size-3.5 shrink-0 rounded border-border text-accent-600 focus:ring-accent-600"
                                 />
                                 <span>
                                     {{ $t('Share time period across views') }}
-                                    <span class="block text-[10px] font-normal text-zinc-400">
+                                    <span class="block text-[10px] font-normal text-text-subtle">
                                         {{ $t('Calendar, planning calendar, shift plan, list view and article planning always show the same time period. Changing the date in one view applies it everywhere.') }}
                                     </span>
                                 </span>
@@ -149,22 +149,22 @@
             <div ref="gridWrapper" class="overflow-auto text-sm relative" style="height: calc(100vh - 114px);" @scroll="onGridScroll">
                 <div ref="gridContent" class="min-w-max">
                     <!-- Timeline header row -->
-                    <div class="flex sticky top-0 z-30 bg-white/90 backdrop-blur shadow-sm text-sm font-medium text-zinc-700">
-                            <div class="sticky left-0 z-20 bg-white/90 px-4 py-2 font-medium w-[220px] min-w-[220px] flex items-center border-r border-zinc-200">
+                    <div class="flex sticky top-0 z-30 bg-white/90 backdrop-blur shadow-sm text-sm font-medium text-text-muted">
+                            <div class="sticky left-0 z-20 bg-white/90 px-4 py-2 font-medium w-[220px] min-w-[220px] flex items-center border-r border-border-subtle">
                                 {{ $t('Article') }}
                             </div>
                             <div
                                 v-for="date in dates"
                                 :key="date.date"
-                                class="px-4 py-2 text-center font-lexend text-[11px] min-w-24 max-w-24 w-24 flex flex-col items-center justify-center border-r border-zinc-200"
+                                class="px-4 py-2 text-center font-lexend text-[11px] min-w-24 max-w-24 w-24 flex flex-col items-center justify-center border-r border-border-subtle"
                                 :class="[
-                                    date.date === todayIso ? 'bg-indigo-50 text-indigo-700 font-semibold' : '',
-                                    weekMeta.get(date.date)?.isWeekStart ? 'border-l-2 border-l-zinc-800' : ''
+                                    date.date === todayIso ? 'bg-accent-50 text-accent-700 font-semibold' : '',
+                                    weekMeta.get(date.date)?.isWeekStart ? 'border-l-2 border-l-border-strong' : ''
                                 ]"
                             >
                                 <span
                                     v-if="weekMeta.get(date.date)?.isWeekStart"
-                                    class="text-[9px] font-bold uppercase tracking-wide text-zinc-800 leading-none mb-0.5"
+                                    class="text-[9px] font-bold uppercase tracking-wide text-text leading-none mb-0.5"
                                 >{{ $t('KW') }} {{ weekMeta.get(date.date)?.week }}</span>
                                 {{ formattedDates[date.date] }}
                             </div>
@@ -174,10 +174,10 @@
                         <div>
                             <template v-for="group in filteredGroupedArticles" :key="group.category">
                                 <!-- Category row (toggle) -->
-                                <div class="flex bg-zinc-100/80 border-t-2 border-zinc-800">
+                                <div class="flex bg-surface-sunken/80 border-t-2 border-border-strong">
                                     <button
                                         type="button"
-                                        class="sticky left-0 z-20 px-4 py-2 min-w-[220px] w-[220px] font-semibold text-[11px] text-zinc-700 inline-flex items-center gap-2 border-r border-zinc-200 select-none"
+                                        class="sticky left-0 z-20 px-4 py-2 min-w-[220px] w-[220px] font-semibold text-[11px] text-text-muted inline-flex items-center gap-2 border-r border-border-subtle select-none"
                                         :aria-expanded="isCatOpen(group.category)"
                                         @click="toggleCategory(group.category)"
                                     >
@@ -187,11 +187,11 @@
                                             :class="isCatOpen(group.category) ? 'rotate-90' : ''"
                                         />
                                         <span class="truncate">{{ group.category }}</span>
-                                        <span class="ml-auto text-[10px] text-zinc-500">
+                                        <span class="ml-auto text-[10px] text-text-subtle">
                       {{ countGroup(group) }}
                     </span>
                                     </button>
-                                    <div class="flex-1 border-b border-zinc-200"></div>
+                                    <div class="flex-1 border-b border-border-subtle"></div>
                                 </div>
 
                                 <!-- Articles without subcategory -->
@@ -213,10 +213,10 @@
                                     <!-- Subcategories -->
                                     <template v-for="sub in group.subcategories" :key="sub.name">
                                         <!-- Subcategory row (toggle) -->
-                                        <div class="flex bg-zinc-100/60">
+                                        <div class="flex bg-surface-sunken/60">
                                             <button
                                                 type="button"
-                                                class="sticky left-0 z-20 px-4 py-2 min-w-[220px] w-[220px] text-[11px] font-semibold text-zinc-700 inline-flex items-center gap-2 border-y border-r border-zinc-200 select-none"
+                                                class="sticky left-0 z-20 px-4 py-2 min-w-[220px] w-[220px] text-[11px] font-semibold text-text-muted inline-flex items-center gap-2 border-y border-r border-border-subtle select-none"
                                                 :aria-expanded="isSubOpen(group.category, sub.name)"
                                                 @click="toggleSub(group.category, sub.name)"
                                             >
@@ -226,9 +226,9 @@
                                                     :class="isSubOpen(group.category, sub.name) ? 'rotate-90' : ''"
                                                 />
                                                 <span class="truncate">{{ sub.name }}</span>
-                                                <span class="ml-auto text-[10px] text-zinc-500">{{ sub.articles?.length ?? 0 }}</span>
+                                                <span class="ml-auto text-[10px] text-text-subtle">{{ sub.articles?.length ?? 0 }}</span>
                                             </button>
-                                            <div class="flex-1 border-b border-zinc-200"></div>
+                                            <div class="flex-1 border-b border-border-subtle"></div>
                                         </div>
 
                                         <!-- Subcategory articles (only if both: cat open + sub open) -->
@@ -258,18 +258,18 @@
         <!-- Floating Tooltip -->
         <div
             v-if="tooltip.visible"
-            class="fixed z-50 pointer-events-none rounded-md bg-zinc-900 text-white text-[11px] px-2.5 py-1.5 shadow-lg"
+            class="fixed z-50 pointer-events-none rounded-md bg-surface-inverse text-text-inverse text-[11px] px-2.5 py-1.5 shadow-lg"
             :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
         >
             <div class="font-semibold mb-0.5">{{ tooltip.issue?.name }}</div>
-            <div class="text-zinc-300">{{ formatDateTooltip(tooltip.issue?.start) }} – {{ formatDateTooltip(tooltip.issue?.end) }}</div>
-            <div v-if="tooltip.issue?.type === 'intern' && tooltip.issue?.project_name" class="text-zinc-300">
+            <div class="text-white/70">{{ formatDateTooltip(tooltip.issue?.start) }} – {{ formatDateTooltip(tooltip.issue?.end) }}</div>
+            <div v-if="tooltip.issue?.type === 'intern' && tooltip.issue?.project_name" class="text-white/70">
                 {{ $t('Project') }}: {{ tooltip.issue.project_name }}
             </div>
-            <div v-else-if="tooltip.issue?.type === 'extern' && tooltip.issue?.receiver_name" class="text-zinc-300">
+            <div v-else-if="tooltip.issue?.type === 'extern' && tooltip.issue?.receiver_name" class="text-white/70">
                 {{ $t('Recipient') }}: {{ tooltip.issue.receiver_name }}
             </div>
-            <div class="text-zinc-400 mt-0.5">
+            <div class="text-white/70 mt-0.5">
                 <span v-if="tooltip.issue?.type === 'intern'">{{ $t('Internal issue') }}</span>
                 <span v-else>{{ $t('External issue') }}</span>
             </div>
@@ -306,24 +306,24 @@
             :title="barIssueForModal.name || $t('Material issue')"
             :description="barIssueIsExtern ? $t('External issue') : $t('Internal issue')"
         >
-            <div class="space-y-3 text-sm text-zinc-700 mt-2">
+            <div class="space-y-3 text-sm text-text-muted mt-2">
                 <div class="grid grid-cols-2 gap-2">
-                    <div class="text-zinc-500">{{ $t('Period') }}</div>
+                    <div class="text-text-subtle">{{ $t('Period') }}</div>
                     <div>{{ formatDateTooltip(barIssueForModal.start) }} – {{ formatDateTooltip(barIssueForModal.end) }}</div>
                 </div>
                 <div v-if="barIssueForModal.project_name" class="grid grid-cols-2 gap-2">
-                    <div class="text-zinc-500">{{ $t('Project') }}</div>
+                    <div class="text-text-subtle">{{ $t('Project') }}</div>
                     <div>
                         <a
                             v-if="barIssueForModal.project_id"
                             :href="route('projects.tab', {project: barIssueForModal.project_id, projectTab: props.projectMaterialIssueTabId})"
-                            class="text-indigo-600 hover:underline"
+                            class="text-accent-600 hover:underline"
                         >{{ barIssueForModal.project_name }}</a>
                         <span v-else>{{ barIssueForModal.project_name }}</span>
                     </div>
                 </div>
                 <div v-if="barIssueForModal.receiver_name" class="grid grid-cols-2 gap-2">
-                    <div class="text-zinc-500">{{ $t('Recipient') }}</div>
+                    <div class="text-text-subtle">{{ $t('Recipient') }}</div>
                     <div>{{ barIssueForModal.receiver_name }}</div>
                 </div>
             </div>

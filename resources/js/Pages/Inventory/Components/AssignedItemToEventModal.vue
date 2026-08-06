@@ -1,9 +1,9 @@
 <template>
 <BaseModal v-if="true" @closed="$emit('closed')">
-    <h1 class="headline1" v-if="!booking">
+    <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text" v-if="!booking">
         {{ $t('Add {0} to {1}', [item.name, event.eventName])}}
     </h1>
-    <h1 class="headline1" v-else>
+    <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text" v-else>
         {{ $t('Edit {0} in {1}', [item.name, event.eventName])}}
     </h1>
 
@@ -13,7 +13,7 @@
 
 
         <div class="flex items-end justify-between">
-            <div class="xsLight cursor-pointer"
+            <div class="text-sm/5 font-bold text-text-subtle cursor-pointer"
                  @click="$emit('closed')">
                 {{ $t('No, not really') }}
             </div>

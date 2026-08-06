@@ -80,7 +80,7 @@ createInertiaApp({
         if (import.meta.env.DEV) app.config.performance = true
         app.mount(el)
     },
-    progress: { color: '#3017AD', showSpinner: false, includeCss: true },
+    progress: { color: '#276293', showSpinner: false, includeCss: true },
 }).then(() => {
     let isHandlingExpiry = false
 

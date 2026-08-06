@@ -4,25 +4,25 @@
         <header class="mb-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-100 to-indigo-100 px-3 py-1 ring-1 ring-inset ring-sky-200">
-                        <span class="inline-block size-1.5 rounded-full bg-sky-500"></span>
-                        <span class="text-[11px] font-semibold text-sky-800 tracking-wide">{{ $t('External Material Issue') }}</span>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-info-surface to-accent-100 px-3 py-1 ring-1 ring-inset ring-info-border">
+                        <span class="inline-block size-1.5 rounded-full bg-info"></span>
+                        <span class="text-[11px] font-semibold text-info tracking-wide">{{ $t('External Material Issue') }}</span>
                     </div>
-                    <h1 class="mt-2 text-xl md:text-2xl font-bold tracking-tight text-zinc-900">
+                    <h1 class="mt-2 text-xl md:text-2xl font-bold tracking-tight text-text">
                         {{ externMaterialIssue?.id ? $t('Edit external material issue') : $t('Create external material issue') }}
                     </h1>
-                    <p class="text-sm text-zinc-500">
+                    <p class="text-sm text-text-subtle">
                         {{ $t('Here you can capture the basic information for the external material issue. Fields marked with * are required.') }}
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
+                    <span class="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-1 text-xs font-medium text-accent-700 ring-1 ring-inset ring-accent-200">
                     {{ externMaterialIssueForm.articles?.length || 0 }} {{ $t('articles') }}
                     </span>
-                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                                        <span class="inline-flex items-center rounded-full bg-success-surface px-2.5 py-1 text-xs font-medium text-success ring-1 ring-inset ring-success-border">
                     {{ externMaterialIssueForm.files?.length || 0 }} {{ $t('files') }}
                     </span>
-                                        <span v-if="externMaterialIssueForm.special_items?.length" class="inline-flex items-center rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-200">
+                                        <span v-if="externMaterialIssueForm.special_items?.length" class="inline-flex items-center rounded-full bg-special-violet-surface px-2.5 py-1 text-xs font-medium text-special-violet ring-1 ring-inset ring-special-violet-border">
                     {{ externMaterialIssueForm.special_items.length }} {{ $t('Special article') }}
                     </span>
                 </div>
@@ -30,22 +30,22 @@
         </header>
 
         <!-- Konflikt-Leiste: Zeigt Überbuchungen im Zeitraum an -->
-        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-red-200 bg-red-50/70 p-4 ring-1 ring-inset ring-red-200">
+        <section v-if="hasConflicts" class="mb-6 rounded-2xl border border-danger-border bg-danger-surface/70 p-4 ring-1 ring-inset ring-danger-border">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-start gap-3">
-                    <div class="grid size-8 place-items-center rounded-full bg-red-600 text-white text-xs font-bold">!</div>
+                    <div class="grid size-8 place-items-center rounded-full bg-danger text-white text-xs font-bold">!</div>
                     <div>
-                        <h3 class="text-sm font-semibold text-red-900">{{ $t('Conflicts regarding availability') }}</h3>
-                        <p class="text-xs text-red-800/90">
+                        <h3 class="text-sm font-semibold text-danger/90">{{ $t('Conflicts regarding availability') }}</h3>
+                        <p class="text-xs text-danger">
                             {{ $t('There are') }} <strong>{{ conflicts.length }}</strong> {{ $t('Items with a quantity higher than available in the selected period.') }}
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-300 hover:bg-red-100" @click="scrollToFirstConflict">
+                    <button type="button" class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-danger ring-1 ring-inset ring-danger-border hover:bg-danger-surface" @click="scrollToFirstConflict">
                         {{ $t('Show first conflict') }}
                     </button>
-                    <button type="button" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700" @click="fixAllConflicts">
+                    <button type="button" class="inline-flex items-center rounded-lg bg-danger px-3 py-1.5 text-xs font-semibold text-white hover:bg-danger" @click="fixAllConflicts">
                         {{ $t('Automatically adjust quantities') }}
                     </button>
                 </div>
@@ -54,12 +54,12 @@
 
             <!-- Konfliktliste (kompakt) -->
             <div class="mt-3 grid gap-2 md:grid-cols-2">
-                <div v-for="c in conflicts" :key="c.id" class="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-zinc-200">
+                <div v-for="c in conflicts" :key="c.id" class="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-border-subtle">
                     <div class="min-w-0 pr-2">
-                        <p class="truncate text-xs font-medium text-zinc-900">{{ c.name }}</p>
-                        <p class="text-[11px] text-zinc-500">{{ $t('Requested') }}: {{ c.wanted }} • {{ $t('Available') }}: {{ c.available }}</p>
+                        <p class="truncate text-xs font-medium text-text">{{ c.name }}</p>
+                        <p class="text-[11px] text-text-subtle">{{ $t('Requested') }}: {{ c.wanted }} • {{ $t('Available') }}: {{ c.available }}</p>
                     </div>
-                    <button type="button" class="text-xs font-medium text-blue-700 underline shrink-0" @click="openLightbox(0, externMaterialIssueForm.articles[c.index]?.images || [])">{{ $t('details') }}</button>
+                    <button type="button" class="text-xs font-medium text-accent-700 underline shrink-0" @click="openLightbox(0, externMaterialIssueForm.articles[c.index]?.images || [])">{{ $t('details') }}</button>
                 </div>
             </div>
         </section>
@@ -68,22 +68,22 @@
 
         <div class="space-y-8">
             <!-- Base data & External contact -->
-            <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div class="border-b border-zinc-100 bg-gradient-to-r from-sky-50 via-sky-50/60 to-transparent px-6 py-4 rounded-t-2xl">
-                    <h2 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-sky-500"></span>
+            <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                <div class="border-b border-border-subtle bg-gradient-to-r from-info-surface via-info-surface to-transparent px-6 py-4 rounded-t-2xl">
+                    <h2 class="text-base font-semibold text-text flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-info"></span>
                         {{ $t('Base data') }}
                     </h2>
-                    <p class="text-xs text-zinc-500">{{ $t('Capture name, value, period and contact.') }}</p>
+                    <p class="text-xs text-text-subtle">{{ $t('Capture name, value, period and contact.') }}</p>
                 </div>
                 <!-- Project -->
                 <div class="px-6 pt-2">
                     <ProjectSearch v-if="!selectedProject" @project-selected="addProject" :get-first-last-event="true" show-recent-projects :label="$t('Project assignment (optional)')" />
                     <div v-else class="mt-1">
-                        <span class="text-xs font-medium text-zinc-500">{{ $t('Selected project') }}</span>
-                        <div class="mt-1 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-1">
-                            <div class="text-sm font-semibold text-blue-800">{{ selectedProject.name }}</div>
-                            <button type="button" class="text-xs font-medium text-blue-700 underline" @click="removeProject">
+                        <span class="text-xs font-medium text-text-subtle">{{ $t('Selected project') }}</span>
+                        <div class="mt-1 flex items-center justify-between rounded-xl border border-accent-200 bg-accent-50 px-3 py-1">
+                            <div class="text-sm font-semibold text-accent-700">{{ selectedProject.name }}</div>
+                            <button type="button" class="text-xs font-medium text-accent-700 underline" @click="removeProject">
                                 {{ $t('Remove assignment') }}
                             </button>
                         </div>
@@ -92,40 +92,40 @@
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-4">
                     <div class="md:col-span-2">
                         <BaseInput id="name" type="text" v-model="externMaterialIssueForm.name" :label="$t('Name') + ' *'" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.name">{{ externMaterialIssueForm.errors.name }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.name">{{ externMaterialIssueForm.errors.name }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <BaseInput id="material_value" type="number" :step="0.01" v-model="externMaterialIssueForm.material_value" :label="$t('Material Value') + ' *'" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.material_value">{{ externMaterialIssueForm.errors.material_value }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.material_value">{{ externMaterialIssueForm.errors.material_value }}</p>
                     </div>
 
 
                     <div class="md:col-span-2">
                         <BaseInput id="issue_date" v-model="externMaterialIssueForm.issue_date" :label="$t('Issue Date') + ' *'" type="date" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.issue_date">{{ externMaterialIssueForm.errors.issue_date }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.issue_date">{{ externMaterialIssueForm.errors.issue_date }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <BaseInput id="return_date" v-model="externMaterialIssueForm.return_date" :label="$t('Return Date') + ' *'" type="date" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.return_date">{{ externMaterialIssueForm.errors.return_date }}</p>
-                        <p class="text-xs font-medium text-red-600 mt-1" v-if="isReturnDateBeforeIssueDate">{{ $t('Return date cannot be earlier than issue date') }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.return_date">{{ externMaterialIssueForm.errors.return_date }}</p>
+                        <p class="text-xs font-medium text-danger mt-1" v-if="isReturnDateBeforeIssueDate">{{ $t('Return date cannot be earlier than issue date') }}</p>
                     </div>
 
 
                     <div class="md:col-span-2">
                         <BaseInput id="external_name" v-model="externMaterialIssueForm.external_name" :label="$t('External Name') + ' *'" type="text" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.external_name">{{ externMaterialIssueForm.errors.external_name }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.external_name">{{ externMaterialIssueForm.errors.external_name }}</p>
                     </div>
                     <div>
                         <BaseInput id="external_email" v-model="externMaterialIssueForm.external_email" :label="$t('External E-Mail')" type="email" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.external_email">{{ externMaterialIssueForm.errors.external_email }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.external_email">{{ externMaterialIssueForm.errors.external_email }}</p>
                     </div>
                     <div>
                         <BaseInput id="external_phone" v-model="externMaterialIssueForm.external_phone" :label="$t('External Phone')" type="text" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.external_phone">{{ externMaterialIssueForm.errors.external_phone }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.external_phone">{{ externMaterialIssueForm.errors.external_phone }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <BaseInput id="external_address" v-model="externMaterialIssueForm.external_address" :label="$t('External Address')" type="text" />
-                        <p class="text-xs text-red-500 mt-0.5" v-if="externMaterialIssueForm.errors.external_address">{{ externMaterialIssueForm.errors.external_address }}</p>
+                        <p class="text-xs text-danger mt-0.5" v-if="externMaterialIssueForm.errors.external_address">{{ externMaterialIssueForm.errors.external_address }}</p>
                     </div>
 
 
@@ -133,13 +133,13 @@
                     <div class="md:col-span-4">
                         <UserSearch @user-selected="selectIssueBy" :label="$t('Issued By')" v-if="!issueBy" />
                         <div v-else class="mt-1">
-                            <span class="text-xs font-medium text-zinc-500">{{ $t('Issued By') }}</span>
-                            <div class="mt-1 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2">
+                            <span class="text-xs font-medium text-text-subtle">{{ $t('Issued By') }}</span>
+                            <div class="mt-1 flex items-center justify-between rounded-xl border border-accent-200 bg-accent-50 px-3 py-2">
                                 <div class="flex items-center gap-2">
                                     <img class="size-8 rounded-full object-cover" :src="issueBy.profile_photo_url" alt="" />
-                                    <span class="text-sm font-semibold text-indigo-800">{{ issueBy.first_name }} {{ issueBy.last_name }}</span>
+                                    <span class="text-sm font-semibold text-accent-700">{{ issueBy.first_name }} {{ issueBy.last_name }}</span>
                                 </div>
-                                <button type="button" class="text-xs font-medium text-indigo-700 underline" @click="issueBy = null">
+                                <button type="button" class="text-xs font-medium text-accent-700 underline" @click="issueBy = null">
                                     {{ $t('Remove assignment') }}
                                 </button>
                             </div>
@@ -159,8 +159,8 @@
                 <!-- Artikelsuche (links) + Auswahl (rechts) 50/50 nebeneinander -->
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
                 <!-- Found articles (left column) -->
-                <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
-                    <div class="sticky top-0 z-10 border-b border-zinc-100 bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl space-y-3">
+                <div class="rounded-2xl border border-border-subtle bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
+                    <div class="sticky top-0 z-10 border-b border-border-subtle bg-white/90 backdrop-blur px-5 py-3 rounded-t-2xl space-y-3">
                         <div class="flex items-center w-full gap-x-3">
                             <BaseInput
                                 id="articleSearchFilter"
@@ -175,13 +175,13 @@
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <h3 class="font-semibold flex items-center gap-2">
-                                <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                                 {{ $t('Found Articles') }}
-                                <span v-if="filteredArticles && filteredArticles.length > 0" class="text-sm font-normal text-zinc-500">
+                                <span v-if="filteredArticles && filteredArticles.length > 0" class="text-sm font-normal text-text-subtle">
                                     · {{ filteredArticles.length }} {{ filteredArticles.length === 1 ? $t('article found') : $t('articles found') }}
                                 </span>
                             </h3>
-                            <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200 shrink-0">
+                            <span class="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-1 text-xs font-medium text-accent-700 ring-1 ring-inset ring-accent-200 shrink-0">
                                 {{ externMaterialIssueForm.articles?.length || 0 }} {{ $t('selected') }}
                             </span>
                         </div>
@@ -189,17 +189,17 @@
 
                     <div ref="scrollContainer" class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                         <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
-                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-emerald-300 bg-emerald-50/50 ring-1 ring-emerald-200' : 'border-zinc-200 bg-zinc-50/60 hover:bg-zinc-50 hover:border-indigo-300'">
+                            <div v-for="article in filteredArticles" :key="article.id" class="rounded-xl border p-3 shadow-sm transition" :class="selectedQuantityById[article.id] ? 'border-success-border bg-success-surface/50 ring-1 ring-success-border' : 'border-border-subtle bg-surface-sunken/60 hover:bg-surface-sunken hover:border-accent-200'">
                                 <button type="button" class="w-full text-left" @click="addArticleToIssue(article)">
                                     <div class="flex items-start gap-3">
-                                        <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-zinc-200 object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
+                                        <img v-if="article?.images?.[0]?.image" :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="h-12 w-12 rounded-lg border border-border-subtle object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                         <div class="min-w-0 w-full">
                                             <div class="font-medium truncate flex items-center gap-1.5">
-                                                <component :is="IconCircleCheck" v-if="selectedQuantityById[article.id]" class="h-4 w-4 shrink-0 text-emerald-600" />
+                                                <component :is="IconCircleCheck" v-if="selectedQuantityById[article.id]" class="h-4 w-4 shrink-0 text-success" />
                                                 <span class="truncate min-w-0">{{ article.name }}</span>
-                                                <span v-if="selectedQuantityById[article.id]" class="ml-auto shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700" :title="$t('selected')">×{{ selectedQuantityById[article.id] }}</span>
+                                                <span v-if="selectedQuantityById[article.id]" class="ml-auto shrink-0 rounded-full bg-success-surface px-1.5 py-0.5 text-[10px] font-semibold text-success" :title="$t('selected')">×{{ selectedQuantityById[article.id] }}</span>
                                             </div>
-                                            <div class="text-xs text-zinc-500 line-clamp-2" v-if="article.description">{{ article.description }}</div>
+                                            <div class="text-xs text-text-subtle line-clamp-2" v-if="article.description">{{ article.description }}</div>
                                             <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
                                                 <template v-for="(status, i) in article.status_values" :key="i">
                                                     <div v-if="status.name === 'Ready for use' || status.name === 'Einsatzbereit'" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5" :style="{ borderColor: status.color, backgroundColor: status.color + '15' }" :title="status.name">
@@ -208,7 +208,7 @@
                                                         <span class="tabular-nums">{{ article.availableStock?.ready ?? status.pivot.value ?? 0 }}</span>
                                                     </div>
                                                 </template>
-                                                <span class="ml-auto text-zinc-500">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
+                                                <span class="ml-auto text-text-subtle">{{ $t('Category') }}: {{ article.category.name }}<span v-if="article.sub_category"> • {{ $t('Subcategory') }}: {{ article.sub_category.name }}</span></span>
                                             </div>
                                         </div>
                                     </div>
@@ -217,50 +217,50 @@
                         </div>
 
                         <!-- Empty state -->
-                        <div v-if="!filteredArticles.length && !loadingMore" class="py-10 text-center text-sm text-zinc-500">
+                        <div v-if="!filteredArticles.length && !loadingMore" class="py-10 text-center text-sm text-text-subtle">
                             {{ $t('No articles found') }}
                         </div>
 
                         <!-- Infinite-scroll sentinel + status -->
                         <div ref="loadMoreSentinel" class="h-px"></div>
                         <div v-if="loadingMore" class="flex justify-center py-4">
-                            <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"></span>
+                            <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-accent-600 border-t-transparent"></span>
                         </div>
-                        <div v-else-if="!hasMoreArticles && filteredArticles.length" class="pt-3 text-center text-xs text-zinc-400">
+                        <div v-else-if="!hasMoreArticles && filteredArticles.length" class="pt-3 text-center text-xs text-text-subtle">
                             {{ $t('All articles loaded') }}
                         </div>
                     </div>
                 </div>
 
                     <!-- Selected items (right column) -->
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
-                        <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl flex items-start justify-between gap-3">
+                    <div class="rounded-2xl border border-border-subtle bg-white shadow-sm flex flex-col lg:sticky lg:top-0 lg:max-h-[calc(100vh-11rem)]">
+                        <div class="border-b border-border-subtle px-6 py-4 rounded-t-2xl flex items-start justify-between gap-3">
                             <div class="min-w-0">
-                                <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
-                                    <span class="inline-block size-2 rounded-full bg-indigo-500"></span>
+                                <h3 class="text-base font-semibold text-text flex items-center gap-2">
+                                    <span class="inline-block size-2 rounded-full bg-accent-600"></span>
                                     {{ $t('Selected items') }}
                                 </h3>
-                                <p class="text-xs text-zinc-500">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
+                                <p class="text-xs text-text-subtle">{{ $t('Here you can see the items you have selected for the material issue. Adjust the quantity or remove items.') }}</p>
                             </div>
                             <div class="shrink-0 text-right">
-                                <div class="text-lg font-bold tabular-nums leading-none text-zinc-900">{{ externMaterialIssueForm.articles?.length || 0 }}</div>
-                                <div class="text-[11px] text-zinc-500">{{ $t('selected') }}</div>
+                                <div class="text-lg font-bold tabular-nums leading-none text-text">{{ externMaterialIssueForm.articles?.length || 0 }}</div>
+                                <div class="text-[11px] text-text-subtle">{{ $t('selected') }}</div>
                             </div>
                         </div>
 
                         <div class="min-h-0 flex-1 overflow-y-auto p-5">
-                            <div v-if="usageError" class="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                            <div v-if="usageError" class="mb-4 flex items-start justify-between gap-3 rounded-lg border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning">
                                 <span>{{ $t(usageError) }}</span>
-                                <button type="button" class="shrink-0 font-medium text-amber-700 hover:text-amber-900" @click="usageError = null">
-                                    <XIcon class="h-4 w-4" />
+                                <button type="button" class="shrink-0 font-medium text-warning hover:text-warning" @click="usageError = null">
+                                    <IconX class="h-4 w-4" />
                                 </button>
                             </div>
-                            <div v-if="externMaterialIssueForm.articles.length > 0" class="divide-y divide-zinc-200/80">
+                            <div v-if="externMaterialIssueForm.articles.length > 0" class="divide-y divide-border-subtle/80">
                                 <div v-for="(article, index) in externMaterialIssueForm.articles" :key="index" :data-article-row="index" class="flex flex-col gap-3 py-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
                                     <div class="flex w-full items-start gap-4">
                                         <!-- Single preview with zoom overlay -->
                                         <div v-if="article?.images?.length" class="shrink-0">
-                                            <div class="group relative h-16 w-16 cursor-zoom-in overflow-hidden rounded-lg border border-zinc-200 shadow-sm" @click="openLightbox(0, article.images)">
+                                            <div class="group relative h-16 w-16 cursor-zoom-in overflow-hidden rounded-lg border border-border-subtle shadow-sm" @click="openLightbox(0, article.images)">
                                                 <img :src="'/storage/' + article.images[0].image" :alt="article.images[0].alt || ''" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                                 <div class="pointer-events-none absolute inset-0 grid place-items-center bg-black/0 transition group-hover:bg-black/30">
                                                     <component :is="IconWindowMaximize" class="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" />
@@ -269,26 +269,25 @@
                                         </div>
 
                                         <div class="min-w-0">
-                                            <h4 class="text-sm font-semibold text-zinc-900 flex items-center gap-1">
+                                            <h4 class="text-sm font-semibold text-text flex items-center gap-1">
                                                 {{ article.name }}
-                                                <component :is="IconListDetails" class="h-4 w-4 text-zinc-400 hover:text-zinc-600" @click="articleForDetailModal = article" />
+                                                <component :is="IconListDetails" class="h-4 w-4 text-text-subtle hover:text-text-muted" @click="articleForDetailModal = article" />
                                             </h4>
-                                            <div class="mt-0.5 text-xs text-zinc-600 flex items-center gap-1">
+                                            <div class="mt-0.5 text-xs text-text-muted flex items-center gap-1">
                                                 {{ props.planningDate ? $t('Available stock on date') : $t('Available stock in period') }}:
-                                                <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{
-                                                  'text-emerald-600': (article.availableStock?.available ?? 0) > 0,
-                                                  'text-red-600': (article.availableStock?.available ?? 0) === 0
+                                                <span v-if="!article.availableStockRequestIsLoading" class="tabular-nums inline-flex items-center gap-1" :class="{ 'text-success': (article.availableStock?.available ?? 0) > 0,
+                                                  'text-danger': (article.availableStock?.available ?? 0) === 0
                                                 }">{{ article.availableStock?.available ?? 0 }}
                                                   <button type="button" class="underline" @click="getArticleDataForUsage(article)">
                                                     <component :is="IconInfoCircle" class="h-3.5 w-3.5" stroke-width="1.5" />
                                                   </button>
                                                 </span>
-                                                <span v-else class="inline-flex items-center gap-1 text-zinc-500">
+                                                <span v-else class="inline-flex items-center gap-1 text-text-subtle">
                                                     {{ $t('Fetching') }}
-                                                    <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-zinc-400" stroke-width="1.5" />
+                                                    <component :is="IconLoader" class="h-3.5 w-3.5 animate-spin text-text-subtle" stroke-width="1.5" />
                                                 </span>
                                             </div>
-                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date))" class="mt-1 inline-flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-inset ring-red-200">
+                                            <div v-if="article.quantity > (article.availableStock?.available ?? 0) && (props.planningDate || (externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date))" class="mt-1 inline-flex items-center gap-1.5 rounded-md bg-danger-surface px-2 py-1 text-[11px] font-medium text-danger ring-1 ring-inset ring-danger-border">
                                                 <span>{{ $t('Overbooking') }}</span>
                                                 <button type="button" class="underline" @click="getArticleDataForUsage(article)">{{ $t('Details') }}</button>
                                             </div>
@@ -297,9 +296,9 @@
 
                                     <div class="flex items-center gap-4 md:gap-6">
                                         <div class="w-28">
-                                            <BaseInput :id="'article-quantity-' + index" type="number" v-model="article.quantity" :label="$t('Menge')" :input-classes="article.quantity > (article.availableStock?.available ?? 0) && externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date ? '!border-red-500 !bg-red-50' : ''" />
+                                            <BaseInput :id="'article-quantity-' + index" type="number" v-model="article.quantity" :label="$t('Menge')" :input-classes="article.quantity > (article.availableStock?.available ?? 0) && externMaterialIssueForm.issue_date && externMaterialIssueForm.return_date ? '!border-danger !bg-danger-surface' : ''" />
                                         </div>
-                                        <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeArticle(index)">
+                                        <button type="button" class="rounded-md p-2 text-text-subtle hover:bg-surface-sunken hover:text-danger" @click="removeArticle(index)">
                                             <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
                                         </button>
                                     </div>
@@ -316,21 +315,21 @@
                 <!-- Sekundär: Sonderartikel (volle Breite) -->
                 <div class="space-y-6">
                     <!-- Special items -->
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                        <div class="flex items-center justify-between gap-3 border-b border-zinc-100 px-6 py-4 rounded-t-2xl">
+                    <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                        <div class="flex items-center justify-between gap-3 border-b border-border-subtle px-6 py-4 rounded-t-2xl">
                             <div>
-                                <h3 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
-                                    <span class="inline-block size-2 rounded-full bg-violet-500"></span>
+                                <h3 class="text-base font-semibold text-text flex items-center gap-2">
+                                    <span class="inline-block size-2 rounded-full bg-special-violet"></span>
                                     {{ $t('Special items') }}
                                 </h3>
-                                <p class="text-xs text-zinc-500">{{ $t('Add items that are not listed in the system.') }}</p>
+                                <p class="text-xs text-text-subtle">{{ $t('Add items that are not listed in the system.') }}</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <label class="flex items-center gap-2 text-xs text-zinc-700">
-                                    <input type="checkbox" v-model="externMaterialIssueForm.special_items_done" class="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500" />
+                                <label class="flex items-center gap-2 text-xs text-text-muted">
+                                    <input type="checkbox" v-model="externMaterialIssueForm.special_items_done" class="h-4 w-4 rounded border-border text-special-violet focus:ring-accent-600" />
                                     <span>{{ $t('Special items done') }}</span>
                                 </label>
-                                <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700" @click="addSpecialItem">
+                                <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-special-violet px-3 py-1.5 text-xs font-semibold text-white hover:bg-special-violet" @click="addSpecialItem">
                                     <component :is="IconCirclePlus" class="h-3.5 w-3.5" />
                                     {{ $t('Add special article') }}
                                 </button>
@@ -338,13 +337,13 @@
                         </div>
 
                         <div class="max-h-[26rem] overflow-y-auto p-6">
-                            <div class="divide-y divide-dashed divide-zinc-200">
+                            <div class="divide-y divide-dashed divide-border-subtle">
                                 <div v-for="(article, index) in externMaterialIssueForm.special_items" :key="index" class="py-3">
                                     <div class="grid grid-cols-1 gap-4 md:grid-cols-9">
                                         <BaseInput :id="'special-article-name-' + index" type="text" v-model="article.name" :label="$t('Article Name')" class="md:col-span-6" />
                                         <BaseInput :id="'special-article-quantity' + index" type="number" v-model="article.quantity" :label="$t('Quantity')" class="md:col-span-2" />
                                         <div class="flex items-center justify-center">
-                                            <button type="button" class="rounded-md p-2 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeSpecialArticle(index)">
+                                            <button type="button" class="rounded-md p-2 text-text-subtle hover:bg-surface-sunken hover:text-danger" @click="removeSpecialArticle(index)">
                                                 <component :is="IconTrash" class="h-5 w-5" stroke-width="1.5" />
                                             </button>
                                         </div>
@@ -358,61 +357,61 @@
             </section>
 
             <!-- Files -->
-            <section class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                <div class="border-b border-zinc-100 px-6 py-4 rounded-t-2xl bg-gradient-to-r from-emerald-50 via-emerald-50/60 to-transparent">
-                    <h2 class="text-base font-semibold text-zinc-900 flex items-center gap-2">
-                        <span class="inline-block size-2 rounded-full bg-emerald-500"></span>
+            <section class="rounded-2xl border border-border-subtle bg-white shadow-sm">
+                <div class="border-b border-border-subtle px-6 py-4 rounded-t-2xl bg-gradient-to-r from-success-surface via-success-surface to-transparent">
+                    <h2 class="text-base font-semibold text-text flex items-center gap-2">
+                        <span class="inline-block size-2 rounded-full bg-success"></span>
                         {{ $t('Files for material output') }}
                     </h2>
                 </div>
                 <div class="p-6 grid grid-cols-1 gap-6 md:grid-cols-2 items-stretch">
                     <div>
-                        <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-emerald-300/70 p-10 text-center hover:border-emerald-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
-                            <component :is="IconFile" class="mx-auto size-12 text-emerald-600" stroke-width="1" />
-                            <span class="mt-2 block text-sm font-semibold text-emerald-800">{{ $t('Select file') }}</span>
+                        <button @click="$refs.externMaterialIssueFiles.click()" type="button" class="relative block w-full max-h-56 min-h-56 rounded-2xl border-2 border-dashed border-success-border/70 p-10 text-center hover:border-success-border focus:outline-hidden focus:ring-2 focus:ring-success focus:ring-offset-2">
+                            <component :is="IconFile" class="mx-auto size-12 text-success" stroke-width="1" />
+                            <span class="mt-2 block text-sm font-semibold text-success">{{ $t('Select file') }}</span>
                             <input @change="upload" class="hidden" ref="externMaterialIssueFiles" id="file" type="file" multiple />
                         </button>
                     </div>
 
-                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 max-h-56 min-h-56 overflow-y-auto">
+                    <div class="rounded-xl border border-border-subtle bg-surface-sunken p-4 max-h-56 min-h-56 overflow-y-auto">
                         <div v-if="props.externMaterialIssue?.files?.length" class="space-y-2">
-                            <div v-for="(file, index) in props.externMaterialIssue.files" :key="'existing-' + index" class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                            <div v-for="(file, index) in props.externMaterialIssue.files" :key="'existing-' + index" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2">
                                 <!-- Thumbnail für Bilddateien -->
                                 <div v-if="isImageFile(file.original_name)" class="shrink-0">
-                                    <div class="overflow-hidden rounded border border-zinc-200 shadow-sm" style="width: 40px; height: 40px;">
+                                    <div class="overflow-hidden rounded border border-border-subtle shadow-sm" style="width: 40px; height: 40px;">
                                         <img :src="'/storage/' + file.file_path" :alt="file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                     </div>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-blue-700 hover:underline">
+                                    <a :href="'/storage/' + file.file_path" target="_blank" download class="truncate text-sm font-medium text-accent-700 hover:underline">
                                         {{ file.original_name }}
                                     </a>
                                 </div>
-                                <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="removeFile(file.id)">
+                                <button type="button" class="rounded-md p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-danger" @click="removeFile(file.id)">
                                     <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                 </button>
                             </div>
                         </div>
 
                         <div v-if="externMaterialIssueForm.files?.length" class="mt-3 space-y-2">
-                            <div v-for="(file, index) in externMaterialIssueForm.files" :key="'new-' + index" class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+                            <div v-for="(file, index) in externMaterialIssueForm.files" :key="'new-' + index" class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white px-3 py-2">
                                 <!-- Thumbnail für neue Bilddateien -->
                                 <div v-if="isImageFile(file.name || file.original_name) && filePreviewUrl(file)" class="shrink-0">
-                                    <div class="overflow-hidden rounded border border-zinc-200 shadow-sm" style="width: 40px; height: 40px;">
+                                    <div class="overflow-hidden rounded border border-border-subtle shadow-sm" style="width: 40px; height: 40px;">
                                         <img :src="filePreviewUrl(file)" :alt="file.name || file.original_name" class="block h-full w-full object-cover" @error="(e) => e.target.src = usePage().props.big_logo" />
                                     </div>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <h4 class="truncate text-sm font-medium">{{ file.name ?? file.original_name }}</h4>
-                                    <p v-if="file.size" class="text-[11px] text-zinc-500">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
+                                    <p v-if="file.size" class="text-[11px] text-text-subtle">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
                                 </div>
-                                <button type="button" class="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600" @click="externMaterialIssueForm.files.splice(index, 1)">
+                                <button type="button" class="rounded-md p-1.5 text-text-subtle hover:bg-surface-sunken hover:text-danger" @click="externMaterialIssueForm.files.splice(index, 1)">
                                     <component :is="IconTrash" class="h-4 w-4" stroke-width="1.5" />
                                 </button>
                             </div>
                         </div>
 
-                        <div v-if="!props.externMaterialIssue?.files?.length && !externMaterialIssueForm.files?.length" class="grid h-full place-items-center text-xs text-zinc-500">
+                        <div v-if="!props.externMaterialIssue?.files?.length && !externMaterialIssueForm.files?.length" class="grid h-full place-items-center text-xs text-text-subtle">
                             {{ $t('No files selected') }}
                         </div>
                     </div>
@@ -423,8 +422,8 @@
         <!-- Sticky Action Bar -->
         <div class="sticky bottom-0 z-40 mt-8 -mx-4 md:-mx-6 bg-gradient-to-t from-white via-white/80 to-transparent pt-4">
             <div class="mx-auto w-full px-4 md:px-6">
-                <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white/90 p-3 backdrop-blur shadow-sm">
-                    <div class="text-xs text-zinc-600">
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-white/90 p-3 backdrop-blur shadow-sm">
+                    <div class="text-xs text-text-muted">
                         {{ $t('Selected') }}: <span class="font-medium">{{ externMaterialIssueForm.articles?.length || 0 }}</span> {{ $t('articles') }} • {{ $t('Files') }}: <span class="font-medium">{{ externMaterialIssueForm.files?.length || 0 }}</span>
                     </div>
                     <FormButton :text="externMaterialIssue?.id ? $t('Update') : $t('Save')" :disabled="externMaterialIssueForm.processing || !externMaterialIssueForm.issue_date || !externMaterialIssueForm.return_date || !externMaterialIssueForm.material_value || isReturnDateBeforeIssueDate" type="submit" />
@@ -486,7 +485,6 @@ import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import RoomSearch from "@/Components/SearchBars/RoomSearch.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import ArticleSearchFilterModal from "@/Pages/IssueOfMaterial/Components/ArticleSearchFilterModal.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
@@ -502,17 +500,7 @@ import axios from "axios";
 import ArticleUsageModal from "@/Pages/Inventory/Components/Planning/ArticleUsageModal.vue";
 import ArticleDetailModal from "@/Pages/Inventory/Components/Article/Modals/ArticleDetailModal.vue";
 import Galleria from "primevue/galleria";
-import {
-    IconCircleCheck,
-    IconCopy,
-    IconFile,
-    IconInfoCircle,
-    IconListDetails,
-    IconLoader, IconParentheses,
-    IconCirclePlus,
-    IconTrash,
-    IconWindowMaximize
-} from "@tabler/icons-vue";
+import {IconCircleCheck, IconCirclePlus, IconCopy, IconFile, IconInfoCircle, IconListDetails, IconLoader, IconParentheses, IconTrash, IconWindowMaximize, IconX} from "@tabler/icons-vue";
 
 const props = defineProps({
     externMaterialIssue: {
@@ -732,8 +720,8 @@ function scrollToFirstConflict () {
         const el = document.querySelector(`[data-article-row="${idx}"]`) | null
         if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            el.classList.add('ring-2','ring-red-400','rounded-xl')
-            setTimeout(() => el.classList.remove('ring-2','ring-red-400','rounded-xl'), 1400)
+            el.classList.add('ring-2','ring-danger-border','rounded-xl')
+            setTimeout(() => el.classList.remove('ring-2','ring-danger-border','rounded-xl'), 1400)
         }
     })
 }

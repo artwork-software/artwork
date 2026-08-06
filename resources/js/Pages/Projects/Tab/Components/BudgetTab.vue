@@ -1,6 +1,6 @@
 <template>
-    <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-light-background-gray'">
-        <div class="flex bg-light-background-gray w-[95%]">
+    <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-surface-canvas'">
+        <div class="flex bg-surface-canvas w-[95%]">
             <BudgetComponent v-if="resolvedTable"
                              :sage-not-assigned="sageNotAssigned ?? effectiveBudgetData?.sageNotAssigned"
                              :hide-project-header="hideProjectHeader"
@@ -21,13 +21,13 @@
                              @sumDetailLoaded="handleSumDetailLoaded"
             />
             <div v-else class="w-full py-8">
-                <div v-if="loadBudgetError" class="text-error text-sm">
+                <div v-if="loadBudgetError" class="text-danger text-sm">
                     {{ loadBudgetError }}
                 </div>
-                <div v-else-if="isLoadingBudget" class="text-secondary text-sm">
+                <div v-else-if="isLoadingBudget" class="text-text-subtle text-sm">
                     {{ $t('Loading data...') }}
                 </div>
-                <div v-else class="text-secondary text-sm">
+                <div v-else class="text-text-subtle text-sm">
                     {{ $t('No budget data available.') }}
                 </div>
             </div>

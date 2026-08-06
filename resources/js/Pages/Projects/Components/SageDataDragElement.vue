@@ -29,7 +29,7 @@
             <div class="ml-2 flex">
                 <PropertyIcon
                     name="IconTrash"
-                    class="w-5 h-5 cursor-pointer hover:text-red-600"
+                    class="w-5 h-5 cursor-pointer hover:text-danger"
                     @click.stop="$emit('removeSageNotAssignedData', sageData)"
                 />
             </div>

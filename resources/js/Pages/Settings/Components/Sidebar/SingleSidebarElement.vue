@@ -144,35 +144,35 @@ function removeDisclosureComponent(id) {
 <template>
     <!-- Gesamt-Card (Sidebar-Tab) -->
     <div
-        class="mb-3 rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur p-4 shadow-sm transition"
+        class="mb-3 rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur p-4 shadow-sm transition"
         draggable="true"
         @dragstart="onDragStart"
-        :class="dragging ? 'ring-2 ring-emerald-400/30' : ''"
+        :class="dragging ? 'ring-2 ring-success-border/30' : ''"
     >
         <!-- Header -->
         <div
-            class="flex items-center justify-between gap-3 pb-3 border-b border-dashed border-zinc-200"
+            class="flex items-center justify-between gap-3 pb-3 border-b border-dashed border-border-subtle"
             :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
         >
             <button
                 type="button"
-                class="group/button inline-flex items-start gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:ring-offset-0"
+                class="group/button inline-flex items-start gap-2 px-2 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-accent-600/30 focus:ring-offset-0"
                 @click="tabClosed = !tabClosed"
                 :aria-expanded="!tabClosed"
                 :aria-controls="`sidebar-panel-${sidebarTab.id}`">
                <div class="text-start flex flex-col items-start gap-1 min-w-0">
                    <h3
-                       class="text-xs font-medium text-zinc-800 truncate"
+                       class="text-xs font-medium text-text truncate"
                        :title="sidebarTab.name">
                        {{ sidebarTab.name }}
                    </h3>
-                   <p class="inline-flex whitespace-nowrap items-center rounded-full border px-1.5 py-0.5 text-[8px] leading-4 border-zinc-200 bg-white/80 text-zinc-600">
+                   <p class="inline-flex whitespace-nowrap items-center rounded-full border px-1.5 py-0.5 text-[8px] leading-4 border-border-subtle bg-white/80 text-text-muted">
                         {{ componentCount }} {{ $t('Components') }}
                     </p>
                </div>
                 <!-- Ein Icon, rotiert je nach State -->
                 <IconChevronDown
-                    class="h-4 w-4 text-zinc-600 transition-transform duration-200"
+                    class="h-4 w-4 text-text-muted transition-transform duration-200"
                     :class="{'-rotate-180': !tabClosed}"
                     aria-hidden="true"
                 />
@@ -218,8 +218,8 @@ function removeDisclosureComponent(id) {
                         @mouseout="showMenu = null"
                     >
                         <div
-                            class="rounded-xl border border-zinc-200/80 bg-white/60 transition"
-                            :class="dragging ? 'ring-2 ring-emerald-400/30' : ''"
+                            class="rounded-xl border border-border-subtle/80 bg-white/60 transition"
+                            :class="dragging ? 'ring-2 ring-success-border/30' : ''"
                         >
                             <!-- Hauptkomponente -->
                             <div class="flex items-center justify-between gap-3 px-4 py-4">
@@ -228,24 +228,24 @@ function removeDisclosureComponent(id) {
                                     <button
                                         v-if="element.component.type === 'DisclosureComponent'"
                                         @click="disclosureOpen[element.id] = !disclosureOpen[element.id]"
-                                        class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white/70 shrink-0 hover:bg-zinc-50 transition"
+                                        class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0 hover:bg-surface-sunken transition"
                                         :aria-expanded="disclosureOpen[element.id]"
                                     >
                                         <IconChevronDown
-                                            class="h-4 w-4 text-zinc-600 transition-transform duration-200"
+                                            class="h-4 w-4 text-text-muted transition-transform duration-200"
                                             :class="{'-rotate-180': disclosureOpen[element.id]}"
                                         />
                                     </button>
                                     <!-- Normales Icon -->
-                                    <div v-else class="grid place-items-center size-9 rounded-lg border border-zinc-200/80 bg-white/70 shrink-0">
+                                    <div v-else class="grid place-items-center size-9 rounded-lg border border-border-subtle/80 bg-white/70 shrink-0">
                                         <ComponentIcons :type="element.component.type" />
                                     </div>
 
                                     <div class="min-w-0">
-                                        <div class="text-sm font-semibold text-zinc-900 truncate">
+                                        <div class="text-sm font-semibold text-text truncate">
                                             {{ element.component.name }}
                                         </div>
-                                        <div class="text-[11px] text-zinc-500">
+                                        <div class="text-[11px] text-text-subtle">
                                             {{ $t(element.component.type) }}
                                             <template v-if="element.component?.data?.height !== undefined">
                                                 · {{ element.component.data.height }} px
@@ -262,7 +262,7 @@ function removeDisclosureComponent(id) {
                                 </div>
 
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <IconDragDrop class="h-5 w-5 text-zinc-400 invisible group-hover:visible" aria-hidden="true" />
+                                    <IconDragDrop class="h-5 w-5 text-text-subtle invisible group-hover:visible" aria-hidden="true" />
                                     <div class="invisible group-hover:visible">
                                         <BaseMenu has-no-offset white-menu-background>
                                             <BaseMenuItem white-menu-background :icon="IconTrash" title="Delete" @click="removeComponentFromSidebar(element.id)" />

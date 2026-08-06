@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconPackage"
                 :title="title || $t('Material Sets')"
-                icon-bg-class="bg-orange-600/10 text-orange-700"
+                icon-bg-class="bg-special-orange-surface text-special-orange"
                 :description="description || $t('Manage material sets for inventory planning.')"
                 :search-enabled="false"
             >

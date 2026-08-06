@@ -4,9 +4,9 @@
         <template #tabBar>
 
             <ToolbarHeader
+                band
                 :icon="IconUsers"
                 title="Users"
-                icon-bg-class="bg-amber-600/10 text-amber-700"
                 v-model="user_query"
                 :description="users?.length ? `${users.length} ${$t('Users')}` : ''"
                 :search-enabled="true"
@@ -14,19 +14,21 @@
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <button
+                    <BaseUIButton
+                        v-if="hasActiveSsoSource"
                         type="button"
-                        class="ui-button"
-                        :class="authProviderFilter === 'sso' ? '!bg-blue-600 !text-white' : ''"
+                        hide-icon
+                        on-band
+                        :class="authProviderFilter === 'sso' ? '!bg-accent-500 !text-white' : ''"
                         @click="setAuthProviderFilter('sso')"
                     >
                         {{ $t('SSO only') }}
-                    </button>
+                    </BaseUIButton>
 
-                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-zinc-900" menu-width="w-72" classes="ui-button" menu-button-text="Sort">
+                    <BaseMenu show-sort-icon dots-size="size-5" has-no-offset dots-color="!text-text-inverse" white-icon menu-width="w-72" classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out" menu-button-text="Sort">
                         <div class="flex items-center justify-between py-1">
                             <span
-                                class="px-4 py-2 text-xs text-zinc-500 hover:text-zinc-900 cursor-pointer"
+                                class="px-4 py-2 text-xs text-text-subtle hover:text-text cursor-pointer"
                                 @click="resetSort()"
                             >
                               {{ $t('Reset') }}
@@ -36,20 +38,20 @@
                             <div
                                 @click="sortBy = userSortEnumName; applyFiltersAndSort()"
                                 :class="[
-                                active ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600',
+                                active ? 'bg-surface-sunken text-text' : 'text-text-muted',
                                 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm rounded-lg'
                               ]"
                             >
                                 {{ getSortEnumTranslation(userSortEnumName) }}
-                                <IconCheck v-if="getUserSortBySetting() === userSortEnumName" class="size-5 text-blue-600" />
+                                <IconCheck v-if="getUserSortBySetting() === userSortEnumName" class="size-5 text-accent-600" />
                             </div>
                         </MenuItem>
                     </BaseMenu>
 
-                    <button v-if="hasAdminRole()" class="ui-button-add"  @click="addingUser = true">
+                    <BaseUIButton v-if="hasAdminRole()" variant="primary" on-band hide-icon @click="addingUser = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Invite new users') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -73,16 +75,16 @@
                         </div>
                         <div class="ml-4">
                             <div class="flex items-center gap-2">
-                                <span class="font-medium text-gray-900">{{ row.first_name }} {{ row.last_name }}</span>
+                                <span class="font-medium text-text">{{ row.first_name }} {{ row.last_name }}</span>
                                 <span
                                     v-if="isSsoUser(row)"
-                                    class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200"
+                                    class="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-xs font-semibold text-accent-700 ring-1 ring-inset ring-accent-200"
                                     v-tooltip.top="{ value: ssoTooltip(row), appendTo: 'body', class: 'aw-tooltip', position: 'top' }"
                                 >
                                     {{ $t('SSO') }}
                                 </span>
                             </div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </Link>
                 </template>
@@ -107,9 +109,9 @@
                         <div v-if="row.departments?.length >= 3" class="relative">
                             <Menu as="div" class="relative">
                                 <MenuButton
-                                    class="flex size-10 items-center justify-center rounded-full bg-zinc-900 text-white ring-2 ring-white hover:bg-zinc-800"
+                                    class="flex size-10 items-center justify-center rounded-full bg-surface-inverse text-text-inverse ring-2 ring-white hover:bg-surface-inverse/90"
                                 >
-                                    <ChevronDownIcon class="size-5" />
+                                    <IconChevronDown class="size-5" />
                                 </MenuButton>
                                 <transition
                                     enter-active-class="transition duration-100 ease-out"
@@ -120,7 +122,7 @@
                                     leave-to-class="opacity-0 translate-y-1"
                                 >
                                     <MenuItems
-                                        class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-zinc-200 bg-white py-1 shadow-lg focus:outline-none"
+                                        class="absolute right-0 z-30 mt-2 max-h-48 w-72 overflow-y-auto rounded-xl border border-border-subtle bg-white py-1 shadow-overlay"
                                     >
                                         <MenuItem
                                             v-for="department in row.departments"
@@ -129,8 +131,8 @@
                                         >
                                             <div
                                                 :class="[
-                                            active ? 'bg-zinc-100' : '',
-                                            'flex items-center px-3 py-2 text-sm text-zinc-700'
+                                            active ? 'bg-surface-sunken' : '',
+                                            'flex items-center px-3 py-2 text-sm text-text-muted'
                                           ]"
                                             >
                                                 <TeamIconCollection class="size-8 rounded-full" :iconName="department.svg_name" />
@@ -175,7 +177,7 @@
     <!-- Delete Modal -->
     <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
         <div class="mx-4">
-            <div class="text-2xl font-bold text-zinc-900 my-2">
+            <div class="text-2xl font-bold text-text my-2">
         <span v-if="userToDelete?.type === 'user'">
           {{ $t('Delete user') }}
         </span>
@@ -187,7 +189,7 @@
         </span>
             </div>
 
-            <div class="text-sm text-red-600">
+            <div class="text-sm text-danger">
         <span v-if="userToDelete?.type === 'user' || userToDelete?.type === 'freelancer'">
           {{
                 $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
@@ -207,7 +209,7 @@
 
             <div class="mt-6 flex items-center justify-between">
                 <BaseUIButton :label="$t('Delete')" is-delete-button @click="deleteUser" />
-                <button @click="closeDeleteUserModal" class="text-sm text-zinc-500 hover:text-zinc-800">
+                <button @click="closeDeleteUserModal" class="text-sm text-text-subtle hover:text-text">
                     {{ $t('No, not really') }}
                 </button>
             </div>
@@ -230,17 +232,13 @@ import { Link, router } from '@inertiajs/vue3'
 import {
     Menu, MenuButton, MenuItem, MenuItems,
 } from '@headlessui/vue'
-import {
-    SearchIcon, TrashIcon, XIcon, PencilAltIcon, ChevronDownIcon,
-} from '@heroicons/vue/outline'
-import {IconCheck, IconCirclePlus, IconEdit, IconGeometry, IconTrash, IconUsers} from '@tabler/icons-vue'
+import {IconCheck, IconChevronDown, IconCirclePlus, IconEdit, IconGeometry, IconSearch, IconTrash, IconUsers, IconX} from "@tabler/icons-vue"
 import debounce from 'lodash.debounce'
 import InviteUsersModal from '@/Layouts/Components/InviteUsersModal.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import BaseMenu from '@/Components/Menu/BaseMenu.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
-import BaseCardButton from '@/Artwork/Buttons/BaseCardButton.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
 import UserHeader from '@/Pages/Users/UserHeader.vue'
 import { is } from 'laravel-permission-to-vuejs'
@@ -259,6 +257,7 @@ const props = defineProps({
     invitedUsers: Array,
     userSortEnumNames: Array,
     userUserManagementSetting: Object,
+    hasActiveSsoSource: Boolean,
 })
 
 const { getSortEnumTranslation } = useSortEnumTranslation()

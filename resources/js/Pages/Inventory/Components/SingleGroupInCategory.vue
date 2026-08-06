@@ -1,11 +1,11 @@
 <template>
-    <tr class="cursor-pointer w-full xsLight pb-1" @click="group.closed = !group.closed">
+    <tr class="cursor-pointer w-full text-sm/5 font-bold text-text-subtle pb-1" @click="group.closed = !group.closed">
         <td>
-            <div class="px-2 py-1.5 bg-gray-50/10 w-full" :class="group.closed ? 'rounded-b-lg' : ''">
+            <div class="px-2 py-1.5 bg-surface-sunken/10 w-full" :class="group.closed ? 'rounded-b-lg' : ''">
                 <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
                     <component :is="IconCornerDownRight" class="h-4 w-4"/>
                     {{ group.name }}
-                    <ChevronDownIcon
+                    <IconChevronDown
                         :class="group.closed ? '' : 'rotate-180 transform'"
                         class="h-4 w-4 mt-0.5"
                     />
@@ -19,10 +19,9 @@
 
 <script setup>
 
-import {ChevronDownIcon} from "@heroicons/vue/outline";
 import SingleItemInGroup from "@/Pages/Inventory/Components/SingleItemInGroup.vue";
 import SingleFolderInGroup from "@/Pages/Inventory/Components/SingleFolderInGroup.vue";
-import {IconCornerDownRight} from "@tabler/icons-vue";
+import {IconChevronDown, IconCornerDownRight} from "@tabler/icons-vue";
 
 const props = defineProps({
     group: {

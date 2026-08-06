@@ -74,8 +74,8 @@ function requestDeleteComponentInDisclosure(componentId) {
     <div class="group w-full">
         <!-- Card -->
         <div
-            class="w-full rounded-xl border border-zinc-200/80 bg-white/70 backdrop-blur px-4 py-4 my-2 shadow-sm transition"
-            :class="dragging ? 'ring-2 ring-emerald-400/30 rounded-lg' : ''"
+            class="w-full rounded-xl border border-border-subtle/80 bg-white/70 backdrop-blur px-4 py-4 my-2 shadow-sm transition"
+            :class="dragging ? 'ring-2 ring-success-border/30 rounded-lg' : ''"
             :key="element.id"
         >
             <div class="flex items-start justify-between gap-3">
@@ -83,7 +83,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                 <div class="flex items-start gap-3 min-w-0">
                     <!-- Icon-Box -->
                     <div
-                        class="grid place-items-center size-10 rounded-xl border bg-white/60 border-zinc-200/80 shrink-0"
+                        class="grid place-items-center size-10 rounded-xl border bg-white/60 border-border-subtle/80 shrink-0"
                         aria-hidden="true"
                     >
                         <ComponentIcons :type="element.component.type" />
@@ -94,22 +94,22 @@ function requestDeleteComponentInDisclosure(componentId) {
                         <!-- Titel + Badges -->
                         <div class="">
                             <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                                <div class="text-sm font-semibold text-zinc-900 truncate max-w-full" :title="$t(element.component.name)">
+                                <div class="text-sm font-semibold text-text truncate max-w-full" :title="$t(element.component.name)">
                                     {{ $t(element.component.name) }}
                                 </div>
 
                                 <!-- Ordner: Titel im Projekt + Anzahl der Komponenten -->
                                 <span
                                     v-if="isFolder && folderLabel"
-                                    class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-zinc-50/80 px-2 py-0.5 text-[11px] leading-4 text-zinc-700 shrink-0 max-w-48"
+                                    class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-sunken/80 px-2 py-0.5 text-[11px] leading-4 text-text-muted shrink-0 max-w-48"
                                     :title="$t('This title is displayed in the project')"
                                 >
-                                    <IconFolder class="size-3.5 shrink-0 text-zinc-500" />
+                                    <IconFolder class="size-3.5 shrink-0 text-text-subtle" />
                                     <span class="truncate font-medium">{{ folderLabel }}</span>
                                 </span>
                                 <span
                                     v-if="isFolder"
-                                    class="inline-flex items-center rounded-full border border-zinc-200 bg-white/70 px-2 py-0.5 text-[11px] leading-4 text-zinc-600 shrink-0"
+                                    class="inline-flex items-center rounded-full border border-border-subtle bg-white/70 px-2 py-0.5 text-[11px] leading-4 text-text-muted shrink-0"
                                 >
                                     {{ folderChildCount }} {{ $t('components') }}
                                 </span>
@@ -118,7 +118,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                             <!-- Höhe -->
                             <span
                                 v-if="element.component?.data?.height !== undefined"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-zinc-200 bg-white/70 text-zinc-600"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-border-subtle bg-white/70 text-text-muted"
                             >
                             {{ element.component.data.height }} px
                           </span>
@@ -126,7 +126,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                             <!-- Separatorline -->
                             <span
                                 v-if="element.component?.data?.showLine === true"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-zinc-200 bg-white/70 text-zinc-600"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-border-subtle bg-white/70 text-text-muted"
                             >
                 {{ $t('Show a separator line') }}
               </span>
@@ -134,25 +134,25 @@ function requestDeleteComponentInDisclosure(componentId) {
                             <!-- Title Size -->
                             <span
                                 v-if="element.component?.data?.title_size !== undefined"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-zinc-200 bg-white/70 text-zinc-600"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-border-subtle bg-white/70 text-text-muted"
                             >
                 {{ element.component.data.title_size }} px
               </span>
                         </div>
 
                         <!-- Typ -->
-                        <div class="text-[11px] text-zinc-500 mt-0.5">
+                        <div class="text-[11px] text-text-subtle mt-0.5">
                             {{ $t(element.component.type) }}
                         </div>
 
                         <!-- Documents Scope Info + Edit -->
-                        <div v-if="isDocuments" class="mt-2 text-[12px] text-zinc-600 flex items-center gap-2">
+                        <div v-if="isDocuments" class="mt-2 text-[12px] text-text-muted flex items-center gap-2">
                             <span>
                                 {{ $t('Shows documents from tabs') }}: {{ scopeTabNames.join(', ') }}
                             </span>
                             <button
                                 type="button"
-                                class="rounded-md px-2 py-0.5 text-xs ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50"
+                                class="rounded-md px-2 py-0.5 text-xs ring-1 ring-inset ring-border hover:bg-surface-sunken"
                                 @click="openEditScopeModal"
                             >
                                 {{ $t('Edit') }}
@@ -161,14 +161,14 @@ function requestDeleteComponentInDisclosure(componentId) {
 
                         <!-- Note -->
                         <div class="mt-3">
-                            <div class="xxsDarkBold text-[11px] text-zinc-600">
+                            <div class="text-xs/[15px] font-semibold text-text text-[11px] text-text-muted">
                                 {{ $t('Tooltip text (optional):') }}
                             </div>
 
                             <div
                                 v-if="!element.openNoteInput"
                                 class="cursor-pointer mt-1.5 text-[12px] leading-5"
-                                :class="element.note ? 'text-zinc-700' : 'text-zinc-400'"
+                                :class="element.note ? 'text-text-muted' : 'text-text-subtle'"
                                 @click="element.openNoteInput = !element.openNoteInput"
                             >
                                 {{ element.note ?? $t('Click here to add text') }}
@@ -188,10 +188,10 @@ function requestDeleteComponentInDisclosure(componentId) {
                         <!-- Ordner-Inhalt -->
                         <div v-if="isFolder" class="mt-3">
                             <Disclosure v-slot="{ open }" as="div">
-                                <DisclosureButton class="xsDark flex items-center gap-2 text-sm">
-                                    <component :is="open ? IconFolderOpen : IconFolder" class="size-4 text-zinc-600" />
+                                <DisclosureButton class="text-sm/5 font-semibold text-text flex items-center gap-2 text-sm">
+                                    <component :is="open ? IconFolderOpen : IconFolder" class="size-4 text-text-muted" />
                                     {{ $t('Components in Disclosure') }} ({{ folderChildCount }})
-                                    <IconChevronDown class="size-4 text-zinc-600 transition-transform" :class="{ 'rotate-180': open }" />
+                                    <IconChevronDown class="size-4 text-text-muted transition-transform" :class="{ 'rotate-180': open }" />
                                 </DisclosureButton>
 
                                 <!-- Dropzone sichtbar, wenn geschlossen -->
@@ -199,25 +199,25 @@ function requestDeleteComponentInDisclosure(componentId) {
 
                                 <DisclosurePanel class="mt-2">
                                     <!-- Eingerückter Bereich mit Führungslinie: alles hier liegt IM Ordner -->
-                                    <div class="ml-2 pl-3 border-l-2 border-zinc-200">
+                                    <div class="ml-2 pl-3 border-l-2 border-border-subtle">
                                         <DropComponentInDisclosureComponentElement :element="element" :index="1" :all-tabs="allTabs" :current-tab="tab" class="mb-2" />
                                         <div v-for="(component, index) in element.disclosure_components" :key="component.id" class="mb-2">
-                                            <div class="rounded-lg border border-zinc-200/80 bg-zinc-50/60 px-2.5 py-2 group/component">
+                                            <div class="rounded-lg border border-border-subtle/80 bg-surface-sunken/60 px-2.5 py-2 group/component">
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex items-center gap-1.5 text-sm text-zinc-800 min-w-0 flex-1">
+                                                    <div class="flex items-center gap-1.5 text-sm text-text min-w-0 flex-1">
                                                         <ComponentIcons :type="component.component.type" class="shrink-0" />
                                                         <span class="truncate font-medium" :title="$t(component.component.name)">{{ $t(component.component.name) }}</span>
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        class="rounded-md p-1 hover:bg-red-50 shrink-0"
+                                                        class="rounded-md p-1 hover:bg-danger-surface shrink-0"
                                                         @click="requestDeleteComponentInDisclosure(component.id)"
                                                         :aria-label="$t('Delete')"
                                                     >
-                                                        <IconTrash class="size-5 text-zinc-500 hover:text-red-500" />
+                                                        <IconTrash class="size-5 text-text-subtle hover:text-danger" />
                                                     </button>
                                                 </div>
-                                                <div class="text-[11px] text-zinc-500 ml-6">
+                                                <div class="text-[11px] text-text-subtle ml-6">
                                                     {{ $t(component.component.type) }}
                                                 </div>
                                             </div>
@@ -231,7 +231,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                                             />
                                         </div>
 
-                                        <div v-if="folderChildCount === 0" class="text-[12px] text-zinc-500 px-2 py-2">
+                                        <div v-if="folderChildCount === 0" class="text-[12px] text-text-subtle px-2 py-2">
                                             {{ $t('This folder is empty. Drop components here or use the plus button in the component list.') }}
                                         </div>
                                     </div>
@@ -244,7 +244,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                 <!-- Right: Actions -->
                 <div class="flex items-start gap-3 shrink-0 pl-2">
                     <!-- Drag-Handle (visuell) -->
-                    <IconDragDrop class="h-5 w-5 text-zinc-400" aria-hidden="true" />
+                    <IconDragDrop class="h-5 w-5 text-text-subtle" aria-hidden="true" />
 
                     <!-- Menu -->
                     <div>
@@ -254,7 +254,7 @@ function requestDeleteComponentInDisclosure(componentId) {
                                     href="#"
                                     @click.prevent="removeComponentFromTab(element.id)"
                                     :class="[
-                    active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary',
+                    active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle',
                     'group flex items-center px-4 py-2 text-sm rounded-md'
                   ]"
                                 >

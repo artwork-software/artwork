@@ -22,15 +22,15 @@
                 <li
                     v-for="preset in timelinePresets"
                     :key="preset.id"
-                    class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-5 py-4"
+                    class="flex items-center justify-between rounded-lg border border-border-subtle bg-white px-5 py-4"
                 >
                     <div class="flex items-center gap-x-4 flex-1 min-w-0">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-semibold text-sm">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-special-orange-surface text-special-orange font-semibold text-sm">
                             {{ preset.times_count }}
                         </div>
                         <div class="min-w-0">
-                            <p class="mDark truncate">{{ preset.name }}</p>
-                            <p class="xxsLight">
+                            <p class="text-lg/[21px] font-semibold text-text truncate">{{ preset.name }}</p>
+                            <p class="text-xs/[18px] text-text-subtle">
                                 {{ preset.times_count }} {{ $t('Points') }}
                             </p>
                         </div>
@@ -55,7 +55,7 @@
                 </li>
             </ul>
 
-            <div v-if="timelinePresets.length === 0" class="mt-5 text-sm text-gray-500">
+            <div v-if="timelinePresets.length === 0" class="mt-5 text-sm text-text-subtle">
                 <p>{{ $t('No timeline presets found.') }}</p>
                 <p class="mt-1">{{ $t('Save the timeline of an event as a preset to create your first one.') }}</p>
             </div>

@@ -3,11 +3,11 @@
     <ArtworkBaseModal @close="closeModal(false)" :title="title" :description="description">
         <div>
             <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
-                <FormButton class="bg-red-500 hover:bg-red-600"
+                <FormButton class="bg-danger hover:bg-danger"
                     @click="deleteElement(true)"
                     :text="buttonText"
                     :disabled="loading" />
-                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal(false)">
+                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal(false)">
                     {{ $t('No, not really') }}
                 </p>
             </div>
@@ -16,12 +16,12 @@
                     @click="deleteElement(true)"
                     :text="buttonText"
                     :disabled="loading" />
-                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete(true)">
+                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="complete_delete(true)">
                     {{ $t('Delete series entry completely') }}
                 </p>
             </div>
             <div v-if="is_budget && !isSeriesDelete" class="flex justify-between mt-5 pl-4 items-center pr-4">
-                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal(false)">{{ $t('Continue without saving') }}</p>
+                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="closeModal(false)">{{ $t('Continue without saving') }}</p>
                 <FormButton
                     type="button"
                     @click="deleteElement(true)"

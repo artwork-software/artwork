@@ -76,7 +76,7 @@ function create() {
     >
 
         <!-- Abschnitt: Zeitraum -->
-        <div class="my-5 border-b border-dotted border-gray-200 pb-5">
+        <div class="my-5 border-b border-dotted border-border-subtle pb-5">
             <ArtworkBaseToggle
                 label="Set period for calendar subscription"
                 description="Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only."
@@ -105,7 +105,7 @@ function create() {
         </div>
 
         <!-- Abschnitt: Gewerke -->
-        <div class="my-5 border-b border-dotted border-gray-200 pb-5">
+        <div class="my-5 border-b border-dotted border-border-subtle pb-5">
             <ArtworkBaseToggle
                 label="Select crafts for calendar subscription"
                 description="Select specific crafts for your shift calendar subscription. This allows you to specify which crafts should be displayed in your subscribed calendar to optimize your planning."
@@ -142,7 +142,7 @@ function create() {
             />
 
             <div v-if="aboForm.enable_notification" class="mt-4 ml-0 md:ml-7">
-                <label class="block text-sm font-medium leading-6 text-gray-900 mb-2">
+                <label class="block text-sm font-medium leading-6 text-text mb-2">
                     {{ $t('Notification settings') }}
                 </label>
 
@@ -163,7 +163,7 @@ function create() {
                                 v-model="aboForm.notification_time_unit"
                                 id="notification_time_unit"
                                 name="notification_time_unit"
-                                class="block w-full rounded-md border border-gray-200 bg-white py-2.5 px-3 h-14 text-sm focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
+                                class="block w-full rounded-md border border-border-subtle bg-white py-2.5 px-3 h-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-600"
                             >
                                 <option value="minutes">{{ $t('Minute(s)') }}</option>
                                 <option value="hours">{{ $t('Hour(s)') }}</option>
@@ -181,7 +181,7 @@ function create() {
                 <button
                     v-if="aboForm.id"
                     type="button"
-                    class="flex items-center text-xs text-artwork-buttons-hover underline"
+                    class="flex items-center text-xs text-accent-700 underline"
                     @click="showCalendarAboInfoModal = true"
                 >
                     <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
@@ -200,13 +200,13 @@ function create() {
         <!-- Info-Hinweis -->
         <div
             v-if="aboForm.id"
-            class="mt-3 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3"
+            class="mt-3 text-accent-600 bg-accent-600/10 rounded-lg p-3"
         >
             <div class="flex items-center gap-1 mb-2">
                 <PropertyIcon name="IconInfoCircle" class="h-4 w-4" stroke-width="1.5" />
                 <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
             </div>
-            <div class="text-xs text-artwork-buttons-create w-fit">
+            <div class="text-xs text-accent-600 w-fit">
                 {{
                     $t(
                         'As soon as you click on "Save", your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.'

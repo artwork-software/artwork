@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>
-            <div class="headline3 py-4">
+            <div class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text py-4">
                 {{ $t('Hours & remuneration')}}
             </div>
            <div class="grid grid-cols-1 gap-4 max-w-md">
@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {IconCheck, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -46,13 +46,13 @@ export default {
         BaseInput,
         NumberInputComponent,
         TextareaComponent,
-        CheckIcon,
-        XIcon,
-        PencilAltIcon,
+        IconCheck,
+        IconX,
+        IconEdit,
         JetInputError,
-        DotsVerticalIcon,
+        IconDotsVertical,
         TeamIconCollection,
-        TrashIcon,
+        IconTrash,
         Menu,
         MenuButton,
         MenuItem,

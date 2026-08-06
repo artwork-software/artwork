@@ -3,9 +3,9 @@
         <Switch
             v-model="model"
             :class="[
-        model ? 'bg-blue-600 hover:bg-blue-600/95' : 'bg-gray-200',
+        model ? 'bg-accent-600/95 hover:bg-accent-600/95' : 'bg-border',
         'relative inline-flex h-7 w-14 cursor-pointer rounded-full p-0.5 transition-colors duration-300 ease-out',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
         'shadow-inner'
       ]"
         >

@@ -1,7 +1,7 @@
 <template>
     <div class="grid grid-cols-12 w-full">
         <div class="col-span-7">
-            <h3 class="headline2 mb-6">{{ $t('Availability')}}</h3>
+            <h3 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mb-6">{{ $t('Availability')}}</h3>
             <div class="mb-10" v-if="type !== 'freelancer'">
                 <TemporarilyHired :user="user" v-if="$can('can manage workers') || hasAdminRole()" />
                 <div v-if="user.temporary && user.employStart && user.employEnd">

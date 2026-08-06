@@ -1,7 +1,7 @@
 <template>
     <BaseModal v-if="show" @closed="close">
         <div class="edit-column-select-options-modal-container">
-            <h1 class="headline1">
+            <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Edit column options') }}
             </h1>
             <span>{{ $t('If an option is removed and it is used in a cell, the corresponding cell is emptied.') }}</span>
@@ -11,7 +11,7 @@
                                         v-model="columnNewSelectOptionName"
                                         :label="$t('New selection option')"
                                         @keyup.enter="addNewColumnNewSelectOption()"/>
-                    <PlusCircleIcon v-if="columnNewSelectOptionName.length > 0"
+                    <IconCirclePlus v-if="columnNewSelectOptionName.length > 0"
                                     class="icon"
                                     @click="addNewColumnNewSelectOption()"/>
                 </div>
@@ -21,7 +21,7 @@
                     <span class="option-index">{{ $t('Selection option') + (index + 1) }}:</span>
                     <div class="option-container">
                         <span class="option">{{ option }}</span>
-                        <TrashIcon class="icon"
+                        <IconTrash class="icon"
                                    @click="removeNewColumnNewSelectOption(index)"/>
                     </div>
                 </div>
@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import {PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
+import {IconCirclePlus, IconTrash} from "@tabler/icons-vue";
 import { ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";

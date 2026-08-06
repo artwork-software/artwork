@@ -5,11 +5,11 @@
         @dragleave="dragLeave"
         class="mx-2 h-full rounded-lg duration-100 ease-in-out border-2 border-dashed"
         :class="{
-        'bg-artwork-buttons-create/30 border-artwork-buttons-create w-44': dropOver,
-        'bg-artwork-buttons-create/10 border-artwork-buttons-create w-8': isDragging,
+        'bg-accent-600/30 border-accent-600 w-44': dropOver,
+        'bg-accent-600/10 border-accent-600 w-8': isDragging,
         'border-transparent': !dropOver && !isDragging,
     }">
-        <div class="flex items-center justify-center pointer-events-none h-full xsDark" v-show="dropOver">
+        <div class="flex items-center justify-center pointer-events-none h-full text-sm/5 font-semibold text-text" v-show="dropOver">
             {{ $t("Drop here") }}
         </div>
     </div>

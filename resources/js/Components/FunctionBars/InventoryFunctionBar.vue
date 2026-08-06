@@ -1,16 +1,17 @@
 <template>
-    <div class="flex items-center w-full">
+    <!-- Dunkles Toolbar-Band (CI »Bühnenlicht«): trägt die Funktionsleiste des Screens -->
+    <div class="flex items-center w-full rounded-lg bg-surface-inverse shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] px-3 py-2">
         <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
 
         <div class="flex items-center mx-4 gap-x-1 select-none">
-            <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="previousTimeRange"/>
-            <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronLeftPipe" :aria-label="$t('Previous')" @click="previousTimeRange"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronLeft" :aria-label="$t('Previous')" @click="scrollToPreviousDay"/>
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
-                    <MenuButton class="">
-                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
-                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
-                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
+                    <MenuButton :class="bandIconButtonClasses">
+                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                     </MenuButton>
                 </div>
 
@@ -20,10 +21,10 @@
                             leave-active-class="transition-leave-active"
                             leave-from-class="transition-leave-from"
                             leave-to-class="transition-leave-to">
-                    <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-lg bg-surface-inverse shadow-overlay">
                         <div class="py-1">
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-white/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Day')"
@@ -32,7 +33,7 @@
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-white/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Calendar week')"
@@ -41,7 +42,7 @@
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']">
+                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-white/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
                                     <ToolTipComponent
                                         direction="right"
                                         :tooltip-text="$t('Jump around') + ' ' + $t('Month')"
@@ -53,19 +54,19 @@
                     </MenuItems>
                 </transition>
             </Menu>
-            <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToNextDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronRight" :aria-label="$t('Next')" @click="scrollToNextDay"/>
 
-            <IconChevronRightPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"  @click="nextTimeRange"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronRightPipe" :aria-label="$t('Next')" @click="nextTimeRange"/>
         </div>
 
         <div class="flex items-center mx-4 gap-x-1 select-none invisible">
-            <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronLeft" :aria-label="$t('Previous')" @click="scrollToPreviousDay"/>
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
-                    <MenuButton class="has">
-                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'month'"/>
-                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'week'"/>
-                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.auth.user.goto_mode === 'day'"/>
+                    <MenuButton :class="bandIconButtonClasses">
+                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'month'"/>
+                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'week'"/>
+                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-text-inverse" v-if="$page.props.auth.user.goto_mode === 'day'"/>
                     </MenuButton>
                 </div>
                 <transition enter-active-class="transition-enter-active"
@@ -74,31 +75,31 @@
                             leave-active-class="transition-leave-active"
                             leave-from-class="transition-leave-from"
                             leave-to-class="transition-leave-to">
-                    <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-lg bg-surface-inverse shadow-overlay">
                         <div class="py-1">
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
+                                <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-white/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
                                     <IconCalendar stroke-width="1.5" class="h-5 w-5 text-white"/>
-                                    <span class="tooltip rounded shadow-lg p-1 text-xs bg-artwork-navigation-background">Tag</span>
+                                    <span class="tooltip rounded shadow-overlay p-1 text-xs text-text-inverse bg-surface-inverse">Tag</span>
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
+                                <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-white/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
                                     <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-white"/>
-                                    <span class="tooltip rounded shadow-lg p-1 text-xs bg-artwork-navigation-background">KW</span>
+                                    <span class="tooltip rounded shadow-overlay p-1 text-xs text-text-inverse bg-surface-inverse">KW</span>
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
+                                <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-white/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']" class="has-tooltip">
                                     <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-white"/>
-                                    <span class="tooltip rounded shadow-lg p-1 text-xs bg-artwork-navigation-background">Monat</span>
+                                    <span class="tooltip rounded shadow-overlay p-1 text-xs text-text-inverse bg-surface-inverse">Monat</span>
                                 </div>
                             </MenuItem>
                         </div>
                     </MenuItems>
                 </transition>
             </Menu>
-            <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToNextDay"/>
+            <BaseUIButton variant="ghost" size="sm" on-band :icon="IconChevronRight" :aria-label="$t('Next')" @click="scrollToNextDay"/>
 
         </div>
 
@@ -120,6 +121,7 @@ import {
 import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     dateValue: {
@@ -127,6 +129,11 @@ const props = defineProps({
         required: true
     }
 })
+
+// Icon-Kachel auf dem dunklen Toolbar-Band (CI »Bühnenlicht«, Spec §3)
+const bandIconButtonClasses =
+    'select-none size-[30px] inline-flex items-center justify-center rounded-md ' +
+    'bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out';
 
 const emits = defineEmits([
     'scrollToPrevious',

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-row items-center p-2 bg-backgroundGray rounded-lg gap-x-1">
+    <div class="flex flex-row items-center p-2  rounded-lg gap-x-1">
         <component :is="dayService.icon"
                    stroke-width="1.5"
                    class="w-5 h-5"

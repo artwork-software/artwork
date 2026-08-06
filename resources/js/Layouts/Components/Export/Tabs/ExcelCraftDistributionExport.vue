@@ -3,16 +3,16 @@
         <div class="flex flex-col space-y-6">
 
             <section>
-                <h1 class="text-lg font-semibold text-zinc-900">
+                <h1 class="text-lg font-semibold text-text">
                     {{ $t('EXCEL_CRAFT_DISTRIBUTION_EXPORT') }}
                 </h1>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('Exports how the shift hours of every person of a universally applicable craft are distributed across the selected crafts, with hours, shares and totals.') }}
                 </p>
             </section>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-                <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Time period') }}</h2>
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
+                <h2 class="text-sm font-semibold text-text">{{ $t('Time period') }}</h2>
                 <VueDatePicker
                     v-model="dateRange"
                     range
@@ -26,9 +26,9 @@
                     :cancelText="$t('Cancel')"
                     :selectText="$t('Apply')"
                     :locale="language"
-                    input-class-name="!rounded-lg !border-gray-300 !py-2 !text-sm"
+                    input-class-name="!rounded-lg !border-border !py-2 !text-sm"
                 />
-                <p v-if="rangeTooLong" class="text-xs text-artwork-messages-error">
+                <p v-if="rangeTooLong" class="text-xs text-danger">
                     {{ $t('The export range must not exceed 36 months.') }}
                 </p>
                 <div class="flex flex-wrap gap-1.5">
@@ -38,8 +38,8 @@
                         type="button"
                         class="rounded-full border px-3 py-1 text-xs transition-colors"
                         :class="isActivePreset(preset)
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'"
+                            ? 'border-accent-200 bg-accent-50 text-accent-700'
+                            : 'border-border-subtle text-text-muted hover:bg-surface-sunken hover:text-text'"
                         @click="dateRange = preset.value"
                     >
                         {{ preset.label }}
@@ -47,29 +47,29 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-                <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Universal craft') }}</h2>
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
+                <h2 class="text-sm font-semibold text-text">{{ $t('Universal craft') }}</h2>
                 <template v-if="universalCrafts.length > 0">
                     <ArtworkBaseListbox
                         v-model="universalCraft"
                         :items="universalCrafts"
                         :placeholder="$t('Please select')"
                     />
-                    <p class="text-xs text-zinc-500">
+                    <p class="text-xs text-text-subtle">
                         {{ $t('All persons assigned to this craft are analyzed.') }}
                     </p>
                 </template>
-                <p v-else class="text-sm text-zinc-500">
+                <p v-else class="text-sm text-text-subtle">
                     {{ $t('There is no craft marked as universally applicable.') }}
                 </p>
             </section>
 
-            <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+            <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-zinc-900">{{ $t('Crafts') }}</h2>
+                    <h2 class="text-sm font-semibold text-text">{{ $t('Crafts') }}</h2>
                     <button
                         type="button"
-                        class="text-sm text-zinc-600 hover:text-zinc-900"
+                        class="text-sm text-text-muted hover:text-text"
                         @click="toggleAllCrafts"
                     >
                         {{ allCraftsSelected ? $t('Deselect all') : $t('Select all') }}
@@ -79,7 +79,7 @@
                     <label
                         v-for="craft in props.crafts"
                         :key="craft.id"
-                        class="flex items-center gap-2 text-xs text-zinc-700 cursor-pointer"
+                        class="flex items-center gap-2 text-xs text-text-muted cursor-pointer"
                     >
                         <input
                             type="checkbox"
@@ -90,13 +90,13 @@
                         {{ craft.name }}
                     </label>
                 </div>
-                <p class="text-xs text-zinc-500">
+                <p class="text-xs text-text-subtle">
                     {{ $t('Hours in crafts that are not selected are summarized as other crafts.') }}
                 </p>
             </section>
 
             <section class="flex items-center justify-end">
-                <p v-if="exportError" class="mr-4 text-sm text-artwork-messages-error" role="alert">
+                <p v-if="exportError" class="mr-4 text-sm text-danger" role="alert">
                     {{ exportError }}
                 </p>
                 <BaseUIButton

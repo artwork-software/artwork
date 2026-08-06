@@ -9,17 +9,17 @@
                 :icon="IconUsersGroup"
                 :title="$t('Permission presets')"
                 :description="`${filteredPresets.length} ${$t('Permission presets')}`"
-                icon-bg-class="bg-indigo-600/10 text-indigo-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 v-model="query"
                 :search-enabled="true"
                 :search-label="$t('Search presets')"
                 :search-tooltip="$t('Search')"
             >
                 <template #actions>
-                    <button class="ui-button-add" @click="openPermissionPresetModal('create')">
+                    <BaseUIButton variant="primary" hide-icon @click="openPermissionPresetModal('create')">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Create new permission presets') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
 
@@ -27,21 +27,24 @@
 
         <!-- List / Empty State -->
         <template #default>
-            <div v-if="filteredPresets.length === 0" class="rounded-2xl border border-zinc-200 bg-white p-10 text-center">
-                <div class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full ring-1 ring-inset ring-zinc-200">
-                    <DotsVerticalIcon class="h-6 w-6 text-zinc-400" />
+            <div v-if="filteredPresets.length === 0" class="rounded-2xl border border-border-subtle bg-white p-10 text-center">
+                <div class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full ring-1 ring-inset ring-border-subtle">
+                    <IconDotsVertical class="h-6 w-6 text-text-subtle" />
                 </div>
-                <h3 class="text-base font-semibold text-zinc-900">
+                <h3 class="text-base font-semibold text-text">
                     {{ $t('No permission presets found') }}
                 </h3>
-                <p class="mt-1 text-sm text-zinc-600">
+                <p class="mt-1 text-sm text-text-muted">
                     {{ $t('Create your first preset to reuse permission sets quickly.') }}
                 </p>
                 <div class="mt-6">
-                    <BaseCardButton
-                        text="Create preset"
+                    <BaseUIButton
+                        variant="secondary"
+                        hide-icon
                         @click="openPermissionPresetModal('create')"
-                    />
+                    >
+                        <span class="flex items-center gap-x-2">{{ $t('Create preset') }}</span>
+                    </BaseUIButton>
                 </div>
             </div>
 
@@ -49,13 +52,13 @@
                 <li
                     v-for="(preset, idx) in filteredPresets"
                     :key="preset.id"
-                    class="group flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-zinc-200 transition hover:bg-zinc-50 hover:shadow-sm"
+                    class="group flex items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-border-subtle transition hover:bg-surface-sunken hover:shadow-sm"
                 >
                     <!-- Clickable name -->
                     <button
                         type="button"
                         @click="openPermissionPresetModal('edit', preset)"
-                        class="text-left text-zinc-900 transition hover:text-zinc-950"
+                        class="text-left text-text transition hover:text-text"
                     >
                         <span class="block text-sm font-medium leading-6">{{ preset.name }}</span>
                     </button>
@@ -112,17 +115,14 @@ import PermissionPresetModal from '@/Pages/PermissionPresets/Components/Permissi
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import SuccessModal from '@/Layouts/Components/General/SuccessModal.vue'
 import ErrorComponent from '@/Layouts/Components/ErrorComponent.vue'
-import BaseCardButton from '@/Artwork/Buttons/BaseCardButton.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import SvgCollection from '@/Layouts/Components/SvgCollection.vue'
 import {
     Menu, MenuButton, MenuItem, MenuItems
 } from '@headlessui/vue'
-import {
-    DotsVerticalIcon, PencilAltIcon, TrashIcon, SearchIcon, XIcon
-} from '@heroicons/vue/outline'
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconCirclePlus, IconEdit, IconTrash, IconUsersGroup} from "@tabler/icons-vue";
+import {IconCirclePlus, IconDotsVertical, IconEdit, IconSearch, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import ToolbarHeader from "@/Artwork/Toolbar/ToolbarHeader.vue";
 
 /* Props */

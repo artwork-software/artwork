@@ -1,13 +1,13 @@
 <template>
     <div class="flex min-w-0 gap-x-4">
         <div class="min-w-0 flex-auto">
-            <p class="text-sm/6 font-semibold text-gray-900">
+            <p class="text-sm/6 font-semibold text-text">
                 {{ contract.name }}
             </p>
-            <p class="mt-1 flex text-xs/5 text-gray-500">
+            <p class="mt-1 flex text-xs/5 text-text-subtle">
                 {{ contract.description }}
             </p>
-            <p class="mt-1 flex text-xs/5 text-gray-500 space-x-2">
+            <p class="mt-1 flex text-xs/5 text-text-subtle space-x-2">
                 <span class="pr-2"><b>{{ $t('Free Full Days Per Week') }}</b>: {{ contract.free_full_days_per_week }}</span>
                 <span class="px-2"><b>{{ $t('Free Half Days Per Week') }}</b>: {{ contract.free_half_days_per_week }}</span>
                 <span class="px-2"><b>{{ $t('Special Day Rule Active') }}</b>: {{ contract.special_day_rule_active ? $t('Yes') : $t('No') }}</span>

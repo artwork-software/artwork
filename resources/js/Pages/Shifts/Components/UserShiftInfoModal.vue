@@ -7,7 +7,7 @@
         @close="$emit('closed')"
     >
         <!-- Tab-Leiste -->
-        <div class="border-b border-gray-200 mb-4">
+        <div class="border-b border-border-subtle mb-4">
             <nav class="-mb-px flex gap-4 overflow-x-auto" aria-label="Tabs">
                 <button
                     v-for="tab in tabs"
@@ -16,8 +16,8 @@
                     @click="activate(tab.key)"
                     :class="[
                         activeTab === tab.key
-                            ? 'border-artwork-buttons-create text-artwork-buttons-create'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                            ? 'border-accent-600 text-accent-600'
+                            : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border',
                         'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium'
                     ]"
                 >
@@ -28,14 +28,14 @@
 
         <div class="min-h-[18rem]">
             <!-- Ladezustand -->
-            <div v-if="loading[activeTab]" class="flex items-center justify-center py-16 text-sm text-gray-500">
+            <div v-if="loading[activeTab]" class="flex items-center justify-center py-16 text-sm text-text-subtle">
                 <PropertyIcon name="IconLoader2" class="size-5 mr-2 animate-spin" />
                 {{ $t('Loading...') }}
             </div>
 
             <!-- 1) Spielzeitbezogene Daten -->
             <div v-else-if="activeTab === 'season' && data.season" class="space-y-4">
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-text-subtle">
                     {{ $t('Season') }}: {{ formatDate(data.season.season.start) }} – {{ formatDate(data.season.season.end) }}
                     <span v-if="data.season.snapshot_recalculated_at">
                         · {{ $t('Documented status') }}: {{ formatDateTime(data.season.snapshot_recalculated_at) }}
@@ -44,29 +44,29 @@
 
                 <table class="min-w-full text-sm">
                     <thead>
-                        <tr class="text-left text-xs uppercase tracking-wide text-gray-500">
+                        <tr class="text-left text-xs uppercase tracking-wide text-text-subtle">
                             <th class="py-2 pr-4 font-medium">{{ $t('Parameter') }}</th>
                             <th class="py-2 px-2 font-medium text-center">{{ $t('1st half') }}</th>
                             <th class="py-2 px-2 font-medium text-center">{{ $t('2nd half') }}</th>
                             <th class="py-2 pl-2 font-medium text-center">{{ $t('Season / Year') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-border-subtle">
                         <tr v-for="row in seasonRows" :key="row.label">
-                            <td class="py-2 pr-4 text-gray-800">{{ $t(row.label) }}</td>
-                            <td class="py-2 px-2 text-center font-medium" :class="row.h1 === null ? 'text-gray-300' : ''">
+                            <td class="py-2 pr-4 text-text">{{ $t(row.label) }}</td>
+                            <td class="py-2 px-2 text-center font-medium" :class="row.h1 === null ? 'text-text-subtle' : ''">
                                 {{ row.h1 === null ? '–' : row.h1 }}
                             </td>
-                            <td class="py-2 px-2 text-center font-medium" :class="row.h2 === null ? 'text-gray-300' : ''">
+                            <td class="py-2 px-2 text-center font-medium" :class="row.h2 === null ? 'text-text-subtle' : ''">
                                 {{ row.h2 === null ? '–' : row.h2 }}
                             </td>
-                            <td class="py-2 pl-2 text-center font-medium" :class="row.total === null ? 'text-gray-300' : ''">
+                            <td class="py-2 pl-2 text-center font-medium" :class="row.total === null ? 'text-text-subtle' : ''">
                                 {{ row.total === null ? '–' : row.total }}
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <p class="text-[11px] text-gray-400">
+                <p class="text-[11px] text-text-subtle">
                     {{ $t('Format "actual / X" – X is the contract target. "–" means not applicable / not activated. The season is configured in the tool settings under "Communication & Legal".') }}
                 </p>
             </div>
@@ -74,11 +74,11 @@
             <!-- 2) Ersatzfreie Tage -->
             <div v-else-if="activeTab === 'compensation' && data.compensation" class="space-y-5">
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ $t('Open substitute days off') }}</h4>
+                    <h4 class="text-sm font-semibold text-text mb-1">{{ $t('Open substitute days off') }}</h4>
                     <SimpleDayTable :rows="data.compensation.openCompensations" empty="No open substitute days off." />
                 </div>
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-900 mb-1">{{ $t('Granted substitute days off') }}</h4>
+                    <h4 class="text-sm font-semibold text-text mb-1">{{ $t('Granted substitute days off') }}</h4>
                     <SimpleDayTable :rows="data.compensation.grantedCompensations" :granted="true" empty="No granted substitute days off." />
                 </div>
             </div>
@@ -86,37 +86,37 @@
             <!-- 3) Urlaub -->
             <div v-else-if="activeTab === 'vacation' && data.vacation" class="space-y-4">
                 <div class="grid grid-cols-3 gap-3">
-                    <div class="rounded-lg border border-gray-100 p-3">
-                        <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Entitlement') }} {{ data.vacation.year }}</p>
+                    <div class="rounded-lg border border-border-subtle p-3">
+                        <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Entitlement') }} {{ data.vacation.year }}</p>
                         <p class="mt-1 text-2xl font-semibold">{{ data.vacation.entitlement }}</p>
                     </div>
-                    <div class="rounded-lg border border-gray-100 p-3">
-                        <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Granted') }}</p>
+                    <div class="rounded-lg border border-border-subtle p-3">
+                        <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Granted') }}</p>
                         <p class="mt-1 text-2xl font-semibold">{{ data.vacation.granted }}</p>
                     </div>
-                    <div class="rounded-lg border border-gray-100 p-3">
-                        <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Remaining') }}</p>
-                        <p class="mt-1 text-2xl font-semibold" :class="data.vacation.remaining < 0 ? 'text-red-600' : ''">
+                    <div class="rounded-lg border border-border-subtle p-3">
+                        <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Remaining') }}</p>
+                        <p class="mt-1 text-2xl font-semibold" :class="data.vacation.remaining < 0 ? 'text-danger' : ''">
                             {{ data.vacation.remaining }}
                         </p>
                     </div>
                 </div>
                 <table class="min-w-full text-sm">
                     <thead>
-                        <tr class="text-left text-xs uppercase tracking-wide text-gray-500">
+                        <tr class="text-left text-xs uppercase tracking-wide text-text-subtle">
                             <th class="py-2 pr-4 font-medium">{{ $t('Date') }}</th>
                             <th class="py-2 px-2 font-medium">{{ $t('Scope') }}</th>
                             <th class="py-2 pl-2 font-medium">{{ $t('Comment') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-border-subtle">
                         <tr v-for="v in data.vacation.vacations" :key="v.id">
                             <td class="py-2 pr-4">{{ formatDate(v.date) }}</td>
                             <td class="py-2 px-2">{{ v.full_day ? $t('Full day') : $t('Half day') }}</td>
-                            <td class="py-2 pl-2 text-gray-500">{{ v.comment }}</td>
+                            <td class="py-2 pl-2 text-text-subtle">{{ v.comment }}</td>
                         </tr>
                         <tr v-if="!data.vacation.vacations.length">
-                            <td colspan="3" class="py-4 text-center text-gray-400">{{ $t('No vacation granted yet.') }}</td>
+                            <td colspan="3" class="py-4 text-center text-text-subtle">{{ $t('No vacation granted yet.') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -124,33 +124,33 @@
 
             <!-- 4) Ist-Stunden -->
             <div v-else-if="activeTab === 'worktimes' && data.worktimes" class="space-y-5">
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-text-subtle">
                     {{ $t('Period') }}: {{ formatDate(data.worktimes.dateRange.start) }} – {{ formatDate(data.worktimes.dateRange.end) }}
                 </p>
                 <div v-for="(days, weekKey) in data.worktimes.workTimes" :key="weekKey"
-                     class="rounded-lg border border-gray-100">
-                    <div class="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-t-lg">
+                     class="rounded-lg border border-border-subtle">
+                    <div class="flex items-center justify-between px-3 py-2 bg-surface-sunken rounded-t-lg">
                         <span class="text-sm font-semibold">{{ weekKey }}</span>
-                        <span class="text-xs" :class="weekDiff(days).minutes >= 0 ? 'text-green-600' : 'text-red-600'">
+                        <span class="text-xs" :class="weekDiff(days).minutes >= 0 ? 'text-success' : 'text-danger'">
                             {{ $t('Actual') }} {{ weekDiff(days).worked }} / {{ $t('Target') }} {{ weekDiff(days).wanted }}
                             ({{ weekDiff(days).diff }})
                         </span>
                     </div>
                     <table class="min-w-full text-sm">
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-border-subtle">
                             <tr v-for="day in Object.values(days)" :key="day.date">
-                                <td class="py-1.5 px-3 text-gray-700 w-1/2">{{ day.formatted_date }}</td>
+                                <td class="py-1.5 px-3 text-text-muted w-1/2">{{ day.formatted_date }}</td>
                                 <td class="py-1.5 px-3 text-right">{{ day.worked_hours_formatted }}</td>
-                                <td class="py-1.5 px-3 text-right text-gray-400">/ {{ day.wantedHoursFormatted }}</td>
+                                <td class="py-1.5 px-3 text-right text-text-subtle">/ {{ day.wantedHoursFormatted }}</td>
                                 <td class="py-1.5 px-3 text-right"
-                                    :class="day.work_time_balance_change >= 0 ? 'text-green-600' : 'text-red-600'">
+                                    :class="day.work_time_balance_change >= 0 ? 'text-success' : 'text-danger'">
                                     {{ day.work_time_balance_change_formatted }}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p v-if="!Object.keys(data.worktimes.workTimes).length" class="py-6 text-center text-gray-400 text-sm">
+                <p v-if="!Object.keys(data.worktimes.workTimes).length" class="py-6 text-center text-text-subtle text-sm">
                     {{ $t('No working hours in this period.') }}
                 </p>
             </div>

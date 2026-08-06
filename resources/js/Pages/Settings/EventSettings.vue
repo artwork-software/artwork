@@ -3,10 +3,10 @@
 
            <EventSettingHeader>
                <template #actions>
-                   <button class="ui-button-add" @click="openAddEventTypeModal">
+                   <BaseUIButton variant="primary" hide-icon @click="openAddEventTypeModal">
                        <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                        {{ $t('New Event Type') }}
-                   </button>
+                   </BaseUIButton>
                </template>
                <SettingsGuideBanner
                    class="mb-6"
@@ -32,27 +32,27 @@
                            </div>
                            <div class="ml-5 my-auto w-full justify-start mr-6">
                                <div class="flex my-auto">
-                                   <p class="mDark">{{ eventType.name }}</p>
-                                   <div class="ml-2 mDark">({{eventType.abbreviation}})</div>
+                                   <p class="text-lg/[21px] font-semibold text-text">{{ eventType.name }}</p>
+                                   <div class="ml-2 text-lg/[21px] font-semibold text-text">({{eventType.abbreviation}})</div>
                                </div>
                                <div class="flex mt-2 divide-x space-x-2">
-                                   <div class="xxsLight">
+                                   <div class="text-xs/[18px] text-text-subtle">
                                        {{
                                            eventType.project_mandatory ? $t('Project assignment mandatory') : $t('Project assignment optional')
                                        }}
                                    </div>
-                                   <div class="xxsLight pl-2">
+                                   <div class="text-xs/[18px] text-text-subtle pl-2">
                                        {{
                                            eventType.individual_name ? $t('individual event name mandatory') : $t('individual event name optional')
                                        }}
                                    </div>
-                                   <div class="xxsLight pl-2" v-if="eventType.relevant_for_project_period">
+                                   <div class="text-xs/[18px] text-text-subtle pl-2" v-if="eventType.relevant_for_project_period">
                                        {{
                                             $t('Relevant for project period')
                                        }}
                                    </div>
                                </div>
-                               <div class="text-gray-400 font-lexend font-extralight text-xs">
+                               <div class="text-text-subtle font-lexend font-extralight text-xs">
                                    {{ $t('Verification mode')}}: {{ $t(eventType.verification_mode) }}<span v-if="eventType.users?.length > 0">: </span>
                                    <span>
                                         {{ eventType.users.map((user) => { return user.name }).join(', ') }}
@@ -94,8 +94,6 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
-import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -110,14 +108,14 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import {ColorPicker} from "vue3-colorpicker";
 import AddEditEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/AddEditEventTypModal.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import DeleteEventTypeConfirmationModal from "@/Pages/Settings/EventType/Components/Modals/DeleteEventTypeConfirmationModal.vue";
 import DeleteStandardEventTypeModal from "@/Pages/Settings/EventType/Components/Modals/DeleteStandardEventTypeModal.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
-import {IconEdit, IconCirclePlus, IconTrash} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconCirclePlus, IconCircleX, IconDotsVertical, IconEdit, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BiEventTypeTagManager from "@/Pages/Settings/EventType/Components/BiEventTypeTagManager.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 export default {
     mixins: [Permissions],
     computed: {
@@ -157,11 +155,11 @@ export default {
         }
     },
     components: {
+        BaseUIButton,
         SettingsGuideBanner,
         BiEventTypeTagManager,
         BasePageTitle,
         BaseMenuItem,
-        GlassyIconButton,
         ColorPicker,
         EventSettingHeader,
         TextInputComponent,
@@ -172,20 +170,20 @@ export default {
         FormButton,
         AddButtonBig,
         AppLayout,
-        XCircleIcon,
-        PlusSmIcon,
+        IconCircleX,
+        IconPlus,
         SvgCollection,
-        CheckIcon,
+        IconCheck,
         Menu,
         MenuButton,
         MenuItem,
         MenuItems,
         JetDialogModal,
-        ChevronDownIcon,
-        DotsVerticalIcon,
-        TrashIcon,
-        PencilAltIcon,
-        XIcon,
+        IconChevronDown,
+        IconDotsVertical,
+        IconTrash,
+        IconEdit,
+        IconX,
         AddEditEventTypeModal,
         DeleteEventTypeConfirmationModal,
         DeleteStandardEventTypeModal

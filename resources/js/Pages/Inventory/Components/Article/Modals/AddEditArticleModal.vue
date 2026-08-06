@@ -6,9 +6,9 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6 pb-4">
                 <div class="col-span-1">
                     <div @click="addImage"
-                         class="relative block w-full rounded-lg border-2 border-dashed border-gray-300 p-12 cursor-pointer text-center hover:border-gray-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden">
-                        <component :is="IconPhotoPlus" class="mx-auto size-12 text-gray-400" aria-hidden="true"/>
-                        <span class="mt-2 block text-sm font-semibold text-gray-900">{{ $t('Upload Images') }}</span>
+                         class="relative block w-full rounded-lg border-2 border-dashed border-border p-12 cursor-pointer text-center hover:border-border-strong focus:ring-2 focus:ring-accent-600 focus:ring-offset-2 focus:outline-hidden">
+                        <component :is="IconPhotoPlus" class="mx-auto size-12 text-text-subtle" aria-hidden="true"/>
+                        <span class="mt-2 block text-sm font-semibold text-text">{{ $t('Upload Images') }}</span>
                         <input type="file" accept="image/*,.heic,.heif" class="sr-only" ref="articleImageInput" multiple
                                @input="handleImageInput"/>
                     </div>
@@ -16,11 +16,11 @@
                 <div class="col-span-3">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div v-for="(image, index) in allImages" :key="image._origin === 'old' ? image.id : index"
-                             class="relative p-2 rounded-lg border bg-white shadow-sm hover:border-yellow-500 cursor-pointer transition duration-200 ease-in-out"
+                             class="relative p-2 rounded-lg border bg-white shadow-sm hover:border-warning cursor-pointer transition duration-200 ease-in-out"
                              @click="currentMainImage = index"
-                             :class="currentMainImage === index ? 'border-yellow-400' : 'border-gray-200'">
-                            <XCircleIcon @click.stop="removeImage(image)"
-                                         class="absolute top-1 right-1 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
+                             :class="currentMainImage === index ? 'border-warning-border' : 'border-border-subtle'">
+                            <IconCircleX @click.stop="removeImage(image)"
+                                         class="absolute top-1 right-1 text-accent-600 h-5 w-5 hover:text-danger "/>
                             <div class="flex flex-col items-center justify-center w-full truncate min-h-16 gap-y-2">
                                 <div v-if="image._origin === 'old'">
                                     <img :src="createImageURL(image)" alt="New image preview"
@@ -45,7 +45,7 @@
             </div>
 
             <div v-if="imageUploadErrors.length" class="px-6 pb-4">
-                <p v-for="(error, idx) in imageUploadErrors" :key="idx" class="text-sm text-red-500 font-lexend">
+                <p v-for="(error, idx) in imageUploadErrors" :key="idx" class="text-sm text-danger font-lexend">
                     {{ error }}
                 </p>
             </div>
@@ -59,8 +59,8 @@
                             required
                             @focusout="onFieldSave('name', articleForm.name)"
                         />
-                        <p v-if="fieldStatus.name === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
-                        <p v-if="fieldStatus.name === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
+                        <p v-if="fieldStatus.name === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.name === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
                     </div>
 
                     <div class="col-span-full">
@@ -70,13 +70,13 @@
                             :label="$t('Description')"
                             @focusout="onFieldSave('description', articleForm.description)"
                         />
-                        <p v-if="fieldStatus.description === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.description === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- tags -->
-            <div class="px-6 pb-4 border-t border-gray-100 pt-5">
+            <div class="px-6 pb-4 border-t border-border-subtle pt-5">
                 <BasePageTitle
                     :title="$t('Tags')"
                     :description="$t('Use tags to better organize this article. Depending on tag permissions, saving may be restricted. You can only assign tags for which you have permission.')"
@@ -101,7 +101,7 @@
                         <span class="ml-1 text-[10px] opacity-70 hover:opacity-100" @click.stop="toggleTag(tag)">×</span>
                     </button>
 
-                    <span v-if="!selectedTags.length" class="text-[11px] text-gray-400">
+                    <span v-if="!selectedTags.length" class="text-[11px] text-text-subtle">
                         {{ $t('No tags assigned yet. Select tags from the list below.') }}
                     </span>
                 </div>
@@ -115,11 +115,11 @@
                         id="tag-search"
                     />
 
-                    <div class="max-h-44 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs">
+                    <div class="max-h-44 overflow-y-auto rounded-xl border border-border-subtle bg-surface-sunken px-3 py-2 text-xs">
                         <template v-for="group in tagGroupsForSelection" :key="group.key">
-                            <p class="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-2">
+                            <p class="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-wide text-text-subtle flex items-center gap-2">
                                 <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white shadow-sm">
-                                    <IconTag class="h-3.5 w-3.5 text-gray-400" />
+                                    <IconTag class="h-3.5 w-3.5 text-text-subtle" />
                                 </span>
                                 <span class="truncate">
                                     {{ group.label }}
@@ -131,20 +131,19 @@
                                     v-for="tag in group.tags"
                                     :key="tag.id"
                                     type="button"
-                                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 bg-white hover:bg-gray-50 transition"
-                                    :class="{
-                                        'opacity-40 cursor-not-allowed': tag.has_restricted_permissions && !userCanUseTag(tag)
+                                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 bg-white hover:bg-surface-sunken transition"
+                                    :class="{ 'text-text-subtle cursor-not-allowed': tag.has_restricted_permissions && !userCanUseTag(tag)
                                     }"
                                     :style="{ borderColor: (tag.color || '#4f46e5') + '40' }"
                                     @click="canSelectTag(tag) && toggleTag(tag)">
                                     <span class="inline-flex h-1.5 w-1.5 rounded-full" :style="{ backgroundColor: tag.color || '#4f46e5' }"/>
                                     <span class="truncate max-w-[140px]">{{ tag.name }}</span>
-                                    <IconLock v-if="tag.has_restricted_permissions" class="h-3 w-3" :class="userCanUseTag(tag) ? 'text-amber-500' : 'text-gray-300'"/>
+                                    <IconLock v-if="tag.has_restricted_permissions" class="h-3 w-3" :class="userCanUseTag(tag) ? 'text-warning' : 'text-text-subtle'"/>
                                 </button>
                             </div>
                         </template>
 
-                        <p v-if="!tagGroupsForSelection.length || !tagGroupsForSelection.some(g => g.tags.length)" class="text-[11px] text-gray-400 mt-1">
+                        <p v-if="!tagGroupsForSelection.length || !tagGroupsForSelection.some(g => g.tags.length)" class="text-[11px] text-text-subtle mt-1">
                             {{ $t('No tags match your search.') }}
                         </p>
                     </div>
@@ -159,7 +158,7 @@
                 />
             </div>
 
-            <div class="bg-gray-50 px-10 -mx-4 py-6 mb-5">
+            <div class="bg-surface-sunken px-10 -mx-4 py-6 mb-5">
                 <div class="mb-5">
                     <ArtworkBaseListbox
                         v-model="selectedCategory"
@@ -171,7 +170,7 @@
                         :placeholder="$t('Please select a Category')"
                         @update:model-value="val => onCategorySave('inventory_category_id', val?.id ?? null)"
                     />
-                    <p v-if="fieldStatus.inventory_category_id === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                    <p v-if="fieldStatus.inventory_category_id === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                 </div>
                 <div class="pb-4" v-if="selectedCategory && selectedCategory.subcategories.length > 0">
                     <ArtworkBaseListbox
@@ -185,10 +184,10 @@
                         @change="val => updateSelectedSubCategory(val)"
                         @update:model-value="val => onCategorySave('inventory_sub_category_id', val?.id ?? null)"
                     />
-                    <p v-if="fieldStatus.inventory_sub_category_id === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                    <p v-if="fieldStatus.inventory_sub_category_id === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                     <div class="flex items-center justify-end mt-3" v-if="selectedSubCategory">
                         <div
-                            class="text-xs text-artwork-buttons-create underline underline-offset-4 hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
+                            class="text-xs text-accent-600 underline underline-offset-4 hover:text-accent-700 duration-200 ease-in-out cursor-pointer"
                             @click="selectedSubCategory = null">{{ $t('Remove the sub-category assignment') }}
                         </div>
                     </div>
@@ -208,11 +207,11 @@
                             :disabled="detailedAlwaysOne && articleForm.is_detailed_quantity"
                             @focusout="onFieldSave('quantity', articleForm.quantity)"
                         />
-                        <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
-                        <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
+                        <p v-if="fieldStatus.quantity === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
+                        <p v-if="fieldStatus.quantity === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
                         <div v-if="articleForm.is_detailed_quantity && calculateTotalQuantity !== articleForm.quantity" class="mt-1 flex items-center gap-x-1">
-                            <span class="text-xs text-red-500 font-lexend">{{ $t('Sum of detailed articles') }}: </span>
-                            <button type="button" class="text-xs font-semibold text-artwork-buttons-create hover:text-artwork-buttons-hover font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
+                            <span class="text-xs text-danger font-lexend">{{ $t('Sum of detailed articles') }}: </span>
+                            <button type="button" class="text-xs font-semibold text-accent-600 hover:text-accent-700 font-lexend flex items-center gap-x-0.5" @click="articleForm.quantity = calculateTotalQuantity">
                                 {{ formatQuantity(calculateTotalQuantity) }}
                                 <component :is="IconClick" class="size-3.5" />
                             </button>
@@ -239,10 +238,10 @@
                                 </div>
                             </div>
                             <div class="text-sm/6">
-                                <label for="is_detailed_quantity" class="font-medium text-gray-900">
+                                <label for="is_detailed_quantity" class="font-medium text-text">
                                     {{ $t('Single inventory capable') }}
                                 </label>
-                                <p id="is_required-description" class="text-gray-500">
+                                <p id="is_required-description" class="text-text-subtle">
                                     {{
                                         $t('If activated, each individual piece of this article can be provided with its own properties')
                                     }}
@@ -256,10 +255,10 @@
                     <div v-for="(statusValue, index) in articleForm.statusValues">
                         <div class="grid grid-cols-2 gap-x-4 mb-3">
                             <div class="flex items-center">
-                                <div class="absolute top-0 left-0 w-px h-[90%] bg-gray-300"></div>
-                                <div class="font-lexend text-sm flex items-center text-secondary">
-                                    <div class="w-5 h-px bg-gray-300"></div>
-                                    <div class="ml-4 text-primary">{{ statusValue.name }}</div>
+                                <div class="absolute top-0 left-0 w-px h-[90%] bg-border"></div>
+                                <div class="font-lexend text-sm flex items-center text-text-subtle">
+                                    <div class="w-5 h-px bg-border"></div>
+                                    <div class="ml-4 text-text">{{ statusValue.name }}</div>
                                 </div>
                             </div>
                             <div>
@@ -277,13 +276,13 @@
 
                     <div
                         v-if="calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity">
-                        <p class="text-red-500 font-lexend text-sm mt-2"
+                        <p class="text-danger font-lexend text-sm mt-2"
                            v-if="calculateStatusQuantityInArticle > articleForm.quantity">
                             {{
                                 $t('The sum of the quantities of the status values exceeds the total quantity of the article')
                             }}
                         </p>
-                        <p class="text-red-500 font-lexend text-sm mt-2"
+                        <p class="text-danger font-lexend text-sm mt-2"
                            v-if="calculateStatusQuantityInArticle < articleForm.quantity">
                             {{
                                 $t('The sum of the quantities of the status values falls below the total quantity of the article')
@@ -294,10 +293,10 @@
                             <span
                                 v-if="calculateStatusQuantityInArticle > articleForm.quantity || calculateStatusQuantityInArticle < articleForm.quantity"
                                 @click="articleForm.quantity = calculateStatusQuantityInArticle"
-                                class="flex items-center gap-x-0.5  cursor-pointer">
+                                class="flex items-center gap-x-0.5 cursor-pointer">
                                    <ToolTipWithTextComponent
                                        :text="formatQuantity(calculateStatusQuantityInArticle)"
-                                       classes="text-artwork-buttons-create"
+                                       classes="text-accent-600"
                                        icon-right
                                        stroke="2"
                                        :icon="IconClick"
@@ -325,26 +324,26 @@
                 <div class="my-8 flow-root pb-4" v-if="articleForm.properties.length > 0">
                     <div class="-my-2">
                         <div class="inline-block min-w-full py-2 align-middle">
-                            <table class="min-w-full divide-y divide-gray-300">
+                            <table class="min-w-full divide-y divide-border">
                                 <thead>
-                                <tr class="divide-x divide-gray-200">
+                                <tr class="divide-x divide-border-subtle">
                                     <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">
                                         Name
                                     </th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">
                                         {{ $t('Type') }}
                                     </th>
                                     <th scope="col"
-                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0">
+                                        class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0">
                                         {{ $t('Value') }}
                                     </th>
                                 </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white">
+                                <tbody class="divide-y divide-border-subtle bg-white">
                                 <tr v-for="property in articleForm.properties" :key="property?.id"
-                                    class="divide-x divide-gray-200">
-                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-gray-900 sm:pl-0 first-letter:capitalize">
+                                    class="divide-x divide-border-subtle">
+                                    <td class="py-4 pr-4 pl-4 text-sm font-medium whitespace-nowrap text-text sm:pl-0 first-letter:capitalize">
                                         <div class="flex items-center justify-between">
                                             {{ property?.name }}
                                             <div class="flex items-center gap-x-2">
@@ -356,17 +355,17 @@
                                                     direction="top"
                                                     tooltipCssClass="break-all !text-xs"
                                                 />
-                                                <!--<component is="IconTrash" class="h-5 w-5 text-red-600 cursor-pointer"
+                                                <!--<component is="IconTrash" class="h-5 w-5 text-danger cursor-pointer"
                                                            v-if="property.categoryProperty"
                                                            @click="articleForm.properties = articleForm.properties.filter(prop => prop.id !== property.id)"/>-->
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="p-4 text-sm whitespace-nowrap text-gray-500 capitalize xsLight cursor-default">
+                                    <td class="p-4 text-sm whitespace-nowrap text-text-subtle capitalize text-sm/5 font-bold text-text-subtle cursor-default">
                                         {{ $t(capitalizeFirstLetter(property?.type)) }}
                                     </td>
 
-                                    <td class="text-sm whitespace-nowrap text-gray-500 sm:pr-0">
+                                    <td class="text-sm whitespace-nowrap text-text-subtle sm:pr-0">
                                         <InventoryStylelessCombobox
                                             v-if="property.type === 'room'"
                                             v-model="property.value"
@@ -399,7 +398,7 @@
                                             v-if="property.type !== 'file' && property.type !== 'checkbox' && property.type !== 'room' && property.type !== 'manufacturer' && property.type !== 'selection' && property.type !== 'year'"
                                             :type="property.type" v-model="property.value"
                                             :required="property.is_required"
-                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-text outline-0 -outline-offset-1 outline-border placeholder:text-text-subtle focus:outline-0 ring-0 focus:ring-0"
                                             :placeholder="property.is_required ? $t('Value*') : $t('Value')"
                                         />
 
@@ -408,7 +407,7 @@
                                             type="number" v-model="property.value"
                                             :required="property.is_required"
                                             min="1900" max="2100" step="1"
-                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-gray-900 outline-0 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-0 ring-0 focus:ring-0"
+                                            class="block w-full rounded-md bg-white border-none text-xs px-3 py-1.5 text-text outline-0 -outline-offset-1 outline-border placeholder:text-text-subtle focus:outline-0 ring-0 focus:ring-0"
                                             :placeholder="property.is_required ? $t('Year*') : $t('Year')"
                                         />
 
@@ -447,7 +446,7 @@
             </div>
 
 
-            <div class="px-6 bg-gray-50 py-6 hidden">
+            <div class="px-6 bg-surface-sunken py-6 hidden">
                 <div class="flex gap-3">
                     <div class="flex h-6 shrink-0 items-center">
                         <div class="group grid size-4 grid-cols-1">
@@ -457,10 +456,10 @@
                         </div>
                     </div>
                     <div class="text-sm/6">
-                        <label for="is_detailed_quantity" class="font-medium text-gray-900">
+                        <label for="is_detailed_quantity" class="font-medium text-text">
                             {{ $t('Single inventory capable')}}
                         </label>
-                        <p id="is_required-description" class="text-gray-500">
+                        <p id="is_required-description" class="text-text-subtle">
                             {{
                                 $t('If activated, each individual piece of this article can be provided with its own properties')
                             }}
@@ -477,11 +476,11 @@
                         :title="$t('Across-article properties')"
                         :description="$t('These properties are shared across all detailed articles and can be edited here once')"
                     />
-                    <div class="mt-4 bg-gray-50 rounded-lg border border-gray-200 p-4">
+                    <div class="mt-4 bg-surface-sunken rounded-lg border border-border-subtle p-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="col-span-1" v-for="prop in acrossProperties" :key="prop.id">
                                 <div class="flex items-center justify-between">
-                                    <div class="block text-xs font-medium text-gray-600 py-1.5">
+                                    <div class="block text-xs font-medium text-text-muted py-1.5">
                                         {{ prop.name }} <span v-if="prop.is_required">*</span>
                                     </div>
                                     <div>
@@ -552,7 +551,7 @@
                                                     type="checkbox" class="aw-checklist-input"
                                                     :id="'across-property-' + prop.id"
                                                 />
-                                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                                <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                                     <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                     <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                 </svg>
@@ -584,7 +583,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.8fr] items-stretch">
-                    <div class="h-full min-h-0 flex flex-col bg-gray-50 rounded-lg border border-gray-200 insert-shadow-md">
+                    <div class="h-full min-h-0 flex flex-col bg-surface-sunken rounded-lg border border-border-subtle insert-shadow-md">
                         <div class="space-y-2 p-4">
                             <div>
                                 <BaseInput
@@ -606,28 +605,28 @@
                                                 :checked="allVisibleSelected"
                                                 @change="toggleSelectAllVisible($event.target.checked)"
                                                 class="aw-checklist-input" />
-                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                                 <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                 <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </div>
                                     </div>
                                     <div class="text-sm/6">
-                                        <label for="allVisibleSelected" class="text-xs text-gray-900 dark:text-white">{{ $t('Select all') }}</label>
+                                        <label for="allVisibleSelected" class="text-xs text-text dark:text-white">{{ $t('Select all') }}</label>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3" v-if="hasSelection">
-                                    <span class="text-xs text-gray-500">{{ selectionCount }}</span>
+                                    <span class="text-xs text-text-subtle">{{ selectionCount }}</span>
                                     <button
                                         type="button"
-                                        class="text-artwork-buttons-create text-xs hover:text-artwork-buttons-hover duration-200 ease-in-out cursor-pointer"
+                                        class="text-accent-600 text-xs hover:text-accent-700 duration-200 ease-in-out cursor-pointer"
                                         @click="openBulkEdit"
                                     >
                                         {{ $t('Edit selection') }}
                                     </button>
                                     <button
                                         type="button"
-                                        class="text-red-600 text-xs hover:text-red-700 duration-200 ease-in-out cursor-pointer"
+                                        class="text-danger text-xs hover:text-danger duration-200 ease-in-out cursor-pointer"
                                         @click="confirmMultiEditDeleteModalOpen = true"
                                     >
                                         {{ $t('Delete selection') }}
@@ -636,12 +635,12 @@
                             </div>
 
                             <!-- NEU: Bulk-Edit-Panel -->
-                            <div v-if="bulkEdit.open" class="mt-2 border border-gray-200 rounded-md bg-white p-3">
+                            <div v-if="bulkEdit.open" class="mt-2 border border-border-subtle rounded-md bg-white p-3">
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="col-span-full">
                                         <div
-                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
-                                            <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
+                                            <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                                 {{ $t('Status') }}
                                             </label>
                                             <SearchableSelect
@@ -670,8 +669,8 @@
                                     <!-- NEU: Property-Auswahl (nur nicht-across_articles, Schnittmenge der Auswahl) -->
                                     <div class="col-span-full" v-if="bulkEditableProperties.length">
                                         <div
-                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
-                                            <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
+                                            <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                                 {{ $t('Property') }}
                                             </label>
                                             <SearchableSelect
@@ -688,8 +687,8 @@
                                     <!-- NEU: Property-Wert-Eingabe je nach Prop-Typ -->
                                     <div class="col-span-full" v-if="selectedBulkProp">
                                         <div
-                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
-                                            <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                            class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
+                                            <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                                 {{ $t('Property value') }}
                                             </label>
 
@@ -751,12 +750,12 @@
 
                                     <div class="col-span-full flex justify-end gap-2">
                                         <button type="button"
-                                                class="text-xs text-gray-500 hover:text-gray-700"
+                                                class="text-xs text-text-subtle hover:text-text-muted"
                                                 @click="cancelBulkEdit">
                                             {{ $t('Cancel') }}
                                         </button>
                                         <button type="button"
-                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                                                class="text-xs text-accent-600 hover:text-accent-700"
                                                 @click="applyBulkEdit">
                                             {{ $t('Apply') }}
                                         </button>
@@ -766,13 +765,12 @@
                         </div>
                         <div class="flex-1 min-h-0 flex flex-col">
                             <!-- Liste -->
-                            <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-200 divide-dashed" role="list">
+                            <ul class="flex-1 min-h-0 overflow-y-auto divide-y divide-border-subtle divide-dashed" role="list">
                                 <li v-for="(item, idx) in filteredDetailedArticles" :key="item.id ?? item._key ?? `idx-${idx}`" class="">
                                     <!-- NEU: Checkbox + Button nebeneinander -->
-                                    <div class="flex items-center group w-full cursor-pointer hover:text-artwork-buttons-create hover:bg-gray-200 focus:text-artwork-buttons-create focus:outline-hidden gap-1.5 px-4 py-2"
-                                         :class="[
-                                             isActiveDetailedArticle(item) || isSelected(item) ? 'text-blue-500 bg-gray-100' : 'text-gray-900',
-                                             isDetailedArticleIncomplete(item) ? 'border-l-2 border-red-500 bg-red-50' : ''
+                                    <div class="flex items-center group w-full cursor-pointer hover:text-accent-600 hover:bg-border-subtle focus:text-accent-600 focus:outline-hidden gap-1.5 px-4 py-2"
+                                         :class="[ isActiveDetailedArticle(item) || isSelected(item) ? 'text-accent-600 bg-surface-sunken' : 'text-text',
+                                             isDetailedArticleIncomplete(item) ? 'border-l-2 border-danger bg-danger-surface' : ''
                                          ]">
 
                                         <div class="flex gap-1.5">
@@ -786,7 +784,7 @@
                                                         :checked="isSelected(item)"
                                                         @click.stop="toggleSelection(item, null, $event)"
                                                         class="aw-checklist-input" />
-                                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                                         <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                         <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
@@ -803,11 +801,11 @@
                                           <span class="text-sm font-medium truncate flex flex-col items-start">
                                             <template v-if="showInventoryNumberAsName && item.inventory_number">
                                                 <span>{{ formatInventoryNumber(item.inventory_number) }}</span>
-                                                <span class="text-xs font-normal text-gray-400">{{ item.name }}</span>
+                                                <span class="text-xs font-normal text-text-subtle">{{ item.name }}</span>
                                             </template>
                                             <template v-else>
                                                 <span>{{ item.name }}</span>
-                                                <span v-if="item.inventory_number" class="font-mono text-xs font-normal text-gray-400">{{ formatInventoryNumber(item.inventory_number) }}</span>
+                                                <span v-if="item.inventory_number" class="font-mono text-xs font-normal text-text-subtle">{{ formatInventoryNumber(item.inventory_number) }}</span>
                                             </template>
                                           </span>
 
@@ -817,7 +815,7 @@
                                                   <!-- Kopieren -->
                                                   <button
                                                       type="button"
-                                                      class="text-gray-400 hover:text-gray-600 duration-200 ease-in-out"
+                                                      class="text-text-subtle hover:text-text-muted duration-200 ease-in-out"
                                                       aria-label="Kopieren"
                                                       @click.stop="copyDetailedArticle(item)"
                                                   >
@@ -827,7 +825,7 @@
                                                     <!-- Löschen -->
                                                   <button
                                                       type="button"
-                                                      class="text-gray-400 hover:text-red-600 duration-200 ease-in-out"
+                                                      class="text-text-subtle hover:text-danger duration-200 ease-in-out"
                                                       aria-label="Löschen"
                                                       @click.stop="removeOpenDetailedArticle(item)"
                                                   >
@@ -846,7 +844,7 @@
 
                                 <!-- Empty State -->
                                 <li v-if="articleForm.detailed_article_quantities.length === 0"
-                                    class="text-red-500 text-sm px-4">
+                                    class="text-danger text-sm px-4">
                                     {{ $t('No detailed articles found') }}
                                 </li>
                             </ul>
@@ -856,14 +854,14 @@
                                 <div class="flex items-center gap-x-3">
                                     <button
                                         type="button"
-                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        class="text-accent-600 hover:text-accent-700 duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
                                         @click="addNewDetailedArticle">
                                         <component :is="IconCirclePlus" class="h-5 w-5" aria-hidden="true"/>
                                         <span>{{ $t('Add Detailed Article') }}</span>
                                     </button>
                                     <button
                                         type="button"
-                                        class="text-artwork-buttons-create hover:text-artwork-buttons-hover duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
+                                        class="text-accent-600 hover:text-accent-700 duration-200 ease-in-out text-xs flex items-center gap-x-2 cursor-pointer"
                                         @click="initBulkCreate">
                                         <component :is="IconCopyPlus" class="h-5 w-5" aria-hidden="true"/>
                                         <span>{{ $t('Bulk create') }}</span>
@@ -871,7 +869,7 @@
                                 </div>
 
                                 <!-- Bulk Create Panel -->
-                                <div v-if="showBulkCreatePanel" class="border border-gray-200 rounded-md bg-white p-3 space-y-3">
+                                <div v-if="showBulkCreatePanel" class="border border-border-subtle rounded-md bg-white p-3 space-y-3">
                                     <BaseInput
                                         type="number"
                                         id="bulk_create_count"
@@ -881,8 +879,8 @@
                                         :max="100"
                                     />
                                     <div
-                                        class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
-                                        <label class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                        class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
+                                        <label class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                             {{ $t('Status') }}
                                         </label>
                                         <SearchableSelect
@@ -899,7 +897,7 @@
                                     <template v-for="prop in bulkCreateData.properties" :key="prop.id">
                                         <div>
                                             <div class="flex items-center justify-between mb-1">
-                                                <span class="text-xs font-medium text-gray-600">
+                                                <span class="text-xs font-medium text-text-muted">
                                                     {{ prop.name }} <span v-if="prop.is_required">*</span>
                                                 </span>
                                                 <ToolTipComponent
@@ -964,12 +962,12 @@
 
                                     <div class="flex justify-end gap-2">
                                         <button type="button"
-                                                class="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                                                class="text-xs text-text-subtle hover:text-text-muted cursor-pointer"
                                                 @click="showBulkCreatePanel = false">
                                             {{ $t('Cancel') }}
                                         </button>
                                         <button type="button"
-                                                class="text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover cursor-pointer"
+                                                class="text-xs text-accent-600 hover:text-accent-700 cursor-pointer"
                                                 @click="executeBulkCreate">
                                             {{ $t('Create items') }}
                                         </button>
@@ -991,8 +989,8 @@
                                     required
                                     @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'name', activeDetailedArticleForEditing.name)"
                                 />
-                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
-                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_name'] === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
                             </div>
 
                             <div class="col-span-full">
@@ -1002,7 +1000,7 @@
                                     :label="$t('Description')"
                                     @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'description', activeDetailedArticleForEditing.description)"
                                 />
-                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_description'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_description'] === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <div v-if="!detailedAlwaysOne" class="col-span-full">
@@ -1016,13 +1014,13 @@
                                     required
                                     @focusout="onDetailedFieldSave(activeDetailedArticleForEditing, 'quantity', activeDetailedArticleForEditing.quantity)"
                                 />
-                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_quantity'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_quantity'] === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <div class="col-span-full">
                                 <div
-                                    class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-gray-200 rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create">
-                                    <label for="location" class="block text-[10px] font-medium text-gray-700 pl-1 pb-1">
+                                    class="px-3 py-3 text-sm block w-full font-lexend shadow-sm border border-border-subtle rounded-md placeholder-transparent focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600">
+                                    <label for="location" class="block text-[10px] font-medium text-text-muted pl-1 pb-1">
                                         {{ $t('Status*') }}
                                     </label>
                                     <SearchableSelect
@@ -1035,7 +1033,7 @@
                                         @change="onDetailedStatusSave(activeDetailedArticleForEditing, activeDetailedArticleForEditing.status)"
                                     />
                                 </div>
-                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_inventory_article_status_id'] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
+                                <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_inventory_article_status_id'] === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
                             </div>
 
                             <!-- Vorher: v-for und v-if auf demselben Element -->
@@ -1043,7 +1041,7 @@
                             <template v-for="property in activeDetailedArticleForEditing?.properties" :key="property?.id">
                                 <div class="col-span-full" v-if="!property.across_articles">
                                     <div class="flex items-center justify-between">
-                                        <div class="block text-xs font-medium text-gray-600 py-1.5">
+                                        <div class="block text-xs font-medium text-text-muted py-1.5">
                                             {{ property.name }} <span v-if="property.is_required">*</span>
                                         </div>
                                         <div>
@@ -1127,8 +1125,8 @@
                                         </div>
                                     </div>
 
-                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'success'" class="text-xs text-green-600 mt-1">{{ $t('Change saved successfully') }}</p>
-                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'error'" class="text-xs text-red-500 mt-1">{{ $t('This field must not be empty') }}</p>
+                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'success'" class="text-xs text-success mt-1">{{ $t('Change saved successfully') }}</p>
+                                    <p v-if="activeDetailedArticleForEditing?.id && detailedFieldStatus[activeDetailedArticleForEditing.id + '_prop_' + property.id] === 'error'" class="text-xs text-danger mt-1">{{ $t('This field must not be empty') }}</p>
                                 </div>
                             </template>
                         </div>
@@ -1145,15 +1143,15 @@
                     <div v-if="isButtonDisabled" class="absolute inset-0 cursor-pointer" />
                 </div>
                 <div v-if="showValidationHints && isButtonDisabled && articleForm.is_detailed_quantity && validationErrors.length" class="flex flex-col items-center gap-y-1">
-                    <p v-for="(error, idx) in validationErrors" :key="idx" class="text-red-500 font-lexend text-sm text-center">
+                    <p v-for="(error, idx) in validationErrors" :key="idx" class="text-danger font-lexend text-sm text-center">
                         {{ error }}
                     </p>
                 </div>
                 <div v-if="serverErrors.length" class="flex flex-col items-center gap-y-1 px-6">
-                    <p class="text-red-500 font-lexend text-sm text-center font-semibold">
+                    <p class="text-danger font-lexend text-sm text-center font-semibold">
                         {{ $t('The article could not be saved:') }}
                     </p>
-                    <p v-for="(error, idx) in serverErrors" :key="idx" class="text-red-500 font-lexend text-sm text-center">
+                    <p v-for="(error, idx) in serverErrors" :key="idx" class="text-danger font-lexend text-sm text-center">
                         {{ error }}
                     </p>
                 </div>
@@ -1192,7 +1190,6 @@ import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import FormButton from '@/Layouts/Components/General/Buttons/FormButton.vue'
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
 import ToolTipWithTextComponent from '@/Components/ToolTips/ToolTipWithTextComponent.vue'
-import {XCircleIcon} from '@heroicons/vue/solid'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
@@ -1204,18 +1201,7 @@ import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Compo
 import PropertyFileCell from "@/Pages/Inventory/Components/Article/PropertyFileCell.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseCheckbox from "@/Artwork/Inputs/BaseCheckbox.vue";
-import {
-    IconClick,
-    IconCopy,
-    IconCopyPlus,
-    IconInfoCircle,
-    IconPhoto,
-    IconPhotoPlus,
-    IconCirclePlus,
-    IconTrash,
-    IconTag,
-    IconLock
-} from '@tabler/icons-vue'
+import {IconCirclePlus, IconCircleX, IconClick, IconCopy, IconCopyPlus, IconInfoCircle, IconLock, IconPhoto, IconPhotoPlus, IconTag, IconTrash} from "@tabler/icons-vue"
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

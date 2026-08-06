@@ -25,14 +25,14 @@
                     class="text-left"
                 >
                     <div
-                        class="rounded-xl bg-white ring-1 ring-gray-200 p-3 hover:shadow-md transition-all duration-200"
-                        :class="[selectedPreset?.id === preset.id ? 'ring-2 !ring-blue-500 shadow-md' : '']"
+                        class="rounded-xl bg-white ring-1 ring-border-subtle p-3 hover:shadow-md transition-all duration-200"
+                        :class="[selectedPreset?.id === preset.id ? 'ring-2 !ring-accent-600 shadow-md' : '']"
                     >
                         <div class="flex items-center justify-between gap-2">
-                            <div class="min-w-0 truncate text-[13px] font-semibold text-gray-900">
+                            <div class="min-w-0 truncate text-[13px] font-semibold text-text">
                                 {{ preset.name }}
                             </div>
-                            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">
+                            <span class="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-medium text-text-muted">
                                 {{ preset.times_count }} {{ $t('Points') }}
                             </span>
                         </div>
@@ -41,11 +41,11 @@
             </div>
         </div>
 
-        <div v-else-if="!isLoading" class="text-sm text-gray-500 text-center py-6">
+        <div v-else-if="!isLoading" class="text-sm text-text-subtle text-center py-6">
             {{ $t('No timeline presets found.') }}
         </div>
 
-        <div v-if="isLoading" class="text-sm text-gray-500 text-center py-6">
+        <div v-if="isLoading" class="text-sm text-text-subtle text-center py-6">
             {{ $t('Loading...') }}
         </div>
 

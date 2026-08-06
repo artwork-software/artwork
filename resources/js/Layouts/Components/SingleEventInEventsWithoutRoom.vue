@@ -1,33 +1,33 @@
 
 <template>
-    <div class="flex w-full border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div class="flex w-full border border-border-subtle rounded-lg bg-white shadow-sm">
         <div class="ml-2 w-full p-2">
             <!-- Event type + name row -->
             <div class="w-full flex cursor-pointer truncate">
                 <div>
                     <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
                 </div>
-                <p class="ml-2 headline2 flex items-center">
+                <p class="ml-2 font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text flex items-center">
                     {{ eventTypes.find(type => type.id === event.eventTypeId)?.name }}
                 </p>
-                <div class="flex w-1/2 ml-12 xsDark items-center">
+                <div class="flex w-1/2 ml-12 text-sm/5 font-semibold text-text items-center">
                     {{ event.eventName }}
                 </div>
             </div>
 
             <!-- Project + Creator row -->
             <div class="w-full flex mt-1">
-                <div class="flex w-1/2 xxsDark items-center my-auto" v-if="event.projectId">
+                <div class="flex w-1/2 text-xs/[15px] text-text items-center my-auto" v-if="event.projectId">
                     {{$t('Project')}}:
                     <a :href="route('projects.tab', {project: event.projectId, projectTab: first_project_calendar_tab_id})"
-                       class="ml-1 xxsDarkBold items-center flex">
+                       class="ml-1 text-xs/[15px] font-semibold text-text items-center flex">
                         {{ event.projectName }}
                     </a>
                 </div>
                 <div class="flex items-center w-1/2 mb-1">
-                    <div class="truncate flex xxsDark max-w-60 mt-1">
+                    <div class="truncate flex text-xs/[15px] text-text max-w-60 mt-1">
                         {{$t('Created by')}}
-                        <div class="xxsDarkBold ml-1"> {{ event.created_by.first_name }}
+                        <div class="text-xs/[15px] font-semibold text-text ml-1"> {{ event.created_by.first_name }}
                             {{ event.created_by.last_name }}
                         </div>
                     </div>
@@ -42,9 +42,9 @@
             <!-- Date/Time + Declined room row -->
             <div class="my-2">
                 <div class="flex" v-if="event.startDate === event.endDate">
-                    <div class="xsDark flex">
+                    <div class="text-sm/5 font-semibold text-text flex">
                         <p v-if="declinedRoomName"
-                           class="text-error mr-1 line-through">
+                           class="text-danger mr-1 line-through">
                             {{ declinedRoomName }},
                         </p>
                         {{ formatDisplayDate(event.startDate) }},
@@ -53,10 +53,10 @@
                 </div>
                 <div v-else>
                     <p v-if="declinedRoomName"
-                       class="text-error line-through">
+                       class="text-danger line-through">
                         {{ declinedRoomName }},
                     </p>
-                    <div class="xsDark">
+                    <div class="text-sm/5 font-semibold text-text">
                         {{ formatDisplayDate(event.startDate) }},
                         {{ event.allDay ? $t('Full day') : event.startTime }} -
                         {{ formatDisplayDate(event.endDate) }},
@@ -70,7 +70,7 @@
                 <button
                     v-if="canEditEvent"
                     @click="$emit('editEvent', event)"
-                    class="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                    class="flex items-center gap-1 text-xs text-accent-600 hover:text-accent-700 cursor-pointer"
                     type="button"
                 >
                     <IconPencil class="h-4 w-4" />
@@ -78,7 +78,7 @@
                 </button>
                 <button
                     v-if="canEditEvent"
-                    class="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-600 cursor-pointer"
+                    class="flex items-center gap-1 text-xs text-text-subtle hover:text-danger cursor-pointer"
                     @click="openDeleteEventModal(event)"
                     type="button"
                 >

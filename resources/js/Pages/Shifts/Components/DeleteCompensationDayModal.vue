@@ -5,14 +5,14 @@
         @close="$emit('close')"
     >
         <div class="space-y-4 text-sm">
-            <div class="rounded-lg border border-zinc-200 bg-zinc-50/70 px-3 py-2.5">
-                <div class="grid grid-cols-2 gap-2 text-xs text-zinc-700">
+            <div class="rounded-lg border border-border-subtle bg-surface-sunken/70 px-3 py-2.5">
+                <div class="grid grid-cols-2 gap-2 text-xs text-text-muted">
                     <div>
-                        <span class="font-medium text-zinc-500">{{ $t('Value') }}:</span>
+                        <span class="font-medium text-text-subtle">{{ $t('Value') }}:</span>
                         {{ compensationDay.value >= 1.0 ? $t('Full day (1.0)') : $t('Half day (0.5)') }}
                     </div>
                     <div>
-                        <span class="font-medium text-zinc-500">{{ $t('Deadline') }}:</span>
+                        <span class="font-medium text-text-subtle">{{ $t('Deadline') }}:</span>
                         {{ formatDate(compensationDay.deadline) }}
                     </div>
                 </div>
@@ -24,12 +24,12 @@
                     v-model="deleteReason"
                     :label="$t('Reason for deletion')"
                 />
-                <p v-if="showError && !deleteReason.trim()" class="mt-1 text-xs text-red-500">
+                <p v-if="showError && !deleteReason.trim()" class="mt-1 text-xs text-danger">
                     {{ $t('Reason for deletion') }}
                 </p>
             </div>
 
-            <div class="flex justify-between pt-2 border-t border-zinc-100">
+            <div class="flex justify-between pt-2 border-t border-border-subtle">
                 <BaseUIButton
                     :label="$t('Cancel')"
                     is-cancel-button

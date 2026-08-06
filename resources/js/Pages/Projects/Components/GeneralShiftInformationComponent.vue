@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-5">
             <span class="componentLabel" :class="{'!text-white': inSidebar}">{{ $t('General shift information') }}</span>
             <div v-if="this.canEditComponent">
-                <PencilAltIcon class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
+                <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-text-muted'"
                                @click="openShiftInformationModal"/>
             </div>
         </div>
@@ -24,8 +24,8 @@
 </template>
 
 <script>
+import {IconEdit} from "@tabler/icons-vue";
 import {defineComponent} from "vue";
-import {PencilAltIcon} from "@heroicons/vue/outline";
 import ShiftInformationModal from "@/Layouts/Components/ShiftInformationModal.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 
@@ -33,7 +33,7 @@ export default defineComponent({
     components: {
         BasePageTitle,
         ShiftInformationModal,
-        PencilAltIcon
+        IconEdit
     },
     props: [
         'project',

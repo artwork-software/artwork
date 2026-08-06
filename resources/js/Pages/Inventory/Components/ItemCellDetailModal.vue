@@ -1,9 +1,9 @@
 <template>
     <BaseModal v-if="true" @closed="$emit('closed')" >
-        <h1 class="headline1">
+        <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
             {{ $t('All bookings on {0} from "{1}"', [day.full_day, item.name]) }}
         </h1>
-        <p class="mt-2 text-sm xsLight">
+        <p class="mt-2 text-sm text-sm/5 font-bold text-text-subtle">
             {{ $t('All events on which "{0}" was booked on "{1}" are listed here. There are a total of {2} event(s).', [item.name, day.full_day, calculateTotalEventCountByDay(day)])}}
         </p>
 

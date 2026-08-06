@@ -21,7 +21,7 @@
 
             <ComboboxButton :class="buttonClass">
                 <slot name="button-icon">
-                    <IconSelector class="size-5 text-gray-400" aria-hidden="true" />
+                    <IconSelector class="size-5 text-text-subtle" aria-hidden="true" />
                 </slot>
             </ComboboxButton>
 
@@ -43,7 +43,7 @@
               </span>
                             <span
                                 v-if="selected"
-                                :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-indigo-600']"
+                                :class="['absolute inset-y-0 right-0 flex items-center pr-4', active ? 'text-white' : 'text-accent-600']"
                             >
                 <IconCheck class="size-5" aria-hidden="true" />
               </span>
@@ -55,13 +55,13 @@
             <!-- Loading / Empty -->
             <div
                 v-else-if="loading"
-                class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-gray-500"
+                class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-text-subtle"
             >
                 <slot name="loading">Loading…</slot>
             </div>
             <div
                 v-else
-                class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-gray-500"
+                class="absolute z-10 mt-1 w-full rounded-md bg-white py-2 text-xs ring-1 shadow-lg ring-black/5 text-text-subtle"
             >
                 <slot name="empty">{{ emptyText }}</slot>
             </div>
@@ -126,16 +126,16 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
 
     /** Klassen – auf deine Styles abgestimmt, überschreibbar */
-    labelClass: { type: String, default: 'xsDark' },
+    labelClass: { type: String, default: 'text-sm/5 font-semibold text-text' },
     wrapperClass: {
         type: String,
         default:
-            'relative px-3 py-3 text-sm block w-full font-lexend bg-white shadow-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create focus:border-artwork-buttons-create',
+            'relative px-3 py-3 text-sm block w-full font-lexend bg-white shadow-sm border border-border-subtle rounded-md focus:outline-none focus:ring-1 focus:ring-accent-600 focus:border-accent-600',
     },
     inputClass: {
         type: String,
         default:
-            'w-full pl-1 !ring-0 focus:outline-hidden rounded-md bg-white text-xs text-gray-900 placeholder:text-gray-400 border-none focus-visible:ring-0',
+            'w-full pl-1 !ring-0 focus:outline-hidden rounded-md bg-white text-xs text-text placeholder:text-text-subtle border-none focus-visible:ring-0',
     },
     buttonClass: {
         type: String,
@@ -151,8 +151,8 @@ const props = defineProps({
         type: String,
         default: 'relative cursor-default py-2 pr-9 pl-3 select-none',
     },
-    activeClass: { type: String, default: 'bg-indigo-600 text-white outline-hidden' },
-    inactiveClass: { type: String, default: 'text-gray-900' },
+    activeClass: { type: String, default: 'bg-accent-600 text-white outline-hidden' },
+    inactiveClass: { type: String, default: 'text-text' },
 })
 
 const emit = defineEmits<{

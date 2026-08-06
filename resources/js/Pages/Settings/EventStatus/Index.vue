@@ -3,10 +3,10 @@
 
         <EventSettingHeader>
             <template #actions>
-                <button class="ui-button-add" @click="showCreateEventStatusModal = true">
+                <BaseUIButton variant="primary" hide-icon @click="showCreateEventStatusModal = true">
                     <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('Add Event Status') }}
-                </button>
+                </BaseUIButton>
             </template>
 
             <SettingsGuideBanner
@@ -20,22 +20,22 @@
             />
 
             <div class="flex items-center gap-x-2">
-                <Switch v-model="settingsForm.enable_status" :class="[settingsForm.enable_status ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                <Switch v-model="settingsForm.enable_status" :class="[settingsForm.enable_status ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2']">
                     <span :class="[settingsForm.enable_status ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                       <span :class="[settingsForm.enable_status ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                        <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                        <svg class="size-3 text-text-subtle" fill="none" viewBox="0 0 12 12">
                           <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                       </span>
                       <span :class="[settingsForm.enable_status ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex size-full items-center justify-center transition-opacity']" aria-hidden="true">
-                        <svg class="size-3 text-artwork-buttons-create" fill="currentColor" viewBox="0 0 12 12">
+                        <svg class="size-3 text-accent-600" fill="currentColor" viewBox="0 0 12 12">
                           <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
                         </svg>
                       </span>
                     </span>
                 </Switch>
                 <div>
-                    <p class="xsDark">{{ $t('Would you like to use the ‘Event Status’ module in {0}?', [usePage().props.page_title])}}</p>
+                    <p class="text-sm/5 font-semibold text-text">{{ $t('Would you like to use the ‘Event Status’ module in {0}?', [usePage().props.page_title])}}</p>
                 </div>
             </div>
 
@@ -66,10 +66,10 @@
                             <div :key="element" class="flex justify-between gap-x-6 py-3" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                 <div class="flex gap-x-4">
                                     <div class="min-w-0 flex-auto">
-                                        <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
+                                        <p class="text-sm font-semibold leading-6 text-text flex items-center gap-x-2">
                                             <span class="h-14 w-14 block rounded-full border" :style="{'backgroundColor' : element.color }"/>
                                             {{ element.name }}
-                                            <span v-if="element.default" class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 ml-10">{{ $t('Default') }}</span>
+                                            <span v-if="element.default" class="inline-flex items-center rounded-md bg-surface-sunken px-2 py-1 text-xs font-medium text-text-muted ring-1 ring-inset border-border-subtle ml-10">{{ $t('Default') }}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -78,18 +78,18 @@
                                     <BaseMenu has-no-offset>
                                         <MenuItem @click="updateEventStatus(element)"
                                                   v-slot="{ active }">
-                                            <a :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <a :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                                 <IconEdit stroke-width="1.5"
-                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                           aria-hidden="true"/>
                                                 {{$t('Edit')}}
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-if="!element.default" @click="openDeleteEventStatusModal(element)"
                                                   v-slot="{ active }">
-                                            <a :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                            <a :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                                 <IconTrash stroke-width="1.5"
-                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                                            aria-hidden="true"/>
                                                 {{$t('Delete')}}
                                             </a>
@@ -139,6 +139,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 const props = defineProps({
     eventStatuses: {

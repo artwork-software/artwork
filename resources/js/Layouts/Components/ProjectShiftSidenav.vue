@@ -5,15 +5,15 @@
             :project="this.project"
             :event-types="this.eventTypes"
         />
-        <hr v-if="RelevantDatesForShiftPlanningComponent" class="my-10 border-darkGray">
+        <hr v-if="RelevantDatesForShiftPlanningComponent" class="my-10 ">
         <ShiftContactPersonsComponent :project="this.project"/>
-        <hr class="my-10 border-darkGray">
+        <hr class="my-10 ">
         <GeneralShiftInformationComponent :project="this.project"/>
     </div>
 </template>
 
 <script>
-import {PencilAltIcon} from '@heroicons/vue/outline';
+import {IconEdit} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ShiftInformationModal from "@/Layouts/Components/ShiftInformationModal.vue";
@@ -35,7 +35,7 @@ export default {
         ProjectCopyrightModal,
         ShiftInformationModal,
         TagComponent,
-        PencilAltIcon,
+        IconEdit,
         // RelevantDatesForShiftPlanningComponent, // Commented out - component can be removed
         ShiftContactPersonsComponent,
         GeneralShiftInformationComponent

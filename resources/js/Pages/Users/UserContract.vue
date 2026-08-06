@@ -27,14 +27,14 @@
         <VisualFeedback :show-save-success="showVisualFeedback" />
 
         <!-- Active contract banner -->
-        <div v-if="isContractSelected" class="mt-5 rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-3">
+        <div v-if="isContractSelected" class="mt-5 rounded-lg border border-accent-200 bg-accent-50/60 px-4 py-3">
             <div class="flex items-start gap-3">
-                <component :is="IconFileCheck" class="size-5 shrink-0 text-blue-600 mt-0.5" stroke-width="1.5" />
+                <component :is="IconFileCheck" class="size-5 shrink-0 text-accent-600 mt-0.5" stroke-width="1.5" />
                 <div class="min-w-0">
-                    <p class="text-sm font-semibold text-blue-900 font-lexend">
+                    <p class="text-sm font-semibold text-accent-700 font-lexend">
                         {{ $t('Active contract: {0}', [selectedContract?.name ?? '-']) }}
                     </p>
-                    <p v-if="selectedContract?.description" class="text-xs text-blue-800/80 mt-0.5">
+                    <p v-if="selectedContract?.description" class="text-xs text-accent-700/80 mt-0.5">
                         {{ selectedContract.description }}
                     </p>
                 </div>
@@ -43,56 +43,56 @@
 
         <!-- Read-only overview of the assigned contract values -->
         <div v-if="isContractSelected" class="mt-5 space-y-4">
-            <div class="card white p-5">
-                <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                    <component :is="IconCalendarOff" class="size-4 text-gray-400" stroke-width="1.5" />
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                    <component :is="IconCalendarOff" class="size-4 text-text-subtle" stroke-width="1.5" />
                     {{ $t('Free days & compensation') }}
                 </h3>
                 <dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
                     <div v-for="item in baseValueItems" :key="item.label">
-                        <dt class="text-xs text-gray-500">{{ $t(item.label) }}</dt>
-                        <dd class="mt-0.5 text-sm font-medium text-gray-900">{{ item.value }}</dd>
+                        <dt class="text-xs text-text-subtle">{{ $t(item.label) }}</dt>
+                        <dd class="mt-0.5 text-sm font-medium text-text">{{ item.value }}</dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="card white p-5">
-                <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                    <component :is="IconInfoSquareRounded" class="size-4 text-gray-400" stroke-width="1.5" />
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                    <component :is="IconInfoSquareRounded" class="size-4 text-text-subtle" stroke-width="1.5" />
                     {{ $t('Season-related info data') }}
                 </h3>
                 <template v-if="activeSeasonInfoItems.length > 0 || Number(userContractForm.annual_vacation_days) > 0">
                     <dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                         <div v-for="item in activeSeasonInfoItems" :key="item.label">
-                            <dt class="text-xs text-gray-500">{{ $t(item.label) }}</dt>
-                            <dd class="mt-0.5 text-sm font-medium text-gray-900">{{ item.value }}</dd>
+                            <dt class="text-xs text-text-subtle">{{ $t(item.label) }}</dt>
+                            <dd class="mt-0.5 text-sm font-medium text-text">{{ item.value }}</dd>
                         </div>
                         <div v-if="Number(userContractForm.annual_vacation_days) > 0">
-                            <dt class="text-xs text-gray-500">{{ $t('Annual vacation days (per calendar year)') }}</dt>
-                            <dd class="mt-0.5 text-sm font-medium text-gray-900">{{ userContractForm.annual_vacation_days }}</dd>
+                            <dt class="text-xs text-text-subtle">{{ $t('Annual vacation days (per calendar year)') }}</dt>
+                            <dd class="mt-0.5 text-sm font-medium text-text">{{ userContractForm.annual_vacation_days }}</dd>
                         </div>
                     </dl>
                 </template>
-                <p v-else class="mt-3 text-sm text-gray-500">
+                <p v-else class="mt-3 text-sm text-text-subtle">
                     {{ $t('No season-related parameters are active for this contract.') }}
                 </p>
             </div>
 
-            <div class="card white p-5">
-                <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                    <component :is="IconClockPlus" class="size-4 text-gray-400" stroke-width="1.5" />
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                    <component :is="IconClockPlus" class="size-4 text-text-subtle" stroke-width="1.5" />
                     {{ $t('Overtime') }}
                 </h3>
                 <div class="mt-3">
                     <template v-if="userContractForm.overtime_rule_active">
-                        <p class="text-sm text-gray-900 font-medium">
+                        <p class="text-sm text-text font-medium">
                             {{ $t('Overtime rule active') }}
                         </p>
-                        <p class="text-sm text-gray-600 mt-1">
+                        <p class="text-sm text-text-muted mt-1">
                             {{ $t('Overtime must be compensated within {0} days, otherwise it becomes overtime to be paid out.', [userContractForm.overtime_compensation_period ?? '-']) }}
                         </p>
                     </template>
-                    <p v-else class="text-sm text-gray-500">
+                    <p v-else class="text-sm text-text-subtle">
                         {{ $t('No overtime rule is active for this contract.') }}
                     </p>
                 </div>
@@ -102,9 +102,9 @@
         <!-- Manual contract data (no template selected) -->
         <div class="mt-5" v-else>
             <form @submit.prevent="submit" class="space-y-4">
-                <div class="card white p-5">
-                    <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                        <component :is="IconCalendarOff" class="size-4 text-gray-400" stroke-width="1.5" />
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                    <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                        <component :is="IconCalendarOff" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Free days & compensation') }}
                     </h3>
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -114,7 +114,7 @@
                                 label="Free Full Days Per Week"
                                 type="number"
                                 id="free_full_days_per_week" />
-                            <p v-if="userContractForm.errors.free_full_days_per_week" class="text-red-500 mt-0.5 text-xs">{{ userContractForm.errors.free_full_days_per_week }}</p>
+                            <p v-if="userContractForm.errors.free_full_days_per_week" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.free_full_days_per_week }}</p>
                         </div>
                         <div>
                             <BaseInput
@@ -122,7 +122,7 @@
                                 label="Free Half Days Per Week"
                                 type="number"
                                 id="free_half_days_per_week" />
-                            <p v-if="userContractForm.errors.free_half_days_per_week" class="text-red-500 mt-0.5 text-xs">{{ userContractForm.errors.free_half_days_per_week }}</p>
+                            <p v-if="userContractForm.errors.free_half_days_per_week" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.free_half_days_per_week }}</p>
                         </div>
                         <div>
                             <BaseInput
@@ -130,7 +130,7 @@
                                 label="Compensation Period (in days)"
                                 type="number"
                                 id="compensation_period" />
-                            <p v-if="userContractForm.errors.compensation_period" class="text-red-500 mt-0.5 text-xs">{{ userContractForm.errors.compensation_period }}</p>
+                            <p v-if="userContractForm.errors.compensation_period" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.compensation_period }}</p>
                         </div>
                     </div>
                     <div class="mt-4">
@@ -140,21 +140,21 @@
                             :label="$t('Special Day Rule Active')"
                             :description="$t('If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.')"
                         />
-                        <p v-if="userContractForm.errors.special_day_rule_active" class="text-red-500 mt-0.5 text-xs">{{ userContractForm.errors.special_day_rule_active }}</p>
+                        <p v-if="userContractForm.errors.special_day_rule_active" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.special_day_rule_active }}</p>
                     </div>
                 </div>
 
-                <div class="card white p-5">
-                    <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                        <component :is="IconInfoSquareRounded" class="size-4 text-gray-400" stroke-width="1.5" />
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                    <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                        <component :is="IconInfoSquareRounded" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Season-related info data') }}
                     </h3>
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs text-text-subtle mt-1">
                         {{ $t('Activate the parameters relevant for this contract and define the target value (X). The season is configured in the tool settings under "Communication & Legal".') }}
                     </p>
                     <div class="mt-4 space-y-3">
                         <div v-for="param in seasonInfoParams" :key="param.key"
-                             class="rounded-md border border-gray-100 p-3">
+                             class="rounded-md border border-border-subtle p-3">
                             <BaseCheckbox
                                 v-model="userContractForm[param.activeKey]"
                                 :id="`param_${param.key}`"
@@ -169,7 +169,7 @@
                                     :id="param.key" />
                             </div>
                         </div>
-                        <div class="rounded-md border border-gray-100 p-3">
+                        <div class="rounded-md border border-border-subtle p-3">
                             <BaseInput
                                 v-model="userContractForm.annual_vacation_days"
                                 :label="$t('Annual vacation days (per calendar year)')"
@@ -179,9 +179,9 @@
                     </div>
                 </div>
 
-                <div class="card white p-5">
-                    <h3 class="text-sm font-semibold text-gray-900 font-lexend flex items-center gap-2">
-                        <component :is="IconClockPlus" class="size-4 text-gray-400" stroke-width="1.5" />
+                <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
+                    <h3 class="text-sm font-semibold text-text font-lexend flex items-center gap-2">
+                        <component :is="IconClockPlus" class="size-4 text-text-subtle" stroke-width="1.5" />
                         {{ $t('Overtime') }}
                     </h3>
                     <div class="mt-4">
@@ -191,7 +191,7 @@
                             :label="$t('Overtime rule active')"
                             :description="$t('If activated, overtime must be compensated within the given number of days; otherwise it is shown in the \'Overtime\' tab as \'overtime to be paid out\' and must be booked out manually.')"
                         />
-                        <p v-if="userContractForm.errors.overtime_rule_active" class="text-red-500 mt-0.5 text-xs">{{ userContractForm.errors.overtime_rule_active }}</p>
+                        <p v-if="userContractForm.errors.overtime_rule_active" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.overtime_rule_active }}</p>
                         <div v-if="userContractForm.overtime_rule_active" class="mt-3 pl-7 max-w-sm">
                             <BaseInput
                                 v-model="userContractForm.overtime_compensation_period"
@@ -199,7 +199,7 @@
                                 type="number"
                                 :min="1"
                                 id="overtime_compensation_period" />
-                            <p v-if="userContractForm.errors.overtime_compensation_period" class="text-red-500 mt-0.5 text-xs">{{ userContractForm.errors.overtime_compensation_period }}</p>
+                            <p v-if="userContractForm.errors.overtime_compensation_period" class="text-danger mt-0.5 text-xs">{{ userContractForm.errors.overtime_compensation_period }}</p>
                         </div>
                     </div>
                 </div>

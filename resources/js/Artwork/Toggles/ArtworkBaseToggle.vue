@@ -41,21 +41,17 @@ const wrapperClasses = computed(() => [
     'group',
     'relative',
     'inline-flex',
-    props.isSmall ? 'w-9' : 'w-11',
+    props.isSmall ? 'h-[18px] w-[30px]' : 'h-5 w-[34px]',
     'shrink-0',
     'rounded-full',
-    props.modelValue ? 'bg-blue-600' : 'bg-gray-200',
+    props.disabled
+        ? (props.modelValue ? 'bg-accent-200' : 'bg-border-subtle')
+        : (props.modelValue ? 'bg-accent-600' : 'bg-border'),
     'p-0.5',
-    'inset-ring',
-    'inset-ring-gray-900/5',
-    'outline-offset-2',
-    'outline-blue-600',
     'transition-colors',
     'duration-200',
     'ease-in-out',
-    'has-checked:bg-blue-600',
-    'has-focus-visible:outline-2',
-    props.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+    props.disabled ? 'cursor-not-allowed' : 'cursor-pointer',
 ].join(' '))
 </script>
 
@@ -64,15 +60,15 @@ const wrapperClasses = computed(() => [
         <div :class="wrapperClasses">
             <!-- Thumb -->
             <span
-                class="rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out"
-                :class="isSmall ? 'size-4 group-has-checked:translate-x-4' : 'size-5 group-has-checked:translate-x-5'"
+                class="rounded-full bg-white shadow-raised transition-transform duration-200 ease-in-out"
+                :class="isSmall ? 'size-3.5 group-has-checked:translate-x-3' : 'size-4 group-has-checked:translate-x-[14px]'"
                 aria-hidden="true"
             />
             <!-- Native Checkbox (steuert die has-checked Variants) -->
             <input
                 :id="baseId"
                 type="checkbox"
-                class="absolute inset-0 appearance-none focus:outline-hidden"
+                class="absolute inset-0 appearance-none rounded-full"
                 :name="name || baseId"
                 :checked="modelValue"
                 :disabled="disabled"
@@ -84,10 +80,10 @@ const wrapperClasses = computed(() => [
             />
         </div>
         <span class="flex grow flex-col min-w-0">
-            <label :id="labelId" class="font-medium text-gray-900" :class="isSmall ? 'text-xs/5' : 'text-sm/6'" :for="baseId">
+            <label :id="labelId" class="font-medium" :class="[isSmall ? 'text-xs/5' : 'text-sm/6', disabled ? 'text-text-subtle' : 'text-text']" :for="baseId">
                 {{ useTranslation ? $t(label) : label }}
             </label>
-            <span v-if="description" :id="descId" class="text-gray-500" :class="isSmall ? 'text-xs' : 'text-sm'">
+            <span v-if="description" :id="descId" class="text-text-muted" :class="isSmall ? 'text-xs' : 'text-sm'">
                 {{ useTranslation ? $t(description) : description }}
             </span>
         </span>

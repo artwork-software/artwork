@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="headline2 mb-4">{{ $t('API Keys Management') }}</h2>
+    <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text mb-4">{{ $t('API Keys Management') }}</h2>
     <SettingsGuideBanner
       class="mb-6"
       variant="static"
@@ -15,49 +15,49 @@
       <div class="col-span-3 flex justify-end">
         <button
           @click="showCreateModal = true"
-          class="px-4 py-2 bg-artwork-buttons-create hover:bg-artwork-buttons-create-hover text-white rounded-md flex items-center transition-all duration-150 ease-in-out"
+          class="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-md flex items-center transition-all duration-150 ease-in-out"
         >
-          <PlusIcon class="h-5 w-5 mr-2" />
+          <IconPlus class="h-5 w-5 mr-2" />
           {{ $t('Create New API Key') }}
         </button>
       </div>
     </div>
 
     <div class="bg-white shadow rounded-lg">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+      <table class="min-w-full divide-y divide-border-subtle">
+        <thead class="bg-surface-sunken">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Name') }}
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Created') }}
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Expires') }}
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Status') }}
             </th>
-            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-text-subtle uppercase tracking-wider">
               {{ $t('Actions') }}
             </th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white divide-y divide-border-subtle">
           <tr v-if="tokens.length === 0">
-            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+            <td colspan="6" class="px-6 py-4 text-center text-sm text-text-subtle">
               {{ $t('No API keys found') }}
             </td>
           </tr>
-          <tr v-for="token in tokens" :key="token.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          <tr v-for="token in tokens" :key="token.id" class="hover:bg-surface-sunken">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
               {{ token.name }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
               {{ formatDate(token.created_at) }}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-text-subtle">
               {{ token.expires_at ? formatDate(token.expires_at) : $t('Never') }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -75,10 +75,10 @@
                 <div>
                   <button
                     @click="toggleDropdown(token.id)"
-                    class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary"
+                    class="inline-flex justify-center rounded-md border border-border shadow-sm px-3 py-1.5 bg-white text-sm font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600"
                   >
                     {{ $t('Actions') }}
-                    <ChevronDownIcon class="ml-2 -mr-0.5 h-4 w-4" aria-hidden="true" />
+                    <IconChevronDown class="ml-2 -mr-0.5 h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
                 <div v-if="activeDropdown === token.id"
@@ -88,19 +88,19 @@
                   <div class="py-1">
                     <button
                       @click="showToken(token)"
-                      class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      class="w-full text-left block px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken"
                     >
                       {{ $t('Show') }}
                     </button>
                     <button
                       @click="showLogs(token)"
-                      class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      class="w-full text-left block px-4 py-2 text-sm text-text-muted hover:bg-surface-sunken"
                     >
                       {{ $t('Log') }}
                     </button>
                     <button
                       @click="confirmDeleteToken(token)"
-                      class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      class="w-full text-left block px-4 py-2 text-sm text-danger hover:bg-surface-sunken"
                     >
                       {{ $t('Revoke') }}
                     </button>
@@ -119,37 +119,37 @@
       modalSize="sm:max-w-lg"
     >
       <div>
-        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <h3 class="text-lg leading-6 font-medium text-text mb-4">
           {{ $t('Create New API Key') }}
         </h3>
         <form @submit.prevent="createToken">
           <div class="mb-4">
-            <label for="name" class="block text-sm font-medium text-gray-700">
-              {{ $t('Name') }} <span class="text-red-500">*</span>
+            <label for="name" class="block text-sm font-medium text-text-muted">
+              {{ $t('Name') }} <span class="text-danger">*</span>
             </label>
             <input
               id="name"
               v-model="form.name"
               type="text"
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
+              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:ring-accent-600 focus:border-accent-600 sm:text-sm"
               required
             />
-            <div v-if="form.errors.name" class="text-red-500 text-xs mt-1">
+            <div v-if="form.errors.name" class="text-danger text-xs mt-1">
               {{ form.errors.name }}
             </div>
           </div>
 
           <div class="mb-4">
-            <label for="expires_at" class="block text-sm font-medium text-gray-700">
+            <label for="expires_at" class="block text-sm font-medium text-text-muted">
               {{ $t('Expires At') }}
             </label>
             <input
               id="expires_at"
               v-model="form.expires_at"
               type="date"
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-artwork-primary focus:border-artwork-primary sm:text-sm"
+              class="mt-1 block w-full border border-border rounded-md shadow-sm py-2 px-3 focus:ring-accent-600 focus:border-accent-600 sm:text-sm"
             />
-            <div v-if="form.errors.expires_at" class="text-red-500 text-xs mt-1">
+            <div v-if="form.errors.expires_at" class="text-danger text-xs mt-1">
               {{ form.errors.expires_at }}
             </div>
           </div>
@@ -159,7 +159,7 @@
           <button
             @click="createToken"
             type="button"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-artwork-buttons-create text-base font-medium text-white hover:bg-artwork-buttons-create-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:ml-3 sm:w-auto sm:text-sm"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-600 text-base font-medium text-white hover:bg-accent-700 focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:ml-3 sm:w-auto sm:text-sm"
             :disabled="form.processing"
           >
             {{ $t('Create') }}
@@ -167,7 +167,7 @@
           <button
             @click="showCreateModal = false"
             type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
           >
             {{ $t('Cancel') }}
           </button>
@@ -181,20 +181,20 @@
       modalSize="sm:max-w-lg"
     >
       <div>
-        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <h3 class="text-lg leading-6 font-medium text-text mb-4">
           {{ $t('API Key Details') }}
         </h3>
         <div>
-          <div v-if="selectedToken.token" class="mt-1 flex items-center bg-gray-50 p-3 rounded border border-gray-200">
+          <div v-if="selectedToken.token" class="mt-1 flex items-center bg-surface-sunken p-3 rounded border border-border-subtle">
             <code class="text-xs break-all mr-2 flex-grow">{{ selectedToken.token }}</code>
             <button
               @click="copyToken(selectedToken.token)"
-              class="p-1 text-gray-700 hover:bg-gray-200 rounded"
+              class="p-1 text-text-muted hover:bg-border-subtle rounded"
             >
-              <ClipboardCopyIcon class="h-5 w-5" />
+              <IconClipboardCopy class="h-5 w-5" />
             </button>
           </div>
-          <p v-else class="text-sm text-gray-500 mt-2">
+          <p v-else class="text-sm text-text-subtle mt-2">
             {{ $t('Can not show token') }}
           </p>
         </div>
@@ -203,7 +203,7 @@
           <button
             @click="selectedToken = null"
             type="button"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-artwork-primary sm:mt-0 sm:w-auto sm:text-sm"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-border shadow-sm px-4 py-2 bg-white text-base font-medium text-text-muted hover:bg-surface-sunken focus:ring-2 focus:ring-offset-2 focus:ring-accent-600 sm:mt-0 sm:w-auto sm:text-sm"
           >
             {{ $t('Close') }}
           </button>
@@ -226,46 +226,46 @@
     >
       <div>
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg leading-6 font-medium text-gray-900">
+          <h3 class="text-lg leading-6 font-medium text-text">
             {{ $t('API Logs') }}: {{ currentLogToken?.name }}
           </h3>
-          <button @click="closeLogModal" class="text-gray-400 hover:text-gray-500">
-            <XIcon class="h-5 w-5" />
+          <button @click="closeLogModal" class="text-text-subtle hover:text-text-subtle">
+            <IconX class="h-5 w-5" />
           </button>
         </div>
 
         <div v-if="loadingLogs" class="flex justify-center items-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-artwork-primary"></div>
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600"></div>
         </div>
 
         <div v-else>
           <div v-if="logs.data && logs.data.length > 0" class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-border-subtle">
+              <thead class="bg-surface-sunken">
                 <tr>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                     {{ $t('Date') }}
                   </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                         {{ $t('IP') }}
                     </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                     {{ $t('Method') }}
                   </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                     {{ $t('URL') }}
                   </th>
-                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-text-subtle uppercase tracking-wider">
                     {{ $t('UserAgent') }}
                   </th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="log in logs.data" :key="log.id" class="hover:bg-gray-50">
-                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+              <tbody class="bg-white divide-y divide-border-subtle">
+                <tr v-for="log in logs.data" :key="log.id" class="hover:bg-surface-sunken">
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-text">
                     {{ formatDate(log.created_at) }}
                   </td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-text-subtle">
                         {{ log.ip }}
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm">
@@ -276,36 +276,36 @@
                       {{ log.method }}
                     </span>
                   </td>
-                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" :title="log.url">
+                    <td class="px-4 py-3 text-sm text-text max-w-xs truncate" :title="log.url">
                     {{ log.url }}
                   </td>
-                    <td class="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" :title="log.url">
+                    <td class="px-4 py-3 text-sm text-text max-w-xs truncate" :title="log.url">
                     {{ log.user_agent }}
                   </td>
                 </tr>
               </tbody>
             </table>
 
-            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6 mt-4">
+            <div class="bg-surface-sunken px-4 py-3 border-t border-border-subtle sm:px-6 mt-4">
               <div class="flex items-center justify-between">
-                <div class="text-sm text-gray-700">
+                <div class="text-sm text-text-muted">
                   {{ $t('Showing') }} {{ logs.from }} {{ $t('to') }} {{ logs.to }} {{ $t('of') }} {{ logs.total }} {{ $t('entries') }}
                 </div>
                 <div class="flex space-x-2">
                   <button
                     @click="loadLogs(logs.current_page - 1)"
                     :disabled="!logs.prev_page_url"
-                    class="relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="relative inline-flex items-center px-3 py-1 border border-border text-sm font-medium rounded-md text-text-muted bg-white hover:bg-surface-sunken disabled:text-text-subtle disabled:cursor-not-allowed"
                   >
                     {{ $t('Previous') }}
                   </button>
-                  <span class="relative inline-flex items-center px-3 py-1 text-sm font-medium text-gray-700">
+                  <span class="relative inline-flex items-center px-3 py-1 text-sm font-medium text-text-muted">
                     {{ logs.current_page }} / {{ logs.last_page }}
                   </span>
                   <button
                     @click="loadLogs(logs.current_page + 1)"
                     :disabled="!logs.next_page_url"
-                    class="relative inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="relative inline-flex items-center px-3 py-1 border border-border text-sm font-medium rounded-md text-text-muted bg-white hover:bg-surface-sunken disabled:text-text-subtle disabled:cursor-not-allowed"
                   >
                     {{ $t('Next') }}
                   </button>
@@ -314,7 +314,7 @@
             </div>
           </div>
 
-          <div v-else class="text-center py-8 text-gray-500">
+          <div v-else class="text-center py-8 text-text-subtle">
             {{ $t('No logs found') }}
           </div>
         </div>
@@ -324,17 +324,11 @@
 </template>
 
 <script>
+import {IconChevronDown, IconCircleCheck, IconClipboardCopy, IconPlus, IconX} from "@tabler/icons-vue";
 import { defineComponent } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import ConfirmationComponent from '@/Layouts/Components/ConfirmationComponent.vue'
 import BaseModal from '@/Components/Modals/BaseModal.vue'
-import {
-  PlusIcon,
-  CheckCircleIcon,
-  ClipboardCopyIcon,
-  ChevronDownIcon,
-  XIcon
-} from '@heroicons/vue/solid'
 import dayjs from 'dayjs'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 
@@ -343,11 +337,11 @@ export default defineComponent({
     SettingsGuideBanner,
     ConfirmationComponent,
     BaseModal,
-    PlusIcon,
-    CheckCircleIcon,
-    ClipboardCopyIcon,
-    ChevronDownIcon,
-    XIcon
+    IconPlus,
+    IconCircleCheck,
+    IconClipboardCopy,
+    IconChevronDown,
+    IconX
   },
   props: {
     tokens: {
@@ -470,9 +464,9 @@ export default defineComponent({
       return this.$t('Active');
     },
     getStatusClass(token) {
-      if (token.revoked) return 'bg-red-100 text-red-800';
-      if (this.isExpired(token)) return 'bg-orange-100 text-orange-800';
-      return 'bg-green-100 text-green-800';
+      if (token.revoked) return 'bg-danger-surface text-danger';
+      if (this.isExpired(token)) return 'bg-special-orange-surface text-special-orange';
+      return 'bg-success-surface text-success';
     },
     showLogs(token) {
       this.activeDropdown = null;
@@ -512,25 +506,25 @@ export default defineComponent({
     },
     getMethodClass(method) {
       const classes = {
-        'GET': 'bg-blue-100 text-blue-800',
-        'POST': 'bg-green-100 text-green-800',
-        'PUT': 'bg-yellow-100 text-yellow-800',
-        'PATCH': 'bg-orange-100 text-orange-800',
-        'DELETE': 'bg-red-100 text-red-800'
+        'GET': 'bg-accent-100 text-accent-700',
+        'POST': 'bg-success-surface text-success',
+        'PUT': 'bg-warning-surface text-warning',
+        'PATCH': 'bg-special-orange-surface text-special-orange',
+        'DELETE': 'bg-danger-surface text-danger'
       };
-      return classes[method] || 'bg-gray-100 text-gray-800';
+      return classes[method] || 'bg-surface-sunken text-text';
     },
     getHttpStatusClass(statusCode) {
       if (statusCode >= 200 && statusCode < 300) {
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-surface text-success';
       } else if (statusCode >= 300 && statusCode < 400) {
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-accent-100 text-accent-700';
       } else if (statusCode >= 400 && statusCode < 500) {
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-special-orange-surface text-special-orange';
       } else if (statusCode >= 500) {
-        return 'bg-red-100 text-red-800';
+        return 'bg-danger-surface text-danger';
       }
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-surface-sunken text-text';
     }
   }
 })

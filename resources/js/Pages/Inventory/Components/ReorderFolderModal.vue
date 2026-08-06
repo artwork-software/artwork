@@ -11,7 +11,7 @@
             leave-from-class="opacity-100"
             leave-to-class="transform opacity-0"
         >
-            <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+            <div class="my-3 text-xs bg-success px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
                 {{ $t('Saved. The changes have been successfully applied.') }}
             </div>
         </transition>
@@ -19,11 +19,11 @@
             <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="folders" @start="dragging=true" @end="dragging=false" @change="updateFolderOrder(folders)">
                 <template #item="{element}" :key="element.id">
                     <div class="flex group">
-                        <div class="flex bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                        <div class="flex bg-surface-sunken py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                             <div class="flex w-full">
                                 <div class="flex">
-                                    <IconDragDrop class="my-auto xsDark h-5 w-5 hidden group-hover:block"/>
-                                    <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto xsDark">
+                                    <IconDragDrop class="my-auto text-sm/5 font-semibold text-text h-5 w-5 hidden group-hover:block"/>
+                                    <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto text-sm/5 font-semibold text-text">
                                         {{ element.name }}
                                     </Link>
                                 </div>

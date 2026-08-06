@@ -29,20 +29,20 @@
                 v-if="open"
                 id="project-search-listbox"
                 role="listbox"
-                class="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-lg border border-zinc-200 bg-white/95 shadow-lg ring-1 ring-black/5 backdrop-blur supports-[backdrop-filter]:bg-white"
+                class="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-lg border border-border-subtle bg-white/95 shadow-lg ring-1 ring-black/5 backdrop-blur supports-[backdrop-filter]:bg-white"
             >
                 <!-- Loading -->
-                <div v-if="loading" class="px-3 py-2 text-[13px] text-zinc-500">
+                <div v-if="loading" class="px-3 py-2 text-[13px] text-text-subtle">
                     {{ $t ? $t('Searching…') : 'Searching…' }}
                 </div>
 
                 <!-- Error -->
-                <div v-else-if="error" class="px-3 py-2 text-[13px] text-rose-600">
+                <div v-else-if="error" class="px-3 py-2 text-[13px] text-danger">
                     {{ error }}
                 </div>
 
                 <!-- Empty -->
-                <div v-else-if="displayList.length === 0" class="px-3 py-2 text-[13px] text-zinc-500">
+                <div v-else-if="displayList.length === 0" class="px-3 py-2 text-[13px] text-text-subtle">
                     <BaseAlertComponent
                         v-if="query.trim() !== ''"
                         :message="$t ? $t('No Projects or Groups found') : 'No Projects or Groups found'"
@@ -54,7 +54,7 @@
 
                 <!-- Results -->
                 <div v-else>
-                <div v-if="isShowingRecent" class="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                <div v-if="isShowingRecent" class="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-text-subtle">
                     {{ $t ? $t('Recently used projects') : 'Recently used projects' }}
                 </div>
                 <ul class="py-1">
@@ -66,24 +66,23 @@
                         :aria-selected="idx === activeIndex"
                         @mouseenter="activeIndex = idx"
                         @mousedown.prevent="selectProject(proj)"
-                    class="cursor-pointer select-none px-3 py-2 text-[13px] text-zinc-800 flex items-center gap-2
-                    hover:bg-indigo-50/60 data-[active=true]:bg-indigo-50/60"
+                    class="cursor-pointer select-none px-3 py-2 text-[13px] text-text flex items-center gap-2 hover:bg-accent-50/60 data-[active=true]:bg-accent-50/60"
                     :data-active="idx === activeIndex"
                     >
-                    <span class="inline-block size-1.5 rounded-full" :class="proj.is_group ? 'bg-emerald-400' : 'bg-indigo-400'"></span>
+                    <span class="inline-block size-1.5 rounded-full" :class="proj.is_group ? 'bg-success' : 'bg-accent-500'"></span>
                     <span class="truncate font-medium">{{ proj.name }}</span>
 
                     <!-- Mini-Badges rechts -->
                     <div class="ml-auto flex items-center gap-1.5 shrink-0">
               <span
                   v-if="proj.is_group"
-                  class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200"
+                  class="inline-flex items-center rounded-full bg-success-surface px-2 py-0.5 text-[11px] font-medium text-success ring-1 ring-success-border"
               >
                 {{ $t ? $t('Group') : 'Group' }}
               </span>
                         <span
                             v-if="proj.marked_as_done"
-                            class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 ring-1 ring-zinc-200"
+                            class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-[11px] font-medium text-text-muted ring-1 ring-border-subtle"
                         >
                 {{ $t ? $t('Done') : 'Done' }}
               </span>

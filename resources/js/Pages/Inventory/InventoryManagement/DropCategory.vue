@@ -26,7 +26,7 @@ const emits = defineEmits(['categoryRequestsDragMove']),
     }),
     draggedOver = ref(false),
     dragOverClass = computed(() => {
-        return draggedOver.value ? 'bg-primary text-white' : 'text-black';
+        return draggedOver.value ? 'bg-surface-inverse text-white' : 'text-black';
     }),
     categoryDragOver = (e) => {
         draggedOver.value = true;

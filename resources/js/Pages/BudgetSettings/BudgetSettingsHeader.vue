@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconCurrencyDollar"
                 :title="title || $t('Budget Settings')"
-                icon-bg-class="bg-green-600/10 text-green-700"
+                icon-bg-class="bg-success-surface text-success"
                 :description="description || $t('Define settings for your budget.')"
                 :search-enabled="false"
             >

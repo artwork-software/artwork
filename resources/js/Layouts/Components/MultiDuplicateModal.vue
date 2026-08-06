@@ -7,7 +7,7 @@
     >
         <div class="space-y-4">
 
-            <div class="rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">
+            <div class="rounded-md bg-accent-50 px-3 py-2 text-sm text-accent-700">
                 {{ $t('{0} event(s) will be duplicated. The originals remain unchanged.', [checkedEvents.length]) }}
                 <template v-if="isPlanning">
                     {{ $t('The copies are created as planned events in the planning calendar.') }}
@@ -17,7 +17,7 @@
             <!-- Raum -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-rose-400"></span>
+                    <span class="ui-dot bg-danger"></span>
                     <h3 class="ui-card-title">{{ $t('Room') }}</h3>
                 </header>
 
@@ -41,7 +41,7 @@
             <!-- Datum & Uhrzeit -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-sky-400"></span>
+                    <span class="ui-dot bg-info"></span>
                     <h3 class="ui-card-title">{{ $t('Date & time') }}</h3>
                 </header>
 
@@ -54,9 +54,8 @@
                         role="radio"
                         :aria-checked="timeMode === mode.key"
                         class="px-2.5 py-1.5 text-xs rounded-md border"
-                        :class="timeMode === mode.key
-                            ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                            : 'border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700'"
+                        :class="timeMode === mode.key ? 'border-accent-200 bg-accent-50 text-accent-700'
+                            : 'border-border-subtle bg-white hover:bg-surface-sunken text-text-muted'"
                         @click="timeMode = mode.key"
                     >
                         {{ $t(mode.label) }}
@@ -71,13 +70,13 @@
 
                     <div class="flex flex-wrap items-end gap-2">
                         <!-- Richtung -->
-                        <div class="inline-flex rounded-md border border-zinc-200 overflow-hidden" role="radiogroup" :aria-label="$t('Direction')">
+                        <div class="inline-flex rounded-md border border-border-subtle overflow-hidden" role="radiogroup" :aria-label="$t('Direction')">
                             <button
                                 type="button"
                                 role="radio"
                                 :aria-checked="direction === 'later'"
                                 class="px-3 py-2.5 text-xs font-medium"
-                                :class="direction === 'later' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-zinc-600 hover:bg-zinc-50'"
+                                :class="direction === 'later' ? 'bg-accent-50 text-accent-700' : 'bg-white text-text-muted hover:bg-surface-sunken'"
                                 @click="direction = 'later'"
                             >
                                 + {{ $t('later') }}
@@ -86,8 +85,8 @@
                                 type="button"
                                 role="radio"
                                 :aria-checked="direction === 'earlier'"
-                                class="px-3 py-2.5 text-xs font-medium border-l border-zinc-200"
-                                :class="direction === 'earlier' ? 'bg-indigo-50 text-indigo-700' : 'bg-white text-zinc-600 hover:bg-zinc-50'"
+                                class="px-3 py-2.5 text-xs font-medium border-l border-border-subtle"
+                                :class="direction === 'earlier' ? 'bg-accent-50 text-accent-700' : 'bg-white text-text-muted hover:bg-surface-sunken'"
                                 @click="direction = 'earlier'"
                             >
                                 &minus; {{ $t('earlier') }}
@@ -123,7 +122,7 @@
                             v-for="preset in offsetPresets"
                             :key="preset.label"
                             type="button"
-                            class="px-2.5 py-1.5 text-xs rounded-md border border-zinc-200 bg-white hover:bg-zinc-50"
+                            class="px-2.5 py-1.5 text-xs rounded-md border border-border-subtle bg-white hover:bg-surface-sunken"
                             @click="applyPreset(preset)"
                         >
                             {{ $t(preset.label) }}
@@ -152,26 +151,26 @@
             <!-- Zusammenfassung -->
             <section class="ui-card">
                 <header class="ui-card-header">
-                    <span class="ui-dot bg-emerald-400"></span>
+                    <span class="ui-dot bg-success"></span>
                     <h3 class="ui-card-title">{{ $t('Summary') }}</h3>
                 </header>
 
-                <ul class="space-y-1 text-[13px] text-zinc-800">
+                <ul class="space-y-1 text-[13px] text-text">
                     <li class="flex items-start gap-2">
-                        <IconCopy class="size-4 shrink-0 mt-0.5 text-zinc-400" />
+                        <IconCopy class="size-4 shrink-0 mt-0.5 text-text-subtle" />
                         <span>{{ $t('{0} new event(s) will be created.', [checkedEvents.length]) }}</span>
                     </li>
                     <li class="flex items-start gap-2">
-                        <IconDoorEnter class="size-4 shrink-0 mt-0.5 text-zinc-400" />
+                        <IconDoorEnter class="size-4 shrink-0 mt-0.5 text-text-subtle" />
                         <span v-if="selectedRoom?.id">{{ $t('All copies are placed in room "{0}".', [selectedRoom.name]) }}</span>
                         <span v-else>{{ $t('Each copy stays in the room of its original.') }}</span>
                     </li>
                     <li class="flex items-start gap-2">
-                        <IconCalendarTime class="size-4 shrink-0 mt-0.5 text-zinc-400" />
+                        <IconCalendarTime class="size-4 shrink-0 mt-0.5 text-text-subtle" />
                         <span>{{ timeSummary }}</span>
                     </li>
                     <li v-if="isPlanning" class="flex items-start gap-2">
-                        <IconClipboardList class="size-4 shrink-0 mt-0.5 text-zinc-400" />
+                        <IconClipboardList class="size-4 shrink-0 mt-0.5 text-text-subtle" />
                         <span>{{ $t('The copies are created as planned events in the planning calendar.') }}</span>
                     </li>
                 </ul>
@@ -181,9 +180,9 @@
 
             <div class="ui-footer">
                 <div class="flex items-center justify-end gap-2">
-                    <button type="button" class="ui-btn-secondary" @click="$emit('closed', false)">
+                    <BaseUIButton type="button" hide-icon @click="$emit('closed', false)">
                         {{ $t('Cancel') }}
-                    </button>
+                    </BaseUIButton>
                     <FormButton
                         :disabled="!isValid || submitting"
                         @click="save"
@@ -200,6 +199,7 @@ import { computed, ref } from "vue";
 import axios from "axios";
 import { useI18n } from "vue-i18n";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseListbox from "@/Artwork/Listbox/ArtworkBaseListbox.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

@@ -11,11 +11,11 @@
               '--footer-height': `${footerHeight}px`
             }">
                 <!-- HEADER (dynamic height, visible on every page) -->
-                <header v-if="hasHeaderContent" ref="headerRef" class="print-header w-full absolute bg-gray-200" :style="{top: `-${headerHeight}px`}">
+                <header v-if="hasHeaderContent" ref="headerRef" class="print-header w-full absolute bg-border-subtle" :style="{top: `-${headerHeight}px`}">
                     <div class="header-content p-2">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_header']">
                             <div v-for="index in layout['columns_header']" :key="index">
-                                <p class="xsDark" v-html="breakLine(layout.notes.header[index - 1])" />
+                                <p class="text-sm/5 font-semibold text-text" v-html="breakLine(layout.notes.header[index - 1])" />
                             </div>
                             <template v-for="col in layout['columns_header']" :key="col">
                                 <div>
@@ -59,11 +59,11 @@
 
 
                 <!-- FOOTER (dynamic height, visible on every page) -->
-                <footer v-if="hasFooterContent" ref="footerRef" class="print-footer bg-gray-200 z-[100] w-full p-2">
+                <footer v-if="hasFooterContent" ref="footerRef" class="print-footer bg-border-subtle z-[100] w-full p-2">
                     <div class="footer-content">
                         <div class="grid gap-4" :class="'grid-cols-' + layout['columns_footer']">
                             <div v-for="index in layout['columns_footer']" :key="index">
-                                <p class="xsDark" v-html="breakLine(layout.notes.footer[index - 1])" />
+                                <p class="text-sm/5 font-semibold text-text" v-html="breakLine(layout.notes.footer[index - 1])" />
                             </div>
                             <template v-for="col in layout['columns_footer']" :key="col">
                                 <div>

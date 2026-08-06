@@ -4,10 +4,10 @@
         :description="$t('Manage custom fields for Business Intelligence.')"
     >
         <template #actions>
-            <button class="ui-button-add inline-flex items-center gap-2" @click="openCreateModal">
+            <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2" @click="openCreateModal">
                 <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Create BI field') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -21,7 +21,7 @@
         <div class="mt-4 space-y-6">
             <BiAudienceCategoryManager />
 
-            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs">
                 <SettingsGuideBanner
                     class="mb-4"
                     variant="inline"
@@ -33,7 +33,7 @@
                         'Only simple field types are available on purpose, so the values stay exportable.',
                     ]"
                 />
-                <div v-if="biFields.length === 0" class="text-center text-sm text-gray-500 py-8">
+                <div v-if="biFields.length === 0" class="text-center text-sm text-text-subtle py-8">
                     {{ $t('No BI fields created yet.') }}
                 </div>
 
@@ -47,31 +47,33 @@
                     class="space-y-2"
                 >
                     <template #item="{ element }">
-                        <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 hover:border-gray-300 transition">
-                            <IconGripVertical class="drag-handle size-5 text-gray-400 cursor-grab flex-shrink-0" />
+                        <div class="flex items-center gap-3 rounded-lg border border-border-subtle bg-white p-3 hover:border-border transition">
+                            <IconGripVertical class="drag-handle size-5 text-text-subtle cursor-grab flex-shrink-0" />
 
                             <ComponentIcons :type="element.type" class="flex-shrink-0" />
 
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 truncate">{{ element.name }}</p>
-                                <p class="text-xs text-gray-500">{{ $t(element.type) }}</p>
+                                <p class="text-sm font-medium text-text truncate">{{ element.name }}</p>
+                                <p class="text-xs text-text-subtle">{{ $t(element.type) }}</p>
                             </div>
 
                             <div class="flex items-center gap-2 flex-shrink-0">
-                                <button
+                                <BaseUIButton
                                     type="button"
-                                    class="ui-button bg-white hover:bg-gray-50 transition"
+                                    hide-icon
+                                    class="bg-white hover:bg-surface-sunken transition"
                                     @click="openEditModal(element)"
                                 >
-                                    <IconEdit class="size-4 text-blue-600" />
-                                </button>
-                                <button
+                                    <IconEdit class="size-4 text-accent-600" />
+                                </BaseUIButton>
+                                <BaseUIButton
                                     type="button"
-                                    class="ui-button bg-red-50 hover:bg-red-100 transition"
+                                    hide-icon
+                                    class="!bg-danger-surface hover:!bg-danger-surface transition"
                                     @click="confirmDelete(element)"
                                 >
-                                    <IconTrash class="size-4 text-red-600" />
-                                </button>
+                                    <IconTrash class="size-4 text-danger" />
+                                </BaseUIButton>
                             </div>
                         </div>
                     </template>
@@ -109,6 +111,7 @@ import draggable from 'vuedraggable';
 import { IconCirclePlus, IconEdit, IconTrash, IconGripVertical } from '@tabler/icons-vue';
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import BiAudienceCategoryManager from '@/Pages/Settings/BiSettings/Components/BiAudienceCategoryManager.vue';
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue';
 import ComponentIcons from '@/Components/Globale/ComponentIcons.vue';

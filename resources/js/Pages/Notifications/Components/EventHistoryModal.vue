@@ -1,10 +1,10 @@
 <template>
     <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_project_history.svg" >
             <div class="mx-4">
-                <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                <div class="font-bold font-lexend text-text tracking-wide text-2xl my-2">
                     {{ $t('Event process')}}
                 </div>
-                <div class="text-secondary subpixel-antialiased">
+                <div class="text-text-subtle subpixel-antialiased">
                     {{ $t('Here you can see what was changed by whom and when.')}}
                 </div>
 
@@ -14,14 +14,14 @@
                     <div v-for="(historyItem,index) in project_history">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null">
                             <div class="flex w-full ">
-                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                    <span class="w-40 text-text-subtle my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
                                 <NewUserToolTip :height="7"
                                                 :width="7"
                                                 :user="historyItem.change_by"
                                                 :id="index"/>
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
+                                <div class="text-text-subtle subpixel-antialiased ml-2 text-sm my-auto w-96">
                                     {{
                                         $t(
                                             historyItem.changes[0].translationKey,
@@ -41,11 +41,10 @@
 
 
 <script>
+import {IconCheck, IconX} from "@tabler/icons-vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon} from "@heroicons/vue/outline";
-import {CheckIcon} from "@heroicons/vue/solid";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
@@ -55,8 +54,8 @@ export default {
         BaseModal,
         NewUserToolTip,
         JetDialogModal,
-        XIcon,
-        CheckIcon
+        IconX,
+        IconCheck
     },
     props: ['project_history'],
     emits: ['closed'],

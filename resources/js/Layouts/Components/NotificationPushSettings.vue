@@ -2,8 +2,8 @@
     <div class="">
 
         <div class="my-10">
-            <h2 class="headline2 my-2">{{$t('Notification by push message')}}</h2>
-            <div class="xsLight">
+            <h2 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text my-2">{{$t('Notification by push message')}}</h2>
+            <div class="text-sm/5 font-bold text-text-subtle">
                 {{$t('Get notified via push notifications and stay up to date.')}}
             </div>
         </div>
@@ -11,8 +11,8 @@
         <div v-for="(settings, groupType) in notificationSettings" class="mt-10 pb-10 border-b-secondary border-b">
 
             <div class="flex items-start">
-                <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-artwork-buttons-create' :
-                                    'bg-gray-300',
+                <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-accent-600' :
+                                    'bg-border',
             'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                 <span aria-hidden="true"
                       :class="[!groupDisabled(settings) ? 'translate-x-3' : 'translate-x-0',
@@ -20,15 +20,15 @@
                 </Switch>
 
                 <div class="ml-3 ">
-                    <h3 class="headline3 ">{{ $t(groupTypes[groupType].title) }}</h3>
-                    <p class="xsLight mt-3">{{ $t(groupTypes[groupType].description) }}</p>
+                    <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text ">{{ $t(groupTypes[groupType].title) }}</h3>
+                    <p class="text-sm/5 font-bold text-text-subtle mt-3">{{ $t(groupTypes[groupType].description) }}</p>
                 </div>
             </div>
             <div v-if="!groupDisabled(settings)">
                 <div v-for="type in settings">
                     <div class="flex justify-between mt-6 ml-9 items-start">
-                        <Switch @click="togglePush(type)" :class="[type.enabled_push ? 'bg-artwork-buttons-create' :
-                                                'bg-gray-300',
+                        <Switch @click="togglePush(type)" :class="[type.enabled_push ? 'bg-accent-600' :
+                                                'bg-border',
                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                             <span aria-hidden="true"
                                   :class="[type.enabled_push ? 'translate-x-3' : 'translate-x-0',
@@ -36,8 +36,8 @@
                         </Switch>
 
                         <div class="ml-3 flex-grow">
-                            <h3 class="headline3">{{ $t(type.title) }}</h3>
-                            <p class="xsLight mt-3">{{ $t(type.description) }}</p>
+                            <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text">{{ $t(type.title) }}</h3>
+                            <p class="text-sm/5 font-bold text-text-subtle mt-3">{{ $t(type.description) }}</p>
                         </div>
 
 
@@ -50,8 +50,8 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Switch, Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
-import {ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 
@@ -88,8 +88,8 @@ export default {
         ListboxButton,
         ListboxOptions,
         ListboxOption,
-        ChevronDownIcon,
-        CheckIcon
+        IconChevronDown,
+        IconCheck
     }
 }
 </script>

@@ -27,14 +27,14 @@
                     <div v-if="this.validationMessages.warnings.shift_start.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.shift_start"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
                     <div v-if="this.validationMessages.errors.shift_start.length > 0"
                          class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.shift_start"
-                                                      class="text-xs errorText">
+                                                      class="text-xs text-sm/5 text-danger">
                                                     {{ error }}
                                                 </span>
                     </div>
@@ -46,14 +46,14 @@
                     <div v-if="this.validationMessages.warnings.shift_end.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.shift_end"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
                     <div v-if="this.validationMessages.errors.shift_end.length > 0"
                          class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.shift_end"
-                                                      class="text-xs errorText">
+                                                      class="text-xs text-sm/5 text-danger">
                                                     {{ error }}
                                                 </span>
                     </div>
@@ -81,14 +81,14 @@
                     <div v-if="this.validationMessages.warnings.break_length.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.break_length"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
                     <div v-if="this.validationMessages.errors.break_length.length > 0"
                          class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.break_length"
-                                                      class="text-xs errorText">
+                                                      class="text-xs text-sm/5 text-danger">
                                                     {{ error }}
                                                 </span>
                     </div>
@@ -100,14 +100,14 @@
                     <div v-if="this.validationMessages.warnings.craft.length > 0"
                          class="flex flex-col">
                                                 <span v-for="warning in this.validationMessages.warnings.craft"
-                                                      class="text-xs text-orange-500">
+                                                      class="text-xs text-special-orange">
                                                     {{ warning }}
                                                 </span>
                     </div>
                     <div v-if="this.validationMessages.errors.craft.length > 0"
                          class="flex flex-col">
                                                 <span v-for="error in this.validationMessages.errors.craft"
-                                                      class="text-xs errorText">
+                                                      class="text-xs text-sm/5 text-danger">
                                                     {{ error }}
                                                 </span>
                     </div>
@@ -123,12 +123,12 @@
                          class="mt-2 space-y-2"
                     >
                         <div v-if="computedShiftQualification.warning" class="flex flex-col">
-                                                    <span class="text-xs errorText">
+                                                    <span class="text-xs text-sm/5 text-danger">
                                                         {{ computedShiftQualification.warning }}
                                                     </span>
                         </div>
                         <div v-if="computedShiftQualification.error" class="flex flex-col">
-                                                    <span class="text-xs errorText">
+                                                    <span class="text-xs text-sm/5 text-danger">
                                                         {{ computedShiftQualification.error }}
                                                     </span>
                         </div>
@@ -147,8 +147,8 @@
 </BaseModal>
 </template>
 <script>
+import {IconCheck, IconChevronDown, IconCirclePlus, IconX} from "@tabler/icons-vue";
 import {defineComponent, reactive} from 'vue'
-import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
     Dialog,
@@ -162,7 +162,6 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
-import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -188,16 +187,16 @@ export default defineComponent({
         DateInputComponent, TimeInputComponent,
         FormButton,
         ConfirmationModal,
-        CheckIcon,
-        ChevronDownIcon,
+        IconCheck,
+        IconChevronDown,
         Input,
         Dialog,
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon,
+        IconX,
         DialogPanel,
-        PlusCircleIcon,
+        IconCirclePlus,
         ListboxButton,
         ListboxOption,
         ListboxOptions,

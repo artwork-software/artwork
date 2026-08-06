@@ -26,18 +26,18 @@
                     />
                     <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
                             <span v-for="(user,index) in usersToAdd"
-                                  class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                  class="flex mr-5 rounded-full items-center font-bold text-text">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full object-cover"
                                          :src="user.profile_photo_url"
                                          alt=""/>
-                                    <span class="flex ml-4 sDark">
+                                    <span class="flex ml-4 text-base/5 font-semibold text-text">
                                     {{ user?.first_name }} {{ user?.last_name }}
                                     </span>
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
-                                        <XIcon
-                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
+                                        <IconX
+                                            class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full bg-accent-600 text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -66,8 +66,8 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 
-import {XIcon} from "@heroicons/vue/outline";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

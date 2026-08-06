@@ -1,7 +1,7 @@
 <template>
     <div class="">
         <div class="flex items-center gap-x-4">
-            <div class="mt-0.5 rounded-lg bg-zinc-50 p-2 ring-1 ring-inset ring-zinc-200">
+            <div class="mt-0.5 rounded-lg bg-surface-sunken p-2 ring-1 ring-inset ring-border-subtle">
                 <PropertyIcon
                     stroke-width="1.5"
                     class="text-black size-7"

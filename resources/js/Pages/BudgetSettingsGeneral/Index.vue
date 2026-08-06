@@ -7,22 +7,22 @@
             :paragraphs="guideParagraphs"
             class="mb-6"
         />
-        <div class="xsLight mb-5">
+        <div class="text-sm/5 font-bold text-text-subtle mb-5">
             {{ $t('Specify here what the first three columns of new budget tables should be called') }}
         </div>
         <div v-for="budgetColumnSetting in this.budgetColumnSettings"
              class="flex flex-row items-center mb-2 gap-2">
-            <span class="xsLight w-20">{{ $t('Column') }} {{ budgetColumnSetting.id }}</span>
+            <span class="text-sm/5 font-bold text-text-subtle w-20">{{ $t('Column') }} {{ budgetColumnSetting.id }}</span>
             <input type="text" class="input w-52"  v-model="budgetColumnSetting.column_name"/>
             <button :class="[
                         budgetColumnSetting.column_name === '' ?
-                            'bg-secondary':
-                            'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none',
+                            'bg-text-subtle':
+                            'bg-accent-600 hover:bg-accent-700 focus:outline-none',
                         'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white'
                     ]"
                 :disabled="budgetColumnSetting.column_name === ''"
                 @click="this.saveBudgetColumnSetting(budgetColumnSetting)">
-                <CheckIcon class="h-5 w-5"></CheckIcon>
+                <IconCheck class="h-5 w-5"></IconCheck>
             </button>
         </div>
     </BudgetSettingsHeader>
@@ -41,11 +41,11 @@
 </template>
 
 <script>
+import {IconCheck} from "@tabler/icons-vue";
 import {defineComponent} from "vue";
 import BudgetSettingsHeader from "@/Pages/BudgetSettings/BudgetSettingsHeader.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
-import {CheckIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
@@ -56,7 +56,7 @@ export default defineComponent({
         SettingsGuideBanner,
         ErrorComponent,
         SuccessModal,
-        CheckIcon,
+        IconCheck,
         Button,
         BudgetSettingsHeader,
         InputComponent

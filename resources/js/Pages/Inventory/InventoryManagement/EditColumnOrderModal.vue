@@ -1,15 +1,15 @@
 <template>
     <BaseModal v-if="show" @closed="close">
         <div class="edit-column-select-options-modal-container">
-            <h1 class="headline1">
+            <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                 {{ $t('Column Order') }}
             </h1>
             <span>{{ $t('Define the order of the columns in the inventory overview.') }}</span>
             <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="columns" @start="dragging = true" @end="dragging = false">
                 <template #item="{element}" :key="element.id">
                     <div v-show="!element.temporary" class="flex group" @mouseover="showMenu = element.id" :key="element.id" @mouseout="showMenu = false">
-                        <div class="flex bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
-                            <IconDragDrop class="my-auto xsDark h-5 w-5 hidden group-hover:block"/>
+                        <div class="flex bg-surface-sunken py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                            <IconDragDrop class="my-auto text-sm/5 font-semibold text-text h-5 w-5 hidden group-hover:block"/>
                             {{ element.name }}
                         </div>
                     </div>

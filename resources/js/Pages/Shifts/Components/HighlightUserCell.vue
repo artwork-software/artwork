@@ -54,7 +54,7 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
@@ -72,7 +72,10 @@ export default defineComponent({
         'workTimeBalance'
     ],
     emits: ['highlightShiftsOfUser'],
-    mixins: [ColorHelper],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity} = useColorHelper();
+        return {backgroundColorWithOpacity};
+    },
 
     computed: {
         divStyle() {
@@ -90,11 +93,11 @@ export default defineComponent({
             const minutes = parseInt(minutePartRaw.split('m')[0].trim(), 10);
 
             if (hours > 0 || (hours === 0 && minutes > 0)) {
-                return 'text-green-200';
+                return 'text-success';
             }
 
             if (hours < 0 || (hours === 0 && minutes < 0)) {
-                return 'text-red-200';
+                return 'text-danger';
             }
 
             return 'text-white';

@@ -2,22 +2,22 @@
     <div class="my-5">
         <!-- Kopf mit Neuer-Eintrag-Button -->
         <div v-if="canManage" class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-200">
+            <h3 class="text-base font-semibold text-text ">
                 {{ $t('Availability & absence') }}
             </h3>
             <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-artwork-buttons-create px-3 py-1.5 text-sm font-medium text-white hover:bg-artwork-buttons-hover transition"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-700 transition"
                 @click="$emit('create')"
             >
-                <PlusIcon class="h-4 w-4" />
+                <IconPlus class="h-4 w-4" />
                 {{ $t('New entry') }}
             </button>
         </div>
 
         <!-- Abwesenheiten -->
         <div v-if="vacationEntries.length > 0" class="mb-6">
-            <h4 class="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
+            <h4 class="mb-2 text-sm font-semibold text-text-muted dark:text-text-subtle">
                 {{ $t('Absences') }}
             </h4>
             <SingleUserVacation
@@ -31,7 +31,7 @@
 
         <!-- Verfügbarkeiten -->
         <div v-if="availabilityEntries.length > 0" class="mb-6">
-            <h4 class="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
+            <h4 class="mb-2 text-sm font-semibold text-text-muted dark:text-text-subtle">
                 {{ $t('Registered availability') }}
             </h4>
             <SingleUserVacation
@@ -45,13 +45,13 @@
 
         <!-- Projektwünsche -->
         <div v-if="wishEntries.length > 0" class="mb-6">
-            <h4 class="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400 italic">
+            <h4 class="mb-2 text-sm font-semibold text-text-muted dark:text-text-subtle italic">
                 {{ $t('Project wishes') }}
             </h4>
             <div
                 v-for="entry in wishEntries"
                 :key="`wish-${entry.groupId}`"
-                class="mb-2 flex items-center justify-between gap-2 rounded-lg border border-dashed border-emerald-200 bg-emerald-50/40 dark:border-emerald-800 dark:bg-emerald-900/20 px-3 py-2"
+                class="mb-2 flex items-center justify-between gap-2 rounded-lg border border-dashed border-success-border bg-success-surface px-3 py-2"
             >
                 <div class="min-w-0">
                     <div class="flex items-center gap-1.5">
@@ -59,9 +59,9 @@
                             class="inline-block size-2 shrink-0 rounded-full"
                             :style="{ backgroundColor: colorForProjectId(entry.projectId) }"
                         />
-                        <span class="truncate text-sm italic text-zinc-800 dark:text-zinc-200">{{ entry.projectName }}</span>
+                        <span class="truncate text-sm italic text-text ">{{ entry.projectName }}</span>
                     </div>
-                    <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    <div class="text-xs text-text-subtle dark:text-text-subtle mt-0.5">
                         <template v-if="entry.isFullPeriod || entry.dates.length > 3">
                             {{ formatAssignmentDate(entry.startDate) }} - {{ formatAssignmentDate(entry.endDate) }}
                             <template v-if="entry.isFullPeriod"> &middot; {{ $t('Entire project period') }}</template>
@@ -74,7 +74,7 @@
                 <button
                     v-if="canManage"
                     type="button"
-                    class="shrink-0 rounded-md p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
+                    class="shrink-0 rounded-md p-1.5 text-text-subtle hover:text-danger hover:bg-danger-surface transition"
                     :title="$t('Remove entire wish')"
                     @click="deleteWish(entry)"
                 >
@@ -86,8 +86,8 @@
         </div>
 
         <!-- Empty state -->
-        <div v-if="hasNoEntries" class="mb-6 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 p-4">
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">
+        <div v-if="hasNoEntries" class="mb-6 rounded-lg border border-dashed border-border p-4">
+            <p class="text-sm text-text-subtle dark:text-text-subtle">
                 {{ $t('No entry has yet been made for this month.') }}
             </p>
         </div>
@@ -95,9 +95,9 @@
 </template>
 
 <script setup>
+import {IconPlus} from "@tabler/icons-vue";
 import { computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
-import { PlusIcon } from '@heroicons/vue/outline'
 import dayjs from 'dayjs'
 import axios from 'axios'
 import SingleUserVacation from '@/Pages/Users/Components/SingleUserVacation.vue'

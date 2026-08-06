@@ -1,13 +1,13 @@
 <template>
     <div>
-        <h4 class="text-xs font-medium text-gray-500 mb-2">{{ $t('Derived values') }}</h4>
+        <h4 class="text-xs font-medium text-text-subtle mb-2">{{ $t('Derived values') }}</h4>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="rounded-lg border border-gray-200 bg-white p-3" v-for="item in items" :key="item.key">
+            <div class="rounded-lg border border-border-subtle bg-white p-3" v-for="item in items" :key="item.key">
                 <div class="flex items-center gap-1.5">
-                    <component :is="item.icon" class="size-4 text-gray-400 shrink-0" />
-                    <span class="text-xs font-medium text-gray-500 truncate">{{ $t(item.label) }}</span>
+                    <component :is="item.icon" class="size-4 text-text-subtle shrink-0" />
+                    <span class="text-xs font-medium text-text-subtle truncate">{{ $t(item.label) }}</span>
                 </div>
-                <span class="text-lg font-bold text-gray-900">{{ derivedValues[item.key] ?? 0 }}</span>
+                <span class="text-lg font-bold text-text">{{ derivedValues[item.key] ?? 0 }}</span>
             </div>
         </div>
     </div>

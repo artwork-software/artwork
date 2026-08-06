@@ -2,26 +2,26 @@
     <AppLayout :title="moneySource.name">
         <div class="artwork-container">
             <!-- Header / Meta / Actions -->
-            <header class="rounded-2xl border border-gray-100 bg-white shadow-sm px-5 py-4">
+            <header class="rounded-2xl border border-border-subtle bg-white shadow-sm px-5 py-4">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <!-- Title & Meta -->
                     <div class="min-w-0">
                         <div class="flex items-center gap-3">
                             <h1 class="text-xl lg:text-2xl font-semibold tracking-tight truncate">{{ moneySource.name }}</h1>
-                            <span v-if="moneySource.is_group" class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] text-gray-700">
+                            <span v-if="moneySource.is_group" class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] text-text-muted">
                                 {{ $t('Gruppe') }}
                               </span>
                                             <span
                                                 v-if="moneySource.hasSentExpirationReminderNotification"
-                                                class="inline-flex items-center rounded-md border border-red-200 bg-red-50/70 px-2 py-0.5 text-[11px] text-red-700"
+                                                class="inline-flex items-center rounded-md border border-danger-border bg-danger-surface/70 px-2 py-0.5 text-[11px] text-danger"
                                             >
                                 {{ $t('Ablaufwarnung gesendet') }}
                               </span>
                         </div>
 
-                        <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
+                        <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-text-muted">
                             <div class="flex items-center gap-2">
-                                <span class="text-gray-500">{{ $t('Erstellt von') }}</span>
+                                <span class="text-text-subtle">{{ $t('Erstellt von') }}</span>
                                 <UserPopoverTooltip
                                     v-if="moneySource.creator"
                                     :user="moneySource.creator"
@@ -34,18 +34,18 @@
                             <div v-if="moneySource.group_id" class="flex items-center gap-2">
                                 <img src="/Svgs/IconSvgs/icon_group_red.svg" class="h-4 w-4" alt="groupIcon" />
                                 <span>{{ $t('Gehört zu') }}</span>
-                                <Link :href="getEditHref(moneySource.group_id)" class="text-indigo-700 hover:text-indigo-800">
+                                <Link :href="getEditHref(moneySource.group_id)" class="text-accent-700 hover:text-accent-700">
                                     {{ moneySource.moneySourceGroup?.name }}
                                 </Link>
                             </div>
 
                             <div v-if="moneySource.source_name" class="flex items-center gap-2">
-                                <span class="text-gray-500">{{ $t('Quelle') }}:</span>
+                                <span class="text-text-subtle">{{ $t('Quelle') }}:</span>
                                 <span class="font-medium">{{ moneySource.source_name }}</span>
                             </div>
 
                             <button
-                                class="inline-flex items-center gap-1 text-indigo-700 hover:text-indigo-800"
+                                class="inline-flex items-center gap-1 text-accent-700 hover:text-accent-700"
                                 @click="openMoneySourceHistoryModal"
                             >
                                 <IconChevronRight class="h-3 w-3" />
@@ -53,18 +53,18 @@
                             </button>
                         </div>
 
-                        <p v-if="moneySource.description" class="mt-3 text-sm text-gray-700 max-w-3xl">
+                        <p v-if="moneySource.description" class="mt-3 text-sm text-text-muted max-w-3xl">
                             {{ moneySource.description }}
                         </p>
 
-                        <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-600">
+                        <div class="mt-3 flex flex-wrap gap-3 text-xs text-text-muted">
                           <span v-if="moneySource.start_date && moneySource.end_date" class="ui-button-small">
                             {{ $t('Laufzeit') }}:
                             <strong class="ml-1">{{ formatDate(moneySource.start_date) }} – {{ formatDate(moneySource.end_date) }}</strong>
                           </span>
                                         <span
                                             v-if="moneySource.funding_start_date && moneySource.funding_end_date"
-                                            :class="['ui-button-small', moneySource.hasSentExpirationReminderNotification ? 'border-red-200 text-red-700 bg-red-50/70' : '']"
+                                            :class="['ui-button-small', moneySource.hasSentExpirationReminderNotification ? 'border-danger-border text-danger bg-danger-surface/70' : '']"
                                         >
                             {{ $t('Förderzeitraum') }}:
                             <strong class="ml-1">{{ formatDate(moneySource.funding_start_date) }} – {{ formatDate(moneySource.funding_end_date) }}</strong>
@@ -85,83 +85,83 @@
 
             <!-- KPI Row -->
             <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                    <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Ursprüngliches Volumen') }}</p>
+                <div class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
+                    <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Ursprüngliches Volumen') }}</p>
                     <p class="mt-2 text-3xl font-semibold">{{ toCurrency(moneySource.amount) }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Noch verfügbar') }}</p>
+                            <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Noch verfügbar') }}</p>
                             <p
                                 class="mt-2 text-3xl font-semibold"
-                                :class="moneySource.amount_available <= 0 || moneySource.hasSentThresholdReminderNotification ? 'text-red-600' : ''"
+                                :class="moneySource.amount_available <= 0 || moneySource.hasSentThresholdReminderNotification ? 'text-danger' : ''"
                             >
                                 {{ toCurrency(moneySource.amount_available) }}
                             </p>
                         </div>
                         <span
                             v-if="moneySource.hasSentThresholdReminderNotification"
-                            class="inline-flex items-center rounded-md border border-red-200 bg-red-50/70 px-2 py-0.5 text-[11px] text-red-700"
+                            class="inline-flex items-center rounded-md border border-danger-border bg-danger-surface/70 px-2 py-0.5 text-[11px] text-danger"
                         >
               {{ $t('Schwelle erreicht') }}
             </span>
                     </div>
                     <div class="mt-3">
-                        <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div class="h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
                             <div
-                                class="h-2 rounded-full bg-emerald-500"
+                                class="h-2 rounded-full bg-success"
                                 :style="{ width: utilizationPct + '%' }"
                             />
                         </div>
-                        <p class="mt-1 text-[11px] text-gray-500">
+                        <p class="mt-1 text-[11px] text-text-subtle">
                             {{ $t('Verbraucht') }}: {{ utilizationPct }}%
                         </p>
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                    <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Förderzeitraum') }}</p>
-                    <p class="mt-2 text-sm text-gray-700" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
+                <div class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
+                    <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Förderzeitraum') }}</p>
+                    <p class="mt-2 text-sm text-text-muted" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
                         {{ formatDate(moneySource.funding_start_date) }} – {{ formatDate(moneySource.funding_end_date) }}
                     </p>
-                    <p class="mt-2 text-sm text-gray-500" v-else>—</p>
+                    <p class="mt-2 text-sm text-text-subtle" v-else>—</p>
                 </div>
 
-                <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-                    <p class="text-xs uppercase tracking-wide text-gray-500">{{ $t('Laufzeit') }}</p>
-                    <p class="mt-2 text-sm text-gray-700" v-if="moneySource.start_date && moneySource.end_date">
+                <div class="rounded-2xl border border-border-subtle bg-white p-4 shadow-sm">
+                    <p class="text-xs uppercase tracking-wide text-text-subtle">{{ $t('Laufzeit') }}</p>
+                    <p class="mt-2 text-sm text-text-muted" v-if="moneySource.start_date && moneySource.end_date">
                         {{ formatDate(moneySource.start_date) }} – {{ formatDate(moneySource.end_date) }}
                     </p>
-                    <p class="mt-2 text-sm text-gray-500" v-else>—</p>
+                    <p class="mt-2 text-sm text-text-subtle" v-else>—</p>
                 </div>
             </section>
 
             <!-- Linked Positions -->
-            <section class="mt-8 rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <section class="mt-8 rounded-2xl border border-border-subtle bg-white shadow-sm">
                 <div class="px-5 pt-5">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <h2 class="text-base font-semibold">{{ $t('Verknüpfte Positionen') }}</h2>
-                            <p class="text-xs text-gray-500">{{ $t('Alle Buchungen zu dieser Geldquelle, gefiltert nach Projekt') }}</p>
+                            <p class="text-xs text-text-subtle">{{ $t('Alle Buchungen zu dieser Geldquelle, gefiltert nach Projekt') }}</p>
                         </div>
 
                         <!-- Project Filter (Listbox) -->
                         <Listbox v-model="wantedProject" as="div" class="relative w-full md:w-72">
-                            <ListboxButton class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-left hover:bg-gray-50 inline-flex items-center justify-between">
+                            <ListboxButton class="w-full rounded-xl border border-border-subtle bg-white px-3 py-2 text-sm text-left hover:bg-surface-sunken inline-flex items-center justify-between">
                 <span class="truncate">
                   {{ wantedProject ? wantedProject.name : $t('Alle Projekte') }}
                 </span>
-                                <IconChevronDown class="h-4 w-4 text-gray-500" />
+                                <IconChevronDown class="h-4 w-4 text-text-subtle" />
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute right-0 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-gray-100 bg-white shadow-lg p-1 z-10">
+                                <ListboxOptions class="absolute right-0 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-border-subtle bg-white shadow-lg p-1 z-10">
                                     <ListboxOption as="template" :value="null" v-slot="{ active, selected }">
-                                        <li :class="['px-3 py-2 rounded-lg text-sm cursor-pointer', active ? 'bg-gray-50' : '']">
+                                        <li :class="['px-3 py-2 rounded-lg text-sm cursor-pointer', active ? 'bg-surface-sunken' : '']">
                                             <div class="flex items-center justify-between">
                                                 <span class="truncate">{{ $t('Alle Projekte') }}</span>
-                                                <IconCheck v-if="selected" class="size-4 text-emerald-600" />
+                                                <IconCheck v-if="selected" class="size-4 text-success" />
                                             </div>
                                         </li>
                                     </ListboxOption>
@@ -172,10 +172,10 @@
                                         as="template"
                                         v-slot="{ active, selected }"
                                     >
-                                        <li :class="['px-3 py-2 rounded-lg text-sm cursor-pointer', active ? 'bg-gray-50' : '']">
+                                        <li :class="['px-3 py-2 rounded-lg text-sm cursor-pointer', active ? 'bg-surface-sunken' : '']">
                                             <div class="flex items-center justify-between">
                                                 <span class="truncate">{{ project.name }}</span>
-                                                <IconCheck v-if="selected" class="size-4 text-emerald-600" />
+                                                <IconCheck v-if="selected" class="size-4 text-success" />
                                             </div>
                                         </li>
                                     </ListboxOption>
@@ -187,23 +187,23 @@
 
                 <!-- Project sums overview -->
                 <div class="px-5 mt-4">
-                    <div v-if="Object.keys(positionSumsPerProject).length" class="rounded-xl border border-gray-100 bg-white p-4">
+                    <div v-if="Object.keys(positionSumsPerProject).length" class="rounded-xl border border-border-subtle bg-white p-4">
                         <h3 class="text-sm font-semibold mb-3">{{ $t('Summen je Projekt') }}</h3>
                         <div class="space-y-3">
                             <div v-for="(sum, pid) in positionSumsPerProject" :key="pid" class="flex items-center gap-3">
-                                <div class="w-48 truncate text-xs text-gray-600">
+                                <div class="w-48 truncate text-xs text-text-muted">
                                     {{ projectNameById(Number(pid)) }}
                                 </div>
                                 <div class="flex-1">
-                                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                                    <div class="h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
                                         <div
                                             class="h-2 rounded-full"
-                                            :class="sum >= 0 ? 'bg-emerald-500' : 'bg-red-500'"
+                                            :class="sum >= 0 ? 'bg-success' : 'bg-danger'"
                                             :style="{ width: barWidth(sum) + '%' }"
                                         />
                                     </div>
                                 </div>
-                                <div class="w-28 text-right text-xs font-medium" :class="sum >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                                <div class="w-28 text-right text-xs font-medium" :class="sum >= 0 ? 'text-success' : 'text-danger'">
                                     <span v-if="sum >= 0">+</span>{{ toCurrency(sum) }}
                                 </div>
                             </div>
@@ -217,13 +217,13 @@
                         <article
                             v-for="position in filteredPositions"
                             :key="position.id"
-                            class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
+                            class="overflow-hidden rounded-xl border border-border-subtle bg-white shadow-sm"
                         >
                             <div class="flex">
                                 <!-- Color stripe -->
                                 <div
                                     class="w-1.5"
-                                    :class="position.type === 'COST' ? 'bg-red-500' : 'bg-emerald-500'"
+                                    :class="position.type === 'COST' ? 'bg-danger' : 'bg-success'"
                                 />
                                 <div class="flex-1 p-4">
                                     <div class="flex items-start justify-between gap-3">
@@ -231,30 +231,30 @@
                                             <div class="flex items-center gap-2">
                         <span
                             class="inline-flex items-center rounded-md border px-2 py-0.5 text-[11px]"
-                            :class="position.type === 'COST' ? 'border-red-200 text-red-700 bg-red-50/70' : 'border-emerald-200 text-emerald-700 bg-emerald-50/70'"
+                            :class="position.type === 'COST' ? 'border-danger-border text-danger bg-danger-surface/70' : 'border-success-border text-success bg-success-surface/70'"
                         >
                           {{ position.type === 'COST' ? $t('Ausgabe') : $t('Einnahme') }}
                         </span>
-                                                <span class="text-xs text-gray-500">{{ position.created_at }}</span>
+                                                <span class="text-xs text-text-subtle">{{ position.created_at }}</span>
                                             </div>
 
-                                            <div class="mt-1 text-sm text-gray-600 flex flex-wrap items-center gap-2">
+                                            <div class="mt-1 text-sm text-text-muted flex flex-wrap items-center gap-2">
                                                 <Link
                                                     :href="getProjectHref(position.project)"
-                                                    class="inline-flex items-center gap-1 text-indigo-700 hover:text-indigo-800"
+                                                    class="inline-flex items-center gap-1 text-accent-700 hover:text-accent-700"
                                                 >
                                                     <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                         <path stroke-width="1.5" d="M4 7h16M4 12h10M4 17h16"/>
                                                     </svg>
                                                     {{ position.project?.name }}
                                                 </Link>
-                                                <span v-if="position.mainPositionName" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
+                                                <span v-if="position.mainPositionName" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-text-muted">
                           {{ position.mainPositionName }}
                         </span>
-                                                <span v-if="position.subPositionName?.length" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
+                                                <span v-if="position.subPositionName?.length" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-text-muted">
                           {{ position.subPositionName }}
                         </span>
-                                                <span v-if="position.column_name" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-gray-600">
+                                                <span v-if="position.column_name" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-text-muted">
                           {{ position.column_name }}
                         </span>
                                             </div>
@@ -262,7 +262,7 @@
 
                                         <div
                                             class="text-right text-2xl font-semibold"
-                                            :class="position.type === 'COST' ? 'text-red-600' : 'text-emerald-600'"
+                                            :class="position.type === 'COST' ? 'text-danger' : 'text-success'"
                                         >
                                             <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>
                                             {{ toCurrency(parseFloat(position.value)) }}
@@ -273,8 +273,8 @@
                         </article>
                     </div>
 
-                    <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
-                        <p class="text-sm text-gray-600">{{ $t('Keine Positionen für den aktuellen Filter gefunden.') }}</p>
+                    <div v-else class="rounded-2xl border border-dashed border-border-subtle bg-white p-8 text-center">
+                        <p class="text-sm text-text-muted">{{ $t('Keine Positionen für den aktuellen Filter gefunden.') }}</p>
                     </div>
                 </div>
             </section>

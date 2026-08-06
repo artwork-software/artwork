@@ -1,13 +1,16 @@
 <script>
-import {XIcon} from "@heroicons/vue/outline";
+import {IconX} from "@tabler/icons-vue";
 import EditProjectSettingsModal from "@/Layouts/Components/EditProjectSettingsModal.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 
 export default {
     name: "EditableTagComponent",
-    components: {EditProjectSettingsModal, XIcon},
+    components: {EditProjectSettingsModal, IconX},
     emits: ['openDeleteModal' , 'openEditModal'],
-    mixins: [ColorHelper],
+    setup() {
+        const {backgroundColorWithOpacityOld: backgroundColorWithOpacity, TextColorWithDarken} = useColorHelper();
+        return {backgroundColorWithOpacity, TextColorWithDarken};
+    },
     data(){
         return {
             showEditModal: false,
@@ -31,7 +34,7 @@ export default {
         </span>
 
         <button type="button" @click="$emit('openDeleteModal', item)">
-            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+            <IconX class="ml-1 h-4 w-4 hover:text-danger "/>
         </button>
     </span>
 

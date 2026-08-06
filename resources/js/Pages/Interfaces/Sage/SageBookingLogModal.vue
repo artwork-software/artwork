@@ -7,15 +7,15 @@
 
         <!-- Runs list -->
         <div v-if="!selectedLog">
-            <div v-if="loadingRuns" class="py-8 text-center xsLight">{{ $t('Loading...') }}</div>
-            <div v-else-if="!runs || runs.data.length === 0" class="py-8 text-center xsLight">
+            <div v-if="loadingRuns" class="py-8 text-center text-sm/5 font-bold text-text-subtle">{{ $t('Loading...') }}</div>
+            <div v-else-if="!runs || runs.data.length === 0" class="py-8 text-center text-sm/5 font-bold text-text-subtle">
                 {{ $t('No entries available') }}
             </div>
             <div v-else>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead>
-                            <tr class="text-left xsLight border-b border-gray-200">
+                            <tr class="text-left text-sm/5 font-bold text-text-subtle border-b border-border-subtle">
                                 <th class="py-2 pr-4">{{ $t('Date') }}</th>
                                 <th class="py-2 pr-4">{{ $t('Type') }}</th>
                                 <th class="py-2 pr-4">{{ $t('Source') }}</th>
@@ -28,22 +28,22 @@
                         </thead>
                         <tbody>
                             <tr v-for="log in runs.data" :key="log.id"
-                                class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                                class="border-b border-border-subtle hover:bg-surface-sunken cursor-pointer"
                                 @click="openRun(log)">
                                 <td class="py-2 pr-4 whitespace-nowrap">{{ formatDateTime(log.created_at) }}</td>
                                 <td class="py-2 pr-4">
                                     <span :class="[
                                         'inline-block rounded-full px-2 py-0.5 text-xs',
-                                        log.type === 'delete' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                                        log.type === 'delete' ? 'bg-danger-surface text-danger' : 'bg-success-surface text-success'
                                     ]">{{ translateType(log.type) }}</span>
                                 </td>
                                 <td class="py-2 pr-4">{{ translateSource(log.source) }}</td>
                                 <td class="py-2 pr-4 whitespace-nowrap">{{ log.user?.full_name ?? '–' }}</td>
-                                <td class="py-2 pr-4 text-right text-green-700">+{{ log.created_count }}</td>
-                                <td class="py-2 pr-4 text-right text-yellow-700">~{{ log.updated_count }}</td>
-                                <td class="py-2 pr-4 text-right text-red-700">−{{ log.deleted_count }}</td>
+                                <td class="py-2 pr-4 text-right text-success">+{{ log.created_count }}</td>
+                                <td class="py-2 pr-4 text-right text-warning">~{{ log.updated_count }}</td>
+                                <td class="py-2 pr-4 text-right text-danger">−{{ log.deleted_count }}</td>
                                 <td class="py-2 pr-4 text-right whitespace-nowrap" @click.stop>
-                                    <button class="text-artwork-buttons-create hover:underline text-xs"
+                                    <button class="text-accent-600 hover:underline text-xs"
                                             @click="downloadCsv(log)">
                                         {{ $t('Download CSV') }}
                                     </button>
@@ -62,23 +62,23 @@
 
         <!-- Entries of a single run -->
         <div v-else>
-            <button class="mb-3 text-sm text-artwork-buttons-create hover:underline" @click="backToRuns">
+            <button class="mb-3 text-sm text-accent-600 hover:underline" @click="backToRuns">
                 &larr; {{ $t('Back to overview') }}
             </button>
             <div class="mb-3 flex items-center justify-end">
-                <button class="text-artwork-buttons-create hover:underline text-sm" @click="downloadCsv(selectedLog)">
+                <button class="text-accent-600 hover:underline text-sm" @click="downloadCsv(selectedLog)">
                     {{ $t('Download CSV') }}
                 </button>
             </div>
-            <div v-if="loadingEntries" class="py-8 text-center xsLight">{{ $t('Loading...') }}</div>
-            <div v-else-if="!entries || entries.data.length === 0" class="py-8 text-center xsLight">
+            <div v-if="loadingEntries" class="py-8 text-center text-sm/5 font-bold text-text-subtle">{{ $t('Loading...') }}</div>
+            <div v-else-if="!entries || entries.data.length === 0" class="py-8 text-center text-sm/5 font-bold text-text-subtle">
                 {{ $t('No entries available') }}
             </div>
             <div v-else>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead>
-                            <tr class="text-left xsLight border-b border-gray-200">
+                            <tr class="text-left text-sm/5 font-bold text-text-subtle border-b border-border-subtle">
                                 <th class="py-2 pr-4">{{ $t('Action') }}</th>
                                 <th class="py-2 pr-4">{{ $t('Assignment') }}</th>
                                 <th class="py-2 pr-4">{{ $t('Sage ID') }}</th>
@@ -90,13 +90,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="entry in entries.data" :key="entry.id" class="border-b border-gray-100">
+                            <tr v-for="entry in entries.data" :key="entry.id" class="border-b border-border-subtle">
                                 <td class="py-2 pr-4">
                                     <span :class="[
                                         'inline-block rounded-full px-2 py-0.5 text-xs',
-                                        entry.action === 'deleted' ? 'bg-red-100 text-red-700'
-                                            : entry.action === 'updated' ? 'bg-yellow-100 text-yellow-700'
-                                            : 'bg-green-100 text-green-700'
+                                        entry.action === 'deleted' ? 'bg-danger-surface text-danger'
+                                            : entry.action === 'updated' ? 'bg-warning-surface text-warning'
+                                            : 'bg-success-surface text-success'
                                     ]">{{ translateAction(entry.action) }}</span>
                                 </td>
                                 <td class="py-2 pr-4">{{ translateTarget(entry.target_type) }}</td>

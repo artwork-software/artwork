@@ -29,7 +29,7 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "bg-artwork-buttons-create"
+            default: "bg-accent-600"
         },
         classes: {
             type: String,
@@ -50,7 +50,7 @@ export default {
                 case 'reset':
                     return ''
                 case 'cancel':
-                    return 'bg-gray-300 hover:bg-gray-400 !text-gray-800'
+                    return 'bg-border hover:bg-border-strong !text-text'
                 default:
                     return ''
             }
@@ -64,7 +64,7 @@ export default {
     <button
        :type="type"
        :disabled="disabled"
-       :class="[disabled ? 'bg-secondary' : `${backgroundColor} hover:bg-artwork-buttons-hover`,
+       :class="[disabled ? 'bg-text-subtle' : `${backgroundColor} hover:bg-accent-700`,
        $props.horizontalPadding, textColor, borderWidth, borderColor, verticalPadding, classes, buttonStyle]"
        class="flex items-center rounded-lg shadow-sm focus:outline-none transition-all duration-150 ease-in-out "
     >

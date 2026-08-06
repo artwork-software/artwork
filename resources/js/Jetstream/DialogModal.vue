@@ -1,7 +1,7 @@
 <template>
     <modal :show="show" :max-width="maxWidth" :closeable="closeable" @close="close">
-        <div class="px-6 py-4">
-            <div class="text-lg">
+        <div class="p-4 text-left">
+            <div class="font-lexend font-semibold text-lg text-text">
                 <slot name="title">
                 </slot>
             </div>
@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        <div class="flex flex-row justify-end px-6 py-4 bg-gray-100 text-right">
+        <div class="flex flex-row justify-end gap-x-2 px-4 py-3 bg-surface-sunken border-t border-border-subtle rounded-b-lg text-right">
             <slot name="footer">
             </slot>
         </div>

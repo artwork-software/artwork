@@ -33,7 +33,7 @@
                     :label="$t('Filter events by BI tags')"
                     :placeholder="$t('All events')"
                 />
-                <p class="mt-1.5 text-xs text-gray-500">
+                <p class="mt-1.5 text-xs text-text-subtle">
                     {{ $t('Without a selection, all events in the period are exported.') }}
                 </p>
             </div>
@@ -55,14 +55,14 @@
                         class="w-44"
                     />
                 </div>
-                <p class="mt-1.5 text-xs text-gray-500">
+                <p class="mt-1.5 text-xs text-text-subtle">
                     {{ $t('Defaults to the project period. Limits which events count towards per-event and count metrics.') }}
                 </p>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4">
-                <span v-if="exportError" class="text-sm text-rose-600">{{ $t('The export could not be generated.') }}</span>
-                <button @click="$emit('close')" class="text-sm text-gray-500 hover:text-gray-700">{{ $t('Cancel') }}</button>
+                <span v-if="exportError" class="text-sm text-danger">{{ $t('The export could not be generated.') }}</span>
+                <button @click="$emit('close')" class="text-sm text-text-subtle hover:text-text-muted">{{ $t('Cancel') }}</button>
                 <BaseUIButton
                     @click="doExport"
                     :label="$t('Download Excel')"

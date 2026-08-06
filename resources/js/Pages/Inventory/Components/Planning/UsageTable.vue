@@ -5,11 +5,11 @@
             :key="issue.id"
             :ref="(el) => registerIssueRef(issue.id, el)"
             class="rounded-lg border p-4 shadow-sm bg-white flex justify-between transition-colors"
-            :class="highlightIssueId === issue.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-300'"
+            :class="highlightIssueId === issue.id ? 'border-accent-600 ring-2 ring-accent-200' : 'border-border'"
         >
             <div>
-                <div class="font-medium text-gray-800">{{ issue.name }}</div>
-                <div class="text-xs text-gray-500">
+                <div class="font-medium text-text">{{ issue.name }}</div>
+                <div class="text-xs text-text-subtle">
                     <span>{{ splitDateTime(issue.start_date_time).date }}</span><span
                         v-if="splitDateTime(issue.start_date_time).time"
                         class="ml-1"
@@ -23,7 +23,7 @@
                     >{{ splitDateTime(issue.end_date_time).time }}</span>
                 </div>
 
-                <ul class="mt-2 divide-y text-sm text-gray-700">
+                <ul class="mt-2 divide-y text-sm text-text-muted">
                     <li
                         v-for="article in issue.articles"
                         :key="article.id"
@@ -34,7 +34,7 @@
                             <span>{{ article.pivot.quantity }} {{ $t('Stk') }}</span>
                             <span
                                 v-if="editingIssueId && issue.id === editingIssueId && editingArticleQuantity != null"
-                                class="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-300"
+                                class="inline-flex items-center rounded-md bg-warning-surface px-1.5 py-0.5 text-[11px] font-medium text-warning ring-1 ring-inset ring-warning-border"
                             >
                                 {{ $t('Current adjustment') }}: {{ editingArticleQuantity }} {{ $t('Stk') }}
                             </span>
@@ -43,15 +43,15 @@
                 </ul>
             </div>
             <div>
-                <button class="new-button-small" @click="openMaterialIssueModal(issue.id)" type="button" :disabled="loadingIssueId === issue.id">
+                <BaseUIButton size="sm" hide-icon @click="openMaterialIssueModal(issue.id)" type="button" :disabled="loadingIssueId === issue.id">
                     <IconLoader2 v-if="loadingIssueId === issue.id" class="size-4 animate-spin" />
                     <IconEdit v-else class="size-4" />
                     {{ $t('Edit')}}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </div>
-    <div v-else class="text-sm text-gray-400 italic">
+    <div v-else class="text-sm text-text-subtle italic">
         {{ $t('No data available') }}
     </div>
 
@@ -71,6 +71,7 @@
 <script setup>
 
 import { IconEdit, IconLoader2 } from '@tabler/icons-vue';
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
 import {defineAsyncComponent, ref, watch, nextTick, computed} from 'vue';
 import axios from 'axios';
 
@@ -212,7 +213,7 @@ const timeClass = (issue, bound) => {
         }
     }
 
-    return overlaps ? 'italic text-red-600' : 'italic text-blue-600';
+    return overlaps ? 'italic text-danger' : 'italic text-accent-600';
 };
 
 

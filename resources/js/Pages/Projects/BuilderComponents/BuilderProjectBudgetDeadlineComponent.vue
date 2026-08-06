@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2 flex items-center gap-1.5">
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2 flex items-center gap-1.5">
             {{ $t('Budget deadline') }}
             <ToolTipComponent
                 :tooltip-text="$t('This date is currently only relevant for the budget export by deadline in the project overview, to determine the point in time for which the budget is relevant.')"
@@ -13,7 +13,7 @@
             <component :is="IconClock" class="h-4 w-4" stroke-width="2"/>
             <span class="font-bold">{{ project.budget_deadline }}</span>
         </div>
-        <div v-else class="text-sm text-secondary">
+        <div v-else class="text-sm text-text-subtle">
             {{ $t('No entries') }}
         </div>
     </div>

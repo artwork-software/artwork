@@ -2,7 +2,7 @@
     <TransitionRoot as="template" :show="sidebarOpen">
         <Dialog class="relative z-50 lg:hidden" @close="sidebarOpen = false">
             <TransitionChild as="template" enter="transition-opacity ease-linear duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="transition-opacity ease-linear duration-300" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-900/80" />
+                <div class="fixed inset-0 bg-surface-inverse/80" />
             </TransitionChild>
 
             <div class="fixed inset-0 flex">
@@ -30,30 +30,30 @@
                                                     <a
                                                         v-if="!item.isMenu"
                                                         :href="item.href"
-                                                        :class="[item.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']"
+                                                        :class="[item.current ? 'bg-surface-sunken text-accent-600' : 'text-text hover:bg-surface-sunken hover:text-accent-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']"
                                                     >
-                                                        <PropertyIcon :name="item.icon" :class="[item.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
+                                                        <PropertyIcon :name="item.icon" :class="[item.current ? 'text-accent-600' : 'text-text-subtle group-hover:text-accent-600', 'size-6 shrink-0']" aria-hidden="true" />
                                                         {{ $t(item.name) }}
                                                     </a>
 
                                                     <a
                                                         v-else-if="getSingleVisibleSubMenu(item)"
                                                         :href="getSingleVisibleSubMenu(item).href"
-                                                        :class="[(getSingleVisibleSubMenu(item).current) ? 'bg-gray-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']"
+                                                        :class="[(getSingleVisibleSubMenu(item).current) ? 'bg-surface-sunken text-accent-600' : 'text-text hover:bg-surface-sunken hover:text-accent-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']"
                                                     >
-                                                        <PropertyIcon :name="item.icon" :class="[(getSingleVisibleSubMenu(item).current) ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-6 shrink-0']" aria-hidden="true" />
+                                                        <PropertyIcon :name="item.icon" :class="[(getSingleVisibleSubMenu(item).current) ? 'text-accent-600' : 'text-text-subtle group-hover:text-accent-600', 'size-6 shrink-0']" aria-hidden="true" />
                                                         {{ $t(item.name) }}
                                                     </a>
 
                                                     <div v-else>
-                                                        <div class="text-gray-700 group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold">
-                                                            <PropertyIcon :name="item.icon" class="text-gray-400 size-6 shrink-0" aria-hidden="true" />
+                                                        <div class="text-text group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold">
+                                                            <PropertyIcon :name="item.icon" class="text-text-subtle size-6 shrink-0" aria-hidden="true" />
                                                             {{ $t(item.name) }}
                                                         </div>
                                                         <ul class="ml-8 space-y-1">
                                                             <li v-for="subMenu in item.subMenus" :key="subMenu.name">
-                                                                <a v-if="subMenu.has_permission" :href="subMenu.href" :class="[subMenu.current ? 'bg-gray-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6']">
-                                                                    <PropertyIcon :name="subMenu.icon" :class="[subMenu.current ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600', 'size-5 shrink-0']" aria-hidden="true" />
+                                                                <a v-if="subMenu.has_permission" :href="subMenu.href" :class="[subMenu.current ? 'bg-surface-sunken text-accent-600' : 'text-text-muted hover:bg-surface-sunken hover:text-accent-600', 'group flex gap-x-3 rounded-md p-2 text-sm/6']">
+                                                                    <PropertyIcon :name="subMenu.icon" :class="[subMenu.current ? 'text-accent-600' : 'text-text-subtle group-hover:text-accent-600', 'size-5 shrink-0']" aria-hidden="true" />
                                                                     {{ $t(subMenu.name) }}
                                                                 </a>
                                                             </li>
@@ -77,13 +77,13 @@
         class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
         :class="isFullSideBar ? 'lg:w-88' : 'lg:w-16'"
     >
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-hidden bg-artwork-navigation-background">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto overflow-x-hidden bg-surface-inverse">
             <!-- Brand -->
             <div class="flex h-16 shrink-0 items-center justify-center">
                 <div :class="isFullSideBar ? 'w-full flex mx-6' : ''" class="mt-5">
                     <div class="group relative">
                         <div
-                            class="absolute inset-0 hidden cursor-pointer bg-artwork-navigation-background/70 group-hover:block z-10"
+                            class="absolute inset-0 hidden cursor-pointer bg-surface-inverse/70 group-hover:block z-10"
                             @click="isFullSideBar = !isFullSideBar"
                         >
                             <div class="flex h-full w-full items-center justify-center">
@@ -117,11 +117,11 @@
                                     :prefetch="item.prefetch"
                                     :aria-current="item.current ? 'page' : undefined"
                                     :class="[
-                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                       item.current
-                                        ? 'bg-white/10 text-white'
-                                        : 'text-white hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                        ? 'bg-white/10 text-white border-accent-500'
+                                        : 'border-transparent text-white hover:bg-white/10 hover:text-white'
                                     ]"
                                 >
                                     <ToolTipComponent
@@ -137,7 +137,7 @@
                                         v-else
                                         :name="item.icon"
                                         :stroke-width="1.5"
-                                        class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                        class="size-6 min-w-6 min-h-6 text-white"
                                         aria-hidden="true"
                                     />
                                     <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
@@ -151,11 +151,11 @@
                                         :prefetch="item.prefetch"
                                         :aria-current="getSingleVisibleSubMenu(item).current ? 'page' : undefined"
                                         :class="[
-                                          'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
+                                          'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2',
                                           isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                           getSingleVisibleSubMenu(item).current
-                                            ? 'bg-white/10 text-white'
-                                            : 'text-white hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                            ? 'bg-white/10 text-white border-accent-500'
+                                            : 'border-transparent text-white hover:bg-white/10 hover:text-white'
                                         ]"
                                     >
                                         <ToolTipComponent
@@ -171,7 +171,7 @@
                                             v-else
                                             :name="item.icon"
                                             :stroke-width="1.5"
-                                            class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                            class="size-6 min-w-6 min-h-6 text-white"
                                             aria-hidden="true"
                                         />
                                         <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
@@ -193,10 +193,10 @@
                                                     :href="subMenu.href"
                                                     :aria-current="subMenu.current ? 'page' : undefined"
                                                     :class="[
-                                                      'group flex items-center gap-3 rounded-lg min-h-9 py-1 px-2 text-sm select-none transition-colors',
+                                                      'group flex items-center gap-3 rounded-lg min-h-9 py-1 px-2 text-sm select-none transition-colors border-l-2',
                                                       subMenu.current
-                                                        ? 'bg-white/10 text-white'
-                                                        : 'text-white/80 hover:bg-white/10 hover:text-artwork-buttons-hover'
+                                                        ? 'bg-white/10 text-white border-accent-500'
+                                                        : 'border-transparent text-white/80 hover:bg-white/10 hover:text-white'
                                                     ]"
                                                 >
                                                     <PropertyIcon
@@ -261,17 +261,17 @@
                                     v-if="!item.isMenu && item.has_permission"
                                     :href="item.href"
                                     :class="[
-                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors',
+                                      'w-full group flex items-center rounded-lg min-h-10 py-1.5 select-none transition-colors border-l-2',
                                       isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
                                       item.current
-                                        ? 'bg-gray-50/10 text-white'
-                                        : 'text-white hover:bg-gray-50/10 hover:text-artwork-buttons-hover'
+                                        ? 'bg-white/10 text-white border-accent-500'
+                                        : 'border-transparent text-white hover:bg-white/10 hover:text-white'
                                     ]"
                                 >
                                     <PropertyIcon
                                         :name="item.icon"
                                         :stroke-width="1"
-                                        class="size-6 min-w-6 min-h-6 text-white group-hover:text-artwork-buttons-hover"
+                                        class="size-6 min-w-6 min-h-6 text-white"
                                     />
                                     <span v-if="isFullSideBar" class="flex-1 min-w-0 leading-tight break-words text-left">{{ $t(item.name) }}</span>
                                 </Link>
@@ -282,7 +282,7 @@
                                         :class="[
                                         'w-full group flex items-center rounded-lg h-10 select-none transition-colors bg-transparent',
                                         isFullSideBar ? 'justify-start gap-3 px-2' : 'justify-center px-0',
-                                        'text-white hover:bg-gray-50/10 hover:text-white'
+                                        'text-white hover:bg-white/10 hover:text-white'
                                       ]"
                                     >
                                         <BaseMenu
@@ -329,12 +329,12 @@
                                     >
                                         <!-- Trigger -->
                                         <PopoverButton
-                                            class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-white/5 focus:outline-none focus:ring-0 focus:ring-white/15"
+                                            class="group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                                             :class="isFullSideBar ? 'justify-start' : 'justify-center px-3'"
                                         >
                                             <div class="relative">
                                                 <img
-                                                    class="h-9 w-9 rounded-full object-cover ring-1 ring-white/10 bg-gray-100"
+                                                    class="h-9 w-9 rounded-full object-cover ring-1 ring-white/10 bg-white/10"
                                                     :src="usePage().props.auth.user.profile_photo_url"
                                                     alt=""
                                                 />
@@ -359,13 +359,13 @@
                                             leave-to-class="opacity-0 translate-y-1 scale-[0.98]"
                                         >
                                             <PopoverPanel
-                                                class="z-50 w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-[#0B1220]/95 shadow-2xl backdrop-blur-xl"
+                                                class="z-50 w-[340px] overflow-hidden rounded-lg border border-white/10 bg-surface-inverse shadow-overlay"
                                             >
                                                 <!-- Header -->
                                                 <div class="p-4">
                                                     <div class="flex items-center gap-3">
                                                         <img
-                                                            class="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10 bg-gray-100"
+                                                            class="h-12 w-12 rounded-lg object-cover ring-1 ring-white/10 bg-white/10"
                                                             :src="usePage().props.auth.user.profile_photo_url"
                                                             alt=""
                                                         />
@@ -385,7 +385,7 @@
                   </span>
                                                             </div>
 
-                                                            <div class="mt-0.5 truncate text-xs text-white/60">
+                                                            <div class="mt-0.5 truncate text-xs text-white/70">
                                                                 {{ usePage().props.auth.user.business }}
                                                             </div>
                                                         </div>
@@ -396,8 +396,8 @@
                                                 <div class="border-t border-white/10 p-2">
                                                     <Link
                                                         :href="route('user.edit.info', { user: usePage().props.auth.user.id })"
-                                                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90
-                     transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/15"
+                                                        class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-white/90
+                     transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                                                     >
                                                         <PropertyIcon
                                                             name="IconUserCircle"
@@ -410,8 +410,8 @@
                                                     <button
                                                         type="button"
                                                         @click="logout"
-                                                        class="group mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90
-                     transition hover:bg-red-500/10 hover:text-red-200 focus:outline-none focus:ring-2 focus:ring-red-500/30 cursor-pointer"
+                                                        class="group mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-white/90
+                     transition hover:bg-red-500/10 hover:text-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 cursor-pointer"
                                                     >
                                                         <PropertyIcon
                                                             name="IconLogout"
@@ -434,15 +434,15 @@
     </div>
 
 
-    <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-xs sm:px-6 lg:hidden">
-        <button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden" @click="sidebarOpen = true">
+    <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-surface px-4 py-4 shadow-raised sm:px-6 lg:hidden">
+        <button type="button" class="-m-2.5 p-2.5 text-text lg:hidden" @click="sidebarOpen = true">
             <span class="sr-only">Open sidebar</span>
             <component :is="IconMenu2" class="size-6" aria-hidden="true" />
         </button>
-        <div class="flex-1 text-sm/6 font-semibold text-gray-900">Dashboard</div>
+        <div class="flex-1 text-sm/6 font-semibold text-text">Dashboard</div>
         <a href="#">
             <span class="sr-only">Your profile</span>
-            <img class="size-8 rounded-full object-cover bg-gray-50" :src="usePage().props.auth.user.profile_photo_url" alt="" />
+            <img class="size-8 rounded-full object-cover bg-surface-sunken" :src="usePage().props.auth.user.profile_photo_url" alt="" />
         </a>
     </div>
 </template>

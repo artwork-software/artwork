@@ -12,22 +12,22 @@
                         <img v-if="page.props.big_logo" :src="page.props.big_logo" class="h-10 w-auto" alt="Artwork Logo" />
                     </div>
 
-                    <div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                    <div class="rounded-2xl border border-border-subtle bg-white shadow-sm">
                         <div class="p-6">
                             <slot />
                         </div>
                     </div>
 
-                    <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-zinc-600">
+                    <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-text-muted">
                         <template v-if="page.props.impressumLink">
-                            <a :href="page.props.impressumLink" target="_blank" class="hover:text-blue-700 hover:underline">
+                            <a :href="page.props.impressumLink" target="_blank" class="hover:text-accent-700 hover:underline">
                                 {{ $t('Imprint') }}
                             </a>
-                            <span class="text-zinc-300">|</span>
+                            <span class="text-text-subtle">|</span>
                         </template>
 
                         <template v-if="page.props.privacyLink">
-                            <a :href="page.props.privacyLink" target="_blank" class="hover:text-blue-700 hover:underline">
+                            <a :href="page.props.privacyLink" target="_blank" class="hover:text-accent-700 hover:underline">
                                 {{ $t('Privacy Policy') }}
                             </a>
                         </template>

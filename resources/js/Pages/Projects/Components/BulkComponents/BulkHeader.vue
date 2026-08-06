@@ -4,12 +4,12 @@
          darunterliegenden Event-Zeilen durch die (transparente) Headerzeile durch.
          backdrop-blur wird nicht in allen Browsern unterstützt → deshalb voll deckend. -->
     <div
-        class="sticky top-0 z-20 print:static w-max bg-white border-b border-zinc-200/70"
+        class="sticky top-0 z-20 print:static w-max bg-white border-b border-border-subtle/70"
     >
         <div
             class="px-6 sm:px-4 mt-2 mb-3"
         >
-            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-zinc-600 print:xsDark">
+            <div class="flex items-center gap-3 sm:gap-4 py-2 sm:py-3 text-[11px] sm:text-xs text-text-muted print:text-sm/5 font-semibold text-text">
                 <!-- left spacer when multiEdit -->
                 <div v-if="multiEdit" class="w-8 h-4 shrink-0"></div>
 
@@ -21,28 +21,28 @@
                         class="shrink-0 min-w-0"
                         :style="getColumnSize(1)"
                     >
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+            <span class="uppercase tracking-wider font-semibold text-text-muted ">
               {{ $t('Event Status') }}
             </span>
                     </div>
 
                     <!-- Type -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(2)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+            <span class="uppercase tracking-wider font-semibold text-text-muted ">
               {{ $t('Event type') }}
             </span>
                     </div>
 
                     <!-- Name -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(3)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+            <span class="uppercase tracking-wider font-semibold text-text-muted ">
               {{ $t('Event name') }}
             </span>
                     </div>
 
                     <!-- Room -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(4)">
-            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+            <span class="uppercase tracking-wider font-semibold text-text-muted ">
               {{ $t('Room') }}
             </span>
                     </div>
@@ -50,7 +50,7 @@
                     <!-- Day -->
                     <div class="shrink-0 min-w-0 print:col-span-2" :style="getColumnSize(5)">
             <div class="flex items-center gap-2">
-              <span class="uppercase tracking-wider font-semibold text-zinc-700 ">
+              <span class="uppercase tracking-wider font-semibold text-text-muted ">
                 {{ $t('Start date') }}
               </span>
               <!-- Toggle to show End date column -->
@@ -58,8 +58,8 @@
                   v-model="localShowEndDate"
                   @change="$emit('update:showEndDate', localShowEndDate)"
                   :class="[
-                    localShowEndDate ? 'bg-artwork-buttons-hover' : 'bg-zinc-200 dark:bg-zinc-800',
-                    'relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-artwork-buttons-create/50'
+                    localShowEndDate ? 'bg-accent-700' : 'bg-border-subtle',
+                    'relative inline-flex h-4 w-8 flex-shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-accent-600/50'
                   ]"
                   :aria-label="$t('Toggle end date column')"
               >
@@ -67,7 +67,7 @@
                     aria-hidden="true"
                     :class="[
                       localShowEndDate ? 'translate-x-4' : 'translate-x-0',
-                      'pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white dark:bg-zinc-100 shadow ring-0 transition duration-200 ease-in-out'
+                      'pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                     ]"
                 />
               </Switch>
@@ -77,19 +77,19 @@
                     <!-- Start time -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(6)">
                         <div>
-                          <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('Start time') }}</span>
+                          <span class="uppercase tracking-wider font-semibold text-text-muted ">{{ $t('Start time') }}</span>
                         </div>
                     </div>
 
                     <!-- End date (optional) -->
                     <div v-if="localShowEndDate" class="shrink-0 min-w-0 print:col-span-2" :style="getColumnSize(5)">
-                        <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('End date') }}</span>
+                        <span class="uppercase tracking-wider font-semibold text-text-muted ">{{ $t('End date') }}</span>
                     </div>
 
                     <!-- End time -->
                     <div class="shrink-0 min-w-0" :style="getColumnSize(6)">
                         <div class="flex items-center gap-2">
-                            <span class="uppercase tracking-wider font-semibold text-zinc-700 ">{{ $t('End time') }}</span>
+                            <span class="uppercase tracking-wider font-semibold text-text-muted ">{{ $t('End time') }}</span>
                             <ToolTipComponent
                                 :icon="IconExclamationCircle"
                                 icon-size="h-5 w-5"

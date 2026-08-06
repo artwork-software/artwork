@@ -1,25 +1,25 @@
 <template>
-    <th class="bg-silver-gray xxsDark w-full">
+    <th class="bg-border text-xs/[15px] text-text w-full">
         <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id" @mouseout="showMenu = null">
-            <div class="pl-2 xxsDark w-full flex items-center h-10" v-if="!subPosition.clicked">
+            <div class="pl-2 text-xs/[15px] text-text w-full flex items-center h-10" v-if="!subPosition.clicked">
                 <div @click="subPosition.clicked = !subPosition.clicked">
                     {{ subPosition.name }}
                 </div>
                 <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
-                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
-                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-text my-auto"/>
+                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                 </button>
             </div>
             <div v-else class="flex w-full">
-                <input class="my-2 ml-1 xxsDark rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                <input class="my-2 ml-1 text-xs/[15px] text-text rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600"
                        type="text" v-model="subPosition.name"
                        @keyup.enter="$event.target.blur()"
                        @keyup.esc="subPosition.name = editedNameOriginalValue ?? subPosition.name; subPosition.clicked = false"
                        @focus="editedNameOriginalValue = subPosition.name"
                        @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
-                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
-                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
+                    <PropertyIcon name="IconChevronUp" stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-text my-auto"/>
+                    <PropertyIcon name="IconChevronDown" stroke-width="1.5" v-else class="h-6 w-6 text-text my-auto"/>
                 </button>
             </div>
             <div class="flex items-center justify-end">
@@ -70,7 +70,7 @@
             </div>
         </div>
         <table class="w-full" v-if="!subPosition.closed">
-            <tbody class="bg-secondary-hover w-full">
+            <tbody class="bg-surface w-full">
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
             <draggable
@@ -86,9 +86,9 @@
                 <template #item="{ element: row, index: rowIndex }">
                     <div>
                         <tr v-show="!(row.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)"
-                            :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
+                            :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-accent-600' : '']"
                             @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                            class="bg-secondary-hover flex justify-between items-center border border-gray-200 group">
+                            class="bg-surface flex justify-between items-center border border-border-subtle group">
                             <div class="flex items-center">
                                 <td v-for="(cell,index) in row.cells"
                                     :key="cell.id"
@@ -96,14 +96,14 @@
                                     :class="[index <= 1 ? 'w-48' : index === 2 ? 'w-72 ' : 'w-48 ', index === 0 ? 'relative' : '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                                     <div
                                         v-if="index === 0 && canReorderSubPositionRows"
-                                        class="sub-position-row-drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab text-secondary hover:text-primaryText"
+                                        class="sub-position-row-drag-handle absolute left-0 top-1/2 -translate-y-1/2 cursor-grab text-text-subtle hover:text-primaryText"
                                         @mousedown.stop
                                     >
                                         <PropertyIcon name="IconGripVertical" class="h-4 w-4" aria-hidden="true" />
                                     </div>
                             <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'text-sm/5 font-bold text-text-subtle' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
                                     <div class="flex items-center cell-button">
@@ -122,14 +122,14 @@
                                             <span
                                                 v-if="isTruncated[cell.id]"
                                                 class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
-                                                       rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                       rounded-xl border border-border-subtle bg-white/95 px-3 py-2 text-xs text-text shadow-lg
                                                        opacity-0 translate-y-1 transition-all duration-150
                                                        group-hover/tt:opacity-100 group-hover/tt:translate-y-0
                                                        whitespace-normal wrap-break-word"
                                             >
                                                 <span
                                                     class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
-                                                           border-l border-t border-gray-200"
+                                                           border-l border-t border-border-subtle"
                                                 />
                                                 {{ String(userShowAccountName ? (cell.display_value ?? cell.value) : (cell.value ?? '')) }}
                                             </span>
@@ -137,7 +137,7 @@
                                     </div>
                                 </div>
                                 <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'text-sm/5 font-bold text-text-subtle' : '', index === 0 ? 'w-44 max-w-44 justify-start pl-8' : index === 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end', cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
@@ -157,7 +157,7 @@
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="group/account relative p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
+                                                    class="group/account relative p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, account.title, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex gap-2">
                                                         <div class="shrink-0 text-left">
@@ -173,7 +173,7 @@
                                                 </div>
                                             </div>
                                             <div v-else
-                                                 class="text-nowrap p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white">
+                                                 class="text-nowrap p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white">
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
@@ -183,7 +183,7 @@
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="group/costunit relative p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
+                                                    class="group/costunit relative p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white"
                                                     @mousedown="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, cost_unit.title, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex gap-2">
                                                         <div class="shrink-0 text-left">
@@ -199,7 +199,7 @@
                                                 </div>
                                             </div>
                                             <div v-else
-                                                 class="text-nowrap p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white">
+                                                 class="text-nowrap p-3 cursor-pointer bg-surface-inverse hover:bg-accent-700 text-white">
                                                 {{ $t('No Cost Units found') }}
                                             </div>
                                         </div>
@@ -207,9 +207,9 @@
                                 </div>
                             </div>
                             <div v-else class="group">
-                                <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
+                                <div :class="[row.commented || cell.commented || cell.column.commented ? 'text-sm/5 font-bold text-text-subtle' : '',
                                     index <= 1 ? 'w-44 max-w-44 justify-start pl-3' : index === 2 ? 'w-72 max-w-72 justify-start pl-3' : 'w-48 max-w-48 pr-2 justify-end',
-                                    cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border border-gray-300 ' : '']"
+                                    cell.value < 0 ? 'text-danger' : '', cell.value === '' || cell.value === null ? 'border border-border ' : '']"
                                      class="my-4 h-6 flex items-center cell-button" v-if="!cell.clicked">
                                     <div
                                         v-if="cell.column.type !== 'subprojects_column_for_group'"
@@ -224,7 +224,7 @@
                                             >
                                                 <PropertyIcon
                                                     name="IconMessageDots"
-                                                    class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                                    class="h-5 w-5 cursor-pointer border-2 rounded-md bg-accent-50 text-accent-600 border-accent-600"
                                                 />
                                             </div>
 
@@ -232,14 +232,14 @@
                                                 v-if="cell.calculations_count > 0"
                                                 name="IconCalculator"
                                                 @click="handleCellClick(cell, 'calculation', index, row)"
-                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-accent-50 text-accent-600 border-accent-600"
                                             />
 
                                             <PropertyIcon
                                                 v-if="cell.linked_money_source_id !== null"
                                                 name="IconLink"
                                                 @click="handleCellClick(cell, 'moneysource', index, row)"
-                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"
+                                                class="h-5 w-5 cursor-pointer border-2 rounded-md bg-accent-50 text-accent-600 border-accent-600"
                                             />
 
                                             <PropertyIcon
@@ -253,8 +253,8 @@
                                                 @click="handleCellClick(cell, 'sageAssignedData', index, row)"
                                                 class="h-5 w-5 cursor-pointer border-2 rounded-md"
                                                 :class="cell.sage_assigned_data?.length === 1
-        ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color'
-        : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'"
+        ? 'bg-accent-50 text-accent-600 border-accent-600'
+        : 'bg-success-surface text-success border-success'"
                                                 stroke-width="1.5"
                                             />
                                         </div>
@@ -285,14 +285,14 @@
                                                 <span
                                                     v-if="index < 3 && isTruncated[cell.id]"
                                                     class="pointer-events-none absolute left-0 top-full z-50 mt-2 w-max max-w-md
-                                                           rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-xs text-gray-900 shadow-lg
+                                                           rounded-xl border border-border-subtle bg-white/95 px-3 py-2 text-xs text-text shadow-lg
                                                            opacity-0 translate-y-1 transition-all duration-150
                                                            group-hover/tt:opacity-100 group-hover/tt:translate-y-0
                                                            whitespace-normal wrap-break-word"
                                                 >
                                                     <span
                                                         class="absolute -top-1 left-3 h-2 w-2 rotate-45 bg-white/95
-                                                               border-l border-t border-gray-200"
+                                                               border-l border-t border-border-subtle"
                                                     />
                                                     {{ String(cell.display_value ?? cell.value ?? '') }}
                                                 </span>
@@ -303,7 +303,7 @@
                                     <div v-else class="flex items-center gap-x-1" :class="cell.column.color !== 'whiteColumn' ? cell.column.color : ''">
                                         <PropertyIcon name="IconList" @click="openRelevantBudgetDataSumModalForCell(cell)"
                                                    v-if="calculateRelevantBudgetDataSumFormProjectsInGroup(cell) > 0"
-                                                   class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                                   class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-accent-50 text-accent-600 border-accent-600"/>
                                         {{ toCurrencyString(calculateRelevantBudgetDataSumFormProjectsInGroup(cell)) }}
                                     </div>
                                 </div>
@@ -312,7 +312,7 @@
                                      v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                     <input :ref="`cell-${cell.id}`"
                                            :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                           class="my-2 xsDark appearance-none z-10 rounded-md border border-gray-300 px-1 focus:border-artwork-buttons-create focus:ring-1 focus:ring-artwork-buttons-create focus:outline-none"
+                                           class="my-2 text-sm/5 font-semibold text-text appearance-none z-10 rounded-md border border-border px-1 focus:border-accent-600 focus:ring-1 focus:ring-accent-600"
                                            type="text"
                                            :disabled="!this.$can('edit budget templates') && table.is_template"
                                            v-model="cell.value"
@@ -321,7 +321,7 @@
 
                                 </div>
                                 <div
-                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '', savingCellIds[cell.id] ? 'opacity-50 animate-pulse' : '']"
+                                    :class="[row.commented ? 'text-sm/5 font-bold text-text-subtle' : 'text-sm/5 font-semibold text-text', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-danger' : '', savingCellIds[cell.id] ? 'opacity-50 animate-pulse' : '']"
                                     class="my-4 h-6 flex items-center justify-end group"
                                     @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                     v-else>
@@ -339,11 +339,11 @@
                             </div>
                             <PropertyIcon name="IconCirclePlus" stroke-width="1.5" v-if="index > 2 "
                                             @click="openCellDetailModal(cell)"
-                                            class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
+                                            class="hidden group-hover:block h-6 w-6 absolute -mt-10 ml-4 z-50 cursor-pointer text-white bg-accent-600 rounded-full"/>
                         </td>
                     </div>
                             <BaseMenu
-                                dots-color="text-artwork-buttons-context"
+                                dots-color="text-text-muted"
                                 class="invisible group-hover:visible"
                                 v-if="hasBudgetAccess || $can('edit budget templates')"
                                 white-menu-background
@@ -387,11 +387,11 @@
                                              :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
                         <div @click="addRowToSubPosition(subPosition, row)"
                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
-                             class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
-                            <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
+                             class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-accent-600 hover:border-t-2 hover:border-accent-600">
+                            <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                                 {{ $t('Row') }}
                                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                                class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
+                                                class="h-6 w-6 ml-2 text-white bg-accent-600 rounded-full"/>
                             </div>
                         </div>
                     </div>
@@ -400,16 +400,16 @@
 
             <div v-if="!(subPosition.sub_position_rows?.length > 0) && (this.hasBudgetAccess || this.$can('edit budget templates'))"
                  @click="addRowToSubPosition(subPosition)"
-                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
-                <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
+                 class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+                <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                     {{ $t('Row') }}
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                    class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
+                                    class="h-6 w-6 ml-2 text-white bg-accent-600 rounded-full"/>
                 </div>
             </div>
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
                                  :sub-position-id="subPosition.id" @budget-updated="$emit('budget-updated')"/>
-            <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
+            <tr class=" text-sm/5 font-semibold text-text flex h-10 w-full text-right">
                 <td class="w-48"></td>
                 <td class="w-48"></td>
                 <td class="w-72 my-2">{{ $t('SUM') }}</td>
@@ -418,7 +418,7 @@
                     :key="column.id"
                     v-show="!(column.commented && this.$page.props.auth.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1"
-                         :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-red-500' : ''">
+                         :class="subPosition.columnSums?.[column.id]?.sum < 0 ? 'text-danger' : ''">
                         <div class="flex group relative justify-end items-center">
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
                                  v-if="subPosition.columnSums?.[column.id]?.hasComments && subPosition.columnSums?.[column.id]?.hasMoneySource"
@@ -443,7 +443,7 @@
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
                                  v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
                                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-accent-600 rounded-full "/>
                             </div>
                         </div>
                     </div>
@@ -453,11 +453,11 @@
         </table>
         <div @click="addSubPosition(mainPosition.id, subPosition)"
              v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
-             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
-            <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
+             class="group  cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-accent-600">
+            <div class="group-hover:block hidden uppercase text-accent-600 text-sm -mt-8">
                 {{ $t('Sub position') }}
                 <PropertyIcon name="IconCirclePlus" stroke-width="1.5"
-                                class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full"/>
+                                class="h-6 w-6 ml-12 text-white bg-accent-600 rounded-full"/>
             </div>
         </div>
     </th>
@@ -1158,28 +1158,28 @@ export default {
             if (cell.value !== cell.verified_value) {
                 if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
                     || mainPosition.is_fixed || subPosition.is_fixed) {
-                    cssString += ' bg-red-300 '
-                    cssString += ' xsWhiteBold '
+                    cssString += ' bg-danger '
+                    cssString += ' text-sm/5 font-bold text-white '
                 } else {
                     if (cell.column.color !== 'whiteColumn') {
-                        cssString += ' xsDark '
+                        cssString += ' text-sm/5 font-semibold text-text '
                         cssString += cell.column.color;
                         if (cell.column.is_locked) {
                             cssString += ' lockedColumn '
                         }
                     } else {
-                        cssString += ' xsDark '
+                        cssString += ' text-sm/5 font-semibold text-text '
                     }
                 }
             } else {
                 if (cell.column.color !== 'whiteColumn') {
-                    cssString += ' xsDark '
+                    cssString += ' text-sm/5 font-semibold text-text '
                     cssString += cell.column.color;
                     if (cell.column.is_locked) {
                         cssString += ' lockedColumn '
                     }
                 } else {
-                    cssString += ' xsDark '
+                    cssString += ' text-sm/5 font-semibold text-text '
                 }
             }
 

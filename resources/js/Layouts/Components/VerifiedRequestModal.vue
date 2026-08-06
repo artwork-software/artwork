@@ -14,10 +14,10 @@
                                 leave-from-class="opacity-100"
                                 leave-to-class="opacity-0">
                         <div v-if="filteredSearchResults.length > 0 && userQuery.length > 0"
-                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                             class="absolute z-10 mt-1 w-full max-h-60 bg-surface-inverse shadow-lg
                                     text-base ring-1 ring-black ring-opacity-5
                                     overflow-auto focus:outline-none sm:text-sm">
-                            <div class="border-gray-200">
+                            <div class="border-border-subtle">
                                 <div v-for="(user, index) in filteredSearchResults" :key="index"
                                      class="flex items-center cursor-pointer">
                                     <div class="flex-1 text-sm py-4">
@@ -32,17 +32,17 @@
                     </transition>
                 </div>
                 <div v-if="selectedUser" class="mt-2 mb-4 flex items-center">
-                    <span class="flex mr-5 rounded-full items-center font-bold text-primary">
+                    <span class="flex mr-5 rounded-full items-center font-bold text-text">
                         <div class="flex items-center">
                             <img class="flex h-11 w-11 rounded-full object-cover"
                                  :src="selectedUser.profile_photo_url" alt=""/>
-                            <span class="flex ml-4 sDark">
+                            <span class="flex ml-4 text-base/5 font-semibold text-text">
                                 {{ selectedUser.first_name }} {{ selectedUser.last_name }}
                             </span>
                             <button type="button" @click="removeUser">
                                 <span class="sr-only">{{ $t('Remove user from money source') }}</span>
                                 <PropertyIcon name="IconX" stroke-width="1.5"
-                                       class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
+                                       class="ml-2 h-4 w-4 p-0.5 hover:text-danger rounded-full bg-accent-600 text-white border-0 "/>
                             </button>
                         </div>
                     </span>
@@ -50,7 +50,7 @@
             </div>
             <div class="mt-6 flex justify-center">
                 <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
+                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-accent-600"
                         @click="submit">
                     {{ $t('Request verification') }}
                 </button>

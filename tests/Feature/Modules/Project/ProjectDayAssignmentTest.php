@@ -1328,4 +1328,114 @@ final class ProjectDayAssignmentTest extends FeatureTestCase
             $response->json('assignments.0.worker.profile_photo_url')
         );
     }
+
+    // ---------- Personen-Vorschläge (workerOptions, Schichten-Tab) ----------
+
+    #[Test]
+    public function worker_options_require_shift_planner_permission(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::VIEW_SHIFT_PLAN->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+
+        $this->getJson(route('projects.day-assignments.worker-options', $project))
+            ->assertForbidden();
+    }
+
+    #[Test]
+    public function worker_options_prioritize_project_team_and_annotate_existing_assignments(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-05');
+
+        $teamMember = User::factory()->create([
+            'first_name' => 'Zoe',
+            'last_name' => 'Team',
+            'can_work_shifts' => true,
+        ]);
+        $project->users()->attach($teamMember->id);
+
+        $assignedWorker = User::factory()->create([
+            'first_name' => 'Anna',
+            'last_name' => 'Assigned',
+            'can_work_shifts' => true,
+        ]);
+        // Direkt anlegen — der Service würde die Person automatisch ins
+        // Projektteam aufnehmen und die Sortier-Assertion verwässern
+        $groupId = Str::uuid()->toString();
+        foreach (['2026-08-02', '2026-08-03'] as $date) {
+            ProjectDayAssignment::query()->create([
+                'project_id' => $project->id,
+                'employable_type' => User::class,
+                'employable_id' => $assignedWorker->id,
+                'type' => ProjectDayAssignmentType::BINDING->value,
+                'date' => $date,
+                'group_id' => $groupId,
+                'is_full_period' => false,
+            ]);
+        }
+
+        $notShiftCapable = User::factory()->create([
+            'first_name' => 'Nora',
+            'last_name' => 'NoShifts',
+            'can_work_shifts' => false,
+        ]);
+
+        $response = $this->getJson(route('projects.day-assignments.worker-options', $project))
+            ->assertOk();
+
+        $workers = collect($response->json('workers'));
+
+        // Nicht schichtfähige Personen tauchen nicht auf
+        $this->assertFalse($workers->contains(fn (array $row) => $row['id'] === $notShiftCapable->id && $row['type'] === 0));
+
+        // Projektteam-Mitglied steht vor Nicht-Team-Personen (trotz Name "Zoe" > "Anna")
+        $teamRow = $workers->first(fn (array $row) => $row['id'] === $teamMember->id && $row['type'] === 0);
+        $assignedRow = $workers->first(fn (array $row) => $row['id'] === $assignedWorker->id && $row['type'] === 0);
+        $this->assertNotNull($teamRow);
+        $this->assertNotNull($assignedRow);
+        $this->assertTrue($teamRow['in_project_team']);
+        $this->assertFalse($assignedRow['in_project_team']);
+        $this->assertLessThan(
+            $workers->search(fn (array $row) => $row['id'] === $assignedWorker->id && $row['type'] === 0),
+            $workers->search(fn (array $row) => $row['id'] === $teamMember->id && $row['type'] === 0)
+        );
+
+        // Bestehende Zuordnung wird zusammengefasst
+        $this->assertSame(2, $assignedRow['binding_days']);
+        $this->assertFalse($assignedRow['has_full_period']);
+        $this->assertSame(0, $assignedRow['wish_days']);
+    }
+
+    #[Test]
+    public function worker_options_search_filters_by_name_across_worker_types(): void
+    {
+        $this->actingAsUserWith(PermissionEnum::SHIFT_PLANNER->value);
+        $project = $this->createProjectWithPeriod('2026-08-01', '2026-08-03');
+
+        $match = User::factory()->create([
+            'first_name' => 'Frieda',
+            'last_name' => 'Findbar',
+            'can_work_shifts' => true,
+        ]);
+        User::factory()->create([
+            'first_name' => 'Otto',
+            'last_name' => 'Anders',
+            'can_work_shifts' => true,
+        ]);
+        $freelancerMatch = Freelancer::factory()->create([
+            'first_name' => 'Frieda',
+            'last_name' => 'Frei',
+            'can_work_shifts' => true,
+        ]);
+
+        $response = $this->getJson(
+            route('projects.day-assignments.worker-options', ['project' => $project, 'search' => 'Frieda'])
+        )->assertOk();
+
+        $workers = collect($response->json('workers'));
+
+        $this->assertTrue($workers->contains(fn (array $row) => $row['id'] === $match->id && $row['type'] === 0));
+        $this->assertTrue($workers->contains(fn (array $row) => $row['id'] === $freelancerMatch->id && $row['type'] === 1));
+        $this->assertFalse($workers->contains(fn (array $row) => $row['name'] === 'Otto Anders'));
+    }
 }

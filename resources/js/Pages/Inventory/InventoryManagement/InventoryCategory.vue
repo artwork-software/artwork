@@ -26,7 +26,7 @@
                     icon-size="h-5 w-5"
                     stroke="1.5"
                     white-icon
-                    classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                    classes="text-black cursor-pointer hover:text-accent-600 duration-150 ease-in-out transition-colors"
                     @click="openAddCategoryOrGroupModal()"
                     v-if="!categoryClicked && can('can manage inventory stock') || hasAdminRole()" />
                 <div :class="[categoryClicked ? '' : '!hidden', 'category-input-container']">
@@ -46,7 +46,7 @@
                           as="div">
                     <a @click="showCategoryDeleteConfirmModal()"
                        :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
-                        <IconTrash class="h-5 w-5 group-hover:text-artwork-buttons-hover"/>
+                        <IconTrash class="h-5 w-5 group-hover:text-accent-700"/>
                         {{ $t('Delete') }}
                     </a>
                 </MenuItem>

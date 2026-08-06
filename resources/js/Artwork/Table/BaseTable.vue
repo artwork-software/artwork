@@ -2,7 +2,7 @@
     <div class="mt-8 flow-root">
         <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                <table class="relative min-w-full divide-y divide-gray-300">
+                <table class="relative min-w-full">
                     <!-- THEAD -->
                     <thead>
                     <tr>
@@ -11,9 +11,10 @@
                             :key="col.key"
                             scope="col"
                             :class="[
-                  'py-3.5 text-sm font-semibold text-gray-900',
+                  'sticky top-0 z-10 bg-surface-header border-b border-border',
+                  'py-2 font-lexend font-semibold text-[11px] uppercase tracking-[0.08em] text-accent-600',
                   col.headerClass,
-                  col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                  isNumericColumn(col) ? 'text-right' : col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                   col.key === normalizedColumns[0]?.key ? 'pl-4 pr-3' : 'px-3'
                 ]"
                             :style="col.width ? { width: col.width } : undefined"
@@ -21,39 +22,33 @@
                             <button
                                 v-if="col.sortable"
                                 type="button"
-                                class="group inline-flex items-center gap-1 hover:text-gray-700"
+                                class="group inline-flex items-center gap-1 uppercase tracking-[0.08em] hover:text-accent-700"
                                 @click="onToggleSort(col.key)"
                             >
                                 <span class="truncate">{{ $t(col.label) }}</span>
-                                <svg v-if="sort.key !== col.key" class="h-4 w-4 opacity-40" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M7 7h6l-3-4-3 4Zm6 6H7l3 4 3-4Z"/>
-                                </svg>
-                                <svg v-else-if="sort.direction === 'asc'" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M7 12h6l-3 4-3-4Z"/>
-                                </svg>
-                                <svg v-else class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M7 8h6l-3-4-3 4Z"/>
-                                </svg>
+                                <PropertyIcon v-if="sort.key !== col.key" name="IconSelector" class="size-3.5 text-text-subtle" :stroke-width="1.5" />
+                                <PropertyIcon v-else-if="sort.direction === 'asc'" name="IconChevronUp" class="size-3.5" :stroke-width="1.5" />
+                                <PropertyIcon v-else name="IconChevronDown" class="size-3.5" :stroke-width="1.5" />
                             </button>
                             <span v-else class="truncate">{{ $t(col.label) }}</span>
                         </th>
 
-                        <th v-if="$slots['header-extra']" scope="col" class="py-3.5 pr-4 pl-3 sm:pr-0">
+                        <th v-if="$slots['header-extra']" scope="col" class="sticky top-0 z-10 bg-surface-header border-b border-border py-2 pr-4 pl-3 sm:pr-0">
                             <slot name="header-extra" />
                         </th>
                     </tr>
                     </thead>
 
                     <!-- TBODY -->
-                    <tbody v-if="displayRows.length" class="divide-y divide-gray-200 bg-white">
-                    <tr v-for="row in displayRows" :key="row[rowKey]" class="hover:bg-gray-50">
+                    <tbody v-if="displayRows.length" class="divide-y divide-border-hairline bg-surface">
+                    <tr v-for="row in displayRows" :key="row[rowKey]" class="group hover:bg-surface-hover" :class="rowHeightClass">
                         <td
                             v-for="(col, idx) in normalizedColumns"
                             :key="col.key"
                             :class="[
-                          'py-5 text-sm whitespace-nowrap',
+                          cellPaddingYClass, 'text-[13px] whitespace-nowrap',
                           col.cellClass,
-                          col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
+                          isNumericColumn(col) ? 'text-right tabular-nums' : col.align === 'right' ? 'text-right tabular-nums' : col.align === 'center' ? 'text-center' : 'text-left',
                           idx === 0 ? 'pl-4 pr-3' : 'px-3'
                         ]"
                         >
@@ -64,29 +59,43 @@
                                     v-if="col.type === 'link' && getValue(row, col) && getValue(row, col) !== '-'"
                                     :href="ensureProtocol(getValue(row, col))"
                                     target="_blank"
-                                    class="text-indigo-600 hover:text-indigo-500 hover:underline"
+                                    class="text-accent-600 hover:text-accent-700 hover:underline"
                                     @click.stop
                                 >{{ getValue(row, col) }}</a>
-                                <span v-else class="text-gray-700">{{ getValue(row, col) }}</span>
+                                <span v-else class="text-text">{{ getValue(row, col) }}</span>
                             </slot>
                         </td>
 
-                        <!-- Actions -->
-                        <td v-if="$slots['row-actions']" class="py-5 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-0">
-                            <slot name="row-actions" :row="row" />
+                        <!-- Actions: bei Hover/Fokus sichtbar, Platz bleibt reserviert (invisible statt display:none/opacity) -->
+                        <td v-if="$slots['row-actions']" class="pr-4 pl-3 text-right text-[13px] font-medium whitespace-nowrap sm:pr-0" :class="cellPaddingYClass">
+                            <div class="invisible group-hover:visible group-focus-within:visible">
+                                <slot name="row-actions" :row="row" />
+                            </div>
                         </td>
                     </tr>
                     </tbody>
 
                     <!-- EMPTY -->
-                    <tbody v-else class="bg-white">
+                    <tbody v-else class="bg-surface">
                     <tr>
-                        <td :colspan="normalizedColumns.length + ($slots['row-actions'] ? 1 : 0)" class="px-4 py-10 text-center">
-                            <div class="mx-auto max-w-md">
-                                <div class="text-lg font-semibold text-gray-900">{{ emptyTitle }}</div>
-                                <p class="mt-1 text-sm text-gray-500">{{ emptyMessage }}</p>
-                                <div class="mt-4">
-                                    <slot name="empty-cta" />
+                        <td :colspan="normalizedColumns.length + ($slots['row-actions'] ? 1 : 0)" class="px-4 py-4">
+                            <div class="border border-dashed border-border rounded-lg px-4 py-10 text-center">
+                                <div class="mx-auto max-w-md">
+                                    <div class="font-lexend font-semibold text-[15px] text-text">{{ $t(emptyTitle) }}</div>
+                                    <p class="mt-1 text-xs text-text-muted">{{ $t(emptyMessage) }}</p>
+                                    <div v-if="showResetButton" class="mt-4 flex justify-center">
+                                        <BaseUIButton
+                                            variant="secondary"
+                                            size="sm"
+                                            hide-icon
+                                            @click="emit('reset')"
+                                        >
+                                            {{ $t(resetLabel) }}
+                                        </BaseUIButton>
+                                    </div>
+                                    <div class="mt-4">
+                                        <slot name="empty-cta" />
+                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -97,26 +106,28 @@
 
                 <!-- Pagination (optional) -->
                 <div v-if="showPagination" class="flex items-center justify-between gap-3 pt-4">
-                    <div class="text-sm text-gray-600">
-                        {{ pageFrom }}–{{ pageTo }} {{ ofLabel }} {{ total }}
+                    <div class="text-[13px] text-text-muted tabular-nums">
+                        {{ pageFrom }}–{{ pageTo }} {{ $t(ofLabel) }} {{ total }}
                     </div>
                     <div class="flex items-center gap-2">
-                        <button
-                            type="button"
-                            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+                        <BaseUIButton
+                            variant="secondary"
+                            size="sm"
+                            hide-icon
                             :disabled="page <= 1"
                             @click="setPage(page - 1)"
                         >
-                            {{ prevLabel }}
-                        </button>
-                        <button
-                            type="button"
-                            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+                            {{ $t(prevLabel) }}
+                        </BaseUIButton>
+                        <BaseUIButton
+                            variant="secondary"
+                            size="sm"
+                            hide-icon
                             :disabled="page >= totalPages"
                             @click="setPage(page + 1)"
                         >
-                            {{ nextLabel }}
-                        </button>
+                            {{ $t(nextLabel) }}
+                        </BaseUIButton>
                     </div>
                 </div>
 
@@ -125,8 +136,20 @@
     </div>
 </template>
 
+<script lang="ts">
+/**
+ * v2 »Bühnenlicht«: Klassen für eine ausgewählte Zeile (BaseTable hat selbst
+ * keine Auswahl-Logik — Konsumenten mit eigenem selected-Konzept wenden diese
+ * Klassen auf ihre aktive <tr> an, z. B. via cellClass/eigene Row-Slots):
+ *   aktive Zeile = bg-accent-50 + Inset-Ring in accent-600.
+ */
+export const ROW_SELECTED_CLASSES = 'bg-accent-50 shadow-[inset_0_0_0_2px_#276293]'
+</script>
+
 <script setup lang="ts">
 import { computed, reactive, watch, toRefs } from 'vue'
+import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 type Align = 'left' | 'center' | 'right'
 type SortDirection = 'asc' | 'desc' | null
@@ -137,7 +160,7 @@ export interface TableColumn {
     align?: Align                     // Ausrichtung
     sortable?: boolean                // sortierbar?
     width?: string                    // optional (z.B. '220px')
-    type?: string                      // optionaler Spaltentyp (z.B. 'link')
+    type?: string                     // optionaler Spaltentyp (z.B. 'link' oder 'number' → rechtsbündig + tabular-nums)
     accessor?: (row: any) => any      // eigener Wertleser
     headerClass?: string              // optionale Klassen Head
     cellClass?: string                // optionale Klassen Cell
@@ -154,12 +177,17 @@ const props = withDefaults(defineProps<{
     pageSize?: number | null
     page?: number
     total?: number | null            // bei serverseitiger Pagination
-    // Texte
+    // Texte (i18n-Keys, werden per $t() übersetzt; Overrides bleiben möglich)
     emptyTitle?: string
     emptyMessage?: string
     prevLabel?: string
     nextLabel?: string
     ofLabel?: string
+    // Empty-State: optionaler Reset-Button (emittiert 'reset')
+    showResetButton?: boolean
+    resetLabel?: string
+    // v2: Zeilenhöhe — 'default' 40px, 'project' 44px, 'compact' 34px
+    density?: 'default' | 'project' | 'compact'
 }>(), {
     rowKey: 'id',
     sortKey: null,
@@ -167,12 +195,25 @@ const props = withDefaults(defineProps<{
     pageSize: null,
     page: 1,
     total: null,
-    emptyTitle: 'Keine Einträge',
-    emptyMessage: 'Es sind aktuell keine Daten vorhanden.',
-    prevLabel: 'Zurück',
-    nextLabel: 'Weiter',
-    ofLabel: 'von'
+    emptyTitle: 'No entries',
+    emptyMessage: 'There is currently no data available.',
+    prevLabel: 'Previous page',
+    nextLabel: 'Next page',
+    ofLabel: 'of',
+    showResetButton: false,
+    resetLabel: 'Reset filters',
+    density: 'default'
 })
+
+// v2-Dichte: tr-Höhe wirkt in Tabellen als Mindesthöhe (Inhalt zentriert via
+// default vertical-align:middle); compact reduziert zusätzlich das Zellpadding,
+// damit 34px erreichbar sind.
+const rowHeightClass = computed(() =>
+    props.density === 'project' ? 'h-11' : props.density === 'compact' ? 'h-[34px]' : 'h-10'
+)
+const cellPaddingYClass = computed(() =>
+    props.density === 'compact' ? 'py-1' : 'py-2'
+)
 
 const emit = defineEmits<{
     (e: 'update:sortKey', value: string | null): void
@@ -180,6 +221,7 @@ const emit = defineEmits<{
     (e: 'update:page', value: number): void
     (e: 'sort-change', payload: { key: string | null, direction: SortDirection }): void
     (e: 'page-change', payload: { page: number, pageSize: number | null }): void
+    (e: 'reset'): void
 }>()
 
 // Spalten normalisieren
@@ -190,6 +232,11 @@ const normalizedColumns = computed<TableColumn[]>(() =>
         ...c
     }))
 )
+
+// numerische Spalten: rechtsbündig + tabular-nums
+function isNumericColumn(col?: TableColumn) {
+    return col?.type === 'number'
+}
 
 // Sort-Model (uncontrolled fallback)
 const internalSort = reactive<{ key: string | null, direction: SortDirection }>({

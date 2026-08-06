@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconChecklist"
                 :title="title || $t('Checklist templates')"
-                icon-bg-class="bg-blue-600/10 text-blue-700"
+                icon-bg-class="bg-accent-50 text-accent-700"
                 :description="description || $t('Create and manage templates for checklists that can be reused across projects.')"
                 :search-enabled="false"
             >

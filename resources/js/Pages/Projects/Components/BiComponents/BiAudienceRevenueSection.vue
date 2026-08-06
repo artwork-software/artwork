@@ -5,11 +5,11 @@
             <div
                 v-for="metric in metrics"
                 :key="metric.key"
-                class="rounded-lg border border-gray-200 p-3"
-                :class="{ 'bg-gray-50 opacity-75': notApplicable[metric.key] }"
+                class="rounded-lg border border-border-subtle p-3"
+                :class="{ 'bg-surface-sunken opacity-75': notApplicable[metric.key] }"
             >
                 <div class="flex items-center justify-between gap-2 mb-2">
-                    <span class="text-sm font-medium text-gray-900">{{ $t(metric.label) }}</span>
+                    <span class="text-sm font-medium text-text">{{ $t(metric.label) }}</span>
                     <SwitchDualLabel
                         v-if="canEdit && !notApplicable[metric.key] && metric.switchRoute"
                         :model-value="modes[metric.key] === 'per_event'"
@@ -18,13 +18,13 @@
                         size="sm"
                         @change="isPerEvent => onToggleChange(metric, isPerEvent)"
                     />
-                    <span v-else-if="!notApplicable[metric.key] && metric.switchRoute" class="text-xs text-gray-400">
+                    <span v-else-if="!notApplicable[metric.key] && metric.switchRoute" class="text-xs text-text-subtle">
                         {{ modes[metric.key] === 'per_event' ? $t('Per event') : $t('Total') }}
                     </span>
                 </div>
 
                 <template v-if="notApplicable[metric.key]">
-                    <span class="inline-flex rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                    <span class="inline-flex rounded-full bg-border-subtle px-2.5 py-0.5 text-xs font-medium text-text-muted">
                         {{ $t('Not relevant for this project') }}
                     </span>
                 </template>
@@ -40,13 +40,13 @@
                         :step="metric.key === 'revenue' || metric.key === 'costs' ? 0.01 : 1"
                         @change="saveTotal(metric)"
                     />
-                    <p v-else class="text-xs text-gray-500">
+                    <p v-else class="text-xs text-text-subtle">
                         {{ $t('Recorded per event in the table below.') }}
-                        <span class="font-medium text-gray-700">{{ perEventSummary(metric) }}</span>
+                        <span class="font-medium text-text-muted">{{ perEventSummary(metric) }}</span>
                     </p>
                     <p
                         v-if="metric.key === 'visitors' && visitorsEstimated"
-                        class="mt-1.5 text-xs text-indigo-600"
+                        class="mt-1.5 text-xs text-accent-600"
                     >
                         ≈ {{ $t('Currently estimated from sold tickets') }}: {{ formatInt(metricsSummary.visitors) }}
                     </p>
@@ -56,19 +56,19 @@
                         v-if="metric.key === 'revenue' && revenueSuggestion !== null && modes.revenue === 'total'"
                         class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs print:hidden"
                     >
-                        <span class="text-gray-400">
+                        <span class="text-text-subtle">
                             {{ scope === 'plan' ? $t('Income side of the project budget') : $t('Revenue from Sage bookings') }}:
-                            <span class="font-medium text-gray-600">{{ currencyFmt.format(revenueSuggestion) }}</span>
+                            <span class="font-medium text-text-muted">{{ currencyFmt.format(revenueSuggestion) }}</span>
                         </span>
                         <button
                             v-if="canEdit && Number(totals.revenue ?? NaN) !== revenueSuggestion"
                             type="button"
-                            class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                            class="rounded-md border border-accent-200 bg-accent-50 px-2 py-0.5 font-medium text-accent-700 hover:bg-accent-100 transition"
                             @click="adoptRevenueSuggestion"
                         >
                             {{ $t('Adopt value') }}
                         </button>
-                        <span v-else-if="biData?.revenue_source" class="text-emerald-600">
+                        <span v-else-if="biData?.revenue_source" class="text-success">
                             ✓ {{ $t('adopted') }}
                         </span>
                     </div>
@@ -78,19 +78,19 @@
                         v-if="metric.key === 'costs' && costSuggestion !== null"
                         class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs print:hidden"
                     >
-                        <span class="text-gray-400">
+                        <span class="text-text-subtle">
                             {{ scope === 'plan' ? $t('Expense side of the project budget') : $t('Costs from Sage bookings') }}:
-                            <span class="font-medium text-gray-600">{{ currencyFmt.format(costSuggestion) }}</span>
+                            <span class="font-medium text-text-muted">{{ currencyFmt.format(costSuggestion) }}</span>
                         </span>
                         <button
                             v-if="canEdit && Number(totals.costs ?? NaN) !== costSuggestion"
                             type="button"
-                            class="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                            class="rounded-md border border-accent-200 bg-accent-50 px-2 py-0.5 font-medium text-accent-700 hover:bg-accent-100 transition"
                             @click="adoptCostSuggestion"
                         >
                             {{ $t('Adopt value') }}
                         </button>
-                        <span v-else-if="biData?.costs_source" class="text-emerald-600">
+                        <span v-else-if="biData?.costs_source" class="text-success">
                             ✓ {{ $t('adopted') }}
                         </span>
                     </div>
@@ -98,7 +98,7 @@
 
                 <label
                     v-if="canEdit"
-                    class="mt-2 flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none print:hidden"
+                    class="mt-2 flex items-center gap-1.5 text-xs text-text-subtle cursor-pointer select-none print:hidden"
                 >
                     <input
                         type="checkbox"
@@ -114,19 +114,19 @@
         <!-- Optionale Aufschlüsselung nach Besucher*innen-Kategorien -->
         <div
             v-if="visibleCategories.length > 0 && !notApplicable.sold_tickets"
-            class="mb-4 rounded-lg border border-gray-200"
+            class="mb-4 rounded-lg border border-border-subtle"
         >
             <button
                 type="button"
                 class="flex w-full items-center justify-between gap-2 p-3 text-left"
                 @click="showCategories = !showCategories"
             >
-                <span class="flex items-center gap-2 text-sm font-medium text-gray-900">
+                <span class="flex items-center gap-2 text-sm font-medium text-text">
                     <IconChevronDown class="size-4 transition-transform" :class="{ '-rotate-90': !showCategories }" />
                     {{ $t('Break down by category') }}
-                    <span class="text-xs font-normal text-gray-400">({{ $t('optional') }})</span>
+                    <span class="text-xs font-normal text-text-subtle">({{ $t('optional') }})</span>
                 </span>
-                <span v-if="categoryTotalSum !== null" class="text-xs text-gray-500">
+                <span v-if="categoryTotalSum !== null" class="text-xs text-text-subtle">
                     {{ $t('Tickets issued') }}: {{ formatInt(categoryTotalSum) }}
                 </span>
             </button>
@@ -145,7 +145,7 @@
                                 :step="1"
                                 @change="saveCategoryTotal(category)"
                             />
-                            <p class="mt-0.5 text-[11px] text-gray-400">
+                            <p class="mt-0.5 text-[11px] text-text-subtle">
                                 {{ pricingTypeLabel(category.pricing_type) }}
                                 <span v-if="!category.is_active"> · {{ $t('deactivated') }}</span>
                             </p>
@@ -155,7 +155,7 @@
                     <!-- Abgleich: Direktwert vs. Summe der zahlenden Kategorien -->
                     <div
                         v-if="soldTicketsMismatch"
-                        class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 print:hidden"
+                        class="mt-3 flex flex-wrap items-center gap-2 rounded-md border border-warning-border bg-warning-surface px-3 py-2 text-xs text-warning print:hidden"
                     >
                         <span>
                             {{ $t('Sum of paying categories') }} ({{ formatInt(paidCategorySum) }})
@@ -164,7 +164,7 @@
                         <button
                             v-if="canEdit"
                             type="button"
-                            class="rounded-md border border-amber-300 bg-white px-2 py-0.5 font-medium text-amber-800 hover:bg-amber-100 transition"
+                            class="rounded-md border border-warning-border bg-white px-2 py-0.5 font-medium text-warning hover:bg-warning-surface transition"
                             @click="adoptPaidCategorySum"
                         >
                             {{ $t('Adopt sum') }}
@@ -172,7 +172,7 @@
                     </div>
                 </template>
                 <template v-else>
-                    <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none print:hidden">
+                    <label class="flex items-center gap-2 text-sm text-text-muted cursor-pointer select-none print:hidden">
                         <input
                             type="checkbox"
                             class="input-checklist !h-3.5 !w-3.5"
@@ -180,7 +180,7 @@
                         />
                         {{ $t('Show category columns in the events table') }}
                     </label>
-                    <p class="mt-1 text-xs text-gray-400">
+                    <p class="mt-1 text-xs text-text-subtle">
                         {{ $t('Categories follow the per-event mode of sold tickets and are recorded in the table below.') }}
                     </p>
                 </template>

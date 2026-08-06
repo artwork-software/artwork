@@ -1,13 +1,13 @@
 <template>
-    <div class="modal-header" :class="classes">
-        <div :class="fullModal ? 'full-modal' : 'not-full-modal'">
-            <div class="model-title">
+    <div class="mb-6 text-left" :class="classes">
+        <div :class="fullModal ? 'px-6 pt-4 pb-2' : 'pt-4 pb-2'">
+            <h2 class="font-lexend font-semibold text-lg text-text">
                 {{ title }}
-            </div>
-            <p class="mb-3 text-gray-400 text-sm" v-if="subTitle">
+            </h2>
+            <p class="mb-3 text-[13px] text-text-muted" v-if="subTitle">
                 {{ subTitle }}
             </p>
-            <p class="modal-description" v-if="description">
+            <p class="text-[13px] text-text-muted" v-if="description">
                 {{ description }}
             </p>
         </div>

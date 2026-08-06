@@ -10,17 +10,17 @@
                 @click="showEditComponentModal = true"
                 :aria-label="$t('Edit')"
             >
-                <IconEdit class="size-4 text-blue-600" />
+                <IconEdit class="size-4 text-accent-600" />
             </button>
 
             <button
                 v-if="!component?.special"
                 type="button"
-                class="ui-button bg-red-50 hover:bg-red-100 transition"
+                class="ui-button bg-danger-surface hover:bg-danger-surface transition"
                 @click="showConfirmDeleteModal = true"
                 :aria-label="$t('Delete')"
             >
-                <IconTrash class="size-4 text-red-600" />
+                <IconTrash class="size-4 text-danger" />
             </button>
         </div>
     </div>
@@ -28,14 +28,14 @@
     <!-- Verwendungs-Badge -->
     <span
         v-if="usages.length > 0"
-        class="absolute left-1 top-1 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] leading-3 text-emerald-700"
+        class="absolute left-1 top-1 inline-flex items-center rounded-full border border-success-border bg-success-surface px-1.5 py-0.5 text-[10px] leading-3 text-success"
         :title="usageTitle"
     >
         {{ usages.length }}×
     </span>
     <span
         v-else
-        class="absolute left-1 top-1 inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] leading-3 text-gray-400"
+        class="absolute left-1 top-1 inline-flex items-center rounded-full border border-border-subtle bg-surface-sunken px-1.5 py-0.5 text-[10px] leading-3 text-text-subtle"
         :title="$t('Not used in any tab')"
     >
         0×
@@ -52,21 +52,21 @@
             <!-- Ordner: Titel, wie er im Projekt angezeigt wird -->
             <div
                 v-if="component?.type === 'DisclosureComponent' && component?.data?.label"
-                class="flex items-center justify-center gap-0.5 text-[10px] font-normal text-gray-600"
+                class="flex items-center justify-center gap-0.5 text-[10px] font-normal text-text-muted"
                 :title="$t('This title is displayed in the project')"
             >
-                <IconFolder class="size-3 shrink-0 text-gray-500" />
+                <IconFolder class="size-3 shrink-0 text-text-subtle" />
                 <span class="truncate">{{ component.data.label }}</span>
             </div>
             <div
-                class="truncate text-[10px] font-normal text-gray-500"
+                class="truncate text-[10px] font-normal text-text-subtle"
                 v-if="component?.data?.height"
             >
                 {{ component.data.height }} {{ $t('Pixel') }}
                 <span v-if="component.data.showLine === true"> | {{ $t('Show a separator line') }}</span>
             </div>
             <div
-                class="truncate text-[10px] font-normal text-gray-500"
+                class="truncate text-[10px] font-normal text-text-subtle"
                 v-if="component?.data?.title_size"
             >
                 {{ component.data.title_size }} {{ $t('Pixel') }}

@@ -9,14 +9,14 @@
     >
         <div v-if="visible" class="pointer-events-auto w-full max-w-md">
             <div
-                class="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-lg ring-0 cursor-pointer"
+                class="flex items-start gap-3 rounded-xl border border-border-subtle bg-white p-3 shadow-lg ring-0 cursor-pointer"
                 @click="$emit('click')"
             >
                 <img class="size-10 rounded-full object-cover shrink-0" :src="avatar" alt="Avatar" />
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center justify-between">
-                        <p class="text-sm font-bold text-gray-900 truncate">{{ name }}</p>
-                        <span class="ml-3 text-[9px] text-gray-500 shrink-0">{{ time }}</span>
+                        <p class="text-sm font-bold text-text truncate">{{ name }}</p>
+                        <span class="ml-3 text-[9px] text-text-subtle shrink-0">{{ time }}</span>
                     </div>
                     <div class="">
                         <div class="inline-block max-w-full">
@@ -25,7 +25,7 @@
                     </div>
                     <button
                         type="button"
-                        class="mt-1 text-xs font-medium text-artwork-buttons-create hover:text-artwork-buttons-hover"
+                        class="mt-1 text-xs font-medium text-accent-600 hover:text-accent-700"
                         @click.stop="$emit('click')"
                     >
                         Öffnen

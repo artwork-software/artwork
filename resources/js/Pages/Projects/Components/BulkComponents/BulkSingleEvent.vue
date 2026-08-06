@@ -2,21 +2,20 @@
     <div ref="rowRootEl" class="print:w-full group w-full">
         <!-- Row-Wrapper mit modernem Card-Look + kontextabhängigen Outlines -->
         <div class="flex items-center gap-4 bg-white/70 backdrop-blur transition px-3 py-2 rounded-lg"
-            :class="[
-                event?.isNew ? 'outline-2 outline-pink-400/60 outline-dashed' : '',
+            :class="[ event?.isNew ? 'outline-2 outline-special-pink outline-dashed' : '',
                 lastEditEventIds.includes(event.id)
-                  ? 'outline-2 outline-blue-400/60 outline-dashed' : '',
-                (event.isSelectedForMultiEdit && effectiveMultiEdit) ? 'ring-2 ring-emerald-400/40' : ''
+                  ? 'outline-2 outline-accent-600 outline-dashed' : '',
+                (event.isSelectedForMultiEdit && effectiveMultiEdit) ? 'ring-2 ring-success-border' : ''
               ]"
         >
             <div
                 v-if="event.is_planning"
-                class="absolute left-0 top-1 bottom-1 w-1.5 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"
+                class="absolute left-0 top-1 bottom-1 w-1.5 rounded-full bg-gradient-to-b from-accent-500 to-accent-600"
                 aria-hidden="true"
             />
             <div
                 v-if="event.isSelectedForMultiEdit && effectiveMultiEdit"
-                class="absolute inset-0 bg-emerald-400/10 pointer-events-none"
+                class="absolute inset-0 bg-success/10 pointer-events-none"
                 aria-hidden="true"
             />
 
@@ -30,8 +29,8 @@
                                    name="candidates"
                                    type="checkbox"
                                    :id="event.id"
-                                   :disabled="!hasPermission" class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:indeterminate:border-indigo-500 dark:indeterminate:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:checked:bg-white/10 forced-colors:appearance-auto" />
-                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25 dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
+                                   :disabled="!hasPermission" class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-white checked:border-accent-600 checked:bg-accent-600 indeterminate:border-accent-600 indeterminate:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:checked:bg-surface-sunken dark:border-white/10 dark:bg-white/5 dark:checked:border-accent-600 dark:checked:bg-accent-600 dark:indeterminate:border-accent-600 dark:indeterminate:bg-accent-600 dark:focus-visible:outline-accent-600 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:checked:bg-white/10 forced-colors:appearance-auto" />
+                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-text-subtle dark:group-has-disabled:stroke-white/25" viewBox="0 0 14 14" fill="none">
                                 <path class="opacity-0 group-has-checked:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path class="opacity-0 group-has-indeterminate:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
@@ -86,13 +85,12 @@
                     v-model="event.name"
                     type="text"
                     :id="'name-' + index"
-                    :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
-                    label="Name"
+                    :class="event.type?.individual_name && !event.name ? 'border-danger' : ''"
                     @mousedown="storeFocus('name-' + index)"
                     @focusout="updateEventInDatabase"
                     :disabled="canEditComponent === false || !hasPermission"
                 />
-                <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-artwork-error">
+                <div v-if="event.nameError && !event.name" class="text-xs mt-1 text-danger">
                     {{ $t('Event name is mandatory') }}
                 </div>
             </div>
@@ -129,7 +127,6 @@
                         v-model="draftStartDate"
                         type="date"
                         :id="'day-' + index"
-                        :label="$t('Start date') + ' ' + dayString"
                         :disabled="canEditComponent === false || !hasPermission"
                         @mousedown="storeFocus('day-' + index)"
                         @focusout="onStartDateFocusOut"
@@ -155,7 +152,6 @@
                         v-if="timeArray"
                         type="time"
                         :id="'start-time-' + index"
-                        :label="$t('Start time')"
                         class="print:border-0 min-w-0 flex-1"
                         :disabled="canEditComponent === false || !hasPermission"
                         @mousedown="storeFocus('start-time-' + index)"
@@ -171,7 +167,6 @@
                         v-model="event.end_day"
                         type="date"
                         :id="'end-day-' + index"
-                        :label="$t('End date')"
                         :disabled="canEditComponent === false || !hasPermission"
                         @mousedown="storeFocus('end-day-' + index)"
                         @focusout="updateEventInDatabase"
@@ -186,7 +181,6 @@
                         v-model="draftEndTime"
                         type="time"
                         :id="'end_time-' + index"
-                        :label="$t('End time')"
                         class="print:border-0"
                         :disabled="canEditComponent === false || !hasPermission"
                         @focusout="onEndTimeFocusOut"
@@ -221,10 +215,10 @@
                     />
 
                     <!-- Copy Menu -->
-                    <BaseMenu show-custom-icon dots-color="!text-artwork-buttons-context" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
+                    <BaseMenu show-custom-icon dots-color="!text-text-muted" classes-button="ui-button" stroke-width="1.5" dots-size="size-5" classes="mr-3"
                               :icon="IconCopy" translation-key="Copy" menu-width="w-fit" white-menu-background>
                         <div class="flex items-center gap-x-2 p-3">
-                            <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-artwork-buttons-context" stroke-width="2" />
+                            <IconCirclePlus class="w-6 h-6 min-w-6 min-h-6 text-text-muted" stroke-width="2" />
                             <BaseInput
                                 type="number"
                                 label="Anzahl"
@@ -236,20 +230,20 @@
                             />
                             <Listbox as="div" class="relative" v-model="event.copyType" id="room">
                                 <ListboxButton class="menu-button rounded-lg">
-                                    <div class="flex-grow flex text-left xsDark !w-12 truncate">
+                                    <div class="flex-grow flex text-left text-sm/5 font-semibold text-text !w-12 truncate">
                                         {{ event.copyType?.name }}
                                     </div>
-                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true" />
+                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true" />
                                 </ListboxButton>
                                 <ListboxOptions
-                                    class="w-44 rounded-xl border border-zinc-200/60 bg-white backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
+                                    class="w-44 rounded-xl border border-border-subtle/60 bg-white backdrop-blur max-h-32 overflow-y-auto text-sm absolute z-30 shadow-lg">
                                     <ListboxOption
                                         v-for="copyType in copyTypes"
                                         :key="copyType.name"
                                         :value="copyType"
                                         v-slot="{ selected }"
-                                        class="hover:bg-indigo-800/90 text-secondary cursor-pointer px-3 py-2 flex justify-between">
-                                        <div :class="[selected ? 'text-artwork-buttons-create' : 'text-zinc-800', 'flex']">
+                                        class="hover:bg-accent-700/90 text-text-subtle cursor-pointer px-3 py-2 flex justify-between">
+                                        <div :class="[selected ? 'text-accent-600' : 'text-text', 'flex']">
                                             {{ copyType.name }}
                                         </div>
                                         <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true" />
@@ -258,7 +252,7 @@
                             </Listbox>
                             <IconCircleCheckFilled
                                 @click="createCopyByEventWithData(event)"
-                                class="w-8 h-8 min-w-6 min-h-6 text-artwork-buttons-create cursor-pointer hover:brightness-110 transition"
+                                class="w-8 h-8 min-w-6 min-h-6 text-accent-600 cursor-pointer hover:brightness-110 transition"
                                 stroke-width="2"
                             />
                         </div>
@@ -310,17 +304,17 @@
         <!-- Inline description row -->
         <div
             v-if="showDescriptionInBulk"
-            class="border-t border-b border-dashed border-zinc-300 border-l-2 border-l-zinc-300 ml-6 bg-zinc-50/50 rounded-b-lg px-3 py-1.5"
+            class="border-t border-b border-dashed border-border border-l-2 border-l-zinc-300 ml-6 bg-surface-sunken/50 rounded-b-lg px-3 py-1.5"
         >
             <div v-if="!editingDescription" @click="startEditDescription"
                  class="min-h-[24px] flex items-center"
                  :class="canEditRow ? 'cursor-pointer' : 'cursor-default'">
                 <template v-if="event.description && event.description.toString().trim().length > 0">
-                    <span class="text-sm text-zinc-700 whitespace-pre-line break-words">{{ event.description }}</span>
+                    <span class="text-sm text-text-muted whitespace-pre-line break-words">{{ event.description }}</span>
                 </template>
                 <template v-else-if="canEditRow">
-                    <IconNote class="size-4 text-zinc-400 mr-1.5" stroke-width="1.5" />
-                    <span class="text-sm text-zinc-400 italic">{{ $t('Add description') }}</span>
+                    <IconNote class="size-4 text-text-subtle mr-1.5" stroke-width="1.5" />
+                    <span class="text-sm text-text-subtle italic">{{ $t('Add description') }}</span>
                 </template>
             </div>
             <div v-else>
@@ -331,7 +325,7 @@
                     @keydown.enter.ctrl="saveDescription"
                     maxlength="250"
                     rows="2"
-                    class="w-full border border-artwork-buttons-context/30 rounded-lg text-sm px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-artwork-buttons-context/50"
+                    class="w-full border border-text-muted/30 rounded-lg text-sm px-2 py-1 resize-none focus:outline-none focus:ring-1 focus:ring-text-muted/50"
                 />
             </div>
         </div>

@@ -24,12 +24,12 @@
             <!-- Property group assignment -->
             <div>
                 <div class="flex items-baseline justify-between">
-                    <h3 class="text-sm font-semibold text-gray-900">{{ $t('Property groups') }}</h3>
-                    <span v-if="propertyGroups.length" class="text-xs text-gray-500">
+                    <h3 class="text-sm font-semibold text-text">{{ $t('Property groups') }}</h3>
+                    <span v-if="propertyGroups.length" class="text-xs text-text-subtle">
                         {{ $t('{count} of {total} groups assigned', { count: assignedGroupCount, total: propertyGroups.length }) }}
                     </span>
                 </div>
-                <p class="text-xs text-gray-500 mt-0.5 mb-3">
+                <p class="text-xs text-text-subtle mt-0.5 mb-3">
                     {{ $t('Assigned groups define which fields contacts of this type have. Expand a group to fine-tune individual properties.') }}
                     {{ $t('Drag groups to define their order on the contact page of this type.') }}
                 </p>
@@ -42,7 +42,7 @@
                     class="mb-3"
                 />
 
-                <div v-if="!propertyGroups.length" class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                <div v-if="!propertyGroups.length" class="rounded-lg border border-dashed border-border bg-surface-sunken p-4 text-sm text-text-subtle">
                     {{ $t('No property groups exist yet. Create a property group first — afterwards you can assign it to this contact type.') }}
                 </div>
 
@@ -57,7 +57,7 @@
                     <template #item="{ element: group }">
                     <div
                         class="rounded-lg border transition-colors"
-                        :class="isGroupAssigned(group) ? 'border-indigo-200 bg-white' : 'border-gray-200 bg-gray-50/70'"
+                        :class="isGroupAssigned(group) ? 'border-accent-200 bg-white' : 'border-border-subtle bg-surface-sunken/70'"
                     >
                         <!-- Group header -->
                         <div
@@ -66,7 +66,7 @@
                         >
                             <component
                                 :is="IconGripVertical"
-                                class="group-order-handle h-4 w-4 text-gray-300 hover:text-gray-500 cursor-grab shrink-0"
+                                class="group-order-handle h-4 w-4 text-text-subtle hover:text-text-subtle cursor-grab shrink-0"
                                 @click.stop
                             />
                             <ToolTipComponent
@@ -80,31 +80,31 @@
                             <input
                                 v-else
                                 type="checkbox"
-                                class="rounded border-gray-300 text-indigo-600 shrink-0"
+                                class="rounded border-border text-accent-600 shrink-0"
                                 :checked="isGroupFullyChecked(group)"
                                 :indeterminate="isGroupPartiallyChecked(group)"
                                 :disabled="!(group.properties?.length)"
                                 @click.stop
                                 @change="toggleGroup(group)"
                             />
-                            <span class="text-sm font-medium truncate" :class="isGroupAssigned(group) ? 'text-gray-900' : 'text-gray-500'">
+                            <span class="text-sm font-medium truncate" :class="isGroupAssigned(group) ? 'text-text' : 'text-text-subtle'">
                                 {{ $t(group.name) }}
                             </span>
-                            <span v-if="group.is_confidential" class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 shrink-0">
+                            <span v-if="group.is_confidential" class="inline-flex items-center rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning shrink-0">
                                 {{ $t('Confidential') }}
                             </span>
-                            <span class="ml-auto text-xs tabular-nums shrink-0" :class="isGroupAssigned(group) ? 'text-indigo-600 font-medium' : 'text-gray-400'">
+                            <span class="ml-auto text-xs tabular-nums shrink-0" :class="isGroupAssigned(group) ? 'text-accent-600 font-medium' : 'text-text-subtle'">
                                 {{ checkedCount(group) }}/{{ group.properties?.length ?? 0 }} {{ $t('Properties') }}
                             </span>
                             <component
                                 :is="IconChevronDown"
-                                class="h-4 w-4 text-gray-400 transition-transform shrink-0"
+                                class="h-4 w-4 text-text-subtle transition-transform shrink-0"
                                 :class="expandedGroupIds.has(group.id) ? 'rotate-180' : ''"
                             />
                         </div>
 
                         <!-- Group properties -->
-                        <div v-if="expandedGroupIds.has(group.id)" class="border-t border-gray-100 divide-y divide-gray-100">
+                        <div v-if="expandedGroupIds.has(group.id)" class="border-t border-border-subtle divide-y divide-border-subtle">
                             <div v-for="property in group.properties" :key="property.id" class="px-4 py-2 pl-11">
                                 <div class="flex items-center gap-3">
                                     <ToolTipComponent
@@ -117,26 +117,26 @@
                                     <input
                                         v-else
                                         type="checkbox"
-                                        class="rounded border-gray-300 text-indigo-600"
+                                        class="rounded border-border text-accent-600"
                                         :checked="checkedPropertyIds.has(property.id)"
                                         @change="toggleProperty(property)"
                                     />
                                     <span class="text-sm">{{ property.name }}</span>
-                                    <span class="text-xs text-gray-400 bg-gray-100 rounded px-2 py-0.5">
+                                    <span class="text-xs text-text-subtle bg-surface-sunken rounded px-2 py-0.5">
                                         {{ $t(propertyTypeLabels[property.type] ?? property.type) }}
                                     </span>
                                 </div>
                                 <div v-if="checkedPropertyIds.has(property.id)" class="ml-7 mt-1 flex items-center gap-4">
-                                    <label class="flex items-center gap-1 text-xs cursor-pointer text-gray-600">
-                                        <input type="checkbox" v-model="pivotData[property.id].is_required" class="rounded border-gray-300 text-indigo-600 h-3.5 w-3.5" />
+                                    <label class="flex items-center gap-1 text-xs cursor-pointer text-text-muted">
+                                        <input type="checkbox" v-model="pivotData[property.id].is_required" class="rounded border-border text-accent-600 h-3.5 w-3.5" />
                                         {{ $t('Mandatory field') }}
                                     </label>
-                                    <label class="flex items-center gap-1 text-xs cursor-pointer text-gray-600">
-                                        <input type="checkbox" v-model="pivotData[property.id].show_in_list" class="rounded border-gray-300 text-indigo-600 h-3.5 w-3.5" />
+                                    <label class="flex items-center gap-1 text-xs cursor-pointer text-text-muted">
+                                        <input type="checkbox" v-model="pivotData[property.id].show_in_list" class="rounded border-border text-accent-600 h-3.5 w-3.5" />
                                         {{ $t('Show in list view') }}
                                     </label>
-                                    <label v-if="property.type !== 'upload'" class="flex items-center gap-1 text-xs cursor-pointer text-gray-600">
-                                        <input type="checkbox" v-model="pivotData[property.id].is_filterable" class="rounded border-gray-300 text-indigo-600 h-3.5 w-3.5" />
+                                    <label v-if="property.type !== 'upload'" class="flex items-center gap-1 text-xs cursor-pointer text-text-muted">
+                                        <input type="checkbox" v-model="pivotData[property.id].is_filterable" class="rounded border-border text-accent-600 h-3.5 w-3.5" />
                                         {{ $t('Filterable') }}
                                     </label>
                                 </div>
@@ -148,10 +148,10 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" @click="submit" :disabled="form.processing">
+                <BaseUIButton variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
+                <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
                     {{ contactType ? $t('Save') : $t('Create') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -164,6 +164,7 @@ import draggable from 'vuedraggable'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import IconSelector from '@/Components/Icon/IconSelector.vue'
 import ColorPickerComponent from '@/Components/Globale/ColorPickerComponent.vue'
 import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'

@@ -5,52 +5,52 @@
             <div class="">
                 <div class="flex items-center gap-4">
                     <div class="flex gap-5 items-center">
-                        <h4 class="xsDark">{{ notification.data.title }}</h4>
+                        <h4 class="text-sm/5 font-semibold text-text">{{ notification.data.title }}</h4>
                         <div class="" v-if="notification.data.showHistory">
-                            <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-artwork-buttons-create">
-                                <ChevronRightIcon class="h-3 w-3"/>
+                            <div @click="openHistory" class="text-xs/[18px] text-text-subtle cursor-pointer items-center flex text-accent-600">
+                                <IconChevronRight class="h-3 w-3"/>
                                 <span>
                                     {{ $t('View history')}}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
+                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-if="notification.data?.description[0]">
                         {{ notification.data?.description[0].text }}
                         {{ $t('from')}}
                         <UserPopoverTooltip :id="notification.id" :user="notification.data.created_by"
                                         height="5" width="5"/>
                     </div>
-                    <div class="flex items-center gap-2 xxsLight" v-else-if="notification.data.created_by">
+                    <div class="flex items-center gap-2 text-xs/[18px] text-text-subtle" v-else-if="notification.data.created_by">
                         {{ notification.data.created_at }}
                         {{ $t('from')}}
                         <UserPopoverTooltip :id="notification.id" :user="notification.data?.created_by" height="5"
                                         width="5"/>
                     </div>
                 </div>
-                <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description">
+                <div class="text-xs/[18px] text-text-subtle mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
                             <a :href="description.href" v-if="description.type === 'link'"
-                               class="text-artwork-buttons-create">{{ description.title }}</a>
+                               class="text-accent-600">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
                         </p>
                     </div>
                 </div>
-                <p v-if="notification.data?.description[5]" class="mt-2 xxsLight">
+                <p v-if="notification.data?.description[5]" class="mt-2 text-xs/[18px] text-text-subtle">
                     {{ notification.data?.description[5]?.title }}
                 </p>
-                <span v-if="notification.data.isModified" class="text-orange-700 bg-orange-50 px-2 py-1 rounded text-xs font-medium">
+                <span v-if="notification.data.isModified" class="text-special-orange bg-special-orange-surface px-2 py-1 rounded text-xs font-medium">
                     {{ $t('modified') }}
                 </span>
                 <div v-if="notification.data.handledStatus" class="mt-2 text-xs font-medium">
-                    <span v-if="notification.data.handledStatus === 'accepted'" class="text-green-700 bg-green-50 px-2 py-1 rounded">
+                    <span v-if="notification.data.handledStatus === 'accepted'" class="text-success bg-success-surface px-2 py-1 rounded">
                         {{ $t('Already accepted by') }} {{ notification.data.handledBy?.name }}
                     </span>
-                    <span v-else-if="notification.data.handledStatus === 'declined'" class="text-red-700 bg-red-50 px-2 py-1 rounded">
+                    <span v-else-if="notification.data.handledStatus === 'declined'" class="text-danger bg-danger-surface px-2 py-1 rounded">
                         {{ $t('Already declined by') }} {{ notification.data.handledBy?.name }}
                     </span>
-                    <span v-else-if="notification.data.handledStatus === 'deleted'" class="text-gray-700 bg-gray-50 px-2 py-1 rounded">
+                    <span v-else-if="notification.data.handledStatus === 'deleted'" class="text-text-muted bg-surface-sunken px-2 py-1 rounded">
                         {{ $t('Event deleted by') }} {{ notification.data.handledBy?.name }}
                     </span>
                 </div>
@@ -76,7 +76,7 @@
              v-show="notification.hovered"
              v-if="!isArchive && notification.data.buttons.filter(button => !['showInTasks', 'show_project', 'delete_shift_notification', 'see_shift', 'change_shift', 'accept', 'decline', 'answerDialog', 'answer', 'change_request', 'event_delete', 'show_in_calendar'].includes(button)).length === 0"
              src="/Svgs/IconSvgs/icon_archive_white.svg"
-             class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-artwork-buttons-create rounded-full"
+             class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-accent-600 rounded-full"
              aria-hidden="true"
              alt=""/>
     </div>
@@ -152,8 +152,8 @@
 </template>
 
 <script>
+import {IconChevronRight} from "@tabler/icons-vue";
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
-import {ChevronRightIcon} from "@heroicons/vue/solid";
 import {router, usePage} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
@@ -180,7 +180,7 @@ export default {
         ProjectHistoryWithoutBudgetComponent,
         NewUserToolTip,
         DeclineEventModal,
-        NotificationButtons, ChevronRightIcon,
+        NotificationButtons, IconChevronRight,
         RoomRequestDialogComponent
     },
     mixins: [Permissions],

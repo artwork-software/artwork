@@ -8,7 +8,7 @@
                 <div
                     v-for="request in requests"
                     :key="request.id"
-                    class="card white p-6"
+                    class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-6"
                 >
                     <SingleWorkTimeChangeRequest :request="request" need-approval />
                 </div>
@@ -22,7 +22,6 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import WorkTimeTabComponent from "@/Pages/WorkTime/Components/WorkTimeTabComponent.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import SingleWorkTimeChangeRequest from "@/Pages/WorkTime/Components/SingleWorkTimeChangeRequest.vue";
 
 const props = defineProps({

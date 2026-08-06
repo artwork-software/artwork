@@ -2,18 +2,18 @@
     <ArtworkBaseModal @close="handleClose" v-if="cell && cell.id" :title="$t('Cell Details')" description="">
         <div class="mx-4">
             <!-- Save Error Indicator -->
-            <div v-if="errorMessage" class="flex items-center justify-between mb-4 text-red-600 bg-red-50 p-3 rounded-md">
+            <div v-if="errorMessage" class="flex items-center justify-between mb-4 text-danger bg-danger-surface p-3 rounded-md">
                 <div class="flex items-center">
                     <IconAlertCircle stroke-width="1.5" class="mr-2 h-5 w-5" />
                     <span class="text-sm font-medium">{{ errorMessage }}</span>
                 </div>
-                <button @click="errorMessage = null" class="p-1 hover:bg-red-100 rounded">
+                <button @click="errorMessage = null" class="p-1 hover:bg-danger-surface rounded">
                     <IconX class="w-4 h-4" stroke-width="1.5" />
                 </button>
             </div>
 
             <!-- Error Indicator -->
-            <div v-if="loadError" class="flex items-center mb-4 text-red-600 bg-red-50 p-3 rounded-md">
+            <div v-if="loadError" class="flex items-center mb-4 text-danger bg-danger-surface p-3 rounded-md">
                 <IconAlertCircle stroke-width="1.5" class="mr-2 h-5 w-5" />
                 <div>
                     <p class="text-sm font-medium">{{ $t('Error loading cell data') }}</p>
@@ -23,22 +23,22 @@
             </div>
 
             <!-- Lock Indicator -->
-            <div v-if="cell?.column?.is_locked" class="flex items-center mb-4 text-yellow-600 bg-yellow-50 p-3 rounded-md">
+            <div v-if="cell?.column?.is_locked" class="flex items-center mb-4 text-warning bg-warning-surface p-3 rounded-md">
                 <IconLock stroke-width="1.5" class="mr-2 h-5 w-5" />
                 <span class="text-sm font-medium">{{ $t('This cell is locked') }}</span>
             </div>
 
             <!-- Tabs Navigation -->
             <div class="mb-6">
-                <nav class="flex space-x-1 bg-gray-100 rounded-lg p-1" aria-label="Tabs">
+                <nav class="flex space-x-1 bg-surface-sunken rounded-lg p-1" aria-label="Tabs">
                     <button
                         v-for="tab in availableTabs"
                         :key="tab.id"
                         @click="activeTab = tab.id"
                         :class="[
                             activeTab === tab.id
-                                ? 'bg-white text-artwork-buttons-create shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900',
+                                ? 'bg-white text-accent-600 shadow-sm'
+                                : 'text-text-muted hover:text-text',
                             'flex-1 py-2.5 px-3 text-sm font-medium rounded-md transition-all duration-200'
                         ]"
                     >
@@ -60,11 +60,11 @@
                             <div
                                 v-for="(calc, index) in calculations"
                                 :key="calc.tempId || calc.id"
-                                class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-artwork-buttons-create transition-all duration-200"
+                                class="bg-surface-sunken rounded-lg p-4 border border-border-subtle hover:border-accent-600 transition-all duration-200"
                             >
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex-1">
-                                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-text-muted mb-1.5">
                                             {{ $t('Name') }}
                                         </label>
                                         <input
@@ -72,13 +72,13 @@
                                             type="text"
                                             :disabled="cell?.column?.is_locked"
                                             :placeholder="$t('e.g. Personnel costs')"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
                                         />
                                     </div>
                                     <button
                                         v-if="!cell?.column?.is_locked"
                                         @click="removeCalculation(index)"
-                                        class="ml-3 mt-6 p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                        class="ml-3 mt-6 p-2 text-danger hover:bg-danger-surface rounded-md transition-colors"
                                         :title="$t('Delete')"
                                     >
                                         <IconTrash class="w-5 h-5" stroke-width="1.5" />
@@ -87,7 +87,7 @@
 
                                 <div class="grid grid-cols-2 gap-3 mb-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-text-muted mb-1.5">
                                             {{ $t('Value') }}
                                         </label>
                                         <input
@@ -96,18 +96,18 @@
                                             step="0.01"
                                             :disabled="cell?.column?.is_locked"
                                             placeholder="0.00"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
                                         />
                                     </div>
                                     <div class="flex items-end">
-                                        <div class="w-full px-3 py-2 bg-gray-100 rounded-md text-sm font-medium text-gray-700">
+                                        <div class="w-full px-3 py-2 bg-surface-sunken rounded-md text-sm font-medium text-text-muted">
                                             {{ formatCurrency(calc.value || 0) }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-text-muted mb-1.5">
                                         {{ $t('Comment') }}
                                     </label>
                                     <textarea
@@ -115,7 +115,7 @@
                                         rows="2"
                                         :disabled="cell?.column?.is_locked"
                                         :placeholder="$t('Additional notes...')"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm resize-none"
+                                        class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm resize-none"
                                     />
                                 </div>
                             </div>
@@ -124,23 +124,23 @@
 
                     <!-- Empty State -->
                     <div v-else class="text-center py-12">
-                        <IconCalculator class="w-16 h-16 mx-auto text-gray-300 mb-4" stroke-width="1" />
-                        <p class="text-gray-500 text-sm">{{ $t('No calculations yet') }}</p>
-                        <p class="text-gray-400 text-xs mt-1">{{ $t('Add your first calculation item') }}</p>
+                        <IconCalculator class="w-16 h-16 mx-auto text-text-subtle mb-4" stroke-width="1" />
+                        <p class="text-text-subtle text-sm">{{ $t('No calculations yet') }}</p>
+                        <p class="text-text-subtle text-xs mt-1">{{ $t('Add your first calculation item') }}</p>
                     </div>
 
                     <!-- Add Calculation Button -->
                     <button
                         v-if="!cell?.column?.is_locked"
                         @click="addCalculation"
-                        class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-artwork-buttons-create hover:text-artwork-buttons-create hover:bg-blue-50 transition-all duration-200 flex items-center justify-center font-medium text-sm"
+                        class="w-full py-3 border-2 border-dashed border-border rounded-lg text-text-muted hover:border-accent-600 hover:text-accent-600 hover:bg-accent-50 transition-all duration-200 flex items-center justify-center font-medium text-sm"
                     >
                         <IconCirclePlus class="w-5 h-5 mr-2" stroke-width="2" />
                         {{ $t('Add calculation item') }}
                     </button>
 
                     <!-- Summary -->
-                    <div class="mt-6 bg-artwork-buttons-create rounded-lg p-4 text-white">
+                    <div class="mt-6 bg-accent-600 rounded-lg p-4 text-white">
                         <div class="flex justify-between items-center">
                             <span class="font-semibold text-lg">{{ $t('Total') }}</span>
                             <span class="text-2xl font-bold">{{ formatCurrency(totalCalculated) }}</span>
@@ -151,32 +151,33 @@
                 <!-- Comment Tab -->
                 <div v-show="activeTab === 'comment'" class="space-y-4">
                     <!-- New Comment Input -->
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <div class="bg-surface-sunken rounded-lg p-4 border border-border-subtle">
+                        <label class="block text-sm font-semibold text-text-muted mb-2">
                             {{ $t('Add new comment') }}
                         </label>
                         <textarea
                             v-model="newComment"
                             rows="4"
                             :placeholder="$t('What do I need to know about this item?')"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent text-sm resize-none"
+                            class="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent text-sm resize-none"
                         />
                         <div class="mt-3 flex justify-end">
-                            <ArtworkBaseModalButton
+                            <BaseUIButton
                                 variant="primary"
-                                size="xs"
+                                size="sm"
+                                hide-icon
                                 :disabled="!newComment || newComment.trim() === '' || isSaving"
                                 @click="saveCommentOnly"
                             >
                                 <IconDeviceFloppy class="w-4 h-4 mr-2" stroke-width="1.5" />
                                 {{ $t('Save comment') }}
-                            </ArtworkBaseModalButton>
+                            </BaseUIButton>
                         </div>
                     </div>
 
                     <!-- Existing Comments -->
                     <div class="space-y-3">
-                        <h3 class="text-sm font-semibold text-gray-700">{{ $t('Previous comments') }}</h3>
+                        <h3 class="text-sm font-semibold text-text-muted">{{ $t('Previous comments') }}</h3>
                         <div v-if="cell?.comments?.length > 0" class="space-y-3">
                             <TransitionGroup name="list">
                                 <div
@@ -184,7 +185,7 @@
                                     :key="comment.id"
                                     @mouseenter="hoveredCommentId = comment.id"
                                     @mouseleave="hoveredCommentId = null"
-                                    class="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all duration-200"
+                                    class="bg-white rounded-lg p-4 border border-border-subtle hover:border-border transition-all duration-200"
                                 >
                                     <div class="flex items-start justify-between mb-2">
                                         <div class="flex items-center space-x-2">
@@ -194,48 +195,48 @@
                                                 :height="8"
                                                 :width="8"
                                             />
-                                            <div class="text-xs text-gray-500">
+                                            <div class="text-xs text-text-subtle">
                                                 {{ formatDate(comment.created_at) }}
                                             </div>
                                         </div>
                                         <button
                                             v-if="hoveredCommentId === comment.id && comment.user_id === $page.props.auth.user.id"
                                             @click="deleteComment(comment)"
-                                            class="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                            class="p-1 text-danger hover:bg-danger-surface rounded transition-colors"
                                             :title="$t('Delete')"
                                         >
                                             <IconTrash class="w-4 h-4" stroke-width="1.5" />
                                         </button>
                                     </div>
-                                    <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ comment.description }}</p>
+                                    <p class="text-sm text-text whitespace-pre-wrap">{{ comment.description }}</p>
                                 </div>
                             </TransitionGroup>
                         </div>
                         <div v-else class="text-center py-8">
-                            <IconMessage class="w-12 h-12 mx-auto text-gray-300 mb-3" stroke-width="1" />
-                            <p class="text-gray-500 text-sm">{{ $t('No comments yet') }}</p>
+                            <IconMessage class="w-12 h-12 mx-auto text-text-subtle mb-3" stroke-width="1" />
+                            <p class="text-text-subtle text-sm">{{ $t('No comments yet') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Linking Tab -->
                 <div v-show="activeTab === 'linking'" class="space-y-4">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <p class="text-sm text-blue-800">
+                    <div class="bg-accent-50 border border-accent-200 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-accent-700">
                             {{ $t('Keep track of your funding sources. You can add the value to the source.') }}
                         </p>
                     </div>
 
                     <!-- Link Toggle -->
-                    <div class="flex items-center bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="flex items-center bg-surface-sunken rounded-lg p-4 border border-border-subtle">
                         <input
                             v-model="isLinked"
                             type="checkbox"
                             :disabled="cell?.column?.is_locked"
-                            class="h-5 w-5 text-artwork-buttons-create border-gray-300 rounded focus:ring-artwork-buttons-create disabled:cursor-not-allowed"
+                            class="h-5 w-5 text-accent-600 border-border rounded focus:ring-accent-600 disabled:cursor-not-allowed"
                         />
                         <label
-                            :class="[isLinked ? 'text-gray-900 font-medium' : 'text-gray-600']"
+                            :class="[isLinked ? 'text-text font-medium' : 'text-text-muted']"
                             class="ml-3 text-sm cursor-pointer"
                             @click="!cell?.column?.is_locked && (isLinked = !isLinked)"
                         >
@@ -255,17 +256,17 @@
                         <div v-if="isLinked" class="space-y-4">
                             <!-- Type Selection -->
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-sm font-semibold text-text-muted mb-2">
                                     {{ $t('Type') }}
                                 </label>
                                 <Listbox v-model="linkedType" :disabled="cell?.column?.is_locked">
                                     <div class="relative">
                                         <ListboxButton
-                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            class="relative w-full cursor-pointer rounded-md bg-white py-2.5 pl-3 pr-10 text-left border border-border focus:outline-none focus:ring-2 focus:ring-accent-600 disabled:bg-surface-sunken disabled:cursor-not-allowed"
                                         >
                                             <span class="block truncate text-sm">{{ linkedType.name }}</span>
                                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                <IconChevronDown class="h-5 w-5 text-gray-400" stroke-width="1.5" />
+                                                <IconChevronDown class="h-5 w-5 text-text-subtle" stroke-width="1.5" />
                                             </span>
                                         </ListboxButton>
                                         <transition
@@ -285,7 +286,7 @@
                                                 >
                                                     <div
                                                         :class="[
-                                                            active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900',
+                                                            active ? 'bg-accent-600 text-white' : 'text-text',
                                                             'relative cursor-pointer select-none py-2 pl-3 pr-9'
                                                         ]"
                                                     >
@@ -308,11 +309,11 @@
 
                             <!-- Money Source Search -->
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <label class="block text-sm font-semibold text-text-muted mb-2">
                                     {{ $t('Funding source') }}
                                 </label>
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                                    <p class="text-xs text-yellow-800">
+                                <div class="bg-warning-surface border border-warning-border rounded-lg p-3 mb-3">
+                                    <p class="text-xs text-warning">
                                         {{ $t('Important: You will only find funding sources here that have specified the current project as a "Funded Project" in the sidebar.') }}
                                     </p>
                                 </div>
@@ -322,7 +323,7 @@
                                         type="text"
                                         :disabled="cell?.column?.is_locked"
                                         :placeholder="$t('Search funding source...')"
-                                        class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-artwork-buttons-create focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                                        class="w-full px-3 py-2.5 border border-border rounded-md focus:ring-2 focus:ring-accent-600 focus:border-transparent disabled:bg-surface-sunken disabled:cursor-not-allowed text-sm"
                                     />
 
                                     <!-- Search Results -->
@@ -339,7 +340,7 @@
                                                 v-for="(source, index) in moneySourceSearchResults"
                                                 :key="index"
                                                 @click="selectMoneySource(source)"
-                                                class="cursor-pointer px-4 py-3 hover:bg-artwork-buttons-create hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
+                                                class="cursor-pointer px-4 py-3 hover:bg-accent-600 hover:text-white transition-colors border-l-4 border-transparent hover:border-success"
                                             >
                                                 <p class="font-medium text-sm">{{ source.name }}</p>
                                             </div>
@@ -349,13 +350,13 @@
                             </div>
 
                             <!-- Selected Source Display -->
-                            <div v-if="selectedMoneySource" class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div v-if="selectedMoneySource" class="bg-success-surface border border-success-border rounded-lg p-4">
                                 <div class="flex items-center text-sm">
-                                    <IconLink class="w-5 h-5 text-green-600 mr-2" stroke-width="1.5" />
-                                    <span class="text-gray-700">{{ $t('Linked with') }}:</span>
-                                    <span class="font-semibold text-gray-900 mx-2">{{ selectedMoneySource.name }}</span>
-                                    <span class="text-gray-700">{{ $t('as') }}</span>
-                                    <span class="font-semibold text-gray-900 ml-2">
+                                    <IconLink class="w-5 h-5 text-success mr-2" stroke-width="1.5" />
+                                    <span class="text-text-muted">{{ $t('Linked with') }}:</span>
+                                    <span class="font-semibold text-text mx-2">{{ selectedMoneySource.name }}</span>
+                                    <span class="text-text-muted">{{ $t('as') }}</span>
+                                    <span class="font-semibold text-text ml-2">
                                         {{ linkedType.type === 'EARNING' ? $t('Revenue') : $t('Expenses') }}
                                     </span>
                                 </div>
@@ -366,7 +367,7 @@
             </div>
 
             <!-- Footer Actions -->
-            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-3">
+            <div class="mt-6 pt-4 border-t border-border-subtle flex justify-end space-x-3">
                 <BaseUIButton is-cancel-button
                     @click="handleClose"
                 >
@@ -416,7 +417,6 @@ import {
     IconAlertCircle,
     IconX
 } from '@tabler/icons-vue';
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import NewUserToolTip from '@/Layouts/Components/NewUserToolTip.vue';
 import { router } from '@inertiajs/vue3';
@@ -428,7 +428,6 @@ export default {
     components: {
         BaseUIButton,
         ArtworkBaseModal,
-        ArtworkBaseModalButton,
         IconX,
         IconLock,
         IconCalculator,

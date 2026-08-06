@@ -3,31 +3,31 @@
         <div class="max-w-screen-xl my-12 ml-10">
             <div class="flex-wrap">
                 <div class="flex items-center pt-5">
-                    <h2 class="headline1">{{ room.name }}</h2>
+                    <h2 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">{{ room.name }}</h2>
                     <BaseMenu :right="false" v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin" class="ml-2">
                         <MenuItem v-slot="{ active }">
                             <a @click="openEditRoomModal(room)"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                               :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                 <PropertyIcon name="IconEdit" stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                           aria-hidden="true"/>
                                 {{$t('edit')}}
                             </a>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="duplicateRoom(room)"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                               :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <PropertyIcon name="IconCopy" stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                           aria-hidden="true"/>
                                 {{ $t('Duplicate')}}
                             </a>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
                             <a @click="openSoftDeleteRoomModal(room)"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                               :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <PropertyIcon name="IconTrash"  stroke-width="1.5"
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                             aria-hidden="true"/>
                                 {{$t('In the recycle bin')}}
                             </a>
@@ -35,7 +35,7 @@
                     </BaseMenu>
                 </div>
                 <div v-if="room.room_history[0]?.changes?.[0]"
-                     class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                     class="mt-2 subpixel-antialiased text-text-subtle text-xs flex items-center">
                     <div>
                         {{$t('last modified')}}:
                     </div>
@@ -45,10 +45,10 @@
                     <span class="ml-2 subpixel-antialiased">
                         {{ room.room_history[0].created_at }}
                     </span>
-                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer text-artwork-buttons-create"
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer text-accent-600"
                             @click="openRoomHistoryModal()">
-                        <ChevronRightIcon
-                            class="-mr-0.5 h-4 w-4 group-hover:text-artwork-buttons-hover"
+                        <IconChevronRight
+                            class="-mr-0.5 h-4 w-4 group-hover:text-accent-700"
                             aria-hidden="true"/>
                         {{$t('View history')}}
                     </button>
@@ -58,14 +58,14 @@
                 </div>
                 <div class="w-[95%] grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
-                        <span class="xsLight">
+                        <span class="text-sm/5 font-bold text-text-subtle">
                             {{ room.area.name }}
                         </span>
-                        <p class="xsLight mt-4">
+                        <p class="text-sm/5 font-bold text-text-subtle mt-4">
                             {{$t('Can be booked by anyone ')}}: <label v-if="room.everyone_can_book">{{$t('Yes')}}</label>
                             <label v-else>{{ $t('No') }}</label>
                         </p>
-                        <span class="flex mt-6 xsLight subpixel-antialiased">
+                        <span class="flex mt-6 text-sm/5 font-bold text-text-subtle subpixel-antialiased">
                             {{ room.description }}
                         </span>
                     </div>
@@ -95,12 +95,12 @@
                             <input v-model="editRoomForm.temporary"
                                    type="checkbox"
                                    class="input-checklist"/>
-                            <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
+                            <p :class="[editRoomForm.temporary ? 'text-text font-black' : 'text-text-subtle']"
                                class="ml-4 my-auto text-sm">{{$t('Temporary room')}}</p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="ml-1 my-auto hind">{{$t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
+                                    class="ml-1 my-auto ">{{$t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
                             </div>
                         </div>
                         <div v-if="editRoomForm.temporary">
@@ -121,12 +121,12 @@
                             <input v-model="editRoomForm.everyone_can_book"
                                    type="checkbox"
                                    class="input-checklist"/>
-                            <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
+                            <p :class="[editRoomForm.everyone_can_book ? 'text-text font-black' : 'text-text-subtle']"
                                class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
+                                    class="ml-1 my-auto ">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                             </div>
                         </div>
                         <div class="flex items-start gap-x-4">
@@ -134,9 +134,9 @@
                                    type="checkbox"
                                    class="input-checklist"/>
                             <div>
-                                <p :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']"
+                                <p :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']"
                                    class="my-auto text-sm">{{ $t('Relevant for disposition')}}</p>
-                                <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-primary font-black' : 'text-secondary']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
+                                <span class="text-xs" :class="[editRoomForm.relevant_for_disposition ? 'text-text font-black' : 'text-text-subtle']">{{ $t('Activate this field if the room is to be included in the calendars.')}}</span>
                             </div>
                         </div>
 
@@ -184,7 +184,7 @@
                                         <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToApprove.eventType?.hex_code }" />
                                     </div>
                                     <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                         {{ requestToApprove.event_type.name }}
                                         <PropertyIcon name="AdjustmentsIcon" v-if="requestToApprove.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
@@ -194,14 +194,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full xsLight whitespace-nowrap ml-3"
+                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3"
                                          v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
                                             requestToApprove.start_time.split(',')[0]
                                         }},{{ requestToApprove.start_time.split(',')[1] }}
                                         - {{ requestToApprove.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full xsLight whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
                                         {{ requestToApprove.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
@@ -211,9 +211,9 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
-                                    <div class="ml-16  xsLight flex items-center">
+                                    <div class="ml-16  text-sm/5 font-bold text-text-subtle flex items-center">
                                         {{$t('assigned to')}}
-                                        <div class="xsDark ml-2">
+                                        <div class="text-sm/5 font-semibold text-text ml-2">
                                             {{ requestToApprove.project.name }}
                                         </div>
                                     </div>
@@ -227,34 +227,34 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="xsLight ml-10" v-else>
+                                <div class="text-sm/5 font-bold text-text-subtle ml-10" v-else>
                                     {{$t('Not assigned to a project')}}
                                 </div>
-                                <div class="flex xsLight items-center">
+                                <div class="flex text-sm/5 font-bold text-text-subtle items-center">
                                     {{$t('requested')}}:
                                     <UserPopoverTooltip :height="7" :width="7" v-if="requestToApprove.created_by"
                                                     :user="requestToApprove.created_by" :id="1"/>
-                                    <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
+                                    <span class="ml-2 text-sm/5 font-bold text-text-subtle"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
+                            <div class="flex ml-12 mt-2 text-sm/5 font-bold text-text-subtle items-center w-full"
                                  v-if="requestToApprove.description">
                                 {{ requestToApprove.description }}
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                        <button class="bg-surface-inverse my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm "
                                 @click="approveRequest" :disabled="approveRequestForm.processing">
                             {{$t('Commitments')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -273,7 +273,7 @@
                                         <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToDecline.eventType?.hex_code }" />
                                     </div>
                                     <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-text">
                                         {{ requestToDecline.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
@@ -283,14 +283,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full xsLight whitespace-nowrap ml-3"
+                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3"
                                          v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
                                             requestToDecline.start_time.split(',')[0]
                                         }},{{ requestToDecline.start_time.split(',')[1] }}
                                         - {{ requestToDecline.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full xsLight whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full text-sm/5 font-bold text-text-subtle whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
                                         {{ requestToDecline.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
@@ -300,9 +300,9 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
-                                    <div class="ml-16 xsLight flex items-center">
+                                    <div class="ml-16 text-sm/5 font-bold text-text-subtle flex items-center">
                                         {{$t('assigned to')}}
-                                        <div class="xsDark ml-2">
+                                        <div class="text-sm/5 font-semibold text-text ml-2">
                                             {{ requestToDecline.project.name }}
                                         </div>
                                     </div>
@@ -316,20 +316,20 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="xsLight ml-10" v-else>
+                                <div class="text-sm/5 font-bold text-text-subtle ml-10" v-else>
                                     {{$t('Not assigned to a project')}}
                                 </div>
-                                <div class="flex xsLight items-center">
+                                <div class="flex text-sm/5 font-bold text-text-subtle items-center">
                                     {{$t('requested')}}:
                                     <UserPopoverTooltip :height="7" :width="7" v-if="requestToDecline.created_by"
                                                     :user="requestToDecline.created_by" :id="1"/>
-                                    <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
+                                    <span class="ml-2 text-sm/5 font-bold text-text-subtle"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
+                            <div class="flex ml-12 mt-2 text-sm/5 font-bold text-text-subtle items-center w-full"
                                  v-if="requestToDecline.description">
                                 {{ requestToDecline.description }}
                             </div>
@@ -345,7 +345,7 @@
                         />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -379,6 +379,7 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconChevronRight, IconCircleX, IconCopy, IconDotsVertical, IconEdit, IconFileText, IconMinus, IconPlus, IconTrash, IconX} from "@tabler/icons-vue";
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
@@ -394,23 +395,6 @@ import {
     MenuItem,
     MenuItems
 } from "@headlessui/vue";
-import {
-    DocumentTextIcon,
-    DuplicateIcon,
-    MinusIcon,
-    PencilAltIcon,
-    PlusIcon,
-    TrashIcon,
-    XIcon
-} from "@heroicons/vue/outline";
-import {
-    CheckIcon,
-    ChevronDownIcon,
-    ChevronRightIcon,
-    DotsVerticalIcon,
-    PlusSmIcon,
-    XCircleIcon
-} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetButton from "@/Jetstream/Button.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -475,8 +459,8 @@ export default {
         RoomSidenav,
         BaseSidenav,
         NewUserToolTip,
-        PlusIcon,
-        MinusIcon,
+        IconPlus,
+        IconMinus,
         Disclosure,
         DisclosureButton,
         DisclosurePanel,
@@ -486,28 +470,28 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
-        XIcon,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
+        IconX,
+        IconEdit,
+        IconTrash,
+        IconDotsVertical,
         SvgCollection,
-        XCircleIcon,
+        IconCircleX,
         JetButton,
         JetDialogModal,
         JetInput,
         JetInputError,
-        CheckIcon,
-        ChevronDownIcon,
-        DocumentTextIcon,
-        DuplicateIcon,
+        IconCheck,
+        IconChevronDown,
+        IconFileText,
+        IconCopy,
         UserTooltip,
-        PlusSmIcon,
+        IconPlus,
         Link,
         Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        ChevronRightIcon,
+        IconChevronRight,
         RoomHistoryComponent,
         BaseInput
     },

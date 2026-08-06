@@ -1,6 +1,6 @@
 <template>
     <div class="text-sm">
-        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-secondary mb-2">{{ $t('Budget Informations') }}</h3>
+        <h3 class="text-[11px] font-semibold uppercase tracking-wide text-text-subtle mb-2">{{ $t('Budget Informations') }}</h3>
         <div class="space-y-1">
             <div>{{ $t('Cost unit:') }} {{ project?.cost_center?.name || '-' }}</div>
             <div>{{ $t('GEMA') }}: {{ project.gema ? $t('Yes') : $t('No') }}</div>

@@ -14,11 +14,11 @@
         <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="rooms" @start="dragging=true" @end="dragging=false" @change="updateRoomOrder(rooms)">
             <template #item="{element}" :key="element.id">
                 <div v-show="!element.temporary" class="flex group" @mouseover="showMenu = element.id" :key="element.id" @mouseout="showMenu = null">
-                    <div class="flex bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                    <div class="flex bg-surface-sunken py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                         <div class="flex w-full">
                             <div class="flex">
-                                <PropertyIcon name="IconDragDrop" class="my-auto xsDark h-5 w-5 hidden group-hover:block"/>
-                                <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto xsDark">
+                                <PropertyIcon name="IconDragDrop" class="my-auto text-sm/5 font-semibold text-text h-5 w-5 hidden group-hover:block"/>
+                                <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto text-sm/5 font-semibold text-text">
                                     {{ element.name }}
                                 </Link>
                             </div>

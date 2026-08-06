@@ -10,23 +10,23 @@
             <div
                 v-for="col in columns"
                 :key="col.index"
-                class="rounded-2xl border border-zinc-200 bg-white/70 backdrop-blur p-4 shadow-sm"
+                class="rounded-2xl border border-border-subtle bg-white/70 backdrop-blur p-4 shadow-sm"
             >
                 <div class="flex items-start justify-between gap-3">
                     <div class="space-y-1">
                         <label
-                            class="text-sm font-medium text-zinc-900"
+                            class="text-sm font-medium text-text"
                             :for="`col-width-${col.index}`"
                         >
                             {{ $t('Column') }} {{ col.index }}
                         </label>
-                        <p class="text-xs text-zinc-500">
+                        <p class="text-xs text-text-subtle">
                             {{ $t('Set the width in pixels') }}
                         </p>
                     </div>
 
                     <span
-                        class="inline-flex items-center rounded-full border border-zinc-200 px-2.5 py-1 text-xs font-medium text-zinc-700"
+                        class="inline-flex items-center rounded-full border border-border-subtle px-2.5 py-1 text-xs font-medium text-text-muted"
                         :aria-live="'polite'"
                     >
             {{ columnSizeForm.bulk_column_size[col.index] }} {{ $t('px') }}
@@ -51,11 +51,11 @@
 
 
                     <!-- Min/Max helper -->
-                    <div class="mt-2 flex items-center justify-between text-[11px] text-zinc-500">
+                    <div class="mt-2 flex items-center justify-between text-[11px] text-text-subtle">
                         <span>{{ $t('Min') }}: {{ columnSizeMinMax[col.index].min }} {{ $t('px') }}</span>
                         <button
                             type="button"
-                            class="rounded-full border border-zinc-200 px-2 py-0.5 hover:bg-zinc-50"
+                            class="rounded-full border border-border-subtle px-2 py-0.5 hover:bg-surface-sunken"
                             @click="setTo(col.index, suggested[col.index])"
                         >
                             {{ $t('Suggest') }}: {{ suggested[col.index] }} {{ $t('px') }}
@@ -72,7 +72,7 @@
             <div class="mt-4 overflow-x-auto">
                 <div class="min-w-max">
                     <!-- Header preview -->
-                    <div class="flex items-center gap-3 mb-2 text-[13px] text-zinc-600">
+                    <div class="flex items-center gap-3 mb-2 text-[13px] text-text-muted">
                         <div class="font-semibold" :style="getColumnSize(1)">{{ $t('Event Status') }}</div>
                         <div class="font-semibold" :style="getColumnSize(2)">{{ $t('Event type') }}</div>
                         <div class="font-semibold" :style="getColumnSize(3)">{{ $t('Event name') }}</div>
@@ -86,10 +86,10 @@
                         <div
                             v-for="(val, idx) in columnSizeForm.bulk_column_size"
                             :key="`preview-${idx}`"
-                            class="rounded-xl border-2 border-dashed border-zinc-200 bg-zinc-50"
+                            class="rounded-xl border-2 border-dashed border-border-subtle bg-surface-sunken"
                             :style="getColumnSize(idx)"
                         >
-                            <div class="px-3 py-2 text-xs text-zinc-500 select-none">
+                            <div class="px-3 py-2 text-xs text-text-subtle select-none">
                                 {{ val }} {{ $t('px') }}
                             </div>
                         </div>
@@ -98,7 +98,7 @@
             </div>
 
             <!-- Hint -->
-            <p class="mt-3 text-xs text-zinc-500">
+            <p class="mt-3 text-xs text-text-subtle">
                 {{ $t('These widths affect only the bulk view table. You can adjust them anytime.') }}
             </p>
         </div>

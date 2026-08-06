@@ -1,11 +1,11 @@
 <template>
-    <div class=" flex items-center justify-between px-4 text-white text-xs relative bg-gray-500 rounded-t-lg">
+    <div class=" flex items-center justify-between px-4 text-white text-xs relative bg-text-subtle rounded-t-lg">
         <div class="h-9 flex items-center">
             {{ presetShift.craft.abbreviation }}
             (0/{{ computedMaxWorkerCount }})
         </div>
         <div class="absolute flex items-center right-0">
-            <div v-if="!presetShift.break_minutes" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
+            <div v-if="!presetShift.break_minutes" class="h-9 bg-danger flex items-center w-fit right-0 p-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12.21" height="12.2" viewBox="0 0 12.21 12.2">
                     <g id="Gruppe_1639" data-name="Gruppe 1639" transform="translate(-523.895 -44.9)" opacity="0.9">
                         <path id="Icon_metro-warning" data-name="Icon metro-warning"
@@ -18,18 +18,18 @@
                 <BaseMenu dots-size="h-4 w-4">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="showEditShiftModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                             <PropertyIcon name="IconEdit" stroke-width="1.5"
-                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                       aria-hidden="true"/>
                             {{  $t('edit') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="deleteShift(presetShift.id)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <PropertyIcon name="IconTrash"  stroke-width="1.5"
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                         aria-hidden="true"/>
                             {{ $t('Delete') }}
                         </a>
@@ -38,7 +38,7 @@
             </div>
         </div>
     </div>
-    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll rounded-b-lg">
+    <div class="mt-1 h-[calc(100%-2.7rem)] bg-border-subtle p-1 max-h-96 overflow-x-scroll rounded-b-lg">
         <p class="text-xs mb-1">
             {{ presetShift.start }} - {{ presetShift.end }}
             <span v-if="presetShift.break_minutes">| {{ presetShift.break_formatted }}</span>
@@ -46,9 +46,9 @@
         <ShiftNoteComponent :shift="presetShift" is-preset />
         <div v-for="shiftsQualification in this.presetShift.shifts_qualifications">
             <div v-for="(count) in shiftsQualification.value">
-                <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded">
+                <div class="flex items-center justify-between p-1 hover:bg-surface-sunken/40 rounded">
                     <div class="flex items-center gap-x-2">
-                        <div class="h-4 w-4 rounded-full block bg-gray-500"></div>
+                        <div class="h-4 w-4 rounded-full block bg-text-subtle"></div>
                         <div class="text-xs">{{ $t('Unoccupied')}}</div>
                     </div>
                     <component
@@ -69,8 +69,6 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import {DotsVerticalIcon, DuplicateIcon, TrashIcon} from "@heroicons/vue/outline";
-import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import dayjs from "dayjs";
@@ -81,7 +79,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconCopy, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 export default defineComponent({
@@ -100,10 +98,10 @@ export default defineComponent({
         AddEditShiftPresetModal,
         AddShiftModal,
         DropElement,
-        XIcon,
-        DotsVerticalIcon,
-        TrashIcon,
-        DuplicateIcon,
+        IconX,
+        IconDotsVertical,
+        IconTrash,
+        IconCopy,
         Menu,
         MenuItems,
         MenuItem,

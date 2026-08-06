@@ -49,39 +49,29 @@ const isDanger = computed(() => {
 })
 
 /** Wrapper-Klassen (Headless UI setzt active/disabled; wir stylen darauf) */
-function wrapperClasses(active: boolean, disabled: boolean) {
+function wrapperClasses(disabled: boolean) {
     const base =
-        'group inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs transition-colors select-none'
-    const state = disabled ? 'opacity-50 cursor-not-allowed' : '!cursor-pointer'
+        'group inline-flex w-full min-h-8 items-center gap-2 rounded-md px-2.5 text-left text-[13px] transition-colors motion-reduce:transition-none select-none'
 
-    if (props.whiteMenuBackground) {
-        // helles Menü
-        const tone = isDanger.value
-            ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
-            : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
-        return [base, state, tone].join(' ')
-    } else {
-        // dunkles Menü
-        const tone = isDanger.value
-            ? 'text-red-300 hover:bg-red-500/10 hover:text-red-200'
-            : 'text-white hover:bg-white/10'
-        const activeBg = active ? 'bg-white/10' : ''
-        return [base, state, tone].join(' ')
+    if (disabled) {
+        return [base, 'cursor-not-allowed text-text-subtle'].join(' ')
     }
+
+    const tone = isDanger.value
+        ? 'text-danger hover:bg-danger-surface'
+        : 'text-text hover:bg-surface-sunken'
+    return [base, '!cursor-pointer', tone].join(' ')
 }
 
-/** Icon-Farben passend zu Variant/Hintergrund */
+/** Icon-Farben passend zur Variante */
 const iconClasses = computed(() => {
-    const base = 'mr-2 size-4 shrink-0 transition-colors'
-    if (props.whiteMenuBackground) {
-        return isDanger.value
-            ? `${base} text-red-500 group-hover:text-red-600`
-            : `${base} text-gray-400 group-hover:text-blue-600`
-    } else {
-        return isDanger.value
-            ? `${base} text-red-300 group-hover:text-red-200`
-            : `${base} text-white/80 group-hover:text-white`
+    const base = 'size-4 shrink-0 transition-colors motion-reduce:transition-none'
+    if (isDisabled.value) {
+        return `${base} text-text-subtle`
     }
+    return isDanger.value
+        ? `${base} text-danger`
+        : `${base} text-text-muted group-hover:text-text`
 })
 
 function handleClick(ev: MouseEvent) {

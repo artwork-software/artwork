@@ -6,12 +6,12 @@
         <div class="bg-white rounded-lg p-6 w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold">Sammelbuchungen</h3>
-                <XIcon class="w-6 h-6 cursor-pointer" @click="$emit('close')" />
+                <IconX class="w-6 h-6 cursor-pointer" @click="$emit('close')" />
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto border-collapse">
                     <thead>
-                    <tr class="bg-gray-100">
+                    <tr class="bg-surface-sunken">
                         <th class="px-4 py-2 text-left">KTO</th>
                         <th class="px-4 py-2 text-left">KST</th>
                         <th class="px-4 py-2 text-left">Buchungstext</th>
@@ -37,12 +37,12 @@
 </template>
 
 <script>
-import { XIcon } from "@heroicons/vue/solid";
+import {IconX} from "@tabler/icons-vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: "SageChildrenModal",
-    components: { XIcon },
+    components: { IconX },
     mixins: [CurrencyFloatToStringFormatter],
     props: {
         children: {

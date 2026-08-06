@@ -1,7 +1,7 @@
 <template>
     <div class="relative">
         <div class="flex" @click="open = ! open">
-            <slot name="trigger"></slot><div v-if="!hideChevron"><ChevronDownIcon v-if="!open" class="h-5 w-5 text-primary" aria-hidden="true"/> <ChevronUpIcon v-else class="h-5 w-5 text-primary" aria-hidden="true"/></div>
+            <slot name="trigger"></slot><div v-if="!hideChevron"><IconChevronDown v-if="!open" class="h-5 w-5 text-text" aria-hidden="true"/> <IconChevronUp v-else class="h-5 w-5 text-text" aria-hidden="true"/></div>
         </div>
 
         <!-- Full Screen Dropdown Overlay -->
@@ -20,7 +20,7 @@
                     :class="[widthClass, alignmentClasses]"
                     style="display: none;"
                     @click="open = false">
-                <div class="ring-1 ring-black/5 bg-primary rounded-lg" :class="contentClasses">
+                <div class="ring-1 ring-black/5 bg-surface-inverse rounded-lg" :class="contentClasses">
                     <slot name="content"></slot>
                 </div>
             </div>
@@ -29,8 +29,8 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronUp} from "@tabler/icons-vue";
 import {defineComponent, onMounted, onUnmounted, ref} from "vue";
-import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 
 export default defineComponent({
     props: {
@@ -65,8 +65,8 @@ export default defineComponent({
         }
     },
     components: {
-      ChevronUpIcon,
-      ChevronDownIcon
+      IconChevronUp,
+      IconChevronDown
     },
     computed: {
         widthClass() {

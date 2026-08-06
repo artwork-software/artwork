@@ -1,12 +1,12 @@
 <template>
     <div>
         <div class="overflow-x-auto" v-if="projectRooms.length > 0">
-            <table class="min-w-full divide-y divide-gray-300 text-sm">
+            <table class="min-w-full divide-y divide-border text-sm">
                 <thead>
                     <tr>
-                        <th class="py-2 pr-3 text-left font-semibold text-gray-900">{{ $t('Room') }}</th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Default capacity') }}</th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">
+                        <th class="py-2 pr-3 text-left font-semibold text-text">{{ $t('Room') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-text">{{ $t('Default capacity') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-text">
                             <div class="flex items-center gap-1">
                                 {{ $t('Project-specific capacity') }}
                                 <ToolTipComponent
@@ -17,45 +17,45 @@
                                 />
                             </div>
                         </th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Effective capacity') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-text">{{ $t('Effective capacity') }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody class="divide-y divide-border-subtle">
                     <tr v-for="room in projectRooms" :key="room.id">
-                        <td class="py-2 pr-3 text-gray-700">
+                        <td class="py-2 pr-3 text-text-muted">
                             <div class="flex items-center gap-2">
                                 <span>{{ room.name }}</span>
                                 <Link
                                     v-if="canEditRooms"
                                     :href="route('rooms.show', { room: room.id })"
-                                    class="text-gray-400 hover:text-artwork-buttons-create transition"
+                                    class="text-text-subtle hover:text-accent-600 transition"
                                     v-tooltip.top="{ value: $t('Open room'), appendTo: 'body', class: 'aw-tooltip' }"
                                 >
                                     <IconExternalLink class="size-4" />
                                 </Link>
                             </div>
                         </td>
-                        <td class="py-2 px-3 text-gray-500">{{ room.default_capacity ?? '-' }}</td>
+                        <td class="py-2 px-3 text-text-subtle">{{ room.default_capacity ?? '-' }}</td>
                         <td class="py-2 px-3">
                             <input
                                 v-if="canEdit"
                                 type="number"
-                                class="w-28 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-artwork-buttons-create focus:outline-none focus:ring-1 focus:ring-artwork-buttons-create"
+                                class="w-28 rounded-md border border-border bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-accent-600 focus:outline-none focus:ring-1 focus:ring-accent-600"
                                 :min="0"
                                 :value="getOverride(room.id)"
                                 placeholder=""
                                 @change="saveOverride(room.id, $event.target.value)"
                             />
-                            <span v-else class="text-gray-700">{{ getOverride(room.id) ?? '–' }}</span>
+                            <span v-else class="text-text-muted">{{ getOverride(room.id) ?? '–' }}</span>
                         </td>
-                        <td class="py-2 px-3 font-medium text-gray-900">
+                        <td class="py-2 px-3 font-medium text-text">
                             {{ getEffectiveCapacity(room) ?? '-' }}
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <p v-else class="text-sm text-gray-400">{{ $t('No rooms with events in this project.') }}</p>
+        <p v-else class="text-sm text-text-subtle">{{ $t('No rooms with events in this project.') }}</p>
     </div>
 </template>
 

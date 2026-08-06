@@ -1,9 +1,9 @@
 <template>
-    <div :class="[usePage().props.auth.user.calendar_settings?.time_period_project_id === resolvedProject?.id ? 'border-[3px] border-dashed !border-pink-500' : '']">
+    <div :class="[usePage().props.auth.user.calendar_settings?.time_period_project_id === resolvedProject?.id ? 'border-[3px] border-dashed !border-special-pink' : '']">
         <div>
-            <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
+            <div class=" text-sm/5 font-bold text-white px-1 py-1 flex justify-between items-center rounded-t-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(resolvedEventType.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(resolvedEventType.hex_code, percentage))}">
-                <a v-if="resolvedProject?.id" :href="route('projects.tab', {project: resolvedProject.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
+                <a v-if="resolvedProject?.id" :href="route('projects.tab', {project: resolvedProject.id, projectTab: firstProjectShiftTabId}) + '?scrollToEvent=' + event.id" class="w-40 truncate cursor-pointer hover:text-text-subtle transition-all duration-150 ease-in-out">
                     {{ resolvedEventType.abbreviation }}: {{ resolvedProject.name }}
                 </a>
                 <div v-if="areAllShiftsCommitted(event)">
@@ -11,7 +11,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-background-gray rounded-b-lg" :class="[userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray', dayString.isWeekend ? 'bg-white' : 'bg-backgroundGray']">
+        <div class="bg-surface-canvas rounded-b-lg" :class="[userForMultiEdit ? 'bg-accent-200/20' : '', dayString.isWeekend ? 'bg-white' : '']">
             <div v-for="shift in event.shifts" class="flex justify-between">
                 <!-- Drop Element -->
                 <ShiftDropElement v-if="checkIfShiftInDayString(shift)"

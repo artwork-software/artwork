@@ -10,11 +10,11 @@
                 <label class="text-xs cursor-pointer">{{ $t('Save') }}</label>
             </button>
         </div>
-        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+        <div class="mx-auto w-full max-w-md rounded-2xl bg-surface-inverse border-none mt-2">
             <!-- Save Filter Section -->
             <Disclosure v-slot="{ open }" default-open>
-                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Saved filters') }}</span>
+                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                    <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Saved filters') }}</span>
                     <IconChevronDown stroke-width="1.5"
                                      :class="open ? 'rotate-180 transform' : ''"
                                      class="h-4 w-4 mt-0.5 text-white"/>
@@ -30,35 +30,35 @@
                                 @keydown.space.prevent
                             />
                             <button @click="saveFilter"
-                                class="rounded-full mt-5 bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
+                                class="rounded-full mt-5 bg-accent-600 cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label class="cursor-pointer text-white text-xs">
                                     {{ $t('Save') }}
                                 </label>
                             </button>
                         </div>
-                        <div v-if="this.hasInvalidFilterName" class="pt-2 errorText">
+                        <div v-if="this.hasInvalidFilterName" class="pt-2 text-sm/5 text-danger">
                             {{ $t('Enter filter name') }}
                         </div>
-                        <hr class="border-gray-500 mt-4 mb-4">
+                        <hr class="border-border-strong mt-4 mb-4">
                     </div>
                     <button
-                        class="rounded-full bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1"
+                        class="rounded-full bg-accent-600 cursor-pointer px-5 py-2 align-middle flex mb-1"
                         v-for="filter in localPersonalFilters">
                         <label @click="applyFilter(filter)"
                                class="cursor-pointer text-white">{{ filter.name }}</label>
                         <IconX stroke-width="1.5" @click="deleteFilter(filter.id)"
                                class="h-3 w-3 text-white ml-1 mt-1"/>
                     </button>
-                    <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">
+                    <p v-if="localPersonalFilters.length === 0" class="text-text-subtle py-1">
                         {{ $t('No filters saved yet') }}
                     </p>
                 </DisclosurePanel>
             </Disclosure>
             <!-- Room Filter Section -->
             <Disclosure v-slot="{ open }" v-if="showRoomFilters">
-                <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
-                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Rooms') }}</span>
+                <hr class="border-text-subtle rounded-full border-2 mt-2 mb-2">
+                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                    <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">{{ $t('Rooms') }}</span>
                     <IconChevronDown stroke-width="1.5"
                                      :class="open ? 'rotate-180 transform' : ''"
                                      class="h-4 w-4 mt-0.5 text-white"/>
@@ -68,22 +68,22 @@
                         <div class="flex w-full items-center mb-2">
                             <input type="checkbox" v-model="filterArray.adjoining.adjoiningNotLoud.checked"
                                    class="input-checklist-dark"/>
-                            <p :class="[filterArray.adjoining.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                            <p :class="[filterArray.adjoining.adjoiningNotLoud.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                 {{ $t('without a loud side event') }}</p>
                         </div>
                         <div class="flex w-full items-center mb-2">
                             <input type="checkbox" v-model="filterArray.adjoining.adjoiningNoAudience.checked"
                                    class="input-checklist-dark"/>
-                            <p :class="[filterArray.adjoining.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                            <p :class="[filterArray.adjoining.adjoiningNoAudience.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                 {{ $t('without side event with audience') }}</p>
                         </div>
-                        <hr class="border-gray-500 mt-2 mb-2">
+                        <hr class="border-border-strong mt-2 mb-2">
                     </div>
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Room categories') }}
                             </span>
                             <IconChevronDown stroke-width="1.5"
@@ -97,20 +97,20 @@
                                 <input type="checkbox" v-model="category.checked"
                                        @change="addRoomCategoryToFilter(category)"
                                        class="input-checklist-dark"/>
-                                <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                <p :class="[category.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ category.name }}</p>
                             </div>
-                            <div v-else class="text-secondary">
+                            <div v-else class="text-text-subtle">
                                 {{ $t('No categories created yet') }}
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Areas ') }}
                             </span>
                             <IconChevronDown stroke-width="1.5"
@@ -123,17 +123,17 @@
                                 <input type="checkbox" v-model="area.checked"
                                        @change="addAreasToFilter(area)"
                                        class="input-checklist-dark"/>
-                                <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                <p :class="[area.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ area.label || area.name }}</p>
                             </div>
-                            <div v-else class="text-secondary">{{ $t('No areas created') }}</div>
+                            <div v-else class="text-text-subtle">{{ $t('No areas created') }}</div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Room properties') }}
                             </span>
                             <IconChevronDown stroke-width="1.5"
@@ -147,18 +147,18 @@
                                 <input type="checkbox" v-model="attribute.checked"
                                        @change="addRoomAttributeToFilter(attribute)"
                                        class="input-checklist-dark"/>
-                                <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                <p :class="[attribute.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ attribute.name }}</p>
                             </div>
-                            <div v-else class="text-secondary">{{ $t('No room properties created yet') }}
+                            <div v-else class="text-text-subtle">{{ $t('No room properties created yet') }}
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr class="border-gray-500 mt-2 mb-2">
+                    <hr class="border-border-strong mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Rooms') }}
                             </span>
                             <IconChevronDown stroke-width="1.5"
@@ -171,12 +171,12 @@
                                 <input type="checkbox" v-model="room.checked"
                                        @change="addRoomsToFilter(room)"
                                        class="input-checklist-dark"/>
-                                <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                <p :class="[room.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ room.label }}
                                 </p>
                             </div>
-                            <div v-else class="text-secondary">
+                            <div v-else class="text-text-subtle">
                                 {{ $t('No rooms created yet') }}
                             </div>
                         </DisclosurePanel>
@@ -184,12 +184,12 @@
                 </DisclosurePanel>
             </Disclosure>
             <hr v-if="filterArray.eventTypes.length > 0 || filterArray.eventProperties.length > 0"
-                class="border-secondary rounded-full border-2 mt-2 mb-2">
+                class="border-text-subtle rounded-full border-2 mt-2 mb-2">
             <!-- Event Filter Section -->
             <Disclosure v-if="filterArray.eventTypes.length > 0 || filterArray.eventProperties.length > 0" v-slot="{ open }">
                 <DisclosureButton
-                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500">
-                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                    class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm focus:outline-none focus-visible:ring-accent-600">
+                    <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                         {{ $t('Events') }}
                     </span>
                     <IconChevronDown stroke-width="1.5"
@@ -197,11 +197,11 @@
                                      class="h-4 w-4 mt-0.5 text-white"/>
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                    <hr v-if="filterArray.eventTypes.length > 0" class="border-gray-500 mt-2 mb-2">
+                    <hr v-if="filterArray.eventTypes.length > 0" class="border-border-strong mt-2 mb-2">
                     <Disclosure v-if="filterArray.eventTypes.length > 0" v-slot="{ open }">
                         <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                            class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600">
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Event type') }}
                             </span>
                             <IconChevronDown stroke-width="1.5"
@@ -213,17 +213,17 @@
                                 <input type="checkbox" v-model="eventType.checked"
                                        @change="addEventTypesToFilter(eventType)"
                                        class="input-checklist-dark"/>
-                                <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                <p :class="[eventType.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ eventType.name }}
                                 </p>
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
-                    <hr v-if="filterArray.eventProperties.length > 0" class="border-gray-500 mt-2 mb-2">
+                    <hr v-if="filterArray.eventProperties.length > 0" class="border-border-strong mt-2 mb-2">
                     <Disclosure v-if="filterArray.eventProperties.length > 0" v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500">
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-surface-inverse text-left text-sm focus:outline-none focus-visible:ring-accent-600">
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-text-subtle'">
                                 {{ $t('Event properties') }}
                             </span>
                             <IconChevronDown stroke-width="1.5"
@@ -238,7 +238,7 @@
                                        type="checkbox"
                                        class="input-checklist-dark"/>
                                 <label :for="'event-property-' + eventProperty.id"
-                                       :class="[eventProperty.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                       :class="[eventProperty.checked ? 'text-white' : 'text-text-subtle', 'subpixel-antialiased']"
                                        class="cursor-pointer ml-1.5 text-xs subpixel-antialiased align-text-middle flex items-center gap-x-1">
                                     <span>
                                         <component :is="eventProperty.icon" class="size-5" />
@@ -253,7 +253,7 @@
                 </DisclosurePanel>
             </Disclosure>
             <div class="flex items-center justify-end py-1">
-                <div class="text-xs cursor-pointer hover:text-gray-200 transition-all duration-150 ease-in-out"
+                <div class="text-xs cursor-pointer hover:text-text-subtle transition-all duration-150 ease-in-out"
                      @click="reloadChanges">
                     {{ $t('Apply') }}
                 </div>
@@ -263,6 +263,7 @@
 </template>
 
 <script>
+import {IconChevronDown, IconFileText, IconX} from "@tabler/icons-vue";
 import {
     Disclosure,
     DisclosureButton,
@@ -275,9 +276,7 @@ import {
     SwitchLabel,
 } from "@headlessui/vue";
 
-import {ChevronDownIcon, DocumentTextIcon,} from '@heroicons/vue/outline';
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {XIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -297,10 +296,10 @@ export default {
         Menu,
         MenuItems,
         MenuButton,
-        ChevronDownIcon,
+        IconChevronDown,
         BaseFilter,
-        XIcon,
-        DocumentTextIcon
+        IconX,
+        IconFileText
     },
     props: [
         'useIcon',

@@ -16,21 +16,21 @@
           />
         </div>
 
-        <div class="mb-4 pb-4 border-b-2 border-dashed border-gray-300">
+        <div class="mb-4 pb-4 border-b-2 border-dashed border-border">
           <div class="flex flex-wrap items-center gap-2 mt-3">
             <!-- Category chips -->
             <div
               v-for="f in activeFilters.categories"
               :key="`cat-${f.id}`"
-              class="group block cursor-pointer shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border border-blue-200"
+              class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200"
             >
               <div class="flex items-center">
                 <div class="mx-2">
-                  <p class="text-blue-500 text-xs group-hover:text-blue-600">{{ f.name }}</p>
+                  <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ f.name }}</p>
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(f, 'category')">
-                    <XIcon class="size-4 text-blue-500 hover:text-error" />
+                    <IconX class="size-4 text-accent-600 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -40,15 +40,15 @@
             <div
               v-for="f in activeFilters.subCategories"
               :key="`sub-${f.id}`"
-              class="group block cursor-pointer shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border border-blue-200"
+              class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200"
             >
               <div class="flex items-center">
                 <div class="mx-2">
-                  <p class="text-blue-500 text-xs group-hover:text-blue-600">{{ f.name }}</p>
+                  <p class="text-accent-600 text-xs group-hover:text-accent-700">{{ f.name }}</p>
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(f, 'subcategory')">
-                    <XIcon class="size-4 text-blue-500 hover:text-error" />
+                    <IconX class="size-4 text-accent-600 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -58,17 +58,17 @@
             <div
               v-for="f in activeFilters.properties"
               :key="`prop-${f.id}`"
-              class="group block cursor-pointer shrink-0 bg-blue-50 w-fit px-2 py-1.5 rounded-full border border-blue-200"
+              class="group block cursor-pointer shrink-0 bg-accent-50 w-fit px-2 py-1.5 rounded-full border border-accent-200"
             >
               <div class="flex items-center">
                 <div class="mx-2">
-                  <p class="text-blue-500 text-xs group-hover:text-blue-600">
+                  <p class="text-accent-600 text-xs group-hover:text-accent-700">
                     {{ f.name }}: <span class="font-medium">{{ f.value }}</span>
                   </p>
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(f, 'property')">
-                    <XIcon class="size-4 text-blue-500 hover:text-error" />
+                    <IconX class="size-4 text-accent-600 hover:text-danger" />
                   </button>
                 </div>
               </div>
@@ -83,18 +83,18 @@
             >
               <div class="flex items-center">
                 <div class="mx-2">
-                  <p class="text-xs group-hover:opacity-80">{{ tag.name }}</p>
+                  <p class="text-xs">{{ tag.name }}</p>
                 </div>
                 <div class="flex items-center">
                   <button type="button" @click="removeActiveFilter(tag, 'tag')">
-                    <XIcon class="size-4 hover:opacity-80" />
+                    <IconX class="size-4 hover:text-danger" />
                   </button>
                 </div>
               </div>
             </div>
 
             <!-- Hinweis, falls keine aktiven Filter -->
-            <div v-if="totalActiveCount === 0" class="text-xs text-gray-500">
+            <div v-if="totalActiveCount === 0" class="text-xs text-text-subtle">
               {{ $t('No active filters') }}
             </div>
           </div>
@@ -105,29 +105,29 @@
       <div class="space-y-1">
         <!-- CATEGORIES -->
         <div class="py-1">
-          <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+          <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
             {{ $t('Categories') }}
           </div>
 
           <div class="space-y-2 mt-2">
-            <div class="card white px-4">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4">
               <div
                 class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                 @click="sections.categories.open = !sections.categories.open"
               >
-                <div class="text-sm text-gray-900">
+                <div class="text-sm text-text">
                   {{ $t('All categories') }}
                 </div>
                 <div class="flex items-center gap-5">
                   <span
-                    class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                    class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                     :class="selectedCategoryIds.length > 0 ? 'visible' : 'invisible'"
                   >
                     {{ selectedCategoryIds.length }} {{ $t('selected') }}
                   </span>
                   <component
                     :is="IconChevronDown"
-                    class="w-4 h-4 text-gray-400"
+                    class="w-4 h-4 text-text-subtle"
                     :class="sections.categories.open ? 'rotate-180' : ''"
                   />
                 </div>
@@ -143,7 +143,7 @@
                           :id="`cat-${cat.id}`"
                           :name="`cat-${cat.id}`"
                           type="checkbox"
-                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                           @change="onToggleCategory(cat)"
                         />
                         <svg
@@ -161,7 +161,7 @@
                         </svg>
                       </div>
                     </div>
-                    <label :for="`cat-${cat.id}`" class="text-sm text-gray-900">
+                    <label :for="`cat-${cat.id}`" class="text-sm text-text">
                       {{ cat.name }}
                     </label>
                   </div>
@@ -170,24 +170,24 @@
             </div>
 
             <!-- SUB-CATEGORIES (pro Kategorie einklappbar) -->
-            <div class="card white px-4" v-if="Object.keys(ui.subCategoriesByCategory).length">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4" v-if="Object.keys(ui.subCategoriesByCategory).length">
               <div
                 class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                 @click="sections.subCategories.open = !sections.subCategories.open"
               >
-                <div class="text-sm text-gray-900">
+                <div class="text-sm text-text">
                   {{ $t('Sub-Categories') }}
                 </div>
                 <div class="flex items-center gap-5">
                   <span
-                    class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                    class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                     :class="selectedSubCategoryIds.length > 0 ? 'visible' : 'invisible'"
                   >
                     {{ selectedSubCategoryIds.length }} {{ $t('selected') }}
                   </span>
                   <component
                     :is="IconChevronDown"
-                    class="w-4 h-4 text-gray-400"
+                    class="w-4 h-4 text-text-subtle"
                     :class="sections.subCategories.open ? 'rotate-180' : ''"
                   />
                 </div>
@@ -197,23 +197,23 @@
                 <div
                   v-for="(subs, catName) in ui.subCategoriesByCategory"
                   :key="`sub-group-${catName}`"
-                  class="border border-gray-100 rounded-lg"
+                  class="border border-border-subtle rounded-lg"
                 >
                   <div
                     class="flex items-center select-none justify-between cursor-pointer px-4 py-2"
                     @click="subs.open = !subs.open"
                   >
-                    <div class="text-xs font-medium text-gray-700">{{ catName }}</div>
+                    <div class="text-xs font-medium text-text-muted">{{ catName }}</div>
                     <div class="flex items-center gap-5">
                       <span
-                        class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                        class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                         :class="subs.items.filter(s => s.checked).length > 0 ? 'visible' : 'invisible'"
                       >
                         {{ subs.items.filter(s => s.checked).length }} {{ $t('selected') }}
                       </span>
                       <component
                         :is="IconChevronDown"
-                        class="w-4 h-4 text-gray-400"
+                        class="w-4 h-4 text-text-subtle"
                         :class="subs.open ? 'rotate-180' : ''"
                       />
                     </div>
@@ -229,7 +229,7 @@
                               :id="`sub-${sub.id}`"
                               :name="`sub-${sub.id}`"
                               type="checkbox"
-                              class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-blue-600 checked:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                              class="col-start-1 row-start-1 appearance-none rounded-sm border border-border bg-surface checked:border-accent-600 checked:bg-accent-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
                             />
                             <svg
                               class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white"
@@ -246,7 +246,7 @@
                             </svg>
                           </div>
                         </div>
-                        <label :for="`sub-${sub.id}`" class="text-sm text-gray-900">
+                        <label :for="`sub-${sub.id}`" class="text-sm text-text">
                           {{ sub.name }}
                         </label>
                       </div>
@@ -261,29 +261,29 @@
 
         <!-- PROPERTIES -->
           <div class="py-1">
-              <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+              <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
                   {{ $t('Properties') }}
               </div>
 
               <div class="space-y-2 mt-2">
-                  <div class="card white px-4">
+                  <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4">
                       <div
                           class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                           @click="sections.properties.open = !sections.properties.open"
                       >
-                          <div class="text-sm text-gray-900">
+                          <div class="text-sm text-text">
                               {{ $t('All properties') }}
                           </div>
                           <div class="flex items-center gap-5">
             <span
-                class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                 :class="filledPropertyCount > 0 ? 'visible' : 'invisible'"
             >
               {{ filledPropertyCount }} {{ $t('selected') }}
             </span>
                               <component
                                   :is="IconChevronDown"
-                                  class="w-4 h-4 text-gray-400"
+                                  class="w-4 h-4 text-text-subtle"
                                   :class="sections.properties.open ? 'rotate-180' : ''"
                               />
                           </div>
@@ -291,7 +291,7 @@
 
                       <div v-if="sections.properties.open" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 my-3">
                           <div v-for="prop in ui.properties" :key="`prop-${prop.id}`" class="flex items-center gap-2 w-full flex-wrap">
-                              <label class="text-sm text-gray-900 min-w-36">{{ prop.name }}</label>
+                              <label class="text-sm text-text min-w-36">{{ prop.name }}</label>
 
                               <!-- Spezielle Properties: ROOM -->
                               <InventoryCombobox
@@ -353,7 +353,7 @@
                               <!-- Clear -->
                               <button
                                   type="button"
-                                  class="text-xs underline underline-offset-2 text-gray-400 hover:text-gray-600"
+                                  class="text-xs underline underline-offset-2 text-text-subtle hover:text-text-muted"
                                   v-if="prop.value !== '' && prop.value !== null && prop.value !== undefined && prop.value !== false"
                                   @click="prop.value = ''"
                               >
@@ -367,29 +367,29 @@
 
         <!-- TAGS -->
         <div class="py-1" v-if="tags && tags.length">
-          <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+          <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
             {{ $t('Tags') }}
           </div>
 
           <div class="space-y-2 mt-2">
-            <div class="card white px-4">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4">
               <div
                 class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
                 @click="sections.tags.open = !sections.tags.open"
               >
-                <div class="text-sm text-gray-900">
+                <div class="text-sm text-text">
                   {{ $t('All tags') }}
                 </div>
                 <div class="flex items-center gap-5">
                   <span
-                    class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+                    class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
                     :class="selectedTagIds.length > 0 ? 'visible' : 'invisible'"
                   >
                     {{ selectedTagIds.length }} {{ $t('selected') }}
                   </span>
                   <component
                     :is="IconChevronDown"
-                    class="w-4 h-4 text-gray-400"
+                    class="w-4 h-4 text-text-subtle"
                     :class="sections.tags.open ? 'rotate-180' : ''"
                   />
                 </div>
@@ -398,7 +398,7 @@
               <div v-if="sections.tags.open" class="space-y-3 my-3">
                 <!-- Loop through tag groups -->
                 <div v-for="group in groupedTags" :key="group.key" class="space-y-2">
-                  <div class="text-xs font-semibold text-gray-600 px-1">
+                  <div class="text-xs font-semibold text-text-muted px-1">
                     {{ group.name }}
                   </div>
                   <div class="flex flex-wrap gap-1.5">
@@ -408,12 +408,12 @@
                       type="button"
                       class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
                       :class="selectedTagIds.includes(tag.id)
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'"
+                        ? 'bg-accent-50 border-accent-200 text-accent-700'
+                        : 'bg-surface border-border-subtle text-text-muted hover:bg-surface-sunken'"
                       @click="toggleTag(tag.id)"
                     >
                       <span
-                        class="inline-block h-2 w-2 rounded-full border border-white/60"
+                        class="inline-block h-2 w-2 rounded-full border border-white"
                         :style="{ backgroundColor: tag.color || '#4f46e5' }"
                       />
                       <span class="truncate max-w-[120px]">
@@ -434,27 +434,27 @@
       v-if="planningHighlight && planningHighlight.projects.value.length > 0"
       class="px-5"
     >
-      <div class="text-white bg-gray-900 rounded-lg px-4 py-2 font-lexend shadow text-sm">
+      <div class="text-text-inverse bg-surface-inverse rounded-lg px-4 py-2 font-lexend shadow text-sm">
         {{ $t('Highlight projects') }}
       </div>
-      <div class="card white px-4 mt-2">
+      <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised px-4 mt-2">
         <div
           class="flex items-center select-none justify-between duration-200 ease-in-out cursor-pointer py-3"
           @click="projectHighlightOpen = !projectHighlightOpen"
         >
-          <div class="text-sm text-gray-900">
+          <div class="text-sm text-text">
             {{ $t('Highlight bars by project') }}
           </div>
           <div class="flex items-center gap-5">
             <span
-              class="inline-flex items-center rounded-lg bg-green-50 px-2 py-1 text-xs/4 text-green-600 ring-1 ring-inset ring-green-500/10"
+              class="inline-flex items-center rounded-lg bg-success-surface px-2 py-1 text-xs/4 text-success ring-1 ring-inset ring-success-border"
               :class="planningHighlight.selected.value.length > 0 ? 'visible' : 'invisible'"
             >
               {{ planningHighlight.selected.value.length }} {{ $t('selected') }}
             </span>
             <component
               :is="IconChevronDown"
-              class="w-4 h-4 text-gray-400"
+              class="w-4 h-4 text-text-subtle"
               :class="projectHighlightOpen ? 'rotate-180' : ''"
             />
           </div>
@@ -466,13 +466,13 @@
                 type="checkbox"
                 :checked="planningHighlight.selected.value.includes(project.id)"
                 @change="toggleProjectHighlight(project.id)"
-                class="size-4 rounded-sm border border-gray-300 checked:bg-blue-600 checked:border-blue-600"
+                class="size-4 rounded-sm border border-border checked:bg-accent-600 checked:border-accent-600"
               />
-              <span class="text-sm text-gray-900 truncate">{{ project.name }}</span>
+              <span class="text-sm text-text truncate">{{ project.name }}</span>
             </label>
           </div>
         </div>
-        <div class="pb-3 text-[11px] text-gray-500">
+        <div class="pb-3 text-[11px] text-text-subtle">
           {{ $t('Non-matching bars are dimmed. Empty selection means all bars are highlighted.') }}
         </div>
       </div>
@@ -484,7 +484,7 @@
         <div>
           <div
             @click="resetFilter"
-            class="underline text-artwork-buttons-create text-xs underline-offset-2 cursor-pointer hover:text-artwork-buttons-hover duration-200 ease-in-out"
+            class="underline text-accent-600 text-xs underline-offset-2 cursor-pointer hover:text-accent-700 duration-200 ease-in-out"
           >
             {{ $t('Reset') }}
           </div>
@@ -501,13 +501,11 @@
 import { computed, inject, onMounted, reactive, ref } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import TinyPageHeadline from '@/Components/Headlines/TinyPageHeadline.vue'
-import { XIcon } from '@heroicons/vue/outline'
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue";
 import InventoryCombobox from "@/Pages/Inventory/Components/Article/Modals/Components/InventoryCombobox.vue";
-import {IconChevronDown} from "@tabler/icons-vue";
+import {IconChevronDown, IconX} from "@tabler/icons-vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

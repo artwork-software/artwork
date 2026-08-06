@@ -1,6 +1,6 @@
 <template>
   <div class="w-full flex flex-col">
-    <label class="text-gray-700 text-sm mb-2" v-if="label">{{ label }}</label>
+    <label class="text-text-muted text-sm mb-2" v-if="label">{{ label }}</label>
 
     <div class="relative w-full flex items-center">
       <input
@@ -9,9 +9,9 @@
           :max="max"
           :step="step"
           v-model="value"
-          class="appearance-none w-full h-2 rounded-full bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 slider-thumb"
+          class="appearance-none w-full h-2 rounded-full bg-border focus:outline-none focus:ring-2 focus:ring-accent-600 slider-thumb"
       />
-      <div class="ml-4 text-gray-700 text-sm font-medium w-10 text-center">
+      <div class="ml-4 text-text-muted text-sm font-medium w-10 text-center">
         {{ value }}
       </div>
     </div>

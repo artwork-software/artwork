@@ -12,7 +12,7 @@
                 ]"
             />
 
-            <div class="card white p-5 mt-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-5">
                 <div class="overflow-x-auto">
                     <draggable
                         ghost-class="opacity-50"
@@ -34,15 +34,15 @@
                 </div>
             </div>
 
-            <div class="card white p-5 mt-5">
+            <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5 mt-5">
                 <div class="flex items-center justify-end">
                     <div class="w-44 md:w-56 lg:w-72">
                         <div>
                             <div class="relative rounded-md shadow-sm">
-                                <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" class="block w-full rounded-md border-0 py-1.5 pr-10 text-text ring-1 ring-inset ring-border placeholder:text-text-subtle focus:ring-2 focus:ring-inset focus:ring-accent-600 sm:text-sm sm:leading-6" />
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                    <IconSearch class="h-5 w-5 text-gray-400 pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
-                                    <IconCircleX class="h-5 w-5 text-gray-400 cursor-pointer hover:text-red-400" aria-hidden="true" v-else @click="searchComponent = ''" />
+                                    <IconSearch class="h-5 w-5 text-text-subtle pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
+                                    <IconCircleX class="h-5 w-5 text-text-subtle cursor-pointer hover:text-danger" aria-hidden="true" v-else @click="searchComponent = ''" />
                                 </div>
                             </div>
                         </div>

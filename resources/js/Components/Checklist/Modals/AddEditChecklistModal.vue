@@ -9,22 +9,22 @@
                             <span v-else>
                                 {{ $t('No template') }}
                             </span>
-                            <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                            <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <ListboxOptions
-                                class="absolute z-10 mt-1 w-full bg-artwork-navigation-background shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                class="absolute z-10 mt-1 w-full bg-surface-inverse shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm">
                                 <ListboxOption as="template" class="max-h-8"
                                                :key="'keineVorlage'"
                                                :value="{name:'',id:null}"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ $t('No template') }}
                                             </span>
-                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                        <span :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                                          class="h-5 w-5 flex text-success"
                                                                          aria-hidden="true"
@@ -37,12 +37,12 @@
                                                :key="template.id"
                                                :value="template"
                                                v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span
                                                 :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ template.name }}
                                             </span>
-                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                        <span :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                                          class="h-5 w-5 flex text-success"
                                                                          aria-hidden="true"
@@ -94,14 +94,14 @@
                             <span v-else>
                                 {{ $t('Select project tab') }}
                             </span>
-                            <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                            <IconChevronDown class="h-5 w-5 text-text-subtle" aria-hidden="true"/>
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions class="absolute z-10 mt-1 w-full bg-artwork-navigation-background shadow-lg max-h-40 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                            <ListboxOptions class="absolute z-10 mt-1 w-full bg-surface-inverse shadow-lg max-h-40 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto sm:text-sm">
                                 <ListboxOption as="template" v-for="t in tabs" :key="t.id" :value="t" v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                    <li :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                         <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">{{ t.name }}</span>
-                                        <span :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                        <span :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center text-sm subpixel-antialiased']">
                                             <IconCircleCheckFilled v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true" />
                                         </span>
                                     </li>
@@ -114,10 +114,10 @@
 
             <div class="" v-if="selectedTemplate.name === ''">
                 <div class="flex items-center my-2" >
-                    <Switch @click="checklistForm.private = !checklistForm.private" :class="[checklistForm.private ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                    <Switch @click="checklistForm.private = !checklistForm.private" :class="[checklistForm.private ? 'bg-success' : 'bg-border', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200']">
                         <span aria-hidden="true" :class="[checklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                     </Switch>
-                    <span class="ml-2 text-sm" :class="checklistForm.private ? 'text-primary' : 'text-secondary'">
+                    <span class="ml-2 text-sm" :class="checklistForm.private ? 'text-text' : 'text-text-subtle'">
                         {{ $t('Private') }}
                     </span>
                 </div>

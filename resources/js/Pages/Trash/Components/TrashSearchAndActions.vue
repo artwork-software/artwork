@@ -4,20 +4,20 @@
             <input type="text"
                    :placeholder="$t('Search')"
                    v-model="search"
-                   class="h-10 sDark inputMain rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-            <XIcon v-if="search" class="ml-2 cursor-pointer h-5 w-5" @click="clearSearch()"/>
+                   class="h-10 text-base/5 font-semibold text-text border border-border rounded-lg placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"/>
+            <IconX v-if="search" class="ml-2 cursor-pointer h-5 w-5" @click="clearSearch()"/>
         </div>
         <button v-if="total > 0" @click="$emit('delete-all')"
-                class="cursor-pointer text-red-500 hover:text-red-700">
-            <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+                class="cursor-pointer text-danger hover:text-danger">
+            <IconTrash class="h-5 w-5" aria-hidden="true"/>
         </button>
     </div>
 </template>
 
 <script setup>
+import {IconTrash, IconX} from "@tabler/icons-vue";
 import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { TrashIcon, XIcon } from '@heroicons/vue/outline'
 import debounce from 'lodash.debounce'
 
 const props = defineProps({

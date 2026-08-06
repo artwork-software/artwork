@@ -3,7 +3,7 @@
         <div
             v-if="artistText"
             v-tooltip.top="{ value: artistText, appendTo: 'body', class: 'aw-tooltip' }"
-            class="font-lexend font-black tracking-wide text-sm text-primary truncate"
+            class="font-lexend font-black tracking-wide text-sm text-text truncate"
         >
             {{ artistText }}
         </div>

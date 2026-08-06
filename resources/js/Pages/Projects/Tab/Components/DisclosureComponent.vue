@@ -1,14 +1,14 @@
 <template>
     <Disclosure as="div" class="my-2" v-slot="{ open }" >
-        <DisclosureButton class="py-2 px-4 bg-gray-200 text-gray-900 flex justify-between items-center w-full" :class="{ 'rounded-t-lg': open, 'rounded-lg': !open }">
-            <div class="flex items-center h-full gap-x-2 xsDark font-bold">
+        <DisclosureButton class="py-2 px-4 bg-border-subtle text-text flex justify-between items-center w-full" :class="{ 'rounded-t-lg': open, 'rounded-lg': !open }">
+            <div class="flex items-center h-full gap-x-2 text-sm/5 font-semibold text-text font-bold">
                 {{ component.component.data.label }}
                 <InfoButtonComponent :component="component" />
             </div>
             <div class="flex items-center gap-2">
                 <span
                     v-if="nonDefaultValueCount > 0"
-                    class="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-white/70 px-1 text-[10px] font-semibold tabular-nums text-artwork-buttons-hover ring-1 ring-inset ring-artwork-navigation-color/30"
+                    class="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-white/70 px-1 text-[10px] font-semibold tabular-nums text-accent-700 ring-1 ring-inset ring-text-inverse/30"
                     :aria-label="$t('Changed fields: {0}', [nonDefaultValueCount])"
                     :title="$t('Changed fields: {0}', [nonDefaultValueCount])"
                 >
@@ -17,7 +17,7 @@
                 <component :is="IconChevronDown" class="size-3" :class="{ 'transform rotate-180': open }" />
             </div>
         </DisclosureButton>
-        <DisclosurePanel class="px-4 py-2 bg-gray-50 rounded-b-lg">
+        <DisclosurePanel class="px-4 py-2 bg-surface-sunken rounded-b-lg">
             <div v-for="(disclosureComponent, index) in component.disclosure_components" :key="disclosureComponent.id" class="">
                 <Component
                     v-if="disclosureComponent?.id && canSeeComponent(disclosureComponent.component) && componentMapping[disclosureComponent.component?.type]"

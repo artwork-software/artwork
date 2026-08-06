@@ -25,7 +25,7 @@
                         :icon="IconCirclePlus"
                         icon-size="h-5 w-5"
                         stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        classes="text-black cursor-pointer hover:text-accent-600 duration-150 ease-in-out transition-colors"
                         @click="addNewItem()"
                         v-if="!groupClicked"
                     />
@@ -35,7 +35,7 @@
                         :icon="IconFolderPlus"
                         icon-size="h-5 w-5"
                         stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        classes="text-black cursor-pointer hover:text-accent-600 duration-150 ease-in-out transition-colors"
                         @click="showAddCategoryOrGroupModal = true"
                         v-if="!groupClicked"
                     />
@@ -45,7 +45,7 @@
                         :icon="IconFolderCog"
                         icon-size="h-5 w-5"
                         stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        classes="text-black cursor-pointer hover:text-accent-600 duration-150 ease-in-out transition-colors"
                         @click="showReorderFoldersModal = true"
                         v-if="!groupClicked && group.folders.length > 1"
                     />
@@ -67,7 +67,7 @@
                           as="div">
                     <a @click="showGroupDeleteConfirmModal()"
                        :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
-                        <IconTrash class="h-5 w-5 mr-3 group-hover:text-artwork-buttons-hover"/>
+                        <IconTrash class="h-5 w-5 mr-3 group-hover:text-accent-700"/>
                         {{ $t('Delete') }}
                     </a>
                 </MenuItem>

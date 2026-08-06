@@ -15,11 +15,11 @@
 
             <div class="flex items-center justify-between mt-5">
                 <FormButton
-                    class="bg-red-500 hover:bg-red-600"
+                    class="bg-danger hover:bg-danger"
                     @click="rejectRequest()"
                     :text="$t('Reject Request')"
                 />
-                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="$emit('close')">
+                <p class="cursor-pointer text-sm mt-3 text-text-subtle" @click="$emit('close')">
                     {{ $t('No, not really') }}
                 </p>
             </div>

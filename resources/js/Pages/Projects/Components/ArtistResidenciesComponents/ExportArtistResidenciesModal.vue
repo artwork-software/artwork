@@ -8,28 +8,28 @@
         </div>
         <div class="mb-5">
             <fieldset>
-                <legend class="text-sm/6 font-semibold text-gray-900">{{ $t('Export Type') }}</legend>
-                <p class="mt-1 text-sm/6 text-gray-600">
+                <legend class="text-sm/6 font-semibold text-text">{{ $t('Export Type') }}</legend>
+                <p class="mt-1 text-sm/6 text-text-muted">
                     {{ $t('Select the export type for the artist residencies.') }}
                 </p>
                 <div class="mt-3 space-y-6 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
                     <div v-for="exportMethod in exportMethods" :key="exportMethod.id" class="flex items-center">
-                        <input :id="exportMethod.id" name="export-method" type="radio" v-model="selectedExportMode"  :value="exportMethod" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden" />
-                        <label :for="exportMethod.id" class="ml-3 block text-sm/6 font-medium text-gray-900">{{ $t(exportMethod.title) }}</label>
+                        <input :id="exportMethod.id" name="export-method" type="radio" v-model="selectedExportMode"  :value="exportMethod" class="relative size-4 appearance-none rounded-full border border-border bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-accent-600 checked:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:before:bg-border-strong forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden" />
+                        <label :for="exportMethod.id" class="ml-3 block text-sm/6 font-medium text-text">{{ $t(exportMethod.title) }}</label>
                     </div>
                 </div>
             </fieldset>
         </div>
         <div class="mb-10">
             <fieldset>
-                <legend class="text-sm/6 font-semibold text-gray-900">{{ $t('Language') }}</legend>
-                <p class="mt-1 text-sm/6 text-gray-600">
+                <legend class="text-sm/6 font-semibold text-text">{{ $t('Language') }}</legend>
+                <p class="mt-1 text-sm/6 text-text-muted">
                     {{ $t('Select the language for the export.') }}
                 </p>
                 <div class="mt-3 space-y-6 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
                     <div v-for="languageMethod in languageMethods" :key="languageMethod.id" class="flex items-center">
-                        <input :id="languageMethod.id" name="language-method" type="radio" v-model="selectedLanguage"  :value="languageMethod" class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden" />
-                        <label :for="languageMethod.id" class="ml-3 block text-sm/6 font-medium text-gray-900">{{ $t(languageMethod.title) }}</label>
+                        <input :id="languageMethod.id" name="language-method" type="radio" v-model="selectedLanguage"  :value="languageMethod" class="relative size-4 appearance-none rounded-full border border-border bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-accent-600 checked:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:border-border disabled:bg-surface-sunken disabled:before:bg-border-strong forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden" />
+                        <label :for="languageMethod.id" class="ml-3 block text-sm/6 font-medium text-text">{{ $t(languageMethod.title) }}</label>
                     </div>
                 </div>
             </fieldset>

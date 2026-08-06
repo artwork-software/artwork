@@ -22,7 +22,7 @@ const props = defineProps({
     },
     backgroundColor: {
         type: String,
-        default: 'bg-green-600'
+        default: 'bg-success'
     },
     text: {
         type: String,

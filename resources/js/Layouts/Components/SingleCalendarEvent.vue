@@ -3,35 +3,35 @@
         class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoomFactor > 0.4"
              class="absolute z-50 w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
-             :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
+             :class="event.clicked ? 'block bg-success-surface/50' : 'hidden bg-accent-600/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
-                   class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                   class="rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                     <PropertyIcon name="IconLink" stroke-width="1.5" class="h-4 w-4"/>
                 </a>
                 <button type="button" @click="openEditEventModal(event)"
-                        class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        class="rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                     <PropertyIcon name="IconEdit" class="h-4 w-4" stroke-width="1.5"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal"
                         v-show="event.eventTypeId === 1" type="button"
-                        class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        class="rounded-full bg-accent-600 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                     <PropertyIcon name="IconCirclePlus" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
                 <button v-if="event.occupancy_option && (isRoomAdmin || this.hasAdminRole())"
                         @click="acceptRoomRequest(event)" type="button"
-                        class="rounded-full bg-green-600 p-1 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600">
+                        class="rounded-full bg-success p-1 text-white shadow-sm hover:bg-success focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
                     <PropertyIcon name="IconCheck" stroke-width="1.5" class="h-4 w-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))" type="button"
                         @click="showDeclineEventModal = true"
-                        class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                        class="rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                     <PropertyIcon name="IconX" stroke-width="1.5"
                            stroke="currentColor" class="w-4 h-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole() || this.$can('create events without request') || (event.isPlanning && this.$can('can edit planning calendar'))"
                         @click="openConfirmModal(event.id, 'main')" type="button"
-                        class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                        class="rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                     <PropertyIcon name="IconTrash" stroke-width="1.5"
                                stroke="currentColor" class="w-4 h-4"/>
                 </button>
@@ -42,14 +42,14 @@
                         <input v-model="event.clicked" @click="$emit('checkEvent', event)" id="candidates"
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
-                               class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
+                               class="h-5 w-5 border-border text-success focus:ring-success"/>
                     </div>
                 </div>
             </div>
         </div>
         <div class="px-1 py-1 ">
             <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: this.TextColorWithDarken}"
-                 :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
+                 :class="[zoomFactor === 1 ? 'text-xs/5 font-bold' : '', 'font-bold']"
                  class="flex justify-between ">
                 <div v-if="!project" class="flex items-center relative w-full">
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
@@ -87,7 +87,7 @@
             <div class="flex">
                 <!-- Time -->
                 <div class="flex" :style="{lineHeight: lineHeight,fontSize: fontSize, color: TextColorWithDarken}"
-                     :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
+                     :class="[zoomFactor === 1 ? 'text-xs/[18px]' : '', 'font-medium subpixel-antialiased']">
                     <div
                         v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
                         class="items-center">
@@ -114,7 +114,7 @@
                         </div>
                         <div v-else class="items-center">
                             <div v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
-                            <span class="text-error">
+                            <span class="text-danger">
                                 {{
                                     new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''
                                 }}
@@ -140,18 +140,18 @@
                 <div v-if="event.option_string && $page.props.auth.user.calendar_settings.options" class="flex items-center">
                     <div
                         v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
-                        class="flex eventTime font-medium subpixel-antialiased"
+                        class="flex text-xs/[18px] font-medium subpixel-antialiased"
                         :style="{lineHeight: lineHeight,fontSize: fontSize}">
                         , {{ event.option_string }}
                     </div>
-                    <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
+                    <div class="flex text-xs/[18px] font-medium subpixel-antialiased ml-0.5" v-else>
                         ({{ event.option_string.charAt(7) }})
                     </div>
                 </div>
             </div>
             <!-- repeating Event -->
             <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
-                 :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
+                 :class="[zoomFactor === 1 ? 'text-[10px]/[19px] font-semibold' : '', 'font-semibold']"
                  v-if="$page.props.auth.user.calendar_settings.repeating_events && event.is_series"
                  class="uppercase flex items-center">
                 <PropertyIcon name="IconRepeat" class="mx-1 h-3 w-3" stroke-width="1.5"/>
@@ -185,10 +185,10 @@
                                       leave-from-class="transition-leave-from"
                                       leave-to-class="transition-leave-to">
                                 <MenuItems
-                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-surface-inverse ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
                                         <Link href="#"
-                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                              :class="[active ? ' ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <img :class="'h-5 w-5'"
                                                  class="rounded-full"
                                                  :src="user.profile_photo_url"
@@ -210,15 +210,15 @@
         <div v-for="subEvent in event.subEvents" class="mb-1">
             <div class="w-full relative group rounded-lg border-l-[6px] border-[#A7A6B115]">
                 <div
-                    class="bg-indigo-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
+                    class="bg-accent-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
                         <button @click="editSubEvent(subEvent)" type="button"
-                                class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                class="rounded-full bg-accent-600 p-1 text-white shadow-sm hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600">
                             <PropertyIcon name="IconEdit" class="h-4 w-4" stroke-width="1.5"/>
                         </button>
                         <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                                 @click="openConfirmModal(subEvent.id, 'sub')" type="button"
-                                class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                                class="rounded-full bg-danger p-1 text-white shadow-sm hover:bg-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
                             <PropertyIcon name="IconTrash" stroke-width="1.5"
                                        stroke="currentColor" class="w-4 h-4"/>
                         </button>
@@ -228,7 +228,7 @@
                      :style="{ width: width + 'px', height: (totalHeight - heightSubtraction(subEvent)) * zoomFactor + 'px' }"
                      class="px-1 py-0.5 rounded-lg overflow-y-auto">
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
-                         :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
+                         :class="[zoomFactor === 1 ? 'text-xs/5 font-bold' : '', 'font-bold']"
                          class="flex justify-between">
                         <div class="flex" v-if="subEvent.title?.length > 0">
                             <div v-if="subEvent.eventTypeAbbreviation" class="mr-1">
@@ -249,7 +249,7 @@
                     </div>
                     <!-- Time -->
                     <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
-                         :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']"
+                         :class="[zoomFactor === 1 ? 'text-xs/[18px]' : '', 'font-medium subpixel-antialiased']"
                          class="flex">
                         <div
                             v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString() && !project && !atAGlance"
@@ -270,7 +270,7 @@
                                     {{ $t('Full day') }}, {{ new Date(subEvent.start).format("DD.MM.") }}
                                 </div>
                                 <div v-else>
-                                    <span class="text-error">
+                                    <span class="text-danger">
                         {{
                                             new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : ''
                                         }}
@@ -282,7 +282,7 @@
 
                             </div>
                             <div v-else class="items-center">
-                            <span class="text-error">
+                            <span class="text-danger">
                         {{
                                     new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : ''
                                 }}
@@ -321,8 +321,8 @@
 </template>
 
 <script>
+import {IconCirclePlus} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {PlusCircleIcon} from '@heroicons/vue/outline'
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
@@ -347,7 +347,7 @@ export default {
         EventComponent,
         ConfirmDeleteModal,
         ConfirmationComponent,
-        Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip,
+        Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, IconCirclePlus, AddSubEventModal, NewUserToolTip,
         Link
     },
     props: [

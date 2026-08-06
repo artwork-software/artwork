@@ -1,10 +1,10 @@
 <template>
     <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
-                <div class="mt-8 headline1">
+                <div class="mt-8 font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                     {{this.mode === 'create' ? $t('Create permission preset') : $t('Edit permission preset')}}
                 </div>
-                <div class="xsLight my-6">
+                <div class="text-sm/5 font-bold text-text-subtle my-6">
                     {{
                         this.mode === 'create' ?
                             $t('You can create a permission preset here. This can be used when creating users.') :
@@ -18,31 +18,31 @@
                                type="text"
                                :class="[
                                    $page.props.errors.name ?
-                                   'border-red-600 focus:border-red-600' :
-                                   'border-gray-300 focus:border-primary',
-                                   'mb-3 peer pl-0 h-12 w-full focus:border-t-transparent focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 text-primary placeholder-secondary placeholder-transparent'
+                                   'border-danger focus:border-danger' :
+                                   'border-border focus:border-surface-inverse',
+                                   'mb-3 peer pl-0 h-12 w-full focus:border-t-transparent focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 text-text placeholder-text-subtle placeholder-transparent'
                                ]"
                                placeholder="placeholder"
                         />
                         <label for="name"
                                :class="[
                                    $page.props.errors.name ?
-                                   'errorText' :
-                                   'text-secondary',
+                                   'text-sm/5 text-danger' :
+                                   'text-text-subtle',
                                    'absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-base peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm'
                                ]"
                         >
                             {{ $t('Permission preset name') }}
                         </label>
-                        <span v-if="$page.props.errors.name" class="errorText">
+                        <span v-if="$page.props.errors.name" class="text-sm/5 text-danger">
                             {{$page.props.errors.name.charAt(0).toUpperCase() + $page.props.errors.name.slice(1)}}
                         </span>
                     </div>
                 </div>
                 <div v-for="(permissions, group) in available_permissions">
                     <div class="flex items-center justify-between">
-                        <h3 class="headline6Light mb-2 mt-3">{{ group }}</h3>
-                        <div class="text-xs underline text-artwork-buttons-create cursor-pointer" @click="checkOrUncheckAllPermissions(permissions)">
+                        <h3 class="text-[10px]/[19px] font-semibold uppercase tracking-wider text-text-subtle mb-2 mt-3">{{ group }}</h3>
+                        <div class="text-xs underline text-accent-600 cursor-pointer" @click="checkOrUncheckAllPermissions(permissions)">
                             {{ permissions.some(permission => this.permissionPresetForm.permissions.includes(permission.id)) ? $t('Deselect all') : $t('Select all') }}
                         </div>
                     </div>
@@ -56,7 +56,7 @@
                                        type="checkbox"
                                        class="input-checklist"/>
 
-                                <p :class="[this.permissionPresetForm.permissions.includes(permission.id) ? 'xsDark' : 'xsLight']"
+                                <p :class="[this.permissionPresetForm.permissions.includes(permission.id) ? 'text-sm/5 font-semibold text-text' : 'text-sm/5 font-bold text-text-subtle']"
                                    class="ml-4 my-auto text-sm">{{ $t(permission.translation_key) }}</p>
                             </div>
                             <div v-if="permission.showIcon !== false">
@@ -77,8 +77,8 @@
 </template>
 
 <script>
+import {IconX} from "@tabler/icons-vue";
 import {defineComponent} from "vue";
-import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {useForm} from "@inertiajs/vue3";
 import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
@@ -93,7 +93,7 @@ export default defineComponent({
         Label,
         TextToolTip,
         JetDialogModal,
-        XIcon,
+        IconX,
     },
     props: [
         'show',

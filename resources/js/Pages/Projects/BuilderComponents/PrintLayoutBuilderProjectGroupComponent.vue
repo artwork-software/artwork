@@ -6,7 +6,7 @@
         <div class="flex items-center" v-if="project?.is_group">
             {{ $t('Projects of this group') }}:
             <div v-for="project in project?.projectsOfGroup">
-                <div class="text-artwork-buttons-create ml-1 mr-3">
+                <div class="text-accent-600 ml-1 mr-3">
                     {{ project?.name }}
                 </div>
             </div>
@@ -14,7 +14,7 @@
         <div class="flex items-center" v-else>
             {{$t('This Project is part of the group')}}:
             <div v-for="project in project?.groupProjects">
-                <div class="text-artwork-buttons-create ml-1">
+                <div class="text-accent-600 ml-1">
                     {{ project?.name }}
                 </div>
             </div>

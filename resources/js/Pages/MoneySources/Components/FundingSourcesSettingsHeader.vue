@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconCurrencyDollar"
                 :title="title || $t('Sources of funding')"
-                icon-bg-class="bg-emerald-600/10 text-emerald-700"
+                icon-bg-class="bg-success-surface text-success"
                 :description="description || $t('Define categories. These can then be filtered in the overview.')"
                 :search-enabled="false"
             >

@@ -1,6 +1,6 @@
 <template>
     <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col lg:w-72">
-        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-artwork-navigation-background px-6 pb-4">
+        <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-surface-inverse px-6 pb-4">
             <div class="flex h-16 shrink-0 items-center">
                 <img v-if="page.props.big_logo" class="h-8 w-auto" :src="page.props.big_logo" alt="Logo" />
             </div>
@@ -18,12 +18,12 @@
                     </li>
 
                     <li v-if="groupedScopes.length > 0">
-                        <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                        <div class="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
                             {{ $t('Shared with you') }}
                         </div>
                         <ul role="list" class="space-y-3">
                             <li v-for="group in groupedScopes" :key="group.project.id">
-                                <div class="text-sm font-medium text-zinc-200 mb-1">
+                                <div class="text-sm font-medium text-text-inverse mb-1">
                                     {{ group.project.name }}
                                 </div>
                                 <ul class="ml-2 space-y-1">
@@ -36,7 +36,7 @@
                                             <span>{{ scope.tab.name }}</span>
                                             <span
                                                 v-if="scope.access_type === 'read'"
-                                                class="ml-auto text-xs text-zinc-400"
+                                                class="ml-auto text-xs text-white/70"
                                             >
                                                 {{ $t('read only') }}
                                             </span>
@@ -48,13 +48,13 @@
                     </li>
 
                     <li class="mt-auto">
-                        <div v-if="page.props.crm_access_expires_at" class="text-xs text-zinc-400 mb-2">
+                        <div v-if="page.props.crm_access_expires_at" class="text-xs text-white/70 mb-2">
                             {{ $t('CRM access valid until') }}: {{ formatDate(page.props.crm_access_expires_at) }}
                         </div>
                         <form @submit.prevent="logout">
                             <button
                                 type="submit"
-                                class="w-full flex items-center justify-center gap-x-2 rounded-md bg-white/5 px-3 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10"
+                                class="w-full flex items-center justify-center gap-x-2 rounded-md bg-white/5 px-3 py-2 text-sm font-semibold text-text-inverse hover:bg-white/10"
                             >
                                 <PropertyIcon name="IconLogout" class="size-5 shrink-0" />
                                 {{ $t('Logout') }}
@@ -102,7 +102,7 @@ function navItemClasses(isCurrent) {
         'group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold',
         isCurrent
             ? 'bg-white/10 text-white'
-            : 'text-zinc-300 hover:bg-white/5 hover:text-white',
+            : 'text-white/70 hover:bg-white/5 hover:text-white',
     ]
 }
 

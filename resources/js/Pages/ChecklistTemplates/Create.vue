@@ -19,9 +19,9 @@
             />
 
             <!-- Users -->
-            <div class="mt-8 bg-gray-50 rounded-xl p-5">
+            <div class="mt-8 bg-surface-sunken rounded-xl p-5">
                 <div class="flex items-center justify-between">
-                    <h3 class="headline4">{{ $t('Checklist users') }}</h3>
+                    <h3 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Checklist users') }}</h3>
                     <BaseUIButton
                         :label="$t('Assign users')"
                         @click="showUsersModal = true"
@@ -34,7 +34,7 @@
                     :text="$t('The tasks in this checklist are automatically assigned to all users. Users who are not in the project are added automatically.')"
                 />
                 <div class="mt-4 flex items-center">
-                    <span v-if="form.users.length === 0" class="text-secondary text-sm">
+                    <span v-if="form.users.length === 0" class="text-text-subtle text-sm">
                         {{ $t('No users added yet') }}
                     </span>
                     <div v-else class="flex -space-x-2">
@@ -53,7 +53,7 @@
             <!-- Tasks -->
             <div class="mt-10">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="headline4">{{ $t('Tasks') }}</h3>
+                    <h3 class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">{{ $t('Tasks') }}</h3>
                     <BaseUIButton
                         is-add-button
                         :label="$t('New task')"
@@ -61,7 +61,7 @@
                     />
                 </div>
 
-                <div v-if="form.task_templates.length === 0" class="text-center text-sm text-zinc-400 py-6 border border-dashed border-zinc-200 rounded-xl">
+                <div v-if="form.task_templates.length === 0" class="text-center text-sm text-text-subtle py-6 border border-dashed border-border-subtle rounded-xl">
                     {{ $t('No tasks added yet') }}
                 </div>
                 <draggable
@@ -110,7 +110,7 @@
         >
             <div class="mt-6">
                 <UserSearch @user-selected="addUser" />
-                <div v-if="form.users.length > 0" class="mt-6 bg-gray-50 rounded-xl p-4 grid grid-cols-1 gap-3">
+                <div v-if="form.users.length > 0" class="mt-6 bg-surface-sunken rounded-xl p-4 grid grid-cols-1 gap-3">
                     <div
                         v-for="user in form.users"
                         :key="user.id"
@@ -118,11 +118,11 @@
                     >
                         <div class="flex items-center gap-x-3">
                             <img class="h-9 w-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
-                            <span class="sDark">{{ user.first_name }} {{ user.last_name }}</span>
+                            <span class="text-base/5 font-semibold text-text">{{ user.first_name }} {{ user.last_name }}</span>
                         </div>
                         <button type="button" @click="removeUser(user)">
                             <span class="sr-only">{{ $t('Remove user from checklist template') }}</span>
-                            <XIcon class="h-4 w-4 p-0.5 rounded-full bg-artwork-buttons-create text-white hover:bg-artwork-buttons-hover" />
+                            <IconX class="h-4 w-4 p-0.5 rounded-full bg-accent-600 text-white hover:bg-accent-700" />
                         </button>
                     </div>
                 </div>
@@ -135,9 +135,9 @@
 </template>
 
 <script setup>
+import {IconX} from "@tabler/icons-vue";
 import { ref } from 'vue'
 import { Link, useForm, usePage } from '@inertiajs/vue3'
-import { XIcon } from '@heroicons/vue/outline'
 import draggable from 'vuedraggable'
 import ChecklistTemplatesHeader from '@/Pages/ChecklistTemplates/Components/ChecklistTemplatesHeader.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'

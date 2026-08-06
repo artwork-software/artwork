@@ -1,33 +1,33 @@
 <template>
-    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm print:hidden">
+    <div class="rounded-xl border border-border-subtle bg-white p-4 shadow-sm print:hidden">
         <button
             type="button"
             class="flex w-full items-center justify-between gap-2 text-left"
             @click="expanded = !expanded"
         >
-            <span class="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <span class="flex items-center gap-2 text-sm font-semibold text-text">
                 <IconChevronDown class="size-4 transition-transform" :class="{ '-rotate-90': !expanded }" />
                 {{ $t('Period comparison') }}
             </span>
-            <span class="text-xs text-gray-400">{{ $t('e.g. revival vs. premiere run') }}</span>
+            <span class="text-xs text-text-subtle">{{ $t('e.g. revival vs. premiere run') }}</span>
         </button>
 
         <div v-show="expanded" class="mt-3">
             <div class="flex flex-wrap items-end gap-3">
                 <div>
-                    <p class="text-xs font-medium text-gray-500 mb-1">{{ $t('Period A') }}</p>
+                    <p class="text-xs font-medium text-text-subtle mb-1">{{ $t('Period A') }}</p>
                     <div class="flex items-end gap-2">
                         <BaseInput type="date" id="bi_cmp_a_from" v-model="aFrom" :label="$t('From')" class="w-38" />
                         <BaseInput type="date" id="bi_cmp_a_to" v-model="aTo" :label="$t('To')" class="w-38" />
                     </div>
                 </div>
                 <div>
-                    <p class="text-xs font-medium text-gray-500 mb-1">
+                    <p class="text-xs font-medium text-text-subtle mb-1">
                         {{ $t('Period B') }}
-                        <button type="button" class="ml-1 text-indigo-600 hover:underline" @click="setBPreviousYear">
+                        <button type="button" class="ml-1 text-accent-600 hover:underline" @click="setBPreviousYear">
                             {{ $t('Previous year') }}
                         </button>
-                        <button type="button" class="ml-1 text-indigo-600 hover:underline" @click="setBPreviousPeriod">
+                        <button type="button" class="ml-1 text-accent-600 hover:underline" @click="setBPreviousPeriod">
                             {{ $t('Previous period') }}
                         </button>
                     </p>
@@ -44,28 +44,28 @@
                 />
             </div>
 
-            <p v-if="error" class="mt-2 text-xs text-rose-600">{{ $t('Error loading BI data.') }}</p>
+            <p v-if="error" class="mt-2 text-xs text-danger">{{ $t('Error loading BI data.') }}</p>
 
             <div v-if="result" class="mt-4 overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead>
-                        <tr class="text-left text-xs text-gray-500 border-b border-gray-200">
+                        <tr class="text-left text-xs text-text-subtle border-b border-border-subtle">
                             <th class="py-1.5 pr-3 font-medium">{{ $t('Key figure') }}</th>
                             <th class="py-1.5 px-3 font-medium">A · {{ rangeLabel(result.a.range) }}</th>
                             <th class="py-1.5 px-3 font-medium">B · {{ rangeLabel(result.b.range) }}</th>
                             <th class="py-1.5 px-3 font-medium">{{ $t('Difference') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-border-subtle">
                         <tr v-for="row in comparisonRows" :key="row.key">
-                            <td class="py-2 pr-3 text-gray-700">{{ $t(row.label) }}</td>
-                            <td class="py-2 px-3 font-medium text-gray-900">{{ row.a ?? '–' }}</td>
-                            <td class="py-2 px-3 text-gray-600">{{ row.b ?? '–' }}</td>
+                            <td class="py-2 pr-3 text-text-muted">{{ $t(row.label) }}</td>
+                            <td class="py-2 px-3 font-medium text-text">{{ row.a ?? '–' }}</td>
+                            <td class="py-2 px-3 text-text-muted">{{ row.b ?? '–' }}</td>
                             <td class="py-2 px-3" :class="row.deltaClass">{{ row.delta ?? '–' }}</td>
                         </tr>
                     </tbody>
                 </table>
-                <p class="mt-1.5 text-[11px] text-gray-400">
+                <p class="mt-1.5 text-[11px] text-text-subtle">
                     {{ $t('Metrics in TOTAL mode are period-neutral — the comparison is only meaningful for per-event figures.') }}
                 </p>
             </div>
@@ -187,14 +187,14 @@ const comparisonRows = computed(() => {
         const bValue = result.value.b.summary?.[def.key] ?? null;
 
         let delta = null;
-        let deltaClass = 'text-gray-300';
+        let deltaClass = 'text-text-subtle';
         if (aValue !== null && bValue !== null) {
             const raw = aValue - bValue;
             // Raten in Prozentpunkten, Zähl-/Summenwerte als Differenz
             delta = def.deltaInPoints
                 ? `${raw > 0 ? '+' : ''}${percentFmt.format(raw)} ${t('percentage points')}`
                 : `${raw > 0 ? '+' : ''}${formatBy(def.format, raw)}`;
-            deltaClass = raw >= 0 ? 'text-emerald-600' : 'text-rose-600';
+            deltaClass = raw >= 0 ? 'text-success' : 'text-danger';
         }
 
         return {

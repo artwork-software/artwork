@@ -91,13 +91,13 @@ function updateDefaultTab() {
 <template>
     <!-- Container -->
     <div
-        class="rounded-2xl border border-zinc-200/80 bg-white/70 backdrop-blur px-4 py-5 shadow-sm transition"
-        :class="dragging ? 'ring-2 ring-emerald-400/40' : ''"
+        class="rounded-2xl border border-border-subtle/80 bg-white/70 backdrop-blur px-4 py-5 shadow-sm transition"
+        :class="dragging ? 'ring-2 ring-success-border/40' : ''"
     >
         <!-- Header -->
         <div class="relative">
             <div
-                class="flex items-start justify-between gap-4 pl-3 pb-3 border-b border-dashed border-zinc-200 select-none"
+                class="flex items-start justify-between gap-4 pl-3 pb-3 border-b border-dashed border-border-subtle select-none"
                 :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
             >
                 <!-- Left -->
@@ -109,35 +109,35 @@ function updateDefaultTab() {
                 >
                     <!-- Chevron -->
                     <span
-                        class="grid place-items-center size-8 rounded-2xl border bg-white/70 border-zinc-200/80 transition"
+                        class="grid place-items-center size-8 rounded-2xl border bg-white/70 border-border-subtle/80 transition"
                         aria-hidden="true"
                     >
                         <IconChevronDown
                             v-if="tabClosed"
-                            class="h-4 w-4 text-zinc-700 transition-transform duration-200"
+                            class="h-4 w-4 text-text-muted transition-transform duration-200"
                         />
                         <IconChevronUp
                             v-else
-                            class="h-4 w-4 text-zinc-700 transition-transform duration-200"
+                            class="h-4 w-4 text-text-muted transition-transform duration-200"
                         />
                     </span>
 
                     <div class="flex flex-col items-start min-w-0 flex-1">
                         <!-- Title row -->
                         <div class="flex items-center gap-2 min-w-0 w-full">
-                            <h3 class="headline3 text-zinc-900 truncate" :title="tab.name">{{ tab.name }}</h3>
+                            <h3 class="font-lexend font-semibold text-[clamp(16px,2vw,18px)]/[21px] text-text text-text truncate" :title="tab.name">{{ tab.name }}</h3>
 
                             <!-- Default badge -->
                             <span
                                 v-if="tab.default"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-emerald-300/70 bg-emerald-50/70 text-emerald-700 shrink-0"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-success-border/70 bg-success-surface/70 text-success shrink-0"
                             >
                                 Default
                             </span>
 
                             <!-- Components count -->
                             <span
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-zinc-200 bg-white/70 text-zinc-600 shrink-0"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] leading-4 border-border-subtle bg-white/70 text-text-muted shrink-0"
                             >
                                 {{ componentCount }} {{ $t("components") }}
                             </span>
@@ -148,7 +148,7 @@ function updateDefaultTab() {
                             <!-- Visibility pill -->
                             <span
                                 v-if="tab.visible_for_all"
-                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-zinc-200 bg-white/70 text-zinc-600"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-border-subtle bg-white/70 text-text-muted"
                             >
                                 <IconWorld class="h-3.5 w-3.5" />
                                 {{ $t("Visible for all") }}
@@ -156,7 +156,7 @@ function updateDefaultTab() {
 
                             <span
                                 v-else
-                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-amber-200 bg-amber-50/70 text-amber-700"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-warning-border bg-warning-surface/70 text-warning"
                             >
                                 <IconLock class="h-3.5 w-3.5" />
                                 {{ $t("Restricted") }}
@@ -165,7 +165,7 @@ function updateDefaultTab() {
                             <!-- Access summary -->
                             <span
                                 v-if="isRestricted"
-                                class="inline-flex items-center gap-2 text-[11px] text-zinc-500"
+                                class="inline-flex items-center gap-2 text-[11px] text-text-subtle"
                             >
                                 <span class="inline-flex items-center gap-1">
                                     <IconUsers class="h-3.5 w-3.5" />
@@ -181,7 +181,7 @@ function updateDefaultTab() {
                             <!-- Warning if restricted but empty -->
                             <span
                                 v-if="isRestricted && !hasAccessList"
-                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-red-200 bg-red-50/70 text-red-700"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] leading-4 border-danger-border bg-danger-surface/70 text-danger"
                             >
                                 <IconEye class="h-3.5 w-3.5" />
                                 {{ $t("No access configured") }}
@@ -194,7 +194,7 @@ function updateDefaultTab() {
                             <span
                                 v-for="u in visibleUsers.slice(0, 6)"
                                 :key="'vu-' + u.id"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-white/70 border-zinc-200 text-zinc-700"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-white/70 border-border-subtle text-text-muted"
                                 :title="userLabel(u)"
                             >
                                 {{ userLabel(u) }}
@@ -204,7 +204,7 @@ function updateDefaultTab() {
                             <span
                                 v-for="d in visibleDepartments.slice(0, 6)"
                                 :key="'vd-' + d.id"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-white/70 border-zinc-200 text-zinc-700"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-white/70 border-border-subtle text-text-muted"
                                 :title="d.name"
                             >
                                 {{ d.name }}
@@ -213,14 +213,14 @@ function updateDefaultTab() {
                             <!-- Overflow -->
                             <span
                                 v-if="accessUserCount + accessDeptCount > 12"
-                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-zinc-50/80 border-zinc-200 text-zinc-600"
+                                class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] bg-surface-sunken/80 border-border-subtle text-text-muted"
                             >
                                 +{{ (accessUserCount + accessDeptCount) - 12 }}
                             </span>
                         </div>
 
                         <!-- Helper text -->
-                        <p class="mt-2 text-[11px] text-zinc-500">
+                        <p class="mt-2 text-[11px] text-text-subtle">
                             {{ $t("Build and order components for this tab") }}
                         </p>
                     </div>
@@ -233,20 +233,18 @@ function updateDefaultTab() {
                         <Switch
                             v-model="tab.default"
                             @click="updateDefaultTab"
-                            :class="[
-                                tab.default ? 'bg-artwork-buttons-create' : 'bg-zinc-200',
-                                'relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create/70 focus:ring-offset-1'
+                            :class="[ tab.default ? 'bg-accent-600' : 'bg-border-subtle',
+                                'relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-600/70 focus:ring-offset-1'
                             ]"
                             :aria-label="$t('Set as default tab')"
                         >
                             <span
-                                :class="[
-                                    tab.default ? 'translate-x-5' : 'translate-x-0',
+                                :class="[ tab.default ? 'translate-x-5' : 'translate-x-0',
                                     'pointer-events-none relative inline-block size-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
                                 ]"
                             />
                         </Switch>
-                        <span class="text-[11px] text-zinc-600">{{ $t("Default") }}</span>
+                        <span class="text-[11px] text-text-muted">{{ $t("Default") }}</span>
                     </div>
 
                     <!-- Menu -->
@@ -263,10 +261,10 @@ function updateDefaultTab() {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <div class="my-2">
-                        <h3 class="text-sm font-semibold text-zinc-700 tracking-wide">
+                        <h3 class="text-sm font-semibold text-text-muted tracking-wide">
                             {{ $t("Main area") }}
                         </h3>
-                        <p class="mt-0.5 text-[11px] text-zinc-500">
+                        <p class="mt-0.5 text-[11px] text-text-subtle">
                             {{ $t("These components are displayed one below the other in the tab") }}
                         </p>
                     </div>
@@ -279,7 +277,7 @@ function updateDefaultTab() {
                         @tab-opened="openTab"
                     />
 
-                    <div class="transition" :class="dragging ? 'ring-2 ring-emerald-400/30' : ''">
+                    <div class="transition" :class="dragging ? 'ring-2 ring-success-border/30' : ''">
                         <draggable
                             ghost-class="opacity-50"
                             key="draggableKey"
@@ -309,7 +307,7 @@ function updateDefaultTab() {
 
                         <div
                             v-if="!tab.components || tab.components.length === 0"
-                            class="text-[12px] text-zinc-500 px-2 py-4 text-center"
+                            class="text-[12px] text-text-subtle px-2 py-4 text-center"
                         >
                             {{ $t("Drop components here to build your tab layout") }}
                         </div>

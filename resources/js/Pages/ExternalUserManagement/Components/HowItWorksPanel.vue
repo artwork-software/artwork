@@ -1,31 +1,31 @@
 <template>
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div class="bg-white border border-border-subtle rounded-lg shadow-sm">
         <button
             type="button"
             class="w-full flex items-center justify-between gap-3 px-6 py-4 text-left"
             @click="open = !open"
         >
             <span class="flex items-center gap-2">
-                <component :is="IconInfoCircle" class="h-5 w-5 text-blue-600 shrink-0" />
-                <span class="text-base font-medium text-gray-900">
+                <component :is="IconInfoCircle" class="h-5 w-5 text-accent-600 shrink-0" />
+                <span class="text-base font-medium text-text">
                     {{ $t('How does the external user management work?') }}
                 </span>
             </span>
             <component
                 :is="IconChevronDown"
-                class="h-5 w-5 text-gray-400 shrink-0 transition-transform"
+                class="h-5 w-5 text-text-subtle shrink-0 transition-transform"
                 :class="{ 'rotate-180': open }"
             />
         </button>
 
-        <div v-if="open" class="px-6 pb-6 text-sm text-gray-700 space-y-6">
+        <div v-if="open" class="px-6 pb-6 text-sm text-text-muted space-y-6">
             <p>
                 {{ $t('artwork does not check the password itself for connected users – the identity check is done by the connected provider (OIDC or LDAP/Active Directory). The artwork account with all its roles, permissions and assignments is fully kept: the provider only replaces the password check, not the account.') }}
             </p>
 
             <!-- How accounts are created -->
             <div>
-                <h4 class="font-semibold text-gray-900 mb-2">{{ $t('How are user accounts created?') }}</h4>
+                <h4 class="font-semibold text-text mb-2">{{ $t('How are user accounts created?') }}</h4>
                 <ul class="list-disc pl-5 space-y-1.5">
                     <li>
                         <span class="font-medium">OIDC:</span>
@@ -46,7 +46,7 @@
 
             <!-- Existing accounts / e-mail matching -->
             <div>
-                <h4 class="font-semibold text-gray-900 mb-2">
+                <h4 class="font-semibold text-text mb-2">
                     {{ $t('What happens with existing accounts (same e-mail address)?') }}
                 </h4>
                 <p class="mb-2">{{ $t('Every login and every synchronization runs through the same three steps:') }}</p>
@@ -61,7 +61,7 @@
                         {{ $t('Otherwise a new account is created and receives the default role of the connection.') }}
                     </li>
                 </ol>
-                <div class="mt-3 p-3 rounded bg-blue-50 text-blue-800">
+                <div class="mt-3 p-3 rounded bg-accent-50 text-accent-700">
                     {{ $t('The e-mail address is only used once – for the very first link. Afterwards the account is recognized exclusively via the stable provider ID (OIDC "sub" or entryUUID/objectGUID). A changed e-mail address at the provider can therefore never take over a different artwork account.') }}
                 </div>
                 <p class="mt-3">
@@ -71,7 +71,7 @@
 
             <!-- Consequences for linked accounts -->
             <div>
-                <h4 class="font-semibold text-gray-900 mb-2">{{ $t('What changes for linked accounts?') }}</h4>
+                <h4 class="font-semibold text-text mb-2">{{ $t('What changes for linked accounts?') }}</h4>
                 <ul class="list-disc pl-5 space-y-1.5">
                     <li>
                         {{ $t('Password login and password reset in artwork are disabled – the password lives at the provider. OIDC users sign in exclusively via the SSO button.') }}
@@ -87,7 +87,7 @@
 
             <!-- Good to know -->
             <div>
-                <h4 class="font-semibold text-gray-900 mb-2">{{ $t('Good to know') }}</h4>
+                <h4 class="font-semibold text-text mb-2">{{ $t('Good to know') }}</h4>
                 <ul class="list-disc pl-5 space-y-1.5">
                     <li>
                         {{ $t('LDAP group mappings: roles and permissions configured in the group mappings are assigned and revoked automatically with every synchronization, based on the directory group membership.') }}

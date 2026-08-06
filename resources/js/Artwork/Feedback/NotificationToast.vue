@@ -12,21 +12,21 @@
                 leave-from-class="opacity-100"
                 leave-to-class="opacity-0"
             >
-                <div class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-glass ring-1 ring-black/5" v-if="visible">
+                <div class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-surface border border-border-subtle shadow-overlay" v-if="visible">
                     <div class="p-4">
                         <div class="flex items-stretch">
-                            <div class="p-1 rounded-lg" :class="{'bg-green-500': type === 'success', 'bg-red-500': type === 'danger', 'bg-yellow-500': type === 'warning'}"></div>
+                            <div class="p-1 rounded-lg" :class="{'bg-success': type === 'success', 'bg-danger': type === 'danger', 'bg-warning': type === 'warning'}"></div>
                             <div class="ml-3 w-0 flex-1 pt-0.5">
-                                <p class="text-sm font-medium text-gray-900 font-lexend">{{ $t(title) }}</p>
-                                <p v-if="description" class="mt-1 xsLight !text-sm text-gray-500">{{ $t(description) }}</p>
+                                <p class="text-sm font-medium text-text font-lexend">{{ $t(title) }}</p>
+                                <p v-if="description" class="mt-1 text-[13px] text-text-muted">{{ $t(description) }}</p>
                             </div>
                             <div class="ml-4 flex shrink-0">
                                 <button
                                     type="button"
                                     @click="visible = false"
-                                    class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                                    <span class="sr-only">Schließen</span>
-                                    <component :is="IconX" class="size-5" aria-hidden="true" />
+                                    class="inline-flex rounded-md bg-surface text-text-subtle hover:text-text-muted">
+                                    <span class="sr-only">{{ $t('Close') }}</span>
+                                    <PropertyIcon name="IconX" class="size-5" :stroke-width="1.5" aria-hidden="true" />
                                 </button>
                             </div>
                         </div>
@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import {IconX} from "@tabler/icons-vue";
+import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 
 const props = defineProps({
     show: Boolean,

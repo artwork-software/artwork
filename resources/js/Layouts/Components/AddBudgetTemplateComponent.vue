@@ -4,11 +4,11 @@
             <!--   Heading   -->
             <div>
                 <h1 class="my-1 flex">
-                    <div class="flex-grow headline1">
+                    <div class="flex-grow font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text">
                         {{ $t('Save as template') }}
                     </div>
                 </h1>
-                <h2 class="xsLight mb-2 mt-8">
+                <h2 class="text-sm/5 font-bold text-text-subtle mb-2 mt-8">
                     {{ $t('Save your calculation and make it available to all users as a template.') }}
                 </h2>
                 <div class="flex items-center w-full mr-2">
@@ -16,7 +16,7 @@
                         <input type="text"
                                :placeholder="$t('Name of the template*')"
                                v-model="this.templateName"
-                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="h-10 border border-border placeholder:text-sm/5 font-bold text-text-subtle placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-text-subtle focus:border-1 w-full border-border"/>
                     </div>
                 </div>
                 <div class="flex justify-center">
@@ -33,10 +33,9 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconCircleX, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -50,11 +49,11 @@ export default {
         FormButton,
         Input,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
-        ChevronDownIcon,
+        IconX,
+        IconCheck,
+        IconChevronDown,
         InputComponent,
-        XCircleIcon
+        IconCircleX
     },
     data() {
         return {

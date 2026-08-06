@@ -13,7 +13,7 @@
                 'This tab is only saved when you click the save button.',
             ]"
         />
-        <div class="card white p-5">
+        <div class="rounded-lg bg-surface border border-border-subtle w-full shadow-raised p-5">
             <BasePageTitle
                 :title="$t('Artist residencies')"
                 :description="$t('Settings for artist residencies such as default values for breakfast deductions.')"
@@ -27,7 +27,7 @@
                 leave-from-class="opacity-100"
                 leave-to-class="transform opacity-0"
             >
-                <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+                <div class="my-3 text-xs bg-success px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
                     {{ $t('Saved. The changes have been successfully applied.') }}
                 </div>
             </transition>
@@ -50,7 +50,7 @@
                     :label="$t('Default daily allowance') + ' (€)'"
                     :step="0.01"
                 />
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-text-subtle mt-1">
                     {{ $t('Pre-filled into the daily allowance field when creating a new artist residency.') }}
                 </p>
             </div>
@@ -60,22 +60,22 @@
                     <input
                         type="checkbox"
                         v-model="form.artist_residency_do_not_save_default"
-                        class="rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                        class="rounded border-border text-accent-700 focus:ring-accent-700"
                     />
-                    <span class="text-sm font-medium text-gray-700">
+                    <span class="text-sm font-medium text-text-muted">
                         {{ $t('“Do not save artist in database” checked by default') }}
                     </span>
                 </label>
             </div>
 
             <div class="mt-6 max-w-md">
-                <label class="block text-sm font-medium text-gray-700">
+                <label class="block text-sm font-medium text-text-muted">
                     {{ $t('Name columns in the artist residency table') }}
                 </label>
-                <p class="text-xs text-gray-500 mt-0.5">
+                <p class="text-xs text-text-subtle mt-0.5">
                     {{ $t('Enable/disable and reorder which name columns are shown first (left to right).') }}
                 </p>
-                <ul class="mt-2 divide-y divide-gray-100 rounded-md border border-gray-200">
+                <ul class="mt-2 divide-y divide-border-subtle rounded-md border border-border-subtle">
                     <li
                         v-for="(column, index) in form.artist_residency_name_columns"
                         :key="column.key"
@@ -85,14 +85,14 @@
                             <input
                                 type="checkbox"
                                 v-model="column.enabled"
-                                class="rounded border-gray-300 text-artwork-buttons-hover focus:ring-artwork-buttons-hover"
+                                class="rounded border-border text-accent-700 focus:ring-accent-700"
                             />
-                            <span class="text-sm text-gray-700">{{ $t(nameColumnLabels[column.key] ?? column.key) }}</span>
+                            <span class="text-sm text-text-muted">{{ $t(nameColumnLabels[column.key] ?? column.key) }}</span>
                         </label>
                         <div class="flex items-center gap-1">
                             <button
                                 type="button"
-                                class="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                class="p-1 text-text-subtle hover:text-text-muted disabled:text-text-subtle disabled:cursor-not-allowed"
                                 :disabled="index === 0"
                                 @click="moveNameColumn(index, -1)"
                                 :title="$t('Move up')"
@@ -101,7 +101,7 @@
                             </button>
                             <button
                                 type="button"
-                                class="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                class="p-1 text-text-subtle hover:text-text-muted disabled:text-text-subtle disabled:cursor-not-allowed"
                                 :disabled="index === form.artist_residency_name_columns.length - 1"
                                 @click="moveNameColumn(index, 1)"
                                 :title="$t('Move down')"
@@ -114,14 +114,15 @@
             </div>
 
             <div class="mt-6">
-                <button
+                <BaseUIButton
                     type="button"
-                    class="ui-button-add"
+                    variant="primary"
+                    hide-icon
                     @click="save"
                     :disabled="form.processing"
                 >
                     {{ $t('Save') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ProjectSettingsHeader>
@@ -135,6 +136,7 @@ import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHe
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import BasePageTitle from '@/Artwork/Titles/BasePageTitle.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 
 const props = defineProps({
     breakfastDeductionPerDay: { type: Number, default: 5.60 },

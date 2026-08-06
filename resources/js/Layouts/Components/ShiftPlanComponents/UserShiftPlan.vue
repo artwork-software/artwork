@@ -17,7 +17,7 @@
 
         <p
             v-if="projectAssignmentError"
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+            class="mb-4 rounded-lg border border-danger-border bg-danger-surface px-3 py-2 text-xs text-danger"
         >
             {{ projectAssignmentError }}
         </p>
@@ -26,11 +26,11 @@
         <div class="space-y-4">
             <!-- Kopfzeile (Zeitraum + Summen) -->
             <div class="flex items-center justify-between">
-                <div class="text-sm font-semibold text-zinc-900">
+                <div class="text-sm font-semibold text-text">
                     <span class="mr-2">{{ rangeLabel }}</span>
                 </div>
 
-                <div class="text-xs text-zinc-600">
+                <div class="text-xs text-text-muted">
                     <span>(</span>
                     <span>{{ totalWorkTimeInRange }}</span>
                     <span> | {{ totalBreakTimeInRange }}</span>
@@ -39,8 +39,8 @@
             </div>
 
             <!-- Keine Schichten im Zeitraum -->
-            <div v-if="workItemsInRange.length === 0" class="rounded-xl border border-zinc-200 bg-white p-4 text-center">
-                <p class="text-sm text-zinc-600">
+            <div v-if="workItemsInRange.length === 0" class="rounded-xl border border-border-subtle bg-white p-4 text-center">
+                <p class="text-sm text-text-muted">
                     {{ $t('No shifts in the selected period.') }}
                 </p>
             </div>
@@ -52,8 +52,8 @@
                     :key="group.id"
                     :href="route('projects.tab', { project: group.id, projectTab: firstProjectShiftTabId })"
                     :disabled="linkDisabledForGroup(group)"
-                    class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-2 py-1 text-xs font-semibold text-white
-                        enabled:hover:bg-zinc-800 enabled:transition disabled:opacity-50"
+                    class="inline-flex items-center gap-2 rounded-lg bg-surface-inverse px-2 py-1 text-xs font-semibold text-text-inverse
+                        enabled:hover:bg-surface-inverse/90 enabled:transition disabled:bg-border-strong disabled:cursor-not-allowed"
                 >
                     <PropertyIcon v-if="group.icon" :name="group.icon" class="size-4" aria-hidden="true" />
                     <span class="truncate max-w-[14rem]">{{ group.name }}</span>
@@ -65,34 +65,34 @@
                 <div
                     v-for="week in weeks"
                     :key="week.key"
-                    class="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden"
+                    class="rounded-xl border border-border-subtle bg-white shadow-sm overflow-hidden"
                 >
                     <!-- Wochen-Kopf -->
-                    <div class="flex items-center justify-between gap-3 px-3 py-2 bg-zinc-50 border-b border-zinc-200">
-                        <div class="text-sm font-semibold text-zinc-900">
+                    <div class="flex items-center justify-between gap-3 px-3 py-2 bg-surface-sunken border-b border-border-subtle">
+                        <div class="text-sm font-semibold text-text">
                             {{ $t('KW') }} {{ week.weekNumber }}
-                            <span class="ml-2 text-xs font-normal text-zinc-500">{{ week.rangeLabel }}</span>
+                            <span class="ml-2 text-xs font-normal text-text-subtle">{{ week.rangeLabel }}</span>
                         </div>
-                        <div class="text-xs text-zinc-600">
+                        <div class="text-xs text-text-muted">
                             ({{ week.totalWork }} | {{ week.totalBreak }})
                         </div>
                     </div>
 
                     <!-- Tagesspalten -->
                     <div class="overflow-x-auto">
-                        <div class="grid grid-cols-7 divide-x divide-zinc-200 min-w-[1190px]">
+                        <div class="grid grid-cols-7 divide-x divide-border-subtle min-w-[1190px]">
                             <div
                                 v-for="day in week.days"
                                 :key="day.date"
                                 class="flex flex-col min-h-[10rem]"
-                                :class="{ 'bg-zinc-50/80 opacity-60': !isInRequestedRange(day.date) }"
+                                :class="{ 'bg-surface-sunken/80': !isInRequestedRange(day.date) }"
                             >
                                 <!-- Tages-Kopf -->
                                 <div
-                                    class="px-2 py-1.5 border-b border-zinc-100 flex items-center justify-between gap-1"
-                                    :class="isToday(day.date) ? 'bg-blue-50' : 'bg-white'"
+                                    class="px-2 py-1.5 border-b border-border-subtle flex items-center justify-between gap-1"
+                                    :class="isToday(day.date) ? 'bg-accent-50' : 'bg-white'"
                                 >
-                                    <span class="text-xs font-semibold" :class="isToday(day.date) ? 'text-blue-700' : 'text-zinc-800'">
+                                    <span class="text-xs font-semibold" :class="isToday(day.date) ? 'text-accent-700' : 'text-text'">
                                         {{ weekdayShort(day.date) }} {{ formatDayShort(day.date) }}
                                     </span>
                                     <div class="flex items-center gap-1">
@@ -114,7 +114,7 @@
                                                     <svg class="h-3.5 w-3.5" :style="{ color: violation.shift_rule?.warning_color || '#ff0000' }" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                                     </svg>
-                                                    <svg class="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full bg-white text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                    <svg class="absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full bg-white text-success" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                                     </svg>
                                                 </span>
@@ -123,18 +123,18 @@
                                                 </svg>
                                             </div>
                                         </div>
-                                        <span v-if="hasWorkTime(day)" class="text-[10px] text-zinc-500">
+                                        <span v-if="hasWorkTime(day)" class="text-[10px] text-text-subtle">
                                             {{ day.totalWorkTime }}
                                         </span>
                                         <!-- Projektwunsch für diesen Tag eintragen (nur eigener Einsatzplan) -->
                                         <button
                                             v-if="isOwnPlan"
                                             type="button"
-                                            class="p-0.5 rounded hover:bg-zinc-100 transition"
+                                            class="p-0.5 rounded hover:bg-surface-sunken transition"
                                             :title="$t('Enter project wish')"
                                             @click="openWishModal(day)"
                                         >
-                                            <PropertyIcon name="IconHeartPlus" class="h-3.5 w-3.5 text-emerald-600" />
+                                            <PropertyIcon name="IconHeartPlus" class="h-3.5 w-3.5 text-success" />
                                         </button>
                                     </div>
                                 </div>
@@ -164,7 +164,7 @@
                                     <span
                                         v-for="dayService in day.dayServices"
                                         :key="`${day.date}-day-service-${dayService.id}`"
-                                        class="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-800"
+                                        class="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-white px-1.5 py-0.5 text-[11px] text-text"
                                         :title="dayService.name"
                                     >
                                         <PropertyIcon
@@ -184,8 +184,8 @@
                                         :key="`${day.date}-pda-${assignment.id}`"
                                         class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px]"
                                         :class="assignment.type === 'wish'
-                                            ? 'border-dashed border-emerald-300 bg-emerald-50/60 text-emerald-700 italic'
-                                            : 'border-zinc-200 bg-white text-zinc-800'"
+                                            ? 'border-dashed border-success-border bg-success-surface/60 text-success italic'
+                                            : 'border-border-subtle bg-white text-text'"
                                         :title="assignmentLabel(assignment, $t('Wish'))"
                                     >
                                         <span
@@ -196,9 +196,9 @@
                                         <button
                                             v-if="assignment.type === 'wish' && isOwnPlan"
                                             type="button"
-                                            class="text-emerald-400 hover:text-red-500 transition"
+                                            class="text-success hover:text-danger transition"
                                             :disabled="projectAssignmentActionId === assignment.id"
-                                            :class="projectAssignmentActionId === assignment.id ? 'cursor-wait opacity-50' : ''"
+                                            :class="projectAssignmentActionId === assignment.id ? 'cursor-wait !text-text-subtle' : ''"
                                             :title="$t('Remove wish for this day')"
                                             @click="deleteOwnWish(assignment)"
                                         >
@@ -211,9 +211,9 @@
                                 <div class="p-2 space-y-2 flex-1">
                                     <template v-if="itemsForDay(day).length">
                                         <div v-for="i in itemsForDay(day)" :key="i._key" class="space-y-1">
-                                            <div class="text-[11px] text-zinc-600">
+                                            <div class="text-[11px] text-text-muted">
                                                 {{ i.start }}–{{ i.end }}
-                                                <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-zinc-100 px-1 py-0.5">
+                                                <span v-if="i._crossesMidnight" class="ml-1 inline-block rounded bg-surface-sunken px-1 py-0.5">
                                                     → +1&nbsp;Tag
                                                 </span>
                                             </div>
@@ -229,26 +229,26 @@
 
                                             <div
                                                 v-else
-                                                class="rounded-lg border border-zinc-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
+                                                class="rounded-lg border border-border-subtle bg-white shadow-sm overflow-hidden transition hover:shadow-md"
                                             >
-                                                <div class="flex items-start justify-between gap-2 px-2 py-1.5 bg-zinc-100 text-zinc-900">
+                                                <div class="flex items-start justify-between gap-2 px-2 py-1.5 bg-surface-sunken text-text">
                                                     <span class="break-words min-w-0 text-xs font-semibold">
                                                         {{ $t('Individual time') }}: {{ i.title ?? '' }}
                                                     </span>
                                                     <button
                                                         type="button"
                                                         @click="openEditIndividualTimeModal(i)"
-                                                        class="p-1 rounded hover:bg-zinc-200 transition"
+                                                        class="p-1 rounded hover:bg-border-subtle transition"
                                                         :title="$t('Edit')"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </button>
                                                 </div>
 
                                                 <div class="px-2 py-2 space-y-1.5">
-                                                    <span class="text-xs font-medium text-zinc-900">
+                                                    <span class="text-xs font-medium text-text">
                                                         <template v-if="i.full_day">
                                                             {{ $t('All day') }}
                                                         </template>
@@ -262,10 +262,10 @@
                                                         <div
                                                             v-for="comment in day.comments"
                                                             :key="`${day.date}-comment-${comment.id}`"
-                                                            class="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-1.5 py-1"
+                                                            class="flex items-start gap-1.5 rounded-md bg-warning-surface border border-warning-border px-1.5 py-1"
                                                         >
-                                                            <PropertyIcon name="IconNote" class="size-3.5 shrink-0 mt-0.5 text-amber-600" aria-hidden="true" />
-                                                            <span class="break-words min-w-0 text-[11px] text-zinc-700">{{ comment.comment }}</span>
+                                                            <PropertyIcon name="IconNote" class="size-3.5 shrink-0 mt-0.5 text-warning" aria-hidden="true" />
+                                                            <span class="break-words min-w-0 text-[11px] text-text-muted">{{ comment.comment }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -275,7 +275,7 @@
 
                                     <div
                                         v-else-if="!day.holidays?.length && !day.dayServices?.length && !day.comments?.length"
-                                        class="h-full flex items-center justify-center text-xs text-zinc-300 select-none"
+                                        class="h-full flex items-center justify-center text-xs text-text-subtle select-none"
                                     >
                                         –
                                     </div>
@@ -285,10 +285,10 @@
                                         <div
                                             v-for="comment in day.comments"
                                             :key="`${day.date}-comment-${comment.id}`"
-                                            class="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-1.5 py-1"
+                                            class="flex items-start gap-1.5 rounded-md bg-warning-surface border border-warning-border px-1.5 py-1"
                                         >
-                                            <PropertyIcon name="IconNote" class="size-3.5 shrink-0 mt-0.5 text-amber-600" aria-hidden="true" />
-                                            <span class="break-words min-w-0 text-[11px] text-zinc-700">{{ comment.comment }}</span>
+                                            <PropertyIcon name="IconNote" class="size-3.5 shrink-0 mt-0.5 text-warning" aria-hidden="true" />
+                                            <span class="break-words min-w-0 text-[11px] text-text-muted">{{ comment.comment }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -302,7 +302,7 @@
 
     <!-- Debug bei Bedarf -->
     <!--
-    <pre class="text-xs text-zinc-500 mt-6">
+    <pre class="text-xs text-text-subtle mt-6">
         {{ shiftsInRange }}
     </pre>
     -->

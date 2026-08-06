@@ -21,7 +21,7 @@
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to" @enter="clampPanelPosition">
-                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-gray-200' : 'bg-artwork-navigation-background']" class="absolute left-1/2 z-[10000] transform rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
+                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '', isWhite ? 'bg-white border border-border-subtle' : 'bg-surface-inverse']" class="absolute left-1/2 z-[10000] transform rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
                     <div class="flex items-center gap-4">
                         <span class="relative inline-flex shrink-0">
                             <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full ring-2" :style="{ '--tw-ring-color': typeColor }" :src="resolvedContact.profile_photo_url" alt=""/>
@@ -30,13 +30,13 @@
                             </span>
                         </span>
                         <div>
-                            <div class="font-black font-lexend text-lg flex items-center gap-x-2 mb-2 border-b border-dashed border-gray-600" :class="isWhite ? 'text-gray-900' : 'text-white'">
+                            <div class="font-black font-lexend text-lg flex items-center gap-x-2 mb-2 border-b border-dashed border-border-strong" :class="isWhite ? 'text-text' : 'text-text-inverse'">
                                 <span>{{ resolvedContact.display_name }}</span>
                                 <button
                                     v-if="canViewCrm"
                                     type="button"
                                     class="shrink-0 rounded-full p-0.5 transition"
-                                    :class="isWhite ? 'text-gray-500 hover:text-gray-900' : 'text-gray-300 hover:text-white'"
+                                    :class="isWhite ? 'text-text-subtle hover:text-text' : 'text-white/70 hover:text-white'"
                                     :title="$t('Open CRM contact')"
                                     @click="goToCrmContact"
                                 >
@@ -50,15 +50,15 @@
                                     {{ $t(resolvedContact.contact_type.name) }}
                                 </span>
                             </div>
-                            <div class="text-sm font-bold flex items-center gap-x-2" v-if="resolvedContact.email" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                            <div class="text-sm font-bold flex items-center gap-x-2" v-if="resolvedContact.email" :class="isWhite ? 'text-text-subtle' : 'text-white/70'">
                                 <PropertyIcon name="IconMail" class="h-4 w-4"/>
                                 {{ resolvedContact.email }}
                             </div>
-                            <div class="text-sm font-bold flex items-center gap-x-2" v-if="resolvedContact.phone_number" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                            <div class="text-sm font-bold flex items-center gap-x-2" v-if="resolvedContact.phone_number" :class="isWhite ? 'text-text-subtle' : 'text-white/70'">
                                 <PropertyIcon name="IconDeviceMobile" class="h-4 w-4"/>
                                 {{ resolvedContact.phone_number }}
                             </div>
-                            <div class="text-sm font-bold flex items-center gap-x-2" v-if="resolvedContact.city" :class="isWhite ? 'text-gray-500' : 'text-gray-300'">
+                            <div class="text-sm font-bold flex items-center gap-x-2" v-if="resolvedContact.city" :class="isWhite ? 'text-text-subtle' : 'text-white/70'">
                                 <PropertyIcon name="IconMapPin" class="h-4 w-4"/>
                                 {{ resolvedContact.city }}
                             </div>

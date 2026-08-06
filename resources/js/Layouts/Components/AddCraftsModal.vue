@@ -6,13 +6,13 @@
         :description="$t('Define the specifications of your trade and who may plan shifts/inventory for it.')"
     >
         <!-- Basics ------------------------------------------------------>
-        <section class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <section class="rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
             <BasePageTitle
                 :title="$t('Edit basic data')"
                 :description="$t('General information about this craft.')"
             />
 
-            <div class="border-b border-dashed border-zinc-200 pb-3">
+            <div class="border-b border-dashed border-border-subtle pb-3">
                 <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-7 items-center">
                     <div class="sm:col-span-1 flex items-center w-full">
                         <ColorPickerComponent :color="craft.color" @updateColor="onPickColor"/>
@@ -40,7 +40,7 @@
                         />
                     </div>
                 </div>
-                <p class="mt-2 text-xs text-zinc-500">{{$t('Choose a color for fast visual recognition in calendars and lists.')}}</p>
+                <p class="mt-2 text-xs text-text-subtle">{{$t('Choose a color for fast visual recognition in calendars and lists.')}}</p>
             </div>
 
             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -55,45 +55,45 @@
                         :min="0"
                         :max="100"
                     />
-                    <p class="mt-2 text-xs text-zinc-500">{{$t('We will alert you when a shift remains under-staffed after this many days.')}}</p>
+                    <p class="mt-2 text-xs text-text-subtle">{{$t('We will alert you when a shift remains under-staffed after this many days.')}}</p>
                 </div>
 
-                <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-                    <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary focus:ring-2">
-                    <label for="universally_applicable" class="text-sm text-zinc-800">{{$t('Universally applicable')}}</label>
+                <div class="sm:col-span-full flex items-center gap-3 rounded-xl border border-border-subtle bg-surface-sunken/70 p-4">
+                    <input id="universally_applicable" v-model="craft.universally_applicable" type="checkbox" class="h-4 w-4 rounded border-border text-text focus:ring-surface-inverse focus:ring-2">
+                    <label for="universally_applicable" class="text-sm text-text">{{$t('Universally applicable')}}</label>
                 </div>
             </div>
         </section>
 
         <!-- Shift planning permissions ---------------------------------->
-        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <section class="mt-6 rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
             <BasePageTitle
                 :title="$t('Shift planning permissions')"
                 :description="$t('Control who may schedule this craft in shifts.')"
             />
 
             <div class="mt-4 flex items-center gap-3">
-                <span class="text-sm" :class="enabled ? 'text-zinc-400' : 'text-zinc-900 font-medium'">{{$t('Allocable to a limited extent')}}</span>
-                <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-create' : 'bg-zinc-200', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                <span class="text-sm" :class="enabled ? 'text-text-subtle' : 'text-text font-medium'">{{$t('Allocable to a limited extent')}}</span>
+                <Switch v-model="enabled" :class="[enabled ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                     <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
-                <span class="text-sm" :class="!enabled ? 'text-zinc-400' : 'text-zinc-900 font-medium'">{{$t('Can be scheduled by all shift planners')}}</span>
+                <span class="text-sm" :class="!enabled ? 'text-text-subtle' : 'text-text font-medium'">{{$t('Can be scheduled by all shift planners')}}</span>
             </div>
 
             <div v-if="!enabled" class="mt-4">
                 <div class="sm:w-96">
                     <Listbox as="div">
                         <div class="relative">
-                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-zinc-200 bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition">
+                            <ListboxButton class="relative w-full cursor-pointer rounded-xl border border-border-subtle bg-white py-2 pl-3 pr-9 text-left text-sm shadow-sm hover:border-border focus:outline-none focus:ring-2 focus:ring-surface-inverse/20 focus:border-surface-inverse/40 transition">
                                 <span class="block truncate text-left">{{$t('Select users')}}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                              <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                              <PropertyIcon name="IconChevronDown" stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                             </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-zinc-200 ring-opacity-5 focus:outline-none sm:text-sm">
+                                <ListboxOptions class="absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-border-subtle ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active }">
-                                        <li @click="togglePlanner(user, 'shift_planer')" :class="[active ? 'bg-zinc-50' : '', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li @click="togglePlanner(user, 'shift_planer')" :class="[active ? 'bg-surface-sunken' : '', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span>{{ user.full_name }}</span>
                                         </li>
                                     </ListboxOption>
@@ -104,15 +104,15 @@
                 </div>
 
                 <div class="mt-4">
-                    <div v-if="craftShiftPlaner.length === 0" class="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">{{$t('No specific planners selected yet.')}}</div>
+                    <div v-if="craftShiftPlaner.length === 0" class="rounded-xl border border-dashed border-border-subtle p-4 text-sm text-text-subtle">{{$t('No specific planners selected yet.')}}</div>
                     <ul class="mt-2 grid gap-3 sm:grid-cols-2">
-                        <li v-for="user in craftShiftPlaner" :key="'planner-' + user.id" class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                        <li v-for="user in craftShiftPlaner" :key="'planner-' + user.id" class="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-sunken p-3">
                             <div class="flex items-center gap-3">
                                 <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                                 <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
                             </div>
                             <button type="button" @click="togglePlanner(user, 'shift_planer')" class="p-1" aria-label="{{$t('Remove')}}">
-                                <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                                <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-text hover:text-danger"/>
                             </button>
                         </li>
                     </ul>
@@ -121,7 +121,7 @@
         </section>
 
         <!-- Managers ----------------------------------------------------->
-        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <section class="mt-6 rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
             <div class="mb-2">
                 <BasePageTitle
                     :title="$t('Craft manager')"
@@ -138,20 +138,20 @@
             />
 
             <ul class="mt-3 grid gap-3 sm:grid-cols-2">
-                <li v-for="user in managers" :key="'manager-' + (user.id || user.pivot?.craft_manager_id)" class="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                <li v-for="user in managers" :key="'manager-' + (user.id || user.pivot?.craft_manager_id)" class="flex items-center justify-between rounded-xl border border-border-subtle bg-surface-sunken p-3">
                     <div class="flex items-center gap-3">
                         <img class="size-9 rounded-full object-cover" :src="user.profile_photo_url" alt="" />
                         <span class="text-sm">{{ user.first_name }} {{ user.last_name }}</span>
                     </div>
                     <button type="button" @click="deleteDepartmentManager(user)" class="p-1" aria-label="$t('Delete department management')">
-                        <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-primary hover:text-error"/>
+                        <PropertyIcon name="IconCircleX" stroke-width="1.5" class="h-5 w-5 text-text hover:text-danger"/>
                     </button>
                 </li>
             </ul>
         </section>
 
         <!-- Managers ----------------------------------------------------->
-        <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <section class="mt-6 rounded-2xl border border-border-subtle bg-white p-6 shadow-sm">
             <div class="mb-2">
                 <BasePageTitle
                     :title="$t('Functions')"

@@ -1,11 +1,11 @@
 <template>
-    <div v-if="nextWorkTime && nextWorkTime.valid_from" class="mt-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
-        <div class="mb-2 text-sm text-gray-700 font-lexend">
+    <div v-if="nextWorkTime && nextWorkTime.valid_from" class="mt-6 p-4 border border-border-subtle rounded-lg shadow-sm bg-white">
+        <div class="mb-2 text-sm text-text-muted font-lexend">
             <strong>{{ $t('Next Work Time Pattern') }}</strong><br>
-            <span class="text-xs text-gray-500">{{ $t('Starts on') }} {{ dayjs(nextWorkTime?.valid_from).format('DD.MM.YYYY') }}</span>
+            <span class="text-xs text-text-subtle">{{ $t('Starts on') }} {{ dayjs(nextWorkTime?.valid_from).format('DD.MM.YYYY') }}</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs text-gray-600 font-mono">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs text-text-muted font-mono">
             <div><b>{{ $t('Monday') }}:</b> {{ formatTime(nextWorkTime.monday) }}</div>
             <div><b>{{ $t('Tuesday') }}:</b> {{ formatTime(nextWorkTime.tuesday) }}</div>
             <div><b>{{ $t('Wednesday') }}:</b> {{ formatTime(nextWorkTime.wednesday) }}</div>
@@ -15,11 +15,11 @@
             <div><b>{{ $t('Sunday') }}:</b> {{ formatTime(nextWorkTime.sunday) }}</div>
         </div>
 
-        <div class="mt-2 text-sm text-gray-800 font-lexend">
+        <div class="mt-2 text-sm text-text font-lexend">
             {{ $t('Total weekly hours:') }} <b>{{ nextWorkTime.full_work_time_in_hours }} Std</b>
         </div>
 
-        <div class="mt-2 text-sm text-blue-600">
+        <div class="mt-2 text-sm text-accent-600">
             <b>{{ $t('Starts in:') }}</b> {{ countdownText }}
         </div>
     </div>

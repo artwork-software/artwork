@@ -4,10 +4,10 @@
             <!-- Header -->
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-xl font-semibold text-gray-900">
+                    <h1 class="text-xl font-semibold text-text">
                         {{ $t('Shift plan requests') }}
                     </h1>
-                    <p class="mt-1 text-sm text-gray-500 max-w-2xl">
+                    <p class="mt-1 text-sm text-text-subtle max-w-2xl">
                         {{ $t('Here you can see all shift plan approval requests grouped by craft.') }}
                     </p>
                 </div>
@@ -16,9 +16,9 @@
             <!-- Kein Craft / keine Requests -->
             <div
                 v-if="!crafts.length"
-                class="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center"
+                class="rounded-2xl border border-dashed border-border-subtle bg-white p-8 text-center"
             >
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-text-subtle">
                     {{ $t('No crafts available.') }}
                 </p>
             </div>
@@ -28,11 +28,11 @@
                 <div
                     v-for="craft in crafts"
                     :key="craft.id"
-                    class="group flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm hover:border-indigo-200 hover:shadow-md transition"
+                    class="group flex flex-col rounded-2xl border border-border-subtle bg-white shadow-sm hover:border-accent-200 hover:shadow-md transition"
                 >
                     <!-- Craft Header -->
                     <div
-                        class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50 rounded-t-2xl"
+                        class="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-gradient-to-r from-white to-surface-sunken rounded-t-2xl"
                     >
                         <div class="flex items-center gap-3">
                             <div
@@ -42,10 +42,10 @@
                                 {{ craft.abbreviation }}
                             </div>
                             <div>
-                                <h2 class="text-sm font-semibold text-gray-900">
+                                <h2 class="text-sm font-semibold text-text">
                                     {{ craft.name }}
                                 </h2>
-                                <p class="text-xs text-gray-500">
+                                <p class="text-xs text-text-subtle">
                                     <span v-if="craft.assignable_by_all">
                                         {{ $t('Assignable by all planners') }}
                                     </span>
@@ -58,7 +58,7 @@
 
                         <div class="flex flex-col items-end gap-1">
                             <span
-                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600"
+                                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-surface-sunken text-text-muted"
                             >
                                 <IconCalendarWeek class="h-4 w-4 mr-1" />
                                 {{ $t('Requests') }}: {{ craft.shift_plan_requests.length }}
@@ -69,34 +69,33 @@
                     <!-- Requests-Liste -->
                     <div class="flex-1">
                         <div v-if="craft.shift_plan_requests.length" class="max-h-[500px] overflow-y-auto">
-                            <div class="divide-y divide-gray-100">
+                            <div class="divide-y divide-border-subtle">
                                 <template v-for="(item, idx) in requestsWithTodayLine(craft)" :key="idx">
                                     <!-- Heute-Linie -->
                                     <div
                                         v-if="item.type === 'today-line'"
                                         class="flex items-center gap-2 px-4 py-1"
                                     >
-                                        <div class="flex-1 border-t border-rose-300/60"></div>
-                                        <span class="text-[10px] font-medium text-rose-400 uppercase tracking-wide">{{ $t('Today') }}</span>
-                                        <div class="flex-1 border-t border-rose-300/60"></div>
+                                        <div class="flex-1 border-t border-danger-border/60"></div>
+                                        <span class="text-[10px] font-medium text-danger uppercase tracking-wide">{{ $t('Today') }}</span>
+                                        <div class="flex-1 border-t border-danger-border"></div>
                                     </div>
 
                                     <!-- Request-Eintrag -->
                                     <button
                                         v-else
                                         type="button"
-                                        class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-indigo-50/60 transition"
+                                        class="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-accent-50/60 transition"
                                         @click="goToRequest(item.data.id)"
                                     >
                                         <div class="flex items-center gap-3">
                                             <div class="flex flex-col">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-sm font-medium text-gray-900">
+                                                    <span class="text-sm font-medium text-text">
                                                         KW {{ item.data.week_number }} / {{ item.data.year }}
                                                     </span>
                                                     <span
-                                                        :class="[
-                                                            'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium',
+                                                        :class="[ 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium',
                                                             statusClasses(item.data.status)
                                                         ]"
                                                     >
@@ -104,7 +103,7 @@
                                                         {{ $t(item.data.status) }}
                                                     </span>
                                                 </div>
-                                                <p class="mt-0.5 text-xs text-gray-500">
+                                                <p class="mt-0.5 text-xs text-text-subtle">
                                                     {{ $t('Requested at') }}:
                                                     {{ formatDateTime(item.data.requested_at) }}
                                                 </p>
@@ -112,10 +111,10 @@
                                         </div>
 
                                         <div class="flex items-center gap-2">
-                                            <span class="text-xs text-gray-400">
+                                            <span class="text-xs text-text-subtle">
                                                 {{ $t('Details') }}
                                             </span>
-                                            <IconChevronRight class="h-4 w-4 text-gray-400 group-hover:text-indigo-500" />
+                                            <IconChevronRight class="h-4 w-4 text-text-subtle group-hover:text-accent-600" />
                                         </div>
                                     </button>
                                 </template>
@@ -125,16 +124,16 @@
                         <!-- Keine Requests fuer dieses Craft -->
                         <div
                             v-else
-                            class="px-4 py-6 text-center text-xs text-gray-400"
+                            class="px-4 py-6 text-center text-xs text-text-subtle"
                         >
                             {{ $t('No shift plan requests for this craft yet.') }}
                         </div>
 
                         <!-- Vergangene Genehmigungen -->
-                        <div v-if="craft.past_approved_count > 0" class="border-t border-gray-100 px-4 py-2">
+                        <div v-if="craft.past_approved_count > 0" class="border-t border-border-subtle px-4 py-2">
                             <button
                                 type="button"
-                                class="text-xs font-medium text-gray-500 hover:text-indigo-600 transition"
+                                class="text-xs font-medium text-text-subtle hover:text-accent-600 transition"
                                 @click="togglePastSection(craft.id, 'approved')"
                             >
                                 {{ $t('Past approvals') }} ({{ craft.past_approved_count }})
@@ -144,29 +143,29 @@
                                     v-for="req in (pastRequests[craft.id]?.approved || [])"
                                     :key="req.id"
                                     type="button"
-                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-indigo-50/60 transition rounded"
+                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-accent-50/60 transition rounded"
                                     @click="goToRequest(req.id)"
                                 >
                                     <div class="flex flex-col">
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">
+                                            <span class="text-sm font-medium text-text">
                                                 KW {{ req.week_number }} / {{ req.year }}
                                             </span>
-                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-success-surface text-success ring-1 ring-success-border">
                                                 <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
                                                 {{ $t('approved') }}
                                             </span>
                                         </div>
-                                        <p class="mt-0.5 text-xs text-gray-500">
+                                        <p class="mt-0.5 text-xs text-text-subtle">
                                             {{ $t('Requested at') }}: {{ formatDateTime(req.requested_at) }}
                                         </p>
                                     </div>
-                                    <IconChevronRight class="h-4 w-4 text-gray-400" />
+                                    <IconChevronRight class="h-4 w-4 text-text-subtle" />
                                 </button>
                                 <button
                                     v-if="hasMorePast(craft.id, 'approved', craft.past_approved_count)"
                                     type="button"
-                                    class="mt-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
+                                    class="mt-1 text-xs font-medium text-accent-600 hover:text-accent-700 transition"
                                     @click="loadMorePast(craft.id, 'approved')"
                                 >
                                     {{ $t('Load more') }}
@@ -175,10 +174,10 @@
                         </div>
 
                         <!-- Vergangene Ablehnungen -->
-                        <div v-if="craft.past_rejected_count > 0" class="border-t border-gray-100 px-4 py-2">
+                        <div v-if="craft.past_rejected_count > 0" class="border-t border-border-subtle px-4 py-2">
                             <button
                                 type="button"
-                                class="text-xs font-medium text-gray-500 hover:text-indigo-600 transition"
+                                class="text-xs font-medium text-text-subtle hover:text-accent-600 transition"
                                 @click="togglePastSection(craft.id, 'rejected')"
                             >
                                 {{ $t('Past rejections') }} ({{ craft.past_rejected_count }})
@@ -188,29 +187,29 @@
                                     v-for="req in (pastRequests[craft.id]?.rejected || [])"
                                     :key="req.id"
                                     type="button"
-                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-indigo-50/60 transition rounded"
+                                    class="w-full text-left px-2 py-2 flex items-center justify-between hover:bg-accent-50/60 transition rounded"
                                     @click="goToRequest(req.id)"
                                 >
                                     <div class="flex flex-col">
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-gray-900">
+                                            <span class="text-sm font-medium text-text">
                                                 KW {{ req.week_number }} / {{ req.year }}
                                             </span>
-                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-200">
+                                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-danger-surface text-danger ring-1 ring-danger-border">
                                                 <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
                                                 {{ $t('rejected') }}
                                             </span>
                                         </div>
-                                        <p class="mt-0.5 text-xs text-gray-500">
+                                        <p class="mt-0.5 text-xs text-text-subtle">
                                             {{ $t('Requested at') }}: {{ formatDateTime(req.requested_at) }}
                                         </p>
                                     </div>
-                                    <IconChevronRight class="h-4 w-4 text-gray-400" />
+                                    <IconChevronRight class="h-4 w-4 text-text-subtle" />
                                 </button>
                                 <button
                                     v-if="hasMorePast(craft.id, 'rejected', craft.past_rejected_count)"
                                     type="button"
-                                    class="mt-1 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition"
+                                    class="mt-1 text-xs font-medium text-accent-600 hover:text-accent-700 transition"
                                     @click="loadMorePast(craft.id, 'rejected')"
                                 >
                                     {{ $t('Load more') }}
@@ -342,15 +341,15 @@ const hasMorePast = (craftId, status, totalCount) => {
 const statusClasses = (status) => {
     switch (status) {
         case "pending":
-            return "bg-amber-50 text-amber-700 ring-1 ring-amber-200";
+            return "bg-warning-surface text-warning ring-1 ring-warning-border";
         case "approved":
         case "accepted":
-            return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+            return "bg-success-surface text-success ring-1 ring-success-border";
         case "rejected":
         case "denied":
-            return "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
+            return "bg-danger-surface text-danger ring-1 ring-danger-border";
         default:
-            return "bg-gray-100 text-gray-600";
+            return "bg-surface-sunken text-text-muted";
     }
 };
 

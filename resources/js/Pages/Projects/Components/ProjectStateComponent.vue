@@ -4,14 +4,14 @@
             <span class="componentLabel">{{ $t('Project status') }}</span>
             <PropertyIcon
                 name="IconEdit"
-                class="w-5 h-5 rounded-full text-artwork-buttons-context cursor-pointer"
+                class="w-5 h-5 rounded-full text-text-muted cursor-pointer"
                 @click="openEditModal"
             />
         </div>
-        <div v-if="loadError" class="text-xs text-rose-600">
+        <div v-if="loadError" class="text-xs text-danger">
             {{ loadError }}
         </div>
-        <div v-else-if="loading" class="text-xs text-secondary">
+        <div v-else-if="loading" class="text-xs text-text-subtle">
             {{ $t('Loading data...') }}
         </div>
         <span v-else-if="projectState" class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
@@ -29,17 +29,17 @@
             <div class="px-6 pb-6">
                 <!-- Show tag when state is selected -->
                 <div v-if="selectedState" class="w-full">
-                    <div class="text-gray-500 text-xs mb-2">
+                    <div class="text-text-subtle text-xs mb-2">
                         {{ $t('Project status') }}
                     </div>
-                    <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-gray-300 bg-white">
+                    <div class="inline-flex items-center gap-x-2 px-3 py-1.5 rounded-full border border-border bg-white">
                         <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : selectedState.color }"/>
                         <span class="text-sm flex items-center gap-x-1">
                             {{ selectedState.name }}
                             <IconCalendarMonth v-if="selectedState.is_planning === true || selectedState.is_planning === 1" class="w-4 h-4" />
                         </span>
                         <button type="button" @click="selectedState = null" class="ml-1">
-                            <IconCircleX class="h-4 w-4 text-gray-400 hover:text-error" />
+                            <IconCircleX class="h-4 w-4 text-text-subtle hover:text-danger" />
                         </button>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                 <Listbox v-else as="div" class="w-full relative" v-model="selectedState">
                     <ListboxButton class="menu-button-no-padding relative">
                         <div class="truncate">
-                            <div class="top-2 left-4 absolute text-gray-500 text-xs">
+                            <div class="top-2 left-4 absolute text-text-subtle text-xs">
                                 {{ $t('Project status') }}
                             </div>
                             <div class="pt-6 pb-2 flex items-center gap-x-2">
@@ -56,27 +56,27 @@
                                 </div>
                             </div>
                         </div>
-                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        <IconChevronDown class="h-5 w-5 text-text" aria-hidden="true"/>
                     </ListboxButton>
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                        <ListboxOptions class="absolute w-full z-10 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                        <ListboxOptions class="absolute w-full z-10 bg-surface-inverse shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                             <ListboxOption as="template" class="max-h-8"
                                 v-for="state in availableStates"
                                 :key="state.id"
                                 :value="state"
                                 v-slot="{ active, selected }">
-                                <li :class="[active ? 'text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                <li :class="[active ? 'text-white' : 'text-text-subtle', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                     <div class="flex items-center">
                                         <div>
                                             <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : state?.color }"/>
                                         </div>
-                                        <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
+                                        <span :class="[selected ? 'text-sm/5 font-bold text-white' : 'font-normal', 'ml-4 flex items-center gap-x-1 truncate']">
                                             {{ state.name }}
                                             <IconCalendarMonth v-if="state.is_planning === true || state.is_planning === 1" class="w-4 h-4" />
                                         </span>
                                     </div>
-                                    <span :class="[active ? 'text-white' : 'text-secondary', 'group flex justify-end items-center text-sm subpixel-antialiased']">
-                                        <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                    <span :class="[active ? 'text-white' : 'text-text-subtle', 'group flex justify-end items-center text-sm subpixel-antialiased']">
+                                        <IconCheck v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                     </span>
                                 </li>
                             </ListboxOption>
@@ -87,7 +87,7 @@
                 <div class="flex justify-end mt-6">
                     <button
                         type="button"
-                        class="bg-artwork-buttons-create text-white rounded-full px-6 py-2 text-sm font-semibold hover:bg-artwork-buttons-hover"
+                        class="bg-accent-600 text-white rounded-full px-6 py-2 text-sm font-semibold hover:bg-accent-700"
                         @click="saveState"
                     >
                         {{ $t('Save') }}
@@ -103,8 +103,7 @@ import axios from "axios";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {CheckIcon, ChevronDownIcon} from "@heroicons/vue/solid";
-import {IconCalendarMonth, IconCircleX} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconCheck, IconChevronDown, IconCircleX} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {can} from "laravel-permission-to-vuejs";
 
@@ -116,8 +115,8 @@ export default defineComponent({
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        CheckIcon,
-        ChevronDownIcon,
+        IconCheck,
+        IconChevronDown,
         IconCalendarMonth,
         IconCircleX,
     },
@@ -207,8 +206,8 @@ export default defineComponent({
                 return luminance > 0.5 ? '#000000' : '#ffffff';
             }
             const lightColors = [
-                'bg-white', 'bg-gray-50', 'bg-gray-100', 'bg-gray-200', 'bg-gray-300',
-                'bg-yellow-50', 'bg-yellow-100', 'bg-yellow-200', 'bg-yellow-300', 'bg-yellow-400',
+                'bg-white', 'bg-surface-sunken', 'bg-surface-sunken', 'bg-border-subtle', 'bg-border',
+                'bg-warning-surface', 'bg-warning-surface', 'bg-warning-surface', 'bg-warning', 'bg-warning',
                 'bg-lime-50', 'bg-lime-100', 'bg-lime-200', 'bg-lime-300', 'bg-lime-400'
             ];
             const isLight = lightColors.some(light => color.includes(light));

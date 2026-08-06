@@ -5,31 +5,31 @@
         @delete-all="showConfirmDeleteAll = true"
     />
     <div v-for="event in trashed_events.data" :key="event.id"
-         class="flex w-full bg-white my-2 border border-gray-200">
+         class="flex w-full bg-white my-2 border border-border-subtle">
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                    <p class="headline2" v-if="!event.name">
+                    <p class="font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text" v-if="!event.name">
                         {{ event.project?.name || this.$t('Event without name') }}
                     </p>
 
                     <div v-else class="flex w-full items-center justify-between">
-                        <div class="mr-12 headline2">
+                        <div class="mr-12 font-lexend font-semibold text-[clamp(18px,2.5vw,20px)]/[25px] text-text">
                             {{ event.name }}
                         </div>
                         <div v-if="event.project" class="mt-1.5 flex">
                             {{ $t('assigned to')}}:
                             <a v-if="event.project?.id"
                                :href="route('projects.tab', {project: event.project.id, projectTab: this.first_project_calendar_tab_id})"
-                               class="ml-3 text-md flex font-bold font-lexend text-primary">
+                               class="ml-3 text-md flex font-bold font-lexend text-text">
                                 {{ event.project.name }}
                             </a>
                         </div>
                     </div>
-                    <p class="xsLight subpixel-antialiased mt-2">
+                    <p class="text-sm/5 font-bold text-text-subtle subpixel-antialiased mt-2">
                         {{ event.start }} - {{ event.end }}
                     </p>
-                    <div class="text-sm leading-6 font-lexend text-gray-500 mt-2 flex items-center">
+                    <div class="text-sm leading-6 font-lexend text-text-subtle mt-2 flex items-center">
                         <div>
                             <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : event.event_type.hex_code }" />
                         </div>
@@ -41,11 +41,11 @@
                         <MenuItem v-slot="{ active }">
                             <Link as="button" method="patch"
                                   :href="route('events.restore', { id: event.id })"
-                                  :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                <RefreshIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                <IconRefresh
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                     aria-hidden="true"/>
                                 {{ $t('Restore') }}
                             </Link>
@@ -53,11 +53,11 @@
                         <MenuItem v-slot="{ active }">
                             <Link as="button" method="delete"
                                   :href="route('events.force', { id: event.id })"
-                                  :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' :
-                                          'text-secondary',
+                                  :class="[active ? 'bg-text-inverse/10 text-accent-700' :
+                                          'text-text-subtle',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                <TrashIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                <IconTrash
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                     aria-hidden="true"/>
                                 {{ $t('Delete permanently')}}
                             </Link>
@@ -85,11 +85,10 @@
 </template>
 
 <script>
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconRefresh, IconSearch, IconTrash, IconX} from "@tabler/icons-vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import TrashLayout from "@/Layouts/TrashLayout.vue";
-import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -107,17 +106,17 @@ export default {
         TrashSearchAndActions,
         ConfirmDeleteModal,
         Input,
-        XIcon,
-        SearchIcon,
-        ChevronDownIcon,
-        ChevronUpIcon,
+        IconX,
+        IconSearch,
+        IconChevronDown,
+        IconChevronUp,
         Menu,
         MenuButton,
-        DotsVerticalIcon,
+        IconDotsVertical,
         MenuItems,
         MenuItem,
-        RefreshIcon,
-        TrashIcon,
+        IconRefresh,
+        IconTrash,
         Link
     },
     data() {

@@ -7,7 +7,7 @@
     >
         <!-- Kopfbereich: Suche + Filter + Sortierung -->
         <div class="space-y-3">
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-text-muted">
                 {{ $t('Please select a material set to issue.') }}
             </p>
 
@@ -17,7 +17,7 @@
                     <input
                         v-model="query"
                         :placeholder="$t('Search by name, description or item')"
-                        class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none ring-0 focus:border-blue-500"
+                        class="w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none ring-0 focus:border-accent-600"
                         type="text"
                         @keydown.down.prevent="moveActive(1)"
                         @keydown.up.prevent="moveActive(-1)"
@@ -25,7 +25,7 @@
                     />
                     <button
                         v-if="query"
-                        class="absolute inset-y-0 right-0 mr-2 rounded p-1 text-gray-400 hover:text-gray-600"
+                        class="absolute inset-y-0 right-0 mr-2 rounded p-1 text-text-subtle hover:text-text-muted"
                         @click="query = ''"
                         :aria-label="$t('Clear search')"
                     >
@@ -35,20 +35,20 @@
 
                 <!-- Filter + Sortierung -->
                 <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-2 text-xs text-gray-600">
+                    <label class="flex items-center gap-2 text-xs text-text-muted">
                         <input
                             type="checkbox"
                             v-model="onlyWithItems"
-                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            class="h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                         />
                         {{ $t('Only sets with items') }}
                     </label>
 
                     <div class="flex items-center gap-2">
-                        <span class="text-xs text-gray-600">{{ $t('Sort by') }}:</span>
+                        <span class="text-xs text-text-muted">{{ $t('Sort by') }}:</span>
                         <select
                             v-model="sortBy"
-                            class="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs outline-none focus:border-blue-500"
+                            class="rounded-md border border-border bg-white px-2 py-1 text-xs outline-none focus:border-accent-600"
                         >
                             <option value="relevance">{{ $t('Relevance') }}</option>
                             <option value="name">{{ $t('Name (A–Z)') }}</option>
@@ -63,41 +63,41 @@
 
         <!-- Ergebnisliste -->
         <div
-            class="mt-3 rounded-md border border-gray-200"
+            class="mt-3 rounded-md border border-border-subtle"
             role="listbox"
             :aria-activedescendant="activeId"
         >
-            <div class="sticky top-0 z-[1] flex items-center justify-between border-b bg-white px-3 py-2 text-xs text-gray-500">
+            <div class="sticky top-0 z-[1] flex items-center justify-between border-b bg-white px-3 py-2 text-xs text-text-subtle">
                 <span>{{ $t('Results') }}: {{ filteredSets.length }}</span>
                 <span v-if="query" class="truncate">{{ $t('Search') }}: “{{ query }}”</span>
             </div>
 
             <div class="max-h-96 overflow-y-auto" ref="scrollEl">
-                <ul class="divide-y divide-gray-100">
+                <ul class="divide-y divide-border-subtle">
                     <li
                         v-for="(set, idx) in pagedSets"
                         :key="set.id"
                         :id="`material-set-${set.id}`"
-                        class="group flex cursor-pointer items-start justify-between gap-x-4 px-3 py-2 hover:bg-gray-50"
+                        class="group flex cursor-pointer items-start justify-between gap-x-4 px-3 py-2 hover:bg-surface-sunken"
                         role="option"
                         :aria-selected="activeIndex === idx"
-                        :class="activeIndex === idx ? 'bg-gray-50' : ''"
+                        :class="activeIndex === idx ? 'bg-surface-sunken' : ''"
                         @mousemove="activeIndex = idx"
                         @click="select(set)"
                     >
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
-                                <p class="truncate text-sm font-semibold text-gray-900">
+                                <p class="truncate text-sm font-semibold text-text">
                                     {{ set.name }}
                                 </p>
                                 <span
-                                    class="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] text-gray-600"
+                                    class="shrink-0 rounded-full border border-border-subtle px-2 py-0.5 text-[10px] text-text-muted"
                                     :title="$t('Items in this set.')"
                                 >
                   {{ (set.items?.length ?? 0) }} {{ $t('Items') }}
                 </span>
                             </div>
-                            <p class="mt-0.5 line-clamp-2 text-xs text-gray-500">
+                            <p class="mt-0.5 line-clamp-2 text-xs text-text-subtle">
                                 {{ set.description || '—' }}
                             </p>
 
@@ -106,13 +106,13 @@
                 <span
                     v-for="(it, i) in (set.items?.slice(0, 4) ?? [])"
                     :key="`${set.id}-${i}`"
-                    class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600"
+                    class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] text-text-muted"
                 >
                   {{ (it.quantity ?? 1) }}× {{ it.name || it.article?.name || $t('Item') }}
                 </span>
                                 <span
                                     v-if="(set.items?.length ?? 0) > 4"
-                                    class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600"
+                                    class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] text-text-muted"
                                 >
                   +{{ (set.items?.length ?? 0) - 4 }}
                 </span>
@@ -123,13 +123,13 @@
                         <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
                             <ToolTipWithTextComponent
                                 :text="(set.items?.length ?? 0) + ' ' + $t('Items in this set.')"
-                                classes="text-[11px] whitespace-nowrap text-gray-600"
+                                classes="text-[11px] whitespace-nowrap text-text-muted"
                                 tooltip-width="whitespace-nowrap"
                                 direction="left"
                                 :tooltip-text="createToolTipTextByItems(set)"
                             />
                             <button
-                                class="mt-2 rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                                class="mt-2 rounded-md border border-border px-2 py-1 text-xs text-text-muted hover:bg-surface-sunken"
                                 @click.stop="select(set)"
                             >
                                 {{ $t('Select') }}
@@ -138,14 +138,14 @@
                     </li>
 
                     <!-- Keine Ergebnisse -->
-                    <li v-if="pagedSets.length === 0" class="px-3 py-6 text-center text-sm text-gray-500">
+                    <li v-if="pagedSets.length === 0" class="px-3 py-6 text-center text-sm text-text-subtle">
                         {{ $t('No material sets found for your filters.') }}
                     </li>
 
                     <!-- Mehr laden -->
                     <li v-if="canLoadMore && pagedSets.length > 0" class="px-3 py-3 text-center">
                         <button
-                            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                            class="rounded-md border border-border px-3 py-1.5 text-sm text-text-muted hover:bg-surface-sunken"
                             @click="loadMore"
                         >
                             {{ $t('Load more') }}
@@ -165,7 +165,6 @@
 <script setup>
 import { ref, computed, inject, onMounted, watch } from 'vue'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
-import ArtworkBaseModalButton from '@/Artwork/Buttons/ArtworkBaseModalButton.vue'
 import ToolTipWithTextComponent from '@/Components/ToolTips/ToolTipWithTextComponent.vue'
 import {useTranslation} from "@/Composeables/Translation.js";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";

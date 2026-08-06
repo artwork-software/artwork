@@ -17,14 +17,14 @@
                 </div>
                <div class="col-span-full">
                    <div class="flex items-center justify-end">
-                       <div class="flex items-center gap-x-1 cursor-pointer select-none underline underline-offset-2 text-blue-500 text-xs" @click="showExamples = !showExamples">
+                       <div class="flex items-center gap-x-1 cursor-pointer select-none underline underline-offset-2 text-accent-600 text-xs" @click="showExamples = !showExamples">
                            <span v-if="!showExamples">{{ $t('Show examples') }}</span>
                            <span v-else>{{ $t('Hide examples') }}</span>
                        </div>
                    </div>
                    <div v-if="showExamples" class="mt-2">
                        <div class="flex flex-wrap gap-2 mb-3">
-                           <div v-for="example in exampleText" class="px-2 py-0.5 bg-gray-100 text-gray-800 text-[10px] rounded-full border border-gray-200 cursor-pointer" @click="addExample(example)">
+                           <div v-for="example in exampleText" class="px-2 py-0.5 bg-surface-sunken text-text text-[10px] rounded-full border border-border-subtle cursor-pointer" @click="addExample(example)">
                                {{ example }}
                            </div>
                        </div>
@@ -41,7 +41,7 @@
                 </div>
 
             </div>
-            <div class="text-xs text-red-500 my-2">
+            <div class="text-xs text-danger my-2">
                 <span class="font-bold">{{ $t('Important')}}</span> <br>
                 <span>
                     {{ $t('The times must be entered in the format HH:MM or HH.MM. If the time is not displayed in the preview, it is not formatted correctly.')}}
@@ -54,14 +54,14 @@
             />
             <div class="flex flex-wrap gap-2 mt-5 w-full">
 
-                <div v-for="(line, index) in dataset" :key="index" class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full border border-blue-200" v-if="dataset.length > 0">
+                <div v-for="(line, index) in dataset" :key="index" class="px-3 py-1 bg-accent-100 text-accent-700 text-sm rounded-full border border-accent-200" v-if="dataset.length > 0">
                     {{ line.start }} – {{ line.end }} {{ line.description }}
-                    <button @click="removeEntry(index)" class="hover:text-red-500 transition-colors duration-300 ease-in-out cursor-pointer focus:outline-none">
+                    <button @click="removeEntry(index)" class="hover:text-danger transition-colors duration-300 ease-in-out cursor-pointer focus:outline-none">
                         ✕
                     </button>
                 </div>
                 <div v-else class="w-full">
-                    <div class="text-xs bg-red-100 text-red-800 border border-red-200 px-3 py-1 w-full rounded-lg text-center">
+                    <div class="text-xs bg-danger-surface text-danger border border-danger-border px-3 py-1 w-full rounded-lg text-center">
                         {{ $t('No entries yet') }}
                     </div>
                 </div>

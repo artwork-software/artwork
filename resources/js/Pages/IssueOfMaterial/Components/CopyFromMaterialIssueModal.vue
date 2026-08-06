@@ -10,13 +10,13 @@
             <input
                 v-model="query"
                 :placeholder="$t('Search material issue by name')"
-                class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none ring-0 focus:border-blue-500"
+                class="w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none ring-0 focus:border-accent-600"
                 type="text"
                 ref="searchInput"
             />
             <button
                 v-if="query"
-                class="absolute inset-y-0 right-0 mr-2 rounded p-1 text-gray-400 hover:text-gray-600"
+                class="absolute inset-y-0 right-0 mr-2 rounded p-1 text-text-subtle hover:text-text-muted"
                 @click="query = ''"
                 :aria-label="$t('Clear search')"
             >
@@ -25,34 +25,34 @@
         </div>
 
         <!-- Ergebnisliste -->
-        <div class="mt-3 rounded-md border border-gray-200">
-            <div class="sticky top-0 z-[1] flex items-center justify-between border-b bg-white px-3 py-2 text-xs text-gray-500">
+        <div class="mt-3 rounded-md border border-border-subtle">
+            <div class="sticky top-0 z-[1] flex items-center justify-between border-b bg-white px-3 py-2 text-xs text-text-subtle">
                 <span>{{ $t('Results') }}: {{ issues.length }}</span>
                 <span v-if="query" class="truncate">{{ $t('Search') }}: “{{ query }}”</span>
             </div>
 
             <div class="max-h-96 overflow-y-auto">
                 <div v-if="loading" class="flex justify-center py-6">
-                    <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"></span>
+                    <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-accent-600 border-t-transparent"></span>
                 </div>
 
-                <ul v-else class="divide-y divide-gray-100">
+                <ul v-else class="divide-y divide-border-subtle">
                     <li
                         v-for="issue in issues"
                         :key="issue.id"
-                        class="group flex cursor-pointer items-start justify-between gap-x-4 px-3 py-2 hover:bg-gray-50"
+                        class="group flex cursor-pointer items-start justify-between gap-x-4 px-3 py-2 hover:bg-surface-sunken"
                         @click="select(issue)"
                     >
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
-                                <p class="truncate text-sm font-semibold text-gray-900">
+                                <p class="truncate text-sm font-semibold text-text">
                                     {{ issue.name }}
                                 </p>
-                                <span class="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[10px] text-gray-600">
+                                <span class="shrink-0 rounded-full border border-border-subtle px-2 py-0.5 text-[10px] text-text-muted">
                                     {{ issue.articles?.length ?? 0 }} {{ $t('articles') }}
                                 </span>
                             </div>
-                            <p class="mt-0.5 text-xs text-gray-500">
+                            <p class="mt-0.5 text-xs text-text-subtle">
                                 {{ formatDate(issue.start_date ?? issue.issue_date) }} – {{ formatDate(issue.end_date ?? issue.return_date) }}
                                 <span v-if="issue.project?.name"> • {{ issue.project.name }}</span>
                                 <span v-if="issue.room?.name"> • {{ issue.room.name }}</span>
@@ -64,13 +64,13 @@
                                 <span
                                     v-for="(article, i) in issue.articles.slice(0, 4)"
                                     :key="`${issue.id}-${i}`"
-                                    class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600"
+                                    class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] text-text-muted"
                                 >
                                     {{ article.pivot?.quantity ?? 1 }}× {{ article.name }}
                                 </span>
                                 <span
                                     v-if="(issue.articles?.length ?? 0) > 4"
-                                    class="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600"
+                                    class="rounded bg-surface-sunken px-1.5 py-0.5 text-[10px] text-text-muted"
                                 >
                                     +{{ issue.articles.length - 4 }}
                                 </span>
@@ -78,14 +78,14 @@
                         </div>
 
                         <button
-                            class="mt-1 shrink-0 rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                            class="mt-1 shrink-0 rounded-md border border-border px-2 py-1 text-xs text-text-muted hover:bg-surface-sunken"
                             @click.stop="select(issue)"
                         >
                             {{ $t('Copy') }}
                         </button>
                     </li>
 
-                    <li v-if="issues.length === 0" class="px-3 py-6 text-center text-sm text-gray-500">
+                    <li v-if="issues.length === 0" class="px-3 py-6 text-center text-sm text-text-subtle">
                         {{ $t('No material issues found') }}
                     </li>
                 </ul>

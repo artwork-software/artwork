@@ -1,7 +1,7 @@
 <template>
     <ToolSettingsHeader :title="$t('Communication & Legal')">
         <div v-if="this.$page.props.flash.success"
-             class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
+             class="w-full font-bold text-sm border-1 border-success rounded bg-success p-2 text-white mb-3">
             {{ this.$page.props.flash.success }}
         </div>
         <SettingsGuideBanner
@@ -28,7 +28,7 @@
                 <div class="sm:col-span-3">
                     <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.impressumLink" id="impressumLink" :label="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
-                          class="text-red-500 text-xs mt-1">
+                          class="text-danger text-xs mt-1">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
@@ -37,7 +37,7 @@
                 <div class="sm:col-span-3">
                     <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.privacyLink" id="privacyLink" :label="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
-                          class="text-red-500 text-xs mt-1">
+                          class="text-danger text-xs mt-1">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
@@ -49,7 +49,7 @@
                                         :label="$t('Invitation Email')"
                                         @focusout="updateCommunicationAndLegal"/>
                     <span v-if="showInvalidInvitationEmailAdressErrorText"
-                          class="text-red-500 text-xs mt-1">
+                          class="text-danger text-xs mt-1">
                         {{ $t('Invalid Email Address') }}
                     </span>
                 </div>
@@ -58,10 +58,10 @@
                 <div class="sm:col-span-3">
                     <BaseInput @focusout="updateCommunicationAndLegal" v-model="mailForm.businessEmail" id="businessEmail" :label="$t('Business Email')"/>
                     <span v-if="showInvalidBusinessEmailAddressErrorText"
-                          class="text-red-500 text-xs mt-1">
+                          class="text-danger text-xs mt-1">
                         {{ $t('Invalid Email Address') }}
                     </span>
-                    <p class="text-xs text-secondary mt-1">
+                    <p class="text-xs text-text-subtle mt-1">
                         {{ $t('This address is the sender of almost all system notifications.') }}
                     </p>
                 </div>
@@ -107,8 +107,8 @@
 
             </div>
 
-            <div class="mt-8 border-t border-gray-200 pt-6">
-                <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ $t('Letterhead') }}</h3>
+            <div class="mt-8 border-t border-border-subtle pt-6">
+                <h3 class="text-sm font-semibold text-text mb-4">{{ $t('Letterhead') }}</h3>
                 <SettingsGuideBanner
                     variant="inline"
                     storage-key="settings-guide.tool.communication-and-legal.letterhead"

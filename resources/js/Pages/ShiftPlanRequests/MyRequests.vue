@@ -4,7 +4,7 @@
             <div class="flex items-center gap-3">
                 <Link
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-white px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface-sunken"
                     :href="route('shifts.approvals.requests')"
                 >
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -16,9 +16,9 @@
             <div class="bg-white shadow sm:rounded-lg">
                 <div class="px-4 py-4 sm:px-6 flex items-start justify-between gap-4">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900">{{ request?.title || $t('Dienstplananfrage') }}</h3>
-                        <p class="mt-1 text-sm text-gray-500">{{ request?.description || '' }}</p>
-                        <p class="mt-2 text-xs text-gray-500">
+                        <h3 class="text-lg font-medium text-text">{{ request?.title || $t('Dienstplananfrage') }}</h3>
+                        <p class="mt-1 text-sm text-text-subtle">{{ request?.description || '' }}</p>
+                        <p class="mt-2 text-xs text-text-subtle">
                             <strong>{{ $t('KW') }}</strong> {{ request.week_number }} / {{ request.year }}
                             <span class="mx-2">•</span>
                             <strong>{{ $t('Angefragt am') }}</strong>
@@ -37,7 +37,7 @@
                 </div>
 
                 <div v-if="request.status === 'rejected' && request.rejection_reason" class="px-4 pb-4 sm:px-6">
-                    <div class="rounded-md bg-red-50 p-3 text-sm text-red-800">{{ request.rejection_reason }}</div>
+                    <div class="rounded-md bg-danger-surface p-3 text-sm text-danger">{{ request.rejection_reason }}</div>
                 </div>
             </div>
 
@@ -58,7 +58,7 @@
                     :shift-selections="{}"
                 />
 
-                <div v-if="!rows.length" class="text-center text-sm text-gray-500">
+                <div v-if="!rows.length" class="text-center text-sm text-text-subtle">
                     {{ $t('Keine Schichten für diese Anfrage gefunden.') }}
                 </div>
             </div>
@@ -100,10 +100,10 @@ const statusLabel = (s) => {
     return t('Unbekannt');
 };
 const statusClass = (s) => {
-    if (s === 'pending' || s === 'review') return 'bg-yellow-50 text-yellow-800';
-    if (s === 'accepted' || s === 'approved') return 'bg-green-50 text-green-800';
-    if (s === 'rejected') return 'bg-red-50 text-red-800';
-    return 'bg-gray-50 text-gray-800';
+    if (s === 'pending' || s === 'review') return 'bg-warning-surface text-warning';
+    if (s === 'accepted' || s === 'approved') return 'bg-success-surface text-success';
+    if (s === 'rejected') return 'bg-danger-surface text-danger';
+    return 'bg-surface-sunken text-text';
 };
 
 const formatDateTime = (value) => {

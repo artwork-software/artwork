@@ -38,7 +38,7 @@
                         class="input-checklist"
                         :disabled="!canEdit"
                     />
-                    <label :for="'bi_custom_' + field.id" class="text-sm text-gray-700">{{ field.name }}</label>
+                    <label :for="'bi_custom_' + field.id" class="text-sm text-text-muted">{{ field.name }}</label>
                 </div>
 
                 <!-- DropDown -->

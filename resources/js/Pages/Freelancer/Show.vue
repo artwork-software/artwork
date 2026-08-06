@@ -6,7 +6,7 @@
                 <div class="flex items-center gap-3">
                     <!-- Avatar / Skeleton -->
                     <div class="relative">
-                        <div v-if="showSidebar" class="size-16 rounded-full bg-zinc-200 animate-pulse" />
+                        <div v-if="showSidebar" class="size-16 rounded-full bg-border-subtle animate-pulse" />
                         <img
                             v-else
                             :src="freelancer.profile_photo_url"
@@ -15,8 +15,8 @@
                         />
                     </div>
                     <div>
-                        <div v-if="showSidebar" class="h-5 w-48 rounded bg-zinc-200 animate-pulse" />
-                        <h1 v-else class="text-xl font-semibold text-zinc-900">
+                        <div v-if="showSidebar" class="h-5 w-48 rounded bg-border-subtle animate-pulse" />
+                        <h1 v-else class="text-xl font-semibold text-text">
                             {{ freelancer.first_name }} {{ freelancer.last_name }}
                         </h1>
                     </div>
@@ -31,10 +31,9 @@
                                 v-if="tab.has_permission"
                                 @click="changeTab(tab.id)"
                                 :aria-current="tab.current ? 'page' : undefined"
-                                :class="[
-                                  tab.current
-                                    ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20'
-                                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+                                :class="[ tab.current
+                                    ? 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-600'
+                                    : 'text-text-muted hover:text-text hover:bg-surface-sunken',
                                   'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium'
                                 ]"
                             >
@@ -83,14 +82,14 @@
             <!-- Persönliche Daten -->
             <div v-if="currentTab === 2" class="grid gap-6">
                 <!-- Card: Basic info -->
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+                <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-sm">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-8">
                         <div class="sm:col-span-1">
                             <input ref="photoInput" type="file" class="hidden" @change="updatePhotoPreview" />
                             <div class="mt-1">
                                 <div v-if="photoPreview" @click="selectNewPhoto" class="cursor-pointer">
                   <span
-                      class="block size-20 rounded-full bg-cover bg-center ring-2 ring-zinc-200"
+                      class="block size-20 rounded-full bg-cover bg-center ring-2 ring-border-subtle"
                       :style="`background-image: url('${photoPreview}');`"
                   />
                                 </div>
@@ -99,7 +98,7 @@
                                     :src="freelancer.profile_photo_url"
                                     :alt="freelancer.first_name"
                                     @click="selectNewPhoto"
-                                    class="size-20 cursor-pointer rounded-full object-cover ring-2 ring-zinc-200"
+                                    class="size-20 cursor-pointer rounded-full object-cover ring-2 ring-border-subtle"
                                 />
                             </div>
                         </div>

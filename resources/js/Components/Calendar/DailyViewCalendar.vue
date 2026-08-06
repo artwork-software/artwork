@@ -1,14 +1,14 @@
 <template>
     <div class="w-max -ml-3">
-        <div class="flex items-center sticky gap-0.5 h-16 bg-artwork-navigation-background z-40 top-[71px] rounded-lg">
+        <div class="flex items-center sticky gap-0.5 h-16 bg-surface-inverse z-40 top-[71px] rounded-lg">
             <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
             <div v-for="room in calendarData" :key="room.roomId ?? room.id" :style="roomWidthStyle(room)" class="flex items-center h-full truncate">
                 <SingleRoomInHeader :room="room" is-light />
             </div>
         </div>
         <div v-for="day in days">
-            <div class="flex items-center sticky gap-0.5 h-16 bg-gray-100 z-30 first-line:divide-none top-34 rounded-r-lg">
-                <div class="flex xxsDark items-center px-8 mt-1.5" :style="{marginLeft: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}">
+            <div class="flex items-center sticky gap-0.5 h-16 bg-surface-sunken z-30 first-line:divide-none top-34 rounded-r-lg">
+                <div class="flex text-xs/[15px] text-text items-center px-8 mt-1.5" :style="{marginLeft: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}">
                     {{ daysWithoutEventsToDisplayHiddenHours.includes(day.fullDay)
                     ? $t('Hours between {start} - {end} are hidden', {
                         start: usePage().props.calendarHours[0],
@@ -17,11 +17,11 @@
                     : '' }}
                 </div>
                 <div class="flex items-center h-full truncate">
-                    <div class="flex xsDark items-center mt-1.5">
+                    <div class="flex text-sm/5 font-semibold text-text items-center mt-1.5">
                         {{ day.dayString}}, {{ day.fullDay}}
                     </div>
                     <HolidayToolTip v-if="day?.holidays?.length > 0" class="mt-2">
-                        <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
+                        <div class="space-y-1 divide-dashed divide-border-strong divide-y">
                             <div v-for="holiday in day.holidays" class="pt-1">
                                 <div :style="{ color: holiday.color}">
                                     <div>{{ holiday.name }}</div>
@@ -44,8 +44,8 @@
                         @click="dayRemarksCanEdit ? (dayRemarkModalDay = day) : null"
                     >
                         <span
-                            class="text-xs bg-amber-50 border border-amber-200 text-gray-800 rounded-lg px-2 py-1 truncate"
-                            :class="{ 'text-gray-400 italic': !remarkForDay(day)?.text }"
+                            class="text-xs bg-warning-surface border border-warning-border text-text rounded-lg px-2 py-1 truncate"
+                            :class="{ 'text-text-subtle italic': !remarkForDay(day)?.text }"
                         >
                             {{ remarkForDay(day)?.text || $t('Add remark') }}
                         </span>
@@ -61,7 +61,7 @@
                 </div>
             </div>
             <template v-for="(hour, hourIndex) in day.hoursOfDay" :key="hourIndex">
-                <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-gray-300 border-dashed" :style="{ position: 'relative', zIndex: 25 - hourIndex }">
+                <div v-if="shouldShowHour(hour, calendarData, day)" class="border-b border-border border-dashed" :style="{ position: 'relative', zIndex: 25 - hourIndex }">
                     <div class="w-fit events-by-days-container rounded-lg" ref="calendarToCalculate">
                         <div :key="day.fullDay"
                              :style="{ height: zoom_factor * 115 + 'px' }"

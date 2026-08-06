@@ -1,18 +1,18 @@
 <template>
-    <div class="rounded-2xl border border-zinc-200 bg-white p-5">
+    <div class="rounded-2xl border border-border-subtle bg-white p-5">
         <div class="flex items-center justify-between mb-3">
-            <label class="block text-sm font-medium text-zinc-700">{{ label }}</label>
+            <label class="block text-sm font-medium text-text-muted">{{ label }}</label>
             <button
                 v-if="editable && links.length < maxItems"
                 type="button"
-                class="text-xs font-medium text-artwork-buttons-create"
+                class="text-xs font-medium text-accent-600"
                 @click="addLink"
             >
                 + {{ $t('Add') }}
             </button>
         </div>
 
-        <div v-if="links.length === 0" class="text-xs text-zinc-400">
+        <div v-if="links.length === 0" class="text-xs text-text-subtle">
             {{ $t('No content') }}
         </div>
 
@@ -23,7 +23,7 @@
                     type="text"
                     :placeholder="schema.placeholder_label"
                     :disabled="!editable"
-                    class="block w-full rounded-lg border-zinc-300 text-sm disabled:bg-zinc-50 disabled:text-zinc-500"
+                    class="block w-full rounded-lg border-border text-sm disabled:bg-surface-sunken disabled:text-text-subtle"
                     @blur="saveLinks"
                 />
                 <input
@@ -31,13 +31,13 @@
                     type="url"
                     :placeholder="schema.placeholder_url"
                     :disabled="!editable"
-                    class="block w-full rounded-lg border-zinc-300 text-sm disabled:bg-zinc-50 disabled:text-zinc-500"
+                    class="block w-full rounded-lg border-border text-sm disabled:bg-surface-sunken disabled:text-text-subtle"
                     @blur="saveLinks"
                 />
                 <button
                     v-if="editable"
                     type="button"
-                    class="shrink-0 text-xs text-red-600"
+                    class="shrink-0 text-xs text-danger"
                     @click="removeLink(index)"
                 >
                     {{ $t('Remove') }}
@@ -45,8 +45,8 @@
             </li>
         </ul>
 
-        <p v-if="status === 'saved'" class="mt-1 text-xs text-emerald-600">{{ $t('Saved') }}</p>
-        <p v-if="status === 'error'" class="mt-1 text-xs text-red-600">{{ $t('Could not save. Try again.') }}</p>
+        <p v-if="status === 'saved'" class="mt-1 text-xs text-success">{{ $t('Saved') }}</p>
+        <p v-if="status === 'error'" class="mt-1 text-xs text-danger">{{ $t('Could not save. Try again.') }}</p>
     </div>
 </template>
 

@@ -7,23 +7,23 @@
         classes-in-white-background="!p-0"
     >
 
-        <div class="w-full mb-5 bg-zinc-100 rounded-t-lg p-5" v-if="!checkIfEditMode">
+        <div class="w-full mb-5 bg-surface-sunken rounded-t-lg p-5" v-if="!checkIfEditMode">
             <div class="w-fit px-5">
                 <SwitchGroup as="div" class="flex items-center justify-between gap-x-8" >
                     <span class="flex grow flex-col">
-                      <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>
+                      <SwitchLabel as="span" class="text-sm/6 font-medium text-text" passive>
                           {{ $t('Internal material issue') }}
                       </SwitchLabel>
-                      <SwitchDescription as="span" class="text-xs text-gray-500">
+                      <SwitchDescription as="span" class="text-xs text-text-subtle">
                           {{ $t('Create an internal material issue for employees') }}
                       </SwitchDescription>
                     </span>
-                <Switch v-model="internOrExternal" :disabled="checkIfEditMode" :class="[internOrExternal ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex h-6 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:bg-gray-500 duration-200 ease-in-out focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:outline-hidden']">
+                <Switch v-model="internOrExternal" :disabled="checkIfEditMode" :class="[internOrExternal ? 'bg-accent-600' : 'bg-border-subtle', 'relative inline-flex h-6 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:bg-text-subtle duration-200 ease-in-out focus:ring-2 focus:ring-accent-600 focus:ring-offset-2 focus:outline-hidden']">
                     <span aria-hidden="true" :class="[internOrExternal ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-8 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out']" />
                 </Switch>
                 <span class="flex grow flex-col">
-                      <SwitchLabel as="span" class="text-sm/6 font-medium text-gray-900" passive>{{ $t('Borrowing slip') }}</SwitchLabel>
-                      <SwitchDescription as="span" class="text-xs text-gray-500">
+                      <SwitchLabel as="span" class="text-sm/6 font-medium text-text" passive>{{ $t('Borrowing slip') }}</SwitchLabel>
+                      <SwitchDescription as="span" class="text-xs text-text-subtle">
                           {{ $t('Create a borrowing slip for external material issues') }}
                       </SwitchDescription>
                     </span>
@@ -53,14 +53,14 @@
         <div class="flex justify-end gap-3 mt-4">
             <button
                 type="button"
-                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition"
+                class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-text-muted hover:bg-surface-sunken transition"
                 @click="showDiscardConfirmation = false"
             >
                 {{ $t('No, continue editing') }}
             </button>
             <button
                 type="button"
-                class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+                class="inline-flex items-center rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger transition"
                 @click="confirmDiscard"
             >
                 {{ $t('Discard') }}

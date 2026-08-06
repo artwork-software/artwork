@@ -1,11 +1,11 @@
 <template>
     <div class="w-full">
         <!-- Initial-Load fehlgeschlagen: ohne Ist-Stand kein Bearbeiten/Emitten -->
-        <div v-if="loadFailed" class="flex items-center gap-x-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
-            <span class="text-xs text-rose-700">{{ $t('Failed to load data') }}</span>
+        <div v-if="loadFailed" class="flex items-center gap-x-3 rounded-lg border border-danger-border bg-danger-surface px-3 py-2">
+            <span class="text-xs text-danger">{{ $t('Failed to load data') }}</span>
             <button
                 type="button"
-                class="text-xs font-medium text-artwork-buttons-create hover:underline shrink-0"
+                class="text-xs font-medium text-accent-600 hover:underline shrink-0"
                 @click="loadLinkedContacts"
             >
                 {{ $t('Retry') }}
@@ -17,7 +17,7 @@
             <div
                 v-for="contact in linkedContacts"
                 :key="contact.id"
-                class="rounded-lg border border-gray-200 bg-white overflow-hidden"
+                class="rounded-lg border border-border-subtle bg-white overflow-hidden"
             >
                 <div class="flex items-center gap-x-2 px-3 py-2">
                     <img
@@ -30,22 +30,22 @@
                         class="flex flex-1 items-center gap-x-2 text-left min-w-0"
                         @click="toggleExpanded(contact.id)"
                     >
-                        <span class="text-sm font-medium text-gray-900 truncate">{{ contact.display_name }}</span>
+                        <span class="text-sm font-medium text-text truncate">{{ contact.display_name }}</span>
                         <span
                             v-if="contact.contact_type"
-                            class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 shrink-0"
+                            class="inline-flex items-center rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted shrink-0"
                         >
                             {{ $t(contact.contact_type.name) }}
                         </span>
                         <component
                             :is="expandedIds.includes(contact.id) ? IconChevronUp : IconChevronDown"
-                            class="h-4 w-4 text-gray-400 shrink-0"
+                            class="h-4 w-4 text-text-subtle shrink-0"
                         />
                     </button>
                     <button
                         v-if="canEdit"
                         type="button"
-                        class="text-gray-400 hover:text-artwork-messages-error transition-colors shrink-0"
+                        class="text-text-subtle hover:text-danger transition-colors shrink-0"
                         :title="$t('Unlink')"
                         @click="unlink(contact)"
                     >
@@ -54,34 +54,34 @@
                 </div>
 
                 <!-- Aufgeklappte Karte mit den (nicht vertraulichen) Kontaktinfos -->
-                <div v-if="expandedIds.includes(contact.id)" class="border-t border-gray-100 px-3 py-2">
-                    <div v-if="detailsLoading[contact.id]" class="text-xs text-secondary py-1">
+                <div v-if="expandedIds.includes(contact.id)" class="border-t border-border-subtle px-3 py-2">
+                    <div v-if="detailsLoading[contact.id]" class="text-xs text-text-subtle py-1">
                         {{ $t('Loading data...') }}
                     </div>
                     <template v-else-if="details[contact.id]">
-                        <div v-if="visibleGroupsFor(contact.id).length === 0" class="text-xs text-secondary py-1">
+                        <div v-if="visibleGroupsFor(contact.id).length === 0" class="text-xs text-text-subtle py-1">
                             {{ $t('No information available') }}
                         </div>
                         <div v-for="group in visibleGroupsFor(contact.id)" :key="group.id" class="py-1.5">
-                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            <div class="text-xs font-semibold text-text-subtle uppercase tracking-wide mb-1">
                                 {{ $t(group.name) }}
                             </div>
                             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
                                 <div v-for="property in group.properties" :key="property.id">
-                                    <dt class="text-xs text-gray-500">{{ $t(property.name) }}</dt>
-                                    <dd class="text-sm text-gray-900 break-words">
+                                    <dt class="text-xs text-text-subtle">{{ $t(property.name) }}</dt>
+                                    <dd class="text-sm text-text break-words">
                                         <template v-if="property.type === 'checkbox'">
                                             <component
                                                 :is="propertyValue(contact.id, property.id) === '1' ? IconCheck : IconX"
                                                 class="h-4 w-4"
-                                                :class="propertyValue(contact.id, property.id) === '1' ? 'text-green-500' : 'text-gray-400'"
+                                                :class="propertyValue(contact.id, property.id) === '1' ? 'text-success' : 'text-text-subtle'"
                                             />
                                         </template>
                                         <template v-else-if="property.type === 'link'">
                                             <a
                                                 :href="propertyValue(contact.id, property.id)"
                                                 target="_blank"
-                                                class="text-artwork-buttons-create hover:underline"
+                                                class="text-accent-600 hover:underline"
                                             >
                                                 {{ propertyValue(contact.id, property.id) }}
                                             </a>
@@ -100,14 +100,14 @@
                             <a
                                 :href="route('crm.contacts.show', contact.id)"
                                 target="_blank"
-                                class="inline-flex items-center gap-x-1 text-xs text-artwork-buttons-create hover:underline"
+                                class="inline-flex items-center gap-x-1 text-xs text-accent-600 hover:underline"
                             >
                                 <IconExternalLink class="h-3.5 w-3.5" stroke-width="1.5" />
                                 {{ $t('Open in CRM') }}
                             </a>
                         </div>
                     </template>
-                    <div v-else class="text-xs text-rose-600 py-1">
+                    <div v-else class="text-xs text-danger py-1">
                         {{ $t('Failed to load data') }}
                     </div>
                 </div>
@@ -119,7 +119,7 @@
             <div v-if="!showSearch" class="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <button
                     type="button"
-                    class="inline-flex items-center gap-x-1.5 text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover transition-colors"
+                    class="inline-flex items-center gap-x-1.5 text-xs text-accent-600 hover:text-accent-700 transition-colors"
                     @click="openSearch"
                 >
                     <IconLink class="h-4 w-4" stroke-width="1.5" />
@@ -128,7 +128,7 @@
                 <button
                     v-if="canViewCrm"
                     type="button"
-                    class="inline-flex items-center gap-x-1.5 text-xs text-artwork-buttons-create hover:text-artwork-buttons-hover transition-colors"
+                    class="inline-flex items-center gap-x-1.5 text-xs text-accent-600 hover:text-accent-700 transition-colors"
                     @click="showCreateModal = true"
                 >
                     <IconUserPlus class="h-4 w-4" stroke-width="1.5" />
@@ -146,7 +146,7 @@
                     />
                     <button
                         type="button"
-                        class="text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+                        class="text-text-subtle hover:text-text-muted transition-colors shrink-0"
                         :title="$t('Close')"
                         @click="closeSearch"
                     >
@@ -157,7 +157,7 @@
                     v-if="searchQuery.length > 0"
                     class="absolute z-30 mt-1 w-full max-h-60 overflow-auto rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 text-sm"
                 >
-                    <div v-if="searching" class="px-4 py-3 text-xs text-secondary">
+                    <div v-if="searching" class="px-4 py-3 text-xs text-text-subtle">
                         {{ $t('Loading data...') }}
                     </div>
                     <template v-else>
@@ -165,7 +165,7 @@
                             v-for="result in selectableResults"
                             :key="result.id"
                             type="button"
-                            class="flex w-full items-center gap-x-2 px-4 py-2.5 text-left hover:bg-gray-50"
+                            class="flex w-full items-center gap-x-2 px-4 py-2.5 text-left hover:bg-surface-sunken"
                             @click="link(result)"
                         >
                             <img
@@ -173,9 +173,9 @@
                                 :alt="result.display_name"
                                 class="h-7 w-7 rounded-full object-cover"
                             />
-                            <span class="truncate text-gray-900">{{ result.display_name }}</span>
+                            <span class="truncate text-text">{{ result.display_name }}</span>
                         </button>
-                        <div v-if="selectableResults.length === 0" class="px-4 py-3 text-xs text-secondary">
+                        <div v-if="selectableResults.length === 0" class="px-4 py-3 text-xs text-text-subtle">
                             {{ $t('No CRM artists found') }}
                         </div>
                     </template>

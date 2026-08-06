@@ -1,8 +1,8 @@
 <template>
     <div id="myCalendar" class="bg-white min-w-[98%] w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
+        <div class="w-full flex flex-wrap  ml-14">
             <div class="flex justify-center w-full bg-white" :class="filteredEvents?.length ? 'mt-10' : ''">
-                <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
+                <div class="mt-4 flex text-sm/5 text-danger items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"
                      v-if="filteredEvents?.length > 0"
                      >
@@ -25,15 +25,15 @@
                                  :personal-filters="personalFilters"
                                  :user_filters="user_filters"
             />
-            <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
+            <div :class="this.project ? 'bg-surface-canvas' : 'bg-white'">
                 <!-- Calendar -->
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                    <div class="bg-secondaryHover">
-                        <tr class="flex w-full bg-userBg stickyHeader" :class="{'rounded-t-full': !isPageScrolled, 'mb-2' : !project}">
+                    <div class="">
+                        <tr class="flex w-full  stickyHeader" :class="{'rounded-t-full': !isPageScrolled, 'mb-2' : !project}">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
                             </th>
-                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth: zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
+                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth: zoomFactor * 212 + 'px'}" class="py-3  border-r-4  truncate mx-2">
                                 <Link :style="textStyle" class="flex font-semibold items-center ml-4"
                                       :href="route('rooms.show',{room: room.id})">
                                     {{ room.name }}
@@ -42,10 +42,10 @@
                         </tr>
                         <tbody class="w-full pt-3 ">
                         <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex "
-                            :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
+                            :class="day.is_weekend ? '' : 'bg-white'" v-for="day in days">
                             <th :style="{height: zoomFactor * 115 + 'px',width: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}"
-                                :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
-                                class="text-calendarText text-right pr-1">
+                                :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft ' : 'stickyDays'"
+                                class=" text-right pr-1">
                                 <div :style="textStyle" class="mt-3">
                                     {{ zoomFactor >= 0.8 ? day.day_string : '' }} {{ day.short_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                 </div>
@@ -54,7 +54,7 @@
 
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
                                 class="border-t-2 border-dashed"
-                                :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
+                                :class="[day.is_weekend ? '' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
                                 <div class="py-0.5" v-for="event in room[day.full_day].events ?? room[day.full_day].events">
                                     <SingleCalendarEvent
@@ -106,7 +106,7 @@
         />
 
         <div v-show="multiEdit"
-             class="fixed z-30 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+             class="fixed z-30 w-full bg-white/70 bottom-0 h-20 shadow border-t border-border-subtle flex items-center justify-center gap-4">
             <FormButton :text="$t('Move events')"
                        @click="openMultiEditModal"/>
             <FormButton v-if="hasCheckedOccupancyEvents"
@@ -114,10 +114,10 @@
                        @click="acceptSelectedRequests"/>
             <FormButton v-if="hasCheckedOccupancyEvents"
                        @click="openDeclineSelectedRequestsModal = true"
-                       class="!border-2 !border-red-600 bg-transparent !text-red-600 hover:!text-white hover:!bg-red-500 hover:!border-transparent resize-none"
+                       class="!border-2 !border-danger bg-transparent !text-danger hover:!text-white hover:!bg-danger hover:!border-transparent resize-none"
                        :text="$t('Decline selected requests')"/>
             <FormButton @click="openDeleteSelectedEventsModal = true"
-                       class="!border-2 !border-artwork-buttons-create bg-transparent !text-artwork-buttons-create hover:!text-white hover:!bg-artwork-buttons-hover !hover:border-transparent resize-none"
+                       class="!border-2 !border-accent-600 bg-transparent !text-accent-600 hover:!text-white hover:!bg-accent-700 !hover:border-transparent resize-none"
                        :text="$t('Delete events')"/>
         </div>
 
@@ -142,11 +142,11 @@
 </template>
 
 <script>
+import {IconAlertTriangle} from "@tabler/icons-vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
-import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Link, router} from "@inertiajs/vue3";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
@@ -173,7 +173,7 @@ export default {
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
         EventsWithoutRoomComponent,
-        ExclamationIcon,
+        IconAlertTriangle,
         EventComponent
     },
     data() {

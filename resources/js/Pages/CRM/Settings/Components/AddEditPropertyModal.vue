@@ -16,7 +16,7 @@
                 :use-translations="true"
                 :placeholder="$t('Please select')"
             />
-            <p v-if="form.errors.type" class="mt-1 text-xs text-artwork-messages-error">{{ form.errors.type }}</p>
+            <p v-if="form.errors.type" class="mt-1 text-xs text-danger">{{ form.errors.type }}</p>
             <BaseInput id="prop_tooltip" v-model="form.tooltip_text" :label="$t('Tooltip text')" />
 
             <!-- Select values input -->
@@ -28,21 +28,21 @@
                         v-model="form.select_values[index]"
                         :label="$t('Selection value {index}', { index: index + 1 })"
                     />
-                    <button type="button" @click="form.select_values.splice(index, 1)" class="text-gray-400 hover:text-red-600">
+                    <button type="button" @click="form.select_values.splice(index, 1)" class="text-text-subtle hover:text-danger">
                         <IconX class="h-4 w-4" />
                     </button>
                 </div>
-                <button type="button" @click="form.select_values.push('')" class="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
+                <button type="button" @click="form.select_values.push('')" class="text-sm text-accent-600 hover:text-accent-600 flex items-center gap-1">
                     <IconCirclePlus class="h-4 w-4" />
                     {{ $t('Add option') }}
                 </button>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-                <button class="ui-button-cancel" @click="$emit('close')">{{ $t('Cancel') }}</button>
-                <button class="ui-button-add" @click="submit" :disabled="form.processing">
+                <BaseUIButton variant="secondary" hide-icon @click="$emit('close')">{{ $t('Cancel') }}</BaseUIButton>
+                <BaseUIButton variant="primary" hide-icon @click="submit" :disabled="form.processing">
                     {{ property ? $t('Save') : $t('Create') }}
-                </button>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -52,6 +52,7 @@
 import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import ArtworkBaseModal from '@/Artwork/Modals/ArtworkBaseModal.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue'
 import { IconX, IconCirclePlus } from '@tabler/icons-vue'

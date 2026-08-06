@@ -1,15 +1,15 @@
 <template>
     <div class="w-full">
         <div class="flex items-center gap-x-3 justify-between w-full">
-            <p class="font-lexend font-semibold text-gray-900">{{ article.name }}</p>
-            <p class="rounded-md px-1.5 py-0.5 text-xs font-medium whitespace-nowrap bg-blue-50 border border-blue-100 text-blue-500">{{ article.is_detailed_quantity ? $t('Total quantity') : $t('Quantity') }}: {{ article.quantity }}</p>
+            <p class="font-lexend font-semibold text-text">{{ article.name }}</p>
+            <p class="rounded-md px-1.5 py-0.5 text-xs font-medium whitespace-nowrap bg-accent-50 border border-accent-200 text-accent-600">{{ article.is_detailed_quantity ? $t('Total quantity') : $t('Quantity') }}: {{ article.quantity }}</p>
         </div>
 
-        <div class="text-xs font-lexend font-extralight text-gray-500 mt-1">
+        <div class="text-xs font-lexend font-extralight text-text-subtle mt-1">
             {{ $t('This article was in the category') }}: {{ article.category.name }}
         </div>
 
-        <div class="text-xs font-lexend font-extralight text-gray-500" v-if="article.is_detailed_quantity && article.detailed_article_quantities.length > 0">
+        <div class="text-xs font-lexend font-extralight text-text-subtle" v-if="article.is_detailed_quantity && article.detailed_article_quantities.length > 0">
             {{ $t('This article has detailed quantities') }}:
             <div class="font-bold">
                 {{ article.detailed_article_quantities.map((detailedArticle) => {
@@ -19,17 +19,17 @@
 
         </div>
 
-        <div class="text-xs font-semibold text-gray-900 font-lexend w-full mt-2">
-            <div class="text-red-500">{{ $t('deleted at') }}: {{ article.deleted_at }}</div>
+        <div class="text-xs font-semibold text-text font-lexend w-full mt-2">
+            <div class="text-danger">{{ $t('deleted at') }}: {{ article.deleted_at }}</div>
         </div>
 
     </div>
     <div class="flex flex-none items-center gap-x-2">
-        <button @click="restoreArticle" class="flex items-center gap-x-1 rounded-md bg-green-50 border border-green-200 px-2.5 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition">
+        <button @click="restoreArticle" class="flex items-center gap-x-1 rounded-md bg-success-surface border border-success-border px-2.5 py-1.5 text-xs font-semibold text-success hover:bg-success-surface transition">
             <IconRefresh class="h-4 w-4" />
             {{ $t('Restore') }}
         </button>
-        <button @click="showConfirmDeleteModal = true" class="flex items-center gap-x-1 rounded-md bg-red-50 border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition">
+        <button @click="showConfirmDeleteModal = true" class="flex items-center gap-x-1 rounded-md bg-danger-surface border border-danger-border px-2.5 py-1.5 text-xs font-semibold text-danger hover:bg-danger-surface transition">
             <IconTrash class="h-4 w-4" />
             {{ $t('Delete permanently') }}
         </button>

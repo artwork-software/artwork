@@ -17,10 +17,10 @@
                         class="inline-block h-2.5 w-2.5 rounded-full shrink-0"
                         :style="{ backgroundColor: violation.warning_color || violation.shift_rule?.warning_color || '#ff0000' }"
                     ></span>
-                    <span class="text-xs font-semibold text-zinc-900">
+                    <span class="text-xs font-semibold text-text">
                         {{ violation.rule_name || violation.shift_rule?.name }}
                     </span>
-                    <span v-if="violation.violation_date" class="text-xs text-zinc-500 ml-auto">
+                    <span v-if="violation.violation_date" class="text-xs text-text-subtle ml-auto">
                         {{ formatDate(violation.violation_date) }}
                     </span>
                 </div>
@@ -32,12 +32,12 @@
                     v-model="ignoreReason"
                     :label="$t('Reason for ignoring')"
                 />
-                <p v-if="showError && !ignoreReason.trim()" class="mt-1 text-xs text-red-500">
+                <p v-if="showError && !ignoreReason.trim()" class="mt-1 text-xs text-danger">
                     {{ $t('Reason for ignoring') }}
                 </p>
             </div>
 
-            <div class="flex justify-between pt-2 border-t border-zinc-100">
+            <div class="flex justify-between pt-2 border-t border-border-subtle">
                 <BaseUIButton
                     :label="$t('Cancel')"
                     is-cancel-button

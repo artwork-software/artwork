@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment.svg">
             <div class="mx-4">
-                <div class="headline1 mt-2 mb-8">
+                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text mt-2 mb-8">
                     {{ $t('Event')}}
                 </div>
                 <!-- Type -->
@@ -20,7 +20,7 @@
                         <div class="w-1/2 flex items-center my-auto" v-if="this.project?.id">
                             {{ $t('assigned to')}}: <a
                             :href="route('projects.tab', {project: this.project.id, projectTab: this.first_project_calendar_tab_id})"
-                            class="ml-3 mt-1 items-center flex linkText">
+                            class="ml-3 mt-1 items-center flex text-xs/[18px] text-accent-600">
                             {{ this.project?.name }}
                         </a>
                         </div>
@@ -31,7 +31,7 @@
                                  :src="this.creator.profile_photo_url"
                                  :alt="this.creator.last_name"
                                  class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <div class="xsLight ml-3" v-else>
+                            <div class="text-sm/5 font-bold text-text-subtle ml-3" v-else>
                                 {{ $t('Deleted user')}}
                             </div>
                         </div>
@@ -58,24 +58,24 @@
                         </div>
                     </div>
                     <!-- Description -->
-                    <div class="mt-4 xsDark flex w-full">
+                    <div class="mt-4 text-sm/5 font-semibold text-text flex w-full">
                         {{ this.request.description }}
                     </div>
                     <div class="py-1 flex w-11/12">
                         <Listbox as="div" class="w-full" v-model="this.room" id="room">
-                            <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow text-left xsDark">
+                            <ListboxButton class="border border-border w-full h-10 cursor-pointer truncate flex p-2">
+                                <div class="flex-grow text-left text-sm/5 font-semibold text-text">
                                     {{ this.room?.name }}
                                 </div>
-                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-text" aria-hidden="true"/>
                             </ListboxButton>
-                            <ListboxOptions class="w-10/12 bg-artwork-navigation-background max-h-32 overflow-y-auto text-sm absolute">
+                            <ListboxOptions class="w-10/12 bg-surface-inverse max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-for="roomOption in rooms"
-                                               class="hover:bg-artwork-buttons-hover text-secondary cursor-pointer p-2 flex justify-between "
+                                               class="hover:bg-accent-700 hover:text-white text-text-subtle cursor-pointer p-2 flex justify-between "
                                                :key="roomOption.name"
                                                :value="roomOption"
                                                v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'xsWhiteBold' : 'xsLight']">
+                                    <div :class="[selected ? 'text-sm/5 font-bold text-white' : 'text-sm/5 font-bold text-text-subtle']">
                                         {{ roomOption.name }}
                                     </div>
                                     <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
@@ -85,7 +85,7 @@
                     </div>
                 </div>
                 <IconX stroke-width="1.5" @click="closeModal(false)"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-text-subtle absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="flex justify-center mt-6">
                     <FormButton @click="closeModal(true)" :text="$t('Confirm occupancy with room change')"
@@ -96,11 +96,10 @@
 </template>
 
 <script>
+import {IconCheck, IconChevronDown, IconX} from "@tabler/icons-vue";
 
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {ChevronDownIcon, XIcon} from '@heroicons/vue/outline';
-import {CheckIcon} from "@heroicons/vue/solid";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -117,14 +116,14 @@ export default {
         BaseModal,
         FormButton,
         JetDialogModal,
-        XIcon,
-        CheckIcon,
+        IconX,
+        IconCheck,
         TagComponent,
         Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        ChevronDownIcon,
+        IconChevronDown,
     },
     props: [
         'type',

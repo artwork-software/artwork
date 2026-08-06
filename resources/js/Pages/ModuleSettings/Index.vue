@@ -1,7 +1,7 @@
 <template>
     <ToolSettingsHeader :title="$t('Module visibility')">
         <div v-if="usePage().props.flash.success"
-             class="mt-4 w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
+             class="mt-4 w-full font-bold text-sm border-1 border-success rounded bg-success p-2 text-white mb-3">
             {{ usePage().props.flash.success }}
         </div>
         <SettingsGuideBanner

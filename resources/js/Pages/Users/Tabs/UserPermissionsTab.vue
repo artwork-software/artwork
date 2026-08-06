@@ -2,27 +2,27 @@
     <div class="">
         <!-- Header -->
         <div class="mb-8">
-            <h2 class="text-2xl font-semibold text-zinc-900 tracking-tight">
+            <h2 class="text-2xl font-semibold text-text tracking-tight">
                 {{ $t('User rights') }}
             </h2>
-            <p class="mt-1 text-sm text-zinc-600">
+            <p class="mt-1 text-sm text-text-muted">
                 {{ $t('Manage global roles and granular permissions for this user.') }}
             </p>
         </div>
 
         <!-- Global roles -->
-        <section class="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+        <section class="rounded-3xl border border-border-subtle bg-white shadow-sm">
             <button
                 type="button"
                 class="flex w-full items-center justify-between px-6 py-4 sm:px-8"
                 @click="showGlobalRoles = !showGlobalRoles"
             >
                 <div class="flex items-center gap-2">
-          <span class="text-xs font-medium uppercase tracking-wide text-zinc-700">
+          <span class="text-xs font-medium uppercase tracking-wide text-text-muted">
             {{ $t('Global roles') }}
           </span>
                     <span
-                        class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-medium text-blue-700 ring-1 ring-blue-200"
+                        class="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-[11px] font-medium text-accent-700 ring-1 ring-accent-200"
                     >
             {{ available_roles?.length || 0 }}
           </span>
@@ -30,12 +30,12 @@
                 <SvgCollection :svg-name="showGlobalRoles ? 'arrowUp' : 'arrowDown'" />
             </button>
 
-            <div v-if="showGlobalRoles" class="border-t border-zinc-100 px-6 py-6 sm:px-8 sm:py-8">
+            <div v-if="showGlobalRoles" class="border-t border-border-subtle px-6 py-6 sm:px-8 sm:py-8">
                 <div class="space-y-4">
                     <div
                         v-for="(role, index) in available_roles"
                         :key="index"
-                        class="flex items-start justify-between rounded-2xl border border-zinc-200 bg-zinc-50/50 px-4 py-3"
+                        class="flex items-start justify-between rounded-2xl border border-border-subtle bg-surface-sunken/50 px-4 py-3"
                     >
                         <label class="flex cursor-pointer items-start gap-3">
                             <input
@@ -43,11 +43,11 @@
                                 @change="editUser"
                                 :value="role.name"
                                 type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                class="mt-1 h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                             />
                             <span>
-                <span class="block font-medium capitalize text-zinc-900">{{ $t(role.translation_key) }}</span>
-                <span class="block text-xs text-zinc-500">
+                <span class="block font-medium capitalize text-text">{{ $t(role.translation_key) }}</span>
+                <span class="block text-xs text-text-subtle">
                   {{ $t(role.tooltipKey) }}
                 </span>
               </span>
@@ -67,13 +67,13 @@
                     v-for="(group, groupName) in groupedPermissions"
                     :key="groupName"
                     v-show="group.shown"
-                    class="rounded-3xl border border-zinc-200 bg-white shadow-sm"
+                    class="rounded-3xl border border-border-subtle bg-white shadow-sm"
                 >
                     <!-- Group Header -->
                     <div class="flex items-center justify-between px-6 py-4 sm:px-7">
                         <button
                             type="button"
-                            class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-800"
+                            class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text"
                             @click="toggleGroup(groupName)"
                         >
                             <span>{{ $t(groupName) }}</span>
@@ -82,7 +82,7 @@
 
                         <button
                             type="button"
-                            class="text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800"
+                            class="text-xs font-medium text-accent-700 underline underline-offset-2 hover:text-accent-700"
                             @click="checkOrUncheckAllPermissionsOfGroup(group)"
                         >
                             {{
@@ -96,12 +96,12 @@
                     <!-- Permissions list -->
                     <div
                         v-if="isGroupOpen(groupName)"
-                        class="space-y-0.5 border-t border-zinc-100 px-6 py-4 sm:px-7 sm:py-6"
+                        class="space-y-0.5 border-t border-border-subtle px-6 py-4 sm:px-7 sm:py-6"
                     >
                         <div
                             v-for="(permission, i) in group.permissions"
                             :key="i"
-                            class="flex items-start justify-between rounded-2xl px-3 py-2 hover:bg-zinc-50"
+                            class="flex items-start justify-between rounded-2xl px-3 py-2 hover:bg-surface-sunken"
                         >
                             <label class="flex cursor-pointer items-start gap-3">
                                 <input
@@ -109,16 +109,16 @@
                                     @change="editUser"
                                     :value="permission.name"
                                     type="checkbox"
-                                    class="mt-1 h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                                    class="mt-1 h-4 w-4 rounded border-border text-accent-600 focus:ring-accent-600"
                                 />
                                 <span>
                   <span
                       class="block font-medium "
-                      :class="userForm.permissions.includes(permission.name) ? 'text-zinc-900' : 'text-zinc-600'"
+                      :class="userForm.permissions.includes(permission.name) ? 'text-text' : 'text-text-muted'"
                   >
                     {{ $t(permission.translation_key) }}
                   </span>
-                  <span class="block text-xs text-zinc-500">
+                  <span class="block text-xs text-text-subtle">
                     {{ $t(permission.tooltipKey) }}
                   </span>
                 </span>
@@ -130,20 +130,20 @@
             </div>
 
             <!-- Danger zone -->
-            <div class="mt-10 rounded-3xl border border-red-200 bg-red-50 p-5">
+            <div class="mt-10 rounded-3xl border border-danger-border bg-danger-surface p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h4 class="text-sm font-semibold text-red-800">
+                        <h4 class="text-sm font-semibold text-danger">
                             {{ $t('Permanently delete user') }}
                         </h4>
-                        <p class="mt-0.5 text-xs text-red-700">
+                        <p class="mt-0.5 text-xs text-danger">
                             {{ $t('This action cannot be undone.') }}
                         </p>
                     </div>
                     <button
                         type="button"
                         @click="openDeleteUserModal"
-                        class="rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                        class="rounded-full border border-danger-border bg-white px-4 py-2 text-sm font-medium text-danger transition hover:bg-danger-surface"
                     >
                         {{ $t('Delete user') }}
                     </button>
@@ -154,10 +154,10 @@
         <!-- Delete user modal -->
         <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
-                <div class="text-2xl font-bold text-zinc-900 my-2">
+                <div class="text-2xl font-bold text-text my-2">
                     {{ $t('Delete user') }}
                 </div>
-                <div class="text-sm text-red-700">
+                <div class="text-sm text-danger">
                     {{
                         $t('Are you sure you want to delete {last_name}, {first_name} from the system?', {
                             last_name: user_to_edit.last_name,
@@ -168,14 +168,14 @@
                 <div class="mt-6 flex items-center justify-between">
                     <button
                         type="button"
-                        class="inline-flex items-center rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+                        class="inline-flex items-center rounded-full bg-danger px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-danger focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2"
                         @click="deleteUser"
                     >
                         {{ $t('Delete') }}
                     </button>
                     <button
                         type="button"
-                        class="text-sm font-medium text-zinc-700 underline underline-offset-2 hover:text-zinc-900"
+                        class="text-sm font-medium text-text-muted underline underline-offset-2 hover:text-text"
                         @click="closeDeleteUserModal"
                     >
                         {{ $t('No, not really') }}

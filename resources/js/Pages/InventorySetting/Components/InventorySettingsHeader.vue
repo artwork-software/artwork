@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconPackage"
                 :title="title || $t('Inventory Settings')"
-                icon-bg-class="bg-purple-600/10 text-purple-700"
+                icon-bg-class="bg-special-violet-surface text-special-violet"
                 :description="description || $t('Define global settings for inventory planning.')"
                 :search-enabled="false"
             >

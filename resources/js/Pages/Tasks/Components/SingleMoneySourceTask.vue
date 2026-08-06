@@ -18,7 +18,7 @@ export default {
     },
     mounted() {
         if(parseInt(this.$page.props.urlParameters.taskId) === this.task.id){
-            this.highlight = 'border-2 border-orange-300 rounded-md p-1';
+            this.highlight = 'border-2 border-special-orange-border rounded-md p-1';
 
             setTimeout(() => {
                 this.highlight = null;
@@ -35,24 +35,24 @@ export default {
                 <input @change="updateMoneySourceTaskStatus(task)"
                        v-model="task.done"
                        type="checkbox"
-                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-gray-300"/>
+                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-border"/>
                 <div>
                     <div class="flex items-center gap-x-2">
-                        <div class="mDark"
-                             :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                        <div class="text-lg/[21px] font-semibold text-text"
+                             :class="task.done ? 'text-text-subtle line-through' : 'text-text'">
                             {{ task.name }}
                         </div>
                         <div v-if="!task.done && task.deadline"
-                             class="pt-1 xsLight "
-                             :class="task.isDeadlineInFuture ? '' : 'text-error'">
+                             class="pt-1 text-sm/5 font-bold text-text-subtle "
+                             :class="task.isDeadlineInFuture ? '' : 'text-danger'">
                             {{ $t('until')}} {{ task.deadline }}
                         </div>
                     </div>
-                    <div class="xsLight mb-2 flex items-center gap-x-2">
+                    <div class="text-sm/5 font-bold text-text-subtle mb-2 flex items-center gap-x-2">
                         {{ $t('Source of funding') }}:
-                        <Link v-if="task.money_source_id" :href="route('money_sources.show', task.money_source_id)" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
+                        <Link v-if="task.money_source_id" :href="route('money_sources.show', task.money_source_id)" class="text-accent-600 underline flex items-center gap-x-0.5">
                             {{ task.money_source.name }}
-                            <IconChevronRight class="h-4 w-4 text-primary" />
+                            <IconChevronRight class="h-4 w-4 text-text" />
                             {{ task.name }}
                         </Link>
                     </div>
@@ -63,7 +63,7 @@ export default {
             </div>
         </div>
 
-        <div class="ml-10 mb-3 xsLight">
+        <div class="ml-10 mb-3 text-sm/5 font-bold text-text-subtle">
             {{ task.description }}
         </div>
     </div>

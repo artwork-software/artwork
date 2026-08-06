@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconSettings"
                 :title="title || $t('Shift Settings')"
-                icon-bg-class="bg-green-600/10 text-green-700"
+                icon-bg-class="bg-success-surface text-success"
                 :description="description || $t('Define global settings for shift scheduling.')"
                 :search-enabled="false"
             >

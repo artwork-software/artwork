@@ -8,7 +8,7 @@
             <jet-authentication-card-logo />
         </template>
 
-        <div class="mb-4 text-sm text-gray-600">
+        <div class="mb-4 text-sm text-text-muted">
             {{$t('This is a secure area of the application. Please confirm your password before continuing.')}}
         </div>
 

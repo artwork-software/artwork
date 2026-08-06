@@ -4,7 +4,7 @@
             <ToolbarHeader
                 :icon="IconBuilding"
                 :title="title || $t('Rooms & areas')"
-                icon-bg-class="bg-teal-600/10 text-teal-700"
+                icon-bg-class="bg-special-teal-surface text-special-teal"
                 :description="description || $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')"
                 :search-enabled="false"
             >

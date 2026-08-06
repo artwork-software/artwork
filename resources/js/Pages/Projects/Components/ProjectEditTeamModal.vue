@@ -25,13 +25,13 @@
                 >
                     <div
                         v-if="showSearchDropdown"
-                        class="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-zinc-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
+                        class="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-border-subtle bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
                     >
                         <!-- Users -->
                         <div
                             v-for="user in department_and_user_search_results.users"
                             :key="`user-${user.id}`"
-                            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50"
+                            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-sunken"
                             @click="addUserToProjectTeamArray(user)"
                         >
                             <img
@@ -40,7 +40,7 @@
                                 class="rounded-full h-8 w-8 object-cover"
                             />
                             <div class="flex flex-col text-sm">
-                                <span class="font-medium text-zinc-900 truncate">
+                                <span class="font-medium text-text truncate">
                                     {{ user.first_name }} {{ user.last_name }}
                                 </span>
                             </div>
@@ -50,7 +50,7 @@
                         <div
                             v-for="department in department_and_user_search_results.departments"
                             :key="`dep-${department.id}`"
-                            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50"
+                            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-sunken"
                             @click="addDepartmentToProjectTeamArray(department)"
                         >
                             <TeamIconCollection
@@ -58,7 +58,7 @@
                                 :alt="department.name"
                                 class="rounded-full h-8 w-8 object-cover"
                             />
-                            <div class="text-sm font-medium text-zinc-900">
+                            <div class="text-sm font-medium text-text">
                                 {{ department.name }}
                             </div>
                         </div>
@@ -71,7 +71,7 @@
                 <!-- Users Section -->
                 <section
                     v-if="users.length > 0"
-                    class="rounded-2xl border border-zinc-200 bg-white shadow-sm divide-y divide-zinc-100"
+                    class="rounded-2xl border border-border-subtle bg-white shadow-sm divide-y divide-border-subtle"
                 >
                     <div
                         v-for="user in users"
@@ -85,7 +85,7 @@
                         />
 
                         <div class="min-w-0 flex-1">
-                            <div class="font-semibold text-zinc-900 truncate">
+                            <div class="font-semibold text-text truncate">
                                 {{ user.first_name }} {{ user.last_name }}
                             </div>
                         </div>
@@ -102,10 +102,10 @@
                         <button
                             type="button"
                             @click="deleteUserFromProjectTeam(user)"
-                            class="flex-shrink-0 rounded-full p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-error"
+                            class="flex-shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-danger"
                         >
                             <span class="sr-only">{{ $t('Remove user from team') }}</span>
-                            <XCircleIcon class="h-5 w-5" />
+                            <IconCircleX class="h-5 w-5" />
                         </button>
                     </div>
                 </section>
@@ -113,7 +113,7 @@
                 <!-- Departments Section -->
                 <section
                     v-if="departments.length > 0"
-                    class="rounded-2xl border border-zinc-200 bg-white shadow-sm divide-y divide-zinc-100"
+                    class="rounded-2xl border border-border-subtle bg-white shadow-sm divide-y divide-border-subtle"
                 >
                     <div
                         v-for="department in departments"
@@ -126,7 +126,7 @@
                                 :alt="department.name"
                                 class="h-9 w-9 rounded-full object-cover flex-shrink-0"
                             />
-                            <div class="min-w-0 font-semibold text-zinc-900 truncate">
+                            <div class="min-w-0 font-semibold text-text truncate">
                                 {{ department.name }}
                             </div>
                         </div>
@@ -134,17 +134,17 @@
                         <button
                             type="button"
                             @click="deleteDepartmentFromProjectTeam(department)"
-                            class="flex items-center text-zinc-400 hover:text-error transition"
+                            class="flex items-center text-text-subtle hover:text-danger transition"
                         >
                             <span class="sr-only">{{ $t('Remove team from the project') }}</span>
-                            <XCircleIcon class="h-5 w-5" />
+                            <IconCircleX class="h-5 w-5" />
                         </button>
                     </div>
                 </section>
 
                 <!-- CRM-Kontakte Section -->
                 <section v-if="crmContactsEnabled">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-2">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-text-subtle mb-2">
                         {{ $t('CRM contacts') }}
                     </div>
                     <div class="relative">
@@ -162,12 +162,12 @@
                         >
                             <div
                                 v-if="showCrmSearchDropdown"
-                                class="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-zinc-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
+                                class="absolute z-20 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-border-subtle bg-white shadow-xl ring-1 ring-black/5 focus:outline-none"
                             >
                                 <div
                                     v-for="contact in crm_contact_search_results"
                                     :key="`crm-search-${contact.id}`"
-                                    class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-50"
+                                    class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-sunken"
                                     @click="addCrmContactToProjectTeamArray(contact)"
                                 >
                                     <img
@@ -176,10 +176,10 @@
                                         class="rounded-full h-8 w-8 object-cover"
                                     />
                                     <div class="flex flex-col text-sm min-w-0">
-                                        <span class="font-medium text-zinc-900 truncate">
+                                        <span class="font-medium text-text truncate">
                                             {{ contact.display_name }}
                                         </span>
-                                        <span v-if="contact.contact_type" class="text-xs text-zinc-500 truncate">
+                                        <span v-if="contact.contact_type" class="text-xs text-text-subtle truncate">
                                             {{ contact.contact_type.name }}
                                         </span>
                                     </div>
@@ -190,7 +190,7 @@
 
                     <div
                         v-if="crmContacts.length > 0"
-                        class="mt-4 rounded-2xl border border-zinc-200 bg-white shadow-sm divide-y divide-zinc-100"
+                        class="mt-4 rounded-2xl border border-border-subtle bg-white shadow-sm divide-y divide-border-subtle"
                     >
                         <div
                             v-for="contact in crmContacts"
@@ -204,10 +204,10 @@
                             />
 
                             <div class="min-w-0 flex-1">
-                                <div class="font-semibold text-zinc-900 truncate">
+                                <div class="font-semibold text-text truncate">
                                     {{ contact.display_name }}
                                 </div>
-                                <div v-if="contact.contact_type" class="text-xs text-zinc-500 truncate">
+                                <div v-if="contact.contact_type" class="text-xs text-text-subtle truncate">
                                     {{ contact.contact_type.name }}
                                 </div>
                             </div>
@@ -223,10 +223,10 @@
                             <button
                                 type="button"
                                 @click="deleteCrmContactFromProjectTeam(contact)"
-                                class="flex-shrink-0 rounded-full p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-error"
+                                class="flex-shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-surface-sunken hover:text-danger"
                             >
                                 <span class="sr-only">{{ $t('Remove CRM contact from team') }}</span>
-                                <XCircleIcon class="h-5 w-5" />
+                                <IconCircleX class="h-5 w-5" />
                             </button>
                         </div>
                     </div>
@@ -247,6 +247,7 @@
 </template>
 
 <script setup>
+import {IconCircleX} from "@tabler/icons-vue";
 import { ref, reactive, watch, computed } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
@@ -260,7 +261,6 @@ import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
 import ProjectTeamPermissionsDropdown from '@/Pages/Projects/Components/ProjectTeamPermissionsDropdown.vue'
 import TeamIconCollection from '@/Layouts/Components/TeamIconCollection.vue'
-import { XCircleIcon } from '@heroicons/vue/solid'
 import {is} from "laravel-permission-to-vuejs";
 
 defineOptions({

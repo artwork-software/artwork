@@ -5,24 +5,24 @@
             <ToolbarHeader
                 :icon="IconPalette"
                 title="Artists"
-                icon-bg-class="bg-zinc-600/10 text-zinc-700"
+                band
                 :description="artists?.length ? `${artists?.length} ${$t('Artists')}` : ''"
                 :search-enabled="false"
             >
                 <template #actions>
-                    <div class="ui-button">
-                        <ToolTipComponent
-                            :icon="IconFileExport"
-                            :tooltip-text="$t('Export artists')"
-                            direction="bottom"
-                            @click="exportArtist"
-                            icon-size="size-5"
-                        />
-                    </div>
-                    <button class="ui-button-add" @click="showCreateOrUpdateArtistModal = true">
+                    <ToolTipComponent
+                        :icon="IconFileExport"
+                        :tooltip-text="$t('Export artists')"
+                        direction="bottom"
+                        @click="exportArtist"
+                        icon-size="size-5"
+                        white-icon
+                        classes-button="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
+                    />
+                    <BaseUIButton variant="primary" on-band hide-icon @click="showCreateOrUpdateArtistModal = true">
                         <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                         {{ $t('Add artist') }}
-                    </button>
+                    </BaseUIButton>
                 </template>
             </ToolbarHeader>
         </template>
@@ -45,8 +45,8 @@
                             <img :src="row.profile_photo_url" alt="" class="size-11 rounded-full object-cover" />
                         </div>
                         <div class="ml-4">
-                            <div class="font-medium text-gray-900">{{ row.name }}</div>
-                            <div class="mt-1 text-gray-500">{{ row.email }}</div>
+                            <div class="font-medium text-text">{{ row.name }}</div>
+                            <div class="mt-1 text-text-subtle">{{ row.email }}</div>
                         </div>
                     </div>
                 </template>
@@ -62,8 +62,8 @@
             <!--<div class="">
                 <div class="sm:flex sm:items-center">
                     <div class="sm:flex-auto">
-                        <h1 class="text-base font-semibold text-gray-900 dark:text-white">{{ $t('Artists')}}</h1>
-                        <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                        <h1 class="text-base font-semibold text-text">{{ $t('Artists')}}</h1>
+                        <p class="mt-2 text-sm text-text-muted">
                             {{ $t('A list of all the artists in the system including their name, title and more') }}
                         </p>
                     </div>
@@ -74,26 +74,26 @@
                             direction="bottom"
                             @click="exportArtist"
                         />
-                        <ArtworkBaseModalButton variant="primary" @click="showCreateOrUpdateArtistModal = true">
+                        <BaseUIButton variant="primary" hide-icon @click="showCreateOrUpdateArtistModal = true">
                             {{ $t('Add artist') }}
-                        </ArtworkBaseModalButton>
+                        </BaseUIButton>
                     </div>
                 </div>
                 <div class="mt-8 flow-root">
                     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                            <table class="min-w-full divide-y divide-gray-300 dark:divide-white/15">
+                            <table class="min-w-full divide-y divide-border">
                                 <thead>
-                                <tr class="divide-x divide-gray-200 dark:divide-white/10">
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0 dark:text-white">
+                                <tr class="divide-x divide-border-subtle">
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pl-0">
                                         {{  $t('Name artist') }}</th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">{{ $t('Position') }}</th>
-                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">{{ $t('phone number') }}</th>
-                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-gray-900 sm:pr-0 dark:text-white">{{ $t('Actions')}}</th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('Position') }}</th>
+                                    <th scope="col" class="px-4 py-3.5 text-left text-sm font-semibold text-text">{{ $t('phone number') }}</th>
+                                    <th scope="col" class="py-3.5 pr-4 pl-4 text-left text-sm font-semibold text-text sm:pr-0">{{ $t('Actions')}}</th>
                                 </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
-                                <tr v-for="artist in artists" :key="artist.id" class="divide-x divide-gray-200 dark:divide-white/10">
+                                <tbody class="divide-y divide-border-subtle bg-white">
+                                <tr v-for="artist in artists" :key="artist.id" class="divide-x divide-border-subtle">
                                     <SingleArtistInTable :artist="artist" />
                                 </tr>
                                 </tbody>
@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import UserHeader from "@/Pages/Users/UserHeader.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import {defineAsyncComponent, nextTick, ref} from "vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {IconPalette, IconCirclePlus, IconFileExport, IconEdit, IconTrash} from "@tabler/icons-vue";

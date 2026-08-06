@@ -3,7 +3,7 @@
         <!-- Left Label -->
         <span
             class="model-title cursor-pointer"
-            :class="model ? 'text-gray-300 font-normal' : 'font-semibold'"
+            :class="model ? 'text-text-subtle font-normal' : 'text-text font-semibold'"
             role="button"
             tabindex="0"
             @click="set(false)"
@@ -18,11 +18,13 @@
             v-model="model"
             :disabled="disabled"
             :class="[
-        model ? 'bg-blue-600 hover:bg-blue-600/95' : 'bg-gray-200',
+        disabled
+            ? (model ? 'bg-accent-200' : 'bg-border-subtle')
+            : (model ? 'bg-accent-600 hover:bg-accent-700' : 'bg-border'),
         sizeClasses.track,
         'relative inline-flex cursor-pointer rounded-full transition-colors duration-300 ease-out shadow-inner',
-        'focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-500',
-        disabled ? 'opacity-60 cursor-not-allowed' : ''
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600',
+        disabled ? 'cursor-not-allowed' : ''
       ]"
         >
             <span class="sr-only">Toggle</span>
@@ -32,7 +34,7 @@
                 :class="[
           model ? sizeClasses.knobTranslateOn : sizeClasses.knobTranslateOff,
           sizeClasses.knob,
-          'inline-flex transform items-center justify-center rounded-full bg-white ring-1 ring-black/5 shadow transition duration-300 ease-out'
+          'inline-flex transform items-center justify-center rounded-full bg-white shadow-raised transition duration-300 ease-out'
         ]"
             >
         <ToolTipComponent
@@ -50,7 +52,7 @@
         <!-- Right Label -->
         <span
             class="model-title cursor-pointer"
-            :class="model ? 'font-semibold' : 'text-gray-300 font-normal'"
+            :class="model ? 'text-text font-semibold' : 'text-text-subtle font-normal'"
             role="button"
             tabindex="0"
             @click="set(true)"

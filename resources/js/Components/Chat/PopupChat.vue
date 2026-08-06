@@ -24,7 +24,7 @@
         <div v-if="!isChatOpen">
             <button
                 @click="openChat"
-                class="relative group grid place-items-center size-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-lg ring-1 ring-white/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                class="relative group grid place-items-center size-12 rounded-2xl bg-gradient-to-br from-accent-600 to-accent-600 text-white shadow-lg ring-1 ring-white/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
             >
                 <PropertyIcon name="IconMessage" class="size-6" />
                 <span
@@ -32,7 +32,7 @@
                     class="absolute -top-1.5 -right-1.5 inline-flex"
                 >
           <span
-              class="relative inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[10px] font-bold text-red-700 bg-red-50 border border-red-100 rounded-full"
+              class="relative inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[10px] font-bold text-danger bg-danger-surface border border-danger-border rounded-full"
           >
             {{ totalUnreadCount }}
           </span>
@@ -42,20 +42,20 @@
 
         <!-- Chat Panel -->
         <div v-if="isChatOpen" class="w-[24rem] md:w-[26rem]">
-            <div class="rounded-2xl overflow-hidden border border-zinc-200/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_10px_30px_-10px_rgba(2,6,23,.2)]">
+            <div class="rounded-2xl overflow-hidden border border-border-subtle/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80 shadow-[0_10px_30px_-10px_rgba(2,6,23,.2)]">
                 <!-- Header -->
-                <div class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-zinc-100/80">
+                <div class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-border-subtle/80">
                     <div class="px-4 py-3">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
-                                <div class="grid size-8 place-items-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                <div class="grid size-8 place-items-center rounded-xl bg-accent-50 text-accent-600 border border-accent-200">
                                     <PropertyIcon name="IconMessage" class="size-4" />
                                 </div>
                                 <div class="min-w-0">
-                                    <div class="text-sm font-semibold text-zinc-900 truncate">
+                                    <div class="text-sm font-semibold text-text truncate">
                                         {{ $t('Chat') }}
                                     </div>
-                                    <div class="text-[11px] text-zinc-500">
+                                    <div class="text-[11px] text-text-subtle">
                                         <template v-if="!checkIfChatIsSelected">
                                             {{ $t('Select a chat or create a new one') }}
                                         </template>
@@ -107,7 +107,7 @@
 
                                 <!-- Close -->
                                 <button @click="closeChat" class="btn-icon" aria-label="Close chat">
-                                    <PropertyIcon name="IconX" class="size-4 text-zinc-500 group-hover:text-zinc-700 transition-colors" />
+                                    <PropertyIcon name="IconX" class="size-4 text-text-subtle group-hover:text-text-muted transition-colors" />
                                 </button>
                             </div>
                         </div>
@@ -123,7 +123,7 @@
                                 :placeholder="$t('Search in chats')"
                             />
                             <PropertyIcon name="IconSearch"
-                                class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-subtle"
                             />
                         </div>
                     </div>
@@ -140,34 +140,34 @@
                                   />
                                   <span
                                       class="absolute right-0 bottom-0 block size-2 rounded-full ring-2 ring-white"
-                                      :class="{ 'bg-red-400': status === 'offline', 'bg-orange-400': status === 'away', 'bg-green-400': status === 'online'}"
+                                      :class="{ 'bg-danger': status === 'offline', 'bg-special-orange': status === 'away', 'bg-success': status === 'online'}"
                                   />
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-zinc-900 truncate">
+                                    <p class="text-sm font-semibold text-text truncate">
                                         {{ chatPartner.users.find(user => user.id !== usePage().props.auth.user.id)?.full_name }}
                                     </p>
-                                    <p class="text-[11px] text-zinc-500 first-letter:capitalize truncate">
+                                    <p class="text-[11px] text-text-subtle first-letter:capitalize truncate">
                                         {{ status ? $t(status) : '' }}
                                     </p>
                                 </div>
                             </div>
-                            <button class="btn-subtle" @click="goBackToChatList">
+                            <BaseUIButton size="sm" hide-icon @click="goBackToChatList">
                                 <PropertyIcon name="IconChevronLeft" class="size-4" />
                                 <span class="text-xs">{{ $t('Back') }}</span>
-                            </button>
+                            </BaseUIButton>
                         </div>
 
                         <div v-else class="flex items-center justify-between">
                             <div class="flex items-center gap-3 min-w-0">
                                 <PropertyIcon name="IconUsersGroup"
-                                    class="size-10 rounded-xl p-2.5 bg-blue-50 text-blue-600 border border-blue-100"
+                                    class="size-10 rounded-xl p-2.5 bg-accent-50 text-accent-600 border border-accent-200"
                                 />
                                 <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-zinc-900 truncate">
+                                    <p class="text-sm font-semibold text-text truncate">
                                         {{ chatPartner.name }}
                                     </p>
-                                    <p class="text-[10px] text-zinc-500 truncate">
+                                    <p class="text-[10px] text-text-subtle truncate">
                                         {{ chatPartner.users.map((user) => user.full_name).join(', ') }}
                                     </p>
                                 </div>
@@ -191,20 +191,20 @@
                                         class="chat-tooltip-black-icon"
                                     />
                                 </button>
-                                <button class="btn-subtle" @click="goBackToChatList">
+                                <BaseUIButton size="sm" hide-icon @click="goBackToChatList">
                                     <PropertyIcon name="IconChevronLeft" class="size-4" />
                                     <span class="text-xs">{{ $t('Back') }}</span>
-                                </button>
+                                </BaseUIButton>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Body -->
-                <div class="bg-zinc-50/60 min-h-96">
+                <div class="bg-surface-sunken/60 min-h-96">
                     <!-- Loader -->
                     <div v-if="isLoading" class="grid place-items-center max-h-96 min-h-96 w-full">
-                        <PropertyIcon name="IconLoaderQuarter" class="motion-safe:animate-spin text-zinc-400" />
+                        <PropertyIcon name="IconLoaderQuarter" class="motion-safe:animate-spin text-text-subtle" />
                     </div>
 
                     <!-- Content -->
@@ -213,7 +213,7 @@
                             ref="scrollContainer"
                             :key="chatPartner?.id || 'chat-list'"
                             @scroll="handleScroll"
-                            class="rounded-xl max-h-[60vh] md:max-h-[65vh] overflow-y-auto scroll-smooth px-1.5 py-2 bg-white border border-zinc-100"
+                            class="rounded-xl max-h-[60vh] md:max-h-[65vh] overflow-y-auto scroll-smooth px-1.5 py-2 bg-white border border-border-subtle"
                         >
                             <!-- Chatliste -->
                             <div v-if="!checkIfChatIsSelected">
@@ -221,14 +221,14 @@
                                     <div
                                         v-for="chat in filteredChats"
                                         :key="chat.id"
-                                        class="group rounded-lg border border-transparent hover:border-blue-100 bg-white hover:bg-blue-50/60 transition-colors cursor-pointer"
+                                        class="group rounded-lg border border-transparent hover:border-accent-200 bg-white hover:bg-accent-50/60 transition-colors cursor-pointer"
                                         @click="openChatPage(chat.id)"
                                     >
                                         <div class="px-3 py-2 flex items-center justify-between">
                                             <SingleChatInOverview :chat="chat" />
                                             <span
                                                 v-if="chat.unread_count > 0"
-                                                class="inline-flex items-center justify-center min-w-6 h-6 px-1.5 text-[11px] font-bold text-red-700 bg-red-50 border border-red-100 rounded-full"
+                                                class="inline-flex items-center justify-center min-w-6 h-6 px-1.5 text-[11px] font-bold text-danger bg-danger-surface border border-danger-border rounded-full"
                                             >
                                                 {{ chat.unread_count }}
                                               </span>
@@ -237,10 +237,10 @@
                                 </div>
 
                                 <div v-else class="p-4">
-                                    <div class="rounded-md border border-red-100 bg-red-50 p-3">
+                                    <div class="rounded-md border border-danger-border bg-danger-surface p-3">
                                         <div class="flex items-start gap-2">
-                                            <PropertyIcon name="IconInfoSquareRoundedFilled" class="size-5 text-red-400 mt-0.5" />
-                                            <p class="text-xs font-medium text-red-800">
+                                            <PropertyIcon name="IconInfoSquareRoundedFilled" class="size-5 text-danger mt-0.5" />
+                                            <p class="text-xs font-medium text-danger">
                                                 {{ $t("No chats found. Click the plus icon to start a new chat.") }}
                                             </p>
                                         </div>
@@ -251,8 +251,8 @@
                             <!-- Nachrichten -->
                             <div v-else class="px-2 py-1">
                                 <!-- Loading more -->
-                                <div v-if="isLoadingMore" class="flex justify-center py-2 text-[11px] text-zinc-500">
-                                    <svg class="animate-spin h-4 w-4 mr-2 text-zinc-400" viewBox="0 0 24 24">
+                                <div v-if="isLoadingMore" class="flex justify-center py-2 text-[11px] text-text-subtle">
+                                    <svg class="animate-spin h-4 w-4 mr-2 text-text-subtle" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
                                     </svg>
@@ -262,11 +262,11 @@
                                 <!-- Nachrichten + Datumstrenner -->
                                 <template v-for="item in messagesWithSeparators" :key="item.key">
                                     <div v-if="item.type === 'date'" class="flex items-center my-3">
-                                        <div class="flex-1 h-px bg-zinc-200"></div>
-                                        <span class="mx-3 text-[10px] text-zinc-500 whitespace-nowrap">
+                                        <div class="flex-1 h-px bg-border-subtle"></div>
+                                        <span class="mx-3 text-[10px] text-text-subtle whitespace-nowrap">
                       {{ item.label }}
                     </span>
-                                        <div class="flex-1 h-px bg-zinc-200"></div>
+                                        <div class="flex-1 h-px bg-border-subtle"></div>
                                     </div>
 
                                     <SingleMessageInChat
@@ -283,7 +283,7 @@
                 </div>
 
                 <!-- Footer / Composer -->
-                <div v-if="checkIfChatIsSelected" class="sticky bottom-0 z-10 bg-white/90 backdrop-blur border-t border-zinc-100 px-3 py-3">
+                <div v-if="checkIfChatIsSelected" class="sticky bottom-0 z-10 bg-white/90 backdrop-blur border-t border-border-subtle px-3 py-3">
                     <div class="flex items-end gap-2">
                         <textarea
                             v-model="newMessage"
@@ -295,7 +295,7 @@
                         />
                         <button
                             @click="sendMessage"
-                            class="grid place-items-center rounded-xl p-2.5 bg-gradient-to-br from-indigo-500 to-blue-600 text-white hover:brightness-105 transition-all shadow-sm hover:shadow-md"
+                            class="grid place-items-center rounded-xl p-2.5 bg-gradient-to-br from-accent-600 to-accent-600 text-white hover:brightness-105 transition-all shadow-sm hover:shadow-md"
                             aria-label="Send message"
                         >
                             <PropertyIcon name="IconBrandTelegram" class="size-5" />
@@ -360,6 +360,7 @@ import {router, usePage} from "@inertiajs/vue3";
 import {useUserStatus} from "@/Composeables/useUserStatus.js";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 const { getUserStatus } = useUserStatus()
 
 

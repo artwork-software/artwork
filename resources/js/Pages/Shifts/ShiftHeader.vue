@@ -6,14 +6,14 @@
     </app-layout>
 </template>
 <script>
+import {IconChevronDown, IconChevronUp} from "@tabler/icons-vue";
 import {defineComponent} from 'vue'
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/solid";
 
 export default defineComponent({
     name: "ShiftHeader",
-    components: {AppLayout, ShiftTabs, ChevronDownIcon, ChevronUpIcon},
+    components: {AppLayout, ShiftTabs, IconChevronDown, IconChevronUp},
     props: {
         title: {
             type: String,

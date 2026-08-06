@@ -2,10 +2,10 @@
     <app-layout :title="$t('Event properties')">
         <EventSettingHeader>
             <template #actions>
-                <button class="ui-button-add" @click="showEventPropertyModal = true">
+                <BaseUIButton variant="primary" hide-icon @click="showEventPropertyModal = true">
                     <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                     {{ $t('New Event Property') }}
-                </button>
+                </BaseUIButton>
             </template>
             <SettingsGuideBanner
                 storage-key="settings-guide.event.properties"
@@ -25,20 +25,20 @@
                         :key="eventProperty.id"
                         class="flex flex-row justify-between">
                         <div class="flex flex-row items-center gap-4">
-                            <PropertyIcon as="div" class="h-12 w-12 rounded-full border border-gray-300 p-2"
+                            <PropertyIcon as="div" class="h-12 w-12 rounded-full border border-border p-2"
                                        width="16" height="16"
                                        :name="eventProperty.icon"
                                        stroke-width="1.5"/>
-                            <p class="mDark">{{ eventProperty.name }}</p>
+                            <p class="text-lg/[21px] font-semibold text-text">{{ eventProperty.name }}</p>
                         </div>
                         <div class="flex items-center">
                             <BaseMenu>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#"
                                        @click="eventPropertyToEdit = eventProperty; showEventPropertyModal = true;"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <PencilAltIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                       :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconEdit
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                             aria-hidden="true"/>
                                         {{ $t('Edit event property') }}
                                     </a>
@@ -46,9 +46,9 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#"
                                        @click="eventPropertyToDelete = eventProperty; showDeleteEventPropertyModal = true;"
-                                       :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <TrashIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-artwork-buttons-hover"
+                                       :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-accent-700"
                                             aria-hidden="true"/>
                                         {{ $t('Delete event property') }}
                                     </a>
@@ -78,8 +78,8 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {MenuItem} from "@headlessui/vue";
 import {ref} from "vue";
 import EventPropertyModal from "@/Pages/Settings/EventProperties/EventPropertyModal.vue";
@@ -87,8 +87,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import {provide} from "vue";
 import IconSelector from "@/Components/Icon/IconSelector.vue";
-import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
-import {IconCirclePlus} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconTrash} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";

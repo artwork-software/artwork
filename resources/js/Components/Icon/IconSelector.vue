@@ -3,7 +3,7 @@
         <!-- Trigger -->
         <PopoverButton
             id="iconSelectorButton"
-            class="size-10 inline-flex items-center justify-center rounded-full ring-1 ring-gray-200 bg-white hover:ring-indigo-300 hover:shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            class="size-10 inline-flex items-center justify-center rounded-full ring-1 ring-border-subtle bg-white hover:ring-accent-200 hover:shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
         >
             <ToolTipComponent
                 :icon="selectedIconComp"
@@ -27,13 +27,13 @@
                 ref="panelRef"
                 class="absolute z-10 mt-3 w-screen max-w-sm transform px-4 sm:px-0 lg:max-w-4xl"
             >
-                <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+                <div class="overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-xl">
                     <!-- Header (sticky) -->
-                    <div class="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+                    <div class="sticky top-0 z-10 border-b border-border-subtle bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
                         <div class="flex items-center justify-between gap-4 px-5 py-3">
                             <div>
-                                <h3 class="text-sm font-semibold text-gray-900">{{ $t('Icons') }}</h3>
-                                <p class="mt-0.5 text-xs text-gray-500" v-if="!loading">
+                                <h3 class="text-sm font-semibold text-text">{{ $t('Icons') }}</h3>
+                                <p class="mt-0.5 text-xs text-text-subtle" v-if="!loading">
                                     {{ $t('Select an icon from {0} different icons.', [filteredNames.length]) }}
                                 </p>
                             </div>
@@ -44,17 +44,17 @@
                                     v-model="searchInput"
                                     type="text"
                                     :placeholder="$t('Search')"
-                                    class="w-full rounded-lg bg-gray-50 pl-10 pr-8 py-2 text-sm text-gray-900 ring-1 ring-gray-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition"
+                                    class="w-full rounded-lg bg-surface-sunken pl-10 pr-8 py-2 text-sm text-text ring-1 ring-border-subtle outline-none focus:bg-white focus:ring-2 focus:ring-accent-600 transition"
                                     @keydown.enter.prevent="selectFirstIfAny"
                                 />
-                                <component :is="SearchIconComp" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                                <component :is="SearchIconComp" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-subtle" />
                                 <button
                                     v-if="searchInput.length > 0"
                                     type="button"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center rounded p-1 hover:bg-gray-100"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 grid place-items-center rounded p-1 hover:bg-surface-sunken"
                                     @click="searchInput = ''"
                                 >
-                                    <component :is="XIconComp" class="size-4 text-gray-500" />
+                                    <component :is="XIconComp" class="size-4 text-text-subtle" />
                                 </button>
                             </div>
                         </div>
@@ -64,19 +64,19 @@
                     <div ref="scrollRef" class="max-h-96 overflow-auto p-5">
                         <!-- Skeleton Grid -->
                         <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                            <div v-for="n in 12" :key="n" class="rounded-xl border border-gray-100 p-4">
-                                <div class="h-8 w-8 rounded bg-gray-200/80 animate-pulse mx-auto"></div>
-                                <div class="mt-3 h-3 w-20 rounded bg-gray-200/80 animate-pulse mx-auto"></div>
+                            <div v-for="n in 12" :key="n" class="rounded-xl border border-border-subtle p-4">
+                                <div class="h-8 w-8 rounded bg-border-subtle/80 animate-pulse mx-auto"></div>
+                                <div class="mt-3 h-3 w-20 rounded bg-border-subtle animate-pulse mx-auto"></div>
                             </div>
                         </div>
 
                         <!-- Kein Treffer -->
                         <div v-else-if="filteredNames.length === 0" class="py-14 text-center">
-                            <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-gray-50 text-gray-400">
+                            <div class="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-surface-sunken text-text-subtle">
                                 <component :is="SearchIconComp" class="size-5" />
                             </div>
-                            <p class="text-sm font-medium text-gray-800">{{ $t('No results') }}</p>
-                            <p class="mt-1 text-xs text-gray-500">
+                            <p class="text-sm font-medium text-text">{{ $t('No results') }}</p>
+                            <p class="mt-1 text-xs text-text-subtle">
                                 {{ $t('Try a different keyword.') }}
                             </p>
                         </div>
@@ -87,20 +87,20 @@
                                 <button
                                     type="button"
                                     @click="selectIcon(name)"
-                                    class="group relative w-full rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                                    :class="selectedIconName === name ? 'ring-2 ring-indigo-500/70 border-indigo-200' : ''"
+                                    class="group relative w-full rounded-xl border border-border-subtle bg-white p-4 transition hover:border-border hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+                                    :class="selectedIconName === name ? 'ring-2 ring-accent-600 border-accent-200' : ''"
                                 >
                                     <!-- Auswahl-Badge -->
                                     <span
                                         v-if="selectedIconName === name"
-                                        class="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-indigo-600 text-white"
+                                        class="absolute right-2 top-2 inline-flex items-center justify-center rounded-full bg-accent-600 text-white"
                                     >
                     <component :is="CheckIconComp" class="size-4" />
                   </span>
 
                                     <div class="grid place-items-center">
-                                        <component :is="iconComp(name)" class="h-8 w-8 text-gray-900 transition group-hover:scale-105" stroke-width="1.5" />
-                                        <p class="mt-2 text-center text-xs text-gray-700">
+                                        <component :is="iconComp(name)" class="h-8 w-8 text-text transition group-hover:scale-105" stroke-width="1.5" />
+                                        <p class="mt-2 text-center text-xs text-text-muted">
                                             {{ toDisplayName(name) }}
                                         </p>
                                     </div>

@@ -15,7 +15,7 @@
                             leave-active-class="transition-leave-active"
                             leave-from-class="transition-leave-from"
                             leave-to-class="transition-leave-to">
-                    <div v-show="show" class="mb-6 bg-white rounded-lg shadow-xl transform transition-all sm:w-full sm:mx-auto" :class="maxWidthClass">
+                    <div v-show="show" class="mb-6 bg-surface border border-border rounded-lg shadow-overlay transform transition-all motion-reduce:transition-none sm:w-full sm:mx-auto" :class="maxWidthClass">
                         <slot v-if="show"></slot>
                     </div>
                 </transition>

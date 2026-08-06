@@ -2,7 +2,7 @@
     <div class="my-3">
         <div>
             <div class="h-9 flex items-center cursor-pointer" @click="showCraftFilter = !showCraftFilter">
-                <div class="" :class="is_tiny ? 'flex items-center text-white text-xs' : 'flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500'">
+                <div class="" :class="is_tiny ? 'flex items-center text-white text-xs' : 'flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-accent-600'">
                     {{ $t('Crafts') }}
                     <PropertyIcon name="IconChevronDown" v-if="!showCraftFilter" class="w-4 h-4 ml-2 text-white"/>
                     <PropertyIcon name="IconChevronUp" v-if="showCraftFilter" class="w-4 h-4 ml-2 text-white"/>

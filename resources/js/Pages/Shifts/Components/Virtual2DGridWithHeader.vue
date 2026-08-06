@@ -195,13 +195,13 @@ defineExpose({
     <div v-if="noVirtualize" ref="viewportEl" class="relative w-full overflow-auto pointer-events-auto">
         <!-- Sticky Header Row -->
         <div
-            class="sticky top-0 z-40 bg-artwork-navigation-background/95 backdrop-blur
+            class="sticky top-0 z-40 bg-surface-inverse/95 backdrop-blur
                    border-b border-white/10 flex"
             :style="{ height: headerHeight + 'px', width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px' }"
         >
             <div
                 class="sticky left-0 z-50 shrink-0 flex items-stretch
-                       bg-artwork-navigation-background/95 backdrop-blur
+                       bg-surface-inverse/95 backdrop-blur
                        border-r border-white/10"
                 :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
             >
@@ -221,7 +221,7 @@ defineExpose({
         <div
             v-for="vr in allRows"
             :key="vr.row.key"
-            class="relative flex border-b border-gray-400"
+            class="relative flex border-b border-border-strong"
             :style="{ width: (stickyColWidth + (colOffsets[cols.length] ?? 0)) + 'px', height: vr.height + 'px' }"
         >
             <!-- Sticky left column -->
@@ -236,7 +236,7 @@ defineExpose({
             <div
                 v-for="vc in allCols"
                 :key="vc.col.key"
-                class="shrink-0 border-r border-gray-200"
+                class="shrink-0 border-r border-border-subtle"
                 :style="{ width: vc.width + 'px' }"
             >
                 <slot
@@ -256,13 +256,13 @@ defineExpose({
 
             <!-- Sticky Header Row -->
             <div
-                class="sticky top-0 z-40 bg-artwork-navigation-background/95 backdrop-blur
+                class="sticky top-0 z-40 bg-surface-inverse/95 backdrop-blur
          border-b border-white/10"
                 :style="{ height: headerHeight + 'px' }"
             >
                 <div
                     class="sticky left-0 z-50 inline-flex items-stretch
-           bg-artwork-navigation-background/95 backdrop-blur
+           bg-surface-inverse/95 backdrop-blur
            border-r border-white/10"
                     :style="{ width: stickyColWidth + 'px', height: headerHeight + 'px' }"
                 >
@@ -287,7 +287,7 @@ defineExpose({
                 :style="{ top: vr.top + 'px', height: vr.height + 'px', width: totalW + 'px' }"
             >
                 <!-- Durchgehende gestrichelte Trennlinie zwischen Räumen -->
-                <div class="absolute bottom-0 left-0 w-full border-b border-gray-400 z-40 pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 w-full border-b border-border-strong z-40 pointer-events-none"></div>
                 <div class="relative h-full w-full">
                     <!-- Sticky left column -->
                     <div

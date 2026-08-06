@@ -3,7 +3,7 @@
         <div class="mt-5 mx-auto container pb-20">
             <!-- Back link -->
             <div class="mb-4">
-                <Link :href="route('crm.index', { type: contact.contact_type?.slug })" class="inline-flex items-center text-sm font-medium text-artwork-buttons-hover hover:text-artwork-buttons-hover/80">
+                <Link :href="route('crm.index', { type: contact.contact_type?.slug })" class="inline-flex items-center text-sm font-medium text-accent-700 hover:text-accent-700/80">
                     <component :is="IconArrowLeft" class="h-4 w-4 mr-2" />
                     {{ $t('Back to CRM') }}
                 </Link>
@@ -13,21 +13,21 @@
             <div v-if="externalAccessStatus" class="mb-4 flex flex-wrap items-center gap-3">
                 <span
                     v-if="externalAccessStatus.crm_access_expires_at && !externalAccessStatus.revoked_at"
-                    class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
+                    class="inline-flex items-center rounded-full bg-accent-50 px-3 py-1 text-xs font-medium text-accent-700"
                 >
                     {{ $t('External access active until {date}', { date: new Date(externalAccessStatus.crm_access_expires_at).toLocaleDateString() }) }}
                 </span>
                 <Link
                     v-if="externalAccessStatus.has_pending_submission"
                     :href="route('crm.contacts.external-submissions.show', [contact.id, externalAccessStatus.pending_submission_id])"
-                    class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-amber-200"
+                    class="inline-flex items-center rounded-full bg-warning-surface px-3 py-1 text-xs font-medium text-warning hover:bg-warning-surface"
                 >
                     {{ $t('There is a data update request to review') }}
                 </Link>
                 <Link
                     v-if="externalAccessStatus.id"
                     :href="route('crm.external-access.show', externalAccessStatus.id)"
-                    class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-200"
+                    class="inline-flex items-center rounded-full bg-surface-sunken px-3 py-1 text-xs font-medium text-text-muted hover:bg-border-subtle"
                 >
                     {{ $t('Manage external access') }}
                 </Link>
@@ -42,8 +42,8 @@
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-1"
             >
-                <div v-if="successMessage" class="mb-4 rounded-md bg-green-50 p-3">
-                    <p class="text-sm font-medium text-green-800">{{ successMessage }}</p>
+                <div v-if="successMessage" class="mb-4 rounded-md bg-success-surface p-3">
+                    <p class="text-sm font-medium text-success">{{ successMessage }}</p>
                 </div>
             </Transition>
 
@@ -61,12 +61,12 @@
                     </label>
                 </div>
                 <div>
-                    <h1 v-if="!editing" class="text-2xl font-bold text-gray-900">{{ contact.display_name }}</h1>
+                    <h1 v-if="!editing" class="text-2xl font-bold text-text">{{ contact.display_name }}</h1>
                     <input
                         v-else
                         v-model="editableDisplayName"
                         type="text"
-                        class="text-2xl font-bold text-gray-900 border-b-2 border-indigo-400 bg-transparent outline-none px-0 py-0.5 w-full max-w-md"
+                        class="text-2xl font-bold text-text border-b-2 border-accent-600 bg-transparent outline-none px-0 py-0.5 w-full max-w-md"
                         :placeholder="$t('Name')"
                     />
                     <span class="inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium mt-1"
@@ -76,29 +76,28 @@
                         <PropertyIcon v-if="contact.contact_type?.icon" :name="contact.contact_type?.icon" class="mr-1.5 h-4 w-4" />
                         {{ $t(contact.contact_type?.name) }}
                     </span>
-                    <p v-if="profileImageError" class="mt-1 text-sm text-red-600">{{ profileImageError }}</p>
+                    <p v-if="profileImageError" class="mt-1 text-sm text-danger">{{ profileImageError }}</p>
                 </div>
                 <div class="ml-auto flex items-center gap-2" v-if="!isReadOnly && activeTab === 'info'">
-                    <button v-if="canChangeType && !editing" class="ui-button" @click="showChangeTypeModal = true">
+                    <BaseUIButton v-if="canChangeType && !editing" hide-icon @click="showChangeTypeModal = true">
                         <component :is="IconSwitchHorizontal" stroke-width="1" class="size-5" />
                         {{ $t('Change type') }}
-                    </button>
-                    <button class="ui-button-add" @click="toggleEditing">
+                    </BaseUIButton>
+                    <BaseUIButton variant="primary" hide-icon @click="toggleEditing">
                         <component :is="editing ? IconCheck : IconEdit" stroke-width="1" class="size-5" />
                         {{ editing ? $t('Save changes') : $t('Edit') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
 
             <!-- Tabs (Projekte-Reiter nur, wenn Verknüpfungen existieren) -->
-            <div v-if="linkedProjects.length > 0" class="border-b border-gray-200 mb-6">
+            <div v-if="linkedProjects.length > 0" class="border-b border-border-subtle mb-6">
                 <nav class="-mb-px flex gap-x-6">
                     <button
                         type="button"
                         class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors"
-                        :class="activeTab === 'info'
-                            ? 'border-artwork-buttons-create text-artwork-buttons-create'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        :class="activeTab === 'info' ? 'border-accent-600 text-accent-600'
+                            : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border'"
                         @click="activeTab = 'info'"
                     >
                         {{ $t('Information') }}
@@ -106,13 +105,12 @@
                     <button
                         type="button"
                         class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors"
-                        :class="activeTab === 'projects'
-                            ? 'border-artwork-buttons-create text-artwork-buttons-create'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        :class="activeTab === 'projects' ? 'border-accent-600 text-accent-600'
+                            : 'border-transparent text-text-subtle hover:text-text-muted hover:border-border'"
                         @click="activeTab = 'projects'"
                     >
                         {{ $t('Projects') }}
-                        <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                        <span class="ml-1 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-text-muted">
                             {{ linkedProjects.length }}
                         </span>
                     </button>
@@ -121,47 +119,47 @@
 
             <!-- Projects tab -->
             <div v-if="activeTab === 'projects'" class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table class="min-w-full divide-y divide-gray-300">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-surface-sunken">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Project') }}</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Linked via') }}</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Period') }}</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Linked on') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Project') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Linked via') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Period') }}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Linked on') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr v-for="project in linkedProjects" :key="project.id" class="hover:bg-gray-50">
+                    <tbody class="bg-white divide-y divide-border-subtle">
+                        <tr v-for="project in linkedProjects" :key="project.id" class="hover:bg-surface-sunken">
                             <td class="px-6 py-4 text-sm">
                                 <Link
                                     v-if="firstProjectTabId"
                                     :href="route('projects.tab', { project: project.id, projectTab: firstProjectTabId })"
-                                    class="font-medium text-artwork-buttons-create hover:underline"
+                                    class="font-medium text-accent-600 hover:underline"
                                 >
                                     {{ project.name }}
                                 </Link>
-                                <span v-else class="font-medium text-gray-900">{{ project.name }}</span>
+                                <span v-else class="font-medium text-text">{{ project.name }}</span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
+                            <td class="px-6 py-4 text-sm text-text-subtle">
                                 <div class="flex flex-col gap-1.5">
-                                    <span v-if="(project.sources ?? []).includes('artist')" class="inline-flex w-fit items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                                    <span v-if="(project.sources ?? []).includes('artist')" class="inline-flex w-fit items-center rounded-full bg-special-violet-surface px-2.5 py-0.5 text-xs font-medium text-special-violet">
                                         {{ $t('Artist linking') }}
                                     </span>
-                                    <span v-if="(project.sources ?? []).includes('team')" class="inline-flex w-fit items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                                    <span v-if="(project.sources ?? []).includes('team')" class="inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-medium text-accent-700">
                                         {{ $t('Project team') }}<template v-if="project.team_roles?.length">:&nbsp;{{ project.team_roles.join(', ') }}</template>
                                     </span>
-                                    <span v-if="(project.sources ?? []).includes('residency')" class="inline-flex w-fit items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                                    <span v-if="(project.sources ?? []).includes('residency')" class="inline-flex w-fit items-center rounded-full bg-success-surface px-2.5 py-0.5 text-xs font-medium text-success">
                                         {{ $t('Artist residency') }}<template v-if="project.residency_summary">:&nbsp;{{ residencySummaryText(project.residency_summary) }}</template>
                                     </span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
+                            <td class="px-6 py-4 text-sm text-text-subtle">
                                 <template v-if="project.first_event_date">
                                     {{ dateOnly(project.first_event_date) }} – {{ dateOnly(project.last_event_date) }}
                                 </template>
                                 <template v-else>-</template>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">
+                            <td class="px-6 py-4 text-sm text-text-subtle">
                                 {{ project.linked_at ?? '-' }}
                             </td>
                         </tr>
@@ -188,20 +186,20 @@
                 <h2 class="text-lg font-semibold mb-4">{{ $t('Room types') }}</h2>
 
                 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-surface-sunken">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Room type') }}</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ $t('Cost per night') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Room type') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-text-subtle uppercase">{{ $t('Cost per night') }}</th>
                                 <th v-if="!isReadOnly" class="relative px-6 py-3">
                                     <span class="sr-only">{{ $t('Actions') }}</span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-border-subtle">
                             <!-- Existing room types -->
-                            <tr v-for="rt in selectedRoomTypes" :key="rt.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4 text-sm text-gray-900">
+                            <tr v-for="rt in selectedRoomTypes" :key="rt.id" class="hover:bg-surface-sunken">
+                                <td class="px-6 py-4 text-sm text-text">
                                     <BaseInput
                                         v-if="!isReadOnly"
                                         :id="`name_${rt.id}`"
@@ -212,7 +210,7 @@
                                     />
                                     <span v-else>{{ $t(rt.name) }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
+                                <td class="px-6 py-4 text-sm text-text-subtle">
                                     <div v-if="!isReadOnly" class="w-32">
                                         <BaseInput
                                             :id="`cost_${rt.id}`"
@@ -230,7 +228,7 @@
                                 <td v-if="!isReadOnly" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <button
                                         type="button"
-                                        class="text-red-600 hover:text-red-800"
+                                        class="text-danger hover:text-danger"
                                         @click="removeRoomType(rt.id)"
                                     >
                                         <component :is="IconTrash" class="h-4 w-4" />
@@ -239,7 +237,7 @@
                             </tr>
 
                             <!-- New row for adding -->
-                            <tr v-if="!isReadOnly && showNewRow" class="bg-gray-50">
+                            <tr v-if="!isReadOnly && showNewRow" class="bg-surface-sunken">
                                 <td class="px-6 py-4">
                                     <BaseInput
                                         id="new_room_type_name"
@@ -265,10 +263,10 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button type="button" class="text-green-600 hover:text-green-800" @click="createRoomType" :disabled="!newRoomTypeName.trim()">
+                                        <button type="button" class="text-success hover:text-success" @click="createRoomType" :disabled="!newRoomTypeName.trim()">
                                             <component :is="IconCheck" class="h-5 w-5" />
                                         </button>
-                                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="showNewRow = false; newRoomTypeName = ''; newRoomTypeCost = 0">
+                                        <button type="button" class="text-text-subtle hover:text-text-muted" @click="showNewRow = false; newRoomTypeName = ''; newRoomTypeCost = 0">
                                             <component :is="IconX" class="h-5 w-5" />
                                         </button>
                                     </div>
@@ -279,21 +277,21 @@
                 </div>
 
                 <div v-if="!isReadOnly && !showNewRow" class="mt-3">
-                    <button type="button" class="ui-button-add" @click="showNewRow = true">
+                    <BaseUIButton type="button" variant="primary" hide-icon @click="showNewRow = true">
                         <component :is="IconCirclePlus" class="h-4 w-4 mr-1" />
                         {{ $t('Add room type') }}
-                    </button>
+                    </BaseUIButton>
                 </div>
             </div>
 
             <!-- Read-only notice for User-type contacts -->
-            <div v-if="isReadOnly && activeTab === 'info'" class="mt-6 rounded-md bg-blue-50 p-4">
+            <div v-if="isReadOnly && activeTab === 'info'" class="mt-6 rounded-md bg-accent-50 p-4">
                 <div class="flex">
-                    <component :is="IconInfoCircle" class="h-5 w-5 text-blue-400" />
+                    <component :is="IconInfoCircle" class="h-5 w-5 text-accent-500" />
                     <div class="ml-3">
-                        <p class="text-sm text-blue-700">
+                        <p class="text-sm text-accent-700">
                             {{ $t('This contact is linked to a user account. Changes must be made in the user profile.') }}
-                            <Link v-if="sourceProfileUrl" :href="sourceProfileUrl" class="font-medium underline hover:text-blue-900">
+                            <Link v-if="sourceProfileUrl" :href="sourceProfileUrl" class="font-medium underline hover:text-accent-700">
                                 {{ $t('Open profile') }}
                             </Link>
                         </p>
@@ -324,6 +322,7 @@ import {
     IconCamera, IconSwitchHorizontal,
 } from '@tabler/icons-vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import { useTranslation } from '@/Composeables/Translation.js'
 import debounce from 'lodash.debounce'
 

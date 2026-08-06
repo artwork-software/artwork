@@ -4,9 +4,9 @@
 
 
             <ToolbarHeader
+                band
                 :icon="IconCurrencyEuro"
                 :title="$t('Sources of funding')"
-                icon-bg-class="bg-blue-600/10 text-blue-700"
                 :description="filteredMoneySources.length + ' ' + $t('Sources of funding')"
                 v-model="moneySource_query"
                 :search-enabled="true"
@@ -19,10 +19,10 @@
                         <Listbox as="div" v-model="moneySourceFilter">
                             <div class="relative">
                                 <ListboxButton
-                                    class="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    class="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-md bg-white/8 hover:bg-white/16 text-text-inverse text-[13px] font-medium cursor-pointer transition-[background-color] duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-accent-500"
                                 >
-                                    <span class="text-gray-800">{{ moneySourceFilter.name }}</span>
-                                    <IconChevronDown class="h-4 w-4 text-gray-400" />
+                                    <span>{{ moneySourceFilter.name }}</span>
+                                    <IconChevronDown class="h-4 w-4 text-text-inverse-muted" />
                                 </ListboxButton>
 
                                 <transition
@@ -34,7 +34,7 @@
                                     leave-to-class="opacity-0 translate-y-1"
                                 >
                                     <ListboxOptions
-                                        class="absolute z-100 mt-2 w-full rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                                        class="absolute z-100 mt-2 w-full rounded-lg border border-border-subtle bg-white p-1 text-sm shadow-lg focus:outline-none"
                                     >
                                         <ListboxOption
                                             v-for="filter in moneySourceFilters"
@@ -45,12 +45,12 @@
                                         >
                                             <li
                                                 :class="[
-                                                active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800',
+                                                active ? 'bg-accent-50 text-accent-700' : 'text-text',
                                                 'flex cursor-pointer items-center justify-between rounded-md w-full px-3 py-2'
                                               ]"
                                             >
                                                 <span :class="[selected ? 'font-semibold' : 'font-normal', 'truncate']">{{ filter.name }}</span>
-                                                <IconCircleCheck v-if="selected" class="h-4 w-4 text-indigo-600" />
+                                                <IconCircleCheck v-if="selected" class="h-4 w-4 text-accent-600" />
                                             </li>
                                         </ListboxOption>
                                     </ListboxOptions>
@@ -61,6 +61,7 @@
                         <BaseUIButton
                             label=""
                             use-translation
+                            on-band
                             :icon="IconFilter"
                             @click="showMoneySourceFilters = !showMoneySourceFilters"
                         />
@@ -68,10 +69,10 @@
 
                     <Menu as="div" class="relative">
                         <MenuButton
-                            class="ui-button"
+                            class="select-none size-[30px] min-h-0 p-0 inline-flex items-center justify-center rounded-md bg-white/8 hover:bg-white/16 cursor-pointer transition-[background-color] duration-150 ease-out"
                             :aria-label="$t('Sort')"
                         >
-                            <IconArrowsSort class="h-5 w-5 text-gray-700" stroke-width="1.5" />
+                            <IconArrowsSort class="h-5 w-5 text-text-inverse" stroke-width="1.5" />
                         </MenuButton>
                         <transition
                             enter-active-class="transition duration-100 ease-out"
@@ -82,14 +83,14 @@
                             leave-to-class="opacity-0 -translate-y-1"
                         >
                             <MenuItems
-                                class="absolute right-0 z-20 mt-2 w-60 rounded-lg border border-gray-200 bg-white p-1 text-sm shadow-lg focus:outline-none"
+                                class="absolute right-0 z-20 mt-2 w-60 rounded-lg border border-border-subtle bg-white p-1 text-sm shadow-lg focus:outline-none"
                             >
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <button
                                             type="button"
                                             @click="changeSortAlgorithm('name')"
-                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                            :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
                                         >
                                             <span>{{ $t('Alphabetical') }}</span>
                                             <span v-if="sortType === 'name'">
@@ -103,7 +104,7 @@
                                         <button
                                             type="button"
                                             @click="changeSortAlgorithm('funding_start_date')"
-                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                            :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
                                         >
                                             <span>{{ $t('Start date') }}</span>
                                             <span v-if="sortType === 'funding_start_date'">
@@ -117,7 +118,7 @@
                                         <button
                                             type="button"
                                             @click="changeSortAlgorithm('funding_end_date')"
-                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                            :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
                                         >
                                             <span>{{ $t('End date') }}</span>
                                             <span v-if="sortType === 'funding_end_date'">
@@ -131,7 +132,7 @@
                                         <button
                                             type="button"
                                             @click="changeSortAlgorithm('created_at')"
-                                            :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-800', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
+                                            :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text', 'flex w-full items-center justify-between rounded-md px-3 py-2']"
                                         >
                                             <span>{{ $t('Created on') }}</span>
                                             <span v-if="sortType === 'created_at'">
@@ -149,6 +150,7 @@
                         label="New"
                         use-translation
                         is-add-button
+                        on-band
                         @click="showMoneySourceModal = true"
                     />
 
@@ -163,62 +165,62 @@
                 class="relative mb-4"
             >
                 <div
-                    class="z-10 w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-lg"
+                    class="z-10 w-full rounded-2xl border border-border-subtle bg-white p-4 shadow-lg"
                 >
                     <!-- Kategorien -->
                     <Disclosure as="div" class="mb-3">
                         <DisclosureButton
-                            class="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm font-medium text-gray-800 hover:bg-gray-50 focus:outline-none"
+                            class="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm font-medium text-text hover:bg-surface-sunken focus:outline-none"
                         >
                             <span>{{ $t('All categories') }}</span>
-                            <IconChevronDown class="h-4 w-4 text-gray-500 ui-open:rotate-180 ui-open:transform" />
+                            <IconChevronDown class="h-4 w-4 text-text-subtle ui-open:rotate-180 ui-open:transform" />
                         </DisclosureButton>
                         <DisclosurePanel class="mt-2 px-2">
                             <div v-if="moneySourceCategories?.length" class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                                 <label
                                     v-for="cat in moneySourceCategories"
                                     :key="cat.id"
-                                    class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-gray-50"
+                                    class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-sunken"
                                 >
                                     <input
                                         v-model="categoryFilters"
-                                        class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        class="h-4 w-4 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
                                         type="checkbox"
                                         :value="cat.id"
                                     />
                                     <span
                                         class="text-xs"
-                                        :class="categoryFilters.includes(cat.id) ? 'text-gray-900' : 'text-gray-500'"
+                                        :class="categoryFilters.includes(cat.id) ? 'text-text' : 'text-text-subtle'"
                                     >{{ cat.name }}</span>
                                 </label>
                             </div>
-                            <div v-else class="px-1 text-xs text-gray-500">
+                            <div v-else class="px-1 text-xs text-text-subtle">
                                 {{ $t('No categories for funding sources have been created yet.') }}
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
 
-                    <hr class="my-3 border-gray-200" />
+                    <hr class="my-3 border-border-subtle" />
 
                     <!-- Offene Aufgaben -->
-                    <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded-md">
+                    <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 hover:bg-surface-sunken rounded-md">
                         <input
                             v-model="openTasksFilter"
-                            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            class="h-4 w-4 cursor-pointer rounded border-border text-accent-600 focus:ring-accent-600"
                             type="checkbox"
                         />
-                        <span :class="openTasksFilter ? 'text-gray-900' : 'text-gray-500'" class="text-xs">
+                        <span :class="openTasksFilter ? 'text-text' : 'text-text-subtle'" class="text-xs">
               {{ $t('Sources with open tasks') }}
             </span>
                     </label>
 
-                    <hr class="my-3 border-gray-200" />
+                    <hr class="my-3 border-border-subtle" />
 
                     <!-- Zeitraum -->
                     <button
                         type="button"
                         class="rounded-md px-2 py-1.5 text-left text-xs"
-                        :class="timeSpanFilterActive ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'"
+                        :class="timeSpanFilterActive ? 'text-text font-medium' : 'text-text-subtle hover:text-text-muted'"
                         @click="openTimeSpanFilterModal"
                     >
                         {{ $t('Period') }}
@@ -255,7 +257,7 @@
                     v-for="moneySource in filteredMoneySources"
                     :key="moneySource.id"
                     v-show="(moneySources.some(s => s.money_source_id === moneySource.id) || can('view edit add money_sources | can edit and delete money sources')) || is('artwork admin')"
-                    class="mb-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs"
+                    class="mb-3 rounded-2xl border border-border-subtle bg-white p-4 shadow-xs"
                 >
                     <!-- Kopfzeile -->
 
@@ -268,17 +270,17 @@
                                     class="h-5 w-5"
                                     alt="groupIcon"
                                 />
-                                <Link :href="getEditHref(moneySource)" class="sDark truncate font-medium">
+                                <Link :href="getEditHref(moneySource)" class="text-base/5 font-semibold text-text truncate font-medium">
                                     {{ moneySource.name }}
                                 </Link>
                                 <IconPinned
                                     v-if="isPinned(moneySource)"
-                                    class="h-4 w-4 text-indigo-600"
+                                    class="h-4 w-4 text-accent-600"
                                     stroke-width="1.5"
                                 />
                             </div>
 
-                            <div v-if="moneySource.group_id !== null" class="mt-1 text-xs text-gray-500">
+                            <div v-if="moneySource.group_id !== null" class="mt-1 text-xs text-text-subtle">
                                 {{ $t('Belongs to') }}:
                                 {{ findGroupName(moneySource.group_id) }}
                             </div>
@@ -290,7 +292,7 @@
                                 <MenuItem v-slot="{ active }">
                                     <a
                                         :href="getEditHref(moneySource)"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700', 'flex items-center rounded-md px-3 py-2 text-sm']"
+                                        :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text-muted', 'flex items-center rounded-md px-3 py-2 text-sm']"
                                     >
                                         <IconEdit class="mr-2 h-4 w-4" stroke-width="1.5" />
                                         {{ $t('edit') }}
@@ -304,7 +306,7 @@
                                     <button
                                         type="button"
                                         @click="duplicateMoneySource(moneySource)"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
+                                        :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text-muted', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
                                     >
                                         <IconCopy class="mr-2 h-4 w-4" stroke-width="1.5" />
                                         {{ $t('Duplicate') }}
@@ -318,7 +320,7 @@
                                     <button
                                         type="button"
                                         @click="pinMoneySource(moneySource)"
-                                        :class="[active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
+                                        :class="[active ? 'bg-accent-50 text-accent-700' : 'text-text-muted', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
                                     >
                                         <IconPin class="mr-2 h-4 w-4" />
                                         {{ isPinned(moneySource) ? $t('Undo pinning') : $t('Pin') }}
@@ -332,7 +334,7 @@
                                     <button
                                         type="button"
                                         @click="openDeleteSourceModal(moneySource)"
-                                        :class="[active ? 'bg-red-50 text-red-700' : 'text-red-600', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
+                                        :class="[active ? 'bg-danger-surface text-danger' : 'text-danger', 'flex w-full items-center rounded-md px-3 py-2 text-sm']"
                                     >
                                         <IconTrash class="mr-2 h-4 w-4" stroke-width="1.5" />
                                         {{ $t('Delete') }}
@@ -343,7 +345,7 @@
                     </div>
 
                     <!-- Meta -->
-                    <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+                    <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-muted">
                         <div class="pl-1">
                             {{ toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }}€ /
                             {{ toCurrencyString(moneySource.amount) }}€
@@ -357,12 +359,12 @@
                     </div>
 
                     <!-- Beschreibung -->
-                    <div v-if="moneySource.description" class="mt-1 pl-1 text-xs text-gray-600">
+                    <div v-if="moneySource.description" class="mt-1 pl-1 text-xs text-text-muted">
                         {{ moneySource.description }}
                     </div>
 
                     <!-- Letzte Änderung -->
-                    <div v-if="moneySource.history?.[0]" class="mt-1 flex items-center pl-1 text-xs text-gray-500">
+                    <div v-if="moneySource.history?.[0]" class="mt-1 flex items-center pl-1 text-xs text-text-subtle">
                         {{ $t('Last change') }}: {{ moneySource.history[0]?.created_at }} {{ $t('by') }}
                         <NewUserToolTip
                             class="ml-2"
@@ -411,13 +413,13 @@
         <!-- Zeitraum-Filter Modal -->
         <BaseModal v-if="timeSpanFilterModalVisible" @closed="closeTimeSpanFilterModal" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <h1 class="headline1 my-1">{{ $t('Select period') }}</h1>
-                <h2 class="xsLight mb-3 mt-4">
+                <h1 class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-1">{{ $t('Select period') }}</h1>
+                <h2 class="text-sm/5 font-bold text-text-subtle mb-3 mt-4">
                     {{ $t('Please select the time period in which the financial sources should be displayed.') }}
                 </h2>
                 <div class="flex gap-2">
-                    <input class="w-1/2 rounded-lg border border-gray-200 p-2" type="date" v-model="timeSpanFilterStart" />
-                    <input class="w-1/2 rounded-lg border border-gray-200 p-2" type="date" v-model="timeSpanFilterEnd" />
+                    <input class="w-1/2 rounded-lg border border-border-subtle p-2" type="date" v-model="timeSpanFilterStart" />
+                    <input class="w-1/2 rounded-lg border border-border-subtle p-2" type="date" v-model="timeSpanFilterEnd" />
                 </div>
                 <div class="my-3 flex w-full justify-center">
                     <FormButton

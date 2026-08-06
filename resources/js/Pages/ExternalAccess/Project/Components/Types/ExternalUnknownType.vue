@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-xs text-zinc-400">
+    <div class="rounded-2xl border border-dashed border-border bg-surface-sunken p-4 text-xs text-text-subtle">
         {{ $t('Unsupported component type') }}
     </div>
 </template>

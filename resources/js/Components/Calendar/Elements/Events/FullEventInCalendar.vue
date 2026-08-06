@@ -6,16 +6,16 @@
       '--event-contrast-color': eventTextColor,
       zoom: contentZoom,
       lineHeight: innerLineHeight,
-      /* Auswahl im Multi-Edit: grüner Ring + dunkle Außenlinie, damit die
-         Markierung auch auf hellen Kachelfarben nicht untergeht */
-      boxShadow: multiEdit && event.considerOnMultiEdit
-          ? '0 0 0 2px #22c55e, 0 0 0 3.5px rgba(0,0,0,0.85)'
-          : undefined
+      /* Multi-Edit-Auswahlring (accent + dunkle Außenlinie) und/oder
+         Hervorhebungs-Innenring — kombiniert in containerBoxShadow */
+      boxShadow: containerBoxShadow
     }"
-        class="group/singleEvent rounded-lg border border-black/5 transition-[border,background-color] duration-150"
+        class="group/singleEvent rounded-lg border transition-[border,background-color] duration-150"
         :class="[
       event.occupancy_option ? 'event-disabled' : '',
-      calSettings.time_period_project_id === event?.project?.id || isHighlighted ? 'border-[3px] border-dashed border-pink-500' : '',
+      // Zustandsdarstellung statt Deckkraft: hervorgehoben = Außenrahmen (Innenring
+      // via boxShadow), nicht relevant = 7%-Fläche + gestrichelter Rahmen + fixe Textfarbe
+      isEmphasized ? 'border-[rgba(0,0,0,0.18)]' : (isDimmed ? 'border-dashed border-border text-[#3F424A]' : 'border-black/5'),
       isHeightFull ? 'h-full' : (expandDays ? '' : 'h-full'),
       pageProps.auth.user.calendar_daily_view ? 'overflow-y-auto' : '',
       multiEdit ? 'relative' : ''
@@ -26,10 +26,10 @@
         <div
             v-if="checkIfMultiEditIsEnabled"
             class="absolute inset-0 z-10 rounded-lg hidden group-hover/singleEvent:flex items-center justify-center"
-            :class="event.considerOnMultiEdit ? '!flex bg-green-200/50' : 'bg-artwork-buttons-create/35'"
+            :class="event.considerOnMultiEdit ? '!flex bg-accent-200/50' : 'bg-accent-600/35'"
         >
             <div v-if="event.considerOnMultiEdit" class="bg-white rounded-md p-0.5">
-                <component :is="IconSquareCheckFilled" class="size-6 text-green-600" />
+                <component :is="IconSquareCheckFilled" class="size-6 text-accent-600" />
             </div>
 
             <!-- wirkliche Checkbox bleibt, nur optisch versteckt -->
@@ -45,10 +45,10 @@
         </div>
 
         <!-- Status-Leiste oben (kompakt) -->
-        <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-artwork-buttons-create px-2 py-1 text-[10px] font-lexend text-white select-none">
+        <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
             {{ $t('Planned Event') }}
         </div>
-        <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-orange-500 px-2 py-1 text-[10px] font-lexend text-white select-none">
+        <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
             {{ $t('Verification requested') }}
         </div>
 
@@ -63,7 +63,7 @@
             <div class="flex items-center gap-1.5 min-w-0">
                 <a
                     :href="getEditHref(event.project.group[0].id)"
-                    class="block w-full min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                    class="block w-full min-w-0 hover:text-accent-700 hover:underline underline-offset-2 transition ease-in-out duration-200"
                     @mouseenter="showProjectGroupTooltipHandler"
                     @mouseleave="hideProjectGroupTooltip"
                 >
@@ -76,7 +76,7 @@
                             class="fixed z-[9999] pointer-events-none"
                             :style="{ top: projectGroupTooltipPosition.top + 'px', left: projectGroupTooltipPosition.left + 'px' }"
                         >
-                            <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                            <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                                 {{ event.project.group[0].name }}
                             </div>
                         </div>
@@ -107,7 +107,7 @@
                     title=""
                 >
                     <div class="absolute hidden group-hover:block top-5 z-99">
-                        <div class="rounded-full bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
+                        <div class="rounded-full bg-surface-inverse px-4 py-0.5 text-[14px] text-white">
                             {{ event?.project?.status?.name }}
                         </div>
                     </div>
@@ -124,7 +124,7 @@
                 <!-- Projektname als Link, einzeilig mit Tooltip bei Trunkierung -->
                 <a
                     :href="getEditHref(event.project?.id)"
-                    class="relative group flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                    class="relative group flex-1 min-w-0 hover:text-accent-700 hover:underline underline-offset-2 transition ease-in-out duration-200"
                     @mouseenter="showTooltip"
                     @mouseleave="hideTooltip"
                 >
@@ -137,7 +137,7 @@
                             class="fixed z-[9999] pointer-events-none"
                             :style="{ top: tooltipPosition.top + 'px', left: tooltipPosition.left + 'px' }"
                         >
-                            <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                            <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                                 {{ event.project?.name }}
                             </div>
                         </div>
@@ -166,7 +166,7 @@
                                     title=""
                                 >
                                     <div class="absolute hidden group-hover:block top-5 z-99">
-                                        <div class="rounded-full bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
+                                        <div class="rounded-full bg-surface-inverse px-4 py-0.5 text-[14px] text-white">
                                             {{ event?.project?.status?.name }}
                                         </div>
                                     </div>
@@ -176,13 +176,13 @@
                                 <a
                                     v-if="event.project?.name && event.project?.id"
                                     :href="getEditHref(event.project?.id)"
-                                    class="relative group flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2 transition ease-in-out duration-200"
+                                    class="relative group flex-1 min-w-0 hover:text-accent-700 hover:underline underline-offset-2 transition ease-in-out duration-200"
                                 >
                                   <span ref="projectNameSpan" :class="['block w-full font-semibold', isProjectNameLong ? 'text-[13px] leading-4 two-line-clamp' : 'truncate text-sm']">
                                     {{ event.project?.name }}
                                   </span>
                                   <div v-if="isNameTruncated" class="absolute hidden group-hover:block top-5 left-0 z-50 w-42">
-                                    <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white">
+                                    <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white">
                                       {{ event.project?.name }}
                                     </div>
                                   </div>
@@ -210,7 +210,7 @@
                                         class="fixed z-[9999] pointer-events-none"
                                         :style="{ top: eventNameTooltipPosition.top + 'px', left: eventNameTooltipPosition.left + 'px' }"
                                     >
-                                        <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                        <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                                             {{ eventNameLabel }}
                                         </div>
                                     </div>
@@ -237,7 +237,7 @@
                                             class="fixed z-[9999] pointer-events-none"
                                             :style="{ top: eventTypeTooltipPosition.top + 'px', left: eventTypeTooltipPosition.left + 'px' }"
                                         >
-                                            <div class="rounded-lg bg-artwork-navigation-background px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
+                                            <div class="rounded-lg bg-surface-inverse px-4 py-0.5 text-[14px] text-white whitespace-nowrap">
                                                 {{ event?.eventType?.name }}
                                             </div>
                                         </div>
@@ -267,7 +267,7 @@
                             />
                             <div
                                 class="subpixel-antialiased"
-                                :class="[zoom_factor >= 1 ? 'eventTime' : '', isSameDay && !project && !atAGlance ? 'whitespace-nowrap' : '']"
+                                :class="[zoom_factor >= 1 ? 'text-xs/[18px]' : '', isSameDay && !project && !atAGlance ? 'whitespace-nowrap' : '']"
                                 :style="{ color: eventTypeTextColor }"
                             >
                                 <!-- gleicher Tag -->
@@ -288,7 +288,7 @@
                                   </span>
                                                     <span v-else>
                                     <template v-if="!isSameDay">
-                                      <span class="text-error pr-0.5">!</span>
+                                      <span class="text-danger pr-0.5">!</span>
                                       {{ resolvedFormattedDates.startDateTime_without_year  + ' - ' +  resolvedFormattedDates.endDateTime_without_year }}
                                     </template>
                                     <template v-else>
@@ -307,12 +307,12 @@
                             <div v-if="event.option_string && calSettings.options" class=" text-xs/5">
                                 <span
                                     v-if="!atAGlance && isSameDay"
-                                    class="eventTime font-medium subpixel-antialiased"
+                                    class="text-xs/[18px] font-medium subpixel-antialiased"
                                     :style="{ lineHeight: innerLineHeight, fontSize: innerFontSize }"
                                 >
                                   , {{ event.option_string }}
                                 </span>
-                                                <span v-else class="eventTime font-medium subpixel-antialiased ml-0.5">
+                                                <span v-else class="text-xs/[18px] font-medium subpixel-antialiased ml-0.5">
                                   ({{ event.option_string.charAt(7) }})
                                 </span>
                             </div>
@@ -349,11 +349,11 @@
                                             leave-from-class="opacity-100 scale-100"
                                             leave-to-class="opacity-0 scale-95"
                                         >
-                                            <MenuItems class="absolute mt-2 w-72 origin-top-right rounded-lg bg-primary py-1 ring-1 ring-black/5 focus:outline-none">
+                                            <MenuItems class="absolute mt-2 w-72 origin-top-right rounded-lg bg-surface-inverse py-1 ring-1 ring-black/5 focus:outline-none">
                                                 <MenuItem v-for="user in event?.project?.leaders" :key="'menu-'+user.id" v-slot="{ active }">
                                                     <Link
                                                         href="#"
-                                                        :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']"
+                                                        :class="[active ? ' ' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']"
                                                     >
                                                         <img class="h-5 w-5 rounded-full" :src="user.profile_photo_url" alt="" />
                                                         <span class="ml-4">{{ user.first_name }} {{ user.last_name }}</span>
@@ -431,7 +431,7 @@
                             :style="{ color: eventTextColor }"
                         />
                         <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
-                            <div class="rounded-lg bg-artwork-navigation-background px-3 py-1 text-xs text-white">
+                            <div class="rounded-lg bg-surface-inverse px-3 py-1 text-xs text-white">
                                 {{ property.name }}
                             </div>
                         </div>
@@ -508,10 +508,10 @@
                             class="rounded-lg border border-black/5"
                         >
                             <!-- Status-Leiste oben -->
-                            <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-artwork-buttons-create px-2 py-1 text-[10px] font-lexend text-white select-none">
+                            <div v-if="event.isPlanning && !event.hasVerification" class="w-full rounded-t-lg bg-accent-600 px-2 py-1 text-[10px] font-lexend text-white select-none">
                                 {{ $t('Planned Event') }}
                             </div>
-                            <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-orange-500 px-2 py-1 text-[10px] font-lexend text-white select-none">
+                            <div v-else-if="event.hasVerification" class="w-full rounded-t-lg bg-special-orange px-2 py-1 text-[10px] font-lexend text-white select-none">
                                 {{ $t('Verification requested') }}
                             </div>
 
@@ -523,7 +523,7 @@
                             >
                                 <a
                                     :href="getEditHref(event.project.group[0].id)"
-                                    class="block w-full min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2"
+                                    class="block w-full min-w-0 hover:text-accent-700 hover:underline underline-offset-2"
                                     @mouseenter="showProjectGroupTooltipHandler"
                                     @mouseleave="hideProjectGroupTooltip"
                                 >
@@ -547,7 +547,7 @@
                                     ></div>
                                     <a
                                         :href="getEditHref(event.project?.id)"
-                                        class="flex-1 min-w-0 hover:text-artwork-buttons-hover hover:underline underline-offset-2"
+                                        class="flex-1 min-w-0 hover:text-accent-700 hover:underline underline-offset-2"
                                     >
                                         <span class="block w-full truncate font-semibold text-xs">{{ event.project?.name }}</span>
                                     </a>
@@ -617,7 +617,7 @@
                                                             {{ $t('Full day') }}, {{ resolvedFormattedDates.start_without_year }} - {{ resolvedFormattedDates.end_without_year }}
                                                         </span>
                                                         <span v-else>
-                                                            <span class="text-error pr-0.5">!</span>
+                                                            <span class="text-danger pr-0.5">!</span>
                                                             {{ resolvedFormattedDates.startDateTime_without_year + ' - ' + resolvedFormattedDates.endDateTime_without_year }}
                                                         </span>
                                                     </template>
@@ -740,7 +740,7 @@
                         :class="[subEvent.class]"
                         :style="{
               height: (totalHeight - heightSubtraction(subEvent)) * heightZoom + 10 + 'px',
-              backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, highContrastPercent)
+              backgroundColor: backgroundColorWithOpacity(subEvent.type.hex_code, eventBgPercent)
             }"
                         class="rounded-r-lg px-2 py-1.5"
                     >
@@ -763,7 +763,7 @@
                                 >
                                     <PropertyIcon :name="property.icon" class="size-3" stroke-width="1.5" />
                                     <div class="absolute hidden group-hover/property:block bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 whitespace-nowrap">
-                                        <div class="rounded-lg bg-artwork-navigation-background px-3 py-1 text-xs text-white">
+                                        <div class="rounded-lg bg-surface-inverse px-3 py-1 text-xs text-white">
                                             {{ property.name }}
                                         </div>
                                     </div>
@@ -783,12 +783,12 @@
                     {{ $t('Full day') }}, {{ subEvent.formattedDates.start_date }}
                   </template>
                   <template v-else>
-                    <span class="text-error" v-if="subEvent.formattedDates.start_date !== subEvent.formattedDates.end_date">!</span>
+                    <span class="text-danger" v-if="subEvent.formattedDates.start_date !== subEvent.formattedDates.end_date">!</span>
                     {{ $t('Full day') }}, {{ subEvent.formattedDates.start_date }} – {{ subEvent.formattedDates.end_date }}
                   </template>
                 </span>
                                 <span v-else>
-                  <span class="text-error" v-if="subEvent.formattedDates.start_date !== subEvent.formattedDates.end_date">!</span>
+                  <span class="text-danger" v-if="subEvent.formattedDates.start_date !== subEvent.formattedDates.end_date">!</span>
                   {{ subEvent.formattedDates.start_date_time }} – {{ subEvent.formattedDates.end_date_time }}
                 </span>
                             </template>
@@ -1018,6 +1018,46 @@ const isHighlighted = computed(() => {
     return highlightEventId && parseInt(highlightEventId) === parseInt(props.event.id);
 });
 
+// --- Zustandsdarstellung Highlight/Multi-Edit (ersetzt frühere Deckkraft-Dimmung) ---
+// HERVORGEHOBEN: Projektzeitraum-Projekt oder highlightEventId-URL-Parameter.
+const isEmphasized = computed(() =>
+    (!!calSettings.value.time_period_project_id
+        && calSettings.value.time_period_project_id === props.event?.project?.id)
+    || isHighlighted.value
+);
+
+// Ein Highlight-Modus ist aktiv, sobald ein Termin/Projekt hervorgehoben wird —
+// alle übrigen Termine gelten dann als "nicht relevant".
+const highlightModeActive = computed(() =>
+    Boolean(pageProps.urlParameters.highlightEventId)
+    || Boolean(calSettings.value.use_project_time_period && calSettings.value.time_period_project_id)
+);
+
+// Multi-Edit im Planungskalender: nicht auswählbare Termine (weder Planungs-
+// noch Verifizierungstermin) sind nicht relevant.
+const isMultiEditIrrelevant = computed(() =>
+    props.multiEdit && props.isPlanning && !(props.event.hasVerification || props.event.isPlanning)
+);
+
+// NICHT RELEVANT: kein opacity auf dem Container — stattdessen 7%-Fläche,
+// gestrichelter Rahmen und fixe Textfarbe (siehe Template/eventTextColor).
+const isDimmed = computed(() =>
+    !isEmphasized.value && (highlightModeActive.value || isMultiEditIrrelevant.value)
+);
+
+// Multi-Edit-Auswahlring (accent-600 + dunkle Außenlinie) und Hervorhebungs-
+// Innenring können gleichzeitig auftreten — daher kombiniert.
+const containerBoxShadow = computed(() => {
+    const shadows = [];
+    if (props.multiEdit && props.event.considerOnMultiEdit) {
+        shadows.push('0 0 0 2px #276293, 0 0 0 3.5px rgba(0,0,0,0.85)');
+    }
+    if (isEmphasized.value) {
+        shadows.push('inset 0 0 0 2px #276293');
+    }
+    return shadows.length ? shadows.join(', ') : undefined;
+});
+
 // Consider project name long when it exceeds a reasonable character threshold
 const isProjectNameLong = computed(() => {
     const name = props.event?.project?.name ?? '';
@@ -1234,14 +1274,24 @@ const getColorBasedOnUserSettings = computed(() => {
     return props.event.eventType.hex_code;
 });
 
+// Flächensättigung je Zustand: gedimmt 7 %, hervorgehoben 100 %, sonst Setting (15/75)
+const eventBgPercent = computed(() => {
+    if (isDimmed.value) return 7;
+    if (isEmphasized.value) return 100;
+    return highContrastPercent.value;
+});
 const eventBgColor = computed(() =>
-    backgroundColorWithOpacity(getColorBasedOnUserSettings.value, highContrastPercent.value)
+    backgroundColorWithOpacity(getColorBasedOnUserSettings.value, eventBgPercent.value)
 );
-const eventTextColor = computed(() => getTextColorBasedOnBackground(eventBgColor.value));
+const eventTextColor = computed(() =>
+    isDimmed.value ? '#3F424A' : getTextColorBasedOnBackground(eventBgColor.value)
+);
 const eventTypeBgColor = computed(() =>
-    backgroundColorWithOpacity(props.event.event_type_color, highContrastPercent.value)
+    backgroundColorWithOpacity(props.event.event_type_color, eventBgPercent.value)
 );
-const eventTypeTextColor = computed(() => getTextColorBasedOnBackground(eventTypeBgColor.value));
+const eventTypeTextColor = computed(() =>
+    isDimmed.value ? '#3F424A' : getTextColorBasedOnBackground(eventTypeBgColor.value)
+);
 
 const totalHeight = computed(() => {
     let height = 42;
@@ -1337,7 +1387,7 @@ const closeTimelineModal = () => {
 /* Barrierearme Fokussierung für interaktive Elemente (wenn Tailwind focus:ring nicht überall greift) */
 a:focus-visible,
 button:focus-visible {
-    outline: 2px solid rgba(59, 130, 246, 0.7); /* blau */
+    outline: 2px solid var(--color-accent-600);
     outline-offset: 2px;
 }
 

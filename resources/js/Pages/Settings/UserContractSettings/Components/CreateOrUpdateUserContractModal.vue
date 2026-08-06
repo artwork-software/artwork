@@ -20,7 +20,7 @@
                         label="Name"
                         required
                         id="name" />
-                    <p v-if="userContractForm.errors.name" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="userContractForm.errors.name" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <div>
@@ -28,7 +28,7 @@
                         v-model="userContractForm.description"
                         label="Description"
                         id="description" />
-                    <p v-if="userContractForm.errors.description" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="userContractForm.errors.description" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
                 <SettingsGuideBanner
@@ -46,7 +46,7 @@
                         label="Free Full Days Per Week"
                         type="number"
                         id="free_full_days_per_week" />
-                    <p v-if="userContractForm.errors.free_full_days_per_week" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="userContractForm.errors.free_full_days_per_week" class="text-danger mt-0.5 text-xs"></p>
                 </div>
                 <div>
                     <BaseInput
@@ -54,7 +54,7 @@
                         label="Free Half Days Per Week"
                         type="number"
                         id="free_half_days_per_week" />
-                    <p v-if="userContractForm.errors.free_half_days_per_week" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="userContractForm.errors.free_half_days_per_week" class="text-danger mt-0.5 text-xs"></p>
                 </div>
                 <div>
                     <div class="flex gap-3">
@@ -64,13 +64,13 @@
                             </div>
                         </div>
                         <div class="text-sm/6">
-                            <label for="candidates" class="font-medium text-gray-900">{{ $t('Special Day Rule Active')}}</label>
-                            <p id="candidates-description" class="text-gray-500">
+                            <label for="candidates" class="font-medium text-text">{{ $t('Special Day Rule Active')}}</label>
+                            <p id="candidates-description" class="text-text-subtle">
                                 {{ $t('If this is active, the special day rule will be applied to this contract. This means that on special days, the rules for free days may differ from the regular rules.') }}
                             </p>
                         </div>
                     </div>
-                    <p v-if="userContractForm.errors.special_day_rule_active" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="userContractForm.errors.special_day_rule_active" class="text-danger mt-0.5 text-xs"></p>
                 </div>
                 <div>
                     <BaseInput
@@ -78,10 +78,10 @@
                         label="Compensation Period (in days)"
                         type="number"
                         id="compensation_period" />
-                    <p v-if="userContractForm.errors.compensation_period" class="text-red-500 mt-0.5 text-xs"></p>
+                    <p v-if="userContractForm.errors.compensation_period" class="text-danger mt-0.5 text-xs"></p>
                 </div>
 
-                <div class="rounded-xl border border-blue-200 bg-blue-50/60 p-4">
+                <div class="rounded-xl border border-accent-200 bg-accent-50/60 p-4">
                     <label class="flex cursor-pointer items-start gap-3" for="use_three_month_average_for_target_reduction">
                         <input
                             id="use_three_month_average_for_target_reduction"
@@ -90,8 +90,8 @@
                             class="input-checklist mt-0.5"
                         >
                         <span>
-                            <span class="block text-sm font-semibold text-gray-900">{{ $t('Use three-month average for target-hour reductions') }}</span>
-                            <span class="mt-1 block text-xs leading-5 text-gray-600">
+                            <span class="block text-sm font-semibold text-text">{{ $t('Use three-month average for target-hour reductions') }}</span>
+                            <span class="mt-1 block text-xs leading-5 text-text-muted">
                                 {{ $t('For weekly holidays and holiday-related compensation days without work, the target is reduced by the average actual daily working time from the three completed calendar months before the affected day. Only days with recorded work are counted; sickness, non-worked holidays and days off are excluded. Confirmed individual working times are included through the daily working-time booking. If no eligible working day exists, the contractual daily target is used.') }}
                             </span>
                         </span>
@@ -99,9 +99,9 @@
                 </div>
 
                 <!-- Spielzeitbezogene Infodaten (DP-18) -->
-                <div class="mt-6 border-t border-gray-200 pt-4">
-                    <h3 class="text-sm font-semibold text-gray-900">{{ $t('Season-related info data') }}</h3>
-                    <p class="text-xs text-gray-500 mb-3">
+                <div class="mt-6 border-t border-border-subtle pt-4">
+                    <h3 class="text-sm font-semibold text-text">{{ $t('Season-related info data') }}</h3>
+                    <p class="text-xs text-text-subtle mb-3">
                         {{ $t('Activate the parameters relevant for this contract and define the target value (X). The season is configured in the tool settings under "Communication & Legal".') }}
                     </p>
 
@@ -117,14 +117,14 @@
 
                     <div class="space-y-3">
                         <div v-for="param in seasonInfoParams" :key="param.key"
-                             class="rounded-md border border-gray-100 p-3">
+                             class="rounded-md border border-border-subtle p-3">
                             <div class="flex items-start gap-3">
                                 <div class="flex h-6 shrink-0 items-center">
                                     <input :id="`param_${param.key}`" type="checkbox" class="input-checklist"
                                            v-model="userContractForm[param.activeKey]" />
                                 </div>
                                 <div class="flex-1 text-sm/6">
-                                    <label :for="`param_${param.key}`" class="font-medium text-gray-900">
+                                    <label :for="`param_${param.key}`" class="font-medium text-text">
                                         {{ $t(param.label) }}
                                     </label>
                                 </div>
@@ -140,7 +140,7 @@
                         </div>
 
                         <!-- Urlaubsanspruch pro Kalenderjahr -->
-                        <div class="rounded-md border border-gray-100 p-3">
+                        <div class="rounded-md border border-border-subtle p-3">
                             <BaseInput
                                 v-model="userContractForm.annual_vacation_days"
                                 :label="$t('Annual vacation days (per calendar year)')"
@@ -151,8 +151,8 @@
                 </div>
 
                 <!-- Überstunden (DP-18 Stufe 2) -->
-                <div class="mt-6 border-t border-gray-200 pt-4">
-                    <h3 class="text-sm font-semibold text-gray-900">{{ $t('Overtime') }}</h3>
+                <div class="mt-6 border-t border-border-subtle pt-4">
+                    <h3 class="text-sm font-semibold text-text">{{ $t('Overtime') }}</h3>
 
                     <SettingsGuideBanner
                         variant="static"
@@ -163,14 +163,14 @@
                         ]"
                     />
 
-                    <div class="mt-3 rounded-md border border-gray-100 p-3">
+                    <div class="mt-3 rounded-md border border-border-subtle p-3">
                         <div class="flex items-start gap-3">
                             <div class="flex h-6 shrink-0 items-center">
                                 <input id="overtime_rule_active" type="checkbox" class="input-checklist"
                                        v-model="userContractForm.overtime_rule_active" />
                             </div>
                             <div class="flex-1 text-sm/6">
-                                <label for="overtime_rule_active" class="font-medium text-gray-900">
+                                <label for="overtime_rule_active" class="font-medium text-text">
                                     {{ $t('Non-reduced overtime within the deadline leads to financial compensation') }}
                                 </label>
                             </div>
@@ -212,7 +212,6 @@
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
 import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {useForm} from "@inertiajs/vue3";

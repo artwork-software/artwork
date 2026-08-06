@@ -7,21 +7,21 @@
         <div class="text-center">
 
             <div class="flex justify-center gap-4 mt-8">
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     variant="primary"
-                    size="md"
+                    hide-icon
                     @click="$emit('convert')"
                 >
                     {{ $t('Convert') }}
-                </ArtworkBaseModalButton>
+                </BaseUIButton>
 
-                <ArtworkBaseModalButton
+                <BaseUIButton
                     variant="secondary"
-                    size="md"
+                    hide-icon
                     @click="$emit('close')"
                 >
                     {{ $t('No, never mind') }}
-                </ArtworkBaseModalButton>
+                </BaseUIButton>
             </div>
         </div>
     </ArtworkBaseModal>
@@ -29,7 +29,7 @@
 
 <script setup>
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
-import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 
 defineEmits(['close', 'convert']);
 </script>

@@ -21,22 +21,22 @@
         </div>
 
         <div class="overflow-x-auto" v-if="timeEfforts.length > 0">
-            <table class="min-w-full divide-y divide-gray-300 text-sm">
+            <table class="min-w-full divide-y divide-border text-sm">
                 <thead>
                     <tr>
-                        <th class="py-2 pr-3 text-left font-semibold text-gray-900">{{ $t('Label') }}</th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Effort') }}</th>
-                        <th class="py-2 px-3 text-left font-semibold text-gray-900">{{ $t('Created by') }}</th>
-                        <th class="py-2 px-3 text-right font-semibold text-gray-900 print:hidden" v-if="canEdit"></th>
+                        <th class="py-2 pr-3 text-left font-semibold text-text">{{ $t('Label') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-text">{{ $t('Effort') }}</th>
+                        <th class="py-2 px-3 text-left font-semibold text-text">{{ $t('Created by') }}</th>
+                        <th class="py-2 px-3 text-right font-semibold text-text print:hidden" v-if="canEdit"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody class="divide-y divide-border-subtle">
                     <tr v-for="effort in timeEfforts" :key="effort.id">
-                        <td class="py-2 pr-3 text-gray-700">{{ effort.label }}</td>
-                        <td class="py-2 px-3 text-gray-500">{{ effort.effort_bucket }}</td>
-                        <td class="py-2 px-3 text-gray-500">{{ effort.user?.first_name }} {{ effort.user?.last_name }}</td>
+                        <td class="py-2 pr-3 text-text-muted">{{ effort.label }}</td>
+                        <td class="py-2 px-3 text-text-subtle">{{ effort.effort_bucket }}</td>
+                        <td class="py-2 px-3 text-text-subtle">{{ effort.user?.first_name }} {{ effort.user?.last_name }}</td>
                         <td class="py-2 px-3 text-right print:hidden" v-if="canEdit">
-                            <button @click="deleteEffort(effort.id)" class="text-xs text-red-500 hover:text-red-700">
+                            <button @click="deleteEffort(effort.id)" class="text-xs text-danger hover:text-danger">
                                 {{ $t('Delete') }}
                             </button>
                         </td>
@@ -44,7 +44,7 @@
                 </tbody>
             </table>
         </div>
-        <p v-else class="text-sm text-gray-400">{{ $t('No time efforts recorded.') }}</p>
+        <p v-else class="text-sm text-text-subtle">{{ $t('No time efforts recorded.') }}</p>
     </div>
 </template>
 

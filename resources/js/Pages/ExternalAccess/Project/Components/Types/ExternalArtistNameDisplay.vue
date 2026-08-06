@@ -1,7 +1,7 @@
 <template>
-    <div class="rounded-2xl border border-zinc-200 bg-white p-5">
-        <p class="text-xs uppercase tracking-wide text-zinc-400">{{ component.name }}</p>
-        <p class="text-base font-semibold text-zinc-900 mt-1">{{ displayValue }}</p>
+    <div class="rounded-2xl border border-border-subtle bg-white p-5">
+        <p class="text-xs uppercase tracking-wide text-text-subtle">{{ component.name }}</p>
+        <p class="text-base font-semibold text-text mt-1">{{ displayValue }}</p>
     </div>
 </template>
 

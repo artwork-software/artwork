@@ -16,7 +16,7 @@
                     :model-value="globalComment"
                     @update:modelValue="$emit('update-global-comment', $event)"
                 />
-                <p class="mt-1 text-[11px] text-gray-500" v-if="!hasAnySelection">
+                <p class="mt-1 text-[11px] text-text-subtle" v-if="!hasAnySelection">
                     {{ $t('No selections yet: global reason will be used to reject entire request.') }}
                 </p>
             </div>
@@ -27,25 +27,25 @@
                     v-for="day in days"
                     :key="day.date"
                     class="rounded-lg border"
-                    :class="selectedDays[day.date] ? 'border-rose-300 bg-rose-50/70' : 'border-gray-200 bg-gray-50'"
+                    :class="selectedDays[day.date] ? 'border-danger-border bg-danger-surface/70' : 'border-border-subtle bg-surface-sunken'"
                 >
                     <div class="flex items-start gap-3 p-3">
                         <div class="flex-1 space-y-2">
                             <div class="flex items-center justify-between">
                                 <label
                                     class="inline-flex items-center gap-1 text-[11px] font-medium cursor-pointer"
-                                    :class="selectedDays[day.date] ? 'text-rose-700' : 'text-gray-700'"
+                                    :class="selectedDays[day.date] ? 'text-danger' : 'text-text-muted'"
                                 >
                                     <input
                                         type="checkbox"
-                                        class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+                                        class="rounded border-border text-danger focus:ring-danger"
                                         :checked="!!selectedDays[day.date]"
                                         @change="$emit('toggle-day', day.date)"
                                     />
                                     <span>{{ day.label }}</span>
                                     <span
                                         v-if="day.is_today"
-                                        class="text-[10px] inline-flex items-center px-1 rounded bg-rose-100 text-rose-700"
+                                        class="text-[10px] inline-flex items-center px-1 rounded bg-danger-surface text-danger"
                                     >
                     {{ $t('Today') }}
                   </span>
@@ -67,7 +67,7 @@
                             <div class="space-y-2">
                                 <template v-for="row in rows" :key="row.key + '-' + day.date">
                                     <div v-if="row.days[day.date] && row.days[day.date].length" class="space-y-1">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
+                                        <div class="text-[10px] uppercase tracking-wide text-text-subtle font-semibold">
                                             {{ row.name }}
                                         </div>
 
@@ -76,24 +76,23 @@
                                                 v-for="entry in row.days[day.date]"
                                                 :key="entry.unique_key"
                                                 class="rounded-md border text-[11px] p-2 flex flex-col gap-1"
-                                                :class="shiftSelections[entry.unique_key]
-                          ? 'border-rose-300 bg-white shadow-sm ring-1 ring-rose-300'
-                          : 'border-gray-200 bg-white/80'"
+                                                :class="shiftSelections[entry.unique_key] ? 'border-danger-border bg-white shadow-sm ring-1 ring-danger-border'
+                          : 'border-border-subtle bg-white/80'"
                                             >
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex flex-col">
-                            <span class="font-medium text-gray-900">
+                            <span class="font-medium text-text">
                               {{ entry.start_time }} – {{ entry.end_time }}
                             </span>
-                                                        <span class="text-[10px] text-gray-500 truncate">
+                                                        <span class="text-[10px] text-text-subtle truncate">
                               {{ entry.qualification || $t('Shift') }}
                             </span>
                                                     </div>
 
-                                                    <label class="inline-flex items-center gap-1 text-[10px] text-gray-600 cursor-pointer">
+                                                    <label class="inline-flex items-center gap-1 text-[10px] text-text-muted cursor-pointer">
                                                         <input
                                                             type="checkbox"
-                                                            class="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+                                                            class="rounded border-border text-danger focus:ring-danger"
                                                             :checked="!!shiftSelections[entry.unique_key]"
                                                             @change="$emit('toggle-shift', entry.unique_key)"
                                                         />
@@ -114,7 +113,7 @@
                                     </div>
                                 </template>
 
-                                <div v-if="!hasAnyShiftForDay(day.date)" class="text-[10px] text-gray-400 italic">
+                                <div v-if="!hasAnyShiftForDay(day.date)" class="text-[10px] text-text-subtle italic">
                                     {{ $t('No shifts on this day.') }}
                                 </div>
                             </div>
@@ -124,8 +123,8 @@
             </div>
 
             <!-- Footer -->
-            <div class="flex items-center justify-between pt-2 border-t border-gray-200">
-                <div class="text-[11px] text-gray-600">
+            <div class="flex items-center justify-between pt-2 border-t border-border-subtle">
+                <div class="text-[11px] text-text-muted">
                     <template v-if="!hasAnySelection">
                         {{ $t('Rejecting entire request with global reason.') }}
                     </template>

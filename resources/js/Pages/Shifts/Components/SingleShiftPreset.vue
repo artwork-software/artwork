@@ -1,34 +1,34 @@
 <template>
     <div class="mb-3">
         <!-- :style="{backgroundColor: preset.event_type.hex_code} -->
-        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg bg-secondary">
+        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg bg-text-subtle">
             <div class="flex items-center uppercase">
                 <!-- {{ preset.event_type.abbreviation }} | -->
                 {{ preset.name }}
                 <div class="ml-4 cursor-pointer" @click="showShift = !showShift">
-                    <ChevronDownIcon class="h-4 w-4" v-if="!showShift"/>
-                    <ChevronUpIcon class="h-4 w-4" v-else/>
+                    <IconChevronDown class="h-4 w-4" v-if="!showShift"/>
+                    <IconChevronUp class="h-4 w-4" v-else/>
                 </div>
             </div>
             <div>
                 <BaseMenu dots-size="h-4 w-4">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="showEditShiftModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
                             {{ $t('Redefine template')}}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="duplicatePreset"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
                             {{ $t('Duplicate template') }}
                         </a>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="showConfirmDeleteModal = true"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-artwork-buttons-hover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-text-inverse/10 text-accent-700' : 'text-text-subtle', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
                             {{ $t('Delete template')}}
                         </a>
@@ -44,9 +44,9 @@
                                    :crafts="this.crafts"
                 />
             </div>
-            <div class="w-[175px] h-[175px] flex items-center justify-center border-2 border-dashed rounded-lg group hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer"
+            <div class="w-[175px] h-[175px] flex items-center justify-center border-2 border-dashed rounded-lg group hover:border-accent-700 transition-colors duration-300 ease-in-out cursor-pointer"
                  @click="showAddShiftPresetModal = true">
-                <component :is="IconCircleDashedPlus" class="h-6 w-6 rounded-full text-gray-300 group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="2"/>
+                <component :is="IconCircleDashedPlus" class="h-6 w-6 rounded-full text-text-subtle group-hover:text-accent-700 transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="2"/>
             </div>
         </div>
     </div>
@@ -70,15 +70,6 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import {
-    ChevronDownIcon,
-    ChevronUpIcon,
-    DotsVerticalIcon,
-    DuplicateIcon,
-    PlusCircleIcon,
-    TrashIcon,
-    XIcon
-} from "@heroicons/vue/outline";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal.vue";
 import PresetTimeLine from "@/Pages/Shifts/Components/PresetTimeLine.vue";
@@ -87,25 +78,25 @@ import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPrese
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {IconCircleDashedPlus} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconCircleDashedPlus, IconCirclePlus, IconCopy, IconDotsVertical, IconTrash, IconX} from "@tabler/icons-vue";
 
 export default defineComponent({
     name: "SingleShiftPreset",
     components: {
         BaseMenu,
         SvgCollection,
-        TrashIcon,
-        DuplicateIcon,
+        IconTrash,
+        IconCopy,
         AddEditShiftPresetModal,
         SinglePresetShift,
-        PlusCircleIcon,
+        IconCirclePlus,
         PresetTimeLine,
-        ChevronDownIcon,
+        IconChevronDown,
         AddShiftPresetModal,
         ConfirmDeleteModal,
-        ChevronUpIcon,
-        XIcon,
-        DotsVerticalIcon,
+        IconChevronUp,
+        IconX,
+        IconDotsVertical,
         Menu,
         MenuItems,
         MenuItem,

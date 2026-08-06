@@ -3,7 +3,7 @@
         <!-- Header -->
         <div
             class="h-10 rounded-xl mb-2 flex items-center justify-between px-3 text-white shadow-sm ring-1 ring-inset ring-black/5
-             bg-artwork-buttons-hover/80"
+             bg-accent-700/80"
         >
             <div class="flex items-center gap-2">
                 <div class="uppercase text-xs font-semibold tracking-wide">
@@ -61,19 +61,19 @@
             <div v-if="canEditComponent">
                 <button
                     type="button"
-                    class="group w-full rounded-xl border border-dashed border-zinc-300 bg-white/70
-                 hover:border-zinc-500 hover:bg-artwork-navigation-color/20
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-artwork-buttons-hover/50
+                    class="group w-full rounded-xl border border-dashed border-border bg-white/70
+                 hover:border-border-strong hover:bg-text-inverse/20
+                 focus-visible:ring-2 focus-visible:ring-accent-700/50
                  transition px-3 py-4 flex items-center justify-center cursor-pointer"
                     @click="addEmptyTimeline"
                 >
                     <component
                         :is="IconCircleDashedPlus"
-                        class="h-6 w-6 text-artwork-buttons-context/40 group-hover:text-artwork-buttons-hover transition-colors"
+                        class="h-6 w-6 text-text-muted/40 group-hover:text-accent-700 transition-colors"
                         stroke-width="1.5"
                         aria-hidden="true"
                     />
-                    <span class="ml-2 text-xs font-medium text-zinc-600 group-hover:text-artwork-buttons-hover">
+                    <span class="ml-2 text-xs font-medium text-text-muted group-hover:text-accent-700">
             {{ $t('Add timeline row') }}
           </span>
                 </button>
@@ -87,7 +87,7 @@
             v-show="successCopied"
             class="fixed inset-x-0 top-5 z-50 sm:flex sm:justify-center sm:px-6 lg:px-8"
         >
-            <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-zinc-900/95 text-white
+            <div class="pointer-events-auto flex items-center justify-between gap-x-6 bg-surface-inverse/95 text-text-inverse
                   px-5 py-2.5 sm:rounded-xl shadow-lg ring-1 ring-inset ring-white/10">
                 <p class="text-sm">{{ $t('Timeline copied to clipboard') }}</p>
                 <button type="button" class="-m-1.5 p-1.5" @click="successCopied = false" aria-label="Dismiss">

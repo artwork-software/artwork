@@ -16,7 +16,7 @@
                     :disabled="notApplicable[metric.key]"
                     class="flex-1"
                 />
-                <label class="flex items-center gap-1.5 pb-2.5 text-xs text-gray-400 cursor-pointer select-none whitespace-nowrap">
+                <label class="flex items-center gap-1.5 pb-2.5 text-xs text-text-subtle cursor-pointer select-none whitespace-nowrap">
                     <input
                         type="checkbox"
                         class="input-checklist !h-3.5 !w-3.5"
@@ -26,20 +26,20 @@
                 </label>
             </div>
 
-            <p class="text-xs text-gray-400">
+            <p class="text-xs text-text-subtle">
                 {{ $t('Totals for the whole project. Per-event entry is available in the project view.') }}
             </p>
 
             <div class="flex items-center justify-between gap-3 pt-2">
                 <Link
                     :href="projectLink"
-                    class="text-xs text-indigo-600 hover:underline"
+                    class="text-xs text-accent-600 hover:underline"
                 >
                     {{ $t('Open project') }}
                 </Link>
                 <div class="flex items-center gap-3">
-                    <span v-if="saveError" class="text-sm text-rose-600">{{ $t('Saving failed. Please try again.') }}</span>
-                    <button @click="$emit('close')" class="text-sm text-gray-500 hover:text-gray-700">{{ $t('Cancel') }}</button>
+                    <span v-if="saveError" class="text-sm text-danger">{{ $t('Saving failed. Please try again.') }}</span>
+                    <button @click="$emit('close')" class="text-sm text-text-subtle hover:text-text-muted">{{ $t('Cancel') }}</button>
                     <BaseUIButton :label="$t('Save')" @click="save" :disabled="saving || !hasInput" hide-icon />
                 </div>
             </div>

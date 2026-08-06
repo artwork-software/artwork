@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="closeDeclineRequestModal" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
+                <div class="font-lexend font-black text-[clamp(24px,3vw,30px)]/[34px] text-text my-2">
                     {{ $t('Cancel booking')}}
                 </div>
                 <div class="flex flex-wrap w-full items-center">
@@ -19,7 +19,7 @@
                     />
                     <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
+                                  class="text-sm/5 font-bold text-text-subtle cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>
@@ -27,11 +27,10 @@
 </template>
 
 <script>
-import {XIcon} from "@heroicons/vue/solid";
+import {IconAdjustments, IconX} from "@tabler/icons-vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Button from "@/Jetstream/Button.vue";
-import {AdjustmentsIcon} from "@heroicons/vue/outline";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -45,11 +44,11 @@ export default {
         BaseModal,
         FormButton,
         NewUserToolTip,
-        AdjustmentsIcon,
+        IconAdjustments,
         Button,
         UserTooltip,
         JetDialogModal,
-        XIcon
+        IconX
     },
     emits: ['closed'],
     props: ['requestToDecline', 'eventTypes'],

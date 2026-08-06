@@ -5,10 +5,10 @@
     >
         <!-- Actions -->
         <template #actions>
-            <button class="ui-button-add inline-flex items-center gap-2" @click="showAddNewComponentModal = true">
+            <BaseUIButton variant="primary" hide-icon class="inline-flex items-center gap-2" @click="showAddNewComponentModal = true">
                 <IconCirclePlus class="size-5" stroke-width="1" />
                 {{ $t('Create a new component') }}
-            </button>
+            </BaseUIButton>
         </template>
 
         <SettingsGuideBanner
@@ -31,11 +31,11 @@
             </div>
 
             <!-- Karten -->
-            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
+            <div class="rounded-2xl border border-border-subtle bg-white p-5 shadow-xs">
                 <!-- Normale Komponenten (gruppiert) -->
                 <div v-if="Object.keys(filteredComponents).length > 0" class="mb-6">
                     <div v-for="(componentsArray, groupKey) in filteredComponents" :key="groupKey">
-                        <h2 class="mb-2 pt-3 first:pt-0 text-sm font-semibold text-gray-900">
+                        <h2 class="mb-2 pt-3 first:pt-0 text-sm font-semibold text-text">
                             {{ $t(groupKey) }}
                         </h2>
 
@@ -47,7 +47,7 @@
                                 :tooltip-text="component.special ? $t(component.name) : component.name"
                             >
                                 <div
-                                    class="group relative flex h-28 w-28 flex-col items-center justify-center truncate rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm"
+                                    class="group relative flex h-28 w-28 flex-col items-center justify-center truncate rounded-xl border border-border-subtle bg-white p-4 transition hover:border-border hover:shadow-sm"
                                 >
                                     <SingleComponent :component="component" :usages="componentUsages?.[component.id] ?? []" />
                                 </div>
@@ -57,13 +57,13 @@
                 </div>
 
                 <!-- Fallback: Keine normalen Komponenten -->
-                <div v-else class="mb-6 text-center text-sm text-gray-500 py-8">
+                <div v-else class="mb-6 text-center text-sm text-text-subtle py-8">
                     {{ $t('No components found') }}
                 </div>
 
                 <!-- Special Components OHNE RecycleScroller -->
                 <div v-if="filteredSpecialComponents.length">
-                    <h2 class="mb-2 text-sm font-semibold text-gray-900">
+                    <h2 class="mb-2 text-sm font-semibold text-text">
                         {{ $t('Special components') }}
                     </h2>
 
@@ -85,7 +85,7 @@
                             :tooltip-text="component.special ? $t(component.name) : component.name"
                         >
                             <div
-                                class="group relative flex h-28 w-28 flex-col items-center justify-center truncate rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-300 hover:shadow-sm"
+                                class="group relative flex h-28 w-28 flex-col items-center justify-center truncate rounded-xl border border-border-subtle bg-white p-4 transition hover:border-border hover:shadow-sm"
                             >
                                 <SingleComponent :component="component" :usages="componentUsages?.[component.id] ?? []" />
                             </div>
@@ -95,7 +95,7 @@
 
 
                 <!-- Fallback: Keine Special Komponenten -->
-                <div v-else-if="filteredSpecialComponents.length === 0 && Object.keys(filteredComponents).length === 0" class="text-center text-sm text-gray-500 py-8">
+                <div v-else-if="filteredSpecialComponents.length === 0 && Object.keys(filteredComponents).length === 0" class="text-center text-sm text-text-subtle py-8">
                     {{ $t('No special components found') }}
                 </div>
             </div>
@@ -119,6 +119,7 @@ import SingleComponent from '@/Pages/Settings/ComponentManagement/Components/Sin
 import ComponentModal from '@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue'
 import DropComponentsToolTip from '@/Components/ToolTips/DropComponentsToolTip.vue'
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue'
+import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue'
 import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue'
 import { IconCirclePlus } from '@tabler/icons-vue'
 

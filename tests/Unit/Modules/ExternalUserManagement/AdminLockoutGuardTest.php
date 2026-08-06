@@ -12,6 +12,17 @@ use Tests\TestCase;
 
 final class AdminLockoutGuardTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Der Guard zählt lokale Admins über die gesamte Tabelle. Geseedete
+        // Bestandsadmins (AuthUserSeeder) würden den Zähler verfälschen, also
+        // hier eine definierte Ausgangslage herstellen — die Transaktion aus
+        // DatabaseTransactions rollt das nach dem Test wieder zurück.
+        User::query()->update(['auth_provider' => 'oidc']);
+    }
+
     #[Test]
     public function it_blocks_binding_the_last_local_admin(): void
     {

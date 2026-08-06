@@ -20,7 +20,8 @@ class ProjectTabController extends Controller
 {
     private const CACHE_TTL = 600; // 10 Minuten
     private const CACHE_KEY_TABS = 'settings_tabs_with_relations';
-    private const CACHE_KEY_COMPONENTS = 'settings_components_not_special';
+    // Eigener Key: Tab-Palette enthält im Gegensatz zu den Komponenteneinstellungen auch BI-Felder
+    private const CACHE_KEY_COMPONENTS = 'settings_components_not_special_tab_palette';
     private const CACHE_KEY_COMPONENTS_SPECIAL = 'settings_components_special';
 
     public function list()

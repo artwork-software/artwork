@@ -19,7 +19,9 @@ class ComponentController extends Controller
         // Komponentenlisten verschlankt und gecacht (10 Minuten)
         // Users und Departments werden nicht mehr eager geladen - stattdessen lazy loading beim Öffnen des Edit-Modals
         // Performance-Optimierung: $with-Array im Component Model wurde geleert, daher kein ->without() mehr nötig
-        $components = Cache::remember('settings_components_not_special', 600, static function () {
+        // Eigener Key: hier ohne BI-Felder (die verwaltet BiComponentSettingsController),
+        // die Tab-Palette (settings_components_not_special_tab_palette) enthält sie dagegen
+        $components = Cache::remember('settings_components_not_special_component_settings', 600, static function () {
             return Component::notSpecial()
                 ->where('is_bi_field', false)
                 ->select(['id', 'name', 'type', 'data', 'special', 'sidebar_enabled', 'permission_type'])
@@ -79,8 +81,9 @@ class ComponentController extends Controller
             $component->departments()->attach($department['department_id'], ['can_write' => $department['can_write']]);
         }
 
-        // Cache invalidieren, damit neue Komponenten sichtbar werden
-        Cache::forget('settings_components_not_special');
+        // Cache invalidieren, damit neue Komponenten sichtbar werden (Einstellungen + Tab-Palette)
+        Cache::forget('settings_components_not_special_component_settings');
+        Cache::forget('settings_components_not_special_tab_palette');
         Cache::forget('settings_components_special');
         // Verwendungs-Cache leeren (Ordner-Label kann sich geändert haben)
         ComponentUsageService::clearCache();
@@ -104,8 +107,9 @@ class ComponentController extends Controller
 
         $component->update($request->only('name', 'data', 'permission_type'));
 
-        // Cache invalidieren, damit Änderungen unmittelbar sichtbar werden
-        Cache::forget('settings_components_not_special');
+        // Cache invalidieren, damit Änderungen unmittelbar sichtbar werden (Einstellungen + Tab-Palette)
+        Cache::forget('settings_components_not_special_component_settings');
+        Cache::forget('settings_components_not_special_tab_palette');
         Cache::forget('settings_components_special');
         // Verwendungs-Cache leeren (Ordner-Label kann sich geändert haben)
         ComponentUsageService::clearCache();
@@ -144,8 +148,9 @@ class ComponentController extends Controller
 
         $component->delete();
 
-        // Cache invalidieren, damit gelöschte Komponenten nicht weiter angezeigt werden
-        Cache::forget('settings_components_not_special');
+        // Cache invalidieren, damit gelöschte Komponenten nicht weiter angezeigt werden (Einstellungen + Tab-Palette)
+        Cache::forget('settings_components_not_special_component_settings');
+        Cache::forget('settings_components_not_special_tab_palette');
         Cache::forget('settings_components_special');
         // Tab-Settings-Cache leeren, damit gelöschte Komponenten aus Tab-Zuweisungen verschwinden
         Cache::forget('settings_tabs_with_relations');

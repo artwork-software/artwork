@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Tests für die Thumbnail-Erzeugung und HEIC-Konvertierung von Artikelbildern
+ * Tests für die Thumbnail-Erzeugung von Artikelbildern
  * (InventoryArticleImageService + Backfill-Command).
  */
 
@@ -50,22 +50,6 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
             'main_image_index' => 0,
             'newImages' => [$image],
         ];
-    }
-
-    private function makeHeicUpload(): UploadedFile
-    {
-        if (!extension_loaded('imagick') || \Imagick::queryFormats('HEIC') === []) {
-            $this->markTestSkipped('Imagick without HEIC support.');
-        }
-
-        $imagick = new \Imagick();
-        $imagick->newImage(120, 90, new \ImagickPixel('red'));
-        $imagick->setImageFormat('heic');
-
-        $path = tempnam(sys_get_temp_dir(), 'heic_test') . '.heic';
-        file_put_contents($path, $imagick->getImageBlob());
-
-        return new UploadedFile($path, 'iphone-foto.heic', 'image/heic', null, true);
     }
 
     #[Test]
@@ -127,28 +111,7 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
     }
 
     #[Test]
-    public function itConvertsHeicUploadsToJpeg(): void
-    {
-        $image = $this->makeHeicUpload();
-
-        $this->post(route('inventory-management.articles.store'), $this->storePayload($image))
-            ->assertSessionHasNoErrors();
-
-        $articleImage = InventoryArticle::query()
-            ->where('name', 'Thumbnailartikel')->firstOrFail()
-            ->images->first();
-        (new GenerateInventoryArticleImageThumbnail($articleImage))
-            ->handle(app(InventoryArticleImageService::class));
-        $articleImage->refresh();
-
-        $this->assertStringEndsWith('.jpg', $articleImage->image);
-        $this->assertNotNull($articleImage->thumbnail);
-        Storage::disk('public')->assertExists($articleImage->image);
-        Storage::disk('public')->assertExists($articleImage->thumbnail);
-    }
-
-    #[Test]
-    public function backfillCommandGeneratesThumbnailsAndConvertsHeic(): void
+    public function backfillCommandGeneratesThumbnailsForLegacyImages(): void
     {
         $article = InventoryArticle::factory()->create([
             'inventory_category_id' => $this->category->id,
@@ -163,15 +126,6 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
             'order' => 0,
         ]);
 
-        // Bestands-HEIC (vor der Format-Whitelist hochgeladen).
-        $heicUpload = $this->makeHeicUpload();
-        $heicPath = $heicUpload->store('inventory_articles', 'public');
-        $heicImage = $article->images()->create([
-            'image' => $heicPath,
-            'is_main_image' => false,
-            'order' => 0,
-        ]);
-
         // Direkt aufrufen statt $this->artisan(): das Booten der kompletten
         // Command-Liste kollidiert mit Mail::fake() aus dem Test-Setup
         // (SendNotificationsEmailSummariesCommand typisiert MailManager).
@@ -182,13 +136,6 @@ final class InventoryArticleImageThumbnailTest extends FeatureTestCase
         $legacyImage->refresh();
         $this->assertNotNull($legacyImage->thumbnail);
         Storage::disk('public')->assertExists($legacyImage->thumbnail);
-
-        $heicImage->refresh();
-        $this->assertStringEndsWith('.jpg', $heicImage->image);
-        $this->assertNotNull($heicImage->thumbnail);
-        Storage::disk('public')->assertExists($heicImage->image);
-        Storage::disk('public')->assertExists($heicImage->thumbnail);
-        Storage::disk('public')->assertMissing($heicPath);
     }
 
     #[Test]

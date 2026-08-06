@@ -104,6 +104,13 @@
                         {{ $t('Compensation days') }}
                     </h4>
 
+                    <SettingsGuideBanner
+                        variant="static"
+                        :paragraphs="[
+                            'Changes here are credited directly to the person\'s compensation account — this is an account-effective booking, not just a display.'
+                        ]"
+                    />
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[11px] font-medium text-zinc-500 mb-1">
@@ -234,6 +241,7 @@ import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseTextarea from '@/Artwork/Inputs/BaseTextarea.vue';
 import BaseCheckbox from '@/Artwork/Inputs/BaseCheckbox.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue';
 
 const { t } = useI18n();
 

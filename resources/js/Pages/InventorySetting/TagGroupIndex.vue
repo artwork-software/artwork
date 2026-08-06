@@ -44,7 +44,7 @@
                                 <button
                                     type="button"
                                     class="drag-handle-group mt-0.5 text-gray-300 hover:text-gray-500"
-                                    title="Reorder group"
+                                    :title="$t('Reorder group')"
                                 >
                                     <component :is="IconGripVertical" class="h-4 w-4" />
                                 </button>
@@ -163,7 +163,7 @@
                                             <button
                                                 type="button"
                                                 class="drag-handle-tag text-gray-300 hover:text-gray-500"
-                                                title="Reorder tag"
+                                                :title="$t('Reorder tag')"
                                             >
                                                 <component :is="IconGripVertical" class="h-4 w-4" />
                                             </button>
@@ -300,7 +300,7 @@
                                 <button
                                     type="button"
                                     class="drag-handle-tag-ungrouped text-gray-300 hover:text-gray-500"
-                                    title="Reorder tag"
+                                    :title="$t('Reorder tag')"
                                 >
                                     <component :is="IconGripVertical" class="h-4 w-4" />
                                 </button>

@@ -7,6 +7,17 @@
             <BaseUIButton @click="openCreateModal" label="Create new rule" use-translation is-add-button class="whitespace-nowrap shrink-0" />
         </template>
 
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.rules"
+            title="How shift warning rules work"
+            class="mb-6"
+            :paragraphs="[
+                'Rules automatically check the shift plan for violations of working time requirements — for example maximum hours, rest times or free days.',
+                'Violations are highlighted in colour in the shift plan and collected in the \'Open violations\' tab, where you can resolve, ignore or compensate them.'
+            ]"
+            footnote="A rule only applies to people whose contract is assigned to it."
+        />
+
         <div class="card white p-5">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -133,6 +144,13 @@
                             </Listbox>
                         </div>
 
+                        <SettingsGuideBanner
+                            v-if="triggerTypeHint"
+                            variant="static"
+                            title="What does this rule check?"
+                            :paragraphs="[triggerTypeHint]"
+                        />
+
                         <div>
                             <BaseInput
                                 v-model="form.individual_number_value"
@@ -244,6 +262,15 @@
                                 </span>
                                 <span v-else class="text-sm text-gray-400">{{ $t('No contracts selected')}}</span>
                             </div>
+
+                            <SettingsGuideBanner
+                                variant="static"
+                                title="Who is covered by this rule?"
+                                class="mt-3"
+                                :paragraphs="[
+                                    'Without assigned contracts this rule applies to nobody: only people who have one of the assigned contracts in their user profile are checked.'
+                                ]"
+                            />
                         </div>
                     </div>
 
@@ -265,13 +292,23 @@
                 </form>
             </div>
         </ArtworkBaseModal>
+
+        <ArtworkBaseDeleteModal
+            v-if="ruleToDelete"
+            :title="$t('Delete rule')"
+            :description="$t('Do you really want to delete this rule? This action cannot be undone.')"
+            @close="closeDeleteRuleModal"
+            @delete="confirmDeleteRule"
+        />
     </ShiftSettingsHeader>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
+import { useI18n } from 'vue-i18n'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 import ArtworkBaseModal from "@/Artwork/Modals/ArtworkBaseModal.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
@@ -280,6 +317,7 @@ import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue"
 import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
+import ArtworkBaseDeleteModal from "@/Artwork/Modals/ArtworkBaseDeleteModal.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
@@ -290,8 +328,11 @@ const props = defineProps({
 })
 
 
+const { t: $t } = useI18n()
+
 const showModal = ref(false)
 const editingRule = ref(null)
+const ruleToDelete = ref(null)
 
 const form = useForm({
     name: '',
@@ -307,21 +348,37 @@ const form = useForm({
 })
 
 const triggerTypeLabels = {
-    'maxWorkingHoursOnDay': 'Tagesmaximum an Stunden',
-    'maxConsecWorkingDays': 'Maximale Tage in Folge arbeiten',
-    'weeklyMaxHours': 'Wochenmaximum an Stunden',
-    'maxWorkingHoursOnWeek': 'Wochenmaximum an Stunden',
-    'restTimeBeforeWorkday': 'Ruhezeit vor Werktag',
-    'restTimeBeforeHoliday': 'Ruhezeit vor Sonder-/Sonntag',
-    'restTimeBetweenShiftGroups': 'Ruhezeit zwischen Schichtgruppen',
-    'halfDayOffConflict': 'Konflikt: halber freier Tag / Schicht',
-    'halfDayOffOnSpecialDay': 'Kein halber freier Tag an Sondertagen',
-    'minDaysBeforeCommit': 'Mindesttage bis Verbindlich-Schaltung'
+    'maxWorkingHoursOnDay': 'Daily maximum of hours',
+    'maxConsecWorkingDays': 'Maximum consecutive working days',
+    'weeklyMaxHours': 'Weekly maximum of hours',
+    'maxWorkingHoursOnWeek': 'Weekly maximum of hours',
+    'restTimeBeforeWorkday': 'Rest time before a working day',
+    'restTimeBeforeHoliday': 'Rest time before a Sunday or special day',
+    'restTimeBetweenShiftGroups': 'Rest time between shift groups',
+    'halfDayOffConflict': 'Conflict: half day off / shift',
+    'halfDayOffOnSpecialDay': 'No half day off on special days',
+    'minDaysBeforeCommit': 'Minimum days before binding commitment'
 }
 
 function formatTriggerType(type) {
-    return triggerTypeLabels[type] || type
+    return triggerTypeLabels[type] ? $t(triggerTypeLabels[type]) : type
 }
+
+// Context-sensitive explanation per rule type: what is checked and in which unit the "Value" field is interpreted.
+const triggerTypeHints = {
+    'maxWorkingHoursOnDay': 'Checks the total planned working hours of a person per day. Value = maximum number of hours per day.',
+    'maxConsecWorkingDays': 'Checks how many days in a row a person is scheduled without a day off. Value = maximum number of consecutive working days.',
+    'weeklyMaxHours': 'Checks the total planned working hours of a person per week. Value = maximum number of hours per week.',
+    'maxWorkingHoursOnWeek': 'Checks the total planned working hours of a person per week. Value = maximum number of hours per week.',
+    'restTimeBeforeWorkday': 'Checks the rest time between the end of a shift and the start of the next shift before a regular working day. Value = minimum rest time in hours.',
+    'restTimeBeforeHoliday': 'Checks the rest time before a Sunday or special day. Value = minimum rest time in hours.',
+    'restTimeBetweenShiftGroups': 'Checks the rest time between shifts of different shift groups. Value = minimum rest time in hours. Requires maintained shift groups (tab \'shift groups\').',
+    'halfDayOffConflict': 'Checks whether a shift conflicts with a half day off. Value = time of day as a decimal hour (14 = 14:00, 14.5 = 14:30).',
+    'halfDayOffOnSpecialDay': 'Checks that no half day off is planned on a special day. Requires the special-day rule to be active in the assigned contract.',
+    'minDaysBeforeCommit': 'Checks whether there is enough lead time between committing and the start of a shift. Value = minimum number of days before shifts become binding.'
+}
+
+const triggerTypeHint = computed(() => triggerTypeHints[form.trigger_type] ?? null)
 
 function openCreateModal() {
     editingRule.value = null
@@ -391,8 +448,18 @@ function saveRule() {
 }
 
 function deleteRule(rule) {
-    if (confirm('Möchten Sie diese Regel wirklich löschen?')) {
-        useForm({}).delete(route('shift-rules.destroy', rule.id))
-    }
+    ruleToDelete.value = rule
+}
+
+function closeDeleteRuleModal() {
+    ruleToDelete.value = null
+}
+
+function confirmDeleteRule() {
+    if (!ruleToDelete.value) return
+    useForm({}).delete(route('shift-rules.destroy', ruleToDelete.value.id), {
+        preserveScroll: true,
+        onFinish: () => closeDeleteRuleModal()
+    })
 }
 </script>

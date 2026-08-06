@@ -2,6 +2,12 @@
 
 return [
 
+    /*
+     * Whether the scheduled backup and cleanup commands are registered at all.
+     * Read via config() so it survives config:cache.
+     */
+    'enabled' => (bool) env('BACKUP_ENABLED', false),
+
     'backup' => [
         /*
          * The name of this application. You can use this name to monitor

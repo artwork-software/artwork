@@ -4,8 +4,26 @@
          class="mt-4 w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
       {{ usePage().props.flash.success }}
     </div>
+    <SettingsGuideBanner
+        class="mt-6"
+        storage-key="settings-guide.tool.file-settings"
+        title="How does this area work?"
+        :paragraphs="[
+            'For each application area you define which file types may be uploaded and how large a file may be. Both limits are enforced server-side on every upload.',
+            'Changes are saved automatically.',
+        ]"
+    />
     <div v-for="area in areas" :key="area.name" class="mt-8">
       <h3 class="headline3">{{ $t(area.name) }}</h3>
+      <SettingsGuideBanner
+          v-if="area.name === 'branding'"
+          class="mt-2"
+          variant="static"
+          title="Applies to the Branding tab"
+          :paragraphs="[
+              'The file types and maximum size set here restrict the logo and illustration uploads in the Branding tab.',
+          ]"
+      />
       <div class="mt-4">
         <Listbox as="div">
           <div class="relative mt-2 w-1/2">
@@ -70,6 +88,7 @@ import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import SliderInput from "@/Components/Form/SliderInput.vue";
 import debounce from "lodash.debounce";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const $t = useTranslation(),
     props = defineProps({

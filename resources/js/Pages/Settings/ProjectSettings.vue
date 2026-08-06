@@ -1,6 +1,17 @@
 <template>
     <ProjectSettingsHeader :title="$t('Project Settings')">
 
+        <SettingsGuideBanner
+            class="mb-6"
+            storage-key="settings-guide.project.general"
+            title="How does this area work?"
+            :paragraphs="[
+                'This tab holds the master data you can assign to projects: genres, categories, sectors, statuses, contract types, company types and currencies.',
+                'Under “Settings for project creation” you control which fields the project creation dialog asks for.',
+                'Everything on this tab is saved immediately.',
+            ]"
+        />
+
         <div class="space-y-10 pb-8">
                 <ProjectSettingsItem
                     :title="$t('Genres')"
@@ -36,6 +47,15 @@
                     <div class="">
                         <BasePageTitle :title="$t('Project Status')" :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')" />
                     </div>
+                    <SettingsGuideBanner
+                        class="mt-3"
+                        variant="inline"
+                        storage-key="settings-guide.project.general.states"
+                        title="Statuses that count as “in planning”"
+                        :paragraphs="[
+                            'If a project is created with a status where “Project counts as in planning” is enabled, its events are automatically created as planned events instead of fixed ones — visible in the calendar and the planning calendar.',
+                        ]"
+                    />
                     <div class="flex flex-wrap w-full max-w-xl my-4">
                         <div class="flex flex-wrap w-full">
                             <ProjectStateTagComponent
@@ -67,7 +87,7 @@
                 <ProjectSettingsItem
                     :title="$t('Company Types')"
                     :description="$t('Define company types that can be assigned to companies later.')"
-                    input-label="Unternehmensform eingeben"
+                    :input-label="$t('Enter company type')"
                     :items="companyTypes"
                     @add="addCompanyType"
                     @openDeleteModal="openDeleteCompanyTypeModal"
@@ -289,10 +309,12 @@ import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseCardButton from "@/Artwork/Buttons/BaseCardButton.vue";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default {
     mixins: [Permissions],
     components: {
+        SettingsGuideBanner,
         BasePageTitle,
         ProjectSettingsHeader,
         BaseCardButton,

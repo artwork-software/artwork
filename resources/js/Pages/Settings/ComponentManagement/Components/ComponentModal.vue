@@ -8,17 +8,21 @@
         <div class="">
             <div class="grid grid-cols-1 gap-6">
                 <!-- Typ-Auswahl (nur im Create) (neu) -->
-                <ArtworkBaseListbox
-                    v-if="isCreateMode"
-                    v-model="selectedType"
-                    :items="typesArray"
-                    :option-label="(o) => `${$t(o.name)}`"
-                    option-key="name"
-                    by="name"
-                    placeholder="Component Layout"
-                    :enable-search="true"
-                    :search-keys="['name']"
-                />
+                <div v-if="isCreateMode">
+                    <ArtworkBaseListbox
+                        v-model="selectedType"
+                        :items="typesArray"
+                        :option-label="(o) => `${$t(o.name)}`"
+                        option-key="name"
+                        by="name"
+                        placeholder="Component Layout"
+                        :enable-search="true"
+                        :search-keys="['name']"
+                    />
+                    <p class="mt-1.5 text-xs text-gray-500">
+                        {{ $t('The type cannot be changed once the component has been created.') }}
+                    </p>
+                </div>
 
                 <!-- Name -->
                 <div>
@@ -297,7 +301,7 @@
                                 v-model="modulePermissions.permission_type"
                             />
                             <span class="text-sm text-gray-700">
-                {{ $t('Sehen darf nur:') }}
+                {{ $t('Only visible to:') }}
               </span>
                         </label>
 

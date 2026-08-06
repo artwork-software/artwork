@@ -3,12 +3,32 @@
         :title="$t('Rooms & areas')"
         :description="$t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')"
     >
+                        <SettingsGuideBanner
+                            class="mb-6"
+                            storage-key="settings-guide.rooms.areas"
+                            title="How does this area work?"
+                            :paragraphs="[
+                                'Areas group your rooms in the calendar. Rooms inherit the color of their area unless they have their own color.',
+                                'Room categories and room properties are global filter dimensions: they let you filter the room rows in the calendars.',
+                            ]"
+                        />
                         <h2 class="headline2 w-full">{{ $t('Room properties') }}</h2>
                         <div class="xsLight flex mt-4 w-full">
                             {{
                                 $t('Define room categories and properties. These can then be filtered in the calendars.')
                             }}
                         </div>
+                        <SettingsGuideBanner
+                            variant="inline"
+                            class="w-full mt-4"
+                            storage-key="settings-guide.rooms.areas.properties"
+                            title="Categories or properties?"
+                            :paragraphs="[
+                                'Categories describe what a room is (e.g. stage, rehearsal stage, storage). Properties describe what a room offers (e.g. air conditioning, accessible).',
+                                'Both are used purely for filtering in the calendars and have no effect on permissions.',
+                                'Deleting a category or property removes its assignments from all rooms.',
+                            ]"
+                        />
                         <div v-if="showInvalidNameErrorText" class="text-red-600 text-sm mt-4">
                             {{
                                 $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')
@@ -654,6 +674,16 @@
                         :empty-text="$t('No rooms created yet')"
                     />
                 </div>
+                <SettingsGuideBanner
+                    variant="static"
+                    title="What do these switches do?"
+                    :paragraphs="[
+                        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                        'Temporary rooms appear in the calendar only during the set period.',
+                        'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
+                        'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
+                    ]"
+                />
                 <div class="flex items-center">
                     <input v-model="newRoomForm.temporary" type="checkbox" class="input-checklist"/>
                     <p :class="[newRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
@@ -781,6 +811,16 @@
                         :empty-text="$t('No rooms created yet')"
                     />
                 </div>
+                <SettingsGuideBanner
+                    variant="static"
+                    title="What do these switches do?"
+                    :paragraphs="[
+                        'Adjoining rooms link rooms for the conflict check: a room counts as occupied if an adjoining room hosts a loud event or an event with audience in the same period.',
+                        'Temporary rooms appear in the calendar only during the set period.',
+                        'If \'Can be booked by anyone\' is off, other users can only send booking requests for this room.',
+                        'If \'Relevant for disposition\' is off, the room does not appear in any calendar, shift plan or export.',
+                    ]"
+                />
                 <div class="flex items-center">
                     <input v-model="editRoomForm.temporary"
                            type="checkbox"
@@ -946,10 +986,12 @@ import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import RoomPropertyCheckboxGroup from "@/Pages/Areas/Components/RoomPropertyCheckboxGroup.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        SettingsGuideBanner,
         PropertyIcon,
         ColorPickerComponent,
         BaseFilter,

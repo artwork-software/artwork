@@ -1,7 +1,7 @@
 <template>
     <InventorySettingsHeader
         :title="$t('Properties')"
-        :description="$t('Define global settings for inventory planning.')"
+        :description="$t('Define the properties that articles can have.')"
     >
         <template #actions>
             <button class="ui-button-add" @click="showAddEditPropertyModal = true">
@@ -10,7 +10,29 @@
             </button>
         </template>
 
+        <SettingsGuideBanner
+            class="mb-4"
+            storage-key="settings-guide.inventory.properties"
+            title="How does this area work?"
+            :paragraphs="[
+                'Properties define which fields your articles can have. They take effect once they are assigned to a category or sub-category.',
+                'Dragging a row changes the global order of the properties.',
+            ]"
+        />
         <div class="card white p-5">
+            <SettingsGuideBanner
+                variant="inline"
+                storage-key="settings-guide.inventory.properties.flags"
+                title="What do the flags mean?"
+                :paragraphs="[
+                    'Filterable: the property appears in the filter sidebar of the inventory overview and in the material set modal.',
+                    'In article overview: the property gets its own column in the article overview.',
+                    'Required field: the property must be filled in when an article is created.',
+                    'Cross-article: one shared value for all detailed articles of an article.',
+                    'Individual value: the value is not duplicated and not changed via multi-edit, e.g. serial numbers.',
+                ]"
+                footnote="System properties such as room and manufacturer cannot be deleted."
+            />
             <div class="my-8 flow-root">
                 <div class="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
                     <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -88,6 +110,7 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import {ref, watch} from "vue";
 import {router} from "@inertiajs/vue3";

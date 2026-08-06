@@ -32,14 +32,18 @@ window.axios.interceptors.response.use(
  */
 
 import Echo from 'laravel-echo';
+import { cfg } from './runtimeConfig';
 
 window.Pusher = pusher;
 
+// Verbindungsdaten kommen zur Laufzeit vom Server (config/frontend.php ->
+// window.__APP_CONFIG__), nicht mehr per import.meta.env aus dem Build. Nur so
+// bleibt das Bundle umgebungsneutral und muss nicht pro Kunde neu gebaut werden.
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_REVERB_APP_KEY ?? 'app-key',
-    cluster: import.meta.env.VITE_REVERB_APP_CLUSTER ?? 'eu',
+    key: cfg('reverb.key', 'app-key'),
+    cluster: cfg('reverb.cluster', 'eu'),
     forceTLS: false,
-    wsHost: import.meta.env.VITE_REVERB_HOST ?? 'localhost',
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+    wsHost: cfg('reverb.host', 'localhost'),
+    wssPort: cfg('reverb.port', 8080),
 });

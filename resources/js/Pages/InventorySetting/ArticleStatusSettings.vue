@@ -1,6 +1,7 @@
 <script setup>
 
 import InventorySettingsHeader from "@/Pages/InventorySetting/Components/InventorySettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import SingleArticleStatus from "@/Pages/InventorySetting/Components/SingleArticleStatus.vue";
 import draggable from "vuedraggable";
 import { ref, watch } from "vue";
@@ -38,6 +39,15 @@ const persistOrder = () => {
         :title="$t('Status Settings')"
         :description="$t('Manage your article status settings here.')"
     >
+        <SettingsGuideBanner
+            class="mb-4"
+            storage-key="settings-guide.inventory.status"
+            title="How does this area work?"
+            :paragraphs="[
+                'The status catalog is fixed: you can adjust the color and order of the statuses, but you cannot create or delete statuses.',
+                'The statuses appear in the status overview of the inventory overview and on the detailed articles.',
+            ]"
+        />
         <div class="mb-10 card white p-5">
 
 

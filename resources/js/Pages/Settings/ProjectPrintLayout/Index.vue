@@ -1,17 +1,36 @@
 <template>
-    <ProjectSettingsHeader :title="$t('Print Layout Settings')" :description="$t('Here you can manage the print layouts for your projects. You can add, edit and delete print layouts. You can also set the default print layout for your projects.')">
+    <ProjectSettingsHeader :title="$t('Print Layout Settings')" :description="$t('Here you can manage the print layouts for your projects. You can add, edit and delete print layouts.')">
         <template #actions>
             <button class="ui-button-add" @click="showCreateOrUpdateModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
                 {{ $t('Create print layout') }}
             </button>
         </template>
+        <SettingsGuideBanner
+            class="mb-6"
+            storage-key="settings-guide.project.print-layout"
+            title="How does this area work?"
+            :paragraphs="[
+                'Print layouts define how a project is put together as a PDF. All active layouts are offered for selection on the project detail page when generating a PDF.',
+                'The builder chain: create building blocks in the component settings, build the project detail page in the tab settings, arrange the blocks for the PDF in the print layout, and turn them into columns of the project list in the overview builder. All four use the same component pool with different filters — that is why you do not see every component everywhere.',
+            ]"
+        />
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 <!-- Tab components -->
                 <div class="w-full col-span-1">
 
 
                     <div class="card white p-5">
+                        <SettingsGuideBanner
+                            class="mb-4"
+                            variant="inline"
+                            storage-key="settings-guide.project.print-layout.editor"
+                            title="Good to know when building layouts"
+                            :paragraphs="[
+                                'The number of columns in header, body and footer is fixed once the layout has been created.',
+                                'The palette deliberately shows only printable components — that is why some building blocks from the tab settings are missing here.',
+                            ]"
+                        />
                         <div v-if="layouts.length > 0">
                             <div v-for="layout in layouts" class="mb-4">
                                 <SingleProjectPrintLayout :layout="layout" :components="allComponents" />
@@ -30,7 +49,7 @@
                         <div class="flex items-center justify-end w-full mb-3">
                             <div class="w-44 md:w-56 lg:w-72">
                                 <div>
-                                    <BaseInput id="search" type="text" name="search" v-model="searchComponent" label="Search" />
+                                    <BaseInput id="search" type="text" name="search" v-model="searchComponent" :label="$t('Search')" />
                                 </div>
                             </div>
                         </div>
@@ -73,6 +92,7 @@ import GlassyIconButton from "@/Artwork/Buttons/GlassyIconButton.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const props = defineProps({
     layouts: {

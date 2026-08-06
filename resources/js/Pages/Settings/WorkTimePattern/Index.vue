@@ -1,5 +1,5 @@
 <template>
-    <ShiftSettingsHeader :title="$t('Work Time Pattern')">
+    <ShiftSettingsHeader :title="$t('Work Time Pattern')" :description="$t('Define weekly target hours that can be assigned to users.')">
         <template #actions>
             <button class="ui-button-add" @click="showCreateOrUpdateWorkTimePatternModal = true">
                 <component :is="IconCirclePlus" stroke-width="1" class="size-5" />
@@ -7,7 +7,14 @@
             </button>
         </template>
 
-
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.work-time-patterns"
+            title="How work time patterns work"
+            :paragraphs="[
+                'Create a pattern here and then assign it to people in their user profile. There it takes effect in the hour account: it defines the daily target hours from which overtime and undertime are calculated.',
+                'The fields per weekday are daily target hours, not times of day — 8:00 therefore means a target of eight hours on that day.'
+            ]"
+        />
 
             <div class="card white p-5 mt-5">
                 <ul role="list" class="divide-y divide-gray-100" v-if="workTimePatterns.length > 0">
@@ -16,7 +23,7 @@
                     </li>
                 </ul>
                 <div v-else>
-                    <BaseAlertComponent message="No work time patterns found. Please create a new one." type="error" use-translation />
+                    <BaseAlertComponent message="No work time patterns found. Please create a new one." type="info" use-translation />
                 </div>
             </div>
 
@@ -39,6 +46,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SingleWorkTimePattern from "@/Pages/Settings/WorkTimePattern/Components/SingleWorkTimePattern.vue";
 import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {IconCirclePlus} from "@tabler/icons-vue";
 
 const props = defineProps({
@@ -49,44 +57,6 @@ const props = defineProps({
 })
 
 const showCreateOrUpdateWorkTimePatternModal = ref(false)
-
-const tabs = ref([
-    {
-        name: 'Shift Settings',
-        href: route('shift.settings'),
-        current: route().current('shift.settings'),
-        show: true,
-        icon: 'IconCalendarUser'
-    },
-    {
-        name: 'Day Services',
-        href: route('day-service.index'),
-        current: route().current('day-service.index'),
-        show: true,
-        icon: 'IconHours24'
-    },
-    {
-        name: 'Work Time Pattern',
-        href: route('shift.work-time-pattern'),
-        current: route().current('shift.work-time-pattern'),
-        show: true,
-        icon: 'IconClockCog'
-    },
-    {
-        name: 'User Contracts',
-        href: route('user-contract-settings.index'),
-        current: route().current('user-contract-settings.index'),
-        show: true,
-        icon: 'IconContract'
-    },
-    {
-        name: 'Shift warnings - rules',
-        href: route('shift-rules.index'),
-        current: route().current('shift-rules.index'),
-        show: true,
-        icon: 'IconGavel'
-    }
-])
 </script>
 
 <style scoped>

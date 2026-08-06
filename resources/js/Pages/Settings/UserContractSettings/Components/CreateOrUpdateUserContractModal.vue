@@ -30,6 +30,16 @@
                         id="description" />
                     <p v-if="userContractForm.errors.description" class="text-red-500 mt-0.5 text-xs"></p>
                 </div>
+
+                <SettingsGuideBanner
+                    variant="static"
+                    title="Free days"
+                    :paragraphs="[
+                        'Full and half free days per week define how many days off a person is entitled to each week. If the special-day rule is active, different free-day rules apply on special days.',
+                        'The compensation period is the deadline in days within which a missed free day must be granted as a substitute day off.'
+                    ]"
+                />
+
                 <div>
                     <BaseInput
                         v-model="userContractForm.free_full_days_per_week"
@@ -95,6 +105,16 @@
                         {{ $t('Activate the parameters relevant for this contract and define the target value (X). The season is configured in the tool settings under "Communication & Legal".') }}
                     </p>
 
+                    <SettingsGuideBanner
+                        variant="static"
+                        title="Season parameters"
+                        class="mb-3"
+                        :paragraphs="[
+                            'These parameters define minimum entitlements per season — the value X is always the minimum that should be reached (e.g. at least X free Sundays per season).',
+                            'The season itself is configured in the tool settings under \'Communication & Legal\'. The evaluation appears on the user info pages.'
+                        ]"
+                    />
+
                     <div class="space-y-3">
                         <div v-for="param in seasonInfoParams" :key="param.key"
                              class="rounded-md border border-gray-100 p-3">
@@ -133,6 +153,16 @@
                 <!-- Überstunden (DP-18 Stufe 2) -->
                 <div class="mt-6 border-t border-gray-200 pt-4">
                     <h3 class="text-sm font-semibold text-gray-900">{{ $t('Overtime') }}</h3>
+
+                    <SettingsGuideBanner
+                        variant="static"
+                        title="Overtime deadline"
+                        class="mt-3"
+                        :paragraphs="[
+                            'After the deadline has expired, overtime that has not been reduced is considered due for financial compensation — it is then no longer expected to be taken as time off.'
+                        ]"
+                    />
+
                     <div class="mt-3 rounded-md border border-gray-100 p-3">
                         <div class="flex items-start gap-3">
                             <div class="flex h-6 shrink-0 items-center">
@@ -184,6 +214,7 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import ArtworkBaseModalButton from "@/Artwork/Buttons/ArtworkBaseModalButton.vue";
 import BaseTextarea from "@/Artwork/Inputs/BaseTextarea.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
 

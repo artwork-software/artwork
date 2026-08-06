@@ -62,14 +62,31 @@
                             <label for="relevant_for_project_period" class="font-medium font-lexend" :class="eventTypeForm.relevant_for_project_period ? 'text-gray-900' : 'text-gray-400'">{{$t('Relevant for project period')}}</label>
                         </div>
                     </div>
+                    <SettingsGuideBanner
+                        class="mt-2"
+                        variant="static"
+                        title="Effect on the project period"
+                        :paragraphs="[
+                            'Only events of types marked as relevant define the start and end of the project period — shown on the project page, in print layouts and for day assignments.',
+                            'If no type is marked as relevant, all events of the project count instead.',
+                        ]"
+                    />
                 </div>
 
                 <div class="col-span-full border-t border-gray-200 border-dashed">
                     <div class="mt-4">
-                        <h4 class="text-sm/6 font-semibold font-lexend text-gray-900">Verifizierungsmodus</h4>
+                        <h4 class="text-sm/6 font-semibold font-lexend text-gray-900">{{ $t('Verification mode') }}</h4>
                         <p class="mt-1 text-sm/6 font-lexend text-gray-600">
-                            {{ $t('Wähle den Verifizierungsmodus für den Planungskalender') }}
+                            {{ $t('Choose the verification mode for the planning calendar') }}
                         </p>
+                        <SettingsGuideBanner
+                            class="mt-3"
+                            variant="static"
+                            title="Verification in the planning calendar"
+                            :paragraphs="[
+                                'The verification mode controls who has to confirm events of this type in the planning calendar before they become binding.',
+                            ]"
+                        />
                         <div class="mt-6 space-y-6 ">
                             <div v-for="notificationMethod in verificationModes" :key="notificationMethod.id" class="flex items-center">
                                 <input
@@ -88,7 +105,7 @@
                     <div v-if="eventTypeForm.verification_mode !== 'none'" class="mt-6">
                         <div class="mt-4">
                             <h4 class="text-sm font-bold  font-lexend text-gray-900">
-                                {{ $t('Wähle Nutzer für den Verifizierungsprozess im Planungskalender') }}
+                                {{ $t('Choose users for the verification process in the planning calendar') }}
                             </h4>
                         </div>
                         <div class="pt-2">
@@ -149,6 +166,7 @@ import BaseAlertComponent from "@/Components/Alerts/BaseAlertComponent.vue";
 import {computed} from "vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import BaseUIButton from "@/Artwork/Buttons/BaseUIButton.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 const props = defineProps({
     eventType: {

@@ -31,8 +31,17 @@
                     </template>
                     <template v-else>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">
-                                {{ $t(property.name) }}<span v-if="property.pivot?.is_required" class="text-red-500 ml-0.5">*</span>
+                            <dt class="flex items-center text-sm font-medium text-gray-500">
+                                <span>{{ $t(property.name) }}<span v-if="property.pivot?.is_required" class="text-red-500 ml-0.5">*</span></span>
+                                <!-- tooltip_text ist Nutzerdaten-Text aus den CRM-Settings — bewusst ohne $t -->
+                                <ToolTipComponent
+                                    v-if="property.tooltip_text"
+                                    class="ml-1.5"
+                                    direction="right"
+                                    :tooltip-text="property.tooltip_text"
+                                    icon="IconInfoCircle"
+                                    icon-size="h-4 w-4"
+                                />
                             </dt>
                             <dd class="mt-1 text-sm text-gray-900">
                                 <template v-if="property.type === 'checkbox'">
@@ -67,6 +76,7 @@
 <script setup>
 import { ref } from 'vue'
 import PropertyIcon from '@/Artwork/Icon/PropertyIcon.vue'
+import ToolTipComponent from '@/Components/ToolTips/ToolTipComponent.vue'
 import CrmPropertyValueInput from '@/Pages/CRM/Components/CrmPropertyValueInput.vue'
 import { IconChevronUp, IconChevronDown, IconCheck, IconX, IconFile } from '@tabler/icons-vue'
 

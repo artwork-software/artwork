@@ -1,6 +1,16 @@
 <template>
     <app-layout :title="$t('Timeline Presets')">
         <EventSettingHeader>
+            <SettingsGuideBanner
+                class="mb-6"
+                storage-key="settings-guide.event.timeline-presets"
+                title="How does this area work?"
+                :paragraphs="[
+                    'Timeline presets are not created on this page: you create one by saving the timeline of an event as a preset.',
+                    'To apply a preset, open an event and use Import timeline preset — the saved schedule is copied to the event.',
+                    'Here you can rename existing presets, adjust their points in time or delete them.',
+                ]"
+            />
             <div>
                 <BasePageTitle
                     title="Timeline Presets"
@@ -46,7 +56,8 @@
             </ul>
 
             <div v-if="timelinePresets.length === 0" class="mt-5 text-sm text-gray-500">
-                {{ $t('No timeline presets found.') }}
+                <p>{{ $t('No timeline presets found.') }}</p>
+                <p class="mt-1">{{ $t('Save the timeline of an event as a preset to create your first one.') }}</p>
             </div>
         </EventSettingHeader>
 
@@ -74,6 +85,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import AddEditTimelineModal from "@/Pages/Projects/Components/TimelineComponents/AddEditTimelineModal.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import {IconEdit, IconTrash} from "@tabler/icons-vue";
 import {router} from "@inertiajs/vue3";
 
@@ -81,6 +93,7 @@ export default {
     components: {
         AppLayout,
         EventSettingHeader,
+        SettingsGuideBanner,
         BasePageTitle,
         BaseMenu,
         BaseMenuItem,

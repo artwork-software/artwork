@@ -1,7 +1,7 @@
 <template>
     <BaseModal @closed="emits.call(this, 'closeModal')">
         <div class="-mt-8">
-            <ModalHeader :title="eventPropertyToEdit ? $t('Event-Eigenschaft bearbeiten') : $t('Event-Eigenschaft erstellen')"/>
+            <ModalHeader :title="eventPropertyToEdit ? $t('Edit event property') : $t('Create event property')"/>
         </div>
         <form @submit.prevent="addOrUpdateEventProperty" class="mt-5">
             <div class="flex items-center gap-x-4">

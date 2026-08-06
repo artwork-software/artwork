@@ -1,10 +1,13 @@
 <template>
     <FundingSourcesSettingsHeader :title="$t('Sources of funding')" :description="$t('Define categories. These can then be filtered in the overview.')">
+        <SettingsGuideBanner
+            variant="static"
+            title="How funding source categories work"
+            :paragraphs="guideParagraphs"
+            class="mb-6"
+        />
         <div>
             <h2 class="mt-10 headline2 w-full">{{$t('Source categories')}}</h2>
-            <div class="xsLight flex mt-4 w-full">
-                {{$t('Define categories. These can then be filtered in the overview.')}}
-            </div>
             <div v-if="showInvalidCategoryNameErrorText" class="text-red-600 text-sm mt-4">
                 {{ $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
             </div>
@@ -70,10 +73,12 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseInput from "@/Artwork/Inputs/BaseInput.vue";
 import FundingSourcesSettingsHeader from "@/Pages/MoneySources/Components/FundingSourcesSettingsHeader.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        SettingsGuideBanner,
         PropertyIcon,
         FundingSourcesSettingsHeader,
         BaseInput,
@@ -93,6 +98,11 @@ export default defineComponent({
             categoryDeleteModalVisible: false,
             categoryToDelete: null,
             showInvalidCategoryNameErrorText: false,
+            guideParagraphs: [
+                'Categories are plain labels to classify your funding sources.',
+                'You assign a funding source to its categories in the detail view of the funding source, not here.',
+                'Categories appear as the All categories filter in the funding sources overview and as a chip on each source.',
+            ],
         }
     },
     methods: {

@@ -42,6 +42,9 @@ import {computed, defineAsyncComponent, ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import {can, is} from "laravel-permission-to-vuejs";
 import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {useTranslation} from "@/Composeables/Translation.js";
+
+const $t = useTranslation()
 
 const props = defineProps({
     set: {
@@ -74,7 +77,7 @@ const ToolTipWithTextComponent = defineAsyncComponent({
 
 const createToolTipTextByItems = computed(() => {
     // return item name with count
-    return props.set.items.map(item => item.quantity + 'x ' + item.name).join(', ')  + ' (' + props.set.items.length + ' Artikel)';
+    return props.set.items.map(item => item.quantity + 'x ' + item.name).join(', ')  + ' (' + props.set.items.length + ' ' + $t('Articles') + ')';
 })
 
 const deleteSet = () => {

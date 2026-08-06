@@ -14,6 +14,7 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import {IconCirclePlus, IconChevronDown} from "@tabler/icons-vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 // Props
 const props = defineProps({
@@ -129,6 +130,28 @@ const filteredSpecialComponents = computed(() => {
     return filtered;
 });
 
+// Anleitungs-Banner: Workflow-Schritte
+const guideSteps = [
+    {
+        title: "Create components",
+        text: "Building blocks are created in the “Component settings” tab — every component in the palette comes from there.",
+        actionLabel: "Go to component settings",
+        href: route("component.index"),
+    },
+    {
+        title: "Build tabs",
+        text: "Create tabs here and drag components from the palette into the tab content.",
+    },
+    {
+        title: "Arrange the layout",
+        text: "Adjust the order, group components into folders and fill the sidebar.",
+    },
+    {
+        title: "Set the default tab",
+        text: "Choose which tab opens first. The result is the project detail page.",
+    },
+];
+
 // Reorder-Handler
 function updateComponentOrder(components) {
     // lokale Reihenfolge aktualisieren
@@ -158,6 +181,15 @@ function updateComponentOrder(components) {
                 {{ t('Create tab') }}
             </button>
         </template>
+        <SettingsGuideBanner
+            class="mb-6"
+            storage-key="settings-guide.project.tabs"
+            title="How does this area work?"
+            :steps="guideSteps"
+            :paragraphs="[
+                'The builder chain: create building blocks in the component settings, build the project detail page in the tab settings, arrange the blocks for the PDF in the print layout, and turn them into columns of the project list in the overview builder. All four use the same component pool with different filters — that is why you do not see every component everywhere.',
+            ]"
+        />
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <!-- Tab components -->
             <div class="w-full col-span-1">
@@ -200,6 +232,17 @@ function updateComponentOrder(components) {
                             </div>
                         </div>
                     </div>
+
+                    <SettingsGuideBanner
+                        variant="inline"
+                        storage-key="settings-guide.project.tabs.palette"
+                        title="How to read the component palette"
+                        :paragraphs="[
+                            '“Used: N” means the component is placed in N tabs — in every one of them it shows the same data record per project.',
+                            '“Requires configuration” means that when you drop the component you choose which tabs it collects its content from (documents, comments, checklists).',
+                            'The plus button on a component is the alternative to drag & drop.',
+                        ]"
+                    />
 
                     <div v-for="componentsArray in filteredComponents" :key="componentsArray.name">
                         <div>

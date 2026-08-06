@@ -26,6 +26,16 @@
                         :title="$t('Article properties')"
                         :description="$t('Add properties to the category that the items in this category should have.')"
                     />
+                    <SettingsGuideBanner
+                        variant="static"
+                        class="mt-3"
+                        title="How do properties work here?"
+                        :paragraphs="[
+                            'The properties assigned here become the fields of the article form for this category.',
+                            'The drag & drop order determines the order of the fields in the form and of the columns in the article overview.',
+                            'Sub-categories add further fields on top of the fields of the category.',
+                        ]"
+                    />
                     <div class="my-4 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -219,7 +229,7 @@
                                         <span v-else>{{ $t('Sub-Category without name. Please add a name')}}</span>
 
                                         <div>
-                                            <component :is="IconTrash" class="h-5 w-5 text-red-600 hover:text-red-900 cursor-pointer" @click="removeSubCategoryFromCategory(subCategory)" />
+                                            <component :is="IconTrash" class="h-5 w-5 text-red-600 hover:text-red-900 cursor-pointer" @click.stop="askRemoveSubCategory(subCategory)" />
                                         </div>
                                     </div>
                                     <component :is="IconChevronUp"
@@ -426,6 +436,14 @@
                 </div>
             </form>
         </div>
+
+        <ConfirmDeleteModal
+            v-if="subCategoryToDelete"
+            :title="$t('Delete sub-category')"
+            :description="$t('Are you sure you want to delete this sub-category? Articles in this sub-category will be deleted as well.')"
+            @delete="confirmRemoveSubCategory"
+            @closed="subCategoryToDelete = null"
+        />
     </BaseModal>
 </template>
 
@@ -453,6 +471,8 @@ import {
 
 import draggable from "vuedraggable";
 import BasePageTitle from "@/Artwork/Titles/BasePageTitle.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const props = defineProps({
     category: {
@@ -653,6 +673,21 @@ const createOrUpdateCategory = () => {
 };
 
 
+
+const subCategoryToDelete = ref(null);
+
+// Ask for confirmation before deleting a sub-category — deleting also removes
+// all articles of the sub-category on the backend.
+const askRemoveSubCategory = (subCategory) => {
+    subCategoryToDelete.value = subCategory;
+}
+
+const confirmRemoveSubCategory = () => {
+    if (subCategoryToDelete.value) {
+        removeSubCategoryFromCategory(subCategoryToDelete.value);
+    }
+    subCategoryToDelete.value = null;
+}
 
 const removeSubCategoryFromCategory = (subCategory) => {
     if ( subCategory.id) {

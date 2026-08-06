@@ -3,6 +3,15 @@
         :title="$t('BI Export')"
         :description="$t('Export business intelligence data for selected productions as Excel.')"
     >
+        <SettingsGuideBanner
+            storage-key="settings-guide.project.bi-export"
+            title="How does this area work?"
+            :paragraphs="[
+                'Nothing is configured on this tab — it generates an Excel file with the BI data of the selected productions.',
+                'The export runs in the background; the download appears after a short wait.',
+                'Additional columns come from the BI fields and audience categories (tab “BI field settings”) and from the BI tags (event settings).',
+            ]"
+        />
         <div class="mt-4 space-y-6">
             <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs space-y-5">
                 <ArtworkBaseListbox
@@ -90,6 +99,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import ProjectSettingsHeader from '@/Pages/Settings/Components/ProjectSettingsHeader.vue';
+import SettingsGuideBanner from '@/Artwork/Guide/SettingsGuideBanner.vue';
 import ArtworkBaseListbox from '@/Artwork/Listbox/ArtworkBaseListbox.vue';
 import BaseInput from '@/Artwork/Inputs/BaseInput.vue';
 import BaseUIButton from '@/Artwork/Buttons/BaseUIButton.vue';

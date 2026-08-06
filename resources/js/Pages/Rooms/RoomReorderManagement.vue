@@ -3,6 +3,14 @@
         :title="$t('Sort rooms')"
         :description="$t('Drag and drop rooms to change their order in the system.')"
     >
+        <SettingsGuideBanner
+            class="mb-6"
+            storage-key="settings-guide.rooms.sort"
+            title="How does this area work?"
+            :paragraphs="[
+                'The order here determines the order of the room rows in the calendar, the planning calendar and the shift plan.',
+            ]"
+        />
         <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="rooms" @start="dragging=true" @end="dragging=false" @change="updateRoomOrder(rooms)">
             <template #item="{element}" :key="element.id">
                 <div v-show="!element.temporary" class="flex group" @mouseover="showMenu = element.id" :key="element.id" @mouseout="showMenu = null">
@@ -31,11 +39,13 @@ import {Link} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 export default {
     name: "RoomReorderManagement",
     mixins: [IconLib],
     components: {
+        SettingsGuideBanner,
         PropertyIcon,
         RoomSettingsHeader, UserPopoverTooltip, IconEdit, Link, IconDotsVertical, IconCopy, IconTrash, draggable},
     props: [

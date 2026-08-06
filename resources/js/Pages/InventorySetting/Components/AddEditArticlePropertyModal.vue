@@ -86,12 +86,12 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="is_filterable" class="font-medium text-gray-900">Filterbar</label>
+                                    <label for="is_filterable" class="font-medium text-gray-900">{{ $t('Filterable') }}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
                                         icon-size="size-4"
-                                        tooltip-text="Soll nach dieser Eigenschaft gefiltert werden können?"
+                                        :tooltip-text="$t('Should it be possible to filter by this property?')"
                                         direction="right"
                                     />
                                 </div>
@@ -111,12 +111,12 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="show_in_list" class="font-medium text-gray-900">In Artikelübersicht</label>
+                                    <label for="show_in_list" class="font-medium text-gray-900">{{ $t('Show in article overview') }}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
                                         icon-size="size-4"
-                                        tooltip-text="Soll diese Eigenschaft in der Artikelübersicht angezeigt werden?"
+                                        :tooltip-text="$t('Should this property be shown in the article overview?')"
                                         direction="right"
                                     />
                                 </div>
@@ -136,12 +136,12 @@
                             </div>
                             <div class="text-sm/6">
                                 <div class="flex items-center">
-                                    <label for="is_required" class="font-medium text-gray-900">Wert verpflichtend</label>
+                                    <label for="is_required" class="font-medium text-gray-900">{{ $t('Value required') }}</label>
                                     <ToolTipComponent
                                         class="ml-2"
                                         :icon="IconInfoCircle"
                                         icon-size="size-4"
-                                        tooltip-text="Muss dieser Wert bei der Artikelanlage angegeben werden?"
+                                        :tooltip-text="$t('Does this value have to be provided when creating an article?')"
                                         direction="right"
                                     />
                                 </div>

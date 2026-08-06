@@ -5,6 +5,8 @@ import AddSingleShiftPresetModal from './Components/AddSingleShiftPresetModal.vu
 import { useI18n } from 'vue-i18n'
 import ShiftSettingsHeader from "@/Pages/Settings/Components/ShiftSettingsHeader.vue"
 import SearchableSelect from "@/Artwork/Listbox/SearchableSelect.vue"
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue"
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue"
 
 // Tabler Icons
 import {
@@ -37,12 +39,19 @@ function openAddModal() { editPreset.value = null; showModal.value = true }
 function openEditModal(p) { editPreset.value = p; showModal.value = true }
 function handleSaved() { showModal.value = false; router.reload({ only: ['presets'] }) }
 function handleClosed() { showModal.value = false }
+const presetIdToDelete = ref<number | null>(null)
 function deletePreset(id: number) {
-    if (confirm($t('Preset wirklich löschen?'))) {
-        router.delete(route('single-shift-presets.destroy', { id }), {
-            onSuccess: () => router.reload({ only: ['presets'] })
-        })
-    }
+    presetIdToDelete.value = id
+}
+function closeDeleteModal() {
+    presetIdToDelete.value = null
+}
+function confirmDeletePreset() {
+    if (presetIdToDelete.value === null) return
+    router.delete(route('single-shift-presets.destroy', { id: presetIdToDelete.value }), {
+        onSuccess: () => router.reload({ only: ['presets'] }),
+        onFinish: () => closeDeleteModal()
+    })
 }
 
 // Helper
@@ -143,6 +152,15 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
         </template>
 
         <div class="space-y-6">
+            <SettingsGuideBanner
+                storage-key="settings-guide.shift.shift-templates"
+                title="How shift templates work"
+                :paragraphs="[
+                    'A template combines times, craft and qualification demand. Applying it in the shift plan creates a fully configured shift in a single step.',
+                    'Not to be confused: time presets (main tab) only store times as a quick selection, and shift preset groups (own tab) bundle several templates so they can be applied together.'
+                ]"
+            />
+
             <!-- Toolbar -->
             <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -376,6 +394,15 @@ function toggleSort(key: 'name' | 'start_time' | 'end_time') {
                     </button>
                 </div>
             </div>
+
+            <!-- Delete Modal -->
+            <ConfirmDeleteModal
+                v-if="presetIdToDelete !== null"
+                :title="$t('Delete shift template')"
+                :description="$t('Would you like to delete the shift template?')"
+                @closed="closeDeleteModal"
+                @delete="confirmDeletePreset"
+            />
 
             <!-- Modal -->
             <AddSingleShiftPresetModal

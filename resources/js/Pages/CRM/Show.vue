@@ -431,11 +431,18 @@ const contactTypePivotMap = computed(() => {
     return map
 })
 
-// Filter groups to only show those that have properties assigned to this contact type
+// Filter groups to only show those that have properties assigned to this contact type,
+// ordered by the type's own group order (pivot sort_order via contact_type.properties)
 const visibleGroups = computed(() => {
-    const typePropertyIds = new Set(
-        (props.contact.contact_type?.properties ?? []).map(p => p.id)
-    )
+    const typeProperties = props.contact.contact_type?.properties ?? []
+    const typePropertyIds = new Set(typeProperties.map(p => p.id))
+
+    const groupOrder = new Map()
+    typeProperties.forEach((p, index) => {
+        if (!groupOrder.has(p.crm_property_group_id)) {
+            groupOrder.set(p.crm_property_group_id, index)
+        }
+    })
 
     return props.propertyGroups
         .map(group => ({
@@ -445,6 +452,9 @@ const visibleGroups = computed(() => {
                 .map(p => ({ ...p, pivot: contactTypePivotMap.value[p.id] ?? {} })),
         }))
         .filter(group => group.properties.length > 0)
+        .sort((a, b) =>
+            (groupOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (groupOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+        )
 })
 
 // Eingaben werden gesammelt und gebündelt gespeichert statt pro Tastendruck

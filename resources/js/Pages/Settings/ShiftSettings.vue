@@ -1,5 +1,13 @@
 <template>
     <ShiftSettingsHeader :title="$t('Shift Settings')">
+        <SettingsGuideBanner
+            storage-key="settings-guide.shift.general"
+            title="How the shift settings work"
+            :paragraphs="[
+                'This tab bundles the master data for shift planning: crafts, craft functions, global qualifications and time presets. Crafts and their functions are the basis of every shift — each shift belongs to a craft and its staffing demand is defined per craft function.',
+                'You also configure global behaviour switches here, such as the permission model, the release workflow, overbooking and the shift plan subscription. All changes are saved immediately.'
+            ]"
+        />
         <div class="my-10 grid gap-5 xl:grid-cols-2">
             <div v-if="hasAdminRole()" class="rounded-2xl border border-blue-200 bg-blue-50/60 p-5">
                 <div class="flex items-start justify-between gap-5">
@@ -314,6 +322,16 @@
 
                 <!-- Content -->
                 <div class="px-5 py-4">
+                    <SettingsGuideBanner
+                        variant="inline"
+                        storage-key="settings-guide.shift.general.craft-functions"
+                        title="Craft functions vs. global qualifications"
+                        class="mb-4"
+                        :paragraphs="[
+                            'Craft functions define the staffing rows of a shift: for each function you specify how many people are needed (e.g. 2 technicians, 1 stage manager).',
+                            'Global qualifications, on the other hand, are cross-craft attributes of people (e.g. driving licence, first aider) and do not create any demand of their own.'
+                        ]"
+                    />
                     <!-- Empty state -->
                     <div v-if="shiftQualifications.length === 0" class="flex items-center justify-between rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-8">
                         <div class="flex items-start gap-3">
@@ -409,6 +427,16 @@
 
                     <BaseUIButton @click="showAddShiftPresetModal = true" label="New time preset" use-translation is-add-button />
                 </div>
+                <SettingsGuideBanner
+                    variant="inline"
+                    storage-key="settings-guide.shift.general.time-presets"
+                    title="Time presets vs. shift templates"
+                    class="mt-4"
+                    :paragraphs="[
+                        'A time preset only stores times (start, end, break) as a quick selection when creating shifts.',
+                        'A shift template goes further: it combines times, craft and qualification demand and creates fully configured shifts — you manage templates in the \'Shift Templates\' tab.'
+                    ]"
+                />
                 <div class="mt-5">
                     <AlertComponent
                         type="info"
@@ -604,6 +632,7 @@ import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 import SwitchIconTooltip from "@/Artwork/Toggles/SwitchIconTooltip.vue";
 import PropertyIcon from "@/Artwork/Icon/PropertyIcon.vue";
 import GlobalQualificationsSettingsCard from "@/Pages/Settings/ShiftSettingsComponents/GlobalQualificationsSettingsCard.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {can, is} from 'laravel-permission-to-vuejs';
 
@@ -612,6 +641,7 @@ export default defineComponent({
     mixins: [IconLib, ColorHelper],
     components: {
         GlobalQualificationsSettingsCard,
+        SettingsGuideBanner,
         ToolTipComponent,
         PropertyIcon,
         SwitchIconTooltip,
@@ -690,51 +720,7 @@ export default defineComponent({
             userForWorkflowForm: useForm({
                 users: []
             }),
-            deleteType: '',
-            tabs: [
-                {
-                    name: this.$t('Shift Settings'),
-                    href: route('shift.settings'),
-                    current: route().current('shift.settings'),
-                    show: true,
-                    icon: 'IconCalendarUser'
-                },
-                {
-                    name: this.$t('Day Services'),
-                    href: route('day-service.index'),
-                    current: route().current('day-service.index'),
-                    show: true,
-                    icon: 'IconHours24'
-                },
-                {
-                    name: this.$t('Work Time Pattern'),
-                    href: route('shift.work-time-pattern'),
-                    current: route().current('shift.work-time-pattern'),
-                    show: true,
-                    icon: 'IconClockCog'
-                },
-                {
-                    name: this.$t('User Contracts'),
-                    href: route('user-contract-settings.index'),
-                    current: route().current('user-contract-settings.index'),
-                    show: true,
-                    icon: 'IconContract'
-                },
-                {
-                    name: this.$t('Shift warnings - rules'),
-                    href: route('shift-rules.index'),
-                    current: route().current('shift-rules.index'),
-                    show: true,
-                    icon: 'IconGavel'
-                },
-                {
-                    name: this.$t('Shift preset groups'),
-                    href: route('shift-preset-groups.index'),
-                    current: route().current('shift-preset-groups.index'),
-                    show: true,
-                    icon: 'IconLayers' // vorhandenes Icon-Set verwenden
-                }
-            ]
+            deleteType: ''
         }
     },
     computed: {

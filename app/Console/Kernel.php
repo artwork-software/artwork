@@ -74,12 +74,12 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground();
 
-        if (env('BACKUP_ENABLED', false)) {
+        if (config('backup.enabled')) {
             $schedule->command(BackupCommand::class)->dailyAt('01:00')->runInBackground();
             $schedule->command(CleanupCommand::class)->dailyAt('00:30')->runInBackground();
         }
 
-        if (env('SAGE_API_ENABLED', false)) {
+        if (config('services.sage.enabled')) {
             $sageApiSettingsService = app(SageApiSettingsService::class);
             $sageApiSettings = $sageApiSettingsService->getFirst();
             if (!is_null($sageApiSettings) && $sageApiSettings->enabled) {

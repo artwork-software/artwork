@@ -1,6 +1,17 @@
 <template>
     <BudgetSettingsHeader :title="$t('Budget templates')" :description="$t('Define settings for your budget.')">
-        <div class="flex justify-between">
+        <SettingsGuideBanner
+            variant="banner"
+            storage-key="settings-guide.budget.templates"
+            title="How budget templates work"
+            :paragraphs="guideParagraphs"
+            footnote="Caution: applying a template to a project irreversibly replaces the project's existing budget table."
+            class="mb-6"
+        />
+        <div v-if="!budget.table.length" class="text-center text-secondary py-16">
+            {{ $t('No budget templates yet. Create one by choosing Save as template in a project budget.') }}
+        </div>
+        <div v-else class="flex justify-between">
             <div></div>
             <div class="flex items-center">
                 <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
@@ -24,11 +35,9 @@
             <div class="ml-4 my-4">
                 <BudgetComponent v-if="!table.closed"
                                  :table="table"
-                                 :project="project"
                                  :selectedCell="budget.selectedCell"
                                  :selectedRow="budget.selectedRow"
                                  :templates="budget.templates"
-                                 :money-sources="moneySources"
                                  :is-budget-template-management="true"
                 />
                 <div v-else>
@@ -48,12 +57,14 @@ import {ChevronDownIcon, ChevronUpIcon, SearchIcon, XIcon} from "@heroicons/vue/
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import BudgetSettingsHeader from "@/Pages/BudgetSettings/BudgetSettingsHeader.vue";
+import SettingsGuideBanner from "@/Artwork/Guide/SettingsGuideBanner.vue";
 
 
 export default {
     mixins: [Permissions],
     name: "BudgetTemplateManagement",
     components: {
+        SettingsGuideBanner,
         BudgetSettingsHeader,
         BudgetComponent, AppLayout, ChevronUpIcon, ChevronDownIcon,InputComponent, XIcon, SearchIcon},
     props: ['budget'],
@@ -61,6 +72,10 @@ export default {
         return{
             showSearchbar: false,
             template_search: '',
+            guideParagraphs: [
+                'Templates are not created here: open a project budget and choose Save as template — the template then appears on this page.',
+                'This page is only for maintaining existing templates.',
+            ],
         }
     },
     methods:{
